@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 7308738F1509F5BF001DE27F /* FEMParallelMPI.m */; };
+		7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7310B08913B0BCD100F5E96B /* Accelerate.framework */; };
 		7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7315512113583FFD004CCD09 /* Cocoa.framework */; };
 		7315512C13583FFD004CCD09 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7315512A13583FFD004CCD09 /* InfoPlist.strings */; };
 		7315512F13583FFD004CCD09 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315512E13583FFD004CCD09 /* main.m */; };
@@ -17,6 +19,26 @@
 		7315514713583FFD004CCD09 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7315514513583FFD004CCD09 /* InfoPlist.strings */; };
 		7315514A13583FFD004CCD09 /* SainoTests.h in Resources */ = {isa = PBXBuildFile; fileRef = 7315514913583FFD004CCD09 /* SainoTests.h */; };
 		7315514C13583FFD004CCD09 /* SainoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315514B13583FFD004CCD09 /* SainoTests.m */; };
+		7315515913586108004CCD09 /* FEMKernel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMKernel.m */; };
+		7315515D1358615D004CCD09 /* FEMMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515C1358615D004CCD09 /* FEMMesh.m */; };
+		73275A3913C2BD0D006EC4BA /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 73275A3713C2BD0D006EC4BA /* Utils.c */; };
+		73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 73281C6314D2898100854B7D /* FEMPrecondition.m */; };
+		73355E761510745100F959D8 /* FEMTimeIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73355E751510745100F959D8 /* FEMTimeIntegration.m */; };
+		73456A711521A137003054EB /* FEMBoundaryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 73456A701521A137003054EB /* FEMBoundaryCondition.m */; };
+		73456ECD14ECDBDC00ECD602 /* FEMHUTIter.m in Sources */ = {isa = PBXBuildFile; fileRef = 73456ECC14ECDBDC00ECD602 /* FEMHUTIter.m */; };
+		73505DD013C1BD0600B1C043 /* NodalBasisFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 73505DCE13C1BD0600B1C043 /* NodalBasisFunctions.c */; };
+		7361A15814C69E6F006C2FA2 /* FEMModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15714C69E6F006C2FA2 /* FEMModel.m */; };
+		7361A15B14C6A084006C2FA2 /* FEMSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15A14C6A084006C2FA2 /* FEMSolution.m */; };
+		737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 737B0D7414E2274B00ED409D /* TimeProfile.c */; };
+		73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */; };
+		73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB2151C483600B11665 /* FEMMatrixCRS.m */; };
+		73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB6151C73F000B11665 /* FEMMatrixBand.m */; };
+		73A4696915076F8500BDDEA6 /* Lists.c in Sources */ = {isa = PBXBuildFile; fileRef = 73A4696815076F8500BDDEA6 /* Lists.c */; };
+		73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */ = {isa = PBXBuildFile; fileRef = 73ED563413AA10BB00F088CC /* GaussIntegration.c */; };
+		73F2105514E3D41000D52906 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 73F2105414E3D41000D52906 /* memory.c */; };
+		73F70A6815130C5E00A5B3B5 /* FEMValueList.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6715130C5E00A5B3B5 /* FEMValueList.m */; };
+		73F70A6B1513247500A5B3B5 /* FEMBodyForce.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6A1513247500A5B3B5 /* FEMBodyForce.m */; };
+		73F70A6E1513467C00A5B3B5 /* FEMUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,25 +52,73 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = file; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
+		7308738E1509F5BF001DE27F /* FEMParallelMPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMParallelMPI.h; sourceTree = "<group>"; };
+		7308738F1509F5BF001DE27F /* FEMParallelMPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMParallelMPI.m; sourceTree = "<group>"; };
+		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		7315511D13583FFD004CCD09 /* Saino.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Saino.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7315512113583FFD004CCD09 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		7315512413583FFD004CCD09 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		7315512513583FFD004CCD09 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		7315512613583FFD004CCD09 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		7315512913583FFD004CCD09 /* Saino-Info.plist */ = {isa = PBXFileReference; path = "Saino-Info.plist"; sourceTree = "<group>"; };
+		7315512913583FFD004CCD09 /* Saino-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Saino-Info.plist"; sourceTree = "<group>"; };
 		7315512B13583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		7315512D13583FFD004CCD09 /* Saino-Prefix.pch */ = {isa = PBXFileReference; path = "Saino-Prefix.pch"; sourceTree = "<group>"; };
+		7315512D13583FFD004CCD09 /* Saino-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Saino-Prefix.pch"; sourceTree = "<group>"; };
 		7315512E13583FFD004CCD09 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		7315513113583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		7315513313583FFD004CCD09 /* SainoAppDelegate.h */ = {isa = PBXFileReference; path = SainoAppDelegate.h; sourceTree = "<group>"; };
+		7315513313583FFD004CCD09 /* SainoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoAppDelegate.h; sourceTree = "<group>"; };
 		7315513413583FFD004CCD09 /* SainoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoAppDelegate.m; sourceTree = "<group>"; };
 		7315513713583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		7315513E13583FFD004CCD09 /* SainoTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SainoTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
-		7315514413583FFD004CCD09 /* SainoTests-Info.plist */ = {isa = PBXFileReference; path = "SainoTests-Info.plist"; sourceTree = "<group>"; };
+		7315514413583FFD004CCD09 /* SainoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SainoTests-Info.plist"; sourceTree = "<group>"; };
 		7315514613583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		7315514813583FFD004CCD09 /* SainoTests-Prefix.pch */ = {isa = PBXFileReference; path = "SainoTests-Prefix.pch"; sourceTree = "<group>"; };
+		7315514813583FFD004CCD09 /* SainoTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SainoTests-Prefix.pch"; sourceTree = "<group>"; };
 		7315514913583FFD004CCD09 /* SainoTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoTests.h; sourceTree = "<group>"; };
 		7315514B13583FFD004CCD09 /* SainoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoTests.m; sourceTree = "<group>"; };
+		7315515713586108004CCD09 /* FEMKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMKernel.h; sourceTree = "<group>"; };
+		7315515813586108004CCD09 /* FEMKernel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMKernel.m; sourceTree = "<group>"; };
+		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		7315515C1358615D004CCD09 /* FEMMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		73275A3713C2BD0D006EC4BA /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
+		73275A3813C2BD0D006EC4BA /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		73281C6214D2898100854B7D /* FEMPrecondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPrecondition.h; sourceTree = "<group>"; };
+		73281C6314D2898100854B7D /* FEMPrecondition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPrecondition.m; sourceTree = "<group>"; };
+		73355E741510745100F959D8 /* FEMTimeIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMTimeIntegration.h; sourceTree = "<group>"; };
+		73355E751510745100F959D8 /* FEMTimeIntegration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMTimeIntegration.m; sourceTree = "<group>"; };
+		73456A6F1521A137003054EB /* FEMBoundaryCondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBoundaryCondition.h; sourceTree = "<group>"; };
+		73456A701521A137003054EB /* FEMBoundaryCondition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMBoundaryCondition.m; sourceTree = "<group>"; };
+		73456ECB14ECDBDC00ECD602 /* FEMHUTIter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMHUTIter.h; sourceTree = "<group>"; };
+		73456ECC14ECDBDC00ECD602 /* FEMHUTIter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMHUTIter.m; sourceTree = "<group>"; };
+		73456ECE14ECE22C00ECD602 /* huti_defs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = huti_defs.h; sourceTree = "<group>"; };
+		73456ED214ECF84E00ECD602 /* hutidoc.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = hutidoc.pdf; path = docs/hutidoc.pdf; sourceTree = SOURCE_ROOT; };
+		73505DCE13C1BD0600B1C043 /* NodalBasisFunctions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = NodalBasisFunctions.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		73505DCF13C1BD0600B1C043 /* NodalBasisFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = NodalBasisFunctions.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		7361A15614C69E6F006C2FA2 /* FEMModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMModel.h; sourceTree = "<group>"; };
+		7361A15714C69E6F006C2FA2 /* FEMModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMModel.m; sourceTree = "<group>"; };
+		7361A15914C6A084006C2FA2 /* FEMSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSolution.h; sourceTree = "<group>"; };
+		7361A15A14C6A084006C2FA2 /* FEMSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolution.m; sourceTree = "<group>"; };
+		736AFC2B1360115200144B03 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
+		736C02E513BC6C0900979806 /* Constructors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constructors.h; sourceTree = "<group>"; };
+		737B0D7414E2274B00ED409D /* TimeProfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TimeProfile.c; sourceTree = "<group>"; };
+		737B0D7614E2281E00ED409D /* TimeProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeProfile.h; sourceTree = "<group>"; };
+		73803A7913AB5EA50036350E /* FEMNumericIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNumericIntegration.h; sourceTree = "<group>"; };
+		73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNumericIntegration.m; sourceTree = "<group>"; };
+		73882CB1151C483600B11665 /* FEMMatrixCRS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixCRS.h; sourceTree = "<group>"; };
+		73882CB2151C483600B11665 /* FEMMatrixCRS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixCRS.m; sourceTree = "<group>"; };
+		73882CB5151C73F000B11665 /* FEMMatrixBand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixBand.h; sourceTree = "<group>"; };
+		73882CB6151C73F000B11665 /* FEMMatrixBand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixBand.m; sourceTree = "<group>"; };
+		73A4696815076F8500BDDEA6 /* Lists.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Lists.c; sourceTree = "<group>"; };
+		73A4696B15076F9200BDDEA6 /* Lists.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lists.h; sourceTree = "<group>"; };
+		73ED563413AA10BB00F088CC /* GaussIntegration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GaussIntegration.c; sourceTree = "<group>"; };
+		73ED563513AA10BB00F088CC /* GaussIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = GaussIntegration.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		73ED563713AA16F200F088CC /* Numerics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Numerics.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		73F2105414E3D41000D52906 /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memory.c; sourceTree = "<group>"; };
+		73F70A6615130C5E00A5B3B5 /* FEMValueList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMValueList.h; sourceTree = "<group>"; };
+		73F70A6715130C5E00A5B3B5 /* FEMValueList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMValueList.m; sourceTree = "<group>"; };
+		73F70A691513247500A5B3B5 /* FEMBodyForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBodyForce.h; sourceTree = "<group>"; };
+		73F70A6A1513247500A5B3B5 /* FEMBodyForce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMBodyForce.m; sourceTree = "<group>"; };
+		73F70A6C1513467C00A5B3B5 /* FEMUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMUtilities.h; sourceTree = "<group>"; };
+		73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilities.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +127,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */,
+				7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,6 +173,7 @@
 		7315512313583FFD004CCD09 /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7310B08913B0BCD100F5E96B /* Accelerate.framework */,
 				7315512413583FFD004CCD09 /* AppKit.framework */,
 				7315512513583FFD004CCD09 /* CoreData.framework */,
 				7315512613583FFD004CCD09 /* Foundation.framework */,
@@ -112,6 +184,9 @@
 		7315512713583FFD004CCD09 /* Saino */ = {
 			isa = PBXGroup;
 			children = (
+				73456ED114ECF82C00ECD602 /* Docs */,
+				7315515A1358610F004CCD09 /* FEM Classes */,
+				73155155135848B4004CCD09 /* Low level C routines */,
 				7315513313583FFD004CCD09 /* SainoAppDelegate.h */,
 				7315513413583FFD004CCD09 /* SainoAppDelegate.m */,
 				7315513613583FFD004CCD09 /* MainMenu.xib */,
@@ -150,6 +225,98 @@
 				7315514813583FFD004CCD09 /* SainoTests-Prefix.pch */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		73155155135848B4004CCD09 /* Low level C routines */ = {
+			isa = PBXGroup;
+			children = (
+				737B0D7614E2281E00ED409D /* TimeProfile.h */,
+				737B0D7414E2274B00ED409D /* TimeProfile.c */,
+				736C02E513BC6C0900979806 /* Constructors.h */,
+				73F2105414E3D41000D52906 /* memory.c */,
+				736AFC2B1360115200144B03 /* memory.h */,
+				73275A3713C2BD0D006EC4BA /* Utils.c */,
+				73275A3813C2BD0D006EC4BA /* Utils.h */,
+				73ED563713AA16F200F088CC /* Numerics.h */,
+				73ED563413AA10BB00F088CC /* GaussIntegration.c */,
+				73ED563513AA10BB00F088CC /* GaussIntegration.h */,
+				73505DCE13C1BD0600B1C043 /* NodalBasisFunctions.c */,
+				73505DCF13C1BD0600B1C043 /* NodalBasisFunctions.h */,
+				73A4696815076F8500BDDEA6 /* Lists.c */,
+				73A4696B15076F9200BDDEA6 /* Lists.h */,
+			);
+			name = "Low level C routines";
+			sourceTree = "<group>";
+		};
+		7315515A1358610F004CCD09 /* FEM Classes */ = {
+			isa = PBXGroup;
+			children = (
+				73456EC914ECDB0200ECD602 /* HUTIter */,
+				73F70A641512EDE000A5B3B5 /* Class utilities */,
+				7308738E1509F5BF001DE27F /* FEMParallelMPI.h */,
+				7308738F1509F5BF001DE27F /* FEMParallelMPI.m */,
+				7361A15914C6A084006C2FA2 /* FEMSolution.h */,
+				7361A15A14C6A084006C2FA2 /* FEMSolution.m */,
+				73882CB1151C483600B11665 /* FEMMatrixCRS.h */,
+				73882CB2151C483600B11665 /* FEMMatrixCRS.m */,
+				73882CB5151C73F000B11665 /* FEMMatrixBand.h */,
+				73882CB6151C73F000B11665 /* FEMMatrixBand.m */,
+				73281C6214D2898100854B7D /* FEMPrecondition.h */,
+				73281C6314D2898100854B7D /* FEMPrecondition.m */,
+				7315515713586108004CCD09 /* FEMKernel.h */,
+				7315515813586108004CCD09 /* FEMKernel.m */,
+				7315515B1358615D004CCD09 /* FEMMesh.h */,
+				7315515C1358615D004CCD09 /* FEMMesh.m */,
+				73803A7913AB5EA50036350E /* FEMNumericIntegration.h */,
+				73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */,
+				7361A15614C69E6F006C2FA2 /* FEMModel.h */,
+				7361A15714C69E6F006C2FA2 /* FEMModel.m */,
+			);
+			name = "FEM Classes";
+			sourceTree = "<group>";
+		};
+		73355E721510743100F959D8 /* Time integration */ = {
+			isa = PBXGroup;
+			children = (
+				73355E741510745100F959D8 /* FEMTimeIntegration.h */,
+				73355E751510745100F959D8 /* FEMTimeIntegration.m */,
+			);
+			name = "Time integration";
+			sourceTree = "<group>";
+		};
+		73456EC914ECDB0200ECD602 /* HUTIter */ = {
+			isa = PBXGroup;
+			children = (
+				73456ECE14ECE22C00ECD602 /* huti_defs.h */,
+				73456ECB14ECDBDC00ECD602 /* FEMHUTIter.h */,
+				73456ECC14ECDBDC00ECD602 /* FEMHUTIter.m */,
+				73355E721510743100F959D8 /* Time integration */,
+			);
+			name = HUTIter;
+			sourceTree = "<group>";
+		};
+		73456ED114ECF82C00ECD602 /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				73456ED214ECF84E00ECD602 /* hutidoc.pdf */,
+				7301FA201520120500451A49 /* sainoReport.pages */,
+			);
+			name = Docs;
+			sourceTree = "<group>";
+		};
+		73F70A641512EDE000A5B3B5 /* Class utilities */ = {
+			isa = PBXGroup;
+			children = (
+				73F70A6C1513467C00A5B3B5 /* FEMUtilities.h */,
+				73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */,
+				73F70A6615130C5E00A5B3B5 /* FEMValueList.h */,
+				73F70A6715130C5E00A5B3B5 /* FEMValueList.m */,
+				73F70A691513247500A5B3B5 /* FEMBodyForce.h */,
+				73F70A6A1513247500A5B3B5 /* FEMBodyForce.m */,
+				73456A6F1521A137003054EB /* FEMBoundaryCondition.h */,
+				73456A701521A137003054EB /* FEMBoundaryCondition.m */,
+			);
+			name = "Class utilities";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -197,6 +364,7 @@
 		7315511413583FFD004CCD09 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0420;
 				ORGANIZATIONNAME = "Institute of Low Temperature Science";
 			};
 			buildConfigurationList = 7315511713583FFD004CCD09 /* Build configuration list for PBXProject "Saino" */;
@@ -262,6 +430,27 @@
 			files = (
 				7315512F13583FFD004CCD09 /* main.m in Sources */,
 				7315513513583FFD004CCD09 /* SainoAppDelegate.m in Sources */,
+				7315515913586108004CCD09 /* FEMKernel.m in Sources */,
+				7315515D1358615D004CCD09 /* FEMMesh.m in Sources */,
+				73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */,
+				73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */,
+				73505DD013C1BD0600B1C043 /* NodalBasisFunctions.c in Sources */,
+				73275A3913C2BD0D006EC4BA /* Utils.c in Sources */,
+				7361A15814C69E6F006C2FA2 /* FEMModel.m in Sources */,
+				7361A15B14C6A084006C2FA2 /* FEMSolution.m in Sources */,
+				73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */,
+				737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */,
+				73F2105514E3D41000D52906 /* memory.c in Sources */,
+				73456ECD14ECDBDC00ECD602 /* FEMHUTIter.m in Sources */,
+				73A4696915076F8500BDDEA6 /* Lists.c in Sources */,
+				730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */,
+				73355E761510745100F959D8 /* FEMTimeIntegration.m in Sources */,
+				73F70A6815130C5E00A5B3B5 /* FEMValueList.m in Sources */,
+				73F70A6B1513247500A5B3B5 /* FEMBodyForce.m in Sources */,
+				73F70A6E1513467C00A5B3B5 /* FEMUtilities.m in Sources */,
+				73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */,
+				73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */,
+				73456A711521A137003054EB /* FEMBoundaryCondition.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +512,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
@@ -341,6 +531,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -444,6 +635,7 @@
 				7315515113583FFD004CCD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		7315515213583FFD004CCD09 /* Build configuration list for PBXNativeTarget "SainoTests" */ = {
 			isa = XCConfigurationList;
@@ -452,6 +644,7 @@
 				7315515413583FFD004CCD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
