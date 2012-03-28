@@ -26,7 +26,7 @@
 
 - (void)dealloc
 {
-    [super dealloc];
+    
 }
 
 -(BOOL)setBasis:(Element_t *)element :(Nodes_t *)nodes :(double)u :(double)v :(double)w :(BOOL)Bubbles :(int)el {

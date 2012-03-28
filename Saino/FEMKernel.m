@@ -123,8 +123,6 @@ static int PRECOND_VANKA     =  560;
         [hutisolver dgcrSolve:solution :ipar[2] :ipar[3] :ipar :dpar :work :pcondlMethod :pcondrMethod :matvecMethod :mstopMethod];
     }
     
-    [hutisolver release];
-    
 }
 
 -(void)FEMKernel_iterSolver:(FEMSolution *)solution {
@@ -609,10 +607,8 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    [parallelUtil release];
-    
     return norm;
-
+    
 }
 
 
@@ -966,10 +962,6 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    [preconditioning release];
-    [convergenceType release];
-    [solverName release];
-    
     x = NULL;
     x0 = NULL;
     
@@ -1202,8 +1194,6 @@ static int PRECOND_VANKA     =  560;
     [self FEMKernel_computeChange:solution :NO :&n :[solution variableReturnPointerToValues] :NULL];
     norm = [solution variableNorm];
     
-    [parallelUtil release];
-    
 }
 
 -(void)FEMKernel_solveSystem:(FEMSolution *)solution {
@@ -1288,8 +1278,6 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    [method release];
-    
 }
 
 #pragma mark Element info
@@ -1341,12 +1329,6 @@ static int PRECOND_VANKA     =  560;
     }
     
     free_dvector(passive, 0, nbNodes-1);
-    
-    [valueList release];
-    [bodyForceAtBodyID release];
-    [bodiesValues release];
-    [bodyForces release];
-    [aString release];
     
     return isPassive;
     
@@ -1602,7 +1584,6 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    [timeIntegration release];
     free_dmatrix(prevSol, 0, (dofs*n)-1, 0, [solution order]-1);
     free_dvector(lForce, 0, (dofs*n)-1);
     free_dvector(dts, 0, [solution order]-1);
@@ -1655,14 +1636,12 @@ static int PRECOND_VANKA     =  560;
         
         crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix CRS_glueLocalMatrix:solution :stiffMatrix :n :dofs :nodeIndexes];
-        [crsMatrix release];
         
     }
     else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
         
         bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix BAND_glueLocalMatrix:solution :stiffMatrix :n :dofs :nodeIndexes];
-        [bandMatrix release];
         
     }
     
@@ -1706,7 +1685,6 @@ static int PRECOND_VANKA     =  560;
 - (void)dealloc
 {
     free_ivector(indexStore, 0, 511);
-    [super dealloc];
 }
 
 -(int)isPElement:(Element_t *)element {
@@ -1885,8 +1863,10 @@ static int PRECOND_VANKA     =  560;
     
     for (i=0; i<[model numberOfBoundaryConditions]; i++) {
         bc_id++;
-        boundaryConditionAtId = [boundaryConditions objectAtIndex:i];
-        if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
+        @autoreleasepool {
+            boundaryConditionAtId = [boundaryConditions objectAtIndex:i];
+            if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
+        }
     }
     if (bc_id > [model numberOfBoundaryConditions]) bc_id = 0;
     
@@ -2198,9 +2178,9 @@ static int PRECOND_VANKA     =  560;
     err = sqrt(sum1) / ( sqrt(sum2) * sqrt(sum3) + sqrt(sum4) );
     
     free_dvector(res, 0, ipar[2]-1);
-    [preconditioning release];
     
     return err;
+    
 }
 
 

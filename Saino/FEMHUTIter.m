@@ -144,10 +144,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (converged == YES || diverged == YES) {
             
         free_dvector(r, 0, n-1);
-        
-        [matvecSignature release];
-        [matvecInvocation release];
-        [preconditioning release];
 
         return;
     }
@@ -192,10 +188,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
     
     free_dvector(r, 0, n-1);
-    
-    [matvecSignature release];
-    [matvecInvocation release];
-    [preconditioning release];
     
 }
 
@@ -244,11 +236,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (converged == YES || diverged == YES) {
         
         free_dvector(r, 0, n-1);
-        
-        [matvecSignature release];
-        [matvecInvocation release];
-        [preconditioning release];
-        
+    
         return;
     }
     
@@ -281,10 +269,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
 
     free_dvector(r, 0, n-1);
-    
-    [matvecSignature release];
-    [matvecInvocation release];
-    [preconditioning release];
     
 }
 
@@ -408,12 +392,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
         free_dvector(buffer, 0, n-1);
         free_dvector(buffer2, 0, n-1);
         free_dvector(buffer3, 0, n-1);
-        
-        [pCondlSignature release];
-        [matvecSignature release];
-        [pcondlInvocation release];
-        [matvecInvocation release];
-        [preconditioning release];
         
         return;
     }
@@ -763,12 +741,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(buffer2, 0, n-1);
     free_dvector(buffer3, 0, n-1);
     
-    [pCondlSignature release];
-    [matvecSignature release];
-    [pcondlInvocation release];
-    [matvecInvocation release];
-    [preconditioning release];
-    
 }
 
 -(void)HUTI_gcr:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)m: (SEL)pcondlMethod: (SEL)matvecMethod {
@@ -846,12 +818,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
             free_dmatrix(v, 0, n-1, 0, (m-1)-1);
             free_dmatrix(s, 0, n-1, 0, (m-1)-1);
         }
-        
-        [pCondlSignature release];
-        [matvecSignature release];
-        [pcondlInvocation release];
-        [matvecInvocation release];
-        [preconditioning release];
         
         return;
     }
@@ -937,12 +903,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
         free_dmatrix(v, 0, n-1, 0, (m-1)-1);
         free_dmatrix(s, 0, n-1, 0, (m-1)-1);
     }
-    
-    [pCondlSignature release];
-    [matvecSignature release];
-    [pcondlInvocation release];
-    [matvecInvocation release];
-    [preconditioning release];
 
 }
 
@@ -1282,19 +1242,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(t2v, 0, ipar[2]-1);
     free_dvector(t, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
-    
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
     
     xvec = NULL;
     rhsvec = NULL;
@@ -1702,19 +1649,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(w, 0, ipar[2]-1);
     free_dvector(t, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
-    
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
     
     xvec = NULL;
     rhsvec = NULL;
@@ -2381,19 +2315,6 @@ jump:
     free_dvector(r, 0, ipar[2]-1);
     free_dvector(trv, 0, ipar[2]-1);
     
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
-    
     xvec = NULL;
     rhsvec = NULL;
     
@@ -2646,19 +2567,6 @@ jump:
     free_dvector(p, 0, ipar[2]-1);
     free_dvector(q, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
-    
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
     
     xvec = NULL;
     rhsvec = NULL;
@@ -2947,19 +2855,6 @@ jump:
     free_dvector(t2v, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
     
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
-
     xvec = NULL;
     rhsvec = NULL;
     
@@ -3472,19 +3367,6 @@ jump:
     free_dvector(y, 0, (HUTI_GMRES_RESTART+1)-1);
     
     free_dmatrix(h, 0, (HUTI_GMRES_RESTART+1)-1, 0, (HUTI_GMRES_RESTART+1)-1);
-    
-    [pCondlSignature release];
-    [pCondrSignature release];
-    [matvecSignature release];
-    [mstopSignature release];
-    
-    [pcondlInvocation release];
-    [pcondrInvocation release];
-    [matvecInvocation release];
-    [mstopInvocation release];
-    
-    [preconditioning release];
-    [kernel release];
     
     xvec = NULL;
     rhsvec = NULL;

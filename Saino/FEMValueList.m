@@ -131,7 +131,6 @@ static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
                 }
                 
                 free_dvector(buffer, 0, [list sizeTValues]-1);
-                [util release];
             }
             fVal = NULL;
             found = YES;
