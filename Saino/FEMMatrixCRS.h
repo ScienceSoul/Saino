@@ -12,6 +12,16 @@
 
 @interface FEMMatrixCRS : NSObject
 
--(void)CRS_glueLocalMatrix:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes;
+-(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n;
+-(void)sortInGlobal:(FEMSolution *)solution: (BOOL *)alsoValues;
+-(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
+-(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
+-(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes;
+-(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution: (int)n: (double)val;
+
+-(void)zeroRowInMatrix:(Matrix_t *)a: (int)n;
+-(void)sortInMatrix:(Matrix_t *)a: (BOOL *)alsoValues;
+-(void)setMatrixElementInMatrix:(Matrix_t *)a: (int)i: (int)j: (double)value;
+
 
 @end

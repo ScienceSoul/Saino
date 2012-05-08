@@ -15,10 +15,15 @@
 @interface FEMSolution : NSObject {
     
     NSMutableDictionary *solutionInfo;
+    NSString *normalTangentialName;
+    
+    int simulationID;
     
     int normalTangentialNOFNodes;
     int coordinateSystemDimension;
     
+    int **ntElement;
+    BOOL **ntZeroingDone;
     int *boundaryReorder;
     double **boundaryNormals, **boundaryTangent1, **boundaryTangent2;
     
@@ -47,8 +52,12 @@
 #pragma mark Setters and getters for FEMSolution variables
 
 -(id)solutionInfoForKey:(NSString *)key;
+-(NSString *)normalTangentialName;
+-(int)simulationID;
 -(int)normalTangentialNOFNodes;
 -(int)coordinateSystemDimension;
+-(int)ntElement:(int)i: (int)j;
+-(BOOL)ntZeroingDone:(int)i: (int)j;
 -(int)boundaryReorder:(int)i;
 -(double)boundaryNormals:(int)i: (int)j;
 -(double)boundaryTangent1:(int)i: (int)j;
@@ -65,8 +74,12 @@
 -(int)defDofs:(int)i;
 -(int)sizeOfDefDofs;
 
+-(void)setNormalTangentialName:(NSString *)string;
+-(void)setSimulationID:(int)i;
 -(void)setNormalTangentialNOFNodes:(int)i;
 -(void)setCoordinateSystemDimension:(int)i;
+-(void)setNtElement:(int)i: (int)j: (int)n;
+-(void)setNtZeroingDone:(int)i: (int)j: (BOOL)n;
 -(void)setBoundaryReorder:(int)i: (int)n;
 -(void)setBoundaryNormals:(int)i: (int)j: (double)n;
 -(void)setBoundaryTangent1:(int)i: (int)j: (double)n;
@@ -91,6 +104,7 @@
 -(int)matrixSolveCount;
 -(int)matrixOrdered;
 -(int)matrixLumped;
+-(int)matrixSymmetric;
 -(int)matrixComplex;
 -(int)matrixRows:(int)i;
 -(int)matrixCols:(int)i;
@@ -113,6 +127,8 @@
 -(void)setMatrixFormat:(int)i;
 -(void)setMatrixSolveCount:(int)i;
 -(void)setMatrixOrdered:(int)i;
+-(void)setMatrixLumped:(int)i;
+-(void)setMatrixSymmetric:(int)i;
 -(void)setMatrixRows:(int)i: (int)n;
 -(void)setMatrixCols:(int)i: (int)n;
 -(void)setMatrixDiag:(int)i: (int)n;
@@ -178,6 +194,7 @@
 -(int)matrixSizeOFILUCols;
 -(int)matrixSizeOfILUDiag;
 -(int)matrixSizeOfCILUValues;
+-(int)variableSizeOfPerm;
 -(int)variableSizeOfValues;
 -(int)variableSizeOfNonLinValues;
 
@@ -198,11 +215,13 @@
 -(void)setMatrixSizeOfILUCols:(int)i;
 -(void)setMatrixSizeOfILUDiag:(int)i;
 -(void)setMatrixSizeOfCILUValues:(int)i;
+-(void)setVariableSizeOfPerm:(int)i;
 -(void)setVariableSizeOfValues:(int)i;
 -(void)setVariableSizeOfNonLinValues: (int)i;
 
 #pragma Test associativity
 
+-(BOOL)isAssociatedMatrixDiag;
 -(BOOL)isAssociatedMatrixILUValues;
 -(BOOL)isAssociatedMatrixMassValues;
 -(BOOL)isAssociatedMatrixDampValues;
@@ -220,6 +239,7 @@
 -(int *)returnPointerToDefDofs;
 -(FEMMesh *)returnPointerToMesh;
 
+-(Matrix_t *)matrixReturnPointerToConstraintMatrix;
 -(double *)matrixReturnPointerToRHS;
 -(double *)matrixReturnPointerToBulkRHS;
 -(double *)matrixReturnPointerToBulkValues;
@@ -229,6 +249,10 @@
 -(double *)variableReturnPointerToSteadyValues;
 
 -(Variable_t *)meshReturnPointerToVariables;
+
+#pragma mark Methods assigning pointers
+
+-(void)matrixAssignConstraintMatrix:(Matrix_t *)a;
 
 #pragma mark Initializations
 

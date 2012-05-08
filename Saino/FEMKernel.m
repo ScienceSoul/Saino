@@ -12,12 +12,16 @@
 #import <complex.h>
 
 #import "FEMValueList.h"
+#import "FEMListUtilities.h"
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
+#import "FEMSimulation.h"
 
 #import "memory.h"
 #import "Utils.h"
 #import "Lists.h"
+#import "Numerics.h"
+#import "GaussIntegration.h"
 
 static int ITER_BICGSTAB     =  320;
 static int ITER_TFQMR        =  330;
@@ -43,6 +47,7 @@ static int PRECOND_VANKA     =  560;
 // Solving linear stsems and compute norms
 -(void)iterCall:(int)iterType: (FEMSolution *)solution: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod;
 -(void)FEMKernel_iterSolver:(FEMSolution *)solution;
+-(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber;
 -(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution;
 -(double)FEMKernel_computeNorm:(FEMSolution *)solution: (int)n: (double *)values;
 -(void)FEMKernel_computeChange:(FEMSolution *)solution: (BOOL)steadyState: (int*)nsize: (double *)values: (double *)values0;
@@ -63,6 +68,19 @@ static int PRECOND_VANKA     =  560;
 
 // Update global equations
 -(void)FEMKernel_updateGlobalEquations:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (double **)stiffMatrix: (double *)force: (int)n: (int)dofs: (int *)nodeIndexes: (int *)rows: (int *)cols: (BOOL *)rotateNT: (BOOL *)bulkUpdate;
+
+// Loads
+-(void)FEMKernel_setElementLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (BOOL *)doneLoad: (int)n: (int)dof: (int)ndofs;
+-(void)FEMKernel_setPointLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (int)n: (int)dof: (int)ndofs;
+
+// Element and point values
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
+-(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
+
+//Periodic
+-(void)FEMKernel_setPeriodicBoundariesPass1:(FEMModel *)model: (FEMSolution *)solution: (NSMutableString *)name: (int)dof: (int)this: (BOOL *)done;
+-(void)FEMKernel_setPeriodicBoundariesPass2:(FEMModel *)model: (FEMSolution *)solution: (NSMutableString *)name: (int)dof: (int)this: (BOOL *)done;
+
 
 @end
 
@@ -446,6 +464,45 @@ static int PRECOND_VANKA     =  560;
     
 }
 
+-(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber {
+    
+    int i, k, dim;
+    double bu, bv, bw, **rm;
+    
+    if ([solution normalTangentialNOFNodes] <= 0) return;
+    
+    dim = [solution coordinateSystemDimension];
+    
+    k = [solution boundaryReorder:nodeNumber];
+    if (k < 0) return;
+    
+    if (dim < 3) {
+        bu = vec[0];
+        bv = vec[1];
+        vec[0] = [solution boundaryNormals:k :0]*bu + [solution boundaryNormals:k :1]*bv;
+        vec[1] = -[solution boundaryNormals:k :1]*bu + [solution boundaryNormals:k :0]*bv;
+    } else {
+        rm = doublematrix(0, 2, 0, 2);
+        
+        bu = vec[0];
+        bv = vec[1];
+        bw = vec[2];
+        
+        for (i=0; i<2; i++) {
+            rm[i][0] = [solution boundaryNormals:k :i];
+            rm[i][1] = [solution boundaryTangent1:k :i];
+            rm[i][2] = [solution boundaryTangent2:k :i];
+        }
+        
+        vec[0] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
+        vec[1] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
+        vec[2] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
+
+        free_dmatrix(rm, 0, 2, 0, 2);
+    }
+    
+}
+
 -(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution {
     
     int i, j, k, l, dim, ndofs;
@@ -777,7 +834,7 @@ static int PRECOND_VANKA     =  560;
     if ([solution solutionInfoForKey:@"Non linear system max norm"] != nil) {
         maxNorm = [[solution solutionInfoForKey:@"Non linear system max norm"] doubleValue];
     } else {
-        maxNorm = HUGE_VALF;
+        maxNorm = HUGE_VAL;
     }
     
     if (isnan(norm) != 0 && norm > maxNorm) {
@@ -1286,12 +1343,12 @@ static int PRECOND_VANKA     =  560;
     
     int body_id, bf_id, nbNodes;
     double *passive;
-    NSArray *bodiesValues, *bodyForces;
+    NSArray *bodies, *bodyForces;
     char *passName, *str;
     NSString *aString;
     BOOL isPassive, found;
     
-    FEMValueList *valueList;
+    FEMListUtilities *listUtil;
     FEMBodyForce *bodyForceAtBodyID;
     
     isPassive = NO;
@@ -1299,28 +1356,28 @@ static int PRECOND_VANKA     =  560;
     body_id = element->BodyID-1;
     if (body_id < 0) return isPassive; // body_id == -1 for boundary elements
     
-    valueList = [[FEMValueList alloc] init];
+    listUtil = [[FEMListUtilities alloc] init];
     
     nbNodes = element->Type.NumberOfNodes;
     passive = doublevec(0, nbNodes-1);
     
-    bodiesValues = [model bodiesValuesForKey:@"Body force"];
-    if ([bodiesValues objectAtIndex:body_id] == nil) {
+    bodies = [model bodies];
+    if ([bodies objectAtIndex:body_id] == nil) {
         return isPassive;
     } else {
-        bf_id = [[bodiesValues objectAtIndex:body_id] intValue];
+        bf_id = [[[bodies objectAtIndex:body_id] objectForKey:@"Body force"] intValue];
     }
     
     passName = [solution variableName];
     str = " passive";
     strcat(passName, str);
     
-    bodyForces = [model returnBodyForces];
+    bodyForces = [model bodyForces];
     // Returns a bodyForce object at index bf_id
     bodyForceAtBodyID = [bodyForces objectAtIndex:bf_id-1];
-    aString = [NSString stringWithCString:str encoding:NSUTF8StringEncoding];
+    aString = [NSString stringWithCString:str encoding:NSASCIIStringEncoding];
     
-    found = [valueList listGetReal:model :[bodyForceAtBodyID returnValuesList] :aString :nbNodes :element->NodeIndexes :passive];
+    found = [listUtil listGetReal:model inArray:[bodyForceAtBodyID returnValuesList] forVariable:aString numberOfNodes:nbNodes indexes:element->NodeIndexes resultArray:passive minValue:NULL maxValue:NULL];
     if (found == YES) {
         if ( count(passive, '>', 0.0, nbNodes) > count(passive, '<', 0.0, nbNodes) ) {
             isPassive = YES;
@@ -1635,13 +1692,13 @@ static int PRECOND_VANKA     =  560;
     if ([solution matrixFormat] == MATRIX_CRS) {
         
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix CRS_glueLocalMatrix:solution :stiffMatrix :n :dofs :nodeIndexes];
+        [crsMatrix glueLocalMatrixInGlobal:solution :stiffMatrix :n :dofs :nodeIndexes];
         
     }
     else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
         
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix BAND_glueLocalMatrix:solution :stiffMatrix :n :dofs :nodeIndexes];
+        [bandMatrix glueLocalMatrixInGlobal:solution :stiffMatrix :n :dofs :nodeIndexes];
         
     }
     
@@ -1668,15 +1725,646 @@ static int PRECOND_VANKA     =  560;
     
 }
 
+#pragma mark Loads
+
+-(void)FEMKernel_setElementLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (BOOL *)doneLoad: (int)n: (int)dof: (int)ndofs {
+    
+    int j, k, l, k1;
+    double *work;
+    double ***workA;
+    FEMListUtilities *listUtil;
+    FEMValueList *valueList;
+    NSString *str;
+    BOOL stat;
+    
+    work = doublevec(0, n-1);
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    if (dof >= 0) {
+        
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        if (stat == NO) {
+            [name appendString:@" dofs"];
+            str = [NSString stringWithString:name];
+            stat = [listUtil listGetReal:model inArray:values forVariable:str numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        }
+        
+    } else {
+        
+        valueList = [listUtil listFindVariable:name inArray:values];
+        if (valueList != nil) workA = d3tensor(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]-1, 0, n-1);
+        
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+    }
+    
+    if (stat == YES) {
+    
+        for (j=0; j<n; j++) {
+            k = [solution variablePerm:indexes[j]];
+            
+            if (doneLoad[k] == YES) continue;
+            doneLoad[k] = YES;
+            
+            if (k >= 0) {
+                if (dof >= 0) {
+                    k = ndofs * k + dof;
+                    [solution setMatrixRHS:k :[solution matrixRHS:k] + work[j]];
+                } else {
+                    for (l=0; l<min(ndofs, [valueList sizeFValues1]); l++) {
+                        k1 = ndofs * k + l;
+                        [solution setMatrixRHS:k1 :[solution matrixRHS:k1] + workA[l][0][j]];
+                    }
+                    
+                }
+            }
+        }
+    
+    }
+    
+    if (workA != NULL) free_d3tensor(workA, 0,  [valueList sizeFValues1]-1, 0,  [valueList sizeFValues2]-1, 0, n-1);
+    workA = NULL;
+    
+    free_dvector(work, 0, n-1);
+    valueList = nil;
+    
+}
+
+-(void)FEMKernel_setPointLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (int)n: (int)dof: (int)ndofs {
+    
+    int j, k, l, k1;
+    double *work;
+    double ***workA;
+    FEMListUtilities *listUtil;
+    FEMValueList *valueList;
+    BOOL stat;
+    
+    work = doublevec(0, n-1);
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    if (dof >= 0) {
+        
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        
+    } else {
+        
+        valueList = [listUtil listFindVariable:name inArray:values];
+        if (valueList != nil) workA = d3tensor(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]-1, 0, n-1);
+        
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+    }
+    
+    if (stat == YES) {
+        
+        for (j=0; j<n; j++) {
+            
+            if (indexes[j] > [solution variableSizeOfPerm] || indexes[j] < 0) {
+                warnfunct("FEMKernel_setPointLoads", "Invalid node number");
+                continue;
+            }
+            
+            k = [solution variablePerm:indexes[j]];
+            
+            if (k >= 0) {
+                if (dof >= 0) {
+                    k = ndofs * k + dof;
+                    [solution setMatrixRHS:k :[solution matrixRHS:k] + work[j]];
+                } else {
+                    for (l=0; l<min(ndofs, [valueList sizeFValues1]); l++) {
+                        k1 = ndofs * k + l;
+                        [solution setMatrixRHS:k1 :[solution matrixRHS:k1] + workA[l][0][j]];
+                    }
+                    
+                }
+            }
+        }
+        
+    }
+    
+    if (workA != NULL) free_d3tensor(workA, 0,  [valueList sizeFValues1]-1, 0,  [valueList sizeFValues2]-1, 0, n-1);
+    workA = NULL;
+    
+    free_dvector(work, 0, n-1);
+    valueList = nil;
+    
+}
+
+#pragma mark Element and point values
+
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+    
+    int i, j, k, l, m, dim, k1;
+    BOOL checkNT, stat, all;
+    double *condition, *work, *rotvec;
+    double ***workA;
+    NSMutableString *str;
+    FEMListUtilities *listUtil;
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    FEMValueList *valueList;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    condition = doublevec(0, n-1);
+    work = doublevec(0, n-1);
+    rotvec = doublevec(0, 2);
+    
+    dim = [model dimension];
+    
+    str = [NSMutableString stringWithString:name];
+    [str appendString:@" dofs"];
+    if (dof >= 0) {
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        if (stat == NO) {
+            stat = [listUtil listGetReal:model inArray:values forVariable:str numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        }
+    } else {
+        valueList = [listUtil listFindVariable:name inArray:values];
+        if (valueList != nil) workA = d3tensor(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]-1, 0, n-1);
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+    }
+    
+    if (stat == YES) {
+        
+        if (conditional == YES) {
+            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+            conditional = (conditional == YES && stat == YES) ? YES : NO;
+        }
+        
+        // Check for nodes belonging to n-t boundary getting set by other BCs
+        checkNT = NO;
+        if ([solution normalTangentialNOFNodes] > 0 && dof >= 0) {
+            checkNT = YES;
+            all = YES;
+            for (i=0; i<n; i++) {
+                k = indexes[i];
+                if ([solution boundaryReorder:k] < 0) {
+                    continue;
+                } else {
+                    all = NO;
+                    break;
+                }
+            }
+            if (all == YES) checkNT = NO;
+            if ([listUtil listGetLogical:model inArray:values forVariable:[solution normalTangentialName] info:stat] == YES) checkNT = NO;
+        }
+        
+        @autoreleasepool {
+            for (j=0; j<n; j++) {
+                if (conditional == YES && condition[j] < 0.0) continue;
+                k = [solution variablePerm:indexes[j]];
+                
+                if (k >= 0) {
+                    if (dof >= 0) {
+                        m = 0;
+                        if ([solution normalTangentialNOFNodes] > 0) m = [solution boundaryReorder:indexes[j]];
+                        if (m >= 0 && checkNT == YES) {
+                            memset( rotvec, 0.0, (3*sizeof(rotvec)) );
+                            rotvec[dof] = 1.0;
+                            [self FEMKernel_rotateNTSystem:solution :rotvec :indexes[j]];
+                            for (k=0; k<dim; k++) {
+                                if (fabs(rotvec[k]) > 1.0e-8) {
+                                    if ([solution ntElement:m :k] == elno) {
+                                        l = [solution variableDofs] * [solution variablePerm:indexes[j]] + k;
+                                        if ([solution ntZeroingDone:m :k] == NO) {
+                                            [solution setMatrixRHS:l :0.0];
+                                            [self zeroTheNumberOfRows:l inSolutionMatrix:solution];
+                                            [self setMatrixElement:solution :l :l :1.0];
+                                            [solution setNtZeroingDone:m :k :YES];
+                                        }
+                                        [solution setMatrixRHS:l :[solution matrixRHS:l]+rotvec[k]+work[j]];
+                                    }
+                                }
+                            }
+                        } else {
+                            k = offset + [solution variableDofs] * k + dof;
+                            if ([solution matrixFormat] == MATRIX_SBAND) {
+                                bandMatrix = [[FEMMatrixBand alloc] init];
+                                [bandMatrix sBand_setDirichlet:solution :k :work[j]];
+                            } else if ([solution matrixFormat] == MATRIX_CRS && [solution matrixSymmetric] == 1) {
+                                crsMatrix = [[FEMMatrixCRS alloc] init];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k :work[j]];
+                            } else {
+                                [solution setMatrixRHS:k :work[j]];
+                                [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                                [self setMatrixElement:solution :k :k :1.0];
+                            }
+                        }
+                    } else {
+                        for (l=0; l<min([solution variableDofs], [valueList sizeFValues1]); l++) {
+                            k1 = offset + [solution variableDofs]*k + l;
+                            if ([solution matrixFormat] == MATRIX_SBAND) {
+                                bandMatrix = [[FEMMatrixBand alloc] init];
+                                [bandMatrix sBand_setDirichlet:solution :k1 :workA[l][0][j]];
+                            } else if ([solution matrixFormat] == MATRIX_CRS && [solution matrixSymmetric] == 1) {
+                                crsMatrix = [[FEMMatrixCRS alloc] init];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA[l][0][j]];
+                            } else {
+                                [solution setMatrixRHS:k1 :workA[l][0][j]];
+                                [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
+                                [self setMatrixElement:solution :k1 :k1 :1.0];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    valueList = nil;
+    free_dvector(condition, 0, n-1);
+    free_dvector(work, 0, n-1);
+    free_dvector(rotvec, 0, 2);
+    if (workA != NULL) free_d3tensor(workA, 0,  [valueList sizeFValues1]-1, 0,  [valueList sizeFValues2]-1, 0, n-1);
+    workA = NULL;
+    
+}
+
+-(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+    
+    int j, k, l, k1;
+    BOOL stat;
+    double *condition, *work;
+    double ***workA;
+    FEMListUtilities *listUtil;
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    FEMValueList *valueList;
+    
+    condition = doublevec(0, n-1);
+    work = doublevec(0, n-1);
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    if (dof >= 0) {
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+    } else {
+        valueList = [listUtil listFindVariable:name inArray:values];
+        if (valueList != nil) workA = d3tensor(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]-1, 0, n-1);
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+    }
+    
+    if (stat == YES) {
+        
+        memset(condition, 1.0, (n*sizeof(condition)) );
+        if (conditional == YES) {
+            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+            conditional = (conditional == YES && stat == YES) ? YES : NO;
+        }
+        
+        @autoreleasepool {
+            for (j=0; j<n; j++) {
+                if (conditional == YES && condition[j] < 0.0) continue;
+                if (indexes[j] > [solution variableSizeOfPerm] || indexes[j] < 0) {
+                    warnfunct("FEMKernel_setPointValues", "Invalid node number");
+                    continue;
+                }
+                
+                k = [solution variablePerm:indexes[j]];
+                
+                if (k >= 0) {
+                    if (dof >= 0) {
+                        k = offset + [solution variableDofs]*k + dof;
+                        if ([solution matrixFormat] == MATRIX_SBAND) {
+                            bandMatrix = [[FEMMatrixBand alloc] init];
+                            [bandMatrix sBand_setDirichlet:solution :k :work[j]];                        
+                        } else if ([solution matrixFormat] == MATRIX_CRS && [solution matrixSymmetric] == 1) {
+                            crsMatrix = [[FEMMatrixCRS alloc] init];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution :k :work[j]];
+                        } else {
+                            [solution setMatrixRHS:k :work[j]];
+                            [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                            [self setMatrixElement:solution :k :k :1.0];
+                        }
+                    } else {
+                        for (l=0; l<min([solution variableDofs], [valueList sizeFValues1]); l++) {
+                            k1 = offset + [solution variableDofs]*k + l;
+                            if ([solution matrixFormat] == MATRIX_SBAND) {
+                                bandMatrix = [[FEMMatrixBand alloc] init];
+                                [bandMatrix sBand_setDirichlet:solution :k1 :workA[l][0][j]];                        
+                            } else if ([solution matrixFormat] == MATRIX_CRS && [solution matrixSymmetric] == 1) {
+                                crsMatrix = [[FEMMatrixCRS alloc] init];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA[l][0][j]];
+                            } else {
+                                [solution setMatrixRHS:k1 :workA[l][0][j]];
+                                [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
+                                [self setMatrixElement:solution :k1 :k1 :1.0];
+                            }                        
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    valueList = nil;
+    free_dvector(condition, 0, n-1);
+    free_dvector(work, 0, n-1);
+    
+    if (workA != NULL) free_d3tensor(workA, 0,  [valueList sizeFValues1]-1, 0,  [valueList sizeFValues2]-1, 0, n-1);
+    workA = NULL;    
+    
+}
+
+#pragma mark Periodics
+
+-(void)FEMKernel_setPeriodicBoundariesPass1:(FEMModel *)model: (FEMSolution *)solution: (NSMutableString *)name: (int)dof: (int)this: (BOOL *)done {
+/*****************************************************************************************************************
+    A first pass sum together the rows related to the periodic dofs.
+ 
+    FEMModel *model           -> class containing the model
+    FEMSolution *solution     -> solution class containing the matrix and variable
+    NSMutableString *name     -> name of the dof to be set
+    int dof                   -> the order number of the dof
+ 
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    beginning of the simulation by the bandwidth optimization
+ 
+*****************************************************************************************************************/
+    
+    int i, j, k, l, m, n, ii, p, q, nn;
+    double scale;
+    BOOL stat;
+    char *cname;
+    Matrix_t *a, *b, *projector;
+    Variable_t *variables, *var;
+    FEMListUtilities *listUtil;
+    FEMUtilities *util;
+    FEMMatrixCRS *crsMatrix;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    NSArray *boundaries;
+    NSMutableString *str1, *str2, *str3;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    util = [[FEMUtilities alloc] init];
+    crsMatrix = [[FEMMatrixCRS alloc] init];
+    
+    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    [str1 appendString:name];
+    
+    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    [str2 appendString:name];
+    
+    str3 = [NSMutableString stringWithString:@"Periodic BC scale "];
+    [str3 appendString:name];
+
+    boundaries = [model boundaryConditions];
+    boundaryConditionAtId = [boundaries objectAtIndex:this];
+    
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str1 info:stat] == YES) {
+        scale = -1.0;
+    } else if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str2 info:stat] == YES) {
+        scale = 1.0;
+    } else {
+        scale = [listUtil listGetConstReal:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str3 info:stat minValue:NULL maxValue:NULL];
+        if (stat == NO) return;
+    }
+    
+    projector = [boundaryConditionAtId returnPMatrix];
+    if (projector != NULL) return;
+    
+    variables = [model returnPointerToVariables];
+    
+    // For explicit conditions just create the dependency almost like a normal Dirichlet BC, 
+    // for implicit one (otherwise) do the assembly of the projector
+    str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
+    str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str1 info:stat] == YES) {
+        
+        cname = (char *)[name UTF8String];
+        var = getVariable(variables, cname);
+        
+        for (i=0; i<projector->NumberOfRows; i++) {
+            ii = projector->InvPerm[i];
+            k = [solution variablePerm:ii];
+            if (done[ii] == NO && k >= 0) {
+                k = [solution variableDofs] * k + dof;
+                [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                [self addToMatrixElement:solution :k :k :1.0];
+                [solution setMatrixRHS:k :0.0];
+                
+                for (l=projector->Rows[i]; l<=projector->Rows[i+1]-1; l++) {
+                    if (projector->Cols[l] < 0) continue;
+                    m = [solution variablePerm:projector->Cols[l]];
+                    if (m >= 0) {
+                        m = [solution variableDofs] * m + dof;
+                        [solution setMatrixRHS:k :[solution matrixRHS:k]-scale*projector->Values[l]*var->Values[m]];
+                    }
+                }
+            }
+        }
+        
+    } else if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str2 info:stat] == YES) {
+        
+        b = NULL;
+        a = [solution matrixReturnPointerToConstraintMatrix];
+        while (a != NULL) {
+            b = projector->Child;
+            while (b != NULL) {
+                if (a == b) break;
+                b = b->Child;
+            }
+            if (a == b) break;
+            a = a->ConstraintMatrix;
+        }
+        
+        if (a != b) {
+            a = [util allocateMatrix];
+            a->ConstraintMatrix = [solution matrixReturnPointerToConstraintMatrix];
+            [solution matrixAssignConstraintMatrix:a];
+            
+            a->Child = projector->Child;
+            projector->Child = a;
+            
+            n = [solution variableDofs]*projector->NumberOfRows;
+            a->NumberOfRows = n;
+            
+            a->RHS = doublevec(0, n-1);
+            a->Rows = intvec(0, (n+1)-1);
+            a->Cols = intvec(0, (projector->sizeCols*pow([solution variableDofs], 2.0)+n)-1);
+            a->Values = doublevec(0, (projector->sizeValues*pow([solution variableDofs], 2.0)+n)-1);
+            
+            a->Rows[0] = 0;
+            for (i=0; i<projector->NumberOfRows; i++) {
+                n = projector->Rows[i+1]-projector->Rows[i];
+                for (j=0; j<[solution variableDofs]; j++) {
+                    k = [solution variableDofs]*i+j;
+                    a->Rows[k+1] = a->Rows[k]+[solution variableDofs]*n;
+                }
+            }
+            
+            for (i=0; i<projector->NumberOfRows; i++) {
+                k = [solution variablePerm:projector->InvPerm[i]];
+                for (p=0; p<[solution variableDofs]; p++) {
+                    n = a->Rows[[solution variableDofs]*i+p];
+                    a->Cols[n] = [solution variableDofs]*k+p;
+                    for (j=projector->Rows[i]; j<=projector->Rows[i+1]-1; j++) {
+                        m = [solution variablePerm:projector->Cols[j]];
+                        if (m >= 0) {
+                            for (q=0; q<[solution variableDofs]; q++) {
+                                n++;
+                                a->Cols[n] = [solution variableDofs]*m+q;
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            [crsMatrix sortInMatrix:a :NULL];
+            
+            memset( a->RHS, 0.0, (n*sizeof(a->RHS)) );
+            memset( a->Values, 0.0, ((projector->sizeValues*pow([solution variableDofs], 2.0)+n)*sizeof(a->Values)) );
+        }
+        
+        for (i=0; i<projector->NumberOfRows; i++) {
+            k = [solution variablePerm:projector->InvPerm[i]];
+            if (k < 0) continue;
+            
+            [util zeroTheNumberOfRows:[solution variableDofs]*i+dof inMatrix:a];
+            [util setMatrixElement:a :[solution variableDofs]*i+dof :[solution variableDofs]*k+dof :scale];
+            
+            for (j=projector->Rows[i]; j<=projector->Rows[i+1]-1; j++) {
+                m = [solution variablePerm:projector->Cols[j]];
+                if (m >= 0) [util setMatrixElement:a :[solution variableDofs]*i+dof :[solution variableDofs]*m+dof :projector->Values[j]];                
+            }
+        }
+        
+    } else {
+        for (i=0; i<projector->NumberOfRows; i++) {
+            ii = projector->InvPerm[i];
+            k = [solution variablePerm:ii];
+            if (done[ii] == NO && k >= 0) {
+                k = [solution variableDofs]*k+dof;
+                for (l=projector->Rows[i]; l<=projector->Rows[i+1]-1; l++) {
+                    if (projector->Cols[l] < 0 || projector->Values[l] == 0.0) continue;
+                    
+                    m = [solution variablePerm:projector->Cols[l]];
+                    if (m >= 0 ) {
+                        m = [solution variableDofs]*m+dof;
+                        for (nn=[solution matrixRows:k]; nn<=[solution matrixRows:k+1]-1; nn++) {
+                            [self addToMatrixElement:solution :m :[solution matrixCols:nn] :projector->Values[l]*[solution matrixValues:nn]];
+                        }
+                        [solution setMatrixRHS:m :[solution matrixRHS:m]+projector->Values[l]*[solution matrixRHS:k]];
+                    }
+                }
+            }
+            done[ii] = YES;
+        }
+    }
+    
+    boundaries = nil;
+    projector = NULL;
+    variables = NULL;
+    
+}
+
+-(void)FEMKernel_setPeriodicBoundariesPass2:(FEMModel *)model: (FEMSolution *)solution: (NSMutableString *)name: (int)dof: (int)this: (BOOL *)done {
+/*****************************************************************************************************************
+    At second pass add the [...1.. -1 ...] row structure that results from the equality of the pediodic dofs.
+ 
+    FEMModel *model           -> class containing the model
+    FEMSolution *solution     -> solution class containing the matrix and variable
+    NSMutableString *name     -> name of the dof to be set
+    int dof                   -> the order number of the dof
+ 
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    beginning of the simulation by the bandwidth optimization
+ 
+*****************************************************************************************************************/
+    
+    int i, k, l, m, ii;
+    double scale;
+    BOOL stat;
+    Matrix_t *projector;
+    FEMListUtilities *listUtil;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    NSArray *boundaries;
+    NSMutableString *str1, *str2, *str3;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+
+    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    [str1 appendString:name];
+    
+    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    [str2 appendString:name];
+    
+    str3 = [NSMutableString stringWithString:@"Periodic BC scale "];
+    [str3 appendString:name];
+    
+    boundaries = [model boundaryConditions];
+    boundaryConditionAtId = [boundaries objectAtIndex:this];
+    
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str1 info:stat] == YES) {
+        scale = -1.0;
+    } else if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str2 info:stat] == YES) {
+        scale = 1.0;
+    } else {
+        scale = [listUtil listGetConstReal:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str3 info:stat minValue:NULL maxValue:NULL];
+        if (stat == NO) return;
+    }
+    
+    projector = [boundaryConditionAtId returnPMatrix];
+    if (projector != NULL) return;
+    
+    str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
+    str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str1 info:stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str2 info:stat] == YES) return;
+    
+    // Do the assembly of the projector
+    for (i=0; i<projector->NumberOfRows; i++) {
+        ii = projector->InvPerm[i];
+        k = [solution variablePerm:ii];
+        if (done[ii] == NO && k >= 0) {
+            k = [solution variableDofs]*k + dof;
+            [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+            for (l=projector->Rows[i]; l<=projector->Rows[i+1]-1; l++) {
+                if (projector->Cols[l] < 0) continue;
+                m = [solution variablePerm:projector->Cols[l]];
+                if (m >= 0) {
+                    m = [solution variableDofs]*m + dof;
+                    [self addToMatrixElement:solution :k :m :projector->Values[l]];
+                }
+            }
+            [solution setMatrixRHS:k :0.0];
+            [self addToMatrixElement:solution :k :k :scale];
+        }
+        done[ii] = YES;
+    }
+    
+    boundaries = nil;
+    projector = NULL;
+    
+}
 
 #pragma mark Public methods...
 
 - (id)init
 {
+    int i;
+    
     self = [super init];
     if (self) {
         // Initialization code here.
         indexStore = intvec(0, 511);
+        sizeIndexStore = 512;
+        memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
+        
+        lineEM = intmatrix(0, 0, 0, 1);
+        triangleEM = intmatrix(0, 2, 0, 1);
+        quadEM = intmatrix(0, 3, 0, 1);
+        tetraEM = intmatrix(0, 5, 0, 1);
+        prismEM = intmatrix(0, 7, 0, 1);
+        wedgeEM = intmatrix(0, 8, 0, 1);
+        brickEM = intmatrix(0, 11, 0, 1);
+        
+        for (i=0; i<8; i++) {
+            initialized[i] = NO;
+        }
+        
     }
     
     return self;
@@ -1684,16 +2372,109 @@ static int PRECOND_VANKA     =  560;
 
 - (void)dealloc
 {
+
+}
+
+-(void)deallocation
+{
     free_ivector(indexStore, 0, 511);
+    free_imatrix(lineEM, 0, 0, 0, 1);
+    free_imatrix(triangleEM, 0, 2, 0, 1);
+    free_imatrix(quadEM, 0, 3, 0, 1);
+    free_imatrix(tetraEM, 0, 5, 0, 1);
+    free_imatrix(prismEM, 0, 7, 0, 1);
+    free_imatrix(wedgeEM, 0, 8, 0, 1);
+    free_imatrix(brickEM, 0, 11, 0, 1);
+    
+    free_ivector(g_Ind, 0, size_g_Ind-1);
+    g_Ind = NULL;
+    
+    free_ivector(l_Ind, 0, size_l_Ind-1);
+    l_Ind = NULL;
+    
+    free_dmatrix(kernStiff, 0, size1kernStiff-1, 0, size2kernStiff-1);
+    kernStiff = NULL;
+    
+     
+    free_dvector(kernWork, 0, sizekernWork-1);
+    kernWork = NULL;
+    
+}
+
+-(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name resultArray:(double *)result {
+    
+    int n;
+    BOOL found;
+    FEMListUtilities *listUtil;
+    
+    if (element != NULL) {
+        n = [self getNumberOfNodesForElement:element];
+    } else {
+        return NO;
+    }
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    found = [listUtil listGetReal:model inArray:list forVariable:name numberOfNodes:n indexes:element->NodeIndexes resultArray:result minValue:NULL maxValue:NULL];
+    
+    return found;
+    
 }
 
 -(int)isPElement:(Element_t *)element {
     
-    if (element->PDefs != NULL) {
+    if (element->Pdefs != NULL) {
         return 1;
     } else {
         return 0;
     }
+}
+
+-(void)getNodes:(FEMSolution *)solution inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int)nd {
+    
+    int i, n, nb, sz, sz1;
+    FEMMesh *mesh;
+    
+    mesh = [solution returnPointerToMesh];
+    
+    n = max([mesh maxElementNodes], [mesh maxElementDofs]);
+    
+    if (nd < n) {
+        errorfunct("getNodes", "Size of nodes structure smaller than the required max(maxElementNodes, maxElementDofs).");
+    }
+    
+    n = element->Type.NumberOfNodes;
+    
+    for (i=0; i<n; i++) {
+        nodes[i].x = [mesh GlobalNodes_x:element->NodeIndexes[i]];
+        nodes[i].y = [mesh GlobalNodes_y:element->NodeIndexes[i]];
+        nodes[i].z = [mesh GlobalNodes_z:element->NodeIndexes[i]];
+    }
+    
+    sz = max([mesh maxElementNodes], [mesh maxElementDofs]); 
+    if ( sz > n) {
+        for (i=n; i<sz; i++) {
+            nodes[i].x = 0.0;
+            nodes[i].y = 0.0;
+            nodes[i].z = 0.0;
+        }
+    }
+    
+    sz1 = [mesh sizeOfGlobalNodes];
+    if (sz1 > [mesh numberOfNodes]) {
+        memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
+        nb = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+        for (i=n; i<nb; i++) {
+            if (indexStore[i] >= 0 && indexStore[i] < sz1) {
+                nodes[i].x = [mesh GlobalNodes_x:indexStore[i]];
+                nodes[i].y = [mesh GlobalNodes_y:indexStore[i]];
+                nodes[i].z = [mesh GlobalNodes_z:indexStore[i]];
+            }
+        }
+    }
+    
+    mesh = nil;
+    
 }
 
 -(int)getElementFamily:(Element_t *)element {
@@ -1788,7 +2569,7 @@ static int PRECOND_VANKA     =  560;
         if ([self getElementFamily:element] == 2) {
             if (parent->EdgeIndexes != NULL) {
                 if ([self isPElement:element] == 1) {
-                    ind = element->PDefs->LocalNumber;
+                    ind = element->Pdefs->LocalNumber;
                 } else {
                     for (ind=0; ind<parent->Type.NumberOfEdges; ind++) {
                         k = 0;
@@ -1811,7 +2592,7 @@ static int PRECOND_VANKA     =  560;
         else if ([self getElementFamily:element] == 3 || [self getElementFamily:element] == 4) {
             if (parent->FaceIndexes != NULL) {
                 if ([self isPElement:element] == 1) {
-                    ind = element->PDefs->LocalNumber;
+                    ind = element->Pdefs->LocalNumber;
                 } else {
                     for (ind=0; ind<parent->Type.NumberOfFaces; ind++) {
                         k = 0;
@@ -1842,9 +2623,123 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    mesh = NULL;
+    mesh = nil;
     
     return nb;
+    
+}
+
+-(int)sgetElementDofs:(FEMSolution *)solution forElement:(Element_t *)element atIndexes:(int *)indexes {
+    
+    int nb, i, j, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs;
+    BOOL gb;
+    Element_t *parent;
+    FEMMesh *mesh;
+    
+    mesh = [solution returnPointerToMesh];
+    
+    nb = 0;
+    
+    if ([solution solutionInfoForKey:@"Discontinuous galerkin"] != nil) {
+        if ([[solution solutionInfoForKey:@"Discontinuous galerkin"] boolValue] == YES) {
+            
+            for (i=0; i<element->DGDOFs; i++) {
+                indexes[nb] = element->DGIndexes[i];
+                nb++;
+            }
+            
+            if (element->BoundaryInfo != NULL) {
+                if (element->BoundaryInfo->Left != NULL) {
+                    for (i=0; element->BoundaryInfo->Left->DGDOFs; i++) {
+                        indexes[nb] = element->BoundaryInfo->Left->DGIndexes[i];
+                        nb++;
+                    }
+                }
+                if (element->BoundaryInfo->Right != NULL) {
+                    for (i=0; i<element->BoundaryInfo->Right->DGDOFs; i++) {
+                        indexes[nb] = element->BoundaryInfo->Right->DGIndexes[i];
+                        nb++;
+                    }
+                }
+            }
+            
+            if (nb > 0) return nb;
+            
+        }
+    }
+    
+    for (i=0; i<element->NDOFs; i++) {
+        indexes[nb] = element->NodeIndexes[i];
+        nb++;
+    }
+    
+    faceDofs = mesh.maxFaceDofs;
+    edgeDofs = mesh.maxEdgeDofs;
+    bubbleDofs = mesh.maxBdofs;
+    
+    if (element->EdgeIndexes != NULL) {
+        for (j=0; j<element->Type.NumberOfEdges; j++) {
+            edofs = [mesh Edges_BDOFs:element->EdgeIndexes[j]];
+            for (i=0; i<edofs; i++) {
+                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]-1) + i + mesh.numberOfNodes;
+                nb++;
+            }
+        }
+    }
+    
+    if (element->FaceIndexes != NULL) {
+        for (j=0; j<element->Type.NumberOfFaces; j++) {
+            fdofs = [mesh Faces_BDOFs:element->FaceIndexes[j]];
+            for (i=0; i<fdofs; i++) {
+                indexes[nb] = faceDofs*(element->FaceIndexes[j]-1) + i + mesh.numberOfNodes + 
+                edgeDofs*mesh.numberOfEdges;
+                nb++;
+            }
+        }
+    }
+    
+    if ([solution solutionInfoForKey:@"Bubbles in global system"] != nil) {
+        gb = [[solution solutionInfoForKey:@"Bubbles in global system"] boolValue];
+    } else {
+        gb = YES;
+    }
+    
+    if (element->BoundaryInfo != NULL) {
+        
+        if ([self isPElement:element] == NO) return nb;
+        
+        parent = element->BoundaryInfo->Left;
+        if (parent == NULL) parent = element->BoundaryInfo->Right;
+        if (parent == NULL) return nb;
+        
+        if (parent->EdgeIndexes != NULL) {
+            edofs = element->BDOFs;
+            for (i=0; i<edofs; i++) {
+                indexes[nb] = edgeDofs*(parent->EdgeIndexes[element->Pdefs->LocalNumber-1]-1) + i + [mesh numberOfNodes];
+                nb++;
+            }
+        }
+        
+        if (parent->FaceIndexes != NULL) {
+            fdofs = element->BDOFs;
+            for (i=0; i<fdofs; i++) {
+                indexes[nb] = faceDofs*(parent->FaceIndexes[element->Pdefs->LocalNumber-1]-1) + i + [mesh numberOfNodes] + edgeDofs*[mesh numberOfEdges];
+                nb++;
+            }
+        }
+    } else if (gb == YES) {
+        if (element->BubbleIndexes != NULL) {
+            for (i=0; i<element->BDOFs; i++) {
+                indexes[nb] = faceDofs*mesh.numberOfFaces + mesh.numberOfNodes + edgeDofs*mesh.numberOfEdges + element->BubbleIndexes[i];
+                nb++;
+            }
+        }
+        
+    }
+    
+    mesh = nil;
+    
+    return nb;    
     
 }
 
@@ -1859,7 +2754,7 @@ static int PRECOND_VANKA     =  560;
     NSArray *boundaryConditions;
     FEMBoundaryCondition *boundaryConditionAtId;
     
-    boundaryConditions = [model returnBoundaryConditions];
+    boundaryConditions = [model boundaryConditions];
     
     for (i=0; i<[model numberOfBoundaryConditions]; i++) {
         bc_id++;
@@ -1880,12 +2775,1443 @@ static int PRECOND_VANKA     =  560;
     NSArray *boundaryConditions;
     FEMBoundaryCondition *boundaryConditionAtId;
     
-    boundaryConditions = [model returnBoundaryConditions];
+    boundaryConditions = [model boundaryConditions];
     // Returns a boundaryCondition object at index bc_id
     bc_id = [self getBoundaryConditionID:model forElement:element];
     boundaryConditionAtId = [boundaryConditions objectAtIndex:bc_id-1];
     
-    return [boundaryConditionAtId returnValuesList];
+    if (boundaryConditionAtId != nil) {
+        return [boundaryConditionAtId returnValuesList];
+    } else {
+        return nil;
+    }
+    
+}
+
+-(Element_t *)getBoundaryElement:(FEMSolution *)solution atIndex:(int)index {
+    
+    FEMMesh *mesh;
+    Element_t *element;
+    
+    mesh = [solution returnPointerToMesh];
+    
+    if (index >= 0 && index < [mesh numberOfBoundaryElements]) {
+        
+        element = [mesh returnElementAtIndex:[mesh numberOfBulkElements]+index];
+    } else {
+        errorfunct("getBoundaryElement", "Invalid element number requested at index:");
+        printf("%d\n", index);
+    }
+    
+    mesh = nil;
+    return element;
+}
+
+-(int **)getEdgeMap:(int)elementFamily {
+    
+    int **edgeMap;
+    
+    switch (elementFamily) {
+        case 2:
+            edgeMap = lineEM;
+            break;
+        case 3:
+            edgeMap = triangleEM;
+            break;
+        case 4:
+            edgeMap = quadEM;
+            break;
+        case 5:
+            edgeMap = tetraEM;
+            break;
+        case 6:
+            edgeMap = prismEM;
+            break;
+        case 7:
+            edgeMap = wedgeEM;
+            break;
+        case 8:
+            edgeMap = brickEM;
+            break;
+    }
+    
+    if (initialized[elementFamily-1] == NO) {
+        initialized[elementFamily-1] = YES;
+        switch (elementFamily) {
+            case 2:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                break;
+            case 3:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][1] = 2;
+                
+                edgeMap[2][0] = 2;
+                edgeMap[2][1] = 0;
+                break;
+            case 4:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][1] = 2;
+                
+                edgeMap[2][0] = 2;
+                edgeMap[2][1] = 3;
+                
+                edgeMap[3][0] = 3;
+                edgeMap[3][1] = 0;
+                break;
+            case 5:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][0] = 2;
+                
+                edgeMap[2][0] = 2;
+                edgeMap[2][1] = 0;
+                
+                edgeMap[3][0] = 0;
+                edgeMap[3][1] = 3;
+                
+                edgeMap[4][0] = 1;
+                edgeMap[4][1] = 3;
+                
+                edgeMap[5][0] = 2;
+                edgeMap[5][1] = 3;
+                break;
+            case 6:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][1] = 2;
+                
+                edgeMap[2][0] = 3;
+                edgeMap[2][1] = 2;
+                
+                edgeMap[3][0] = 0;
+                edgeMap[3][1] = 3;
+                
+                edgeMap[4][0] = 0;
+                edgeMap[4][1] = 4;
+                
+                edgeMap[5][0] = 1;
+                edgeMap[5][1] = 4;
+                
+                edgeMap[6][0] = 2;
+                edgeMap[6][1] = 4;
+                
+                edgeMap[7][0] = 3;
+                edgeMap[7][1] = 4;
+                break;
+            case 7:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][1] = 2;
+                
+                edgeMap[2][0] = 2;
+                edgeMap[2][1] = 0;
+                
+                edgeMap[3][0] = 3;
+                edgeMap[3][1] = 4;
+                
+                edgeMap[4][0] = 4;
+                edgeMap[4][1] = 5;
+                
+                edgeMap[5][0] = 5;
+                edgeMap[5][1] = 3;
+                
+                edgeMap[6][0] = 0;
+                edgeMap[6][1] = 3;
+                
+                edgeMap[7][0] = 1;
+                edgeMap[7][1] = 4;
+                
+                edgeMap[8][0] = 2;
+                edgeMap[8][1] = 5;
+                break;
+            case 8:
+                edgeMap[0][0] = 0;
+                edgeMap[0][1] = 1;
+                
+                edgeMap[1][0] = 1;
+                edgeMap[1][1] = 2;
+                
+                edgeMap[2][0] = 3;
+                edgeMap[2][1] = 2;
+                
+                edgeMap[3][0] = 0;
+                edgeMap[3][1] = 3;
+                
+                edgeMap[4][0] = 4;
+                edgeMap[4][1] = 5;
+                
+                edgeMap[5][0] = 5;
+                edgeMap[5][1] = 6;
+                
+                edgeMap[6][0] = 7;
+                edgeMap[6][1] = 6;
+                
+                edgeMap[7][0] = 4;
+                edgeMap[7][1] = 7;
+                
+                edgeMap[8][0] = 0;
+                edgeMap[8][1] = 4;
+                
+                edgeMap[9][0] = 1;
+                edgeMap[9][1] = 5;
+                
+                edgeMap[10][0] = 2;
+                edgeMap[10][1] = 6;
+                
+                edgeMap[11][0] = 3;
+                edgeMap[11][1] = 7;
+                break;
+        }
+    }
+    
+    return edgeMap;
+    
+}
+
+-(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution {
+    
+    BOOL l;
+    int i, n;
+    int *perm;
+    
+    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    
+    perm = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        perm[i] = [solution variablePerm:indexStore[i]];
+    }
+    
+    if (all(perm, '>', 0, n) == 1) {
+        l = YES;
+    } else {
+        l = NO;
+    }
+
+    free_ivector(perm, 0, n-1);
+    
+    return l;
+    
+}
+
+-(void)checkNormalTangentiality:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes atBoundary:(int)bc variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+    
+    int i, j, k, m, dim;
+    double *condition, *rotvec;
+    BOOL stat, all;
+    NSArray *boundaries;
+    FEMListUtilities *listUtil;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    condition = doublevec(0, n-1);
+    rotvec = doublevec(0, 2);
+    
+    dim = [model dimension];
+    
+    boundaries = [model boundaryConditions];
+    boundaryConditionAtId = [boundaries objectAtIndex:bc];
+    
+    if (dof < 0) return;
+    
+    all = YES;
+    for (i=0; i<n; i++) {
+        k = indexes[i];
+        if ([solution boundaryReorder:k] < 0) {
+            continue;
+        } else {
+            all = NO;
+            break;
+        }
+    }
+    if (all == YES) return;
+    
+    if ([listUtil listCheckPresentVariable:name inArray:[boundaryConditionAtId returnValuesList]] == NO) return;
+    if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:[solution normalTangentialName] info:stat] == YES) return;
+    
+    if (conditional == YES) {
+        stat = [listUtil listGetReal:model inArray:[boundaryConditionAtId returnValuesList] forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+        conditional = (conditional == YES && stat == YES) ? YES : NO; 
+    }
+    
+    // Check for nodes belonging to n-t boundary getting set by other bcs
+    for (j=0; j<n; j++) {
+        if (conditional == YES && condition[j] < 0.0) continue;
+        k = [solution variablePerm:indexes[j]];
+        if (k >= 0) {
+            k = k + offset;
+            m = [solution boundaryReorder:indexes[j]];
+            if (m >= 0) {
+                memset( rotvec, 0.0, (3*sizeof(rotvec)) );
+                rotvec[dof] = 1.0;
+                [self FEMKernel_rotateNTSystem:solution :rotvec :indexes[j]];
+                for (k=0; k<dim; k++) {
+                    if (fabs(rotvec[k]) > 1.0e-8) [solution setNtElement:m :k :elno];
+                }
+            }
+        }
+    }
+    
+    boundaries = nil;
+    free_dvector(condition, 0, n-1);
+    free_dvector(rotvec, 0, 2);
+    
+}
+
+-(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int)indSize {
+/****************************************************************************************************************************************************
+    Calculate global indexes of boundary dofs for given element and its boundary
+ 
+    Arguments:
+ 
+        FEMMesh *mesh      -> class containing the mesh its edges and faces of elements
+        Element_t *element -> Boundary element to get indexes for
+        Element_t *parent  -> Parent of boundary element
+        int *indexes       -> Calculated indexes of boundary element in global system
+        int resultSize     -> Size of created index vector, i.e., how many indexes were created
+ 
+****************************************************************************************************************************************************/
+    
+    int i, j, n;
+    Element_t *edge, *face;
+    
+    // Clear indexes
+    memset( indexes, 0.0, (mesh.numberOfNodes*sizeof(indexes)) );
+    
+    n = element->Type.NumberOfNodes;
+    
+    // Nodal indexes
+    memcpy(indexes, element->NodeIndexes, n*sizeof(indexes));
+    
+    // Assign rest of indexes if necessary
+    switch (parent->Type.dimension) {
+        case 2:
+            // Add index for each bubble dof in edge
+            for (i=0; i<element->BDOFs; i++) {
+                if (mesh.numberOfNodes < n) {
+                    errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    return;
+                }
+                
+                indexes[n] = mesh.numberOfNodes + parent->EdgeIndexes[element->Pdefs->LocalNumber-1] * mesh.maxEdgeDofs + i;
+                n++;
+            }
+            indSize = n;
+            break;
+        case 3:
+            // Get boundary face
+            face = [mesh returnFaceAtIndex:parent->FaceIndexes[element->Pdefs->LocalNumber-1]];
+            
+            // Add indexes of faces edges
+            for (i=0; i<face->Type.NumberOfEdges; i++) {
+                edge = [mesh returnEdgeAtIndex:face->EdgeIndexes[i]];
+                
+                // If edge has no dofs jump to next edge
+                if (edge->BDOFs <= 0) continue;
+                
+                for (j=0; j<edge->BDOFs; j++) {
+                    
+                    if (mesh.numberOfNodes < n) {
+                        errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                        return;
+                    }
+                    
+                    indexes[n] = mesh.numberOfNodes + face->EdgeIndexes[i]*mesh.maxEdgeDofs + j;
+                    n++;
+                }
+            }
+            
+            // Add indexes of gaces bubbles
+            for (i=0; i<face->BDOFs; i++) {                
+                if (mesh.numberOfNodes < n) {
+                    errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    return;
+                }
+                
+                indexes[n] = mesh.numberOfNodes + mesh.numberOfEdges * mesh.maxEdgeDofs + parent->FaceIndexes[element->Pdefs->LocalNumber-1] * mesh.maxFaceDofs;
+                n++;
+            }
+            
+            indSize = n;
+            face = NULL;
+            edge = NULL;
+            break;
+        default:
+            errorfunct("getBoundaryIndexes", "Unsupported dimension.");
+            break;
+    }
+    
+}
+
+-(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution {
+    
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    
+    if ([solution matrixFormat] == MATRIX_CRS) {
+        crsMatrix = [[FEMMatrixCRS alloc] init];
+        [crsMatrix zeroRowInGlobal:solution :n];
+        
+    } else if ([solution matrixFormat] == MATRIX_LIST) {
+        
+        // To do's: implement the zeroRow method for list matrix.
+        
+    } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
+        bandMatrix = [[FEMMatrixBand alloc] init];
+        [bandMatrix zeroRowInGlobal:solution :n];
+        
+    }
+    
+}
+
+-(void)setMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value {
+    
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    
+    if ([solution matrixFormat] == MATRIX_CRS) {
+         crsMatrix = [[FEMMatrixCRS alloc] init];
+        [crsMatrix setMatrixElementInGlobal:solution :i :j :value];
+        
+    } else if ([solution matrixFormat] == MATRIX_LIST) {
+        // To do's: implement the setMatrixElement method for list matrix.
+        
+    } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
+        bandMatrix = [[FEMMatrixBand alloc] init];
+        [bandMatrix setMatrixElementInGlobal:solution :i :j :value];
+    }
+    
+}
+
+-(void)addToMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value {
+    
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    
+    if ([solution matrixFormat] == MATRIX_CRS) {
+        crsMatrix = [[FEMMatrixCRS alloc] init];
+        [crsMatrix addToMatrixElementInGlobal:solution :i :j :value];
+        
+    } else if ([solution matrixFormat] == MATRIX_LIST) {
+        // To do's: implement the setMatrixElement method for list matrix.
+        
+    } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
+        bandMatrix = [[FEMMatrixBand alloc] init];
+        [bandMatrix addToMatrixElementInGlobal:solution :i :j :value];
+        
+    }
+
+}
+
+-(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double)integral {
+    
+    int i, j, k, n, jj, kk, t, size;
+    int **edgeMap;
+    double s, l, sum;
+    double *load, **vLoad, *buffer, *g, *vl;
+    FEMMesh *mesh;
+    FEMElementDescription *elementDescription;
+    FEMNumericIntegration *numericIntegration;
+    ElementType_t savedType;
+    GaussIntegrationPoints integCompound;
+    Nodes_t *nodes, *pNodes;
+    NSMutableString *string;
+    BOOL stat;
+    
+    mesh = [solution returnPointerToMesh];
+    n = max([mesh maxElementNodes], [mesh maxElementDofs]);
+    
+    elementDescription = [[FEMElementDescription alloc] init];
+    
+    numericIntegration = [[FEMNumericIntegration alloc] init];
+    [numericIntegration allocation:mesh];
+    
+    nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    pNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    
+    [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
+    [self getNodes:solution inElement:parent resultNodes:pNodes numberOfNodes:n];
+    
+    load = doublevec(0, np-1);
+    memset( load, 0.0, (np*sizeof(load)) );
+    
+    vLoad = doublematrix(0, 2, 0, np-1);
+    for (i=0; i<3; i++) {
+        for (j=0; j<np; j++) {
+            vLoad[i][j] = 0.0;
+        }
+    }
+    
+    vl = doublevec(0, 2);
+    memset( vl, 0.0, (3*sizeof(vl)) );
+    
+    buffer = doublevec(0, np-1);
+    memset( buffer, 0.0, (np*sizeof(buffer)) );
+    
+    g = doublevec(0, 2);
+    memset( g, 0.0, (3*sizeof(g)) );
+    
+    [self getReal:model forElement:element inList:bc variableName:name resultArray:load];
+    
+    edgeMap = [self getEdgeMap:[self getElementFamily:parent]];
+    
+    switch ([self getElementFamily:parent]) {
+        case 2:
+            size = 1;
+            break;
+        case 3:
+            size = 3;
+            break;
+        case 4:
+            size = 4;
+            break;
+        case 5:
+            size = 6;
+            break;
+        case 6:
+            size = 8;
+            break;
+        case 7:
+            size = 9;
+            break;
+        case 8:
+            size = 12;
+            break;
+    }
+    
+    for (i=0; i<size; i++) {
+        jj = edgeMap[i][0];
+        kk = edgeMap[i][1];
+        if ( (parent->NodeIndexes[jj] == element->NodeIndexes[0] && parent->NodeIndexes[kk] == element->NodeIndexes[1]) ||
+            (parent->NodeIndexes[jj] == element->NodeIndexes[1] && parent->NodeIndexes[kk] == element->NodeIndexes[0]) ) break;
+    }
+    
+    string = [string initWithString:name];
+    [string appendString:@" 1"];
+    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    for (i=0; i<nd; i++) {
+        vLoad[0][i] = buffer[i];
+    }
+    
+    string = [string initWithString:name];
+    [string appendString:@" 2"];
+    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    for (i=0; i<nd; i++) {
+        vLoad[1][i] = buffer[i];
+    }
+    
+    string = [string initWithString:name];
+    [string appendString:@" 3"];
+    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    for (i=0; i<nd; i++) {
+        vLoad[2][i] = buffer[i];
+    }
+    
+    free_dvector(buffer, 0, np-1);
+
+    g[0] = pNodes[kk].x - pNodes[jj].x;
+    g[1] = pNodes[kk].y - pNodes[jj].y;
+    g[2] = pNodes[kk].z - pNodes[jj].z;
+    sum = 0.0;
+    for (i=0; i<3; i++) {
+        sum = sum + pow(g[i], 2.0);
+    }
+    for (i=0; i<3; i++) {
+        g[i] = g[i] / sqrt(sum);
+    }
+    
+    savedType = element->Type;
+    if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:mesh stabilization:NULL];
+    
+    buffer = doublevec(0, (3*nd)-1);
+    integral = 0.0;
+    integCompound = GaussQuadrature(element);
+    for (t=0; t<integCompound.n; t++) {
+        stat = [numericIntegration setMetricDeterminantForElement:element 
+                                                     elementNodes:nodes 
+                                                           inMesh:mesh 
+                                             firstEvaluationPoint:integCompound.u[t] 
+                                            secondEvaluationPoint:integCompound.v[t] 
+                                             thirdEvaluationPoint:integCompound.w[t]];
+        s = integCompound.s[t] * [numericIntegration metricDeterminant];
+        
+        stat = [numericIntegration setBasisForElement:element 
+                                         elementNodes:nodes 
+                                               inMesh:mesh 
+                                 firstEvaluationPoint:integCompound.u[t] 
+                                secondEvaluationPoint:integCompound.v[t] 
+                                 thirdEvaluationPoint:integCompound.w[t] 
+                                          withBubbles:NO 
+                                          basisDegree:NULL];
+        sum = 0.0;
+        for (i=0; i<nd; i++) {
+            sum = sum + load[i]*[numericIntegration basis:i];
+        }
+        l = sum;
+        k = 0;
+        for (i=0; i<2; i++) {
+            for (j=0; j<nd; j++) {
+                buffer[k] = vLoad[i][j];
+                k++;
+            }
+        }
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, buffer, 3, [numericIntegration returnPointerToBasis], 1, 0, vl, 1);
+        
+        sum = 0.0;
+        for (i=0; i<3; i++) {
+            sum = sum + vl[i] * g[i];
+        }
+        integral = integral + s * (l+sum);
+    }
+    free_dvector(buffer, 0, (3*nd)-1);
+    element->Type = savedType;
+    
+    jj = parent->NodeIndexes[jj];
+    kk = parent->NodeIndexes[kk];
+    
+    if (kk < jj) integral = -integral;
+    
+    edgeMap = NULL;
+    
+    free(nodes);
+    free(pNodes);
+    free_dvector(load, 0, np-1);
+    free_dmatrix(vLoad, 0, 2, 0, np-1);
+    free_dvector(vl, 0, 2);
+    free_dvector(g, 0, 2);
+    
+    [numericIntegration deallocation:mesh];
+    
+}
+
+-(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
+/*************************************************************************************************************************************
+    Given boundary condition, element and stiffness matrix and force vector, assemble boundary problem local
+    stiffness matrix and force vector
+ 
+    Arguments:
+        FEMModel *model                 ->  class containing the model
+        FEMSolution *solution           ->  class solution containing the global matrix
+        NSArray *bc                     ->  boundary condition value list
+        Element_t *element              ->  boundary element to get stiffness matrix to
+        int nd                          ->  number of degrees of freedom in boundary element
+        NSMutableString *name           ->  name of boundary condition
+        double **stiff, double *force   ->  Output: boundary problem stiffness matrix and force vector
+ 
+*************************************************************************************************************************************/
+    
+    GaussIntegrationPoints integCompound;
+    int i, j, n, p, q, t;
+    double xip, yip, zip, s, load;
+    FEMMesh *mesh;
+    FEMNumericIntegration *numericIntegration;
+    FEMListUtilities *listUtil;
+    Nodes_t *nodes;
+    BOOL stat;
+    
+    mesh = [solution returnPointerToMesh];
+    
+    numericIntegration = [[FEMNumericIntegration alloc] init];
+    [numericIntegration allocation:mesh];
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    n = max([mesh maxElementNodes], [mesh maxElementDofs]);
+    mesh = [solution returnPointerToMesh];
+    
+    // Get nodes of boundary elements parent and gauss points for boundary
+    nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
+    integCompound = GaussQuadrature(element);
+    
+    memset( force, 0.0, (nd*sizeof(force)) );
+    for (i=0; i<nd; i++) {
+        for (j=0; j<nd; j++) {
+            stiff[i][j] = 0.0;
+        }
+    }
+    
+    for (t=0; t<integCompound.n; t++) {
+        stat = [numericIntegration setMetricDeterminantForElement:element 
+                                                     elementNodes:nodes 
+                                                           inMesh:mesh 
+                                             firstEvaluationPoint:integCompound.u[t] 
+                                            secondEvaluationPoint:integCompound.v[t] 
+                                             thirdEvaluationPoint:integCompound.w[t]];
+        
+        s = integCompound.s[t] * [numericIntegration metricDeterminant]; 
+        
+        stat = [numericIntegration setBasisForElement:element 
+                                         elementNodes:nodes 
+                                               inMesh:mesh 
+                                 firstEvaluationPoint:integCompound.u[t] 
+                                secondEvaluationPoint:integCompound.v[t] 
+                                 thirdEvaluationPoint:integCompound.w[t] 
+                                          withBubbles:NO 
+                                          basisDegree:NULL];
+        
+        // Get value of boundary condition
+        xip = 0.0;
+        yip = 0.0;
+        zip = 0.0;
+        for (i=0; i<nd; i++) {
+            xip = xip + [numericIntegration basis:i]*nodes[i].x;
+            yip = yip + [numericIntegration basis:i]*nodes[i].y;
+            zip = zip + [numericIntegration basis:i]*nodes[i].z;
+        }
+        load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:stat minValue:NULL maxValue:NULL];
+        
+        // Build local stiffness matrix and force vector
+        for (p=0; p<nd; p++) {
+            for (q=0; q<nd; q++) {
+                stiff[p][q] = stiff[p][q] + s * [numericIntegration basis:p] * [numericIntegration basis:q];
+            }
+            force[p] = force[p] + s * load * [numericIntegration basis:p];
+        }
+    }
+    
+    free(nodes);
+    mesh = nil;
+    [numericIntegration deallocation:mesh];
+    
+}
+
+-(void)solveWithLapackMatrix:(double *)a andVector:(double *)x size:(int)n {
+    
+    int nhrs, info;
+    int *ipiv;
+    char *trans;
+    
+    ipiv = intvec(0, n-1);
+    
+    if (n <= 0) return;
+    dgetrf_(&n, &n, a, &n, ipiv, &info);
+    if (info < 0 || info > 0) {
+        warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrf. Error code:");
+        printf("%d\n", info);
+        errorfunct("solveWithLapackMatrix", "Program terminating now...");
+    }
+    
+    trans = "N";
+    nhrs = 1;
+    dgetrs_(trans, &n, &nhrs, a, &n, ipiv, x, &n, &info);
+    if (info < 0 || info > 0) {
+        warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrs. Error code:");
+        printf("%d\n", info);
+        errorfunct("solveWithLapackMatrix", "Program terminating now...");
+    }
+    
+    free_ivector(ipiv, 0, n-1);
+    
+}
+
+-(void)solveLinearSystemWithMatrix:(double **)a andVector:(double *)x size:(int)n {
+    
+    int i;
+    double *b;
+    FEMUtilities *util;
+    
+    util = [[FEMUtilities alloc] init];
+    
+    b = doublevec(0, n-1);
+    
+    switch (n) {
+        case 1:
+            x[0] = x[0] / a[0][0];
+            break;
+        case 2:
+            for (i=0; i<n; i++) {
+                b[i] = x[i];
+            }
+            [util solveLinearSystem2x2:a :x :b];
+            break;
+        case 3:
+            for (i=0; i<n; i++) {
+                b[i] = x[i];
+            }
+            [util solveLinearSystem3x3:a :x :b];
+            break;
+        default:
+            break;
+    }
+    
+    free_dvector(b, 0, n-1);
+    
+}
+
+-(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof {
+/*****************************************************************************************************************
+    Set nodel load for given dof
+ 
+    FEMModel *model           -> class containing the model
+    FEMSolution *solution     -> solution class containing the matrix and variable
+    NSMutableString *name     -> name of the dof to be set
+    int dof                   -> the order number of the dof
+ 
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    beginning of the simulation by the bandwidth optimization
+ 
+*****************************************************************************************************************/
+    
+    int i, j, n, bc, t, bf_id, noNodes, noDims;
+    int *indexes, *inNodes, *nodeIndexes;
+    double **coordNodes, minDist, dist;
+    BOOL *activePort, *activePortAll, *doneLoad, anyActive;
+    Element_t *element;
+    FEMMesh *mesh;
+    FEMListUtilities *listUtil;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    FEMBodyForce *bodyForceAtId;
+    NSArray *boundaries, *bodyForces, *bodies;
+    FEMValueList *valueList;
+    NSMutableString *loadName, *str;
+    BOOL stat, nodesFound;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    loadName = [NSMutableString stringWithString:name];
+    [loadName appendString:@" load"];
+    
+    n = max([model numberOfBoundaryConditions], [model numberOfBodyForces]);
+    activePort = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
+    
+    mesh = [solution returnPointerToMesh];
+    
+    indexes = intvec(0, [mesh maxElementDofs]-1);
+    
+    // Go through the boundaries
+    
+    memset( activePort, NO, (n*sizeof(activePort)) );
+    memset( activePortAll, NO, (n*sizeof(activePortAll)) );
+    
+    boundaries = [model boundaryConditions];
+    
+    str = [NSMutableString stringWithString:loadName];
+    [str appendString:@" dofs"];
+    
+    @autoreleasepool {
+       
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            boundaryConditionAtId = [boundaries objectAtIndex:bc];
+            if ([listUtil listCheckPresentVariable:@"Target boundaries" inArray:[boundaryConditionAtId returnValuesList]] == NO) continue;
+            activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:[boundaryConditionAtId returnValuesList]]; 
+            activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:[boundaryConditionAtId returnValuesList]];
+        }
+        
+    }
+    
+    anyActive = NO;
+    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        if (activePort[bc] == YES || activePortAll[bc] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+    if (anyActive == YES) {
+        doneLoad = (BOOL*)malloc(sizeof(BOOL) *  ([solution matrixSizeOfRHS]/[solution variableDofs]) );
+        for (i=0; i<([solution matrixSizeOfRHS]/[solution variableDofs]); i++) {
+            doneLoad[i] = NO;
+        }
+        
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+            
+            @autoreleasepool {
+              
+                for (t=[model numberOfBulkElements]; t<[model numberOfBulkElements]+[model numberOfBoundaryElements]; t++) {
+                    
+                    element = [mesh returnElementAtIndex:t];
+                    boundaryConditionAtId = [boundaries objectAtIndex:bc];
+                    if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    
+                    if (activePort[bc] == YES) {
+                        n = element->Type.NumberOfNodes;
+                        for (i=0; i<n; i++) {
+                            indexes[i] = element->NodeIndexes[i];
+                        }
+                    } else {
+                        n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                    }
+                    
+                    [self FEMKernel_setElementLoads:model :solution :element :[boundaryConditionAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
+                }
+            }
+        }
+    }
+    
+    // Go though the nodal load conditions for the body force list
+        
+    memset( activePort, NO, (n*sizeof(activePort)) );
+    memset( activePortAll, NO, (n*sizeof(activePortAll)) );
+
+    bodyForces = [model bodyForces];
+    bodies = [model bodies];
+    
+    @autoreleasepool {
+    
+        for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+            bodyForceAtId = [bodyForces objectAtIndex:bf_id];
+            activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:[bodyForceAtId returnValuesList]];
+            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:[bodyForceAtId returnValuesList]];
+        }
+        
+    }
+    
+    anyActive = NO;
+    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+        if (activePort[bf_id] == YES || activePortAll[bf_id] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+        
+    if (anyActive == YES) {
+        if (doneLoad == NULL) doneLoad = (BOOL*)malloc(sizeof(BOOL) *  ([solution matrixSizeOfRHS]/[solution variableDofs]) );
+        for (i=0; i<([solution matrixSizeOfRHS]/[solution variableDofs]); i++) {
+            doneLoad[i] = NO;
+        }
+        
+        @autoreleasepool {
+            
+            for (t=0; t<[model numberOfBulkElements]; t++) {
+                
+                element = [mesh returnElementAtIndex:t];
+                bf_id = [[[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] intValue];
+                
+                if ([[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+                
+                
+                if (activePort[bf_id] == YES) {
+                    n = element->Type.NumberOfNodes;
+                    for (i=0; i<n; i++) {
+                        indexes[i] = element->NodeIndexes[i];
+                    }
+                } else {
+                    n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                }
+                
+                bodyForceAtId = [bodyForces objectAtIndex:bf_id];
+                [self FEMKernel_setElementLoads:model :solution :element :[bodyForceAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
+            }
+        }
+    }
+    
+    free(activePort);
+    free(activePortAll);
+    if (doneLoad != NULL) free(doneLoad);
+    
+    // Go through the point loads which are created on the fly
+    
+    @autoreleasepool {
+        
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            
+            boundaryConditionAtId = [boundaries objectAtIndex:bc];
+            if ([listUtil listCheckPresentVariable:loadName inArray:[boundaryConditionAtId returnValuesList]] == NO) continue;
+            nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:[boundaryConditionAtId returnValuesList]];
+            
+            // At the first calling, the list of coordinates is transformed to list of nodes
+            if (nodesFound == NO) {
+                
+                valueList = [listUtil listFindVariable:@"Target coordinates" inArray:[boundaryConditionAtId returnValuesList]];
+                if (valueList != nil) coordNodes = doublematrix(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]); 
+                stat = [listUtil listGetConstRealArray:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target coordinates" resultArray:coordNodes];
+                
+                if (stat == YES) {
+                    
+                    noNodes = [valueList sizeFValues1];
+                    noDims = [valueList sizeFValues2];
+                    
+                    if (noNodes > 0) {
+                        inNodes = intvec(0, noNodes-1);
+                        for (j=0; j<noNodes; j++) {
+                            minDist = HUGE_VAL;
+                            for (i=0; i<[model numberOfNodes]; i++) {
+                                if ([solution variablePerm:i] < 0) continue;
+                                
+                                dist = pow(([mesh GlobalNodes_x:i]-coordNodes[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow(([mesh GlobalNodes_y:i]-coordNodes[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow(([mesh GlobalNodes_z:i]-coordNodes[j][2]), 2.0);
+                                
+                                if (dist<minDist) {
+                                    minDist = dist;
+                                    inNodes[j] = i;
+                                }
+                            }
+                        }
+                        // Add the found nodes to the list values
+                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:noNodes];
+                        free_ivector(inNodes, 0, noNodes-1);
+                        nodesFound = YES;
+                    }
+                }
+            }
+            
+            valueList = nil;
+            if (nodesFound == YES) {
+                valueList = [listUtil listFindVariable:@"Target nodes" inArray:[boundaryConditionAtId returnValuesList]];
+                n = [valueList sizeIValues];
+                nodeIndexes = intvec(0, n-1);
+                [listUtil listGetIntegerArray:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target nodes" resultArray:nodeIndexes];
+                
+                [self FEMKernel_setPointLoads:model :solution :element :[boundaryConditionAtId returnValuesList] :loadName :nodeIndexes :n :dof :[solution variableDofs]];
+                
+                free_ivector(nodeIndexes, 0, n-1);
+                
+            }
+        }
+        
+    }
+        
+    free_ivector(indexes, 0, [mesh maxElementDofs]-1);
+    
+    mesh = nil;
+    boundaries = nil;
+    bodyForces = nil;
+    bodies = nil;
+    valueList = nil;
+    
+}
+
+-(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset {
+/*****************************************************************************************************************
+    Set dirichlet boundary condition for given dof
+ 
+    FEMModel *model           -> class containing the model
+    FEMSolution *solution     -> solution class containing the matrix and variable
+    NSMutableString *name     -> name of the dof to be set
+    int dof                   -> the order number of the dof
+    int *offset               -> Optional: If the matrix and pernutation vectors are not in sync the offset
+                                 may be used as a remedy. Needed in fully coupled systems.
+ 
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    beginning of the simulation by the bandwidth optimization
+ 
+*****************************************************************************************************************/
+    
+    int i, j, k, n, bc, t, bf_id, noNodes, noDims, permOffset, numberOfNodesFound;
+    int *indexes, *inNodes, *nodeIndexes, bndry_start, bndry_end;
+    double **coordNodes, minDist, dist, eps;
+    BOOL *activePort, *activePortAll, *activeCond, *donePeriodic, anyActive, passive;
+    Element_t *element;
+    FEMMesh *mesh;
+    FEMListUtilities *listUtil;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    FEMBodyForce *bodyForceAtId;
+    FEMSimulation *simulationAtId;
+    NSArray *boundaries, *bodyForces, *bodies, *simulations;
+    FEMValueList *valueList;
+    NSMutableString *condName, *passName, *str1, *str2;
+    BOOL stat, nodesFound, orderByBCNumbering, conditional;
+    
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    // These logical vectors are used to minimize extra effort in setting up different BCs
+    n = max([model numberOfBoundaryConditions], [model numberOfBodyForces]);
+    activePort = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
+    activeCond = (BOOL*)malloc(sizeof(BOOL) * n );
+    
+    condName = [NSMutableString stringWithString:name];
+    [condName appendString:@" condition"];
+    
+    passName = [NSMutableString stringWithString:name];
+    [passName appendString:@" passive"];
+    
+    permOffset = 0;
+    if (offset != NULL) permOffset = *offset;
+    
+    mesh = [solution returnPointerToMesh];
+
+    indexes = intvec(0, [mesh maxElementDofs]-1);
+    
+    // Go through the perdiodic BCs and set the linear dependence
+    
+    memset( activePort, NO, (n*sizeof(activePort)) );
+    
+    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    [str1 appendString:name];
+    
+    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    [str2 appendString:name];
+    
+    boundaries = [model boundaryConditions];
+
+    @autoreleasepool {
+        
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            boundaryConditionAtId = [boundaries objectAtIndex:bc];
+            if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str1 info:stat] == NO) activePort[bc] = YES;
+            if ([listUtil listGetLogical:model inArray:[boundaryConditionAtId returnValuesList] forVariable:str2 info:stat] == NO) activePort[bc] = YES;
+        }
+        
+    }
+    
+    anyActive = NO;
+    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        if (activePort[bc] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+    if (anyActive == YES) {
+        
+        donePeriodic = (BOOL*)malloc(sizeof(BOOL) * [mesh numberOfNodes] );
+        memset( donePeriodic, NO, ([mesh numberOfNodes]*sizeof(donePeriodic)) );
+        
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            [self FEMKernel_setPeriodicBoundariesPass1:model :solution :name :dof :bc :donePeriodic];
+            
+        }
+        
+        memset( donePeriodic, NO, ([mesh numberOfNodes]*sizeof(donePeriodic)) );
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            [self FEMKernel_setPeriodicBoundariesPass2:model :solution :name :dof :bc :donePeriodic];
+            
+        }
+        
+        free(donePeriodic);
+        
+    }
+    
+    // Go through the normal Dirichlet BCs applied on the boundaries
+    
+    memset( activePort, NO, (n*sizeof(activePort)) );
+    memset( activePortAll, NO, (n*sizeof(activePortAll)) );
+    memset( activeCond, NO, (n*sizeof(activeCond)) );
+    
+    str1 = [NSMutableString stringWithString:name];
+    [str1 appendString:@" dofs"];
+    
+    @autoreleasepool {
+        
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            boundaryConditionAtId = [boundaries objectAtIndex:bc];
+            activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:[boundaryConditionAtId returnValuesList]];
+            activePort[bc] = [listUtil listCheckPresentVariable:name inArray:[boundaryConditionAtId returnValuesList]];
+            activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:[boundaryConditionAtId returnValuesList]]; 
+        }
+        
+    }
+    
+    simulations = [model simulations];
+    simulationAtId = [simulations objectAtIndex:[solution simulationID]];
+    orderByBCNumbering = [listUtil listGetLogical:model inArray:[simulationAtId returnValuesList] forVariable:@"Set Dirichlet BCs by BC numbering" info:stat];
+    
+    bndry_start = [model numberOfBulkElements];
+    bndry_end = bndry_start + [model numberOfBoundaryElements]-1;
+    
+    // Check and sey some flags for nodes belonging to n-t boundaries getting set by other bcs
+    if ([solution normalTangentialNOFNodes] > 0) {
+        if (orderByBCNumbering == YES) {
+            @autoreleasepool {
+                for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                    
+                    if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                    conditional = activeCond[bc];
+                    
+                    boundaryConditionAtId = [boundaries objectAtIndex:bc];
+                    
+                    for (t=bndry_start; t<bndry_end; t++) {
+                        element = [mesh returnElementAtIndex:t];
+                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        if (activePort[bc] == YES) {
+                            n = element->Type.NumberOfNodes;
+                            for (i=0; i<n; i++) {
+                                indexes[i] = element->NodeIndexes[i];
+                            }
+                        } else {
+                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                        }
+                        [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    }
+                }
+            }
+        } else {
+             for (t=bndry_start; t<bndry_end; t++) {
+                 @autoreleasepool {
+                     for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                         if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                         conditional = activeCond[bc];
+                         
+                         boundaryConditionAtId = [boundaries objectAtIndex:bc];
+                         
+                         element = [mesh returnElementAtIndex:t];
+                         if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                         
+                         if (activePort[bc] == YES) {
+                             n = element->Type.NumberOfNodes;
+                             for (i=0; i<n; i++) {
+                                 indexes[i] = element->NodeIndexes[i];
+                             }
+                         } else {
+                             n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                         }
+                         [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                     }
+                 }
+             }
+        }
+        
+        if (dof < 0) {
+            for (t=bndry_start; t<bndry_end; t++) {
+                element = [mesh returnElementAtIndex:t];
+                n = element->Type.NumberOfNodes;
+                for (j=0; j<n; j++) {
+                    k = [solution boundaryReorder:element->NodeIndexes[j]];
+                    if (k >= 0) {
+                        for (i=0; i<3; i++) {
+                            [solution setNtZeroingDone:k :i :NO];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Set the Dirichlet BCs from active boundary elements, if any...
+    anyActive = NO;
+    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        if (activePort[bc] == YES || activePortAll[bc] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+    if (anyActive == YES) {
+        if (orderByBCNumbering == YES) {
+            @autoreleasepool {
+                for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                    
+                    if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                    conditional = activeCond[bc];
+                    
+                    boundaryConditionAtId = [boundaries objectAtIndex:bc];
+                    
+                    for (t=bndry_start; t<bndry_end; t++) {
+                        element = [mesh returnElementAtIndex:t];
+                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        if (activePort[bc] == YES) {
+                            n = element->Type.NumberOfNodes;
+                            for (i=0; i<n; i++) {
+                                indexes[i] = element->NodeIndexes[i];
+                            }
+                        } else {
+                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                        }
+                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    }
+                }
+            }
+        } else {
+            for (t=bndry_start; t<bndry_end; t++) {
+                @autoreleasepool {
+                    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                        if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                        conditional = activeCond[bc];
+                        
+                        boundaryConditionAtId = [boundaries objectAtIndex:bc];
+                        
+                        element = [mesh returnElementAtIndex:t];
+                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        
+                        if (activePort[bc] == YES) {
+                            n = element->Type.NumberOfNodes;
+                            for (i=0; i<n; i++) {
+                                indexes[i] = element->NodeIndexes[i];
+                            }
+                        } else {
+                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                        }
+                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                        
+                    }
+                }
+            }
+        }
+    }
+    
+    // Go through the Dirichlet conditions in the body force lists
+    
+    memset( activePort, NO, (n*sizeof(activePort)) );
+    memset( activeCond, NO, (n*sizeof(activeCond)) );
+    memset( activePortAll, NO, (n*sizeof(activePortAll)) );
+    passive = NO;
+    
+    bodyForces = [model bodyForces];
+    bodies = [model bodies];
+
+    @autoreleasepool {
+        
+        for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+            bodyForceAtId = [bodyForces objectAtIndex:bf_id];
+            activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:[bodyForceAtId returnValuesList]];
+            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:[bodyForceAtId returnValuesList]];
+            activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:[bodyForceAtId returnValuesList]];
+            
+            passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:[bodyForceAtId returnValuesList]] == YES) ? YES : NO;
+        }
+    }
+    
+    anyActive = NO;
+    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+        if (activePort[bf_id] == YES || activePortAll[bf_id] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+
+    if (anyActive == YES) {
+        
+        @autoreleasepool {
+            
+            for (t=0; t<[model numberOfBulkElements]; t++) {
+                element = [mesh returnElementAtIndex:t];
+                
+                bf_id = [[[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] intValue];
+                
+                if ([[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+                conditional = activeCond[bf_id];
+                
+                if (activePort[bf_id] == YES) {
+                    n = element->Type.NumberOfNodes;
+                    for (i=0; i<n; i++) {
+                        indexes[i] = element->NodeIndexes[i];
+                    }
+                } else {
+                    n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                }
+                bodyForceAtId = [bodyForces objectAtIndex:bf_id];
+                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[bodyForceAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            }
+        }
+    }
+    free(activePort);
+    free(activePortAll);
+    free(activeCond);
+    free_ivector(indexes, 0, [mesh maxElementDofs]-1);
+    
+    // Go through the pointwise Dirichlet BCs that are created on the fly.
+    // Note that it is best that the coordinates are transformed to nodes using
+    // the right variable. Otherwise, it could point to nodes that are not active
+    
+    @autoreleasepool {
+
+        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+            
+            boundaryConditionAtId = [boundaries objectAtIndex:bc];
+            if ([listUtil listCheckPresentVariable:name inArray:[boundaryConditionAtId returnValuesList]] == NO) continue;
+            nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:[boundaryConditionAtId returnValuesList]];
+            
+            // The coodinates are only requested for a body that has no list of nodes.
+            // At the first calling, the list of coordinates is transformed to a list of nodes
+            if (nodesFound == NO) {
+                
+                valueList = [listUtil listFindVariable:@"Target coordinates" inArray:[boundaryConditionAtId returnValuesList]];
+                if (valueList != nil) coordNodes = doublematrix(0, [valueList sizeFValues1]-1, 0, [valueList sizeFValues2]);
+                stat = [listUtil listGetConstRealArray:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target coordinates" resultArray:coordNodes];
+                
+                if (stat == YES) {
+                    
+                    eps = [listUtil listGetConstReal:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target coordinates eps" info:stat minValue:NULL maxValue:NULL];
+                    if (stat == NO) {
+                        eps = HUGE_VAL;
+                    } else {
+                        eps = pow(eps, 2.0);
+                    }
+                    
+                    noNodes = [valueList sizeFValues1];
+                    noDims = [valueList sizeFValues2];
+                    
+                    if (noNodes > 0) {
+                        inNodes = intvec(0, noNodes-1);
+                        memset( inNodes, -1, (noNodes*sizeof(inNodes)) );
+                        for (j=0; j<noNodes; j++) {
+                            minDist = HUGE_VAL;
+                            for (i=0; i<[model numberOfNodes]; i++) {
+                                if ([solution variablePerm:i] < 0) continue;
+                                
+                                dist = pow(([mesh GlobalNodes_x:i]-coordNodes[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow(([mesh GlobalNodes_y:i]-coordNodes[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow(([mesh GlobalNodes_z:i]-coordNodes[j][2]), 2.0);
+
+                                dist = sqrt(dist);
+                                
+                                if (dist < minDist && dist <= eps) {
+                                    minDist = dist;
+                                    inNodes[j] = i;
+                                }
+                            }
+                        }
+                        
+                        numberOfNodesFound = 0;
+                        for (j=0; j<noNodes; j++) {
+                            if (inNodes[j] >= 0) {
+                                inNodes[numberOfNodesFound] = inNodes[j];
+                                numberOfNodesFound++;
+                            }
+                        }
+                        
+                        // In the first time add teh found nodes to the list
+                        if (numberOfNodesFound > 0) {
+                            [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
+                            free_ivector(inNodes, 0, noNodes-1);
+                            nodesFound = YES;
+                        }
+                    }
+                }
+            }
+            
+            if (nodesFound == YES) {
+                conditional = [listUtil listCheckPresentVariable:condName inArray:[boundaryConditionAtId returnValuesList]];
+                valueList = [listUtil listFindVariable:@"Target nodes" inArray:[boundaryConditionAtId returnValuesList]];
+                n = [valueList sizeIValues];
+                nodeIndexes = intvec(0, n-1);
+                [listUtil listGetIntegerArray:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target nodes" resultArray:nodeIndexes];
+                
+                [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                
+                free_ivector(nodeIndexes, 0, n-1);
+            }
+        }
+    }
+    
+    // Take care of the matrix entries of passive elements
+    if (passive == YES) {
+        for (i=0; i<[solution matrixNumberOfRows]; i++) {
+            if (fabs([solution matrixValues:[solution matrixDiag:i]]) < 1.0e-14) {
+                [solution setMatrixValues:[solution matrixDiag:i] :1.0];
+                [solution setMatrixRHS:i :[solution variableValues:i]];
+            }
+        }
+    }
+    
+    mesh = nil;
+    boundaries = nil;
+    bodyForces = nil;
+    simulations = nil;
+    bodies = nil;
+    valueList = nil;
     
 }
 
@@ -1898,6 +4224,7 @@ static int PRECOND_VANKA     =  560;
     int *perm;
     
     dt = [solution dt];
+    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
     
     perm = intvec(0, n-1);
@@ -1920,6 +4247,7 @@ static int PRECOND_VANKA     =  560;
     
     dt = [solution dt];
     dofs = [solution variableDofs];
+    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -1977,6 +4305,7 @@ static int PRECOND_VANKA     =  560;
     BOOL rotateNT, bupd;
     double *saveValues;
     
+    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
     
     perm = intvec(0, n-1);
@@ -2043,6 +4372,7 @@ static int PRECOND_VANKA     =  560;
     BOOL rotateNT, bupd;
     double *saveValues;
     
+    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
     
     perm = intvec(0, n-1);
@@ -2122,6 +4452,404 @@ static int PRECOND_VANKA     =  560;
     
 }
 
+
+#pragma mark Boundary conditions
+
+-(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset {
+    
+    int i, j, k, kk, l, m, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
+    double *buffer;
+    Element_t *element, *parent, *edge, *face;
+    NSNumber *appendDof;
+    NSMutableString *name, *componentName;
+    NSMutableString *str1, *str2;
+    NSArray *bc;
+    
+    FEMMesh *mesh;
+    FEMMatrixCRS *crsMatrix;
+    FEMListUtilities *listUtil; 
+    FEMValueList *list;
+    
+    BOOL constantValue;
+    
+    mesh = [solution returnPointerToMesh];
+    
+    crsMatrix = [[FEMMatrixCRS alloc] init];
+    listUtil = [[FEMListUtilities alloc] init];
+    
+    u_offset = 0;
+    if (offset != NULL) {
+        u_offset = *offset;
+    }
+    
+    n = [mesh maxElementDofs];
+    
+    if (g_Ind == NULL) {
+        g_Ind = intvec(0, n-1);
+        l_Ind = intvec(0, n-1);
+        kernStiff = doublematrix(0, n-1, 0, n-1);
+        kernWork = doublevec(0, n-1);
+        if (g_Ind == NULL || l_Ind == NULL || kernStiff == NULL || kernWork == NULL) 
+            errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
+        size1kernStiff = n;
+        size2kernStiff = n;
+        sizekernWork = n;
+        size_g_Ind = n;
+        size_l_Ind = n;
+    } else if (size_g_Ind < n) {
+        free_ivector(g_Ind, 0, size_g_Ind);
+        free_ivector(l_Ind, 0, size_l_Ind);
+        free_dmatrix(kernStiff, 0, size1kernStiff, 0, size2kernStiff);
+        free_dvector(kernWork, 0, sizekernWork);
+        
+        g_Ind = intvec(0, n-1);
+        l_Ind = intvec(0, n-1);
+        kernStiff = doublematrix(0, n-1, 0, n-1);
+        kernWork = doublevec(0, n-1);
+        if (g_Ind == NULL || l_Ind == NULL || kernStiff == NULL || kernWork == NULL) 
+            errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
+
+        size1kernStiff = n;
+        size2kernStiff = n;
+        sizekernWork = n;
+        size_g_Ind = n;
+        size_l_Ind = n;
+    }
+    
+    // Use the buffer for serializing the stiff matrix which is passed to lapack routine
+    buffer = doublevec(0, (size1kernStiff*size2kernStiff)-1);
+    
+    name = [NSString stringWithCString:[solution variableName] encoding:NSASCIIStringEncoding];
+        
+    if ([solution variableDofs] > 1) {
+        [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-1 permutationOffset:NULL];
+    }
+    
+    constantValue = NO;
+    
+    // Set Dirichlet dofs for edges and faces
+    @autoreleasepool {
+
+        for (dof=0; dof<[solution variableDofs]; dof++) {
+            
+            componentName = [NSString stringWithCString:[solution variableName] encoding:NSASCIIStringEncoding];
+            if ([solution variableDofs] > 1) {
+                appendDof = [NSNumber numberWithInt:dof+1];
+                [componentName appendString:@" "];
+                [componentName appendString:[appendDof stringValue]];
+            }
+            
+            // Clean BC face and edge dofs
+            for (i=0; i<[mesh numberOfBoundaryElements]; i++) {
+                
+                element = [self getBoundaryElement:solution atIndex:i];
+                if ([self isActiveElement:element inSolution:solution] == NO) continue;
+                
+                // Get parent element
+                parent = element->BoundaryInfo->Left;
+                if (parent == NULL) parent = element->BoundaryInfo->Right;
+                
+                if (parent == NULL) continue;
+                
+                bc = [self getBoundaryCondition:model forElement:element];
+                if (bc == nil) continue;
+                
+                list = [listUtil listFindVariable:componentName inArray:bc];
+                if (list == nil) continue;
+                
+                constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
+                
+                // Get indexes for boudnary and values for dofs associated to them
+                n = [self getNumberOfNodesForElement:element];
+                
+                if (parent->Pdefs != NULL) {
+                    [self getBoundaryIndexes:mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
+                } else {
+                    continue;
+                }
+                
+                // Contribute this boundary to global system (i.e., solve global boundary problem)
+                for (k=n; k<numEdgeDofs; k++) {
+                    nb = [solution variablePerm:g_Ind[k]];
+                    if (nb < 0) continue;
+                    nb = u_offset + [solution variableDofs]*nb + dof;
+                    if (constantValue == YES) {
+                        [crsMatrix setSymmetricDirichletInGlobal:solution :nb :0.0];
+                    }else {
+                        [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                        [solution setMatrixRHS:nb :0.0];
+                    }
+                }
+            }
+        }
+    }
+    
+     @autoreleasepool {
+    
+         // Set Dirichlet dofs for edges and faces
+         for (dof=0; dof<[solution variableDofs]; dof++) {
+             
+             componentName = [NSString stringWithCString:[solution variableName] encoding:NSASCIIStringEncoding];
+             if ([solution variableDofs] > 1) {
+                 appendDof = [NSNumber numberWithInt:dof+1];
+                 [componentName appendString:@" "];
+                 [componentName appendString:[appendDof stringValue]];
+             }
+             
+             [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
+             
+             [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset];
+             
+             // Dirichlet BCs for face and edge dofs
+             for (i=0; i<[mesh numberOfBoundaryElements]; i++) {
+                 
+                 element = [self getBoundaryElement:solution atIndex:i];
+                 if ([self isActiveElement:element inSolution:solution] == NO) continue;
+                 
+                 bc = [self getBoundaryCondition:model forElement:element];
+                 if (bc == nil) continue;
+                 
+                 
+                 str1 = [NSString stringWithString:componentName];
+                 str2 = [NSString stringWithString:componentName];
+                 [str1 appendString:@" {e}"];
+                 [str2 appendString:@" {f}"];
+                 if ( [listUtil listCheckPresentVariable:componentName inArray:bc] == NO
+                     && [listUtil listCheckPresentVariable:str1 inArray:bc] == NO
+                     && [listUtil listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
+                 
+                 // Get parent element
+                 parent = element->BoundaryInfo->Left;
+                 if (parent == NULL) {
+                     parent = element->BoundaryInfo->Right;
+                 }
+                 if (parent == NULL) continue;
+                 
+                 if ([listUtil listCheckPresentVariable:str1 inArray:bc] == YES) {
+                     if ([mesh isAssociatedEdges] == YES) {
+                         switch ([self getElementFamily:element]) {
+                             case 1:
+                             case 2:
+                                 for (j=0; j<parent->Type.NumberOfEdges; j++) {
+                                     edge = [mesh returnEdgeAtIndex:parent->EdgeIndexes[j]];
+                                     
+                                     n = 0;
+                                     for (k=0; k<element->Type.NumberOfNodes; k++) {
+                                         for (l=0; l<edge->Type.NumberOfNodes; l++) {
+                                             if (element->NodeIndexes[k] == edge->NodeIndexes[l]) n++;
+                                         }
+                                     }
+                                     if (n == element->Type.NumberOfNodes) break;
+                                 }
+                                 nb = parent->Type.NumberOfNodes;
+                                 n = edge->Type.NumberOfNodes;
+                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:edge withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                 
+                                 n = [self getElementDofs:solution forElement:edge atIndexes:g_Ind];
+                                 for (k=[solution defDofs:0]*edge->NDOFs; k<n; k++) {
+                                     nb = [solution variablePerm:g_Ind[k]];
+                                     if (nb < 0) continue;
+                                     nb = u_offset + [solution variableDofs]*nb + dof;
+                                     if ([solution matrixSymmetric] == 1) {
+                                         [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[0]];
+                                     } else {
+                                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                                         [solution setMatrixRHS:nb :kernWork[0]];
+                                         [self setMatrixElement:solution :nb :nb :1.0];
+                                     }
+                                 }
+                                 break;
+                             case 3:
+                             case 4:
+                                 for (j=0; j<parent->Type.NumberOfFaces; j++) {
+                                     face = [mesh returnFaceAtIndex:parent->FaceIndexes[j]];
+                                     if (element->Type.ElementCode == face->Type.ElementCode) {
+                                         n = 0;
+                                         for (k=0; k<element->Type.NumberOfNodes; k++) {
+                                             for (l=0; l<face->Type.NumberOfNodes; l++) {
+                                                 if (element->NodeIndexes[k] == face->NodeIndexes[l]) n++;
+                                             }
+                                         }
+                                         if (n == element->Type.NumberOfNodes) break;
+                                     }
+                                 }
+                                 
+                                 for (j=0; j<face->Type.NumberOfEdges; j++) {
+                                     edge = [mesh returnEdgeAtIndex:face->EdgeIndexes[j]];
+                                     nb = edge->Type.NumberOfNodes;
+                                     n = parent->Type.NumberOfNodes;
+                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:edge withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                     
+                                     n = [self getElementDofs:solution forElement:edge atIndexes:g_Ind];
+                                     for (k=[solution defDofs:0]*edge->NDOFs; k<n; k++) {
+                                         nb = [solution variablePerm:g_Ind[k]];
+                                         if (nb < 0) continue;
+                                         nb = u_offset + [solution variableDofs]*nb + dof;
+                                         if ([solution matrixSymmetric] == 1) {
+                                             [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[0]];
+                                         } else {
+                                             [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                                             [solution setMatrixRHS:nb :kernWork[0]];
+                                             [self setMatrixElement:solution :nb :nb :1.0];
+                                         }
+                                     }
+                                 }
+                         }
+                     } // end associated edges
+                 } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
+                     n = [self getElementDofs:solution forElement:element atIndexes:g_Ind];
+                     for (k=0; k<n; k++) {
+                         nb = [solution variablePerm:g_Ind[k]];
+                         if (nb < 0) continue;
+                         nb = u_offset + [solution variableDofs]+nb + dof;
+                         
+                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                         [self setMatrixElement:solution :nb :nb :1.0];
+                         [solution setMatrixRHS:nb :kernWork[0]];
+                     }
+                 }
+                 
+                 if (parent->Pdefs == NULL) continue;
+                 
+                 list = [listUtil listFindVariable:componentName inArray:bc];
+                 constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
+                 if (constantValue == YES) continue;
+                 
+                 switch (parent->Type.dimension) {
+                     case 2:
+                         // If no edges do not try to set boundary conditions
+                         // To do's: change to break instead of continue ??
+                         if ([mesh isAssociatedEdges] == NO) continue;
+                         
+                         // If boundary edge has not dofs, move on to next edge
+                         if (element->BDOFs <= 0) continue;
+                         
+                         // Number of nodes for this element
+                         n = element->Type.NumberOfNodes;
+                         
+                         // Get indexes for boundary and values dofs associated to them
+                         [self getBoundaryIndexes:mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
+                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:kernStiff resultVector:kernWork];
+                         
+                         if ([solution matrixSymmetric] == 1) {
+                             
+                             for (l=0; l<n; l++) {
+                                 nb = [solution variablePerm:g_Ind[l]];
+                                 if (nb < 0) continue;
+                                 nb = u_offset + [solution variableDofs]*nb + dof;
+                                 for (k=n; k<numEdgeDofs; k++) {
+                                     kernWork[k] = kernWork[k] - kernStiff[k][l]*[solution matrixRHS:nb];
+                                 }
+                             }
+                             
+                             for (k=n; k<numEdgeDofs; k++) {
+                                 for (l=n; l<numEdgeDofs; l++) {
+                                     kernStiff[k-n][l-n] = kernStiff[k][l];
+                                 }
+                                 kernWork[k-n] = kernWork[k];
+                             }
+                             l = numEdgeDofs - n;
+                             if (l == 1) {
+                                 kernWork[0] = kernWork[0] / kernStiff[0][0];
+                             } else {
+                                 memset( buffer, 0.0, (size1kernStiff*size2kernStiff)*sizeof(buffer) );
+                                 m = 0;
+                                 for (j=0; j<l; j++) {
+                                     for (k=0; k<l; k++) {
+                                         buffer[m] = kernStiff[j][k];
+                                         m++;
+                                     }
+                                 }
+                                 [self solveWithLapackMatrix:buffer andVector:kernWork size:l];
+                             }
+                             for (k=n; k<numEdgeDofs; k++) {
+                                 nb = [solution variablePerm:g_Ind[k]];
+                                 if (nb < 0) continue;
+                                 nb = u_offset + [solution variableDofs]*nb + dof;
+                                 [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[k-n]];
+                             }
+                         } else {
+                             // Contribute this boundary to global system
+                             // (i.e., solve global boundary problem)
+                             for (k=n; k<numEdgeDofs; k++) {
+                                 nb = [solution variablePerm:g_Ind[k]];
+                                 if (nb < 0) continue;
+                                 nb = u_offset + [solution variableDofs]*nb + dof;
+                                 [solution setMatrixRHS:nb :[solution matrixRHS:nb] + kernWork[k]];
+                                 for (l=0; l<numEdgeDofs; l++) {
+                                     mb = [solution variablePerm:g_Ind[l]];
+                                     if (mb < 0) continue;
+                                     mb = u_offset + [solution variableDofs]*mb + dof;
+                                     for (kk=[solution matrixRows:nb]+dof; kk<=[solution matrixRows:nb+1]-1; k+=[solution variableDofs]) {
+                                         if ([solution matrixCols:kk] == mb) {
+                                             [solution setMatrixValues:kk :[solution matrixValues:kk] + kernStiff[k][l]];
+                                             break;
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+                         break;
+                     case 3:
+                         // If no faces present do not try to set boundary conditions
+                         // To do's: change to break instead of continue ??
+                         if ([mesh isAssociatedFaces] == NO) continue;
+                         
+                         // Parameters of element
+                         n = element->Type.NumberOfNodes;
+                         
+                         // Get global boundary indexes and solve dofs asscociated to them
+                         [self getBoundaryIndexes:mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
+                         
+                         // If boundary face has no dofs, skip to next boundary element
+                         if (numEdgeDofs == n) continue;
+                         
+                         // Get local solution
+                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:kernStiff resultVector:kernWork];
+                         
+                         n_start = 0;
+                         if ([solution matrixSymmetric] == 1) {
+                             for (l=0; l<n; l++) {
+                                 nb = [solution variablePerm:g_Ind[l]];
+                                 if (nb < 0) continue;
+                                 nb = u_offset + [solution variableDofs]*nb + dof;
+                                 for (k=n; k<numEdgeDofs; k++) {
+                                     kernWork[k] = kernWork[k] - kernStiff[k][l] * [solution matrixRHS:nb];
+                                     
+                                 }
+                             }
+                             n_start++;
+                         }
+                         
+                         // Contribute this entry to global boundary problem
+                         for (k=n; k<numEdgeDofs; k++) {
+                             nb = [solution variablePerm:g_Ind[k]];
+                             if (nb < 0) continue;
+                             nb = u_offset + [solution variableDofs]*nb + dof;
+                             [solution setMatrixRHS:nb :[solution matrixRHS:nb] + kernWork[k]];
+                             for (l=n_start; l<numEdgeDofs; l++) {
+                                 mb = [solution variablePerm:g_Ind[l]];
+                                 if (mb < 0) continue;
+                                 mb = u_offset + [solution variableDofs]*mb + dof;
+                                 for (kk=[solution matrixRows:nb]+dof; kk<=[solution matrixRows:nb+1]-1; k+=[solution variableDofs]) {
+                                     if ([solution matrixCols:kk] == mb) {
+                                         [solution setMatrixValues:kk :[solution matrixValues:kk] + kernStiff[k][l]];
+                                         break;
+                                     }
+                                 }
+                             }
+                         }
+                 }
+             } //end loop over boundary elements
+         } //end loop over dofs
+         
+     }
+    
+    mesh = nil;
+    free_dvector(buffer, 0, (size1kernStiff*size2kernStiff)-1);
+}
+
+#pragma mark Solve
 
 -(double)findSolution:(FEMSolution *)solution {
     

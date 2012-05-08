@@ -21,7 +21,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     if ([solution solutionInfoForKey:@"fsstep"] != nil) {
@@ -80,7 +80,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb1 = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     if (cols != NULL) {
@@ -88,7 +88,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb2 = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     switch (order) {
@@ -177,7 +177,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb1 = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     if (cols != NULL) {
@@ -185,7 +185,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb2 = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     a = doublevec(0, 3);
@@ -236,7 +236,7 @@
     } else {
         mesh = [solution returnPointerToMesh];
         nb = mesh.maxElementNodes;
-        mesh = NULL;
+        mesh = nil;
     }
     
     for (i=0; i<nb; i++) {

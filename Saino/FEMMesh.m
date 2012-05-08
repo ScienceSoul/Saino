@@ -302,6 +302,11 @@
     return numberOfNodes;
 }
 
+-(int)numberOfBulkElements {
+    
+    return numberOfBulkElements;
+}
+
 -(int)numberOfEdges {
     
     return numberOfEdges;
@@ -312,9 +317,19 @@
     return numberOfFaces;
 }
 
+-(int)numberOfBoundaryElements {
+    
+    return numberOfBoundaryElements;
+}
+
 -(int)maxElementNodes {
     
     return maxElementNodes;
+}
+
+-(int)maxElementDofs {
+    
+    return maxElementDofs;
 }
 
 -(int)maxFaceDofs {
@@ -342,6 +357,11 @@
     numberOfNodes = n;
 }
 
+-(void)setNumberOfBulkElements:(int)n {
+    
+    numberOfBulkElements = n;
+}
+
 -(void)setNumberOfEdges:(int)n {
     
     numberOfEdges = n;
@@ -352,9 +372,19 @@
     numberOfFaces = n;
 }
 
+-(void)setNumberOfBoundaryElements:(int)n {
+    
+    numberOfBoundaryElements = n;
+}
+
 -(void)setMaxElementNodes:(int)n {
     
     maxElementNodes = n;
+}
+
+-(void)setMaxElementDofs:(int)n {
+    
+    maxElementDofs = n;
 }
 
 -(void)setMaxFaceDofs:(int)n {
@@ -376,7 +406,7 @@
 
 -(BOOL)AllocateNodes:(int)nl :(int)nh {
     
-    GlobalNodes = NodeVec(nl,nh);
+    GlobalNodes = nodesvec(nl,nh-1);
     if (GlobalNodes == NULL) {
         return NO;
     }
@@ -438,6 +468,11 @@
 }
 
 #pragma mark Elements getters/setters
+
+-(Element_t *)returnElementAtIndex:(int)i {
+    
+    return &Elements[i];
+}
 
 -(int)Elements_NodeIndexes:(int)i :(int)j {
     
@@ -672,6 +707,11 @@
 
 #pragma mark Edges getters/setters
 
+-(Element_t *)returnEdgeAtIndex:(int)i {
+    
+    return &Edges[i];
+}
+
 -(int)Edges_NodeIndexes:(int)i :(int)j {
     
     return Edges[i].NodeIndexes[j];
@@ -704,6 +744,11 @@
 }
 
 #pragma mark Faces getters/setters
+
+-(Element_t *)returnFaceAtIndex:(int)i {
+    
+    return &Faces[i];
+}
 
 -(int)Faces_NodeIndexes:(int)i :(int)j {
     
@@ -775,6 +820,39 @@
     return variables;
 }
 
+#pragma mark Test associativity
+
+-(BOOL)isAssociatedEdges {
+    
+    if (Edges != NULL) {
+        return YES;
+    } else {
+        return NO;
+    }
+    
+}
+
+-(BOOL)isAssociatedFaces {
+    
+    if (Faces != NULL) {
+        return YES;
+    } else {
+        return NO;
+    }
+
+}
+
+#pragma mark Sizes
+
+-(int)sizeOfGlobalNodes {
+    
+    return sizeOfGlobalNodes;
+}
+
+-(void)setSizeOfGlobalNodes:(int)n {
+    
+    sizeOfGlobalNodes = n;
+}
 
 
 

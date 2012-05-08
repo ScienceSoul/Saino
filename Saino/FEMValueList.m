@@ -8,34 +8,64 @@
 
 #import "FEMValueList.h"
 
-static int LIST_TYPE_CONSTANT_SCALAR      =  1;
-static int LIST_TYPE_CONSTANT_TENSOR      =  2;
-static int LIST_TYPE_VARIABLE_SCALAR      =  3;
-static int LIST_TYPE_VARIABLE_TENSOR      =  4;
-static int LIST_TYPE_LOGICAL              =  5;
-static int LIST_TYPE_STRING               =  6;
-static int LIST_TYPE_INTEGER              =  7;
-static int LIST_TYPE_CONSTANT_SCALAR_STR  =  8;
-static int LIST_TYPE_CONSTANT_TENSIOR_STR =  9;
-static int LIST_TYPE_VARIABLE_SCALAR_STR  =  10;
-static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
-
+#import "Constructors.h"
+#import "memory.h"
 
 @implementation FEMValueList
+
+-(double)tValues:(int)i {
+    
+    return tValues[i];
+}
+
+-(double)fValues:(int)i :(int)j :(int)k {
+    
+    return fValues[i][j][k];
+}
 
 -(int)sizeTValues {
     
     return sizeTValues;
 }
 
--(int)sizeFValues {
+-(int)sizeFValues1 {
     
-    return sizeFValues;
+    return sizeFValues1;
+}
+
+-(int)sizeFValues2 {
+    
+    return sizeFValues2;
+}
+
+-(int)sizeFValues3 {
+    
+    return sizeFValues3;
 }
 
 -(int)type {
     
     return type;
+}
+
+-(BOOL)method {
+    
+    return method;
+}
+
+-(BOOL)lValue {
+    
+    return lValue;
+}
+
+-(int)iValues:(int)i {
+    
+    return iValues[i];
+}
+
+-(int)sizeIValues {
+    
+    return sizeIValues;
 }
 
 -(NSString *)name {
@@ -48,20 +78,59 @@ static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
     return dependName;
 }
 
+-(void)setTValues:(int)i :(double)n {
+    
+    tValues[i] = n;
+}
+
+-(void)setFValues:(int)i :(int)j :(int)k :(double)n {
+    
+    fValues[i][j][k] = n;
+}
 
 -(void)setSizeTValues:(int)n {
     
     sizeTValues = n;
 }
 
--(void)setSizeFValues:(int)n {
+-(void)setSizeFValues1:(int)n {
     
-    sizeFValues = n;
+    sizeFValues1 = n;
+}
+
+-(void)setSizeFValues2:(int)n {
+    
+    sizeFValues2 = n;
+}
+
+-(void)setSizeFValues3:(int)n {
+    
+    sizeFValues3 = n;
 }
 
 -(void)setType:(int)n {
     
     type = n;
+}
+
+-(void)setMethod:(BOOL)n {
+    
+    method = n;
+}
+
+-(void)setLValue:(BOOL)n {
+    
+    lValue = n;
+}
+
+-(void)setIValues:(int)i :(int)n {
+    
+    iValues[i] = n;
+}
+
+-(void)setSizeIValues:(int)n {
+    
+    sizeIValues = n;
 }
 
 -(void)setName:(NSString *)string {
@@ -89,123 +158,9 @@ static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
     return iValues;
 }
 
-
--(BOOL)listGetReal:(FEMModel *)model: (NSArray *)array: (NSString *)varName: (int)n: (int *)nodeIndexes: (double *)result {
+-(void)allocateIValues:(int)n {
     
-    int i, j, k;
-    double ***fVal;
-    double *buffer;
-    double t[32];
-    FEMUtilities *util;
-    BOOL found;
-    
-    found = NO;
-    
-    for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
-            
-            fVal = [list returnPointerToFValues];
-            
-            if ([list type] == LIST_TYPE_CONSTANT_SCALAR) {
-                for (i=0; i<n; i++) {
-                    result[i] = fVal[0][0][0];
-                }
-            }
-            else if ([list type] == LIST_TYPE_VARIABLE_SCALAR) {
-                
-                util = [[FEMUtilities alloc] init];
-                buffer = doublevec(0, [list sizeTValues]-1);
-                
-                for (i=0; i<n; i++) {
-                    buffer[i] = fValues[0][0][i];
-                }
-                
-                for (i=0; i<n; i++) {
-                    k = nodeIndexes[i];
-                    [self listParseStrToValues:model :[list dependName] :k :[list name] :t :j];
-                    
-                    if (any(t, '=', HUGE_VALF, j) == 0) {
-                     
-                        result[i] = [util interpolateCurve:[list returnPointerToTValues] :buffer :t[0] :[list sizeTValues]];
-                    }
-                }
-                
-                free_dvector(buffer, 0, [list sizeTValues]-1);
-            }
-            fVal = NULL;
-            found = YES;
-            break;
-        }
-    }
-    
-    return found;
-    
-}
-
--(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count {
-    
-    int l, k1;
-    char *theName;
-    Variable_t *variable, *cVar;
-    
-    count = 0;
-    
-    theName = (char *)[str UTF8String];
-    
-    if ([str isEqualToString:@"Coordinate"] == NO) {
-        variable = getVariable([model returnPointerToVariables], theName);
-        if (variable == NULL) {
-            warnfunct("listParseStrToValues", "Can't find indpendent variable:");
-            printf("%s\n", theName);
-            errorfunct("listParseStrToValues", "Abort...");
-        }
-    } else {
-        theName = "Coordinate 1";
-        variable = getVariable([model returnPointerToVariables], theName);
-    }
-    
-    k1 = ind;
-    if (variable->Perm != NULL) k1 = variable->Perm[k1];
-    
-    if (k1 > 0 && k1 <= variable->sizeValues) {
-        if ([str isEqualToString:@"Coordinate"] == YES) {
-            theName = "Coordinate 1";
-            cVar = getVariable([model returnPointerToVariables], theName);
-            count++;
-            t[0] = cVar->Values[k1];
-            
-            theName = "Coordinate 2";
-            cVar = getVariable([model returnPointerToVariables], theName);
-            count++;
-            t[1] = cVar->Values[k1];
-            
-            theName = "Coordinate 3";
-            cVar = getVariable([model returnPointerToVariables], theName);
-            count++;
-            t[2] = cVar->Values[k1];
-        }
-        else {
-            if (variable->Dofs == 1) {
-                t[count] = variable->Values[k1];
-                count++;
-            } else {
-                for (l=0; l<variable->Dofs; l++) {
-                    t[count] = variable->Values[variable->Dofs*(k1-1)+l];
-                    count++;
-                }
-            }
-        }
-    } else {
-        if (variable->Perm != NULL) {
-            t[count] = HUGE_VALF;
-        } else {
-            t[count] = variable->Values[0];
-        }
-    }
-    
-    variable = NULL;
-    cVar = NULL;
-    
+    iValues = intvec(0, n-1);
 }
 
 @end

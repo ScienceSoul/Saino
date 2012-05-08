@@ -315,6 +315,16 @@
     return [solutionInfo objectForKey:key];
 }
 
+-(NSString *)normalTangentialName {
+    
+    return normalTangentialName;
+}
+
+-(int)simulationID {
+    
+    return simulationID;
+}
+
 -(int)normalTangentialNOFNodes {
     
     return normalTangentialNOFNodes;
@@ -323,6 +333,16 @@
 -(int)coordinateSystemDimension {
     
     return coordinateSystemDimension;
+}
+
+-(int)ntElement:(int)i :(int)j {
+    
+    return ntElement[i][j];
+}
+
+-(BOOL)ntZeroingDone:(int)i :(int)j {
+    
+    return ntZeroingDone[i][j];
 }
 
 -(int)boundaryReorder:(int)i {
@@ -400,6 +420,16 @@
     return sizeDefDofs;
 }
 
+-(void)setNormalTangentialName:(NSString *)string {
+    
+    normalTangentialName = [NSString stringWithString:string];
+}
+
+-(void)setSimulationID:(int)i {
+    
+    simulationID = i;
+}
+
 -(void)setNormalTangentialNOFNodes:(int)i {
     
     normalTangentialNOFNodes = i;
@@ -408,6 +438,16 @@
 -(void)setCoordinateSystemDimension:(int)i {
     
     coordinateSystemDimension = i;
+}
+
+-(void)setNtElement:(int)i :(int)j :(int)n {
+    
+    ntElement[i][j] = n;
+}
+
+-(void)setNtZeroingDone:(int)i :(int)j :(BOOL)n {
+    
+    ntZeroingDone[i][j] = n;
 }
 
 -(void)setBoundaryReorder:(int)i :(int)n {
@@ -510,6 +550,11 @@
 -(int)matrixLumped {
     
     return matrix.Lumped;
+}
+
+-(int)matrixSymmetric {
+    
+    return matrix.Symmetric;
 }
 
 -(int)matrixComplex {
@@ -615,6 +660,16 @@
 -(void)setMatrixOrdered:(int)i {
     
     matrix.Ordered = i;
+}
+
+-(void)setMatrixLumped:(int)i {
+    
+    matrix.Lumped = i;
+}
+
+-(void)setMatrixSymmetric:(int)i {
+    
+    matrix.Symmetric = i;
 }
 
 -(void)setMatrixRows:(int)i :(int)n {
@@ -907,6 +962,11 @@
     return matrix.sizeCILUValues;
 }
 
+-(int)variableSizeOfPerm {
+    
+    return variable.sizePerm;
+}
+
 -(int)variableSizeOfValues {
     
     return variable.sizeValues;
@@ -1002,6 +1062,11 @@
     matrix.sizeCILUValues = i;
 }
 
+-(void)setVariableSizeOfPerm:(int)i {
+    
+    variable.sizePerm = i;
+}
+
 -(void)setVariableSizeOfValues:(int)i {
     
     variable.sizeValues = i;
@@ -1013,6 +1078,16 @@
 }
 
 #pragma mark Test associativity
+
+-(BOOL)isAssociatedMatrixDiag {
+
+    if (matrix.Diag != NULL) {
+        return YES;
+    } else {
+        return NO;
+    }
+    
+}
 
 -(BOOL)isAssociatedMatrixILUValues {
     
@@ -1117,6 +1192,11 @@
     return mesh;
 }
 
+-(Matrix_t *)matrixReturnPointerToConstraintMatrix {
+
+    return matrix.ConstraintMatrix;
+}
+
 -(double *)matrixReturnPointerToRHS {
     
     return matrix.RHS;
@@ -1150,6 +1230,13 @@
 -(Variable_t *)meshReturnPointerToVariables {
     
     return [mesh returnPointerToVariables];
+}
+
+#pragma mark Methods assigning pointers
+
+-(void)matrixAssignConstraintMatrix:(Matrix_t *)a {
+    
+    matrix.ConstraintMatrix = a;
 }
 
 

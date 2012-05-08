@@ -15,6 +15,21 @@
     return dimension;
 }
 
+-(int)numberOfNodes {
+    
+    return numberOfNodes;
+}
+
+-(int)numberOfBulkElements {
+    
+    return numberOfBulkElements;
+}
+
+-(int)numberOfBoundaryElements {
+    
+    return numberOfBoundaryElements;
+}
+
 -(int)numberOfBodyForces {
     
     return numberOfBodyForces;
@@ -25,24 +40,44 @@
     return numberOfBoundaryConditions;
 }
 
--(NSArray *)bodiesValuesForKey:(NSString *)key {
+-(NSArray *)bodies {
     
-    return [bodies valueForKey:key];
+    return bodies;
 }
 
--(NSArray *)returnBodyForces {
+-(NSArray *)bodyForces {
     
     return bodyForces;
 }
 
--(NSArray *)returnBoundaryConditions {
+-(NSArray *)boundaryConditions {
     
     return boundaryConditions;
+}
+
+-(NSArray *)simulations {
+    
+    return simulations;
 }
 
 -(void)setDimension:(int)n {
     
     dimension = n;
+}
+
+-(void)setNumberOfNodes:(int)n {
+    
+    numberOfNodes = n;
+}
+
+-(void)setNumberOfBulkElements:(int)n {
+    
+    numberOfBulkElements = n;
+}
+
+-(void)setNumberOfBoundaryElements:(int)n {
+    
+    numberOfBoundaryElements = n;
 }
 
 -(void)setNumberOfBodyForces:(int)n {

@@ -1,14 +1,14 @@
 //
-//  FEMBoundaryCondition.m
+//  FEMSimulation.m
 //  Saino
 //
-//  Created by Hakime Seddik on 27/03/12.
+//  Created by Hakime Seddik on 26/04/12.
 //  Copyright (c) 2012 Institute of Low Temperature Science. All rights reserved.
 //
 
-#import "FEMBoundaryCondition.h"
+#import "FEMSimulation.h"
 
-@implementation FEMBoundaryCondition
+@implementation FEMSimulation
 
 -(int)tag {
     
@@ -23,11 +23,6 @@
 -(NSMutableArray *)returnValuesList {
     
     return valuesList;
-}
-
--(Matrix_t *)returnPMatrix {
-    
-    return pMatrix;
 }
 
 

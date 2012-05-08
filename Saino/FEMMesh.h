@@ -22,24 +22,32 @@
     Nodes_t *GlobalNodes;
     Variable_t *variables;
     
+    int sizeOfGlobalNodes;
+    
 }
 
 -(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) meshSize elemetCode:(int) elementID;
 
 -(int)dimension;
 -(int)numberOfNodes;
+-(int)numberOfBulkElements;
 -(int)numberOfEdges;
 -(int)numberOfFaces;
+-(int)numberOfBoundaryElements;
 -(int)maxElementNodes;
+-(int)maxElementDofs;
 -(int)maxFaceDofs;
 -(int)maxEdgeDofs;
 -(int)maxBdofs;
 
 -(void)setDimension: (int) n;
 -(void)setNumberOfNodes:(int)n;
+-(void)setNumberOfBulkElements:(int)n;
 -(void)setNumberOfEdges:(int)n;
 -(void)setNumberOfFaces:(int)n;
+-(void)setNumberOfBoundaryElements:(int)n;
 -(void)setMaxElementNodes:(int)n;
+-(void)setMaxElementDofs:(int)n;
 -(void)setMaxFaceDofs: (int)n;
 -(void)setMaxEdgeDofs: (int)n;
 -(void)setMaxBdofs: (int)n;
@@ -63,6 +71,7 @@
 -(void)setGlobalNodes_z: (int)i: (double)n;
 
 // Getters and setters for element structure fields
+-(Element_t *)returnElementAtIndex:(int)i;
 -(int)Elements_NodeIndexes:(int)i: (int)j;
 -(int)Elements_BodyID:(int)i;
 -(int)Elements_ElementIndex:(int)i;
@@ -113,6 +122,7 @@
 
 
 // Getters and setters for edges structure fields
+-(Element_t *)returnEdgeAtIndex:(int)i;
 -(int)Edges_NodeIndexes:(int)i: (int)j;
 -(int)Edges_Type_NumberOfNodes: (int)i;
 -(int)Edges_BDOFs:(int)i;
@@ -123,6 +133,7 @@
 
 
 // Getters and setters for faces structure fields
+-(Element_t *)returnFaceAtIndex:(int)i;
 -(int)Faces_NodeIndexes:(int)i: (int)j;
 -(int)Faces_Type_NumberOfNodes: (int)i;
 -(int)Faces_BDOFs:(int)i;
@@ -142,6 +153,17 @@
 
 // Getters for Variables
 -(Variable_t *)returnPointerToVariables;
+
+// Test associativity
+-(BOOL)isAssociatedEdges;
+-(BOOL)isAssociatedFaces;
+
+// Size
+-(int)sizeOfGlobalNodes;
+-(void)setSizeOfGlobalNodes:(int)n;
+
+
+
 
 
 

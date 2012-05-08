@@ -300,23 +300,23 @@ void free_i3tensor(int ***t, long nrl, long nrh, long ncl, long nch, long ndl, l
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-Nodes_t *NodeVec(long nl, long nh)
+Nodes_t *nodesvec(long nl, long nh)
 {
     Nodes_t *v;
     
     v = (Nodes_t *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(Nodes_t)));
-    if (!v) errorfunct("NodeVec", "Allocation failure for the nodes vector");
+    if (!v) errorfunct("nodesvec", "Allocation failure for the nodes vector");
     
     return v-nl+FI_END;
     
 }
 
-Element_t *ElementVec(long nl, long nh)
+Element_t *elementsvec(long nl, long nh)
 {
     Element_t *v;
     
     v = (Element_t *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(Element_t)));
-    if (!v) errorfunct("ElementVec", "Allocation failure for the elements vector");
+    if (!v) errorfunct("elementsvec", "Allocation failure for the elements vector");
     
     return v-nl+FI_END;
 }

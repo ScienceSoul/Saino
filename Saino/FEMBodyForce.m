@@ -10,7 +10,7 @@
 
 @implementation FEMBodyForce
 
--(NSArray *)returnValuesList {
+-(NSMutableArray *)returnValuesList {
     
     return valuesList;
 }

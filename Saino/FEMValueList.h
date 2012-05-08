@@ -8,21 +8,18 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FEMUtilities.h"
-#import "FEMModel.h"
-#import "Utils.h"
-#import "Lists.h"
-
 @interface FEMValueList : NSObject {
     
     double *tValues;
     double ***fValues;
-    int sizeTValues, sizeFValues;
+    int sizeTValues, sizeFValues1, sizeFValues2, sizeFValues3;
     
     int type;
+    BOOL method;
     
     BOOL lValue;
     int *iValues;
+    int sizeIValues;
     
     char *cValue;
     
@@ -31,15 +28,31 @@
     
 }
 
+-(double)tValues:(int)i;
+-(double)fValues:(int)i: (int)j: (int)k;
 -(int)sizeTValues;
--(int)sizeFValues;
+-(int)sizeFValues1;
+-(int)sizeFValues2;
+-(int)sizeFValues3;
 -(int)type;
+-(BOOL)method;
+-(BOOL)lValue;
+-(int)iValues:(int)i;
+-(int)sizeIValues;
 -(NSString *)name;
 -(NSString *)dependName;
 
+-(void)setTValues:(int)i: (double)n;
+-(void)setFValues:(int)i: (int)j: (int)k: (double)n;
 -(void)setSizeTValues:(int)n;
--(void)setSizeFValues:(int)n;
+-(void)setSizeFValues1:(int)n;
+-(void)setSizeFValues2:(int)n;
+-(void)setSizeFValues3:(int)n;
 -(void)setType:(int)n;
+-(void)setMethod:(BOOL)n;
+-(void)setLValue:(BOOL)n;
+-(void)setIValues:(int)i: (int)n;
+-(void)setSizeIValues:(int)n;
 -(void)setName:(NSString *)string;
 -(void)setDependName:(NSString *)string;
 
@@ -47,8 +60,6 @@
 -(double ***)returnPointerToFValues;
 -(int *)returnPointerToIValues;
 
-
--(BOOL)listGetReal:(FEMModel *)model: (NSArray *)array: (NSString *)varName: (int)n: (int *)nodeIndexes: (double *)result;
--(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count;
+-(void)allocateIValues:(int)n;
 
 @end

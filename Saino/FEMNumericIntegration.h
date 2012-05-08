@@ -14,32 +14,42 @@
 
 //@class FEMMesh;
 
-@interface FEMNumericIntegration : FEMMesh {
+@interface FEMNumericIntegration : NSObject {
 
 //@private
     GaussIntegrationPoints IntegCompound;
-    double *basis, **dBasisdx, ***ddBasisddx;
-    double detJ, **elementMetric, **covariantMetrixTensor, **LtoGMap;
-    double **dx; // Partial derivatives of global coordinates with respect to local coordinates
+    double *basis, **basisFirstDerivative, ***basisSecondDerivative;
+    double metricDeterminant, **elementMetric, **covariantMetrixTensor, **ltoGMap;
+    double **dx;         // Partial derivatives of global coordinates with respect to local coordinates
     
 }
 
--(BOOL)setBasis: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (BOOL)Bubbles: (int)el;
--(BOOL)setdBasisdx: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (BOOL)Bubbles: (int)el;
--(double)dBasisdx: (int)i: (int)j;
--(BOOL)setddBasisddx: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (BOOL)Bubbles: (int)el;
--(void)setdx: (int)NDOFs: (Nodes_t*)nodes: (double **)dLBasisdx: (int)el;
--(double)dx: (int)i: (int)j;
--(void)setCovariantMetrixTensor: (int)NDOFs: (Nodes_t*)nodes: (double **)dLBasisdx: (int)el;
--(double)covariantMetrixTensor: (int)i: (int)j;
--(BOOL)setdetJ: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (int)el;
--(double)detJ;
--(BOOL)setElementMetric: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (int)el;
--(double)elementMetric: (int)i: (int)j;
--(double)detG: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (int)el;
--(void)InvertMatrix3x3: (double **)GI: (double)detG;
--(BOOL)setLtoGMap: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (int)el;
--(double)LtoGMap: (int)i: (int)j;
--(void)GlobalSecondDerivatives: (Element_t*)element: (Nodes_t*)nodes: (double)u: (double)v: (double)w: (double*)f: (double**)dLBasisdx: (double **)values: (int)el;
+-(BOOL)allocation:(FEMMesh *)mesh;
+-(void)deallocation:(FEMMesh *)mesh;
+
+-(double)basis:(int)i;
+-(double)basisFirstDerivative:(int)i: (int)j;
+-(double)metricDeterminant;
+-(double)elementMetric:(int)i: (int)j;
+-(double)covariantMetrixTensor:(int)i: (int)j;
+-(double)ltoGMap:(int)i: (int)j;
+-(double)dx:(int)i: (int)j;
+
+-(BOOL)setBasisForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
+-(BOOL)setBasisFirstDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
+-(BOOL)setBasisSecondDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
+-(BOOL)setMetricDeterminantForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w;
+-(BOOL)setMetricForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w;
+
+-(void)setCovariantMetrixTensor:(Element_t *)element: (int)nDOFs: (Nodes_t*)nodes: (FEMMesh *)mesh: (double **)dLBasisdx;
+-(BOOL)setLtoGMap:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w;
+-(void)setdx:(Element_t *)element: (int)nDOFs: (Nodes_t*)nodes: (double **)dLBasisdx;
+
+-(double)detG:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w;
+-(void)invertMatrix3x3:(double **)GI: (double)detG;
+-(void)globalSecondDerivatives:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w: (double*)f: (double**)dLBasisdx: (double **)values;
+
+// Return pointers to data structures
+-(double *)returnPointerToBasis;
 
 @end

@@ -13,11 +13,12 @@
 @interface FEMModel : NSObject {
     
     int dimension;
+    int numberOfNodes, numberOfBulkElements, numberOfBoundaryElements;
     int numberOfBodyForces;
     int numberOfBoundaryConditions;
     
     
-    NSArray *bodies;     // Array of dictionaries
+    NSArray *bodies;                            // Array of dictionaries
     /* Initialize bodies like this:
      NSArray* names = [NSArray arrayWithObjects:
      [NSDictionary dictionaryWithObjectsAndKeys:
@@ -35,20 +36,28 @@
      nil];
      */
     
-    NSArray *bodyForces; // Array of FEMBodyForce objects
-    NSArray *boundaryConditions; // Array of FEMBoundaryCondition objects
+    NSArray *bodyForces;                        // Array of FEMBodyForce objects
+    NSArray *boundaryConditions;                // Array of FEMBoundaryCondition objects
+    NSArray *simulations;                        // Array of FEMSimulation objects 
     
     Variable_t *variables;
 }
 
 -(int)dimension;
+-(int)numberOfNodes;
+-(int)numberOfBulkElements;
+-(int)numberOfBoundaryElements;
 -(int)numberOfBodyForces;
 -(int)numberOfBoundaryConditions;
--(NSArray *)bodiesValuesForKey:(NSString *)key;
--(NSArray *)returnBodyForces;
--(NSArray *)returnBoundaryConditions;
+-(NSArray *)bodies;
+-(NSArray *)bodyForces;
+-(NSArray *)boundaryConditions;
+-(NSArray *)simulations;
 
 -(void)setDimension:(int)n;
+-(void)setNumberOfNodes:(int)n;
+-(void)setNumberOfBulkElements:(int)n;
+-(void)setNumberOfBoundaryElements:(int)n;
 -(void)setNumberOfBodyForces:(int)n;
 -(void)setNumberOfBoundaryConditions:(int)n;
 

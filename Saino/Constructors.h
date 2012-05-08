@@ -18,6 +18,18 @@ static int MATRIX_BAND   = 2;
 static int MATRIX_SBAND  = 3;
 static int MATRIX_LIST   = 4;
 
+static int LIST_TYPE_CONSTANT_SCALAR      =  1;
+static int LIST_TYPE_CONSTANT_TENSOR      =  2;
+static int LIST_TYPE_VARIABLE_SCALAR      =  3;
+static int LIST_TYPE_VARIABLE_TENSOR      =  4;
+static int LIST_TYPE_LOGICAL              =  5;
+static int LIST_TYPE_STRING               =  6;
+static int LIST_TYPE_INTEGER              =  7;
+static int LIST_TYPE_CONSTANT_SCALAR_STR  =  8;
+static int LIST_TYPE_CONSTANT_TENSIOR_STR =  9;
+static int LIST_TYPE_VARIABLE_SCALAR_STR  =  10;
+static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
+
 typedef struct {
     
     int ID;                     // Node identificaton number
@@ -37,20 +49,22 @@ typedef struct {
     
 } BasisFunctions_t;
 
-typedef struct {
+typedef struct ElementType_t {
     
-    int ElementCode;            // Numeric code for element
-    int BasisFunctionDegree,    // Linear or quadratic
+    struct ElementType_t *NextElementType; // List of types
+    
+    int ElementCode;                       // Numeric code for element
+    int BasisFunctionDegree,               // Linear or quadratic
         NumberOfNodes, 
         NumberOfEdges, 
         NumberOfFaces, 
-        dimension;              // 1=Line; 2=Surface; 3=Volume
+        dimension;                         // 1=Line; 2=Surface; 3=Volume
     
-    int GaussPoints,            // Number of Gauss points to use
+    int GaussPoints,                       // Number of Gauss points to use
         GaussPoints2;
     
     double StabilizationMK;
-    double *NodeU, *NodeV, *NodeW;
+    double *NodeU, *NodeV, *NodeW;         // They have size of NumberOfNodes
     
     BasisFunctions_t *BasisFunctions;
     
@@ -81,7 +95,7 @@ typedef struct Element_t {
     
     ElementType_t Type;
     BoundaryInfo_t *BoundaryInfo;
-    PElementDefs_t *PDefs;        // Initialize to NULL somewhere!!
+    PElementDefs_t *Pdefs;                        // Initialize to NULL somewhere!!
     
     int *NodeIndexes, *EdgeIndexes, *FaceIndexes, 
         *BubbleIndexes, *DGIndexes;               // Initialize that to NULL somewhere!!
@@ -199,7 +213,7 @@ typedef struct Variable_t {
     int NonLinIter;
     double *Values, **PrevValues, *PValues, *NonLinValues, *SteadyValues;
     double complex *EigenValues, **EigenVectors;
-    int sizeValues, sizePrevValues, sizePValues, sizeNonLinValues, sizeSteadyValues;
+    int sizePerm, sizeValues, sizePrevValues, sizePValues, sizeNonLinValues, sizeSteadyValues;
     
 } Variable_t;
 
@@ -224,6 +238,6 @@ typedef struct {
 
 #endif
 
-Nodes_t *NodeVec(long nl, long nh);
-Element_t *ElementVec(long nl, long nh);
+Nodes_t *nodesvec(long nl, long nh);
+Element_t *elementsvec(long nl, long nh);
 BDElement_t *BDElementVec(long nl, long nh);
