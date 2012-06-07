@@ -76,7 +76,7 @@ void addVariable(Variable_t *variables, char *name, int dofs, double *values, in
             return;
         }
         
-        //Apend at the end of the list
+        //Append at the end of the list
         temp1->Next = NULL;
         temp2->Next = temp1;
     }
