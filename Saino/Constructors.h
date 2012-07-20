@@ -120,7 +120,7 @@ typedef struct {               // Boundary element
 } BDElement_t;
 
 typedef struct {
-    // To do's
+    //TODO
 } Header;
 
 typedef struct ListMatrixEntry_t {

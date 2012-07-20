@@ -391,7 +391,7 @@ static int PRECOND_VANKA     =  560;
     
     if ([solution solutionInfoForKey:@"No precondition recompute"] != nil) {
         if ([[solution solutionInfoForKey:@"No precondition recompute"] boolValue] == NO) {
-            // To do's: Implement the code if we choose not to compute the preconditioner
+            // TODO: Implement the code if we choose not to compute the preconditioner
             // for each method call.
         }
     }
@@ -1155,14 +1155,14 @@ static int PRECOND_VANKA     =  560;
     // If solving harmonic anaysis go there:
     if (harmonicAnalysis == YES) {
         
-        // To do's
+        // TODO:
         
     }
     
     // If solving eigen system go there:
     if (eigenAnalysis) {
         
-        // To do's
+        // TODO:
         
     }
     
@@ -1242,7 +1242,7 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    // To do's: Add support for the treatment of variable loads and constrained matrix here
+    // TODO: Add support for the treatment of variable loads and constrained matrix here
     // ....
     
     [self FEMKernel_backRotateNTSystem:solution];
@@ -1303,7 +1303,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     
-    // To do's: Add support for constrained matrix
+    // TODO: Add support for constrained matrix
     
     [self FEMKernel_solveLinearSystem:solution];
     
@@ -1330,7 +1330,7 @@ static int PRECOND_VANKA     =  560;
             
             NSLog(@"Solution time for %s: %lf %lf (s)\n", [solution variableName], st, rst);
             
-            // // To do's: Add support for cumulative timing
+            // TODO: Add support for cumulative timing
         
         }
     }
@@ -3168,7 +3168,7 @@ static int PRECOND_VANKA     =  560;
         
     } else if ([solution matrixFormat] == MATRIX_LIST) {
         
-        // To do's: implement the zeroRow method for list matrix.
+        // TODO: implement the zeroRow method for list matrix.
         
     } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
@@ -3188,7 +3188,7 @@ static int PRECOND_VANKA     =  560;
         [crsMatrix setMatrixElementInGlobal:solution :i :j :value];
         
     } else if ([solution matrixFormat] == MATRIX_LIST) {
-        // To do's: implement the setMatrixElement method for list matrix.
+        // TODO: implement the setMatrixElement method for list matrix.
         
     } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
@@ -3207,7 +3207,7 @@ static int PRECOND_VANKA     =  560;
         [crsMatrix addToMatrixElementInGlobal:solution :i :j :value];
         
     } else if ([solution matrixFormat] == MATRIX_LIST) {
-        // To do's: implement the setMatrixElement method for list matrix.
+        // TODO: implement the setMatrixElement method for list matrix.
         
     } else if ([solution matrixFormat] == MATRIX_BAND || [solution matrixFormat] == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
@@ -4718,7 +4718,7 @@ static int PRECOND_VANKA     =  560;
                  switch (parent->Type.dimension) {
                      case 2:
                          // If no edges do not try to set boundary conditions
-                         // To do's: change to break instead of continue ??
+                         // TODO: change to break instead of continue ??
                          if ([mesh isAssociatedEdges] == NO) continue;
                          
                          // If boundary edge has not dofs, move on to next edge
@@ -4792,7 +4792,7 @@ static int PRECOND_VANKA     =  560;
                          break;
                      case 3:
                          // If no faces present do not try to set boundary conditions
-                         // To do's: change to break instead of continue ??
+                         // TODO: change to break instead of continue ??
                          if ([mesh isAssociatedFaces] == NO) continue;
                          
                          // Parameters of element

@@ -91,7 +91,7 @@
             
             if ([list type] == LIST_TYPE_CONSTANT_SCALAR) {
                 
-                // To do's: implement the call of a user provided method if required
+                // TODO: implement the call of a user provided method if required
                  
                 if ([list returnPointerToFValues] == NULL) {
                     warnfunct("listGetReal", "fValues not allocated in list:\n");
@@ -116,7 +116,7 @@
                     
                     if (any(t, '=', HUGE_VAL, j) == 0) {
                         
-                        // To do's: implement the call of a user provided method if required
+                        // TODO: implement the call of a user provided method if required
                         
                         if ([list returnPointerToFValues] == NULL) {
                             warnfunct("listGetReal", "fValues not allocated in list:\n");
@@ -129,9 +129,9 @@
                 
                 free_dvector(buffer, 0, [list sizeTValues]-1);
             } else if ([list type] == LIST_TYPE_CONSTANT_SCALAR_STR) {
-                 // To do's: implement this case
+                 // TODO: implement this case
             } else if ([list type] == LIST_TYPE_VARIABLE_SCALAR_STR) {
-                 // To do's: implement this case
+                 // TODO: implement this case
             }
             
             found = YES;
@@ -183,11 +183,11 @@
                     }
                 }
                 
-                // To do's: implement the call of a user provided method if required
+                // TODO: implement the call of a user provided method if required
             
             } else if ([list type] == LIST_TYPE_VARIABLE_TENSOR || [list type] == LIST_TYPE_VARIABLE_TENSOR_STR){
                 
-                // To do's: implement this case
+                // TODO: implement this case
                 
             } else {
                 
@@ -233,12 +233,12 @@
             
             if ([list type] >= 8) {
                 
-                // To do's: unimplemented case where type is greater than 8
+                // TODO: unimplemented case where type is greater than 8
                 // In Elmer this calls matc. Figure out later what we do in Saino
                 
             } else if ([list method] == YES) {
                 
-                // To do's: implement the call of a user provided method
+                // TODO: implement the call of a user provided method
                 
             } else {
                 
@@ -288,7 +288,7 @@
                 }
             }
             
-            // To do's: implement the call of a user provided method
+            // TODO: implement the call of a user provided method
             
             found = YES;
             break;
@@ -320,7 +320,7 @@
                 result[i] = [list iValues:i];
             }
             
-           // To do's: implement the call of a user provided method if required 
+           // TODO: implement the call of a user provided method if required 
             
             found = YES;
             break;
@@ -340,7 +340,7 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:[list name]] == YES) {
             
-            // To do's: implement the call of a user provided method if required
+            // TODO: implement the call of a user provided method if required
             
             if ([list returnPointerToIValues] == NULL) {
                 warnfunct("listGetReal", "iValues not allocated in list:\n");

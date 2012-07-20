@@ -603,7 +603,7 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
     
     NodalBasis = doublevec(0, n-1);
     
-    // To do's: Add support for p-elements
+    // TODO: Add support for p-elements
     
     switch(dim) {
         case 1:

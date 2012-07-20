@@ -84,7 +84,7 @@
         
     } else if (a->Format == MATRIX_LIST) {
         
-        // To do's: implement the zeroRow method for list matrix.
+        // TODO: implement the zeroRow method for list matrix.
         
     } else if (a->Format == MATRIX_BAND || a->Format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
@@ -104,7 +104,7 @@
         [crsMatrix setMatrixElementInMatrix:a :i :j :value];
         
     } else if (a->Format == MATRIX_LIST) {
-        // To do's: implement the setMatrixElement method for list matrix.
+        // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (a->Format == MATRIX_BAND || a->Format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];

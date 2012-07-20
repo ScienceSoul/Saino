@@ -55,7 +55,7 @@
 
 //Allocations methods
 -(BOOL)AllocateNodes: (int)nl: (int)nh;
-// To do's: Add diallocation methods........
+// TODO: Add diallocation methods........
 
 // Getters and setters for node structure fields
 -(int) GlobalNodes_ID: (int)i;

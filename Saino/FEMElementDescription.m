@@ -1483,7 +1483,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         return;
     }
     
-    // To do's: Here we serialize the arrays l[][] and g[][] because we need to do that for using 
+    // TODO: Here we serialize the arrays l[][] and g[][] because we need to do that for using 
     // them in dsygv_(). Later optimize so that we work initially on serialzed arrays so that 
     // we don't need to do a copy.
     
