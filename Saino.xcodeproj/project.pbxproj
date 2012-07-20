@@ -21,6 +21,8 @@
 		7315514C13583FFD004CCD09 /* SainoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315514B13583FFD004CCD09 /* SainoTests.m */; };
 		7315515913586108004CCD09 /* FEMKernel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMKernel.m */; };
 		7315515D1358615D004CCD09 /* FEMMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515C1358615D004CCD09 /* FEMMesh.m */; };
+		7320CC62159970510050D3B6 /* NodeCompare.c in Sources */ = {isa = PBXBuildFile; fileRef = 7320CC61159970510050D3B6 /* NodeCompare.c */; };
+		7320CC66159C6B9D0050D3B6 /* SIOMeshIO.m in Sources */ = {isa = PBXBuildFile; fileRef = 7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */; };
 		73275A3913C2BD0D006EC4BA /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 73275A3713C2BD0D006EC4BA /* Utils.c */; };
 		73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 73281C6314D2898100854B7D /* FEMPrecondition.m */; };
 		7332A9C6153E8E6500D81D30 /* FEMListUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 7332A9C5153E8E6500D81D30 /* FEMListUtilities.m */; };
@@ -31,6 +33,7 @@
 		73505DD013C1BD0600B1C043 /* NodalBasisFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 73505DCE13C1BD0600B1C043 /* NodalBasisFunctions.c */; };
 		7361A15814C69E6F006C2FA2 /* FEMModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15714C69E6F006C2FA2 /* FEMModel.m */; };
 		7361A15B14C6A084006C2FA2 /* FEMSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15A14C6A084006C2FA2 /* FEMSolution.m */; };
+		7372925415AA879E004532B5 /* SIOInfoParallel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7372925315AA879E004532B5 /* SIOInfoParallel.m */; };
 		7372A5F815495CF400A1D6FB /* FEMSimulation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7372A5F715495CF400A1D6FB /* FEMSimulation.m */; };
 		737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 737B0D7414E2274B00ED409D /* TimeProfile.c */; };
 		73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */; };
@@ -38,7 +41,12 @@
 		73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB6151C73F000B11665 /* FEMMatrixBand.m */; };
 		7396D183157863F500626765 /* FEMLinearAlgebra.m in Sources */ = {isa = PBXBuildFile; fileRef = 7396D182157863F500626765 /* FEMLinearAlgebra.m */; };
 		739A5684157DE092003E549C /* FEMElementsDefinition.m in Sources */ = {isa = PBXBuildFile; fileRef = 739A5683157DE092003E549C /* FEMElementsDefinition.m */; };
+		73A06CC715919DC5009FC87E /* SIOModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 73A06CC615919DC5009FC87E /* SIOModelManager.m */; };
 		73A4696915076F8500BDDEA6 /* Lists.c in Sources */ = {isa = PBXBuildFile; fileRef = 73A4696815076F8500BDDEA6 /* Lists.c */; };
+		73ADFABE1592D52F009A83C6 /* SIOMeshAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */; };
+		73ADFACE1594525A009A83C6 /* FileReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFACD1594525A009A83C6 /* FileReader.m */; };
+		73ADFAD115945343009A83C6 /* NSDataExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD015945343009A83C6 /* NSDataExtensions.m */; };
+		73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD31594560F009A83C6 /* DirectoryReader.m */; };
 		73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */ = {isa = PBXBuildFile; fileRef = 73ED563413AA10BB00F088CC /* GaussIntegration.c */; };
 		73F2105514E3D41000D52906 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 73F2105414E3D41000D52906 /* memory.c */; };
 		73F70A6815130C5E00A5B3B5 /* FEMValueList.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6715130C5E00A5B3B5 /* FEMValueList.m */; };
@@ -82,8 +90,12 @@
 		7315514B13583FFD004CCD09 /* SainoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoTests.m; sourceTree = "<group>"; };
 		7315515713586108004CCD09 /* FEMKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMKernel.h; sourceTree = "<group>"; };
 		7315515813586108004CCD09 /* FEMKernel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMKernel.m; sourceTree = "<group>"; };
-		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; };
 		7315515C1358615D004CCD09 /* FEMMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		7320CC61159970510050D3B6 /* NodeCompare.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NodeCompare.c; sourceTree = "<group>"; };
+		7320CC63159970680050D3B6 /* NodeCompare.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeCompare.h; sourceTree = "<group>"; };
+		7320CC64159C6B9C0050D3B6 /* SIOMeshIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshIO.h; sourceTree = "<group>"; };
+		7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshIO.m; sourceTree = "<group>"; };
 		73275A3713C2BD0D006EC4BA /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
 		73275A3813C2BD0D006EC4BA /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		73281C6214D2898100854B7D /* FEMPrecondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPrecondition.h; sourceTree = "<group>"; };
@@ -108,6 +120,8 @@
 		7361A15A14C6A084006C2FA2 /* FEMSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolution.m; sourceTree = "<group>"; };
 		736AFC2B1360115200144B03 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
 		736C02E513BC6C0900979806 /* Constructors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constructors.h; sourceTree = "<group>"; };
+		7372925215AA879E004532B5 /* SIOInfoParallel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOInfoParallel.h; sourceTree = "<group>"; };
+		7372925315AA879E004532B5 /* SIOInfoParallel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOInfoParallel.m; sourceTree = "<group>"; };
 		7372A5F615495CF400A1D6FB /* FEMSimulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSimulation.h; sourceTree = "<group>"; };
 		7372A5F715495CF400A1D6FB /* FEMSimulation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSimulation.m; sourceTree = "<group>"; };
 		737B0D7414E2274B00ED409D /* TimeProfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TimeProfile.c; sourceTree = "<group>"; };
@@ -122,8 +136,19 @@
 		7396D182157863F500626765 /* FEMLinearAlgebra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMLinearAlgebra.m; sourceTree = "<group>"; };
 		739A5682157DE092003E549C /* FEMElementsDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementsDefinition.h; sourceTree = "<group>"; };
 		739A5683157DE092003E549C /* FEMElementsDefinition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMElementsDefinition.m; sourceTree = "<group>"; };
+		73A06CC515919DC5009FC87E /* SIOModelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOModelManager.h; sourceTree = "<group>"; };
+		73A06CC615919DC5009FC87E /* SIOModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOModelManager.m; sourceTree = "<group>"; };
 		73A4696815076F8500BDDEA6 /* Lists.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Lists.c; sourceTree = "<group>"; };
 		73A4696B15076F9200BDDEA6 /* Lists.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lists.h; sourceTree = "<group>"; };
+		73ADFABC1592D52F009A83C6 /* SIOMeshAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshAgent.h; sourceTree = "<group>"; };
+		73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshAgent.m; sourceTree = "<group>"; };
+		73ADFAC01592FEA1009A83C6 /* sio_config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sio_config.h; sourceTree = "<group>"; };
+		73ADFACC1594525A009A83C6 /* FileReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileReader.h; sourceTree = "<group>"; };
+		73ADFACD1594525A009A83C6 /* FileReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileReader.m; sourceTree = "<group>"; };
+		73ADFACF15945343009A83C6 /* NSDataExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDataExtensions.h; sourceTree = "<group>"; };
+		73ADFAD015945343009A83C6 /* NSDataExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDataExtensions.m; sourceTree = "<group>"; };
+		73ADFAD21594560F009A83C6 /* DirectoryReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectoryReader.h; sourceTree = "<group>"; };
+		73ADFAD31594560F009A83C6 /* DirectoryReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectoryReader.m; sourceTree = "<group>"; };
 		73ED563413AA10BB00F088CC /* GaussIntegration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GaussIntegration.c; sourceTree = "<group>"; };
 		73ED563513AA10BB00F088CC /* GaussIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = GaussIntegration.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		73ED563713AA16F200F088CC /* Numerics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Numerics.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -266,6 +291,8 @@
 		7315515A1358610F004CCD09 /* FEM Classes */ = {
 			isa = PBXGroup;
 			children = (
+				73ADFACB15945240009A83C6 /* Readers */,
+				73A06CC31591826B009FC87E /* SIO */,
 				73456EC914ECDB0200ECD602 /* HUTIter */,
 				73F70A641512EDE000A5B3B5 /* Class utilities */,
 				7308738E1509F5BF001DE27F /* FEMParallelMPI.h */,
@@ -319,6 +346,37 @@
 				7301FA201520120500451A49 /* sainoReport.pages */,
 			);
 			name = Docs;
+			sourceTree = "<group>";
+		};
+		73A06CC31591826B009FC87E /* SIO */ = {
+			isa = PBXGroup;
+			children = (
+				73ADFAC01592FEA1009A83C6 /* sio_config.h */,
+				7372925215AA879E004532B5 /* SIOInfoParallel.h */,
+				7372925315AA879E004532B5 /* SIOInfoParallel.m */,
+				7320CC63159970680050D3B6 /* NodeCompare.h */,
+				7320CC61159970510050D3B6 /* NodeCompare.c */,
+				73A06CC515919DC5009FC87E /* SIOModelManager.h */,
+				73A06CC615919DC5009FC87E /* SIOModelManager.m */,
+				73ADFABC1592D52F009A83C6 /* SIOMeshAgent.h */,
+				73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */,
+				7320CC64159C6B9C0050D3B6 /* SIOMeshIO.h */,
+				7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */,
+			);
+			name = SIO;
+			sourceTree = "<group>";
+		};
+		73ADFACB15945240009A83C6 /* Readers */ = {
+			isa = PBXGroup;
+			children = (
+				73ADFACF15945343009A83C6 /* NSDataExtensions.h */,
+				73ADFAD015945343009A83C6 /* NSDataExtensions.m */,
+				73ADFAD21594560F009A83C6 /* DirectoryReader.h */,
+				73ADFAD31594560F009A83C6 /* DirectoryReader.m */,
+				73ADFACC1594525A009A83C6 /* FileReader.h */,
+				73ADFACD1594525A009A83C6 /* FileReader.m */,
+			);
+			name = Readers;
 			sourceTree = "<group>";
 		};
 		73F70A641512EDE000A5B3B5 /* Class utilities */ = {
@@ -481,6 +539,14 @@
 				7372A5F815495CF400A1D6FB /* FEMSimulation.m in Sources */,
 				7396D183157863F500626765 /* FEMLinearAlgebra.m in Sources */,
 				739A5684157DE092003E549C /* FEMElementsDefinition.m in Sources */,
+				73A06CC715919DC5009FC87E /* SIOModelManager.m in Sources */,
+				73ADFABE1592D52F009A83C6 /* SIOMeshAgent.m in Sources */,
+				73ADFACE1594525A009A83C6 /* FileReader.m in Sources */,
+				73ADFAD115945343009A83C6 /* NSDataExtensions.m in Sources */,
+				73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */,
+				7320CC62159970510050D3B6 /* NodeCompare.c in Sources */,
+				7320CC66159C6B9D0050D3B6 /* SIOMeshIO.m in Sources */,
+				7372925415AA879E004532B5 /* SIOInfoParallel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

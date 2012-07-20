@@ -38,7 +38,7 @@
     
     NSArray *bodyForces;                        // Array of FEMBodyForce objects
     NSArray *boundaryConditions;                // Array of FEMBoundaryCondition objects
-    NSArray *simulations;                        // Array of FEMSimulation objects 
+    NSArray *simulations;                       // Array of FEMSimulation objects 
     
     Variable_t *variables;
 }

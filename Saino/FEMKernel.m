@@ -3078,7 +3078,7 @@ static int PRECOND_VANKA     =  560;
  
     Arguments:
  
-        FEMMesh *mesh      -> class containing the mesh its edges and faces of elements
+        FEMMesh *mesh      -> class containing the mesh and its edges and faces of elements
         Element_t *element -> Boundary element to get indexes for
         Element_t *parent  -> Parent of boundary element
         int *indexes       -> Calculated indexes of boundary element in global system
