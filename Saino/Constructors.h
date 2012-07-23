@@ -13,22 +13,27 @@
 
 #define MAX_NAME_LEN 128
 
-static int MATRIX_CRS    = 1;
-static int MATRIX_BAND   = 2;
-static int MATRIX_SBAND  = 3;
-static int MATRIX_LIST   = 4;
 
-static int LIST_TYPE_CONSTANT_SCALAR      =  1;
-static int LIST_TYPE_CONSTANT_TENSOR      =  2;
-static int LIST_TYPE_VARIABLE_SCALAR      =  3;
-static int LIST_TYPE_VARIABLE_TENSOR      =  4;
-static int LIST_TYPE_LOGICAL              =  5;
-static int LIST_TYPE_STRING               =  6;
-static int LIST_TYPE_INTEGER              =  7;
-static int LIST_TYPE_CONSTANT_SCALAR_STR  =  8;
-static int LIST_TYPE_CONSTANT_TENSIOR_STR =  9;
-static int LIST_TYPE_VARIABLE_SCALAR_STR  =  10;
-static int LIST_TYPE_VARIABLE_TENSOR_STR  =  11;
+enum {
+    MATRIX_CRS = 1,
+    MATRIX_BAND,
+    MATRIX_SBAND,
+    MATRIX_LIST
+};
+
+enum  {
+    LIST_TYPE_CONSTANT_SCALAR = 1,
+    LIST_TYPE_CONSTANT_TENSOR,
+    LIST_TYPE_VARIABLE_SCALAR,
+    LIST_TYPE_VARIABLE_TENSOR,
+    LIST_TYPE_LOGICAL,
+    LIST_TYPE_STRING,
+    LIST_TYPE_INTEGER,
+    LIST_TYPE_CONSTANT_SCALAR_STR,
+    LIST_TYPE_CONSTANT_TENSIOR_STR,
+    LIST_TYPE_VARIABLE_SCALAR_STR,
+    LIST_TYPE_VARIABLE_TENSOR_STR
+};
 
 typedef struct {
     

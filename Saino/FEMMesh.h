@@ -12,155 +12,62 @@
 
 @interface FEMMesh : NSObject {
   
-    int dimension;
-    int numberOfNodes, numberOfBulkElements, numberOfEdges, numberOfFaces, 
-        numberOfBoundaryElements, maxElementNodes, maxElementDofs, maxEdgeDofs, 
-        maxFaceDofs, maxBdofs;
+    int _dimension;
+    int _numberOfNodes; 
+    int _numberOfBulkElements; 
+    int _numberOfEdges; 
+    int _numberOfFaces;
+    int _numberOfBoundaryElements; 
+    int _maxElementNodes; 
+    int _maxElementDofs; 
+    int _maxEdgeDofs;
+    int _maxFaceDofs; 
+    int _maxBdofs;
+    int _sizeOfGlobalNodes;
     
-    Element_t *Elements, *Edges, *Faces;
-    BDElement_t *BDElements;
-    Nodes_t *GlobalNodes;
-    Variable_t *variables;
+    Element_t *_elements, *_edges, *_faces;
+    Nodes_t *_globalNodes;
     
-    int sizeOfGlobalNodes;
-    
+    Variable_t *_variables;
 }
 
--(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) meshSize elemetCode:(int) elementID;
-
--(int)dimension;
--(int)numberOfNodes;
--(int)numberOfBulkElements;
--(int)numberOfEdges;
--(int)numberOfFaces;
--(int)numberOfBoundaryElements;
--(int)maxElementNodes;
--(int)maxElementDofs;
--(int)maxFaceDofs;
--(int)maxEdgeDofs;
--(int)maxBdofs;
-
--(void)setDimension: (int) n;
--(void)setNumberOfNodes:(int)n;
--(void)setNumberOfBulkElements:(int)n;
--(void)setNumberOfEdges:(int)n;
--(void)setNumberOfFaces:(int)n;
--(void)setNumberOfBoundaryElements:(int)n;
--(void)setMaxElementNodes:(int)n;
--(void)setMaxElementDofs:(int)n;
--(void)setMaxFaceDofs: (int)n;
--(void)setMaxEdgeDofs: (int)n;
--(void)setMaxBdofs: (int)n;
-
+@property(nonatomic, assign) int dimension;
+@property(nonatomic, assign) int numberOfNodes;
+@property(nonatomic, assign) int numberOfBulkElements;
+@property(nonatomic, assign) int numberOfEdges;
+@property(nonatomic, assign) int numberOfFaces;
+@property(nonatomic, assign) int numberOfBoundaryElements;
+@property(nonatomic, assign) int maxElementNodes;
+@property(nonatomic, assign) int maxElementDofs;
+@property(nonatomic, assign) int maxEdgeDofs;
+@property(nonatomic, assign) int maxFaceDofs;
+@property(nonatomic, assign) int maxBdofs;
+@property(nonatomic, assign) int sizeOfGlobalNodes;
 
 //Allocations methods
 -(BOOL)AllocateNodes: (int)nl: (int)nh;
 // TODO: Add diallocation methods........
 
-// Getters and setters for node structure fields
--(int) GlobalNodes_ID: (int)i;
--(int) GlobalNodes_p: (int)i;
--(double) GlobalNodes_x: (int)i;
--(double) GlobalNodes_y: (int)i;
--(double) GlobalNodes_z: (int)i;
+// Nodes getter
+-(Nodes_t *)getNodes;
 
--(void)setGlabalNodes_ID: (int)i: (int)n;
--(void)setGlabalNodes_p: (int)i: (int)n;
--(void)setGlobalNodes_x: (int)i: (double)n;
--(void)setGlobalNodes_y: (int)i: (double)n;
--(void)setGlobalNodes_z: (int)i: (double)n;
+// Elements getter
+-(Element_t *)getElements;
 
-// Getters and setters for element structure fields
--(Element_t *)returnElementAtIndex:(int)i;
--(int)Elements_NodeIndexes:(int)i: (int)j;
--(int)Elements_BodyID:(int)i;
--(int)Elements_ElementIndex:(int)i;
--(int)Elements_NDOFs:(int)i;
--(double)Elements_StabilizationMK:(int)i;
--(double)Elements_hk:(int)i;
--(int)Elements_Type_ElementCode: (int)i;
--(int)Elements_Type_BasisFunctionDegree: (int)i;
--(int)Elements_Type_NumberOfNodes: (int)i;
--(int)Elements_Type_NumberOfEdges: (int)i;
--(int)Elements_Type_NumberOfFaces: (int)i;
--(int)Elements_Type_dimension: (int)i;
--(int)Elements_Type_GaussPoints: (int)i;
--(int)Elements_Type_GaussPoints2: (int)i;
--(double)Elements_Type_StabilizationMK: (int)i;
--(double)Elements_Type_NodeU: (int)i: (int)j;
--(double)Elements_Type_NodeV: (int)i: (int)j;
--(double)Elements_Type_NodeW: (int)i: (int)j;
--(int)Elements_Type_BasisFunctions_n:(int)i: (int)j;
--(int)Elements_Type_BasisFunctions_p:(int)i: (int)j: (int)k;
--(int)Elements_Type_BasisFunctions_q:(int)i: (int)j: (int)k;
--(int)Elements_Type_BasisFunctions_r:(int)i: (int)j: (int)k;
--(double)Elements_Type_BasisFunctions_coeff:(int)i: (int)j: (int)k;
+// Edges getter 
+-(Element_t *)getEdges;
 
--(void)setElements_NodeIndexes: (int)i: (int)j: (int)n;
--(void)setElements_BodyID: (int)i: (int)n;
--(void)setElements_ElementIndex: (int)i: (int)n;
--(void)setElements_NDOFs: (int)i: (int)n;
--(void)setElements_StabilizationMK: (int)i: (double)n;
--(void)setElements_hK: (int)i: (double)n;
--(void)setElements_Type_ElementCode: (int)i: (int)n;
--(void)setElements_Type_BasisFunctionDegree: (int)i: (int)n;
--(void)setElements_Type_NumberOfNodes: (int)i: (int)n;
--(void)setElements_Type_NumberOfEdges: (int)i: (int)n;
--(void)setElements_Type_NumberOfFaces: (int)i: (int)n;
--(void)setElements_Type_dimension: (int)i: (int)n;
--(void)setElements_Type_GaussPoints: (int)i: (int)n;
--(void)setElements_Type_GaussPoints2: (int)i: (int)n;
--(void)setElements_Type_StabilizationMK: (int)i: (double)n;
--(void)setElements_Type_NodeU: (int)i: (int)j: (double)n;
--(void)setElements_Type_NodeV: (int)i: (int)j: (double)n;
--(void)setElements_Type_NodeW: (int)i: (int)j: (double)n;
--(void)setElements_Type_BasisFunctions_n: (int)i: (int)j: (int)n;
--(void)setElements_Type_BasisFunctions_p: (int)i: (int)j: (int)k: (int)n;
--(void)setElements_Type_BasisFunctions_q: (int)i: (int)j: (int)k: (int)n;
--(void)setElements_Type_BasisFunctions_r: (int)i: (int)j: (int)k: (int)n;
--(void)setElements_Type_BasisFunctions_coeff: (int)i: (int)j: (int)k: (double)n;
+// Faces getter
+-(Element_t *)getFaces;
 
-
-// Getters and setters for edges structure fields
--(Element_t *)returnEdgeAtIndex:(int)i;
--(int)Edges_NodeIndexes:(int)i: (int)j;
--(int)Edges_Type_NumberOfNodes: (int)i;
--(int)Edges_BDOFs:(int)i;
-
--(void)setEdges_NodeIndexes: (int)i: (int)j: (int)n;
--(void)setEdges_Type_NumberOfNodes: (int)i: (int)n;
--(void)setEdges_BDOFs: (int)i: (int)n;
-
-
-// Getters and setters for faces structure fields
--(Element_t *)returnFaceAtIndex:(int)i;
--(int)Faces_NodeIndexes:(int)i: (int)j;
--(int)Faces_Type_NumberOfNodes: (int)i;
--(int)Faces_BDOFs:(int)i;
-
--(void)setFaces_NodeIndexes: (int)i: (int)j: (int)n;
--(void)setFaces_Type_NumberOfNodes: (int)i: (int)n;
--(void)setFaces_BDOFs: (int)i: (int)n;
-
-
-// Getters and setters for boundary element structure fields
--(void)setBDElements_ID: (int)i: (int)n;
--(void)setBDElements_boundary: (int)i: (int)n;
--(void)setBDElements_p1: (int)i: (int)n;
--(void)setBDElements_p2: (int)i: (int)n;
--(void)setDElements_code:(int)i: (int)n;
--(void)setBDElements_NodeIndexes: (int)i: (int)j: (int)n;
-
-// Getters for Variables
--(Variable_t *)returnPointerToVariables;
+// Variables getter
+-(Variable_t *)getVariables;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;
 -(BOOL)isAssociatedFaces;
 
-// Size
--(int)sizeOfGlobalNodes;
--(void)setSizeOfGlobalNodes:(int)n;
+-(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) meshSize elemetCode:(int) elementID;
 
 
 

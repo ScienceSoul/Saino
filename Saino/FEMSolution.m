@@ -1229,7 +1229,7 @@
 
 -(Variable_t *)meshReturnPointerToVariables {
     
-    return [mesh returnPointerToVariables];
+    return [mesh getVariables];
 }
 
 #pragma mark Methods assigning pointers

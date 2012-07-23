@@ -2434,8 +2434,10 @@ static int PRECOND_VANKA     =  560;
     
     int i, n, nb, sz, sz1;
     FEMMesh *mesh;
+    Nodes_t *globalNodes;
     
     mesh = [solution returnPointerToMesh];
+    globalNodes = [mesh getNodes];
     
     n = max([mesh maxElementNodes], [mesh maxElementDofs]);
     
@@ -2446,9 +2448,9 @@ static int PRECOND_VANKA     =  560;
     n = element->Type.NumberOfNodes;
     
     for (i=0; i<n; i++) {
-        nodes[i].x = [mesh GlobalNodes_x:element->NodeIndexes[i]];
-        nodes[i].y = [mesh GlobalNodes_y:element->NodeIndexes[i]];
-        nodes[i].z = [mesh GlobalNodes_z:element->NodeIndexes[i]];
+        nodes[i].x = globalNodes[element->NodeIndexes[i]].x;
+        nodes[i].y = globalNodes[element->NodeIndexes[i]].y;
+        nodes[i].z = globalNodes[element->NodeIndexes[i]].z;
     }
     
     sz = max([mesh maxElementNodes], [mesh maxElementDofs]); 
@@ -2466,14 +2468,15 @@ static int PRECOND_VANKA     =  560;
         nb = [self getElementDofs:solution forElement:element atIndexes:indexStore];
         for (i=n; i<nb; i++) {
             if (indexStore[i] >= 0 && indexStore[i] < sz1) {
-                nodes[i].x = [mesh GlobalNodes_x:indexStore[i]];
-                nodes[i].y = [mesh GlobalNodes_y:indexStore[i]];
-                nodes[i].z = [mesh GlobalNodes_z:indexStore[i]];
+                nodes[i].x = globalNodes[indexStore[i]].x;
+                nodes[i].y = globalNodes[indexStore[i]].y;
+                nodes[i].z = globalNodes[indexStore[i]].z;
             }
         }
     }
     
     mesh = nil;
+    globalNodes = NULL;
     
 }
 
@@ -2486,10 +2489,12 @@ static int PRECOND_VANKA     =  560;
     
     int nb, i, j, k, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
-    Element_t *parent;
+    Element_t *parent, *edges, *faces;
     FEMMesh *mesh;
     
     mesh = [solution returnPointerToMesh];
+    edges = [mesh getEdges];
+    faces = [mesh getFaces];
     
     nb = 0;
     
@@ -2535,7 +2540,7 @@ static int PRECOND_VANKA     =  560;
     
     if (element->EdgeIndexes != NULL) {
         for (j=0; j<element->Type.NumberOfEdges; j++) {
-            edofs = [mesh Edges_BDOFs:element->EdgeIndexes[j]];
+            edofs = edges[element->EdgeIndexes[j]].BDOFs;
             for (i=0; i<edofs; i++) {
                 indexes[nb] = edgeDofs*(element->EdgeIndexes[j]-1) + i + mesh.numberOfNodes;
                 nb++;
@@ -2545,7 +2550,7 @@ static int PRECOND_VANKA     =  560;
     
     if (element->FaceIndexes != NULL) {
         for (j=0; j<element->Type.NumberOfFaces; j++) {
-            fdofs = [mesh Faces_BDOFs:element->FaceIndexes[j]];
+            fdofs = faces[element->FaceIndexes[j]].BDOFs;
             for (i=0; i<fdofs; i++) {
                 indexes[nb] = faceDofs*(element->FaceIndexes[j]-1) + i + mesh.numberOfNodes + 
                 edgeDofs*mesh.numberOfEdges;
@@ -2573,9 +2578,9 @@ static int PRECOND_VANKA     =  560;
                 } else {
                     for (ind=0; ind<parent->Type.NumberOfEdges; ind++) {
                         k = 0;
-                        for (i=0; i<[mesh Edges_Type_NumberOfNodes:parent->EdgeIndexes[ind]]; i++) {
+                        for (i=0; i<edges[parent->EdgeIndexes[ind]].Type.NumberOfNodes; i++) {
                             for (j=0; element->Type.NumberOfNodes; j++) {
-                                if ([mesh Edges_NodeIndexes:parent->EdgeIndexes[ind] :i] == element->NodeIndexes[j]) k++;
+                                if (edges[parent->EdgeIndexes[ind]].NodeIndexes[i] == element->NodeIndexes[j]) k++;
                             }
                         }
                         if (k == element->Type.NumberOfNodes) break;
@@ -2596,9 +2601,9 @@ static int PRECOND_VANKA     =  560;
                 } else {
                     for (ind=0; ind<parent->Type.NumberOfFaces; ind++) {
                         k = 0;
-                        for (i=0; i<[mesh Faces_Type_NumberOfNodes:parent->FaceIndexes[ind]]; i++) {
+                        for (i=0; i<faces[parent->FaceIndexes[ind]].Type.NumberOfNodes; i++) {
                             for (j=0; j<element->Type.NumberOfNodes; j++) {
-                                if ([mesh Faces_NodeIndexes:parent->FaceIndexes[ind] :i] == element->NodeIndexes[j]) k++;
+                                if (faces[parent->FaceIndexes[ind]].NodeIndexes[i] == element->NodeIndexes[j]) k++;
                             }
                         }
                         if (k == element->Type.NumberOfNodes) break;
@@ -2624,6 +2629,8 @@ static int PRECOND_VANKA     =  560;
     }
     
     mesh = nil;
+    edges = NULL;
+    faces = NULL;
     
     return nb;
     
@@ -2633,10 +2640,12 @@ static int PRECOND_VANKA     =  560;
     
     int nb, i, j, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs;
     BOOL gb;
-    Element_t *parent;
+    Element_t *parent, *edges, *faces;
     FEMMesh *mesh;
     
     mesh = [solution returnPointerToMesh];
+    edges = [mesh getEdges];
+    faces = [mesh getFaces];
     
     nb = 0;
     
@@ -2679,7 +2688,7 @@ static int PRECOND_VANKA     =  560;
     
     if (element->EdgeIndexes != NULL) {
         for (j=0; j<element->Type.NumberOfEdges; j++) {
-            edofs = [mesh Edges_BDOFs:element->EdgeIndexes[j]];
+            edofs = edges[element->EdgeIndexes[j]].BDOFs;
             for (i=0; i<edofs; i++) {
                 indexes[nb] = edgeDofs*(element->EdgeIndexes[j]-1) + i + mesh.numberOfNodes;
                 nb++;
@@ -2689,7 +2698,7 @@ static int PRECOND_VANKA     =  560;
     
     if (element->FaceIndexes != NULL) {
         for (j=0; j<element->Type.NumberOfFaces; j++) {
-            fdofs = [mesh Faces_BDOFs:element->FaceIndexes[j]];
+            fdofs = faces[element->FaceIndexes[j]].BDOFs;
             for (i=0; i<fdofs; i++) {
                 indexes[nb] = faceDofs*(element->FaceIndexes[j]-1) + i + mesh.numberOfNodes + 
                 edgeDofs*mesh.numberOfEdges;
@@ -2738,6 +2747,8 @@ static int PRECOND_VANKA     =  560;
     }
     
     mesh = nil;
+    edges = NULL;
+    faces = NULL;
     
     return nb;    
     
@@ -2791,20 +2802,18 @@ static int PRECOND_VANKA     =  560;
 -(Element_t *)getBoundaryElement:(FEMSolution *)solution atIndex:(int)index {
     
     FEMMesh *mesh;
-    Element_t *element;
+    Element_t *elements;
     
     mesh = [solution returnPointerToMesh];
+    elements = [mesh getElements];
     
-    if (index >= 0 && index < [mesh numberOfBoundaryElements]) {
+    if (index < 0 || index > [mesh numberOfBoundaryElements]-1) {   
         
-        element = [mesh returnElementAtIndex:[mesh numberOfBulkElements]+index];
-    } else {
         errorfunct("getBoundaryElement", "Invalid element number requested at index:");
         printf("%d\n", index);
     }
     
-    mesh = nil;
-    return element;
+    return &elements[[mesh numberOfBulkElements]+index];
 }
 
 -(int **)getEdgeMap:(int)elementFamily {
@@ -3087,12 +3096,15 @@ static int PRECOND_VANKA     =  560;
 ****************************************************************************************************************************************************/
     
     int i, j, n;
-    Element_t *edge, *face;
+    Element_t *edges, *faces;
     
     // Clear indexes
     memset( indexes, 0.0, (mesh.numberOfNodes*sizeof(indexes)) );
     
     n = element->Type.NumberOfNodes;
+    
+    edges = [mesh getEdges];
+    faces = [mesh getFaces];
     
     // Nodal indexes
     memcpy(indexes, element->NodeIndexes, n*sizeof(indexes));
@@ -3112,31 +3124,27 @@ static int PRECOND_VANKA     =  560;
             }
             indSize = n;
             break;
-        case 3:
-            // Get boundary face
-            face = [mesh returnFaceAtIndex:parent->FaceIndexes[element->Pdefs->LocalNumber-1]];
-            
+        case 3:            
             // Add indexes of faces edges
-            for (i=0; i<face->Type.NumberOfEdges; i++) {
-                edge = [mesh returnEdgeAtIndex:face->EdgeIndexes[i]];
+            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].Type.NumberOfEdges; i++) {
                 
                 // If edge has no dofs jump to next edge
-                if (edge->BDOFs <= 0) continue;
+                if (edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]].BDOFs <= 0) continue;
                 
-                for (j=0; j<edge->BDOFs; j++) {
+                for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]].BDOFs; j++) {
                     
                     if (mesh.numberOfNodes < n) {
                         errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
                         return;
                     }
                     
-                    indexes[n] = mesh.numberOfNodes + face->EdgeIndexes[i]*mesh.maxEdgeDofs + j;
+                    indexes[n] = mesh.numberOfNodes + faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]*mesh.maxEdgeDofs + j;
                     n++;
                 }
             }
             
             // Add indexes of gaces bubbles
-            for (i=0; i<face->BDOFs; i++) {                
+            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].BDOFs; i++) {                
                 if (mesh.numberOfNodes < n) {
                     errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
@@ -3147,8 +3155,8 @@ static int PRECOND_VANKA     =  560;
             }
             
             indSize = n;
-            face = NULL;
-            edge = NULL;
+            faces = NULL;
+            edges = NULL;
             break;
         default:
             errorfunct("getBoundaryIndexes", "Unsupported dimension.");
@@ -3571,7 +3579,8 @@ static int PRECOND_VANKA     =  560;
     int *indexes, *inNodes, *nodeIndexes;
     double **coordNodes, minDist, dist;
     BOOL *activePort, *activePortAll, *doneLoad, anyActive;
-    Element_t *element;
+    Element_t *elements;
+    Nodes_t *globalNodes;
     FEMMesh *mesh;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
@@ -3591,6 +3600,8 @@ static int PRECOND_VANKA     =  560;
     activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
     
     mesh = [solution returnPointerToMesh];
+    elements = [mesh getElements];
+    globalNodes = [mesh getNodes];
     
     indexes = intvec(0, [mesh maxElementDofs]-1);
     
@@ -3636,20 +3647,19 @@ static int PRECOND_VANKA     =  560;
               
                 for (t=[model numberOfBulkElements]; t<[model numberOfBulkElements]+[model numberOfBoundaryElements]; t++) {
                     
-                    element = [mesh returnElementAtIndex:t];
                     boundaryConditionAtId = [boundaries objectAtIndex:bc];
-                    if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
                     
                     if (activePort[bc] == YES) {
-                        n = element->Type.NumberOfNodes;
+                        n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
-                            indexes[i] = element->NodeIndexes[i];
+                            indexes[i] = elements[t].NodeIndexes[i];
                         }
                     } else {
-                        n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                     }
                     
-                    [self FEMKernel_setElementLoads:model :solution :element :[boundaryConditionAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
+                    [self FEMKernel_setElementLoads:model :solution :&elements[t] :[boundaryConditionAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
                 }
             }
         }
@@ -3692,24 +3702,23 @@ static int PRECOND_VANKA     =  560;
             
             for (t=0; t<[model numberOfBulkElements]; t++) {
                 
-                element = [mesh returnElementAtIndex:t];
-                bf_id = [[[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] intValue];
+                bf_id = [[[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
                 
-                if ([[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if ([[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
                 if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
                 
                 
                 if (activePort[bf_id] == YES) {
-                    n = element->Type.NumberOfNodes;
+                    n = elements[t].Type.NumberOfNodes;
                     for (i=0; i<n; i++) {
-                        indexes[i] = element->NodeIndexes[i];
+                        indexes[i] = elements[t].NodeIndexes[i];
                     }
                 } else {
-                    n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
                 
                 bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-                [self FEMKernel_setElementLoads:model :solution :element :[bodyForceAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
+                [self FEMKernel_setElementLoads:model :solution :&elements[t] :[bodyForceAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :[solution variableDofs]];   
             }
         }
     }
@@ -3747,9 +3756,9 @@ static int PRECOND_VANKA     =  560;
                             for (i=0; i<[model numberOfNodes]; i++) {
                                 if ([solution variablePerm:i] < 0) continue;
                                 
-                                dist = pow(([mesh GlobalNodes_x:i]-coordNodes[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow(([mesh GlobalNodes_y:i]-coordNodes[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow(([mesh GlobalNodes_z:i]-coordNodes[j][2]), 2.0);
+                                dist = pow((globalNodes[i].x-coordNodes[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes[j][2]), 2.0);
                                 
                                 if (dist<minDist) {
                                     minDist = dist;
@@ -3772,7 +3781,7 @@ static int PRECOND_VANKA     =  560;
                 nodeIndexes = intvec(0, n-1);
                 [listUtil listGetIntegerArray:model inArray:[boundaryConditionAtId returnValuesList] forVariable:@"Target nodes" resultArray:nodeIndexes];
                 
-                [self FEMKernel_setPointLoads:model :solution :element :[boundaryConditionAtId returnValuesList] :loadName :nodeIndexes :n :dof :[solution variableDofs]];
+                [self FEMKernel_setPointLoads:model :solution :elements :[boundaryConditionAtId returnValuesList] :loadName :nodeIndexes :n :dof :[solution variableDofs]];
                 
                 free_ivector(nodeIndexes, 0, n-1);
                 
@@ -3784,6 +3793,8 @@ static int PRECOND_VANKA     =  560;
     free_ivector(indexes, 0, [mesh maxElementDofs]-1);
     
     mesh = nil;
+    elements = NULL;
+    globalNodes = NULL;
     boundaries = nil;
     bodyForces = nil;
     bodies = nil;
@@ -3811,7 +3822,8 @@ static int PRECOND_VANKA     =  560;
     int *indexes, *inNodes, *nodeIndexes, bndry_start, bndry_end;
     double **coordNodes, minDist, dist, eps;
     BOOL *activePort, *activePortAll, *activeCond, *donePeriodic, anyActive, passive;
-    Element_t *element;
+    Element_t *elements;
+    Nodes_t *globalNodes;
     FEMMesh *mesh;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
@@ -3840,6 +3852,8 @@ static int PRECOND_VANKA     =  560;
     if (offset != NULL) permOffset = *offset;
     
     mesh = [solution returnPointerToMesh];
+    elements = [mesh getElements];
+    globalNodes = [mesh getNodes];
 
     indexes = intvec(0, [mesh maxElementDofs]-1);
     
@@ -3932,15 +3946,14 @@ static int PRECOND_VANKA     =  560;
                     boundaryConditionAtId = [boundaries objectAtIndex:bc];
                     
                     for (t=bndry_start; t<bndry_end; t++) {
-                        element = [mesh returnElementAtIndex:t];
-                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
                         if (activePort[bc] == YES) {
-                            n = element->Type.NumberOfNodes;
+                            n = elements[t].Type.NumberOfNodes;
                             for (i=0; i<n; i++) {
-                                indexes[i] = element->NodeIndexes[i];
+                                indexes[i] = elements[t].NodeIndexes[i];
                             }
                         } else {
-                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                         }
                         [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                     }
@@ -3955,16 +3968,15 @@ static int PRECOND_VANKA     =  560;
                          
                          boundaryConditionAtId = [boundaries objectAtIndex:bc];
                          
-                         element = [mesh returnElementAtIndex:t];
-                         if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                         if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
                          
                          if (activePort[bc] == YES) {
-                             n = element->Type.NumberOfNodes;
+                             n = elements[t].Type.NumberOfNodes;
                              for (i=0; i<n; i++) {
-                                 indexes[i] = element->NodeIndexes[i];
+                                 indexes[i] = elements[t].NodeIndexes[i];
                              }
                          } else {
-                             n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                             n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                          }
                          [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                      }
@@ -3974,10 +3986,9 @@ static int PRECOND_VANKA     =  560;
         
         if (dof < 0) {
             for (t=bndry_start; t<bndry_end; t++) {
-                element = [mesh returnElementAtIndex:t];
-                n = element->Type.NumberOfNodes;
+                n = elements[t].Type.NumberOfNodes;
                 for (j=0; j<n; j++) {
-                    k = [solution boundaryReorder:element->NodeIndexes[j]];
+                    k = [solution boundaryReorder:elements[t].NodeIndexes[j]];
                     if (k >= 0) {
                         for (i=0; i<3; i++) {
                             [solution setNtZeroingDone:k :i :NO];
@@ -4008,15 +4019,14 @@ static int PRECOND_VANKA     =  560;
                     boundaryConditionAtId = [boundaries objectAtIndex:bc];
                     
                     for (t=bndry_start; t<bndry_end; t++) {
-                        element = [mesh returnElementAtIndex:t];
-                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
                         if (activePort[bc] == YES) {
-                            n = element->Type.NumberOfNodes;
+                            n = elements[t].Type.NumberOfNodes;
                             for (i=0; i<n; i++) {
-                                indexes[i] = element->NodeIndexes[i];
+                                indexes[i] = elements[t].NodeIndexes[i];
                             }
                         } else {
-                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                         }
                         [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                     }
@@ -4031,16 +4041,15 @@ static int PRECOND_VANKA     =  560;
                         
                         boundaryConditionAtId = [boundaries objectAtIndex:bc];
                         
-                        element = [mesh returnElementAtIndex:t];
-                        if (element->BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
                         
                         if (activePort[bc] == YES) {
-                            n = element->Type.NumberOfNodes;
+                            n = elements[t].Type.NumberOfNodes;
                             for (i=0; i<n; i++) {
-                                indexes[i] = element->NodeIndexes[i];
+                                indexes[i] = elements[t].NodeIndexes[i];
                             }
                         } else {
-                            n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                         }
                         [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                         
@@ -4085,21 +4094,20 @@ static int PRECOND_VANKA     =  560;
         @autoreleasepool {
             
             for (t=0; t<[model numberOfBulkElements]; t++) {
-                element = [mesh returnElementAtIndex:t];
                 
-                bf_id = [[[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] intValue];
+                bf_id = [[[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
                 
-                if ([[bodies objectAtIndex:element->BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if ([[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
                 if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
                 conditional = activeCond[bf_id];
                 
                 if (activePort[bf_id] == YES) {
-                    n = element->Type.NumberOfNodes;
+                    n = elements[t].Type.NumberOfNodes;
                     for (i=0; i<n; i++) {
-                        indexes[i] = element->NodeIndexes[i];
+                        indexes[i] = elements[t].NodeIndexes[i];
                     }
                 } else {
-                    n = [self sgetElementDofs:solution forElement:element atIndexes:indexes];
+                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
                 bodyForceAtId = [bodyForces objectAtIndex:bf_id];
                 [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[bodyForceAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
@@ -4151,9 +4159,9 @@ static int PRECOND_VANKA     =  560;
                             for (i=0; i<[model numberOfNodes]; i++) {
                                 if ([solution variablePerm:i] < 0) continue;
                                 
-                                dist = pow(([mesh GlobalNodes_x:i]-coordNodes[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow(([mesh GlobalNodes_y:i]-coordNodes[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow(([mesh GlobalNodes_z:i]-coordNodes[j][2]), 2.0);
+                                dist = pow((globalNodes[i].x-coordNodes[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes[j][2]), 2.0);
 
                                 dist = sqrt(dist);
                                 
@@ -4207,6 +4215,8 @@ static int PRECOND_VANKA     =  560;
     }
     
     mesh = nil;
+    elements = NULL;
+    globalNodes = NULL;
     boundaries = nil;
     bodyForces = nil;
     simulations = nil;
@@ -4459,7 +4469,7 @@ static int PRECOND_VANKA     =  560;
     
     int i, j, k, kk, l, m, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
     double *buffer;
-    Element_t *element, *parent, *edge, *face;
+    Element_t *element, *parent, *edges, *faces;
     NSNumber *appendDof;
     NSMutableString *name, *componentName;
     NSMutableString *str1, *str2;
@@ -4473,6 +4483,8 @@ static int PRECOND_VANKA     =  560;
     BOOL constantValue;
     
     mesh = [solution returnPointerToMesh];
+    edges = [mesh getEdges];
+    faces = [mesh getFaces];
     
     crsMatrix = [[FEMMatrixCRS alloc] init];
     listUtil = [[FEMListUtilities alloc] init];
@@ -4631,22 +4643,21 @@ static int PRECOND_VANKA     =  560;
                              case 1:
                              case 2:
                                  for (j=0; j<parent->Type.NumberOfEdges; j++) {
-                                     edge = [mesh returnEdgeAtIndex:parent->EdgeIndexes[j]];
                                      
                                      n = 0;
                                      for (k=0; k<element->Type.NumberOfNodes; k++) {
-                                         for (l=0; l<edge->Type.NumberOfNodes; l++) {
-                                             if (element->NodeIndexes[k] == edge->NodeIndexes[l]) n++;
+                                         for (l=0; l<edges[parent->EdgeIndexes[j]].Type.NumberOfNodes; l++) {
+                                             if (element->NodeIndexes[k] == edges[parent->EdgeIndexes[j]].NodeIndexes[l]) n++;
                                          }
                                      }
                                      if (n == element->Type.NumberOfNodes) break;
                                  }
                                  nb = parent->Type.NumberOfNodes;
-                                 n = edge->Type.NumberOfNodes;
-                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:edge withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                 n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
+                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
                                  
-                                 n = [self getElementDofs:solution forElement:edge atIndexes:g_Ind];
-                                 for (k=[solution defDofs:0]*edge->NDOFs; k<n; k++) {
+                                 n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:g_Ind];
+                                 for (k=[solution defDofs:0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                      nb = [solution variablePerm:g_Ind[k]];
                                      if (nb < 0) continue;
                                      nb = u_offset + [solution variableDofs]*nb + dof;
@@ -4662,26 +4673,24 @@ static int PRECOND_VANKA     =  560;
                              case 3:
                              case 4:
                                  for (j=0; j<parent->Type.NumberOfFaces; j++) {
-                                     face = [mesh returnFaceAtIndex:parent->FaceIndexes[j]];
-                                     if (element->Type.ElementCode == face->Type.ElementCode) {
+                                     if (element->Type.ElementCode == faces[parent->FaceIndexes[j]].Type.ElementCode) {
                                          n = 0;
                                          for (k=0; k<element->Type.NumberOfNodes; k++) {
-                                             for (l=0; l<face->Type.NumberOfNodes; l++) {
-                                                 if (element->NodeIndexes[k] == face->NodeIndexes[l]) n++;
+                                             for (l=0; l<faces[parent->FaceIndexes[j]].Type.NumberOfNodes; l++) {
+                                                 if (element->NodeIndexes[k] == faces[parent->FaceIndexes[j]].NodeIndexes[l]) n++;
                                              }
                                          }
                                          if (n == element->Type.NumberOfNodes) break;
                                      }
                                  }
                                  
-                                 for (j=0; j<face->Type.NumberOfEdges; j++) {
-                                     edge = [mesh returnEdgeAtIndex:face->EdgeIndexes[j]];
-                                     nb = edge->Type.NumberOfNodes;
+                                 for (j=0; j<faces[parent->FaceIndexes[j]].Type.NumberOfEdges; j++) {
+                                     nb = edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].Type.NumberOfNodes;
                                      n = parent->Type.NumberOfNodes;
-                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:edge withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
                                      
-                                     n = [self getElementDofs:solution forElement:edge atIndexes:g_Ind];
-                                     for (k=[solution defDofs:0]*edge->NDOFs; k<n; k++) {
+                                     n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:g_Ind];
+                                     for (k=[solution defDofs:0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                          nb = [solution variablePerm:g_Ind[k]];
                                          if (nb < 0) continue;
                                          nb = u_offset + [solution variableDofs]*nb + dof;
