@@ -19,8 +19,8 @@
 -(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes;
 -(void)sBand_setDirichlet:(FEMSolution *)solution: (int)n: (double)value;
 
--(void)zeroRowInMatrix:(Matrix_t *)a: (int)n;
--(void)setMatrixElementInMatrix:(Matrix_t *)a: (int)i: (int)j: (double)value;
+-(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n;
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value;
 
 
 @end

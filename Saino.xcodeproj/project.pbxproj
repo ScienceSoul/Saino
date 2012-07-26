@@ -33,6 +33,7 @@
 		73505DD013C1BD0600B1C043 /* NodalBasisFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 73505DCE13C1BD0600B1C043 /* NodalBasisFunctions.c */; };
 		7361A15814C69E6F006C2FA2 /* FEMModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15714C69E6F006C2FA2 /* FEMModel.m */; };
 		7361A15B14C6A084006C2FA2 /* FEMSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15A14C6A084006C2FA2 /* FEMSolution.m */; };
+		736DF3BC15BD38DD00D702C7 /* FEMMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = 736DF3BB15BD38DD00D702C7 /* FEMMatrix.m */; };
 		7372925415AA879E004532B5 /* SIOInfoParallel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7372925315AA879E004532B5 /* SIOInfoParallel.m */; };
 		7372A5F815495CF400A1D6FB /* FEMSimulation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7372A5F715495CF400A1D6FB /* FEMSimulation.m */; };
 		737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 737B0D7414E2274B00ED409D /* TimeProfile.c */; };
@@ -120,6 +121,8 @@
 		7361A15A14C6A084006C2FA2 /* FEMSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolution.m; sourceTree = "<group>"; };
 		736AFC2B1360115200144B03 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
 		736C02E513BC6C0900979806 /* Constructors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constructors.h; sourceTree = "<group>"; };
+		736DF3BA15BD38DD00D702C7 /* FEMMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrix.h; sourceTree = "<group>"; };
+		736DF3BB15BD38DD00D702C7 /* FEMMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrix.m; sourceTree = "<group>"; };
 		7372925215AA879E004532B5 /* SIOInfoParallel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOInfoParallel.h; sourceTree = "<group>"; };
 		7372925315AA879E004532B5 /* SIOInfoParallel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOInfoParallel.m; sourceTree = "<group>"; };
 		7372A5F615495CF400A1D6FB /* FEMSimulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSimulation.h; sourceTree = "<group>"; };
@@ -185,6 +188,8 @@
 		7300EC5615B90FC6001D9116 /* Saino Constructor classes */ = {
 			isa = PBXGroup;
 			children = (
+				736DF3BA15BD38DD00D702C7 /* FEMMatrix.h */,
+				736DF3BB15BD38DD00D702C7 /* FEMMatrix.m */,
 			);
 			name = "Saino Constructor classes";
 			sourceTree = "<group>";
@@ -301,6 +306,7 @@
 				73ADFACB15945240009A83C6 /* Readers */,
 				73A06CC31591826B009FC87E /* SIO */,
 				73456EC914ECDB0200ECD602 /* HUTIter */,
+				7300EC5615B90FC6001D9116 /* Saino Constructor classes */,
 				73F70A641512EDE000A5B3B5 /* Class utilities */,
 				7308738E1509F5BF001DE27F /* FEMParallelMPI.h */,
 				7308738F1509F5BF001DE27F /* FEMParallelMPI.m */,
@@ -322,7 +328,6 @@
 				73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */,
 				7361A15614C69E6F006C2FA2 /* FEMModel.h */,
 				7361A15714C69E6F006C2FA2 /* FEMModel.m */,
-				7300EC5615B90FC6001D9116 /* Saino Constructor classes */,
 			);
 			name = "FEM Classes";
 			sourceTree = "<group>";
@@ -555,6 +560,7 @@
 				7320CC62159970510050D3B6 /* NodeCompare.c in Sources */,
 				7320CC66159C6B9D0050D3B6 /* SIOMeshIO.m in Sources */,
 				7372925415AA879E004532B5 /* SIOInfoParallel.m in Sources */,
+				736DF3BC15BD38DD00D702C7 /* FEMMatrix.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

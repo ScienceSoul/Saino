@@ -25,7 +25,7 @@
     return valuesList;
 }
 
--(Matrix_t *)returnPMatrix {
+-(FEMMatrix *)returnPMatrix {
     
     return pMatrix;
 }

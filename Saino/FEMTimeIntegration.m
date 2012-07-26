@@ -14,14 +14,11 @@
     
     int i, j, nb;
     double s, fsStep, fsTheta, fsdTheta, fsAlpha, fsBeta, massCoeff, forceCoeff;
-    FEMMesh *mesh;
 
     if (rows != NULL) {
         nb = *rows;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb = mesh.maxElementNodes;
-        mesh = nil;
+        nb = solution.mesh.maxElementNodes;
     }
     
     if ([solution solutionInfoForKey:@"fsstep"] != nil) {
@@ -73,22 +70,17 @@
     
     int i, j, nb1, nb2;
     double s;
-    FEMMesh *mesh;
     
     if (rows != NULL) {
         nb1 = *rows;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb1 = mesh.maxElementNodes;
-        mesh = nil;
+        nb1 = solution.mesh.maxElementNodes;
     }
     
     if (cols != NULL) {
         nb2 = *cols;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb2 = mesh.maxElementNodes;
-        mesh = nil;
+        nb2 = solution.mesh.maxElementNodes;
     }
     
     switch (order) {
@@ -170,22 +162,17 @@
     
     int i, j, k, nb1, nb2;
     double s, *a;
-    FEMMesh *mesh;
     
     if (rows != NULL) {
         nb1 = *rows;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb1 = mesh.maxElementNodes;
-        mesh = nil;
+        nb1 = solution.mesh.maxElementNodes;
     }
     
     if (cols != NULL) {
         nb2 = *cols;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb2 = mesh.maxElementNodes;
-        mesh = nil;
+        nb2 = solution.mesh.maxElementNodes;
     }
     
     a = doublevec(0, 3);
@@ -229,14 +216,11 @@
     
     int i, j, nb;
     double s;
-    FEMMesh *mesh;
     
     if (rows != NULL) {
         nb = *rows;
     } else {
-        mesh = [solution returnPointerToMesh];
-        nb = mesh.maxElementNodes;
-        mesh = nil;
+        nb = solution.mesh.maxElementNodes;
     }
     
     for (i=0; i<nb; i++) {

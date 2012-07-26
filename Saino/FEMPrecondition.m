@@ -18,7 +18,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
 -(void)CRS_DiagPrecondition:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar;
 -(void)CRS_ComplexDiagPrecondition:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar;
 
--(void)CRS_BlockDiagonal:(FEMSolution *)solution: (Matrix_t) B: (int)blocks;
+-(void)CRS_BlockDiagonal:(FEMSolution *)solution: (FEMMatrix *) B: (int)blocks;
 
 // ILU(n) preconditioning
 -(BOOL)CRS_IncompleteLU:(FEMSolution *)solution: (int)ilun;
@@ -65,47 +65,50 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
 *******************************************************************************************/
     int i, j, n;
-    
     int *range1;
     double *range2;
+    matrixArraysContainer *matContainers;
     
-    n = [solution matrixNumberOfRows];  
+    matContainers = solution.matrix.getContainers;
     
-    if ([solution matrixOrdered] == 0) {
+    n = solution.matrix.numberOfRows;  
+    
+    if (solution.matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
-            range1 = intvec(0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            range2 = doublevec(0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            for (j=[solution matrixRHS:i]; j<=[solution matrixRHS:i+1]-1; j++) {
-                range1[j] = [solution matrixCols:j];
-                range2[j] = [solution matrixValues:j];
+            range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+                range1[j] = matContainers->Cols[j];
+                range2[j] = matContainers->Values[j];
             }
-            sort([solution matrixRHS:i+1]-[solution matrixRHS:i], range1-1, range2-1);
-            for (j=[solution matrixRHS:i]; j<=[solution matrixRHS:i+1]-1; j++) {
-                [solution setMatrixCols:j :range1[j]];
-                [solution setMatrixValues:j :range2[j]];
+            sort(matContainers->RHS[i+1]-matContainers->RHS[i], range1-1, range2-1);
+            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+                matContainers->Cols[j] = range1[j];
+                matContainers->Values[j] = range2[j];
             }
-            free_ivector(range1, 0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            free_dvector(range2, 0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
+            free_ivector(range1, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            free_dvector(range2, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
         }
         for (i=0; i<n; i++) {
-            for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                if ([solution matrixCols:j] == i) {
-                    [solution setMatrixDiag:i :j];
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                if (matContainers->Cols[j] == i) {
+                    matContainers->Diag[i] = j;
                     break;
                 }
             }
         }
-        [solution setMatrixOrdered:1];
+        solution.matrix.ordered = YES;
     }
     
     for (i=0; i<n; i++) {
-        if (fabs([solution matrixValues:[solution matrixDiag:i]]) > AEPS) {
-            u[i] = v[i] / [solution matrixValues:[solution matrixDiag:i]];
+        if (fabs(matContainers->Values[matContainers->Diag[i]]) > AEPS) {
+            u[i] = v[i] / matContainers->Values[matContainers->Diag[i]];
         } else {
             u[i] = v[i];
         }
     }
     
+    matContainers = NULL;
 }
 
 -(void)CRS_ComplexDiagPrecondition:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar {
@@ -123,65 +126,71 @@ static double AEPS = 10.0 * DBL_EPSILON;
  *******************************************************************************************/
     
     int i, j, n;
-    
     double complex A;
-    
     int *range1;
     double *range2;
+    matrixArraysContainer *matContainers;
     
-    n = [solution matrixNumberOfRows]; 
+    matContainers = solution.matrix.getContainers;
     
-    if ([solution matrixOrdered] == 0) {
+    n = solution.matrix.numberOfRows; 
+    
+    if (solution.matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
-            range1 = intvec(0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            range2 = doublevec(0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            for (j=[solution matrixRHS:i]; j<=[solution matrixRHS:i+1]-1; j++) {
-                range1[j] = [solution matrixCols:j];
-                range2[j] = [solution matrixValues:j];
+            range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+                range1[j] = matContainers->Cols[j];
+                range2[j] = matContainers->Values[j];
             }
-            sort([solution matrixRHS:i+1]-[solution matrixRHS:i], range1-1, range2-1);
-            for (j=[solution matrixRHS:i]; j<=[solution matrixRHS:i+1]-1; j++) {
-                [solution setMatrixCols:j :range1[j]];
-                [solution setMatrixValues:j :range2[j]];
+            sort(matContainers->RHS[i+1]-matContainers->RHS[i], range1-1, range2-1);
+            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+                matContainers->Cols[j] = range1[j];
+                matContainers->Values[j] = range2[j];
             }
-            free_ivector(range1, 0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
-            free_dvector(range2, 0, ([solution matrixRHS:i+1]-[solution matrixRHS:i])-1);
+            free_ivector(range1, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            free_dvector(range2, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
         }
         for (i=0; i<n; i++) {
-            for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                if ([solution matrixCols:j] == i) {
-                    [solution setMatrixDiag:i :j];
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                if (matContainers->Cols[j] == i) {
+                    matContainers->Diag[i] = j;
                     break;
                 }
             }
         }
-        [solution setMatrixOrdered:1];
+        solution.matrix.ordered = YES;
     }
     
     for (i=0; n/2; i++) {
-        A = [solution matrixValues:[solution matrixDiag:2*i-1]] + (-[solution matrixValues:[solution matrixDiag:2*i-1]+1] * I);
+        A = matContainers->Values[matContainers->Diag[2*i-1]] + (-matContainers->Values[matContainers->Diag[2*i-1]+1] * I);
         u[i] = v[i] / A;
     }
     
+    matContainers = NULL;
 }
 
--(void)CRS_BlockDiagonal:(FEMSolution *)solution: (Matrix_t) B: (int)blocks {
+-(void)CRS_BlockDiagonal:(FEMSolution *)solution: (FEMMatrix *) B: (int)blocks {
 /*******************************************************************************************
     Description: 
-        Pics the block diagonal entries form matrix Solution.matrix to build matrix B.
+        Pics the block diagonal entries form matrix solution.matrix to build matrix B.
  
  *******************************************************************************************/
     
     int n;
     int i, k, l, kb;
+    matrixArraysContainer *matContainers, *bContainers;
     
-    n = [solution matrixNumberOfRows];
-    B.NumberOfRows = n;
+    matContainers = solution.matrix.getContainers;
+    bContainers = B.getContainers;
+    
+    n = solution.matrix.numberOfRows;
+    B.numberOfRows = n;
     
     kb = 0;
     for (i=0; i<n; i++) {
-        for (k=[solution matrixRows:i]; k<=[solution matrixRows:i+1]-1; k++) {
-            l = [solution matrixCols:k];
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+            l = matContainers->Cols[k];
             if ((i % blocks) == (l % blocks)) kb = kb + 1;
         }
     }
@@ -191,19 +200,21 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     kb = 0;
     for (i=0; i<n; i++) {
-        B.Rows[i] = kb;
-        for (k=[solution matrixRows:i]; k<=[solution matrixRows:i+1]-1; k++) {
-            l = [solution matrixCols:k];
+        bContainers->Rows[i] = kb;
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+            l = matContainers->Cols[k];
             if ((i % blocks) == (l % blocks)) {
-                B.Values[kb] = [solution matrixValues:k];
-                B.Cols[kb] = [solution matrixCols:k];
-                if (B.Cols[kb] == i) B.Diag[i] = kb;
+                bContainers->Values[kb] = matContainers->Values[k];
+                bContainers->Cols[kb] = matContainers->Cols[k];
+                if (bContainers->Cols[kb] == i) bContainers->Diag[i] = kb;
                 kb = kb + 1;
             }
         }
     }
-    B.Rows[(n-1)+1] = kb;
+    bContainers->Rows[(n-1)+1] = kb;
     
+    matContainers = NULL;
+    bContainers = NULL;
 }
 
 -(BOOL)CRS_IncompleteLU:(FEMSolution *)solution: (int)ilun {
@@ -226,14 +237,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j, k, l, n;
     double t, *S;
-    int *C;                      //Boolean
+    int *C;                      //Booleans
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     errorfunct("CRS_IncompleteLU", "ILU (Real). Starting factorization with order:", ilun);
     t = cputime();
     
-    n = [solution matrixNumberOfRows];
+    n = solution.matrix.numberOfRows;
     
-    if ([solution isAssociatedMatrixILUValues] == NO) {
+    if (matContainers->ILUValues == NULL) {
         
         [solution initializeILU:ilun];
     }
@@ -251,31 +265,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Convert current row to full form for speed, 
         // only flagging the nonzeros entries
-        for (k=[solution matrixRows:i]; k<=[solution matrixRows:i+1]-1; k++) {
-            S[[solution matrixCols:k]] = [solution matrixValues:k];
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+            S[matContainers->Cols[k]] = matContainers->Values[k];
         }
-        for (k=[solution matrixILURows:i]; k<=[solution matrixILURows:i+1]-1; k++) {
-            C[[solution matrixILUCols:k]] = 1;
+        for (k=matContainers->ILURows[i]; k<=matContainers->ILURows[i+1]-1; k++) {
+            C[matContainers->ILUCols[k]] = 1;
         }
         
         // This is the factorization part for the current row
-        for (k=[solution matrixILUCols:[solution matrixILURows:i]]; k<=i-1; k++) {
+        for (k=matContainers->ILUCols[matContainers->ILURows[i]]; k<=i-1; k++) {
             if (C[k] == 1) {
-                if (fabs([solution matrixILUValues:[solution matrixILUDiag:k]]) > AEPS) S[k] = S[k] / [solution matrixILUValues:[solution matrixILUDiag:k]];
+                if (fabs(matContainers->ILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->ILUValues[matContainers->ILUDiag[k]];
                 
-                for (l=[solution matrixILUDiag:k]; l<=[solution matrixILURows:k+1]-1; l++) {
-                    j = [solution matrixILUCols:l];
-                    if (C[j] == 1) S[j] = S[j] - S[k] * [solution matrixILUValues:l];
+                for (l=matContainers->ILUDiag[k]; l<=matContainers->ILURows[k+1]-1; l++) {
+                    j = matContainers->ILUCols[l];
+                    if (C[j] == 1) S[j] = S[j] - S[k] * matContainers->ILUValues[l];
                 }
             }
         }
         
         // Convert the row back to CRS format
-        for (k=[solution matrixILURows:i]; k<=[solution matrixILURows:i+1]-1; k++) {
-            if (C[[solution matrixILUCols:k]] == 1) {
-                [solution setMatrixILUValues:k :S[[solution matrixILUCols:k]]];
-                S[[solution matrixILUCols:k]] = 0.0;
-                C[[solution matrixILUCols:k]] = 0;
+        for (k=matContainers->ILURows[i]; k<=matContainers->ILURows[i+1]-1; k++) {
+            if (C[matContainers->ILUCols[k]] == 1) {
+                matContainers->ILUValues[k] = S[matContainers->ILUCols[k]];
+                S[matContainers->ILUCols[k]] = 0.0;
+                C[matContainers->ILUCols[k]] = 0;
             }
         }
     }
@@ -285,19 +299,20 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // Prescale the diagonal for the LU solver
     for (i=0; i<n; i++) {
-        if (fabs([solution matrixILUValues:[solution matrixILUDiag:i]]) < AEPS) {
-            [solution setMatrixILUValues:[solution matrixILUDiag:i] :1.0];
+        if (fabs(matContainers->ILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+            matContainers->ILUValues[matContainers->ILUDiag[i]] = 1.0;
         } else {
-            [solution setMatrixILUValues:[solution matrixILUDiag:i] :(1.0 / [solution matrixILUValues:[solution matrixILUDiag:i]])];
+            matContainers->ILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->ILUValues[matContainers->ILUDiag[i]];
         }
     }
     
-    warnfunct("CRS_IncompleteLU", "ILU (Real), NOF nonzeros", [solution matrixILURows:(n+1)-1]);
-    warnfunct("CRS_IncompleteLU", "ILU (Real), Filling (%):", floor([solution matrixILURows:(n+1)-1]) * (100.0 / [solution matrixRows:(n+1)-1]));
+    warnfunct("CRS_IncompleteLU", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRS_IncompleteLU", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
     warnfunct("CRS_IncompleteLU", "ILU (Real), Factorization ready at (s):", cputime() - t);
     
-    return YES;
+    matContainers = NULL;
     
+    return YES;
 }
 
 -(BOOL)CRS_ComplexIncompleteLU:(FEMSolution *)solution: (int)ilun {
@@ -321,14 +336,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
     int i, j, k, l, n;
     double t;
     double complex *S;
-    int *C;                      //Boolean
+    int *C;                      //Booleans
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     errorfunct("CRS_IncompleteLU", "ILU (Complex), Starting factorization with order:", ilun);
     t = cputime();
     
-    n = [solution matrixNumberOfRows];
+    n = solution.matrix.numberOfRows;
     
-    if ([solution isAssociatedMatrixCILUValues] == NO) {
+    if (matContainers->CILUValues == NULL) {
         
         [solution initializeCILU:ilun];
     }
@@ -346,31 +364,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Convert current row to full form for speed, 
         // only flagging the nonzeros entries
-        for (k=[solution matrixILURows:i]; k<=[solution matrixILURows:i+1]-1; k++) {
-            C[[solution matrixILUCols:k]] = 1;
+        for (k=matContainers->ILURows[i]; k<=matContainers->ILURows[i+1]-1; k++) {
+            C[matContainers->ILUCols[k]] = 1;
         }
-        for (k=[solution matrixRows:2*i-1]; k<=[solution matrixRows:2*i]-1; k+=2) {
-            S[([solution matrixCols:k]+1)/2] = [solution matrixValues:k] + (-[solution matrixValues:k+1] * I);
+        for (k=matContainers->Rows[2*i-1]; k<=matContainers->Rows[2*i]-1; k+=2) {
+            S[(matContainers->Cols[k]+1)/2] = matContainers->Values[k] + (-matContainers->Values[k+1] * I);
         }
         
         // This is the factorization part for the current row
-        for (k=[solution matrixILUCols:[solution matrixILURows:i]]; k<=i-1; k++) {
+        for (k=matContainers->ILUCols[matContainers->ILURows[i]]; k<=i-1; k++) {
             if (C[k] == 1) {
-                if (fabs([solution matrixCILUValues:[solution matrixILUDiag:k]]) > AEPS) S[k] = S[k] / [solution matrixCILUValues:[solution matrixILUDiag:k]];
+                if (fabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
                 
-                for (l=[solution matrixILUDiag:k]+1; l<=[solution matrixILURows:k+1]-1; l++) {
-                    j = [solution matrixILUCols:l];
-                    if (C[j] == 1) S[j] = S[j] - S[k] * [solution matrixCILUValues:l];
+                for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
+                    j = matContainers->ILUCols[l];
+                    if (C[j] == 1) S[j] = S[j] - S[k] * matContainers->CILUValues[l];
                 }
             }
         }
         
         // Convert the row back to CRS format
-        for (k=[solution matrixILURows:i]; k<=[solution matrixILURows:i+1]-1; k++) {
-            if (C[[solution matrixILUCols:k]] == 1) {
-                [solution setMatrixCILUValues:k :S[[solution matrixILUCols:k]]];
-                S[[solution matrixILUCols:k]] = 0.0;
-                C[[solution matrixILUCols:k]] = 0;
+        for (k=matContainers->ILURows[i]; k<=matContainers->ILURows[i+1]-1; k++) {
+            if (C[matContainers->ILUCols[k]] == 1) {
+                matContainers->CILUValues[k] = S[matContainers->ILUCols[k]];
+                S[matContainers->ILUCols[k]] = 0.0;
+                C[matContainers->ILUCols[k]] = 0;
             }
         }
     }
@@ -380,50 +398,54 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // Prescale the diagonal for the LU solver
     for (i=0; i<n/2; i++) {
-        if (fabs([solution matrixCILUValues:[solution matrixILUDiag:i]]) < AEPS) {
-            [solution setMatrixCILUValues:[solution matrixILUDiag:i] :1.0];
+        if (fabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+            matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0;
         } else {
-            [solution setMatrixCILUValues:[solution matrixILUDiag:i] :1.0 / [solution matrixCILUValues:[solution matrixILUDiag:i]]];
+            matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->CILUValues[matContainers->ILUDiag[i]];
         }
     }
     
-    warnfunct("CRS_IncompleteLU", "ILU (Complex), NOF nonzeros", [solution matrixILURows:(n/2+1)-1]);
-    warnfunct("CRS_IncompleteLU", "ILU (Complex), Filling (%):", floor([solution matrixILURows:(n/2+1)-1]) * (400.0 / [solution matrixRows:(n+1)-1]));
+    warnfunct("CRS_IncompleteLU", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
+    warnfunct("CRS_IncompleteLU", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
     warnfunct("CRS_IncompleteLU", "ILU (Complex), Factorization ready at (s):", cputime() - t);
     
-    return YES;
+    matContainers = NULL;
     
+    return YES;
 }
 
 -(void)computeILUT:(FEMSolution *)solution :(int)n :(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
-    int *C;                         //Boolean
+    int *C;                         //Booleans
     const double WORKN = 128;
     double norma, cptime, ttime, t;
     double *S;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     ttime = cputime();
     cptime = 0.0;
     
-    [solution allocateMatrixILURows:n+1];
-    [solution allocateMatrixILUDiag:n];
-    if ([solution isAssociatedMatrixILURows] == NO || [solution isAssociatedMatrixILUDiag] == NO) {
+    matContainers->ILURows = intvec(0, (n+1)-1);
+    matContainers->ILUDiag = intvec(0, n-1);
+    if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
         errorfunct("computeILUT", "Memory allocation error.");
     }
-    [solution setMatrixSizeOfILURows:n+1];
-    [solution setMatrixSizeOfILUDiag:n];
+    matContainers->sizeILURows = n+1;
+    matContainers->sizeILUDiag = n;
     
-    [solution allocateMatrixILUCols:WORKN*n];
-    [solution allocateMatrixILUValues:WORKN*n];
-    if ([solution isAssociatedMatrixILUCols] == NO || [solution isAssociatedMatrixILUValues] == NO) {
+    matContainers->ILUCols = intvec(0, (WORKN*n)-1);
+    matContainers->ILUValues = doublevec(0, (WORKN*n)-1);
+    if (matContainers->ILUCols == NULL || matContainers->ILUValues == NO) {
         errorfunct("computeILUT", "Memory allocation error.");
     }
-    [solution setMatrixSizeOfILUCols:WORKN*n];
-    [solution setMatrixSizeOfILUValues:WORKN*n];
+    matContainers->sizeILUCols = WORKN*n;
+    matContainers->sizeILUValues = WORKN*n;
     
     // The factorization row by row
-    [solution setMatrixILURows:0 :0];
+    matContainers->ILURows[0] = 0;
     C = intvec(0, n);
     S = doublevec(0, n);
     for (i=0; i<n; i++) {
@@ -435,28 +457,28 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Convert the current row to full from for speed, 
         // only flagging the nonzero entries
-        for (k=[solution matrixRows:i]; k<=[solution matrixRows:i+1]-1; k++) {
-            C[[solution matrixCols:k]] = 1;
-            S[[solution matrixCols:k]] = [solution matrixValues:k];
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+            C[matContainers->Cols[k]] = 1;
+            S[matContainers->Cols[k]] = matContainers->Values[k];
         }
         
-        // Check for bandwidth for speed, bandwidth optimization
-        // helps a lot.
-        rowMin = [solution matrixCols:[solution matrixRows:i]];
-        rowMax = [solution matrixCols:[solution matrixRows:i+1]-1];
+        // Check for bandwidth for speed, bandwidth optimization,
+        // it helps a lot.
+        rowMin = matContainers->Cols[matContainers->Rows[i]];
+        rowMax = matContainers->Cols[matContainers->Rows[i+1]-1];
         
         // Here is the factorization part for the current row;
         for (k=rowMin; k<=i-1; k++) {
             if (C[k] == 1) {
-                if (fabs([solution matrixILUValues:[solution matrixILUDiag:k]]) > AEPS) S[k] = S[k] / [solution matrixILUValues:[solution matrixILUDiag:k]];
+                if (fabs(matContainers->ILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->ILUValues[matContainers->ILUDiag[k]];
                 
-                for (l=[solution matrixILUDiag:k]+1; l<=[solution matrixILURows:k+1]-1; l++) {
-                    j = [solution matrixILUCols:l];
+                for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
+                    j = matContainers->ILUCols[l];
                     if (C[j] == 0) {
                         C[j] = 1;
                         rowMax = max(rowMax, j);
                     }
-                    S[j] = S[j] - S[k] * [solution matrixILUValues:l];
+                    S[j] = S[j] - S[k] * matContainers->ILUValues[l];
                 }
             }
         }
@@ -464,31 +486,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
         // This is the ILUT part, drop element ILU(i,j), if
         // ABS(ILU(i,j)) <= NORM(A(i.:))*tol
         norma = 0.0;
-        for (k=[solution matrixRows:i]; k<=[solution matrixRows:i+1]-1; k++) {
-            norma = norma + pow(fabs([solution matrixValues:k]), 2.0);
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+            norma = norma + pow(fabs(matContainers->Values[k]), 2.0);
         }
         norma = sqrt(norma);
         
-        j = [solution matrixILURows:i]-1;
+        j =matContainers->ILURows[i]-1;
         for (k=rowMin; k<=rowMax; k++) {
             if (C[k] == 1) {
                 if (fabs(S[k]) >= tol*norma || k == i) {
                     j = j + 1;
-                    [solution setMatrixILUCols:j :k];
-                    [solution setMatrixILUValues:j :S[k]];
-                    if (k == i) [solution setMatrixILUDiag:i :j];
+                    matContainers->ILUCols[j] = k;
+                    matContainers->ILUValues[j] = S[k];
+                    if (k == i) matContainers->ILUDiag[i] = j;;
                 }
                 S[k] = 0.0;
                 C[k] = 0;
             }
         }
-        [solution setMatrixILURows:i+1 :j+1];
+        matContainers->ILURows[i+1] = j+1;
         
         // Preparations for the next row
         if (i < n-1) {
             
             // Check if still enough workspace
-            if ([solution matrixSizeOFILUCols] < [solution matrixILURows:i+1]+n) {
+            if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
                 
                 t = cputime();
                 [solution ilutWorkspaceCheck:i :n];
@@ -501,14 +523,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Prescale the diagonal for the LU solver
     for (i=0; i<n; i++) {
         
-        if (fabs([solution matrixILUValues:[solution matrixILUDiag:i]]) < AEPS) {
-            [solution setMatrixILUValues:[solution matrixILUDiag:i] :1.0];
+        if (fabs(matContainers->ILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+            matContainers->ILUValues[matContainers->ILUDiag[i]] = 1.0;
         } else {
-            
-            [solution setMatrixILUValues:[solution matrixILUDiag:i] :(1.0 / [solution matrixILUValues:[solution matrixILUDiag:i]])];
+            matContainers->ILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->ILUValues[matContainers->ILUDiag[i]];
         }
     }
     
+    matContainers = NULL;
 }
 
 -(BOOL)CRS_ILUT:(FEMSolution *)solution: (int)tol {
@@ -532,27 +554,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int n; 
     double t;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     warnfunct("CRS_ILUT", "Starting factorization:");
     t = cputime();
     
-    n = [solution matrixNumberOfRows];
+    n = solution.matrix.numberOfRows;
     
-    if ([solution isAssociatedMatrixILUValues] == YES) {
-        [solution freeMatrixILURows:[solution matrixSizeOfILURows]];
-        [solution freeMatrixILUDiag:[solution matrixSizeOfILUDiag]];
-        [solution freeMatrixILUCols:[solution matrixSizeOFILUCols]];
-        [solution freeMatrixILUValues:[solution matrixSizeOfILUValues]];
+    if (matContainers->ILUValues != NULL) {
+        free_ivector(matContainers->ILURows, 0, matContainers->sizeILURows-1);
+        free_ivector(matContainers->ILUDiag, 0, matContainers->sizeILUDiag-1);
+        free_ivector(matContainers->ILUCols, 0, matContainers->sizeILUCols-1);
+        free_dvector(matContainers->ILUValues, 0, matContainers->sizeILUValues-1);
     }
     
     [self computeILUT:solution :n :tol];
     
-    warnfunct("CRS_ILUT", "ILU(T) (Real), NOF nonzeros", [solution matrixILURows:(n+1)-1]);
-    warnfunct("CRS_ILUT", "ILU(T) (Real), Filling (%)", floor([solution matrixILURows:(n+1)-1]) * (100.0 / [solution matrixRows:(n+1)-1]));
+    warnfunct("CRS_ILUT", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRS_ILUT", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
     warnfunct("CRS_ILUT", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
     
-    return YES;
+    matContainers = NULL;
     
+    return YES;
 }
 
 -(void)computeComplexILUT:(FEMSolution *)solution: (int)n: (int)tol {
@@ -562,25 +588,28 @@ static double AEPS = 10.0 * DBL_EPSILON;
     const double WORKN = 128;
     double norma;
     double complex *S;
+    matrixArraysContainer *matContainers;
     
-    [solution allocateMatrixILURows:n+1];
-    [solution allocateMatrixILUDiag:n];
-    if ([solution isAssociatedMatrixILURows] == NO || [solution isAssociatedMatrixILUDiag] == NO) {
+    matContainers = solution.matrix.getContainers;
+    
+    matContainers->ILURows = intvec(0, (n+1)-1);
+    matContainers->ILUDiag = intvec(0, n-1);
+    if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
         errorfunct("computeILUT", "Memory allocation error.");
     }
-    [solution setMatrixSizeOfILURows:n+1];
-    [solution setMatrixSizeOfILUDiag:n];
+    matContainers->sizeILURows = n+1;
+    matContainers->sizeILUDiag = n;
     
-    [solution allocateMatrixILUCols:WORKN*n];
-    [solution allocateMatrixCILUValues:WORKN*n];
-    if ([solution isAssociatedMatrixILUCols] == NO || [solution isAssociatedMatrixCILUValues] == NO) {
+    matContainers->ILUCols = intvec(0, (WORKN*n)-1);
+    matContainers->CILUValues = cdoublevec(0, (WORKN*n)-1);
+    if (matContainers->ILUCols == NULL || matContainers->CILUValues == NULL) {
         errorfunct("computeILUT", "Memory allocation error.");
     }
-    [solution setMatrixSizeOfILUCols:WORKN*n];
-    [solution setMatrixSizeOfCILUValues:WORKN*n];
+    matContainers->sizeILUCols = WORKN*n;
+    matContainers->sizeCILUValues = WORKN*n;
     
     // The factorization row by row
-    [solution setMatrixILURows:0 :0];
+    matContainers->ILURows[0] = 0;
     C = intvec(0, n);
     S = cdoublevec(0, n);
     for (i=0; i<n; i++) {
@@ -592,28 +621,28 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Convert the current row to full from for speed, 
         // only flagging the nonzero entries
-        for (k=[solution matrixRows:2*i-1]; k<=[solution matrixRows:2*i]-1; k+=2) {
-            C[([solution matrixCols:k]+1) / 2] = 1;
-            S[([solution matrixCols:k]+1) / 2] = [solution matrixValues:k] + (-[solution matrixValues:k+1] * I);
+        for (k=matContainers->Rows[2*i-1]; k<=matContainers->Rows[2*i]-1; k+=2) {
+            C[(matContainers->Cols[k]+1) / 2] = 1;
+            S[(matContainers->Cols[k]+1) / 2] = matContainers->Values[k] + (-matContainers->Values[k+1] * I);
         }
         
         // Check for bandwidth for speed, bandwidth optimization
         // helps a lot.
-        rowMin = ([solution matrixCols:[solution matrixRows:2*i-1]] + 1) / 2;
-        rowMax = ([solution matrixCols:[solution matrixRows:2*i]-1] + 1) / 2;
+        rowMin = (matContainers->Cols[matContainers->Rows[2*i-1]] + 1) / 2;
+        rowMax = (matContainers->Cols[matContainers->Rows[2*i]-1] + 1) / 2;
         
         // Here is the factorization part for the current row;
         for (k=rowMin; k<=i-1; k++) {
             if (C[k] == 1) {
-                if (fabs([solution matrixCILUValues:[solution matrixILUDiag:k]]) > AEPS) S[k] = S[k] / [solution matrixCILUValues:[solution matrixILUDiag:k]];
+                if (fabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
                 
-                for (l=[solution matrixILUDiag:k]+1; l<=[solution matrixILURows:k+1]-1; l++) {
-                    j = [solution matrixILUCols:l];
+                for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
+                    j = matContainers->ILUCols[l];
                     if (C[j] == 0) {
                         C[j] = 1;
                         rowMax = max(rowMax, j);
                     }
-                    S[j] = S[j] - S[k] * [solution matrixCILUValues:l];
+                    S[j] = S[j] - S[k] * matContainers->CILUValues[l];
                 }
             }
         }
@@ -621,31 +650,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
         // This is the ILUT part, drop element ILU(i,j), if
         // ABS(ILU(i,j)) <= NORM(A(i.:))*tol
         norma = 0.0;
-        for (k=[solution matrixRows:2*i-1]; k<=[solution matrixRows:2*i]-1; k++) {
-            norma = norma + pow([solution matrixValues:k], 2.0) + pow([solution matrixValues:k+1], 2.0);
+        for (k=matContainers->Rows[2*i-1]; k<=matContainers->Rows[2*i]-1; k++) {
+            norma = norma + pow(matContainers->Values[k], 2.0) + pow(matContainers->Values[k+1], 2.0);
         }
         norma = sqrt(norma);
         
-        j = [solution matrixILURows:i]-1;
+        j = matContainers->ILURows[i]-1;
         for (k=rowMin; k<=rowMax; k++) {
             if (C[k] == 1) {
                 if (fabs(S[k]) >= tol*norma || k == i) {
                     j = j + 1;
-                    [solution setMatrixILUCols:j :k];
-                    [solution setMatrixCILUValues:j :S[k]];
-                    if (k == i) [solution setMatrixILUDiag:i :j];
+                    matContainers->ILUCols[j] = k;
+                    matContainers->CILUValues[j] = S[k];
+                    if (k == i) matContainers->ILUDiag[i] = j;
                 }
                 S[k] = 0.0 + 0.0 * I;
                 C[k] = 0;
             }
         }
-        [solution setMatrixILURows:i+1 :j+1];
+        matContainers->ILURows[i+1] = j+1;
         
         // Preparations for the next row
         if (i < n-1) {
             
             // Check if still enough workspace
-            if ([solution matrixSizeOFILUCols] < [solution matrixILURows:i+1]+n) {
+            if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
                 
                 [solution ilutComplexWorkspaceCheck:i :n];
             }
@@ -655,14 +684,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Prescale the diagonal for the LU solver
     for (i=0; i<n; i++) {
         
-        if (fabs([solution matrixCILUValues:[solution matrixILUDiag:i]]) < AEPS) {
-            [solution setMatrixCILUValues:[solution matrixILUDiag:i] :1.0];
+        if (fabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+            matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0;
         } else {
-            
-            [solution setMatrixCILUValues:[solution matrixILUDiag:i] :(1.0 / [solution matrixCILUValues:[solution matrixILUDiag:i]])];
+            matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->CILUValues[matContainers->ILUDiag[i]];
         }
     }
     
+    matContainers = NULL;
 }
 
 -(BOOL)CRS_ComplexILUT:(FEMSolution *)solution: (int)tol {
@@ -686,27 +715,31 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int n; 
     double t;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     warnfunct("CRS_ComplexILUT", "Starting factorization:");
     t = cputime();
     
-    n = [solution matrixNumberOfRows] / 2;
+    n = solution.matrix.numberOfRows / 2;
     
-    if ([solution isAssociatedMatrixCILUValues] == YES) {
-        [solution freeMatrixILURows:[solution matrixSizeOfILURows]];
-        [solution freeMatrixILUDiag:[solution matrixSizeOfILUDiag]];
-        [solution freeMatrixILUCols:[solution matrixSizeOFILUCols]];
-        [solution freeMatrixCILUValues:[solution matrixSizeOfCILUValues]];
+    if (matContainers->CILUValues != NULL) {
+        free_ivector(matContainers->ILURows, 0, matContainers->sizeILURows-1);
+        free_ivector(matContainers->ILUDiag, 0, matContainers->sizeILUDiag-1);
+        free_ivector(matContainers->ILUCols, 0, matContainers->sizeILUCols-1);
+        free_cdvector(matContainers->CILUValues, 0, matContainers->sizeCILUValues-1);
     }
     
     [self computeComplexILUT:solution :n :tol];
     
-    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), NOF nonzeros", [solution matrixILURows:(n+1)-1]);
-    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Filling (%)", floor([solution matrixILURows:(n+1)-1]) * (400.0 / [solution matrixRows:(2*n+1)-1]));
+    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
     warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
     
-    return YES;
+    matContainers = NULL;
     
+    return YES;
 }
 
 -(void)CRS_LUSolve:(int)n: (FEMSolution *)solution: (double *)b {
@@ -728,20 +761,24 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
     int i, j;
     double s;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     // If no ILU provided do diagonal solve
-    if ([solution isAssociatedMatrixILUValues] == NO) {
+    if (matContainers->ILUValues == NULL) {
         for (i=0; i<n; i++) {
-            b[i] = b[i] / [solution matrixValues:[solution matrixDiag:i]];
+            b[i] = b[i] / matContainers->Values[matContainers->Diag[i]];
         }
+        matContainers = NULL;
         return;
     }
     
     // Forward substitute (solve z from Lz = b)
     for (i=0; i<n; i++) {
         s = b[i];
-        for (j=[solution matrixILURows:i]; j<=[solution matrixILUDiag:i]-1; j++) {
-            s = s - [solution matrixILUValues:j] * b[[solution matrixILUCols:j]];
+        for (j=matContainers->ILURows[i]; j<=matContainers->ILUDiag[i]-1; j++) {
+            s = s - matContainers->ILUValues[j] * b[matContainers->ILUCols[j]];
         }
         b[i] = s;
     }
@@ -749,12 +786,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Backward substitute (solve x from UDx = z)
     for (i=n-1; i>=0; i--) {
         s = b[i];
-        for (j=[solution matrixILUDiag:i]+1; j<=[solution matrixILURows:i+1]-1; j++) {
-            s = s - [solution matrixILUValues:j] * b[[solution matrixILUCols:j]];
+        for (j=matContainers->ILUDiag[i]+1; j<=matContainers->ILURows[i+1]-1; j++) {
+            s = s - matContainers->ILUValues[j] * b[matContainers->ILUCols[j]];
         }
-        b[i] = [solution matrixILUValues:[solution matrixILUDiag:i]] * s;
+        b[i] = matContainers->ILUValues[matContainers->ILUDiag[i]] * s;
     }
     
+    matContainers = NULL;
 }
 
 -(void)CRS_ComplexLUSolve:(int)n: (FEMSolution *)solution: (double complex *)b {
@@ -776,22 +814,26 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j;
     double complex s, x;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     // If no ILU provided do diagonal solve
-    if ([solution isAssociatedMatrixCILUValues] == NO) {
+    if (matContainers->CILUValues == NULL) {
         for (i=0; i<n/2; i++) {
             
-            x = [solution matrixValues:[solution matrixDiag:2*i-1]] + (-[solution matrixValues:[solution matrixDiag:2*i-1]+1] * I);
+            x = matContainers->Values[matContainers->Diag[2*i-1]] + (-matContainers->Values[matContainers->Diag[2*i-1]+1] * I);
             b[i] = b[i] / x;
         }
+        matContainers = NULL;
         return;
     }
     
     // Forward substitute (solve z from Lz = b)
     for (i=0; i<n; i++) {
         s = b[i];
-        for (j=[solution matrixILURows:i]; j<=[solution matrixILUDiag:i]-1; j++) {
-            s = s - [solution matrixCILUValues:j] * b[[solution matrixILUCols:j]];
+        for (j=matContainers->ILURows[i]; j<=matContainers->ILUDiag[i]-1; j++) {
+            s = s - matContainers->CILUValues[j] * b[matContainers->ILUCols[j]];
         }
         b[i] = s;
     }
@@ -799,12 +841,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Backward substitute (solve x from UDx = z)
     for (i=n-1; i>=0; i--) {
         s = b[i];
-        for (j=[solution matrixILUDiag:i]+1; j<=[solution matrixILURows:i+1]-1; j++) {
-            s = s - [solution matrixCILUValues:j] * b[[solution matrixILUCols:j]];
+        for (j=matContainers->ILUDiag[i]+1; j<=matContainers->ILURows[i+1]-1; j++) {
+            s = s - matContainers->CILUValues[j] * b[matContainers->ILUCols[j]];
         }
-        b[i] = [solution matrixCILUValues:[solution matrixILUDiag:i]] * s;
+        b[i] = matContainers->CILUValues[matContainers->ILUDiag[i]] * s;
     }    
     
+    matContainers = NULL;
 }
 
 -(BOOL)CRS_LUPrecondition: (FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar {
@@ -890,15 +933,18 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j, n;
     double s;
+    matrixArraysContainer *matContainers;
     
-    n = [solution matrixNumberOfRows];
+    matContainers = solution.matrix.getContainers;
+    
+    n = solution.matrix.numberOfRows;
     
     if (ipar[5] == 0) {
         
         for (i=0; i<n; i++) {
             s = 0.0;
-            for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                s = s + [solution matrixValues:j] * u[[solution matrixCols:j]];
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                s = s + matContainers->Values[j] * u[matContainers->Cols[j]];
             }
             v[i] = s;
         }
@@ -908,11 +954,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
         for (i=0; i<n; i++) {
             s = u[i];
-            for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                v[[solution matrixCols:j]] = v[[solution matrixCols:j]] + s * [solution matrixValues:j];
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                v[matContainers->Cols[j]] = v[matContainers->Cols[j]] + s * matContainers->Values[j];
             }
         }
     }
+    
+    matContainers = NULL;
 }
 
 -(void)CRS_ComplexMatrixVectorProd:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar {
@@ -936,6 +984,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j, n;
     double complex s, rsum;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     n = ipar[2];
     
@@ -943,9 +994,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         for (i=0; i<n; i++) {
             rsum = 0.0 + 0.0 * I;
-            for (j=[solution matrixRows:2*i-1]; j<=[solution matrixRows:2*i]-1; i+=2) {
-                s = [solution matrixValues:j] + (-[solution matrixValues:j+1] * I);
-                rsum = rsum + s * u[([solution matrixCols:j]+1)/2];
+            for (j=matContainers->Rows[2*i-1]; j<=matContainers->Rows[2*i]-1; i+=2) {
+                s = matContainers->Values[j] + (-matContainers->Values[j+1] * I);
+                rsum = rsum + s * u[(matContainers->Cols[j]+1)/2];
             }
             v[i] = rsum;
         }
@@ -955,12 +1006,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
         for (i=0; i<n; i++) {
             rsum = u[i];
-            for (j=[solution matrixRows:2*i-1]; j<=[solution matrixRows:2*i]-1; j+=2) {
-                s = [solution matrixValues:j] + (-[solution matrixValues:j+1] * I);
-                v[([solution matrixCols:j]+1)/2] = v[([solution matrixCols:j]+1)/2] + s * rsum;
+            for (j=matContainers->Rows[2*i-1]; j<=matContainers->Rows[2*i]-1; j+=2) {
+                s = matContainers->Values[j] + (-matContainers->Values[j+1] * I);
+                v[(matContainers->Cols[j]+1)/2] = v[(matContainers->Cols[j]+1)/2] + s * rsum;
             }
         }
     }
+    
+    matContainers = NULL;
 }
 
 -(void)CRS_pcond_dummy:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar {
@@ -993,17 +1046,21 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j, n;
     double rsum;
+    matrixArraysContainer *matContainers;
     
-    n = [solution matrixNumberOfRows];
+    matContainers = solution.matrix.getContainers;
+    
+    n = solution.matrix.numberOfRows;
     
     for (i=0; i<n; i++) {
         rsum = 0.0;
-        for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-            rsum = rsum + u[[solution matrixCols:j]] * [solution matrixValues:j];
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            rsum = rsum + u[matContainers->Cols[j]] * matContainers->Values[j];
         }
         v[i] = rsum;
     }
     
+    matContainers = NULL;
 }
 
 -(void)CRS_ComplexMatrixVectorMultiply:(FEMSolution *)solution: (double complex *)u: (double complex *)v {
@@ -1025,21 +1082,22 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     int i, j, n;
     double complex s, rsum;
+    matrixArraysContainer *matContainers;
     
-    n = [solution matrixNumberOfRows] / 2;
+    matContainers = solution.matrix.getContainers;
+    
+    n = solution.matrix.numberOfRows / 2;
     
     for (i=0; i<n; i++) {
         rsum = 0.0 + 0.0 * I;
-        for (j=[solution matrixRows:2*i-1]; j<=[solution matrixRows:2*i]-1; j+=2) {
-            s = [solution matrixValues:j] + (-[solution matrixValues:j+1] * I);
-            rsum = rsum + s * u[([solution matrixCols:j]+1)/2];
+        for (j=matContainers->Rows[2*i-1]; j<=matContainers->Rows[2*i]-1; j+=2) {
+            s = matContainers->Values[j] + (-matContainers->Values[j+1] * I);
+            rsum = rsum + s * u[(matContainers->Cols[j]+1)/2];
         }
         v[i] = rsum;
     }
     
+    matContainers = NULL;
 }
-
-
-
 
 @end

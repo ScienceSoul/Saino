@@ -330,7 +330,6 @@
     } else {
         return NO;
     }
-    
 }
 
 -(BOOL)isAssociatedFaces {
@@ -340,7 +339,6 @@
     } else {
         return NO;
     }
-
 }
 
 @end

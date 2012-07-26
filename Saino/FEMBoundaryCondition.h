@@ -8,19 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMMatrix.h"
 #import "Constructors.h"
 
 @interface FEMBoundaryCondition : NSObject {
     
     int tag;
     NSMutableArray *valuesList;  // Array of FEMValueList objects 
-    Matrix_t *pMatrix;
+    FEMMatrix *pMatrix;
 
 }
 
 -(int)tag;
 -(void)setTag:(int)n;
 -(NSMutableArray *)returnValuesList;
--(Matrix_t *)returnPMatrix;
+-(FEMMatrix *)returnPMatrix;
 
 @end

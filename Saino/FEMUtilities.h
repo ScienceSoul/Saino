@@ -16,9 +16,9 @@
 
 @interface FEMUtilities : NSObject
 
--(Matrix_t *)allocateMatrix;
--(void)zeroTheNumberOfRows:(int)n inMatrix:(Matrix_t *)a;
--(void)setMatrixElement:(Matrix_t *)a: (int)i: (int)j: (double)value;
+-(FEMMatrix *)allocateMatrix;
+-(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix *)a;
+-(void)setMatrixElement:(FEMMatrix *)a: (int)i: (int)j: (double)value;
 
 -(double)interpolateCurve:(double *)tValues: (double *)fValues: (double)t: (int)n;
 -(void)solveLinearSystem2x2:(double **)a: (double *)x: (double *)b;

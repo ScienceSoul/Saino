@@ -7,6 +7,7 @@
 //
 
 #import "FEMMesh.h"
+#import "FEMMatrix.h"
 
 #import "Constructors.h"
 #import "memory.h"
@@ -40,14 +41,15 @@
     int sizeDefDofs;
     
     ValueList_t values;
-    Matrix_t matrix;
+    FEMMatrix *_matrix;
     Variable_t variable;
-    
     Variable_t *exportedVariable;
-    
-    FEMMesh *mesh;
+    FEMMesh *_mesh;
     
 }
+
+@property(nonatomic, strong) FEMMatrix *matrix;
+@property(nonatomic, strong) FEMMesh *mesh;
 
 #pragma mark Setters and getters for FEMSolution variables
 
@@ -95,56 +97,6 @@
 -(void)setDefDofs:(int)i: (int)n;
 -(void)setSizeOfDefDofs:(int)n;
 
-
-#pragma mark Setters and getters for Matrix structure
-
--(int)matrixNumberOfRows;
--(int)matrixSubband;
--(int)matrixFormat;
--(int)matrixSolveCount;
--(int)matrixOrdered;
--(int)matrixLumped;
--(int)matrixSymmetric;
--(int)matrixComplex;
--(int)matrixRows:(int)i;
--(int)matrixCols:(int)i;
--(int)matrixDiag:(int)i;
--(double)matrixRHS:(int)i;
--(double)matrixBulkRHS:(int)i;
--(double)matrixForce:(int)i: (int)j;
--(double)matrixValues:(int)i;
--(double)matrixILUValues:(int)i;
--(double)matrixMassValues:(int)i;
--(double)matrixDampValues:(int)i;
--(double)matrixBulkValues:(int)i;
--(int)matrixILURows:(int)i;
--(int)matrixILUCols:(int)i;
--(int)matrixILUDiag:(int)i;
--(double complex)matrixCILUValues:(int)i;
-
--(void)setMatrixNumberOfRows:(int)i;
--(void)setMatrixSubband:(int)i;
--(void)setMatrixFormat:(int)i;
--(void)setMatrixSolveCount:(int)i;
--(void)setMatrixOrdered:(int)i;
--(void)setMatrixLumped:(int)i;
--(void)setMatrixSymmetric:(int)i;
--(void)setMatrixRows:(int)i: (int)n;
--(void)setMatrixCols:(int)i: (int)n;
--(void)setMatrixDiag:(int)i: (int)n;
--(void)setMatrixRHS:(int)i: (double)n;
--(void)setMatrixBulkRHS:(int)i: (double)n;
--(void)setMatrixForce:(int)i: (int)j: (double)n;
--(void)setMatrixValues:(int)i: (double)n;
--(void)setMatrixILUValues:(int)i: (double)n;
--(void)setMatrixMassValues:(int)i: (double)n;
--(void)setMatrixDampValues:(int)i: (double)n;
--(void)setMatrixBulkValues:(int)i: (double)n;
--(void)setMatrixILURows:(int)i: (int)n;
--(void)setMatrixILUCols:(int)i: (int)n;
--(void)setMatrixILUDiag:(int)i: (int)n;
--(void)setMatrixCILUValues:(int)i: (double complex)n;
-
 #pragma mark Setters and getters for Variable structure
 
 -(char *)variableName;
@@ -178,57 +130,17 @@
 #pragma mark Sizes
 
 -(int)sizeOfBoundaryReorder;
--(int)matrixSizeOfRows;
--(int)matrixSizeOfCols;
--(int)matrixSizeOfDiag;
--(int)matrixSizeOfRHS;
--(int)matrixSizeOfBulkRHS;
--(int)matrixSize1OfForce;
--(int)matrixSize2OfForce;
--(int)matrixSizeOfValues;
--(int)matrixSizeOfILUValues;
--(int)matrixSizeOfMassValues;
--(int)matrixSizeOfDampValues;
--(int)matrixSizeOfBulkValues;
--(int)matrixSizeOfILURows;
--(int)matrixSizeOFILUCols;
--(int)matrixSizeOfILUDiag;
--(int)matrixSizeOfCILUValues;
 -(int)variableSizeOfPerm;
 -(int)variableSizeOfValues;
 -(int)variableSizeOfNonLinValues;
 
 -(void)setSizeOfBoundaryReorder:(int)i;
--(void)setMatrixSizeOfRows:(int)i;
--(void)setMatrixSizeOfCols:(int)i;
--(void)setMatrixSizeOfDiag:(int)i;
--(void)setMatrixSizeOfRHS:(int)i;
--(void)setMatrixSizeOfBulkRHS:(int)i;
--(void)setMatrixSize1OfForce:(int)i;
--(void)setMatrixSize2OfForce:(int)i;
--(void)setMatrixSizeOfValues:(int)i;
--(void)setMatrixSizeOfILUValues:(int)i;
--(void)setMatrixSizeOfMassValues:(int)i;
--(void)setMatrixSizeOfDampValues:(int)i;
--(void)setMatrixSizeOfBulkValues:(int)i;
--(void)setMatrixSizeOfILURows:(int)i;
--(void)setMatrixSizeOfILUCols:(int)i;
--(void)setMatrixSizeOfILUDiag:(int)i;
--(void)setMatrixSizeOfCILUValues:(int)i;
 -(void)setVariableSizeOfPerm:(int)i;
 -(void)setVariableSizeOfValues:(int)i;
 -(void)setVariableSizeOfNonLinValues: (int)i;
 
 #pragma Test associativity
 
--(BOOL)isAssociatedMatrixDiag;
--(BOOL)isAssociatedMatrixILUValues;
--(BOOL)isAssociatedMatrixMassValues;
--(BOOL)isAssociatedMatrixDampValues;
--(BOOL)isAssociatedMatrixILURows;
--(BOOL)isAssociatedMatrixILUCols;
--(BOOL)isAssociatedMatrixILUDiag;
--(BOOL)isAssociatedMatrixCILUValues;
 -(BOOL)isAssociatedVariablePrevValues;
 -(BOOL)isAssociatedVariableNonLinValues;
 -(BOOL)isAssociatedVariableSteadyValues;
@@ -237,22 +149,12 @@
 #pragma mark Methods returning pointers
 
 -(int *)returnPointerToDefDofs;
--(FEMMesh *)returnPointerToMesh;
-
--(Matrix_t *)matrixReturnPointerToConstraintMatrix;
--(double *)matrixReturnPointerToRHS;
--(double *)matrixReturnPointerToBulkRHS;
--(double *)matrixReturnPointerToBulkValues;
 
 -(double *)variableReturnPointerToValues;
 -(double *)variableReturnPointerToNonLinValues;
 -(double *)variableReturnPointerToSteadyValues;
 
 -(Variable_t *)meshReturnPointerToVariables;
-
-#pragma mark Methods assigning pointers
-
--(void)matrixAssignConstraintMatrix:(Matrix_t *)a;
 
 #pragma mark Initializations
 
@@ -263,22 +165,7 @@
 
 #pragma mark Allocations
 
--(void)allocateMatrixBulkRHS:(int)n;
--(void)allocateMatrixBulkValues:(int)n;
--(void)allocateMatrixILUValues:(int)n;
--(void)allocateMatrixILURows:(int)n;
--(void)allocateMatrixILUCols:(int)n;
--(void)allocateMatrixILUDiag:(int)n;
--(void)allocateMatrixCILUValues:(int)n;
 -(void)allocateVariableNonLinValues:(int)n;
-
--(void)freeMatrixBulkRHS:(int)n;
--(void)freeMatrixBulkValues:(int)n;
--(void)freeMatrixILUValues:(int)n;
--(void)freeMatrixILURows:(int)n;
--(void)freeMatrixILUCols:(int)n;
--(void)freeMatrixILUDiag:(int)n;
--(void)freeMatrixCILUValues:(int)n;
 -(void)freeVariableNonLinValues:(int)n;
 
 

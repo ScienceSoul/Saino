@@ -10,83 +10,29 @@
 
 @implementation FEMUtilities
 
--(Matrix_t *)allocateMatrix {
+-(FEMMatrix *)allocateMatrix {
     
-    Matrix_t *matrix;
+    FEMMatrix *matrix;
     
-    matrix = (Matrix_t*) malloc( sizeof(Matrix_t) * 1 );
-    
-    matrix->Format = MATRIX_CRS;
-    
-    matrix->Child = NULL;
-    matrix->Parent = NULL;
-    matrix->EMatrix = NULL;
-    matrix->ConstraintMatrix = NULL;
-    
-    matrix->Perm = NULL;
-    matrix->InvPerm = NULL;
-    
-    matrix->Cols = NULL;
-    matrix->Rows = NULL;
-    matrix->Diag = NULL;
-    matrix->GRows = NULL;
-    
-    matrix->RHS = NULL;
-    matrix->Force = NULL;
-    matrix->RHS_im = NULL;
-    
-    matrix->Values = NULL;
-    matrix->ILUValues = NULL;
-    matrix->MassValues = NULL;
-    matrix->DampValues = NULL;
-    
-    matrix->BulkRHS = NULL;
-    matrix->BulkValues = NULL;
-    
-    matrix->ILUCols = NULL;
-    matrix->ILURows = NULL;
-    matrix->ILUDiag = NULL;
-    
-    matrix->CRHS = NULL;
-    matrix->CForce = NULL;
-    
-    matrix->RowOwner = NULL;
-    
-    matrix->CValues = NULL;
-    matrix->CILUValues = NULL;
-    matrix->CMassValues = NULL;
-    matrix->CDampValues = NULL;
-    
-    matrix->GRows = NULL;
-    matrix->GOrder = NULL;
-    
-    matrix->UMFPack_Numeric = 0;
-    
-    matrix->Lumped = 0;
-    matrix->Ordered = 0;
-    matrix->Complex = 0;
-    matrix->Symmetric = 0;
-    matrix->SolveCount = 0;
-    matrix->NumberOfRows = 0;
+    matrix = [[FEMMatrix alloc] init];
     
     return matrix;
-    
 }
 
--(void)zeroTheNumberOfRows:(int)n inMatrix:(Matrix_t *)a {
+-(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix *)a {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
     
-    if (a->Format == MATRIX_CRS) {
+    if (a.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix zeroRowInMatrix:a :n];
         
-    } else if (a->Format == MATRIX_LIST) {
+    } else if (a.format == MATRIX_LIST) {
         
         // TODO: implement the zeroRow method for list matrix.
         
-    } else if (a->Format == MATRIX_BAND || a->Format == MATRIX_SBAND) {
+    } else if (a.format == MATRIX_BAND || a.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix zeroRowInMatrix:a :n];
         
@@ -94,19 +40,19 @@
     
 }
 
--(void)setMatrixElement:(Matrix_t *)a: (int)i: (int)j: (double)value {
+-(void)setMatrixElement:(FEMMatrix *)a: (int)i: (int)j: (double)value {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
     
-    if (a->Format == MATRIX_CRS) {
+    if (a.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix setMatrixElementInMatrix:a :i :j :value];
         
-    } else if (a->Format == MATRIX_LIST) {
+    } else if (a.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
-    } else if (a->Format == MATRIX_BAND || a->Format == MATRIX_SBAND) {
+    } else if (a.format == MATRIX_BAND || a.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix setMatrixElementInMatrix:a :i :j :value];
     }

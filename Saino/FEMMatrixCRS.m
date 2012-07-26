@@ -52,7 +52,6 @@
     }
     
     return index;
-    
 }
 
 #pragma mark Public methods
@@ -60,27 +59,32 @@
 -(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n {
     
     int i;
+    matrixArraysContainer *matContainers;
     
-    for (i=[solution matrixRows:n]; i<=[solution matrixRows:n+1]-1; i++) {
-        [solution setMatrixValues:i :0.0];
+    matContainers = solution.matrix.getContainers;
+    
+    
+    for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+        matContainers->Values[i] = 0.0;
     }
     
-    if ([solution isAssociatedMatrixMassValues] == YES) {
-        if ([solution matrixSizeOfMassValues] == [solution matrixSizeOfValues]) {
-            for (i=[solution matrixRows:n]; i<=[solution matrixRows:n+1]-1; i++) {
-                [solution setMatrixMassValues:i :0.0];
+    if (matContainers->MassValues != NULL) {
+        if (matContainers->sizeMassValues == matContainers->sizeValues) {
+            for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+                matContainers->MassValues[i] = 0.0;
             }
         }
     }
     
-    if ([solution isAssociatedMatrixDampValues] == YES) {
-        if ([solution matrixSizeOfDampValues] == [solution matrixSizeOfValues]) {
-            for (i=[solution matrixRows:n]; i<=[solution matrixRows:n+1]-1; i++) {
-                [solution setMatrixDampValues:i :0.0];
+    if (matContainers->DampValues != NULL) {
+        if (matContainers->sizeDampValues == matContainers->sizeValues) {
+            for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+                matContainers->DampValues[i] = 0.0;
             }
         }
     }
     
+    matContainers = NULL;
 }
 
 -(void)sortInGlobal:(FEMSolution *)solution: (BOOL *)alsoValues {
@@ -97,68 +101,73 @@
     int *buffer1;
     double *buffer2;
     BOOL sortValues;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     sortValues = NO;
     if (alsoValues != NULL) sortValues = *alsoValues;
     
-    n = [solution matrixNumberOfRows];
+    n = solution.matrix.numberOfRows;
     
-    if ([solution matrixOrdered] == 0) {
+    if (solution.matrix.isOrdered == NO) {
         if (sortValues == YES) {
-            buffer1 = intvec(0, [solution matrixSizeOfValues]-1);
-            buffer2 = doublevec(0, [solution matrixSizeOfValues]-1);
-            memset( buffer1, 0, ([solution matrixSizeOfValues]*sizeof(buffer1)) );
-            memset( buffer2, 0.0, ([solution matrixSizeOfValues]*sizeof(buffer2)) );
+            buffer1 = intvec(0, matContainers->sizeValues-1);
+            buffer2 = doublevec(0, matContainers->sizeValues-1);
+            memset( buffer1, 0, (matContainers->sizeValues*sizeof(buffer1)) );
+            memset( buffer2, 0.0, (matContainers->sizeValues*sizeof(buffer2)) );
             for (i=0; i<n; i++) {
                 k = 0;
-                for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                    buffer1[k] = [solution matrixCols:j];
-                    buffer2[k] = [solution matrixValues:j];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = matContainers->Cols[j];
+                    buffer2[k] = matContainers->Values[j];
                     k++;
                 }
-                sort([solution matrixRows:i+1]-[solution matrixRows:i], buffer1-1, buffer2-1);
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1, buffer2-1);
                 k = 0;
-                for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                    [solution setMatrixCols:j :buffer1[k]];
-                    [solution setMatrixValues:j :buffer2[k]];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->Cols[j] = buffer1[k];
+                    matContainers->Values[j] = buffer2[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, [solution matrixSizeOfValues]-1);
-            free_dvector(buffer2, 0, [solution matrixSizeOfValues]-1);
+            free_ivector(buffer1, 0, matContainers->sizeValues-1);
+            free_dvector(buffer2, 0, matContainers->sizeValues-1);
             
         } else {
-            buffer1 = intvec(0, [solution matrixSizeOfValues]-1);
-            memset( buffer1, 0, ([solution matrixSizeOfValues]*sizeof(buffer1)) );
+            buffer1 = intvec(0, matContainers->sizeValues-1);
+            memset( buffer1, 0, (matContainers->sizeValues*sizeof(buffer1)) );
             for (i=0; i<n; i++) {
                 k = 0;
-                for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                    buffer1[k] = [solution matrixCols:j];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = matContainers->Cols[j];
                     k++;
                 }
-                sort([solution matrixRows:i+1]-[solution matrixRows:i], buffer1-1);
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1);
                 k = 0;
-                for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                    [solution setMatrixCols:j :buffer1[k]];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->Cols[j] = buffer1[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, [solution matrixSizeOfValues]-1);
+            free_ivector(buffer1, 0, matContainers->sizeValues-1);
         }
         
-        if ([solution isAssociatedMatrixDiag] == YES) {
+        if (matContainers->Diag != NULL) {
             for (i=0; i<n; i++) {
-                for (j=[solution matrixRows:i]; j<=[solution matrixRows:i+1]-1; j++) {
-                    if ([solution matrixCols:j] == i) {
-                        [solution setMatrixDiag:i :j];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    if (matContainers->Cols[j] == i) {
+                        matContainers->Diag[i] = j;
                         break;
                     }
                 }
             }
         }
         
-        [solution setMatrixOrdered:1];
+        solution.matrix.ordered = YES;
     }
+    
+    matContainers = NULL;
     
 }
 
@@ -175,28 +184,31 @@
     
     int ii, jj, k;
     int *buffer;
+    matrixArraysContainer *matContainers;
     
-    if ([solution isAssociatedMatrixDiag] == NO || i != j || [solution matrixOrdered] == 0) {
-        jj = [solution matrixRows:i]-[solution matrixRows:i+1];
+    matContainers = solution.matrix.getContainers;
+    
+    if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
+        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
         buffer = intvec( 0, jj );
         memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
-        for (ii=[solution matrixRows:i]; ii<=[solution matrixRows:i+1]-1; ii++) {
-            buffer[ii] = [solution matrixCols:ii];
+        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
+            buffer[ii] = matContainers->Cols[ii];
         }
-        k = [self CRS_Search:[solution matrixRows:i+1]-[solution matrixRows:i] :buffer :j];
+        k = [self CRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
         if (k < 0) {
             warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
             printf("%d %d %f\n", i, j, value);
             return;
         }
-        k = k + [solution matrixRows:i];
+        k = k + matContainers->Rows[i];
         free_ivector(buffer, 0, jj);
     } else {
-        k = [solution matrixDiag:i];
+        k = matContainers->Diag[i];
     }
-    
-    [solution setMatrixValues:k :value];
-    
+    matContainers->Values[k] = value;
+
+    matContainers = NULL;
 }
 
 -(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value {
@@ -212,25 +224,29 @@
     
     int k, ii, jj;
     int *buffer;
+    matrixArraysContainer *matContainers;
     
-    if ([solution isAssociatedMatrixDiag] == NO || i != j || [solution matrixOrdered] == 0) {
-        jj = [solution matrixRows:i]-[solution matrixRows:i+1];
+    matContainers = solution.matrix.getContainers;
+    
+    if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
+        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
         buffer = intvec( 0, jj );
         memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
-        for (ii=[solution matrixRows:i]; ii<=[solution matrixRows:i+1]-1; ii++) {
-            buffer[ii] = [solution matrixCols:ii];
+        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
+            buffer[ii] = matContainers->Cols[ii];
         }
-        k = [self CRS_Search:[solution matrixRows:i+1]-[solution matrixRows:i] :buffer :j];
+        k = [self CRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
         if (k < 0 && value != 0) warnfunct("addToMatrixElement", "Trying to add value to non existent element:");
         printf("%d %d %f\n", i, j, value);
         if (k < 0) return;
-        k = k + [solution matrixRows:i];
+        k = k + matContainers->Rows[i];
         free_ivector(buffer, 0, jj);
     } else {
-        k = [solution matrixDiag:i];
+        k = matContainers->Diag[i];
     }
-    [solution setMatrixValues:k :[solution matrixValues:k]+value];
+    matContainers->Values[k] = matContainers->Values[k]+value;
     
+    matContainers = NULL;
 }
 
 
@@ -252,6 +268,9 @@
 ************************************************************************************************************/
     
     int i, j, k, l, c, row, col;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = solution.matrix.getContainers;
     
     if (dofs == 1) {
         for (i=0; i<n; i++) {
@@ -261,16 +280,16 @@
                 col = indexes[j];
                 if (col < 0) continue;
                 if (col >= row) {
-                    for (c=[solution matrixDiag:row]; c<=[solution matrixRows:row+1]-1; c++) {
-                        if ([solution matrixCols:c] == col) {
-                            [solution setMatrixValues:c :[solution matrixValues:c] + matrix[i][j]];
+                    for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
+                        if (matContainers->Cols[c] == col) {
+                            matContainers->Values[c] = matContainers->Values[c] + matrix[i][j];
                             break;
                         }
                     }
                 } else {
-                    for (c=[solution matrixRows:row]; c<=[solution matrixDiag:row]-1; c++) {
-                        if ([solution matrixCols:c] == col) {
-                            [solution setMatrixValues:c :[solution matrixValues:c] + matrix[i][j]];
+                    for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
+                        if (matContainers->Cols[c] == col) {
+                            matContainers->Values[c] = matContainers->Values[c] + matrix[i][j];
                             break;
                         }
                     }
@@ -287,15 +306,15 @@
                         if (indexes[j] < 0) continue;
                         col = dofs * (indexes[j]+1) - l;
                         if (col >= row) {
-                            for (c=[solution matrixDiag:row]; c<=[solution matrixRows:row+1]-1; c++) {
-                                if ([solution matrixCols:c] == col) {
-                                    [solution setMatrixValues:c :[solution matrixValues:c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l]];
+                            for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
+                                if (matContainers->Cols[c] == col) {
+                                    matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
                                 }
                             }
                         } else {
-                            for (c=[solution matrixRows:row]; c<=[solution matrixDiag:row]-1; c++) {
-                                if ([solution matrixCols:c] == col) {
-                                    [solution setMatrixValues:c :[solution matrixValues:c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l]];
+                            for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
+                                if (matContainers->Cols[c] == col) {
+                                    matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
                                 }
                             }
                         }
@@ -305,6 +324,7 @@
         }
     }
     
+    matContainers = NULL;
 }
 
 -(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution: (int)n: (double)val {
@@ -312,34 +332,37 @@
     int i, j, k, l, m, k1, k2;
     int *buffer;
     BOOL isMass, isDamp;
+    matrixArraysContainer *matContainers;
     
-    isMass = ([solution isAssociatedMatrixMassValues] == YES) ? YES : NO;
-    isMass = (isMass == YES && [solution matrixSizeOfMassValues] == [solution matrixSizeOfValues]) ? YES : NO;
-    isDamp = ([solution isAssociatedMatrixDampValues] == YES) ? YES : NO;
-    isDamp = (isDamp == YES && [solution matrixSizeOfDampValues] == [solution matrixSizeOfValues]) ? YES : NO;
+    matContainers = solution.matrix.getContainers;
     
-    for (l=[solution matrixRows:n]; l<=[solution matrixRows:n+1]-1; l++) {
-        i = [solution matrixCols:l];
+    isMass = (matContainers->MassValues != NULL) ? YES : NO;
+    isMass = (isMass == YES && matContainers->sizeMassValues == matContainers->sizeValues) ? YES : NO;
+    isDamp = (matContainers->DampValues != NULL) ? YES : NO;
+    isDamp = (isDamp == YES && matContainers->sizeDampValues == matContainers->sizeValues) ? YES : NO;
+    
+    for (l=matContainers->Rows[n]; l<=matContainers->Rows[n+1]-1; l++) {
+        i = matContainers->Cols[l];
         if (i == n) continue;
         
         if (n > i) {
-            k1 = [solution matrixDiag:i]+1;
-            k2 = [solution matrixRows:i+1]-1;
+            k1 = matContainers->Diag[i]+1;
+            k2 = matContainers->Rows[i+1]-1;
         } else {
-            k1 = [solution matrixRows:i];
-            k2 = [solution matrixDiag:i]-1;
+            k1 = matContainers->Rows[i];
+            k2 = matContainers->Diag[i]-1;
         }
         
         k = k2 - k1;
         if (k <= 30) {
             for (j=k1; j<=k2; j++) {
-                if ([solution matrixCols:j] == n) {
-                    [solution setMatrixRHS:i :[solution matrixRHS:i] - [solution matrixValues:j] * val];
-                    [solution setMatrixValues:j :0.0];
-                    if (isMass == YES) [solution setMatrixMassValues:j :0.0];
-                    if (isDamp == YES) [solution setMatrixDampValues:j :0.0];
+                if (matContainers->Cols[j] == n) {
+                    matContainers->Rows[i] = matContainers->RHS[i] - matContainers->Values[j] * val;
+                    matContainers->Values[j] = 0.0;
+                    if (isMass == YES) matContainers->MassValues[j] = 0.0;
+                    if (isDamp == YES) matContainers->DampValues[j] = 0.0;
                     break;
-                } else if ([solution matrixCols:j] > n) {
+                } else if (matContainers->Cols[j] > n) {
                     break;
                 }
             }
@@ -347,54 +370,59 @@
             buffer = intvec(k1, k2);
             m = 0;
             for (i=k1; i<=k2; i++) {
-                buffer[m] = [solution matrixCols:i];
+                buffer[m] = matContainers->Cols[i];
                 m++;
             }
             j = [self CRS_Search:k1 :buffer :n];
             if (j >= 0) {
                 j = j + k1;
-                [solution setMatrixRHS:i :[solution matrixRHS:i] - [solution matrixValues:j] * val];
-                [solution setMatrixValues:j :0.0];
-                if (isMass == YES) [solution setMatrixMassValues:j :0.0];
-                if (isDamp == YES) [solution setMatrixDampValues:j :0.0];
+                matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * val;
+                matContainers->Values[j] = 0.0;
+                if (isMass == YES) matContainers->MassValues[j] = 0.0;
+                if (isDamp == YES) matContainers->DampValues[j] = 0.0;
             }
             free_ivector(buffer, k1, k2);
         }
     }
     
     [self zeroRowInGlobal:solution :n];
-    [solution setMatrixRHS:n :val];
-    [solution setMatrixValues:[solution matrixDiag:n] : 1.0];
+    matContainers->RHS[n] = val;
+    matContainers->Values[matContainers->Diag[n]] = 1.0;
     
+    matContainers = NULL;
 }
 
--(void)zeroRowInMatrix:(Matrix_t *)a: (int)n {
+-(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n {
     
     int i;
+    matrixArraysContainer *aContainers;
     
-    for (i=a->Rows[n]; i<=a->Rows[n+1]-1; i++) {
-        a->Values[i] = 0.0;
+    aContainers = a.getContainers;
+    
+    for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
+        aContainers->Values[i] = 0.0;
     }
     
-    if (a->MassValues != NULL) {
-        if (a->sizeMassValues == a->sizeValues) {
-            for (i=a->Rows[n]; i<=a->Rows[n+1]-1; i++) {
-                a->MassValues[i] = 0.0;
+    if (aContainers->MassValues != NULL) {
+        if (aContainers->sizeMassValues == aContainers->sizeValues) {
+            for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
+                aContainers->MassValues[i] = 0.0;
             }
         }
     }
     
-    if (a->DampValues != NULL) {
-        if (a->sizeDampValues == a->sizeValues) {
-            for (i=a->Rows[n]; i<=a->Rows[n+1]-1; i++) {
-                a->DampValues[i] = 0.0;
+    if (aContainers->DampValues != NULL) {
+        if (aContainers->sizeDampValues == aContainers->sizeValues) {
+            for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
+                aContainers->DampValues[i] = 0.0;
             }
         }
     }
-
+    
+    aContainers = NULL;
 }
 
--(void)sortInMatrix:(Matrix_t *)a: (BOOL *)alsoValues {
+-(void)sortInMatrix:(FEMMatrix *)a: (BOOL *)alsoValues {
 /************************************************************************************************
     Sort columns to ascending order for rows of a CRS format matrix
  
@@ -408,72 +436,76 @@
     int *buffer1;
     double *buffer2;
     BOOL sortValues;
+    matrixArraysContainer *aContainers;
+    
+    aContainers = a.getContainers;
     
     sortValues = NO;
     if (alsoValues != NULL) sortValues = *alsoValues;
     
-    n = a->NumberOfRows;
+    n = a.numberOfRows;
     
-    if (a->Ordered == 0) {
+    if (a.isOrdered == NO) {
         if (sortValues == YES) {
-            buffer1 = intvec(0, a->sizeValues-1);
-            buffer2 = doublevec(0, a->sizeValues-1);
-            memset( buffer1, 0, (a->sizeValues*sizeof(buffer1)) );
-            memset( buffer2, 0.0, (a->sizeValues*sizeof(buffer2)) );
+            buffer1 = intvec(0, aContainers->sizeValues-1);
+            buffer2 = doublevec(0, aContainers->sizeValues-1);
+            memset( buffer1, 0, (aContainers->sizeValues*sizeof(buffer1)) );
+            memset( buffer2, 0.0, (aContainers->sizeValues*sizeof(buffer2)) );
             for (i=0; i<n; i++) {
                 k = 0;
-                for (j=a->Rows[i]; j<=a->Rows[i+1]-1; j++) {
-                    buffer1[k] = a->Cols[j];
-                    buffer2[k] = a->Values[j];
+                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = aContainers->Cols[j];
+                    buffer2[k] = aContainers->Values[j];
                     k++;
                 }
-                sort(a->Rows[i+1]-a->Rows[i], buffer1-1, buffer2-1);
+                sort(aContainers->Rows[i+1]-aContainers->Rows[i], buffer1-1, buffer2-1);
                 k = 0;
-                for (j=a->Rows[i]; j<=a->Rows[i+1]-1; j++) {
-                    a->Cols[j] = buffer1[k];
-                    a->Values[j] = buffer2[k];
+                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
+                    aContainers->Cols[j] = buffer1[k];
+                    aContainers->Values[j] = buffer2[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, a->sizeValues-1);
-            free_dvector(buffer2, 0, a->sizeValues-1);
+            free_ivector(buffer1, 0, aContainers->sizeValues-1);
+            free_dvector(buffer2, 0, aContainers->sizeValues-1);
             
         } else {
-            buffer1 = intvec(0, a->sizeValues-1);
-            memset( buffer1, 0, (a->sizeValues*sizeof(buffer1)) );
+            buffer1 = intvec(0, aContainers->sizeValues-1);
+            memset( buffer1, 0, (aContainers->sizeValues*sizeof(buffer1)) );
             for (i=0; i<n; i++) {
                 k = 0;
-                for (j=a->Rows[i]; j<=a->Rows[i+1]-1; j++) {
-                    buffer1[k] = a->Cols[j];
+                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = aContainers->Cols[j];
                     k++;
                 }
-                sort(a->Rows[i+1]-a->Rows[i], buffer1-1);
+                sort(aContainers->Rows[i+1]-aContainers->Rows[i], buffer1-1);
                 k = 0;
-                for (j=a->Rows[i]; j<=a->Rows[i+1]-1; j++) {
-                    a->Cols[j] = buffer1[k];
+                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
+                    aContainers->Cols[j] = buffer1[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, a->sizeValues-1);
+            free_ivector(buffer1, 0, aContainers->sizeValues-1);
         }
         
-        if (a->Diag != NULL) {
+        if (aContainers->Diag != NULL) {
             for (i=0; i<n; i++) {
-                for (j=a->Rows[i]; j<=a->Rows[i+1]-1; j++) {
-                    if (a->Cols[j] == i) {
-                        a->Diag[i] = j;
+                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
+                    if (aContainers->Cols[j] == i) {
+                        aContainers->Diag[i] = j;
                         break;
                     }
                 }
             }
         }
         
-        a->Ordered = 1;
+        a.ordered = YES;
     }
     
+    aContainers = NULL;
 }
 
--(void)setMatrixElementInMatrix:(Matrix_t *)a: (int)i: (int)j: (double)value {
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value {
 /************************************************************************************************
     Set a given value to an element of a CRS format Matrix
  
@@ -486,28 +518,32 @@
     
     int ii, jj, k;
     int *buffer;
+    matrixArraysContainer *aContainers;
     
-    if (a->Diag != NULL || i != j || a->Ordered == 0) {
-        jj = a->Rows[i]-a->Rows[i+1];
+    aContainers = a.getContainers;
+    
+    if (aContainers->Diag != NULL || i != j || a.isOrdered == NO) {
+        jj = aContainers->Rows[i+1]-aContainers->Rows[i];
         buffer = intvec( 0, jj );
         memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
-        for (ii=a->Rows[i]; ii<=a->Rows[i+1]-1; ii++) {
-            buffer[ii] = a->Cols[ii];
+        for (ii=aContainers->Rows[i]; ii<=aContainers->Rows[i+1]-1; ii++) {
+            buffer[ii] = aContainers->Cols[ii];
         }
-        k = [self CRS_Search:a->Rows[i+1]-a->Rows[i] :buffer :j];
+        k = [self CRS_Search:aContainers->Rows[i+1]-aContainers->Rows[i] :buffer :j];
         if (k < 0) {
             warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
             printf("%d %d %f\n", i, j, value);
             return;
         }
-        k = k + a->Rows[i];
+        k = k + aContainers->Rows[i];
         free_ivector(buffer, 0, jj);
     } else {
-        k = a->Diag[i];
+        k = aContainers->Diag[i];
     }
     
-    a->Values[k] = value;
-
+    aContainers->Values[k] = value;
+    
+    aContainers = NULL;
 }
 
 @end

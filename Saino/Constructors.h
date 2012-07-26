@@ -143,15 +143,7 @@ typedef struct {
     
 } ListMatrix_t;
 
-typedef struct Matrix_t {
-    
-    struct Matrix_t *Child, *Parent, *ConstraintMatrix, *EMatrix;
-    int NumberOfRows;
-    
-    int Subband, Format, SolveCount;
-    int Comm;
-    
-    int Ordered, Lumped, Symmetric, Complex, DGMatrix;   // Those are logicals: 0 -> False; 1 -> True
+typedef struct matrixArraysContainer {
     
     ListMatrix_t *ListMatrix;
     
@@ -161,13 +153,11 @@ typedef struct Matrix_t {
     int sizeRows, sizeCols, sizeDiag;
     
     double *RHS, *BulkRHS, *RHS_im, **Force;
-    double sizeRHS, sizeBulkRHS, sizeRHS_im, size1force, size2Force;
+    int sizeRHS, sizeBulkRHS, sizeRHS_im, size1force, size2Force;
     
     double *Values, *ILUValues;
     double *MassValues, *DampValues, *BulkValues;
     int sizeValues, sizeILUValues, sizeMassValues, sizeDampValues, sizeBulkValues;
-    
-    int UMFPack_Numeric;
     
     int *ILURows, *ILUCols, *ILUDiag;
     int sizeILURows, sizeILUCols, sizeILUDiag;
@@ -178,7 +168,7 @@ typedef struct Matrix_t {
     double complex *CMassValues, *CDampValues;
     int sizeCILUValues;
     
-} Matrix_t;
+} matrixArraysContainer;
 
 typedef struct ValueList_t {
     
@@ -221,25 +211,6 @@ typedef struct Variable_t {
     int sizePerm, sizeValues, sizePrevValues, sizePValues, sizeNonLinValues, sizeSteadyValues;
     
 } Variable_t;
-
-typedef struct {
-    
-    ValueList_t *Values;
-    
-    int TimeOrder, DoneTime, Order, NOFEigenValues;
-    int LinBeforeProc, LinAfterProc;
-    
-    double Alpha, Beta, dt;
-    
-    int SolverExecWhen;
-    
-    int NumberOfActiveElements;
-    int *ActiveElments, *Def_Dofs;
-    
-    Matrix_t *Matrix;
-    Variable_t *Variable;
-    
-} Solution_t;
 
 #endif
 
