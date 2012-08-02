@@ -974,12 +974,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega;
-    double *xvec;
     double *rtld, *p, *t1v, *v, *s, *t2v, *t, *r;
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1016,8 +1017,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
     
-    xvec = [solution variableReturnPointerToValues];
-    
     // Vector allocations
     rtld = doublevec(0, ipar[2]-1);
     p = doublevec(0, ipar[2]-1);
@@ -1051,15 +1050,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [matvecInvocation setArgument:&solution atIndex:2];
-    [matvecInvocation setArgument:&xvec atIndex:3];
+    [matvecInvocation setArgument:&varContainers->Values atIndex:3];
     [matvecInvocation setArgument:&r atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
@@ -1116,7 +1115,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         residual = cblas_dnrm2(HUTI_NDIM, s, 1);
         if (residual < HUTI_EPSILON) {
             for (i=0; i<ipar[2]; i++) {
-                xvec[i] = xvec[i] + alpha * t1v[i];
+                varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i];
                 HUTI_INFO = HUTI_BICGSTAB_SNORM;
                 break;
             }
@@ -1142,7 +1141,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         omega = ( cblas_ddot(HUTI_NDIM, t, 1, s, 1) ) / ( cblas_ddot(HUTI_NDIM, t, 1, t, 1));
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + alpha * t1v[i] + omega * t2v[i];
+            varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i] + omega * t2v[i];
             r[i] = s[i] - omega * t[i];
         }
         
@@ -1150,7 +1149,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         switch (HUTI_STOPC) {
             case HUTI_TRUERESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1161,7 +1160,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_TRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1187,7 +1186,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -1196,7 +1195,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             default:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1252,8 +1251,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(t, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark BI-CGSTAB(2)
@@ -1274,12 +1273,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega1, omega2;
     double tau, delta, myy;
-    double *xvec;
     double *rtld, *u, *t1v, *v, *s, *w, *t, *r;
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1316,8 +1316,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
     
-    xvec = [solution variableReturnPointerToValues];
-    
     // Vector allocations
     rtld = doublevec(0, ipar[2]-1);
     u = doublevec(0, ipar[2]-1);
@@ -1352,16 +1350,16 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [pcondrInvocation setArgument:&solution atIndex:2];
     [pcondrInvocation setArgument:&u atIndex:3];
-    [pcondrInvocation setArgument:&xvec atIndex:4];
+    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
     
@@ -1449,7 +1447,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
         
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + alpha * u[i];
+            varContainers->Values[i] = varContainers->Values[i] + alpha * u[i];
         }
         
         // This is the odd BI-CG step
@@ -1520,7 +1518,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         omega1 = ( omega1 - delta * omega2 ) / myy;
         
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + omega1 * r[i] + omega2 * s[i] + alpha * u[i];
+            varContainers->Values[i] = varContainers->Values[i] + omega1 * r[i] + omega2 * s[i] + alpha * u[i];
             r[i] = r[i] - omega1 * s[i] - omega2 * t[i];
         }
         
@@ -1529,7 +1527,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRUERESIDUAL:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&s atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -1551,7 +1549,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRESID_SCALED_BYB:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&s atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -1587,7 +1585,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -1597,7 +1595,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             default:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&s atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
 
@@ -1659,10 +1657,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(w, 0, ipar[2]-1);
     free_dvector(t, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
-    
-    xvec = NULL;
+
     matContainers = NULL;
-    
+    varContainers = NULL;
 }
 
 #pragma mark TFQMR
@@ -1682,12 +1679,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     int i, iter_count;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
-    double *xvec;
     double *v, *y, *ynew, *rtld, *t1v, *t2v, *w, *d, *r, *trv;
     double residual, upperb, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1723,9 +1721,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
-    
-    xvec = [solution variableReturnPointerToValues];
-    
+        
     // Vector allocations
     v = doublevec(0, ipar[2]-1);
     y = doublevec(0, ipar[2]-1);
@@ -1765,16 +1761,16 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     //  Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [pcondrInvocation setArgument:&solution atIndex:2];
     [pcondrInvocation setArgument:&d atIndex:3];
-    [pcondrInvocation setArgument:&xvec atIndex:4];
+    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
     
@@ -1864,7 +1860,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         eta = c * c * alpha;
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + eta * d[i];
+            varContainers->Values[i] = varContainers->Values[i] + eta * d[i];
         }
         
         oldgamma = gamma;
@@ -1874,7 +1870,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRUERESIDUAL:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -1896,7 +1892,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRESID_SCALED_BYB:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -1917,7 +1913,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PSEUDORESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1933,7 +1929,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1949,7 +1945,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PRESID_SCALED_BYPRECB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1974,7 +1970,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 if ( (upperb / HUTI_TOLERANCE) < UPPERB_TOL_RATIO ) {
                     [pcondrInvocation setArgument:&solution atIndex:2];
                     [pcondrInvocation setArgument:&trv atIndex:3];
-                    [pcondrInvocation setArgument:&xvec atIndex:4];
+                    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                     [pcondrInvocation setArgument:&ipar atIndex:5];
                     [pcondrInvocation invoke];
                     
@@ -1998,7 +1994,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -2008,7 +2004,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             default:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -2067,7 +2063,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         eta = c * c * alpha;
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + eta * d[i];
+            varContainers->Values[i] = varContainers->Values[i] + eta * d[i];
         }
         
         oldgamma = gamma;
@@ -2077,7 +2073,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRUERESIDUAL:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -2099,7 +2095,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             case HUTI_TRESID_SCALED_BYB:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -2120,7 +2116,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PSEUDORESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2136,7 +2132,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2152,7 +2148,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PRESID_SCALED_BYPRECB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2177,7 +2173,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 if ( (upperb / HUTI_TOLERANCE) < UPPERB_TOL_RATIO ) {
                     [pcondrInvocation setArgument:&solution atIndex:2];
                     [pcondrInvocation setArgument:&trv atIndex:3];
-                    [pcondrInvocation setArgument:&xvec atIndex:4];
+                    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                     [pcondrInvocation setArgument:&ipar atIndex:5];
                     [pcondrInvocation invoke];
                     
@@ -2201,7 +2197,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -2211,7 +2207,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             default:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&trv atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
                 
@@ -2298,11 +2294,11 @@ jump:
     // Compute the unpreconditioned xvec
     [pcondrInvocation setArgument:&solution atIndex:2];
     [pcondrInvocation setArgument:&trv atIndex:3];
-    [pcondrInvocation setArgument:&xvec atIndex:4];
+    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
     for (i=0; i<ipar[2]; i++) {
-        xvec[i] = trv[i];
+        varContainers->Values[i] = trv[i];
     }
     
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
@@ -2327,8 +2323,8 @@ jump:
     free_dvector(r, 0, ipar[2]-1);
     free_dvector(trv, 0, ipar[2]-1);
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark CG
@@ -2348,12 +2344,13 @@ jump:
     
     int i, iter_count;
     double rho, oldrho, alpha, beta;
-    double *xvec;
     double *z, *p, *q, *r;
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -2390,8 +2387,6 @@ jump:
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
     
-    xvec = [solution variableReturnPointerToValues];
-    
     // Vector allocations
     z = doublevec(0, ipar[2]-1);
     p = doublevec(0, ipar[2]-1);
@@ -2422,15 +2417,15 @@ jump:
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [matvecInvocation setArgument:&solution atIndex:2];
-    [matvecInvocation setArgument:&xvec atIndex:3];
+    [matvecInvocation setArgument:&varContainers->Values atIndex:3];
     [matvecInvocation setArgument:&r atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
@@ -2480,7 +2475,7 @@ jump:
         alpha = rho / cblas_ddot(HUTI_NDIM, p, 1, q, 1);
         
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + alpha * p[i];
+            varContainers->Values[i] = varContainers->Values[i] + alpha * p[i];
             r[i] = r[i] - alpha * q[i];
         }
         
@@ -2488,7 +2483,7 @@ jump:
         switch (HUTI_STOPC) {
             case HUTI_TRUERESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2499,7 +2494,7 @@ jump:
                 break;
             case HUTI_TRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2525,7 +2520,7 @@ jump:
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -2534,7 +2529,7 @@ jump:
                 break;
             default:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2581,8 +2576,8 @@ jump:
     free_dvector(q, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark CGS
@@ -2602,12 +2597,13 @@ jump:
     
     int i, iter_count;
     double rho, oldrho, alpha, beta;
-    double *xvec;
     double *rtld, *p, *q, *u, *t1v, *t2v, *r;
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -2643,8 +2639,6 @@ jump:
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
-    
-    xvec = [solution variableReturnPointerToValues];
 
     // Vector allocations
     rtld = doublevec(0, ipar[2]-1);
@@ -2679,15 +2673,15 @@ jump:
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [matvecInvocation setArgument:&solution atIndex:2];
-    [matvecInvocation setArgument:&xvec atIndex:3];
+    [matvecInvocation setArgument:&varContainers->Values atIndex:3];
     [matvecInvocation setArgument:&r atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
@@ -2757,7 +2751,7 @@ jump:
         [pcondrInvocation setArgument:&ipar atIndex:5];
         [pcondrInvocation invoke];
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + alpha * t1v[i];
+            varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i];
         }
         
         [matvecInvocation setArgument:&solution atIndex:2];
@@ -2773,7 +2767,7 @@ jump:
         switch (HUTI_STOPC) {
             case HUTI_TRUERESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2784,7 +2778,7 @@ jump:
                 break;
             case HUTI_TRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2810,7 +2804,7 @@ jump:
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -2819,7 +2813,7 @@ jump:
                 break;
             default:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -2869,8 +2863,8 @@ jump:
     free_dvector(t2v, 0, ipar[2]-1);
     free_dvector(r, 0, ipar[2]-1);
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark GMRES
@@ -2892,13 +2886,14 @@ jump:
     int s_ind, vtmp_ind, v_ind;
     double bnrm, alpha, beta;
     double temp, temp2, error;
-    double *xvec;
     double *w, *r, *s, *vtmp, *t1v, *v, *buffer, *buffer2;
     double **h, *cs, *sn, *y, *mat; 
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -2934,8 +2929,6 @@ jump:
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     [mstopInvocation setTarget:kernel];
-    
-    xvec = [solution variableReturnPointerToValues];
     
     // Vector allocations
     w = doublevec(0, ipar[2]-1);
@@ -2979,16 +2972,16 @@ jump:
 
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:xvec :ipar];
+        [self HUTI_drandvec:varContainers->Values :ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        for (i=0; i<[solution variableSizeOfValues]; i++) {
-            xvec[i] = 1;
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1;
         }
     }
     
     [pcondrInvocation setArgument:&solution atIndex:2];
     [pcondrInvocation setArgument:&t1v atIndex:3];
-    [pcondrInvocation setArgument:&xvec atIndex:4];
+    [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
     
@@ -3031,7 +3024,7 @@ jump:
         
         [pcondrInvocation setArgument:&solution atIndex:2];
         [pcondrInvocation setArgument:&t1v atIndex:3];
-        [pcondrInvocation setArgument:&xvec atIndex:4];
+        [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
         [pcondrInvocation setArgument:&ipar atIndex:5];
         [pcondrInvocation invoke];
         
@@ -3165,7 +3158,7 @@ jump:
                 cblas_dgemv(CblasRowMajor, CblasNoTrans, ipar[2], ( (v_ind+i-1)-((v_ind-1)+1-1) )+1, 1, mat, ipar[2], buffer2, 1, 0, buffer, 1);
                 
                 for (i=0; i<ipar[2]; i++) {
-                    xvec[i] = xvec[i] + buffer[i];
+                    varContainers->Values[i] = varContainers->Values[i] + buffer[i];
                 }
                 free_dvector(mat, 0, ( ipar[2] * (( (v_ind+i-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
                 free_dvector(buffer2, 0, i);
@@ -3197,7 +3190,7 @@ jump:
         // Matrix-vector product
         cblas_dgemv(CblasRowMajor, CblasNoTrans, ipar[2], ( ((v_ind-1)+m-1)-((v_ind-1)+1-1) )+1, 1, mat, ipar[2], buffer2, 1, 0, buffer, 1);
         for (i=0; i<ipar[2]; i++) {
-            xvec[i] = xvec[i] + buffer[i];
+            varContainers->Values[i] = varContainers->Values[i] + buffer[i];
         }
         free_dvector(mat, 0, ( ipar[2] * (( ((v_ind-1)+m-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
         free_dvector(buffer2, 0, m-1);
@@ -3209,7 +3202,7 @@ jump:
             case HUTI_TRUERESIDUAL:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&t1v atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
 
@@ -3231,7 +3224,7 @@ jump:
             case HUTI_TRESID_SCALED_BYB:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&t1v atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
 
@@ -3252,7 +3245,7 @@ jump:
                 break;
             case HUTI_PSEUDORESIDUAL:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -3268,7 +3261,7 @@ jump:
                 break;
             case HUTI_PRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -3284,7 +3277,7 @@ jump:
                 break;
             case HUTI_PRESID_SCALED_BYPRECB:
                 [matvecInvocation setArgument:&solution atIndex:2];
-                [matvecInvocation setArgument:&xvec atIndex:3];
+                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -3306,7 +3299,7 @@ jump:
                 break;
             case HUTI_USUPPLIED_STOPC:
                 [mstopInvocation setArgument:&solution atIndex:2];
-                [mstopInvocation setArgument:&xvec atIndex:3];
+                [mstopInvocation setArgument:&varContainers->Values atIndex:3];
                 [mstopInvocation setArgument:&matContainers->RHS atIndex:4];
                 [mstopInvocation setArgument:&r atIndex:5];
                 [mstopInvocation setArgument:&ipar atIndex:6];
@@ -3316,7 +3309,7 @@ jump:
             default:
                 [pcondrInvocation setArgument:&solution atIndex:2];
                 [pcondrInvocation setArgument:&t1v atIndex:3];
-                [pcondrInvocation setArgument:&xvec atIndex:4];
+                [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
                 [pcondrInvocation setArgument:&ipar atIndex:5];
                 [pcondrInvocation invoke];
 
@@ -3383,8 +3376,8 @@ jump:
     
     free_dmatrix(h, 0, (HUTI_GMRES_RESTART+1)-1, 0, (HUTI_GMRES_RESTART+1)-1);
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark SGS
@@ -3392,14 +3385,13 @@ jump:
 -(void)dsgsSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
     
     int rounds, outputInterval;
-    double *xvec;
     double minTol, maxTol, residual, omega;
     BOOL converged, diverged;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
-    
-    xvec = [solution variableReturnPointerToValues];
+    varContainers = solution.variable.getContainers;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -3407,13 +3399,13 @@ jump:
     outputInterval = ipar[4];
     omega = dpar[2];
     
-    [self HUTI_sgs:ndim :solution :xvec :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :omega :matvecMethod];
+    [self HUTI_sgs:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :omega :matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark JACOBI
@@ -3421,27 +3413,26 @@ jump:
 -(void)djacobiSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
     
     int rounds, outputInterval;
-    double *xvec;
     double minTol, maxTol, residual;
     BOOL converged, diverged;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
-    
-    xvec = [solution variableReturnPointerToValues];
+    varContainers = solution.variable.getContainers;
 
     rounds = ipar[9];
     minTol = dpar[0];
     maxTol = dpar[1];
     outputInterval = ipar[4];
     
-    [self HUTI_jacobi:ndim :solution :xvec :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :matvecMethod];
+    [self HUTI_jacobi:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark BI-CGSTAB(l)
@@ -3449,14 +3440,13 @@ jump:
 -(void)dbicgstablSolve:(FEMSolution *)solution: (int)ndim: (int)wrkdim: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod {
     
     int rounds, outputInterval, polynomialDegree;
-    double *xvec;
     double minTol, maxTol;
     BOOL converged, diverged;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
-    
-    xvec = [solution variableReturnPointerToValues];
+    varContainers = solution.variable.getContainers;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -3464,13 +3454,13 @@ jump:
     outputInterval = ipar[4];
     polynomialDegree = ipar[15];
     
-    [self HUTI_BICGStabl:ndim :solution :xvec :matContainers->RHS :ipar :rounds :minTol :maxTol :converged :diverged :outputInterval :polynomialDegree :pcondlMethod :matvecMethod];
+    [self HUTI_BICGStabl:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :converged :diverged :outputInterval :polynomialDegree :pcondlMethod :matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
     
-    xvec = NULL;
     matContainers = NULL;
+    varContainers = NULL;
 }
 
 #pragma mark GCR
@@ -3478,14 +3468,13 @@ jump:
 -(void)dgcrSolve:(FEMSolution *)solution: (int)ndim: (int)wrkdim: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod {
     
     int rounds, outputInterval, restartN;
-    double *xvec;
     double minTol, maxTol, residual;
     BOOL converged, diverged;
     matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
     
     matContainers = solution.matrix.getContainers;
-    
-    xvec = [solution variableReturnPointerToValues];
+    varContainers = solution.variable.getContainers;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -3493,13 +3482,13 @@ jump:
     outputInterval = ipar[4];
     restartN = ipar[16];
     
-    [self HUTI_gcr:ndim :solution :xvec :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :restartN :pcondlMethod :matvecMethod];
+    [self HUTI_gcr:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :restartN :pcondlMethod :matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
     
-    xvec = NULL;
-    matContainers = NULL;    
+    matContainers = NULL;
+    varContainers = NULL;
 }
 
 @end

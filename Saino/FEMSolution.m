@@ -107,6 +107,8 @@
 #pragma mark Public methods...
 
 @synthesize matrix = _matrix;
+@synthesize variable = _variable;
+@synthesize exportedVariable = _exportedVariable;
 @synthesize mesh = _mesh;
 
 #pragma mark Initializations
@@ -567,134 +569,6 @@
     sizeDefDofs = n;
 }
 
-#pragma mark Setters and getters for Variable structure
-
--(char *)variableName {
-    
-    return variable.Name;
-}
-
--(int)variableDofs {
-    
-    return variable.Dofs;
-}
-
--(int)variablePerm:(int)i {
-    
-    return variable.Perm[i];
-}
-
--(double)variableNorm {
-    
-    return variable.Norm;
-}
-
--(double)variablePrevNorm {
-    
-    return variable.PrevNorm;
-}
-
--(double)variableNonLinChange {
-    
-    return variable.NonLinChange;
-}
-
--(double)variableSteadyChange {
-    
-    return variable.SteadyChange;
-}
-
--(int)variableNonLinConverged {
-    
-    return variable.NonLinConverged;
-}
-
--(int)variableSteadyConverged {
-    
-    return variable.SteadyConverged;
-}
-
--(int)variableNonLinIter {
-    
-    return variable.NonLinIter;
-}
-
--(double)variableValues:(int)i {
-    
-    return variable.Values[i];
-}
-
--(double)variablePrevValues:(int)i :(int)j {
-    
-    return variable.PrevValues[i][j];
-    
-}
-
--(double)variableNonLinValues:(int)i {
-    
-    return variable.NonLinValues[i];
-}
-
--(void)setVariableName:(char *)string {
-    
-    variable.Name = string;
-}
-
--(void)setVariableDofs:(int)i {
-    
-    variable.Dofs = i;
-}
-
--(void)setVariablePerm:(int)i :(int)n {
-    
-    variable.Perm[i] = n;
-}
-
--(void)setVariableNorm:(double)n {
-    
-    variable.Norm = n;
-}
-
--(void)setVariableNonLinChange:(double)n {
-    
-    variable.NonLinChange = n;
-}
-
--(void)setVariableSteadyChange:(double)n {
-    
-    variable.SteadyChange = n;
-}
-
--(void)setVariableNonLinConverged:(int)n {
-    
-    variable.NonLinConverged = n;
-}
-
--(void)setVariableSteadyConverged:(int)n {
-    
-    variable.SteadyConverged = n;
-}
-
--(void)setVariableNonLinIter:(int)n {
-    
-    variable.NonLinIter = n;
-}
-
--(void)setVariableValues:(int)i :(double)n {
-    
-    variable.Values[i] = n;
-}
-
--(void)setVariablePrevValues:(int)i :(int)j :(double)n {
-    
-    variable.PrevValues[i][j] = n;
-}
-
--(void)setVariableNonLinValues:(int)i :(double)n {
-    
-    variable.NonLinValues[i] = n;
-}
-
 #pragma mark Sizes
 
 -(int)sizeOfBoundaryReorder {
@@ -702,70 +576,10 @@
     return sizeBoundaryReorder;
 }
 
--(int)variableSizeOfPerm {
-    
-    return variable.sizePerm;
-}
-
--(int)variableSizeOfValues {
-    
-    return variable.sizeValues;
-}
-
--(int)variableSizeOfNonLinValues {
-    
-    return variable.sizeNonLinValues;
-}
-
 -(void)setSizeOfBoundaryReorder:(int)i {
     
     sizeBoundaryReorder = i;
 }
-
--(void)setVariableSizeOfPerm:(int)i {
-    
-    variable.sizePerm = i;
-}
-
--(void)setVariableSizeOfValues:(int)i {
-    
-    variable.sizeValues = i;
-}
-
--(void)setVariableSizeOfNonLinValues:(int)i {
-    
-    variable.sizeNonLinValues = i;
-}
-
-#pragma mark Test associativity
-
--(BOOL)isAssociatedVariablePrevValues {
-    
-    if (variable.PrevValues != NULL) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
--(BOOL)isAssociatedVariableNonLinValues {
-    
-    if (variable.NonLinValues != NULL) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
--(BOOL)isAssociatedVariableSteadyValues {
-    
-    if (variable.SteadyValues != NULL) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
 
 #pragma mark Methods returning pointers
 
@@ -773,40 +587,5 @@
     
     return defDofs;
 }
-
--(double *)variableReturnPointerToValues {
-    
-    return variable.Values;
-}
-
--(double *)variableReturnPointerToNonLinValues {
-    
-    return variable.NonLinValues;
-}
-
--(double *)variableReturnPointerToSteadyValues {
-    
-    return variable.SteadyValues;
-}
-
--(Variable_t *)meshReturnPointerToVariables {
-    
-    return [_mesh getVariables];
-}
-
-#pragma mark Allocations and disallocations
-
--(void)allocateVariableNonLinValues:(int)n {
-    
-    variable.NonLinValues = doublevec(0, n-1);
-}
-
-
--(void)freeVariableNonLinValues:(int)n {
-
-    free_dvector(variable.NonLinValues, 0, n-1);
-    variable.NonLinValues = NULL;
-}
-
 
 @end

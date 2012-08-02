@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMVariable.h"
 #import "Constructors.h"
 
 @interface FEMModel : NSObject {
@@ -40,8 +41,10 @@
     NSArray *boundaryConditions;                // Array of FEMBoundaryCondition objects
     NSArray *simulations;                       // Array of FEMSimulation objects 
     
-    Variable_t *variables;
+    NSMutableDictionary *_variables;            // Mutable dictionary holding FEMVariable classes
 }
+
+@property(nonatomic, strong) NSMutableDictionary *variables;
 
 -(int)dimension;
 -(int)numberOfNodes;
@@ -60,7 +63,5 @@
 -(void)setNumberOfBoundaryElements:(int)n;
 -(void)setNumberOfBodyForces:(int)n;
 -(void)setNumberOfBoundaryConditions:(int)n;
-
--(Variable_t *)returnPointerToVariables;
 
 @end

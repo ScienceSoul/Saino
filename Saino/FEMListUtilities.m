@@ -13,67 +13,67 @@
 -(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count {
 
     int l, k1;
-    char *theName;
-    Variable_t *variable, *cVar;
+    FEMVariable *variable, *cVar;
+    variableArraysContainer *varContainers, *cvarContainers;
     
     count = 0;
     
-    theName = (char *)[str UTF8String];
-    
     if ([str isEqualToString:@"Coordinate"] == NO) {
-        variable = getVariable([model returnPointerToVariables], theName);
-        if (variable == NULL) {
+        variable = [model.variables objectForKey:str];
+        if (variable == nil) {
             warnfunct("listParseStrToValues", "Can't find indpendent variable:");
-            printf("%s\n", theName);
+            printf("%s\n", [str UTF8String]);
             errorfunct("listParseStrToValues", "Abort...");
         }
     } else {
-        theName = "Coordinate 1";
-        variable = getVariable([model returnPointerToVariables], theName);
+        variable = [model.variables objectForKey:@"Coordinate 1"];
     }
     
-    k1 = ind;
-    if (variable->Perm != NULL) k1 = variable->Perm[k1];
+    varContainers = variable.getContainers;
     
-    if (k1 > 0 && k1 <= variable->sizeValues) {
+    k1 = ind;
+    if (varContainers->Perm != NULL) k1 = varContainers->Perm[k1];
+    
+    if (k1 > 0 && k1 <= varContainers->sizeValues) {
         if ([str isEqualToString:@"Coordinate"] == YES) {
-            theName = "Coordinate 1";
-            cVar = getVariable([model returnPointerToVariables], theName);
+            cVar = [model.variables objectForKey:@"Coordinate 1"];
             count++;
-            t[0] = cVar->Values[k1];
+            cvarContainers = cVar.getContainers;
+            t[0] = cvarContainers->Values[k1];
             
-            theName = "Coordinate 2";
-            cVar = getVariable([model returnPointerToVariables], theName);
+            cVar = [model.variables objectForKey:@"Coordinate 2"];
             count++;
-            t[1] = cVar->Values[k1];
+            cvarContainers = cVar.getContainers;
+            t[1] = cvarContainers->Values[k1];
             
-            theName = "Coordinate 3";
-            cVar = getVariable([model returnPointerToVariables], theName);
+            cVar = [model.variables objectForKey:@"Coordinate 3"];
             count++;
-            t[2] = cVar->Values[k1];
+            cvarContainers = cVar.getContainers;
+            t[2] = cvarContainers->Values[k1];
         }
         else {
-            if (variable->Dofs == 1) {
-                t[count] = variable->Values[k1];
+            if (variable.dofs == 1) {
+                t[count] = varContainers->Values[k1];
                 count++;
             } else {
-                for (l=0; l<variable->Dofs; l++) {
-                    t[count] = variable->Values[variable->Dofs*(k1-1)+l];
+                for (l=0; l<variable.dofs; l++) {
+                    t[count] = varContainers->Values[variable.dofs*(k1-1)+l];
                     count++;
                 }
             }
         }
     } else {
-        if (variable->Perm != NULL) {
+        if (varContainers->Perm != NULL) {
             t[count] = HUGE_VAL;
         } else {
-            t[count] = variable->Values[0];
+            t[count] = varContainers->Values[0];
         }
     }
     
-    variable = NULL;
-    cVar = NULL;
-
+    variable = nil;
+    cVar = nil;
+    varContainers = NULL;
+    cvarContainers = NULL;
 }
 
 -(BOOL)listGetReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes resultArray:(double *)result minValue:(double *)minv maxValue:(double *)maxv {

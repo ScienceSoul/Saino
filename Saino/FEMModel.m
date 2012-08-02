@@ -10,6 +10,19 @@
 
 @implementation FEMModel
 
+@synthesize variables = _variables;
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
+    
+    return self;
+}
+
 -(int)dimension {
     
     return dimension;
@@ -88,11 +101,6 @@
 -(void)setNumberOfBoundaryConditions:(int)n {
     
     numberOfBoundaryConditions = n;
-}
-
--(Variable_t *)returnPointerToVariables {
-    
-    return variables;
 }
 
 @end

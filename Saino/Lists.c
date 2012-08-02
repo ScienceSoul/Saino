@@ -28,7 +28,7 @@ void addVariable(Variable_t *variables, char *name, int dofs, double *values, in
         temp1->Perm = NULL;
     }
     
-    temp1->NameLen = strlen(name);
+    temp1->NameLen = (int)strlen(name);
     strcpy(temp1->Name, name);
     
     temp1->Norm = 0.0;
@@ -92,7 +92,7 @@ Variable_t* getVariable(Variable_t *variables, char *name) {
     cur_ptr = variables;
     var = NULL;
     
-    k = strlen(name);
+    k = (int)strlen(name);
     
     if (cur_ptr == NULL) {
         printf("List is empty.\n");

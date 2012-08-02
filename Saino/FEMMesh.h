@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMVariable.h"
 #import "Constructors.h"
 
 @interface FEMMesh : NSObject {
@@ -28,7 +29,7 @@
     Element_t *_elements, *_edges, *_faces;
     Nodes_t *_globalNodes;
     
-    Variable_t *_variables;
+    NSMutableDictionary *_variables;                // Mutable dictionary holding FEMVariable classes
 }
 
 @property(nonatomic, assign) int dimension;
@@ -43,6 +44,7 @@
 @property(nonatomic, assign) int maxFaceDofs;
 @property(nonatomic, assign) int maxBdofs;
 @property(nonatomic, assign) int sizeOfGlobalNodes;
+@property(nonatomic, strong) NSMutableDictionary *variables;
 
 //Allocations methods
 -(BOOL)AllocateNodes: (int)nl: (int)nh;
@@ -59,9 +61,6 @@
 
 // Faces getter
 -(Element_t *)getFaces;
-
-// Variables getter
--(Variable_t *)getVariables;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;

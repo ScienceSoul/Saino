@@ -36,7 +36,7 @@
 			return nil;
 		}
 		// TODO: How can I use NSLineSeparatorCharacter instead of \n here?
-		m_lineDelimiter = [[NSString alloc] initWithString:@"\n"];
+		m_lineDelimiter = @"\n";
 		m_filePath = filePath;
 		m_currentOffset = 0ULL;										
 		m_chunkSize = 10;										

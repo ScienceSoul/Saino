@@ -170,6 +170,25 @@ typedef struct matrixArraysContainer {
     
 } matrixArraysContainer;
 
+typedef struct variableArraysContainer {
+    
+    int *Perm;
+    double *Values;
+    double **PrevValues;
+    double *PValues;
+    double *NonLinValues;
+    double *SteadyValues;
+    double complex *EigenValues;
+    double complex **EigenVectors;
+    int sizePerm;
+    int sizeValues;
+    int sizePrevValues;
+    int sizePValues;
+    int sizeNonLinValues;
+    int sizeSteadyValues;
+    
+} variableArraysContainer;
+
 typedef struct ValueList_t {
     
     struct ValueList_t *Next;
@@ -192,25 +211,6 @@ typedef struct ValueList_t {
     char *DependName;
     
 } ValueList_t;
-
-typedef struct Variable_t {
-    
-    struct Variable_t *Next;
-    int NameLen;
-    char *Name;
-    
-    int Valid, Output, ValuesChanged, Secondary;          // Those are logicals: 0 -> False; 1 -> True
-    
-    int Dofs;
-    int *Perm;
-    double Norm, PrevNorm, NonLinChange, SteadyChange;
-    int NonLinConverged, SteadyConverged;                 // Those are logicals: 0 -> False; 1 -> True
-    int NonLinIter;
-    double *Values, **PrevValues, *PValues, *NonLinValues, *SteadyValues;
-    double complex *EigenValues, **EigenVectors;
-    int sizePerm, sizeValues, sizePrevValues, sizePValues, sizeNonLinValues, sizeSteadyValues;
-    
-} Variable_t;
 
 #endif
 

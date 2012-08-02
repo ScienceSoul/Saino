@@ -8,6 +8,7 @@
 
 #import "FEMMesh.h"
 #import "FEMMatrix.h"
+#import "FEMVariable.h"
 
 #import "Constructors.h"
 #import "memory.h"
@@ -40,16 +41,19 @@
     int *acticeElements, *defDofs;
     int sizeDefDofs;
     
-    ValueList_t values;
     FEMMatrix *_matrix;
-    Variable_t variable;
-    Variable_t *exportedVariable;
+    FEMVariable *_variable;
     FEMMesh *_mesh;
+    NSMutableDictionary *_exportedVariable;         // Mutable dictionary holding FEMVariable classes
+    
+    ValueList_t values;
     
 }
 
 @property(nonatomic, strong) FEMMatrix *matrix;
+@property(nonatomic, strong) FEMVariable *variable;
 @property(nonatomic, strong) FEMMesh *mesh;
+@property(nonatomic, strong) NSMutableDictionary *exportedVariables;
 
 #pragma mark Setters and getters for FEMSolution variables
 
@@ -97,64 +101,15 @@
 -(void)setDefDofs:(int)i: (int)n;
 -(void)setSizeOfDefDofs:(int)n;
 
-#pragma mark Setters and getters for Variable structure
-
--(char *)variableName;
--(int)variableDofs;
--(int)variablePerm:(int)i;
--(double)variableNorm;
--(double)variablePrevNorm;
--(double)variableNonLinChange;
--(double)variableSteadyChange;
--(int)variableNonLinConverged;
--(int)variableSteadyConverged;
--(int)variableNonLinIter;
--(double)variableValues:(int)i;
--(double)variablePrevValues:(int)i: (int)j;
--(double)variableNonLinValues:(int)i;
-
--(void)setVariableName:(char *)string;
--(void)setVariableDofs:(int)i;
--(void)setVariablePerm:(int)i: (int)n;
--(void)setVariableNorm:(double)n;
--(void)setVariableNonLinChange:(double)n;
--(void)setVariableSteadyChange:(double)n;
--(void)setVariableNonLinConverged:(int)n;
--(void)setVariableSteadyConverged:(int)n;
--(void)setVariableNonLinIter:(int)n;
--(void)setVariableValues:(int)i: (double)n;
--(void)setVariablePrevValues:(int)i: (int)j: (double)n;
--(void)setVariableNonLinValues:(int)i: (double)n;
-
-
 #pragma mark Sizes
 
 -(int)sizeOfBoundaryReorder;
--(int)variableSizeOfPerm;
--(int)variableSizeOfValues;
--(int)variableSizeOfNonLinValues;
-
 -(void)setSizeOfBoundaryReorder:(int)i;
--(void)setVariableSizeOfPerm:(int)i;
--(void)setVariableSizeOfValues:(int)i;
--(void)setVariableSizeOfNonLinValues: (int)i;
-
-#pragma Test associativity
-
--(BOOL)isAssociatedVariablePrevValues;
--(BOOL)isAssociatedVariableNonLinValues;
--(BOOL)isAssociatedVariableSteadyValues;
 
 
 #pragma mark Methods returning pointers
 
 -(int *)returnPointerToDefDofs;
-
--(double *)variableReturnPointerToValues;
--(double *)variableReturnPointerToNonLinValues;
--(double *)variableReturnPointerToSteadyValues;
-
--(Variable_t *)meshReturnPointerToVariables;
 
 #pragma mark Initializations
 
@@ -162,11 +117,6 @@
 -(void)initializeCILU:(int)ilun;
 -(void)ilutWorkspaceCheck:(int)i: (int)n;
 -(void)ilutComplexWorkspaceCheck:(int)i: (int)n;
-
-#pragma mark Allocations
-
--(void)allocateVariableNonLinValues:(int)n;
--(void)freeVariableNonLinValues:(int)n;
 
 
 

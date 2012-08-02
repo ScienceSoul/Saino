@@ -33,7 +33,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //---------------------
     _1nodePoint = [[FEMElementsDefinition alloc] init];
     _1nodePoint.dimension = [NSNumber numberWithInt:1];
-    _1nodePoint.topology = [NSString stringWithString:@"point"];
+    _1nodePoint.topology = @"point";
     _1nodePoint.code = [NSNumber numberWithInt:101];
     _1nodePoint.nodes = [NSNumber numberWithInt:1];
     _1nodePoint.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], nil];
@@ -46,7 +46,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------
     _2nodePeriodic = [[FEMElementsDefinition alloc] init];
     _2nodePeriodic.dimension = [NSNumber numberWithInt:1];
-    _2nodePeriodic.topology = [NSString stringWithString:@"point"];
+    _2nodePeriodic.topology = @"point";
     _2nodePeriodic.code = [NSNumber numberWithInt:102];
     _2nodePeriodic.nodes = [NSNumber numberWithInt:2];
     _2nodePeriodic.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], nil];
@@ -59,7 +59,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //---------------------
     _2nodeLine = [[FEMElementsDefinition alloc] init];
     _2nodeLine.dimension = [NSNumber numberWithInt:1];
-    _2nodeLine.topology = [NSString stringWithString:@"line"];
+    _2nodeLine.topology = @"line";
     _2nodeLine.code = [NSNumber numberWithInt:202];
     _2nodeLine.nodes = [NSNumber numberWithInt:2];
     //          1    2 
@@ -75,7 +75,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //---------------------
     _3nodeLine = [[FEMElementsDefinition alloc] init];
     _3nodeLine.dimension = [NSNumber numberWithInt:1];
-    _3nodeLine.topology = [NSString stringWithString:@"line"];
+    _3nodeLine.topology = @"line";
     _3nodeLine.code = [NSNumber numberWithInt:203];
     _3nodeLine.nodes = [NSNumber numberWithInt:3];
     //          1     2     3
@@ -91,7 +91,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //---------------------
     _4nodeLine = [[FEMElementsDefinition alloc] init];
     _4nodeLine.dimension = [NSNumber numberWithInt:1];
-    _4nodeLine.topology = [NSString stringWithString:@"line"];
+    _4nodeLine.topology = @"line";
     _4nodeLine.code = [NSNumber numberWithInt:204];
     _4nodeLine.nodes = [NSNumber numberWithInt:4];
     //          1     2     3     
@@ -108,7 +108,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------
     _3nodeTriangle = [[FEMElementsDefinition alloc] init];
     _3nodeTriangle.dimension = [NSNumber numberWithInt:2];
-    _3nodeTriangle.topology = [NSString stringWithString:@"triangle"];
+    _3nodeTriangle.topology = @"triangle";
     _3nodeTriangle.code = [NSNumber numberWithInt:303];
     _3nodeTriangle.nodes = [NSNumber numberWithInt:3];
     //          1     2     3
@@ -128,7 +128,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------
     _6nodeTriangle = [[FEMElementsDefinition alloc] init];
     _6nodeTriangle.dimension = [NSNumber numberWithInt:2];
-    _6nodeTriangle.topology = [NSString stringWithString:@"triangle"];
+    _6nodeTriangle.topology = @"triangle";
     _6nodeTriangle.code = [NSNumber numberWithInt:306];
     _6nodeTriangle.nodes = [NSNumber numberWithInt:6];
     //          1     2     3     4     5     6
@@ -151,7 +151,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //--------------------------
     _10nodeTriangle = [[FEMElementsDefinition alloc] init];
     _10nodeTriangle.dimension = [NSNumber numberWithInt:2];
-    _10nodeTriangle.topology = [NSString stringWithString:@"triangle"];
+    _10nodeTriangle.topology = @"triangle";
     _10nodeTriangle.code = [NSNumber numberWithInt:310];
     _10nodeTriangle.nodes = [NSNumber numberWithInt:10];
     //          1     2     3     ......
@@ -181,7 +181,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //------------------------------
     _4nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
     _4nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
-    _4nodeQuadrilateral.topology = [NSString stringWithString:@"quadrilateral"];
+    _4nodeQuadrilateral.topology = @"quadrilateral";
     _4nodeQuadrilateral.code = [NSNumber numberWithInt:404];
     _4nodeQuadrilateral.nodes = [NSNumber numberWithInt:4];
     //          1     2     3     4
@@ -204,7 +204,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //------------------------------
     _8nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
     _8nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
-    _8nodeQuadrilateral.topology = [NSString stringWithString:@"quadrilateral"];
+    _8nodeQuadrilateral.topology = @"quadrilateral";
     _8nodeQuadrilateral.code = [NSNumber numberWithInt:408];
     _8nodeQuadrilateral.nodes = [NSNumber numberWithInt:8];
     //          1     2     3     4     5     6      7      8
@@ -229,7 +229,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //------------------------------
     _9nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
     _9nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
-    _9nodeQuadrilateral.topology = [NSString stringWithString:@"quadrilateral"];
+    _9nodeQuadrilateral.topology = @"quadrilateral";
     _9nodeQuadrilateral.code = [NSNumber numberWithInt:409];
     _9nodeQuadrilateral.nodes = [NSNumber numberWithInt:9];
     //          1     2     3     4     5     6      7      8      9
@@ -255,7 +255,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------------
     _12nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
     _12nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
-    _12nodeQuadrilateral.topology = [NSString stringWithString:@"quadrilateral"];
+    _12nodeQuadrilateral.topology = @"quadrilateral";
     _12nodeQuadrilateral.code = [NSNumber numberWithInt:412];
     _12nodeQuadrilateral.nodes = [NSNumber numberWithInt:12];
     //          1     2     3     ......
@@ -285,7 +285,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------------
     _16nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
     _16nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
-    _16nodeQuadrilateral.topology = [NSString stringWithString:@"quadrilateral"];
+    _16nodeQuadrilateral.topology = @"quadrilateral";
     _16nodeQuadrilateral.code = [NSNumber numberWithInt:416];
     _16nodeQuadrilateral.nodes = [NSNumber numberWithInt:16];
     //          1     2     3     ......
@@ -315,7 +315,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //----------------------------
     _4nodeTetrahedron = [[FEMElementsDefinition alloc] init];
     _4nodeTetrahedron.dimension = [NSNumber numberWithInt:3];
-    _4nodeTetrahedron.topology = [NSString stringWithString:@"tetrahedron"];
+    _4nodeTetrahedron.topology = @"tetrahedron";
     _4nodeTetrahedron.code = [NSNumber numberWithInt:504];
     _4nodeTetrahedron.nodes = [NSNumber numberWithInt:4];
     //          1     2     3     4
@@ -345,7 +345,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-----------------------------
     _10nodeTetrahedron = [[FEMElementsDefinition alloc] init];
     _10nodeTetrahedron.dimension = [NSNumber numberWithInt:3];
-    _10nodeTetrahedron.topology = [NSString stringWithString:@"tetrahedron"];
+    _10nodeTetrahedron.topology = @"tetrahedron";
     _10nodeTetrahedron.code = [NSNumber numberWithInt:510];
     _10nodeTetrahedron.nodes = [NSNumber numberWithInt:10];
     //          1     2     3     4     5     6      7      8      9     10
@@ -382,7 +382,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //------------------------
     _5nodePyramid = [[FEMElementsDefinition alloc] init];
     _5nodePyramid.dimension = [NSNumber numberWithInt:3];
-    _5nodePyramid.topology = [NSString stringWithString:@"pyramid"];
+    _5nodePyramid.topology = @"pyramid";
     _5nodePyramid.code = [NSNumber numberWithInt:605];
     _5nodePyramid.nodes = [NSNumber numberWithInt:5];
     //          1     2     3     4     5
@@ -413,7 +413,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //-------------------------
     _13nodePyramid = [[FEMElementsDefinition alloc] init];
     _13nodePyramid.dimension = [NSNumber numberWithInt:3];
-    _13nodePyramid.topology = [NSString stringWithString:@"pyramid"];
+    _13nodePyramid.topology = @"pyramid";
     _13nodePyramid.code = [NSNumber numberWithInt:613];
     _13nodePyramid.nodes = [NSNumber numberWithInt:13];
     //          1     2     3     4     5     6      7      8      9     10    11    12    13
@@ -451,7 +451,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //----------------------
     _6nodeWedge = [[FEMElementsDefinition alloc] init];
     _6nodeWedge.dimension = [NSNumber numberWithInt:3];
-    _6nodeWedge.topology = [NSString stringWithString:@"wedge"];
+    _6nodeWedge.topology = @"wedge";
     _6nodeWedge.code = [NSNumber numberWithInt:706];
     _6nodeWedge.nodes = [NSNumber numberWithInt:6];
     //          1     2     3     4     5     6
@@ -482,7 +482,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //---------------------------
     _8nodeOctahedron = [[FEMElementsDefinition alloc] init];
     _8nodeOctahedron.dimension = [NSNumber numberWithInt:3];
-    _8nodeOctahedron.topology = [NSString stringWithString:@"brick"];
+    _8nodeOctahedron.topology = @"brick";
     _8nodeOctahedron.code = [NSNumber numberWithInt:808];
     _8nodeOctahedron.nodes = [NSNumber numberWithInt:8];
     //          1     2     3     4     5     6     7     8
@@ -519,7 +519,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //----------------------------
     _20nodeOctahedron = [[FEMElementsDefinition alloc] init];
     _20nodeOctahedron.dimension = [NSNumber numberWithInt:3];
-    _20nodeOctahedron.topology = [NSString stringWithString:@"brick"];
+    _20nodeOctahedron.topology = @"brick";
     _20nodeOctahedron.code = [NSNumber numberWithInt:820];
     _20nodeOctahedron.nodes = [NSNumber numberWithInt:20];
     //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20
@@ -568,7 +568,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //----------------------------
     _27nodeOctahedron = [[FEMElementsDefinition alloc] init];
     _27nodeOctahedron.dimension = [NSNumber numberWithInt:3];
-    _27nodeOctahedron.topology = [NSString stringWithString:@"brick"];
+    _27nodeOctahedron.topology = @"brick";
     _27nodeOctahedron.code = [NSNumber numberWithInt:827];
     _27nodeOctahedron.nodes = [NSNumber numberWithInt:27];
     //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20    21    22    23    24    25

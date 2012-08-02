@@ -24,6 +24,18 @@
 @synthesize maxFaceDofs = _maxFaceDofs;
 @synthesize maxBdofs = _maxBdofs;
 @synthesize sizeOfGlobalNodes = _sizeOfGlobalNodes;
+@synthesize variables = _variables;
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
+    
+    return self;
+}
 
 -(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {
     
@@ -312,13 +324,6 @@
 -(Element_t *)getFaces {
     
     return _faces;
-}
-
-#pragma mark variables instance methods
-
--(Variable_t *)getVariables {
-    
-    return _variables;
 }
 
 #pragma mark Test associativity
