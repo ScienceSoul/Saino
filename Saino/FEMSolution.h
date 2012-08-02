@@ -44,7 +44,7 @@
     FEMMatrix *_matrix;
     FEMVariable *_variable;
     FEMMesh *_mesh;
-    NSMutableDictionary *_exportedVariable;         // Mutable dictionary holding FEMVariable classes
+    NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes
     
     ValueList_t values;
     

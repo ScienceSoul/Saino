@@ -108,7 +108,7 @@
 
 @synthesize matrix = _matrix;
 @synthesize variable = _variable;
-@synthesize exportedVariable = _exportedVariable;
+@synthesize exportedVariables = _exportedVariables;
 @synthesize mesh = _mesh;
 
 #pragma mark Initializations
