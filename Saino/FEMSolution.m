@@ -311,7 +311,6 @@
     iWork = NULL;
     cWork = NULL;
     matContainers = NULL;
-    
 }
 
 -(void)ilutComplexWorkspaceCheck:(int)i: (int)n {
@@ -354,7 +353,11 @@
     iWork = NULL;
     cWork = NULL;
     matContainers = NULL;
+}
+
+-(solutionArraysContainer*)getContainers {
     
+    return _containers;
 }
 
 #pragma mark Setters and getters for FEMSolution variables
@@ -382,46 +385,6 @@
 -(int)coordinateSystemDimension {
     
     return coordinateSystemDimension;
-}
-
--(int)ntElement:(int)i :(int)j {
-    
-    return ntElement[i][j];
-}
-
--(BOOL)ntZeroingDone:(int)i :(int)j {
-    
-    return ntZeroingDone[i][j];
-}
-
--(int)boundaryReorder:(int)i {
-    
-    return boundaryReorder[i];
-}
-
--(double)boundaryNormals:(int)i :(int)j {
-    
-    return boundaryNormals[i][j];
-}
-
--(double)boundaryTangent1:(int)i :(int)j {
-    
-    return boundaryTangent1[i][j];
-}
-
--(double)boundaryTangent2:(int)i :(int)j {
-    
-    return boundaryTangent2[i][j];
-}
-
--(int)size1boundaryNormals {
-    
-    return size1boundaryNormals;
-}
-
--(int)size2boundaryNormals {
-    
-    return size2boundaryNormals;
 }
 
 -(int)timeOrder {
@@ -459,16 +422,6 @@
     return dt;
 }
 
--(int)defDofs:(int)i {
-    
-    return defDofs[i];
-}
-
--(int)sizeOfDefDofs {
-    
-    return sizeDefDofs;
-}
-
 -(void)setNormalTangentialName:(NSString *)string {
     
     normalTangentialName = [NSString stringWithString:string];
@@ -487,46 +440,6 @@
 -(void)setCoordinateSystemDimension:(int)i {
     
     coordinateSystemDimension = i;
-}
-
--(void)setNtElement:(int)i :(int)j :(int)n {
-    
-    ntElement[i][j] = n;
-}
-
--(void)setNtZeroingDone:(int)i :(int)j :(BOOL)n {
-    
-    ntZeroingDone[i][j] = n;
-}
-
--(void)setBoundaryReorder:(int)i :(int)n {
-    
-    boundaryReorder[i] = n;
-}
-
--(void)setBoundaryNormals:(int)i :(int)j :(double)n {
-    
-    boundaryNormals[i][j] = n;
-}
-
--(void)setBoundaryTangent1:(int)i :(int)j :(double)n {
-    
-    boundaryTangent1[i][j] = n;
-}
-
--(void)setBoundaryTangent2:(int)i :(int)j :(double)n {
-    
-    boundaryTangent2[i][j] = n;
-}
-
--(void)setSize1boundaryNormals:(int)n {
-    
-    size1boundaryNormals = n;
-}
-
--(void)setSize2boundaryNormals:(int)n {
-    
-    size2boundaryNormals = n;
 }
 
 -(void)setTimeOrder:(int)n {
@@ -557,35 +470,6 @@
 -(void)setDt:(double)n {
     
     dt = n;
-}
-
--(void)setDefDofs:(int)i :(int)n {
-    
-    defDofs[i] = n;
-}
-
--(void)setSizeOfDefDofs:(int)n {
-    
-    sizeDefDofs = n;
-}
-
-#pragma mark Sizes
-
--(int)sizeOfBoundaryReorder {
-    
-    return sizeBoundaryReorder;
-}
-
--(void)setSizeOfBoundaryReorder:(int)i {
-    
-    sizeBoundaryReorder = i;
-}
-
-#pragma mark Methods returning pointers
-
--(int *)returnPointerToDefDofs {
-    
-    return defDofs;
 }
 
 @end

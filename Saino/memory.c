@@ -12,6 +12,16 @@
 #define FI_END 1
 #define FREE_ARG char*
 
+bool *boolvec(long nl, long nh) {
+    
+    bool *v;
+	
+	v = (bool *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(bool)));
+	if (!v) errorfunct("intvec", "Allocation failure for the bool vector");
+	return v-nl+FI_END;
+    
+}
+
 int *intvec(long nl, long nh)
 {
 	int *v;
@@ -65,6 +75,27 @@ double complex *cdoublevec(long nl, long nh)
 	
 	return v-nl+FI_END;
 	
+}
+
+bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
+    
+    long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
+	bool **m;
+	
+	m = (bool **) malloc((size_t) ((nrow+FI_END)*sizeof(bool*)));
+	if (!m) errorfunct("intmatrix", "Allocation failure for the integer matrix 1");
+	m += FI_END;
+	m -= nrl;
+	
+	m[nrl] = (bool *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(bool)));
+	if (!m[nrl]) errorfunct("intmatrix", "Allocation failure for the integer matrix 2");
+	m[nrl] += FI_END;
+	m[nrl] -= ncl;
+	
+	for (i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
+	
+	return m;
+    
 }
 
 double **doublematrix(long nrl, long nrh, long ncl, long nch)
@@ -233,6 +264,11 @@ int ***i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	return t;	    
 }
 
+void free_bvector(bool *v, long nl, long nh){
+    
+    free((FREE_ARG) (v+nl-FI_END));
+}
+
 void free_dvector(double *v, long nl, long nh)
 {
 	free((FREE_ARG) (v+nl-FI_END));
@@ -256,6 +292,12 @@ void free_cdvector(double complex *v, long nl, long nh)
 void free_ulvector(unsigned long *v, long nl, long nh) 
 {    
     free((FREE_ARG) (v+nl-FI_END));
+}
+
+void free_bmatrix(bool **m, long nrl, long nrh, long ncl, long nch) {
+    
+    free((FREE_ARG) (m[nrl]+ncl-FI_END));
+	free((FREE_ARG) (m+nrl-FI_END));
 }
 
 void free_dmatrix(double **m, long nrl, long nrh, long ncl, long nch)

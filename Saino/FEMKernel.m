@@ -73,7 +73,7 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_setPointLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (int)n: (int)dof: (int)ndofs;
 
 // Element and point values
--(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 -(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 
 //Periodic
@@ -468,19 +468,22 @@ static int PRECOND_VANKA     =  560;
     
     int i, k, dim;
     double bu, bv, bw, **rm;
+    solutionArraysContainer *solContainers;
     
     if ([solution normalTangentialNOFNodes] <= 0) return;
     
+    solContainers = solution.getContainers;
+    
     dim = [solution coordinateSystemDimension];
     
-    k = [solution boundaryReorder:nodeNumber];
+    k = solContainers->boundaryReorder[nodeNumber];
     if (k < 0) return;
     
     if (dim < 3) {
         bu = vec[0];
         bv = vec[1];
-        vec[0] = [solution boundaryNormals:k :0]*bu + [solution boundaryNormals:k :1]*bv;
-        vec[1] = -[solution boundaryNormals:k :1]*bu + [solution boundaryNormals:k :0]*bv;
+        vec[0] = solContainers->boundaryNormals[k][0]*bu + solContainers->boundaryNormals[k][1]*bv;
+        vec[1] = -solContainers->boundaryNormals[k][1]*bu + solContainers->boundaryNormals[k][0]*bv;
     } else {
         rm = doublematrix(0, 2, 0, 2);
         
@@ -489,9 +492,9 @@ static int PRECOND_VANKA     =  560;
         bw = vec[2];
         
         for (i=0; i<2; i++) {
-            rm[i][0] = [solution boundaryNormals:k :i];
-            rm[i][1] = [solution boundaryTangent1:k :i];
-            rm[i][2] = [solution boundaryTangent2:k :i];
+            rm[i][0] = solContainers->boundaryNormals[k][i];
+            rm[i][1] = solContainers->boundaryTangent1[k][i];
+            rm[i][2] = solContainers->boundaryTangent2[k][i];
         }
         
         vec[0] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
@@ -501,6 +504,7 @@ static int PRECOND_VANKA     =  560;
         free_dmatrix(rm, 0, 2, 0, 2);
     }
     
+    solContainers = NULL;
 }
 
 -(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution {
@@ -508,16 +512,18 @@ static int PRECOND_VANKA     =  560;
     int i, j, k, l, dim, ndofs;
     double bu, bv, bw, **rm;
     variableArraysContainer *varContainers;
+    solutionArraysContainer *solContainers;
     
     if ([solution normalTangentialNOFNodes] <= 0) return;
     
     varContainers = solution.variable.getContainers;
+    solContainers = solution.getContainers;
     
     dim = [solution coordinateSystemDimension];
     ndofs = solution.variable.dofs;
     
-    for (i=0; i<[solution sizeOfBoundaryReorder]; i++) {
-        k = [solution boundaryReorder:i];
+    for (i=0; i<solContainers->sizeBoundaryReorder; i++) {
+        k = solContainers->boundaryReorder[i];
         if (k < 0) continue;
         j = varContainers->Perm[i];
         if (j < 0) continue;
@@ -527,8 +533,8 @@ static int PRECOND_VANKA     =  560;
             bu = varContainers->Values[(ndofs*(j-1)+1)];
             bv = varContainers->Values[(ndofs*(j-1)+2)];
             
-            varContainers->Values[(ndofs*(j-1)+1)] = [solution boundaryNormals:k :0]*bu - [solution boundaryNormals:k :1]*bv;
-            varContainers->Values[(ndofs*(j-1)+2)] = [solution boundaryNormals:k :1]*bu + [solution boundaryNormals:k :0]*bv;
+            varContainers->Values[(ndofs*(j-1)+1)] = solContainers->boundaryNormals[k][0]*bu - solContainers->boundaryNormals[k][1]*bv;
+            varContainers->Values[(ndofs*(j-1)+2)] = solContainers->boundaryNormals[k][1]*bu + solContainers->boundaryNormals[k][0]*bv;
         } else {
             
             rm = doublematrix(0, 2, 0, 2);
@@ -538,9 +544,9 @@ static int PRECOND_VANKA     =  560;
             bw = varContainers->Values[(ndofs*(j-1)+3)];
             
             for (l=0; l<2; l++) {
-                rm[0][l] = [solution boundaryNormals:k :l];
-                rm[1][l] = [solution boundaryTangent1:k :l];
-                rm[2][l] = [solution boundaryTangent2:k :l];
+                rm[0][l] = solContainers->boundaryNormals[k][l];
+                rm[1][l] = solContainers->boundaryTangent1[k][l];
+                rm[2][l] = solContainers->boundaryTangent2[k][l];
             }
 
             varContainers->Values[(ndofs*(j-1)+1)] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
@@ -553,6 +559,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     varContainers = NULL;
+    solContainers = NULL;
 }
 
 -(double)FEMKernel_computeNorm:(FEMSolution *)solution: (int)n: (double *)values {
@@ -1427,6 +1434,7 @@ static int PRECOND_VANKA     =  560;
     
     int i, j, k, l;
     double s, **r, **q, *n1, *t1, *t2;
+    solutionArraysContainer *solContainers;
     
     r = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
     q = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -1434,9 +1442,11 @@ static int PRECOND_VANKA     =  560;
     t1 = doublevec(0, 2);
     t2 = doublevec(0, 2);
     
+    solContainers = solution.getContainers;
+    
     for (i=0; i<n; i++) {
         
-        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 > [solution size1boundaryNormals]) continue;
+        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 > solContainers->size1boundaryNormals) continue;
         
         for (j=0; j<n*dofs; j++) {
             for (k=0; k<n*dofs; k++) {
@@ -1449,7 +1459,7 @@ static int PRECOND_VANKA     =  560;
         }
         
         for (j=0; j<2; j++) {
-            n1[j] = [solution boundaryNormals:nodeIndexes[i] :j];
+            n1[j] = solContainers->boundaryNormals[nodeIndexes[i]][j];
         }
         
         switch (dim) {
@@ -1462,8 +1472,8 @@ static int PRECOND_VANKA     =  560;
                 break;
             case 3:
                 for (j=0; j<2; j++) {
-                    t1[j] = [solution boundaryTangent1:nodeIndexes[i] :j];
-                    t2[j] = [solution boundaryTangent2:nodeIndexes[i] :j];
+                    t1[j] = solContainers->boundaryTangent1[nodeIndexes[i]][j];
+                    t2[j] = solContainers->boundaryTangent2[nodeIndexes[i]][j];
                 }
                 
                 r[dofs*(i-1)+1][dofs*(i-1)+1] = n1[0];
@@ -1518,7 +1528,7 @@ static int PRECOND_VANKA     =  560;
     free_dvector(n1, 0, 2);
     free_dvector(t1, 0, 2);
     free_dvector(t2, 0, 2);
-    
+    solContainers = NULL;
 }
 
 -(void)FEMKernel_updateGlobalForce:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (double *)forceVector: (double *)localForce: (int)n: (int)dofs: (int *)nodeIndexes: (BOOL *)rotateNT {
@@ -1526,12 +1536,15 @@ static int PRECOND_VANKA     =  560;
     int i, j, k, dim, *indexes;
     BOOL rotate;
     double **localStiffMatrix;
+    solutionArraysContainer *solContainers;
     
     // Check if this element has been defined as passive
     if ([self FEMKernel_checkPassiveElement:model :solution :element] == YES) return;
     
     localStiffMatrix = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
     indexes = intvec(0, n-1);
+    
+    solContainers = solution.getContainers;
     
     rotate = YES;
     if (rotateNT != NULL) rotate = *rotateNT;
@@ -1541,7 +1554,7 @@ static int PRECOND_VANKA     =  560;
         dim = [model dimension];
          memset( indexes, 0.0, (n*sizeof(indexes)) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
-            indexes[i] = [solution boundaryReorder:element->NodeIndexes[i]];
+            indexes[i] = solContainers->boundaryReorder[element->NodeIndexes[i]];
         }
         [self FEMKernel_rotateMatrix:solution :localStiffMatrix :localForce :n :dim :dofs :indexes];
     
@@ -1559,7 +1572,7 @@ static int PRECOND_VANKA     =  560;
     
     free_dmatrix(localStiffMatrix, 0, (n*dofs)-1, 0, (n*dofs)-1);
     free_ivector(indexes, 0, n-1);
-    
+    solContainers = NULL;
 }
 
 -(void)FEMKernel_addFirstOrderTime:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double)dt: (int)n: (int)dofs: (int *)nodeIndexes: (int *)rows: (int *)cols {
@@ -1707,11 +1720,13 @@ static int PRECOND_VANKA     =  560;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers;
+    solutionArraysContainer *solContainers;
     
     // Check if this element has been defined as passive
     if ([self FEMKernel_checkPassiveElement:model :solution :element] == YES) return;
     
     matContainers = solution.matrix.getContainers;
+    solContainers = solution.getContainers;
     
     indexes = intvec(0, n-1);
     
@@ -1724,7 +1739,7 @@ static int PRECOND_VANKA     =  560;
         dim = [model dimension];
         memset( indexes, 0.0, (n*sizeof(indexes)) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
-            indexes[i] = [solution boundaryReorder:element->NodeIndexes[i]];
+            indexes[i] = solContainers->boundaryReorder[element->NodeIndexes[i]];
         }
         [self FEMKernel_rotateMatrix:solution :stiffMatrix :force :n :dim :dofs :indexes];
     }
@@ -1764,6 +1779,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     matContainers = NULL;
+    solContainers = NULL;
 }
 
 #pragma mark Loads
@@ -1902,7 +1918,7 @@ static int PRECOND_VANKA     =  560;
 
 #pragma mark Element and point values
 
--(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
     
     int i, j, k, l, m, dim, k1;
     BOOL checkNT, stat, all;
@@ -1915,9 +1931,11 @@ static int PRECOND_VANKA     =  560;
     FEMValueList *valueList;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
+    solutionArraysContainer *solContainers;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
+    solContainers = solution.getContainers;
     
     listUtil = [[FEMListUtilities alloc] init];
     
@@ -1954,7 +1972,7 @@ static int PRECOND_VANKA     =  560;
             all = YES;
             for (i=0; i<n; i++) {
                 k = indexes[i];
-                if ([solution boundaryReorder:k] < 0) {
+                if (solContainers->boundaryReorder[k] < 0) {
                     continue;
                 } else {
                     all = NO;
@@ -1973,20 +1991,20 @@ static int PRECOND_VANKA     =  560;
                 if (k >= 0) {
                     if (dof >= 0) {
                         m = 0;
-                        if ([solution normalTangentialNOFNodes] > 0) m = [solution boundaryReorder:indexes[j]];
+                        if ([solution normalTangentialNOFNodes] > 0) m = solContainers->boundaryReorder[indexes[j]];
                         if (m >= 0 && checkNT == YES) {
                             memset( rotvec, 0.0, (3*sizeof(rotvec)) );
                             rotvec[dof] = 1.0;
                             [self FEMKernel_rotateNTSystem:solution :rotvec :indexes[j]];
                             for (k=0; k<dim; k++) {
                                 if (fabs(rotvec[k]) > 1.0e-8) {
-                                    if ([solution ntElement:m :k] == elno) {
+                                    if (solContainers->ntElement[m][k] == elno) {
                                         l = solution.variable.dofs * varContainers->Perm[indexes[j]] + k;
-                                        if ([solution ntZeroingDone:m :k] == NO) {
+                                        if (solContainers->ntZeroingDone[m][k] == false) {
                                             matContainers->RHS[l] = 0.0;
                                             [self zeroTheNumberOfRows:l inSolutionMatrix:solution];
                                             [self setMatrixElement:solution :l :l :1.0];
-                                            [solution setNtZeroingDone:m :k :YES];
+                                            solContainers->ntZeroingDone[m][k] = true;
                                         }
                                         matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k]+work[j];
                                     }
@@ -2036,6 +2054,7 @@ static int PRECOND_VANKA     =  560;
     workA = NULL;
     matContainers = NULL;
     varContainers = NULL;
+    solContainers = NULL;
 }
 
 -(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
@@ -2563,6 +2582,7 @@ static int PRECOND_VANKA     =  560;
     int nb, i, j, k, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
     Element_t *parent, *edges, *faces;
+    solutionArraysContainer *solContainers;
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -2600,13 +2620,19 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    if ([solution defDofs:0] > 0) {
+    solContainers = solution.getContainers;
+    
+    if (solContainers->defDofs[0] > 0) {
         for (i=0; i>element->NDOFs; i++) {
             indexes[nb] = element->NodeIndexes[i];
             nb++;
         }
     }
-    if (all_in_range([solution returnPointerToDefDofs], '<', 0, 1, [solution sizeOfDefDofs]) == 1) return nb;
+    if (all_in_range(solContainers->defDofs, '<', 0, 1, solContainers->sizeDefDofs) == 1) {
+        
+        solContainers = NULL;
+        return nb;
+    }
     
     faceDofs = solution.mesh.maxFaceDofs;
     edgeDofs = solution.mesh.maxEdgeDofs;
@@ -2708,6 +2734,7 @@ static int PRECOND_VANKA     =  560;
     
     edges = NULL;
     faces = NULL;
+    solContainers = NULL;
     
     return nb;
 }
@@ -3105,6 +3132,7 @@ static int PRECOND_VANKA     =  560;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     variableArraysContainer *varContainers;
+    solutionArraysContainer *solContainers;
     
     listUtil = [[FEMListUtilities alloc] init];
     
@@ -3118,17 +3146,22 @@ static int PRECOND_VANKA     =  560;
     
     if (dof < 0) return;
     
+    solContainers = solution.getContainers;
+    
     all = YES;
     for (i=0; i<n; i++) {
         k = indexes[i];
-        if ([solution boundaryReorder:k] < 0) {
+        if (solContainers->boundaryReorder[k] < 0) {
             continue;
         } else {
             all = NO;
             break;
         }
     }
-    if (all == YES) return;
+    if (all == YES) {
+        solContainers = NULL;
+        return;
+    }
     
     varContainers = solution.variable.getContainers;
     
@@ -3146,13 +3179,13 @@ static int PRECOND_VANKA     =  560;
         k = varContainers->Perm[indexes[j]];
         if (k >= 0) {
             k = k + offset;
-            m = [solution boundaryReorder:indexes[j]];
+            m = solContainers->boundaryReorder[indexes[j]];
             if (m >= 0) {
                 memset( rotvec, 0.0, (3*sizeof(rotvec)) );
                 rotvec[dof] = 1.0;
                 [self FEMKernel_rotateNTSystem:solution :rotvec :indexes[j]];
                 for (k=0; k<dim; k++) {
-                    if (fabs(rotvec[k]) > 1.0e-8) [solution setNtElement:m :k :elno];
+                    if (fabs(rotvec[k]) > 1.0e-8) solContainers->ntElement[m][k] = elno;
                 }
             }
         }
@@ -3162,6 +3195,7 @@ static int PRECOND_VANKA     =  560;
     free_dvector(condition, 0, n-1);
     free_dvector(rotvec, 0, 2);
     varContainers = NULL;
+    solContainers = NULL;
 }
 
 -(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int)indSize {
@@ -3908,10 +3942,12 @@ static int PRECOND_VANKA     =  560;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
+    solutionArraysContainer *solContainers;
     BOOL stat, nodesFound, orderByBCNumbering, conditional;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
+    solContainers = solution.getContainers;
     
     listUtil = [[FEMListUtilities alloc] init];
     
@@ -4066,10 +4102,10 @@ static int PRECOND_VANKA     =  560;
             for (t=bndry_start; t<bndry_end; t++) {
                 n = elements[t].Type.NumberOfNodes;
                 for (j=0; j<n; j++) {
-                    k = [solution boundaryReorder:elements[t].NodeIndexes[j]];
+                    k = solContainers->boundaryReorder[elements[t].NodeIndexes[j]];
                     if (k >= 0) {
                         for (i=0; i<3; i++) {
-                            [solution setNtZeroingDone:k :i :NO];
+                            solContainers->ntZeroingDone[k][i] = false;
                         }
                     }
                 }
@@ -4106,7 +4142,7 @@ static int PRECOND_VANKA     =  560;
                         } else {
                             n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                         }
-                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                     }
                 }
             }
@@ -4129,7 +4165,7 @@ static int PRECOND_VANKA     =  560;
                         } else {
                             n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                         }
-                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:[boundaryConditionAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                         
                     }
                 }
@@ -4188,7 +4224,7 @@ static int PRECOND_VANKA     =  560;
                     n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
                 bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes forValues:[bodyForceAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:[bodyForceAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
             }
         }
     }
@@ -4301,6 +4337,7 @@ static int PRECOND_VANKA     =  560;
     valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
+    solContainers = NULL;
 }
 
 #pragma mark First order time
@@ -4565,6 +4602,7 @@ static int PRECOND_VANKA     =  560;
     FEMValueList *list;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
+    solutionArraysContainer *solContainers;
     
     BOOL constantValue;
     
@@ -4576,6 +4614,7 @@ static int PRECOND_VANKA     =  560;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
+    solContainers = solution.getContainers;
     
     u_offset = 0;
     if (offset != NULL) {
@@ -4745,7 +4784,7 @@ static int PRECOND_VANKA     =  560;
                                  [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
                                  
                                  n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:g_Ind];
-                                 for (k=[solution defDofs:0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                 for (k=solContainers->defDofs[0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                      nb = varContainers->Perm[g_Ind[k]];
                                      if (nb < 0) continue;
                                      nb = u_offset + solution.variable.dofs*nb + dof;
@@ -4778,7 +4817,7 @@ static int PRECOND_VANKA     =  560;
                                      [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
                                      
                                      n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:g_Ind];
-                                     for (k=[solution defDofs:0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                     for (k=solContainers->defDofs[0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                          nb = varContainers->Perm[g_Ind[k]];
                                          if (nb < 0) continue;
                                          nb = u_offset + solution.variable.dofs*nb + dof;
@@ -4944,6 +4983,7 @@ static int PRECOND_VANKA     =  560;
     free_dvector(buffer, 0, (size1kernStiff*size2kernStiff)-1);
     matContainers = NULL;
     varContainers = NULL;
+    solContainers = NULL;
 }
 
 #pragma mark Solve

@@ -7,6 +7,7 @@
 //
 
 #include <complex.h>
+#include <stdbool.h>
 
 #ifndef CONSTRUCTORS_H
 #define CONSTRUCTORS_H
@@ -188,6 +189,23 @@ typedef struct variableArraysContainer {
     int sizeSteadyValues;
     
 } variableArraysContainer;
+
+typedef struct solutionArraysContainer {
+    
+    bool **ntZeroingDone;
+    int **ntElement;
+    int *boundaryReorder;
+    int *acticeElements;
+    int *defDofs;
+    double **boundaryNormals;
+    double **boundaryTangent1;
+    double **boundaryTangent2;
+    int sizeBoundaryReorder;
+    int size1boundaryNormals;
+    int size2boundaryNormals;
+    int sizeDefDofs;
+    
+} solutionArraysContainer;
 
 typedef struct ValueList_t {
     
