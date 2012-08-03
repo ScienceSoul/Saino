@@ -105,11 +105,26 @@
 }
 
 #pragma mark Public methods...
-
+@synthesize simulationID = _simulationID;
+@synthesize normalTangentialNOFNodes = _normalTangentialNOFNodes;
+@synthesize coordinateSystemDimension  = _coordinateSystemDimension;
+@synthesize timeOrder = _timeOrder;
+@synthesize doneTime = _doneTime;
+@synthesize order = _order;
+@synthesize nOfEigenValues = _nOfEigenValues;
+@synthesize solutionComputeWhen = _solutionComputeWhen;
+@synthesize solutionMode = _solutionMode;
+@synthesize numberOfActiveElements = _numberOfActiveElements;
+@synthesize alpha = _alpha;
+@synthesize beta = _beta;
+@synthesize dt = _dt;
 @synthesize matrix = _matrix;
 @synthesize variable = _variable;
-@synthesize exportedVariables = _exportedVariables;
 @synthesize mesh = _mesh;
+@synthesize solutionInfo = _solutionInfo;
+@synthesize normalTangentialName = _normalTangentialName;
+@synthesize exportedVariables = _exportedVariables;
+@synthesize values = _values;
 
 #pragma mark Initializations
 
@@ -124,6 +139,10 @@
     return self;
 }
 
+-(solutionArraysContainer*)getContainers {
+    
+    return _containers;
+}
 
 -(void)initializeILU:(int)ilun {
     
@@ -353,123 +372,6 @@
     iWork = NULL;
     cWork = NULL;
     matContainers = NULL;
-}
-
--(solutionArraysContainer*)getContainers {
-    
-    return _containers;
-}
-
-#pragma mark Setters and getters for FEMSolution variables
-
--(id)solutionInfoForKey:(NSString *)key {
-    
-    return [solutionInfo objectForKey:key];
-}
-
--(NSString *)normalTangentialName {
-    
-    return normalTangentialName;
-}
-
--(int)simulationID {
-    
-    return simulationID;
-}
-
--(int)normalTangentialNOFNodes {
-    
-    return normalTangentialNOFNodes;
-}
-
--(int)coordinateSystemDimension {
-    
-    return coordinateSystemDimension;
-}
-
--(int)timeOrder {
-    
-    return timeOrder;
-}
-
--(int)doneTime {
-    
-    return doneTime;
-}
-
--(int)order {
-    
-    return order;
-}
-
--(int)nofEigenValues {
-    
-    return nofEigenValues;
-}
-
--(double)alpha {
-    
-    return alpha;
-}
-
--(double)beta {
-    
-    return beta;
-}
-
--(double)dt {
-    
-    return dt;
-}
-
--(void)setNormalTangentialName:(NSString *)string {
-    
-    normalTangentialName = [NSString stringWithString:string];
-}
-
--(void)setSimulationID:(int)i {
-    
-    simulationID = i;
-}
-
--(void)setNormalTangentialNOFNodes:(int)i {
-    
-    normalTangentialNOFNodes = i;
-}
-
--(void)setCoordinateSystemDimension:(int)i {
-    
-    coordinateSystemDimension = i;
-}
-
--(void)setTimeOrder:(int)n {
-    
-    timeOrder = n;
-}
-
--(void)setDoneTime:(int)n {
-    
-    doneTime = n;
-}
-
--(void)setOrder:(int)n {
-    
-    order = n;
-}
-
--(void)setAlpha:(double)n {
-    
-    alpha = n;
-}
-
--(void)setBeta:(double)n {
-    
-    beta = n;
-}
-
--(void)setDt:(double)n {
-    
-    dt = n;
 }
 
 @end

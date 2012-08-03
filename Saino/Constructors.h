@@ -193,6 +193,7 @@ typedef struct variableArraysContainer {
 typedef struct solutionArraysContainer {
     
     bool **ntZeroingDone;
+    int *activeElements;
     int **ntElement;
     int *boundaryReorder;
     int *acticeElements;
@@ -207,28 +208,18 @@ typedef struct solutionArraysContainer {
     
 } solutionArraysContainer;
 
-typedef struct ValueList_t {
+typedef struct valueListArraysContainer {
     
-    struct ValueList_t *Next;
+    int *iValues;
+    double *tValues;
+    double ***fValues;
+    int sizeTValues;
+    int sizeFValues1;
+    int sizeFValues2;
+    int sizeFValues3;
+    int sizeIValues;
     
-    int Model;
-    int Type;
-    
-    double *TValues;
-    double ***FValues;
-    
-    int LValuel;
-    int *IValues;
-    
-    int Procedure;
-    
-    char *CValue;
-    
-    int NameLen, DepNameLen;
-    char *Name; 
-    char *DependName;
-    
-} ValueList_t;
+} valueListArraysContainer;
 
 #endif
 

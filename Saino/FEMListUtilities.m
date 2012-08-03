@@ -83,51 +83,52 @@
     double t[32];
     FEMUtilities *util;
     BOOL found;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
-            
-            if ([list type] == LIST_TYPE_CONSTANT_SCALAR) {
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
+            if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
                 
                 // TODO: implement the call of a user provided method if required
                  
-                if ([list returnPointerToFValues] == NULL) {
+                if (containers->fValues == NULL) {
                     warnfunct("listGetReal", "fValues not allocated in list:\n");
                     printf("%s\n", [varName UTF8String]);
                     errorfunct("listGetReal", "Program terminating now...");
                 }
                 for (i=0; i<n; i++) {
-                    result[i] = [list fValues:0 :0 :0];
+                    result[i] = containers->fValues[0][0][0];
                 }
-            } else if ([list type] == LIST_TYPE_VARIABLE_SCALAR) {
+            } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 
                 util = [[FEMUtilities alloc] init];
-                buffer = doublevec(0, [list sizeTValues]-1);
+                buffer = doublevec(0, containers->sizeTValues-1);
                 
                 for (i=0; i<n; i++) {
-                    buffer[i] = [list fValues:0 :0 :i];
+                    buffer[i] = containers->fValues[0][0][i];
                 }
                 
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
-                    [self listParseStrToValues:model :[list dependName] :k :[list name] :t :j];
+                    [self listParseStrToValues:model :list.dependName :k :list.name :t :j];
                     
                     if (any(t, '=', HUGE_VAL, j) == 0) {
                         
                         // TODO: implement the call of a user provided method if required
                         
-                        if ([list returnPointerToFValues] == NULL) {
+                        if (containers->fValues == NULL) {
                             warnfunct("listGetReal", "fValues not allocated in list:\n");
                             printf("%s\n", [varName UTF8String]);
                             errorfunct("listGetReal", "Program terminating now...");
                         }
-                        result[i] = [util interpolateCurve:[list returnPointerToTValues] :buffer :t[0] :[list sizeTValues]];
+                        result[i] = [util interpolateCurve:containers->tValues :buffer :t[0] :containers->sizeTValues];
                     }
                 }
                 
-                free_dvector(buffer, 0, [list sizeTValues]-1);
+                free_dvector(buffer, 0, containers->sizeTValues-1);
             } else if ([list type] == LIST_TYPE_CONSTANT_SCALAR_STR) {
                  // TODO: implement this case
             } else if ([list type] == LIST_TYPE_VARIABLE_SCALAR_STR) {
@@ -135,6 +136,7 @@
             }
             
             found = YES;
+            containers = NULL;
             break;
         }
     }
@@ -156,7 +158,6 @@
     }
     
     return found;
-
 }
 
 -(BOOL)listGetRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes resultArray:(double ***)result {
@@ -164,28 +165,29 @@
     int i, j, k, n1, n2;
     BOOL found;
     double *buffer;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
+            n1 = containers->sizeFValues1;
+            n2 = containers->sizeFValues2;
             
-            n1 = [list sizeFValues1];
-            n2 = [list sizeFValues2];
-            
-            if ([list type] == LIST_TYPE_CONSTANT_TENSOR) {
+            if (list.type == LIST_TYPE_CONSTANT_TENSOR) {
                 
                 for (i=0; i<n1; i++) {
                     for (j=0; j<n2; j++) {
                         for (k=0; k<n; k++) {
-                            result[i][j][k] = [list fValues:i :j :0];
+                            result[i][j][k] = containers->fValues[i][j][0];
                         }
                     }
                 }
                 
                 // TODO: implement the call of a user provided method if required
             
-            } else if ([list type] == LIST_TYPE_VARIABLE_TENSOR || [list type] == LIST_TYPE_VARIABLE_TENSOR_STR){
+            } else if (list.type == LIST_TYPE_VARIABLE_TENSOR || list.type == LIST_TYPE_VARIABLE_TENSOR_STR){
                 
                 // TODO: implement this case
                 
@@ -213,38 +215,41 @@
             }
             
             found = YES;
+            containers = NULL;
             break; 
         }
     }
     
     return found;
-
 }
 
 
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
             
             if ([list type] >= 8) {
                 
                 // TODO: unimplemented case where type is greater than 8
                 // In Elmer this calls matc. Figure out later what we do in Saino
                 
-            } else if ([list method] == YES) {
+            } else if (list.method == YES) {
                 
                 // TODO: implement the call of a user provided method
                 
             } else {
                 
-                f = [list fValues:0 :0 :0];
+                f = containers->fValues[0][0][0];
             }
             found = YES;
+            containers = NULL;
             break;
         }
     }
@@ -266,91 +271,95 @@
     }
     
     return f;
-
 }
 
 -(BOOL)listGetConstRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName resultArray:(double **)result {
 
     int i, j, n1, n2;
     BOOL found;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
-            
-            n1 = [list sizeFValues1];
-            n2 = [list sizeFValues2];
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
+            n1 = containers->sizeFValues1;
+            n2 = containers->sizeFValues2;
             
             for (i=0; i<n1; i++) {
                 for (j=0; j<n2; j++) {
-                    result[i][j] = [list fValues:i :j :0];
+                    result[i][j] = containers->fValues[i][j][0];
                 }
             }
             
             // TODO: implement the call of a user provided method
             
             found = YES;
+            containers = NULL;
             break;
         }
     }
     
     return found;
-    
 }
 
 -(BOOL)listGetIntegerArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName resultArray:(int *)result {
     
     int i, n;
     BOOL found;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
-       
-            if ([list returnPointerToIValues] == NULL) {
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
+            if (containers->iValues == NULL) {
                 warnfunct("listGetIntegerArray", "iValues not allocated in list:\n");
                 printf("%s\n", [varName UTF8String]);
                 errorfunct("listGetIntegerArray", "Program terminating now...");
             }
             
-            n = [list sizeIValues];
+            n = containers->sizeIValues;
             for (i=0; i<n; i++) {
-                result[i] = [list iValues:i];
+                result[i] = containers->iValues[i];
             }
             
            // TODO: implement the call of a user provided method if required 
             
             found = YES;
+            containers = NULL;
             break;
         }
     }
     
     return found;
-    
 }
 
 -(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found minValue:(int *)minv maxValue:(int *)maxv {
     
     int l;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:list.name] == YES) {
+            containers = list.getContainers;
             
             // TODO: implement the call of a user provided method if required
             
-            if ([list returnPointerToIValues] == NULL) {
+            if (containers->iValues == NULL) {
                 warnfunct("listGetReal", "iValues not allocated in list:\n");
                 printf("%s\n", [varName UTF8String]);
                 errorfunct("listGetReal", "Program terminating now...");
             }
             
-            l = [list iValues:0];
+            l = containers->iValues[0];
             
             found = YES;
+            containers = NULL;
             break;
             
         }
@@ -373,7 +382,6 @@
     }
 
     return l;
-    
 }
 
 -(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found {
@@ -384,13 +392,10 @@
     l = NO;
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
-            
-            l = [list lValue];
-            
+        if ([varName isEqualToString:list.name] == YES) {
+            l = list.isLvalue;
             break;
             found = YES;
-            
         }
     }
     
@@ -406,19 +411,17 @@
     }
     
     return nil;
-
 }
 
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array {
 
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:list.name] == YES) {
             return YES;
         }
     }
     
     return NO;
-
 }
 
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n {
@@ -426,14 +429,14 @@
     int i;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
-    
     BOOL found;
+    valueListArraysContainer *containers;
     
     found = NO;
     
     valuesArray = [className returnValuesList];
     for (FEMValueList *list in valuesArray) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:list.name] == YES) {
             found = YES;
             break;
         }
@@ -442,19 +445,18 @@
     if (found == NO) {
         
         newValueList = [[FEMValueList alloc] init];
-        [newValueList setType:LIST_TYPE_CONSTANT_TENSOR];
+        newValueList.type = LIST_TYPE_CONSTANT_TENSOR;
         
-        [newValueList allocateIValues:n];
+        containers = newValueList.getContainers;
+        containers->iValues = intvec(0, n-1);
         for (i=0; i<n; i++) {
-            [newValueList setIValues:i :values[i]];
+            containers->iValues[i] = values[i];
         }
         
-        [newValueList setName:varName];
-        
+        newValueList.name = varName;
         [valuesArray addObject:newValueList];
-        
+        containers = NULL;
     }
-    
 }
 
 @end

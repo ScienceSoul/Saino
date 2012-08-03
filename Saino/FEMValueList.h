@@ -8,58 +8,33 @@
 
 #import <Foundation/Foundation.h>
 
+#import "Constructors.h"
+
 @interface FEMValueList : NSObject {
     
-    double *tValues;
-    double ***fValues;
-    int sizeTValues, sizeFValues1, sizeFValues2, sizeFValues3;
+    int _model;
+    int _type;
+    int _nameLength;
+    int _depNameLength;
+    BOOL _method;
+    BOOL _lValue;
+    NSString *_name;
+    NSString *_dependName;
+    NSString *_cValue;
     
-    int type;
-    BOOL method;
-    
-    BOOL lValue;
-    int *iValues;
-    int sizeIValues;
-    
-    char *cValue;
-    
-    int nameLen, depNameLen;
-    NSString *name, *dependName;
-    
+    valueListArraysContainer *_containers;
 }
 
--(double)tValues:(int)i;
--(double)fValues:(int)i: (int)j: (int)k;
--(int)sizeTValues;
--(int)sizeFValues1;
--(int)sizeFValues2;
--(int)sizeFValues3;
--(int)type;
--(BOOL)method;
--(BOOL)lValue;
--(int)iValues:(int)i;
--(int)sizeIValues;
--(NSString *)name;
--(NSString *)dependName;
+@property(nonatomic, assign) int model;
+@property(nonatomic, assign) int type;
+@property(nonatomic, assign) int nameLength;
+@property(nonatomic, assign) int depNameLength;
+@property(nonatomic, assign, getter = isMethod) BOOL method;
+@property(nonatomic, assign, getter = isLvalue) BOOL lValue;
+@property(nonatomic, strong) NSString *name;
+@property(nonatomic, strong) NSString *dependName;
+@property(nonatomic, strong) NSString *cValue;
 
--(void)setTValues:(int)i: (double)n;
--(void)setFValues:(int)i: (int)j: (int)k: (double)n;
--(void)setSizeTValues:(int)n;
--(void)setSizeFValues1:(int)n;
--(void)setSizeFValues2:(int)n;
--(void)setSizeFValues3:(int)n;
--(void)setType:(int)n;
--(void)setMethod:(BOOL)n;
--(void)setLValue:(BOOL)n;
--(void)setIValues:(int)i: (int)n;
--(void)setSizeIValues:(int)n;
--(void)setName:(NSString *)string;
--(void)setDependName:(NSString *)string;
-
--(double *)returnPointerToTValues;
--(double ***)returnPointerToFValues;
--(int *)returnPointerToIValues;
-
--(void)allocateIValues:(int)n;
+-(valueListArraysContainer *)getContainers;
 
 @end

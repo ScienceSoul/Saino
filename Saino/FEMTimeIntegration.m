@@ -21,20 +21,20 @@
         nb = solution.mesh.maxElementNodes;
     }
     
-    if ([solution solutionInfoForKey:@"fsstep"] != nil) {
-        fsStep = [[solution solutionInfoForKey:@"fsstep"] doubleValue];
+    if ([solution.solutionInfo objectForKey:@"fsstep"] != nil) {
+        fsStep = [[solution.solutionInfo objectForKey:@"fsstep" ] doubleValue];
     }
-    if ([solution solutionInfoForKey:@"fstheta"] != nil) {
-        fsTheta = [[solution solutionInfoForKey:@"fstheta"] doubleValue];
+    if ([solution.solutionInfo objectForKey:@"fstheta"] != nil) {
+        fsTheta = [[solution.solutionInfo objectForKey:@"fstheta"] doubleValue];
     }
-    if ([solution solutionInfoForKey:@"fsdtheta"] != nil) {
-        fsdTheta = [[solution solutionInfoForKey:@"fsdtheta"] doubleValue];
+    if ([solution.solutionInfo objectForKey:@"fsdtheta"] != nil) {
+        fsdTheta = [[solution.solutionInfo objectForKey:@"fsdtheta"] doubleValue];
     }
-    if ([solution solutionInfoForKey:@"fsalpha"] != nil) {
-        fsAlpha = [[solution solutionInfoForKey:@"fsalpha"] doubleValue];
+    if ([solution.solutionInfo objectForKey:@"fsalpha"] != nil) {
+        fsAlpha = [[solution.solutionInfo objectForKey:@"fsalpha"] doubleValue];
     }
-    if ([solution solutionInfoForKey:@"fsbeta"] != nil) {
-        fsBeta = [[solution solutionInfoForKey:@"fsbeta"] doubleValue];
+    if ([solution.solutionInfo objectForKey:@"fsbeta"] != nil) {
+        fsBeta = [[solution.solutionInfo objectForKey:@"fsbeta"] doubleValue];
     }
     
     switch ((int)fsStep) {

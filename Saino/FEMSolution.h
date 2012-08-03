@@ -9,6 +9,7 @@
 #import "FEMMesh.h"
 #import "FEMMatrix.h"
 #import "FEMVariable.h"
+#import "FEMValueList.h"
 
 #import "Constructors.h"
 #import "memory.h"
@@ -16,61 +17,52 @@
 
 @interface FEMSolution : NSObject {
     
-    NSMutableDictionary *solutionInfo;
-    NSString *normalTangentialName;
-    
-    int simulationID;
-    int normalTangentialNOFNodes;
-    int coordinateSystemDimension;
-    int timeOrder, doneTime, order, nofEigenValues;
-    int lineBeforeProc, linAfterProc;
-    double alpha, beta, dt;
-    int solutionComputeWhen;
-    int numberOfActiveElements;
-   
+    int _simulationID;
+    int _normalTangentialNOFNodes;
+    int _coordinateSystemDimension;
+    int _timeOrder;
+    int _doneTime;
+    int _order;
+    int _nOfEigenValues;
+    int _solutionComputeWhen;
+    int _solutionMode;
+    int _numberOfActiveElements;
+    double _alpha;
+    double _beta;
+    double _dt;
     FEMMatrix *_matrix;
     FEMVariable *_variable;
     FEMMesh *_mesh;
+    NSMutableDictionary *_solutionInfo;
+    NSString *_normalTangentialName;
     NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes
+    FEMValueList *_values;
     
     solutionArraysContainer *_containers;
-    ValueList_t values;
-    
 }
 
+@property(nonatomic, assign) int simulationID;
+@property(nonatomic, assign) int normalTangentialNOFNodes;
+@property(nonatomic, assign) int coordinateSystemDimension;
+@property(nonatomic, assign) int timeOrder;
+@property(nonatomic, assign) int doneTime;
+@property(nonatomic, assign) int order;
+@property(nonatomic, assign) int nOfEigenValues;
+@property(nonatomic, assign) int solutionComputeWhen;
+@property(nonatomic, assign) int solutionMode;
+@property(nonatomic, assign) int numberOfActiveElements;
+@property(nonatomic, assign) double alpha;
+@property(nonatomic, assign) double beta;
+@property(nonatomic, assign) double dt;
 @property(nonatomic, strong) FEMMatrix *matrix;
 @property(nonatomic, strong) FEMVariable *variable;
 @property(nonatomic, strong) FEMMesh *mesh;
+@property(nonatomic, strong) NSMutableDictionary *solutionInfo;
+@property(nonatomic, strong) NSString *normalTangentialName;
 @property(nonatomic, strong) NSMutableDictionary *exportedVariables;
+@property(nonatomic, strong) FEMValueList *values;
 
 -(solutionArraysContainer *)getContainers;
-
-#pragma mark Setters and getters for FEMSolution variables
-
--(id)solutionInfoForKey:(NSString *)key;
--(NSString *)normalTangentialName;
--(int)simulationID;
--(int)normalTangentialNOFNodes;
--(int)coordinateSystemDimension;
--(int)timeOrder;
--(int)doneTime;
--(int)order;
--(int)nofEigenValues;
--(double)alpha;
--(double)beta;
--(double)dt;
-
--(void)setNormalTangentialName:(NSString *)string;
--(void)setSimulationID:(int)i;
--(void)setNormalTangentialNOFNodes:(int)i;
--(void)setCoordinateSystemDimension:(int)i;
--(void)setTimeOrder:(int)n;
--(void)setDoneTime:(int)n;
--(void)setOrder:(int)n;
--(void)setAlpha:(double)n;
--(void)setBeta:(double)n;
--(void)setDt:(double)n;
-
 
 #pragma mark Initializations
 
