@@ -11,6 +11,7 @@
 @implementation FEMModel
 
 @synthesize variables = _variables;
+@synthesize bodyForces = _bodyForces;
 
 - (id)init
 {
@@ -56,11 +57,6 @@
 -(NSArray *)bodies {
     
     return bodies;
-}
-
--(NSArray *)bodyForces {
-    
-    return bodyForces;
 }
 
 -(NSArray *)boundaryConditions {

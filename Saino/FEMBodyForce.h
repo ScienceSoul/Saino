@@ -10,9 +10,10 @@
 
 @interface FEMBodyForce : NSObject {
     
-    NSMutableArray *valuesList;  // Array of FEMListValue objects 
+    NSMutableArray *_valuesList;  // Array of FEMValueList objects
 }
 
--(NSMutableArray *)returnValuesList;
+@property(nonatomic, strong) NSMutableArray *valuesList;
+
 
 @end

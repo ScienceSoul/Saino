@@ -10,9 +10,17 @@
 
 @implementation FEMBodyForce
 
--(NSMutableArray *)returnValuesList {
+@synthesize valuesList = _valuesList;
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
     
-    return valuesList;
+    return self;
 }
 
 @end

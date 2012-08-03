@@ -1384,7 +1384,7 @@ static int PRECOND_VANKA     =  560;
     
     int body_id, bf_id, nbNodes;
     double *passive;
-    NSArray *bodies, *bodyForces;
+    NSArray *bodies;
     NSMutableString *passName;
     NSString *str;
     BOOL isPassive, found;
@@ -1413,11 +1413,10 @@ static int PRECOND_VANKA     =  560;
     str = @" passive";
     [passName appendString:str];
     
-    bodyForces = [model bodyForces];
     // Returns a bodyForce object at index bf_id
-    bodyForceAtBodyID = [bodyForces objectAtIndex:bf_id-1];
+    bodyForceAtBodyID = [model.bodyForces objectAtIndex:bf_id-1];
     
-    found = [listUtil listGetReal:model inArray:[bodyForceAtBodyID returnValuesList] forVariable:passName numberOfNodes:nbNodes indexes:element->NodeIndexes resultArray:passive minValue:NULL maxValue:NULL];
+    found = [listUtil listGetReal:model inArray:bodyForceAtBodyID.valuesList forVariable:passName numberOfNodes:nbNodes indexes:element->NodeIndexes resultArray:passive minValue:NULL maxValue:NULL];
     if (found == YES) {
         if ( count(passive, '>', 0.0, nbNodes) > count(passive, '<', 0.0, nbNodes) ) {
             isPassive = YES;
@@ -3720,7 +3719,7 @@ static int PRECOND_VANKA     =  560;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
-    NSArray *boundaries, *bodyForces, *bodies;
+    NSArray *boundaries, *bodies;
     FEMValueList *valueList;
     NSMutableString *loadName, *str;
     matrixArraysContainer *matContainers;
@@ -3810,15 +3809,14 @@ static int PRECOND_VANKA     =  560;
     memset( activePort, NO, (n*sizeof(activePort)) );
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
 
-    bodyForces = [model bodyForces];
     bodies = [model bodies];
     
     @autoreleasepool {
     
         for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-            bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-            activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:[bodyForceAtId returnValuesList]];
-            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:[bodyForceAtId returnValuesList]];
+            bodyForceAtId = [model.bodyForces objectAtIndex:bf_id];
+            activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForceAtId.valuesList];
+            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForceAtId.valuesList];
         }
         
     }
@@ -3857,8 +3855,8 @@ static int PRECOND_VANKA     =  560;
                     n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
                 
-                bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-                [self FEMKernel_setElementLoads:model :solution :&elements[t] :[bodyForceAtId returnValuesList] :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
+                bodyForceAtId = [model.bodyForces objectAtIndex:bf_id];
+                [self FEMKernel_setElementLoads:model :solution :&elements[t] :bodyForceAtId.valuesList :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
             }
         }
     }
@@ -3944,7 +3942,6 @@ static int PRECOND_VANKA     =  560;
     elements = NULL;
     globalNodes = NULL;
     boundaries = nil;
-    bodyForces = nil;
     bodies = nil;
     valueList = nil;
     matContainers = NULL;
@@ -3977,7 +3974,7 @@ static int PRECOND_VANKA     =  560;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     FEMSimulation *simulationAtId;
-    NSArray *boundaries, *bodyForces, *bodies, *simulations;
+    NSArray *boundaries, *bodies, *simulations;
     FEMValueList *valueList;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
@@ -4221,18 +4218,17 @@ static int PRECOND_VANKA     =  560;
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
     passive = NO;
     
-    bodyForces = [model bodyForces];
     bodies = [model bodies];
 
     @autoreleasepool {
         
         for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-            bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-            activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:[bodyForceAtId returnValuesList]];
-            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:[bodyForceAtId returnValuesList]];
-            activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:[bodyForceAtId returnValuesList]];
+            bodyForceAtId = [model.bodyForces objectAtIndex:bf_id];
+            activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForceAtId.valuesList ];
+            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForceAtId.valuesList];
+            activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForceAtId.valuesList];
             
-            passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:[bodyForceAtId returnValuesList]] == YES) ? YES : NO;
+            passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForceAtId.valuesList] == YES) ? YES : NO;
         }
     }
     
@@ -4264,8 +4260,8 @@ static int PRECOND_VANKA     =  560;
                 } else {
                     n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
-                bodyForceAtId = [bodyForces objectAtIndex:bf_id];
-                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:[bodyForceAtId returnValuesList] variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                bodyForceAtId = [model.bodyForces objectAtIndex:bf_id];
+                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
             }
         }
     }
@@ -4383,7 +4379,6 @@ static int PRECOND_VANKA     =  560;
     elements = NULL;
     globalNodes = NULL;
     boundaries = nil;
-    bodyForces = nil;
     simulations = nil;
     bodies = nil;
     valueList = nil;
