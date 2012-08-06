@@ -13,13 +13,19 @@
 
 @interface FEMModel : NSObject {
     
-    int dimension;
-    int numberOfNodes, numberOfBulkElements, numberOfBoundaryElements;
-    int numberOfBodyForces;
-    int numberOfBoundaryConditions;
+    int _dimension;
+    int _numberOfNodes;
+    int _numberOfBulkElements;
+    int _numberOfBoundaryElements;
+    int _numberOfBodyForces;
+    int _numberOfBoundaries;
     
+    NSArray *_bodies;                             // Array of dictionaries
+    NSArray *_bodyForces;                         // Array of FEMBodyForce objects
+    NSArray *_boundaries;                         // Array of FEMBoundaryCondition objects
+    NSArray *_simulations;                        // Array of FEMSimulation objects
+    NSMutableDictionary *_variables;              // Mutable dictionary holding FEMVariable classes
     
-    NSArray *bodies;                            // Array of dictionaries
     /* Initialize bodies like this:
      NSArray* names = [NSArray arrayWithObjects:
      [NSDictionary dictionaryWithObjectsAndKeys:
@@ -36,31 +42,18 @@
      nil],
      nil];
      */
-    
-    NSArray *_bodyForces;                        // Array of FEMBodyForce objects
-    NSArray *_boundaries;                // Array of FEMBoundaryCondition objects
-    NSArray *_simulations;                        // Array of FEMSimulation objects
-    NSMutableDictionary *_variables;             // Mutable dictionary holding FEMVariable classes
 }
 
-@property(nonatomic, strong) NSMutableDictionary *variables;
+@property(nonatomic, assign) int dimension;
+@property(nonatomic, assign) int numberOfNodes;
+@property(nonatomic, assign) int numberOfBulkElements;
+@property(nonatomic, assign) int numberOfBoundaryElements;
+@property(nonatomic, assign) int numberOfBodyForces;
+@property(nonatomic, assign) int numberOfBoundaries;
+@property(nonatomic, strong) NSArray *bodies;
 @property(nonatomic, strong) NSArray *bodyForces;
 @property(nonatomic, strong) NSArray *boundaries;
 @property(nonatomic, strong) NSArray *simulations;
-
--(int)dimension;
--(int)numberOfNodes;
--(int)numberOfBulkElements;
--(int)numberOfBoundaryElements;
--(int)numberOfBodyForces;
--(int)numberOfBoundaryConditions;
--(NSArray *)bodies;
-
--(void)setDimension:(int)n;
--(void)setNumberOfNodes:(int)n;
--(void)setNumberOfBulkElements:(int)n;
--(void)setNumberOfBoundaryElements:(int)n;
--(void)setNumberOfBodyForces:(int)n;
--(void)setNumberOfBoundaryConditions:(int)n;
+@property(nonatomic, strong) NSMutableDictionary *variables;
 
 @end

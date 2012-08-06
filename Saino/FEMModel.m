@@ -10,6 +10,12 @@
 
 @implementation FEMModel
 
+@synthesize dimension = _dimension;
+@synthesize numberOfNodes = _numberOfNodes;
+@synthesize numberOfBulkElements = _numberOfBulkElements;
+@synthesize numberOfBoundaryElements = _numberOfBoundaryElements;
+@synthesize numberOfBodyForces = _numberOfBodyForces;
+@synthesize numberOfBoundaries = _numberOfBoundaries;
 @synthesize variables = _variables;
 @synthesize bodyForces = _bodyForces;
 @synthesize boundaries = _boundaries;
@@ -24,71 +30,6 @@
     }
     
     return self;
-}
-
--(int)dimension {
-    
-    return dimension;
-}
-
--(int)numberOfNodes {
-    
-    return numberOfNodes;
-}
-
--(int)numberOfBulkElements {
-    
-    return numberOfBulkElements;
-}
-
--(int)numberOfBoundaryElements {
-    
-    return numberOfBoundaryElements;
-}
-
--(int)numberOfBodyForces {
-    
-    return numberOfBodyForces;
-}
-
--(int)numberOfBoundaryConditions {
-    
-    return numberOfBoundaryConditions;
-}
-
--(NSArray *)bodies {
-    
-    return bodies;
-}
-
--(void)setDimension:(int)n {
-    
-    dimension = n;
-}
-
--(void)setNumberOfNodes:(int)n {
-    
-    numberOfNodes = n;
-}
-
--(void)setNumberOfBulkElements:(int)n {
-    
-    numberOfBulkElements = n;
-}
-
--(void)setNumberOfBoundaryElements:(int)n {
-    
-    numberOfBoundaryElements = n;
-}
-
--(void)setNumberOfBodyForces:(int)n {
-    
-    numberOfBodyForces = n;
-}
-
--(void)setNumberOfBoundaryConditions:(int)n {
-    
-    numberOfBoundaryConditions = n;
 }
 
 @end

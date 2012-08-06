@@ -1384,7 +1384,6 @@ static int PRECOND_VANKA     =  560;
     
     int body_id, bf_id, nbNodes;
     double *passive;
-    NSArray *bodies;
     NSMutableString *passName;
     NSString *str;
     BOOL isPassive, found;
@@ -1402,11 +1401,10 @@ static int PRECOND_VANKA     =  560;
     nbNodes = element->Type.NumberOfNodes;
     passive = doublevec(0, nbNodes-1);
     
-    bodies = [model bodies];
-    if ([bodies objectAtIndex:body_id] == nil) {
+    if ([model.bodies objectAtIndex:body_id] == nil) {
         return isPassive;
     } else {
-        bf_id = [[[bodies objectAtIndex:body_id] objectForKey:@"Body force"] intValue];
+        bf_id = [[[model.bodies objectAtIndex:body_id] objectForKey:@"Body force"] intValue];
     }
     
     passName = [NSMutableString stringWithString:solution.variable.name];
@@ -1427,7 +1425,6 @@ static int PRECOND_VANKA     =  560;
     free_dvector(passive, 0, nbNodes-1);
     
     return isPassive;
-    
 }
 
 #pragma mark Manipulate matrix
@@ -2888,14 +2885,14 @@ static int PRECOND_VANKA     =  560;
     int i, bc_id;
     FEMBoundaryCondition *boundaryConditionAtId;
     
-    for (i=0; i<[model numberOfBoundaryConditions]; i++) {
+    for (i=0; i<model.numberOfBoundaries; i++) {
         bc_id++;
         @autoreleasepool {
             boundaryConditionAtId = [model.boundaries objectAtIndex:i];
             if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
         }
     }
-    if (bc_id > [model numberOfBoundaryConditions]) bc_id = 0;
+    if (bc_id > model.numberOfBoundaries) bc_id = 0;
     
     return bc_id;
 }
@@ -3700,7 +3697,6 @@ static int PRECOND_VANKA     =  560;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
-    NSArray *bodies;
     FEMValueList *valueList;
     NSMutableString *loadName, *str;
     matrixArraysContainer *matContainers;
@@ -3716,7 +3712,7 @@ static int PRECOND_VANKA     =  560;
     loadName = [NSMutableString stringWithString:name];
     [loadName appendString:@" load"];
     
-    n = max([model numberOfBoundaryConditions], [model numberOfBodyForces]);
+    n = max(model.numberOfBoundaries, model.numberOfBodyForces);
     activePort = (BOOL*)malloc(sizeof(BOOL) * n );
     activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
     
@@ -3735,7 +3731,7 @@ static int PRECOND_VANKA     =  560;
     
     @autoreleasepool {
        
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             boundaryConditionAtId = [model.boundaries objectAtIndex:bc];
             if ([listUtil listCheckPresentVariable:@"Target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
             activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
@@ -3745,7 +3741,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     anyActive = NO;
-    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
         if (activePort[bc] == YES || activePortAll[bc] == YES) {
             anyActive = YES;
             break;
@@ -3758,7 +3754,7 @@ static int PRECOND_VANKA     =  560;
             doneLoad[i] = NO;
         }
         
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
             
             @autoreleasepool {
@@ -3787,8 +3783,6 @@ static int PRECOND_VANKA     =  560;
         
     memset( activePort, NO, (n*sizeof(activePort)) );
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
-
-    bodies = [model bodies];
     
     @autoreleasepool {
     
@@ -3819,9 +3813,9 @@ static int PRECOND_VANKA     =  560;
             
             for (t=0; t<[model numberOfBulkElements]; t++) {
                 
-                bf_id = [[[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
+                bf_id = [[[model.bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
                 
-                if ([[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if ([[model.bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
                 if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
                 
                 
@@ -3848,7 +3842,7 @@ static int PRECOND_VANKA     =  560;
     
     @autoreleasepool {
         
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             
             boundaryConditionAtId = [model.boundaries objectAtIndex:bc];
             if ([listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList] == NO) continue;
@@ -3920,7 +3914,6 @@ static int PRECOND_VANKA     =  560;
     
     elements = NULL;
     globalNodes = NULL;
-    bodies = nil;
     valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
@@ -3952,7 +3945,6 @@ static int PRECOND_VANKA     =  560;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     FEMSimulation *simulationAtId;
-    NSArray *bodies;
     FEMValueList *valueList;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
@@ -3968,7 +3960,7 @@ static int PRECOND_VANKA     =  560;
     listUtil = [[FEMListUtilities alloc] init];
     
     // These logical vectors are used to minimize extra effort in setting up different BCs
-    n = max([model numberOfBoundaryConditions], [model numberOfBodyForces]);
+    n = max(model.numberOfBoundaries, model.numberOfBodyForces);
     activePort = (BOOL*)malloc(sizeof(BOOL) * n );
     activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
     activeCond = (BOOL*)malloc(sizeof(BOOL) * n );
@@ -3999,7 +3991,7 @@ static int PRECOND_VANKA     =  560;
 
     @autoreleasepool {
         
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             boundaryConditionAtId = [model.boundaries objectAtIndex:bc];
             if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == NO) activePort[bc] = YES;
             if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == NO) activePort[bc] = YES;
@@ -4008,7 +4000,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     anyActive = NO;
-    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
         if (activePort[bc] == YES) {
             anyActive = YES;
             break;
@@ -4020,13 +4012,13 @@ static int PRECOND_VANKA     =  560;
         donePeriodic = (BOOL*)malloc(sizeof(BOOL) * solution.mesh.numberOfNodes );
         memset( donePeriodic, NO, (solution.mesh.numberOfNodes*sizeof(donePeriodic)) );
         
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             [self FEMKernel_setPeriodicBoundariesPass1:model :solution :name :dof :bc :donePeriodic];
             
         }
         
         memset( donePeriodic, NO, (solution.mesh.numberOfNodes*sizeof(donePeriodic)) );
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             [self FEMKernel_setPeriodicBoundariesPass2:model :solution :name :dof :bc :donePeriodic];
             
         }
@@ -4046,7 +4038,7 @@ static int PRECOND_VANKA     =  560;
     
     @autoreleasepool {
         
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             boundaryConditionAtId = [model.boundaries objectAtIndex:bc];
             activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryConditionAtId.valuesList];
             activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList];
@@ -4065,7 +4057,7 @@ static int PRECOND_VANKA     =  560;
     if ([solution normalTangentialNOFNodes] > 0) {
         if (orderByBCNumbering == YES) {
             @autoreleasepool {
-                for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                for (bc=0; bc<model.numberOfBoundaries; bc++) {
                     
                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                     conditional = activeCond[bc];
@@ -4089,7 +4081,7 @@ static int PRECOND_VANKA     =  560;
         } else {
              for (t=bndry_start; t<bndry_end; t++) {
                  @autoreleasepool {
-                     for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                     for (bc=0; bc<model.numberOfBoundaries; bc++) {
                          if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                          conditional = activeCond[bc];
                          
@@ -4128,7 +4120,7 @@ static int PRECOND_VANKA     =  560;
     
     // Set the Dirichlet BCs from active boundary elements, if any...
     anyActive = NO;
-    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
         if (activePort[bc] == YES || activePortAll[bc] == YES) {
             anyActive = YES;
             break;
@@ -4138,7 +4130,7 @@ static int PRECOND_VANKA     =  560;
     if (anyActive == YES) {
         if (orderByBCNumbering == YES) {
             @autoreleasepool {
-                for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                for (bc=0; bc<model.numberOfBoundaries; bc++) {
                     
                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                     conditional = activeCond[bc];
@@ -4162,7 +4154,7 @@ static int PRECOND_VANKA     =  560;
         } else {
             for (t=bndry_start; t<bndry_end; t++) {
                 @autoreleasepool {
-                    for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+                    for (bc=0; bc<model.numberOfBoundaries; bc++) {
                         if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                         conditional = activeCond[bc];
                         
@@ -4193,8 +4185,6 @@ static int PRECOND_VANKA     =  560;
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
     passive = NO;
     
-    bodies = [model bodies];
-
     @autoreleasepool {
         
         for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
@@ -4221,9 +4211,9 @@ static int PRECOND_VANKA     =  560;
             
             for (t=0; t<[model numberOfBulkElements]; t++) {
                 
-                bf_id = [[[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
+                bf_id = [[[model.bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] intValue];
                 
-                if ([[bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
+                if ([[model.bodies objectAtIndex:elements[t].BodyID-1] objectForKey:@"Body force"] == nil) continue;
                 if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
                 conditional = activeCond[bf_id];
                 
@@ -4251,7 +4241,7 @@ static int PRECOND_VANKA     =  560;
     
     @autoreleasepool {
 
-        for (bc=0; bc<[model numberOfBoundaryConditions]; bc++) {
+        for (bc=0; bc<model.numberOfBoundaries; bc++) {
             
             boundaryConditionAtId = [model.boundaries objectAtIndex:bc];
             if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) continue;
@@ -4353,7 +4343,6 @@ static int PRECOND_VANKA     =  560;
     
     elements = NULL;
     globalNodes = NULL;
-    bodies = nil;
     valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
