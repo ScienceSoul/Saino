@@ -13,6 +13,7 @@
 @synthesize variables = _variables;
 @synthesize bodyForces = _bodyForces;
 @synthesize boundaries = _boundaries;
+@synthesize simulations = _simulations;
 
 - (id)init
 {
@@ -58,11 +59,6 @@
 -(NSArray *)bodies {
     
     return bodies;
-}
-
--(NSArray *)simulations {
-    
-    return simulations;
 }
 
 -(void)setDimension:(int)n {

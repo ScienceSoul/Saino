@@ -10,20 +10,18 @@
 
 @implementation FEMSimulation
 
--(int)tag {
-    
-    return tag;
-}
+@synthesize tag = _tag;
+@synthesize valuesList = _valuesList;
 
--(void)setTag:(int)n {
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
     
-    tag = n;
+    return self;
 }
-
--(NSMutableArray *)returnValuesList {
-    
-    return valuesList;
-}
-
 
 @end

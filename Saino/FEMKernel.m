@@ -3952,7 +3952,7 @@ static int PRECOND_VANKA     =  560;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     FEMSimulation *simulationAtId;
-    NSArray *bodies, *simulations;
+    NSArray *bodies;
     FEMValueList *valueList;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
@@ -4055,9 +4055,8 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    simulations = [model simulations];
-    simulationAtId = [simulations objectAtIndex:[solution simulationID]];
-    orderByBCNumbering = [listUtil listGetLogical:model inArray:[simulationAtId returnValuesList] forVariable:@"Set Dirichlet BCs by BC numbering" info:stat];
+    simulationAtId = [model.simulations objectAtIndex:[solution simulationID]];
+    orderByBCNumbering = [listUtil listGetLogical:model inArray:simulationAtId.valuesList forVariable:@"Set Dirichlet BCs by BC numbering" info:stat];
     
     bndry_start = [model numberOfBulkElements];
     bndry_end = bndry_start + [model numberOfBoundaryElements]-1;
@@ -4354,7 +4353,6 @@ static int PRECOND_VANKA     =  560;
     
     elements = NULL;
     globalNodes = NULL;
-    simulations = nil;
     bodies = nil;
     valueList = nil;
     matContainers = NULL;

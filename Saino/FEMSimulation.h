@@ -10,13 +10,12 @@
 
 @interface FEMSimulation : NSObject {
     
-    int tag;
-    NSMutableArray *valuesList;  // Array of FEMValueList objects 
+    int _tag;
+    NSMutableArray *_valuesList;  // Array of FEMValueList objects
 
 }
 
--(int)tag;
--(void)setTag:(int)n;
--(NSMutableArray *)returnValuesList;
+@property(nonatomic, assign) int tag;
+@property(nonatomic, strong) NSMutableArray *valuesList;
 
 @end

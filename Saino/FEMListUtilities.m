@@ -445,7 +445,7 @@
         valuesArray = boundary.valuesList;
     } else if ([className isKindOfClass:[FEMSimulation class]]) {
         simulation = className;
-        valuesArray = [simulation returnValuesList];
+        valuesArray = simulation.valuesList;
     }
     
     for (FEMValueList *list in valuesArray) {
