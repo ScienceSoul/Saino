@@ -12,6 +12,7 @@
 #import "FEMValueList.h"
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
+#import "FEMSimulation.h"
 #import "FEMUtilities.h"
 
 #import "Utils.h"

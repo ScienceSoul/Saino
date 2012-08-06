@@ -427,6 +427,9 @@
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n {
     
     int i;
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -434,7 +437,17 @@
     
     found = NO;
     
-    valuesArray = [className returnValuesList];
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = [simulation returnValuesList];
+    }
+    
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
             found = YES;
@@ -457,6 +470,10 @@
         [valuesArray addObject:newValueList];
         containers = NULL;
     }
+    
+    boundary = nil;
+    bodyForce = nil;
+    simulation = nil;
 }
 
 @end

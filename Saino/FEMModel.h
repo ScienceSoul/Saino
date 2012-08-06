@@ -38,7 +38,7 @@
      */
     
     NSArray *_bodyForces;                        // Array of FEMBodyForce objects
-    NSArray *boundaryConditions;                 // Array of FEMBoundaryCondition objects
+    NSArray *_boundaries;                // Array of FEMBoundaryCondition objects
     NSArray *simulations;                        // Array of FEMSimulation objects
     
     NSMutableDictionary *_variables;             // Mutable dictionary holding FEMVariable classes
@@ -46,6 +46,7 @@
 
 @property(nonatomic, strong) NSMutableDictionary *variables;
 @property(nonatomic, strong) NSArray *bodyForces;
+@property(nonatomic, strong) NSArray *boundaries;
 
 -(int)dimension;
 -(int)numberOfNodes;
@@ -54,7 +55,6 @@
 -(int)numberOfBodyForces;
 -(int)numberOfBoundaryConditions;
 -(NSArray *)bodies;
--(NSArray *)boundaryConditions;
 -(NSArray *)simulations;
 
 -(void)setDimension:(int)n;

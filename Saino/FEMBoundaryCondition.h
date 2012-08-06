@@ -13,15 +13,14 @@
 
 @interface FEMBoundaryCondition : NSObject {
     
-    int tag;
-    NSMutableArray *valuesList;  // Array of FEMValueList objects 
-    FEMMatrix *pMatrix;
+    int _tag;
+    NSMutableArray *_valuesList;  // Array of FEMValueList objects
+    FEMMatrix *_pMatrix;
 
 }
+@property(nonatomic, assign) int tag;
+@property(nonatomic, strong) NSMutableArray *valuesList;
+@property(nonatomic, strong) FEMMatrix *pMatrix;
 
--(int)tag;
--(void)setTag:(int)n;
--(NSMutableArray *)returnValuesList;
--(FEMMatrix *)returnPMatrix;
 
 @end

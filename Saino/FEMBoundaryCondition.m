@@ -10,24 +10,19 @@
 
 @implementation FEMBoundaryCondition
 
--(int)tag {
-    
-    return tag;
-}
+@synthesize tag = _tag;
+@synthesize valuesList = _valuesList;
+@synthesize pMatrix = _pMatrix;
 
--(void)setTag:(int)n {
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
     
-    tag = n;
-}
-
--(NSMutableArray *)returnValuesList {
-    
-    return valuesList;
-}
-
--(FEMMatrix *)returnPMatrix {
-    
-    return pMatrix;
+    return self;
 }
 
 
