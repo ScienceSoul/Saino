@@ -17,62 +17,6 @@
 #import "memory.h"
 
 @interface FEMElementDescription : NSObject {
-@private
-    
-    int maxDeg, maxDeg3, maxDeg2;
-    
-    int MAX_ELEMEMT_NODES;
-        
-    //------------------------------
-    // Number of elements definition
-    //------------------------------
-    int numberOfElementDefs;
-    
-    //---------------------------------------
-    // List of supported elements definition
-    //---------------------------------------
-    FEMElementsDefinition *_1nodePoint;
-    FEMElementsDefinition *_2nodePeriodic;
-    FEMElementsDefinition *_2nodeLine;
-    FEMElementsDefinition *_3nodeLine;
-    FEMElementsDefinition *_4nodeLine;
-    FEMElementsDefinition *_3nodeTriangle;
-    FEMElementsDefinition *_6nodeTriangle;
-    FEMElementsDefinition *_10nodeTriangle;
-    FEMElementsDefinition *_4nodeQuadrilateral;
-    FEMElementsDefinition *_8nodeQuadrilateral;
-    FEMElementsDefinition *_9nodeQuadrilateral;
-    FEMElementsDefinition *_12nodeQuadrilateral;
-    FEMElementsDefinition *_16nodeQuadrilateral;
-    FEMElementsDefinition *_4nodeTetrahedron;
-    FEMElementsDefinition *_10nodeTetrahedron;
-    FEMElementsDefinition *_5nodePyramid;
-    FEMElementsDefinition *_13nodePyramid;
-    FEMElementsDefinition *_6nodeWedge;
-    FEMElementsDefinition *_8nodeOctahedron;
-    FEMElementsDefinition *_20nodeOctahedron;
-    FEMElementsDefinition *_27nodeOctahedron;
-    
-    NSArray *listOfDefinitions;
-    
-    //-----------------------------------------------------
-    // Linked list strurture which contains the elements 
-    // definition and their allocations. The elements 
-    // definition are provided by the class itself.
-    //-----------------------------------------------------
-    ElementType_t *elementTypeList;
-    BOOL isTypeListInitialized;
-    
-    int **point;
-    int **line;
-    int **triangle;
-    int **quad;
-    int **tetra;
-    int **prism;
-    int **wedge;
-    int **brick;
-    
-    BOOL initialized[8];
     
 }
 

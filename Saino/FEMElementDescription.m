@@ -22,7 +22,62 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 @end
 
-@implementation FEMElementDescription
+@implementation FEMElementDescription {
+    
+    int _maxDeg, _maxDeg3, _maxDeg2;
+    int _maxElementNodes;
+    
+    //------------------------------
+    // Number of elements definition
+    //------------------------------
+    int _numberOfElementDefs;
+    
+    //---------------------------------------
+    // List of supported elements definition
+    //---------------------------------------
+    FEMElementsDefinition *_1nodePoint;
+    FEMElementsDefinition *_2nodePeriodic;
+    FEMElementsDefinition *_2nodeLine;
+    FEMElementsDefinition *_3nodeLine;
+    FEMElementsDefinition *_4nodeLine;
+    FEMElementsDefinition *_3nodeTriangle;
+    FEMElementsDefinition *_6nodeTriangle;
+    FEMElementsDefinition *_10nodeTriangle;
+    FEMElementsDefinition *_4nodeQuadrilateral;
+    FEMElementsDefinition *_8nodeQuadrilateral;
+    FEMElementsDefinition *_9nodeQuadrilateral;
+    FEMElementsDefinition *_12nodeQuadrilateral;
+    FEMElementsDefinition *_16nodeQuadrilateral;
+    FEMElementsDefinition *_4nodeTetrahedron;
+    FEMElementsDefinition *_10nodeTetrahedron;
+    FEMElementsDefinition *_5nodePyramid;
+    FEMElementsDefinition *_13nodePyramid;
+    FEMElementsDefinition *_6nodeWedge;
+    FEMElementsDefinition *_8nodeOctahedron;
+    FEMElementsDefinition *_20nodeOctahedron;
+    FEMElementsDefinition *_27nodeOctahedron;
+    
+    NSArray *_listOfDefinitions;
+    
+    //-----------------------------------------------------
+    // Linked list strurture which contains the elements
+    // definition and their allocations. The elements
+    // definition are provided by the class itself.
+    //-----------------------------------------------------
+    ElementType_t *_elementTypeList;
+    BOOL _isTypeListInitialized;
+    
+    int **_point;
+    int **_line;
+    int **_triangle;
+    int **_quad;
+    int **_tetra;
+    int **_prism;
+    int **_wedge;
+    int **_brick;
+    
+    BOOL _initialized[8];
+}
 
 #pragma mark Private methods...
 
@@ -700,36 +755,36 @@ static double AEPS = 10.0 * DBL_EPSILON;
     if (self) {
         // Initialization code here.
         
-        MAX_ELEMEMT_NODES = 256;
-        maxDeg = 4;
-        maxDeg3 = pow(maxDeg, 3.0);
-        maxDeg2 = pow(maxDeg, 2.0);
+        _maxElementNodes = 256;
+        _maxDeg = 4;
+        _maxDeg3 = pow(_maxDeg, 3.0);
+        _maxDeg2 = pow(_maxDeg, 2.0);
        
-        point = intmatrix(0, 0, 0, 0);
-        line = intmatrix(0, 0, 0, 1);
-        triangle = intmatrix(0, 2, 0, 1);
-        quad = intmatrix(0, 3, 0, 1);
-        tetra = intmatrix(0, 5, 0, 1);
-        prism = intmatrix(0, 7, 0, 1);
-        wedge = intmatrix(0, 8, 0, 1);
-        brick = intmatrix(0, 11, 0, 1);
+        _point = intmatrix(0, 0, 0, 0);
+        _line = intmatrix(0, 0, 0, 1);
+        _triangle = intmatrix(0, 2, 0, 1);
+        _quad = intmatrix(0, 3, 0, 1);
+        _tetra = intmatrix(0, 5, 0, 1);
+        _prism = intmatrix(0, 7, 0, 1);
+        _wedge = intmatrix(0, 8, 0, 1);
+        _brick = intmatrix(0, 11, 0, 1);
         
         for (i=0; i<8; i++) {
-            initialized[i] = NO;
+            _initialized[i] = NO;
         }
         
         // Construction of definitions
         [self FEMElementDescription_initElementsDefinition];
         
-        numberOfElementDefs = 21;
+        _numberOfElementDefs = 21;
         
          // Array of objects describing each definition
-        listOfDefinitions = [NSArray arrayWithObjects:_1nodePoint, _2nodePeriodic, _2nodeLine, _3nodeLine, _4nodeLine, _3nodeTriangle, _6nodeTriangle, 
+        _listOfDefinitions = [NSArray arrayWithObjects:_1nodePoint, _2nodePeriodic, _2nodeLine, _3nodeLine, _4nodeLine, _3nodeTriangle, _6nodeTriangle,
                              _10nodeTriangle, _4nodeQuadrilateral, _8nodeQuadrilateral, _9nodeQuadrilateral, _12nodeQuadrilateral, _16nodeQuadrilateral,
                              _4nodeTetrahedron, _10nodeTetrahedron, _5nodePyramid, _13nodePyramid, _6nodeWedge, _8nodeOctahedron, _20nodeOctahedron,
                              _27nodeOctahedron, nil];
         
-        isTypeListInitialized = NO;
+        _isTypeListInitialized = NO;
 
     }
     
@@ -738,14 +793,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 -(void)deallocation
 {
-    free_imatrix(point, 0, 0, 0, 0);
-    free_imatrix(line, 0, 0, 0, 1);
-    free_imatrix(triangle, 0, 2, 0, 1);
-    free_imatrix(quad, 0, 3, 0, 1);
-    free_imatrix(tetra, 0, 5, 0, 1);
-    free_imatrix(prism, 0, 7, 0, 1);
-    free_imatrix(wedge, 0, 8, 0, 1);
-    free_imatrix(brick, 0, 11, 0, 1);
+    free_imatrix(_point, 0, 0, 0, 0);
+    free_imatrix(_line, 0, 0, 0, 1);
+    free_imatrix(_triangle, 0, 2, 0, 1);
+    free_imatrix(_quad, 0, 3, 0, 1);
+    free_imatrix(_tetra, 0, 5, 0, 1);
+    free_imatrix(_prism, 0, 7, 0, 1);
+    free_imatrix(_wedge, 0, 8, 0, 1);
+    free_imatrix(_brick, 0, 11, 0, 1);
 }
 
 -(void)addDescriptionOfElement:(ElementType_t)element withBasisTerms:(int *)terms {
@@ -806,8 +861,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 v = element.NodeV[i];
                 for (j=0; j<n; j++) {
                     k = terms[j] - 1;
-                    vpow = k / maxDeg;
-                    upow = k % maxDeg;
+                    vpow = k / _maxDeg;
+                    upow = k % _maxDeg;
                     
                     if (upow == 0) {
                         a[i][j] = 1;
@@ -835,9 +890,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 w = element.NodeW[i];
                 for (j=0; j<n; j++) {
                     k = terms[j] - 1;
-                    upow = k % maxDeg;
-                    wpow = k / maxDeg2;
-                    vpow = (k / maxDeg) % maxDeg;
+                    upow = k % _maxDeg;
+                    wpow = k / _maxDeg2;
+                    vpow = (k / _maxDeg) % _maxDeg;
                     
                     if (upow == 0) {
                         a[i][j] = 1;
@@ -888,13 +943,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
                         upow = k;
                         break;
                     case 2:
-                        upow = k % maxDeg;
-                        vpow = k / maxDeg;
+                        upow = k % _maxDeg;
+                        vpow = k / _maxDeg;
                         break;
                     case 3:
-                        upow = k % maxDeg;
-                        vpow = (k / maxDeg) % maxDeg;
-                        wpow = k / maxDeg2;
+                        upow = k % _maxDeg;
+                        vpow = (k / _maxDeg) % _maxDeg;
+                        wpow = k / _maxDeg2;
                 }
                 
                 element.BasisFunctions[i].p[j] = upow;
@@ -964,16 +1019,16 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     // Finally add the element description to the global list of types
-    if (isTypeListInitialized == NO) {
-        elementTypeList = (ElementType_t *)malloc(sizeof(ElementType_t));
-        elementTypeList = &element;
-        isTypeListInitialized = YES;
-        elementTypeList->NextElementType = NULL;
+    if (_isTypeListInitialized == NO) {
+        _elementTypeList = (ElementType_t *)malloc(sizeof(ElementType_t));
+        _elementTypeList = &element;
+        _isTypeListInitialized = YES;
+        _elementTypeList->NextElementType = NULL;
     } else {
         temp = (ElementType_t *)malloc(sizeof(ElementType_t));
         temp = &element;
-        temp->NextElementType = elementTypeList;
-        elementTypeList = temp;
+        temp->NextElementType = _elementTypeList;
+        _elementTypeList = temp;
     }
     
 }
@@ -992,10 +1047,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
     ElementType_t element;
     FEMElementsDefinition *defs;
     
-    basisTerms = intvec(0, maxDeg3-1);
+    basisTerms = intvec(0, _maxDeg3-1);
     
     // Add the connectivity element types...
-    memset( basisTerms, 0.0, (maxDeg3*sizeof(basisTerms)) );
+    memset( basisTerms, 0.0, (_maxDeg3*sizeof(basisTerms)) );
     element.GaussPoints = 0;
     element.GaussPoints2 = 0;
     element.StabilizationMK = 0;
@@ -1011,13 +1066,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // ... then the rest of them
     @autoreleasepool {
         
-        for (i=0; i<numberOfElementDefs; i++) {
+        for (i=0; i<_numberOfElementDefs; i++) {
             
             element.NodeU = NULL;
             element.NodeV = NULL;
             element.NodeW = NULL;
             
-            defs = [listOfDefinitions objectAtIndex:i];
+            defs = [_listOfDefinitions objectAtIndex:i];
             
             element.dimension = [defs.dimension intValue];
             element.ElementCode = [defs.code intValue];
@@ -1082,32 +1137,32 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     switch (elementFamily) {
         case 1:
-            edgeMag = point;
+            edgeMag = _point;
         case 2:
-            edgeMag = line;
+            edgeMag = _line;
             break;
         case 3:
-            edgeMag = triangle;
+            edgeMag = _triangle;
             break;
         case 4:
-            edgeMag = quad;
+            edgeMag = _quad;
             break;
         case 5:
-            edgeMag = tetra;
+            edgeMag = _tetra;
             break;
         case 6:
-            edgeMag = prism;
+            edgeMag = _prism;
             break;
         case 7:
-            edgeMag = wedge;
+            edgeMag = _wedge;
             break;
         case 8:
-            edgeMag = brick;
+            edgeMag = _brick;
             break;
     }
     
-    if (initialized[elementFamily-1] == NO) {
-        initialized[elementFamily-1] = YES;
+    if (_initialized[elementFamily-1] == NO) {
+        _initialized[elementFamily-1] = YES;
         switch (elementFamily) {
             case 1:
                 edgeMag[0][0] = 0;
@@ -1565,7 +1620,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     ElementType_t *element;
     Nodes_t *nodes;
     
-    element = elementTypeList;
+    element = _elementTypeList;
     
     while (element != NULL) {
         if (code == element->ElementCode) break;

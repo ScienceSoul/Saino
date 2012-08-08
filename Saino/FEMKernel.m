@@ -43,7 +43,7 @@ static int PRECOND_VANKA     =  560;
 
 @interface FEMKernel ()
 
-// Solving linear stsems and compute norms
+// Solving linear systems and compute norms
 -(void)iterCall:(int)iterType: (FEMSolution *)solution: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod;
 -(void)FEMKernel_iterSolver:(FEMSolution *)solution;
 -(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber;
@@ -53,7 +53,7 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution;
 -(void)FEMKernel_solveSystem:(FEMSolution *)solution;
 
-// Check pasisve element
+// Check passive element
 -(BOOL)FEMKernel_checkPassiveElement:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element;
 
 // Rotate matrix
