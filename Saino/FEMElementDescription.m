@@ -87,299 +87,299 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // 1 node point element
     //---------------------
     _1nodePoint = [[FEMElementsDefinition alloc] init];
-    _1nodePoint.dimension = [NSNumber numberWithInt:1];
+    _1nodePoint.dimension = @1;
     _1nodePoint.topology = @"point";
-    _1nodePoint.code = [NSNumber numberWithInt:101];
-    _1nodePoint.nodes = [NSNumber numberWithInt:1];
-    _1nodePoint.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], nil];
-    _1nodePoint.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], nil];
-    _1nodePoint.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:0], nil];
-    _1nodePoint.stabilization = [NSNumber numberWithDouble:0.0];
+    _1nodePoint.code = @101;
+    _1nodePoint.nodes = @1;
+    _1nodePoint.nodeU = @[@0.0];
+    _1nodePoint.basis = @[@1];
+    _1nodePoint.gaussPoints = @[@1, @0];
+    _1nodePoint.stabilization = @0.0;
     
     //-------------------------
     // 2 nodes periodic element
     //-------------------------
     _2nodePeriodic = [[FEMElementsDefinition alloc] init];
-    _2nodePeriodic.dimension = [NSNumber numberWithInt:1];
+    _2nodePeriodic.dimension = @1;
     _2nodePeriodic.topology = @"point";
-    _2nodePeriodic.code = [NSNumber numberWithInt:102];
-    _2nodePeriodic.nodes = [NSNumber numberWithInt:2];
-    _2nodePeriodic.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], nil];
-    _2nodePeriodic.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], nil];
-    _2nodePeriodic.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:0], [NSNumber numberWithInt:0], nil];
-    _2nodePeriodic.stabilization = [NSNumber numberWithDouble:0.0];
+    _2nodePeriodic.code = @102;
+    _2nodePeriodic.nodes = @2;
+    _2nodePeriodic.nodeU = @[@0.0, @1.0];
+    _2nodePeriodic.basis = @[@1, @2];
+    _2nodePeriodic.gaussPoints = @[@0, @0];
+    _2nodePeriodic.stabilization = @0.0;
     
     //---------------------
     // 2 nodes line element
     //---------------------
     _2nodeLine = [[FEMElementsDefinition alloc] init];
-    _2nodeLine.dimension = [NSNumber numberWithInt:1];
+    _2nodeLine.dimension = @1;
     _2nodeLine.topology = @"line";
-    _2nodeLine.code = [NSNumber numberWithInt:202];
-    _2nodeLine.nodes = [NSNumber numberWithInt:2];
+    _2nodeLine.code = @202;
+    _2nodeLine.nodes = @2;
     //          1    2 
-    _2nodeLine.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], nil];
+    _2nodeLine.nodeU = @[@-1.0, @1.0];
     //          1  2   3   4
     //          1  u  u^2 u^3
-    _2nodeLine.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], nil];
-    _2nodeLine.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:2], [NSNumber numberWithInt:4], nil];
-    _2nodeLine.stabilization = [NSNumber numberWithDouble:0.33333333333333333333333];
+    _2nodeLine.basis = @[@1, @2];
+    _2nodeLine.gaussPoints = @[@2, @4];
+    _2nodeLine.stabilization = @0.33333333333333333333333;
     
     //---------------------
     // 3 nodes line element
     //---------------------
     _3nodeLine = [[FEMElementsDefinition alloc] init];
-    _3nodeLine.dimension = [NSNumber numberWithInt:1];
+    _3nodeLine.dimension = @1;
     _3nodeLine.topology = @"line";
-    _3nodeLine.code = [NSNumber numberWithInt:203];
-    _3nodeLine.nodes = [NSNumber numberWithInt:3];
+    _3nodeLine.code = @203;
+    _3nodeLine.nodes = @3;
     //          1     2     3
-    _3nodeLine.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], nil];
+    _3nodeLine.nodeU = @[@-1.0, @1.0, @0.0];
     //          1  2   3   4
     //          1  u  u^2 u^3
-    _3nodeLine.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], nil];
-    _3nodeLine.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:3], [NSNumber numberWithInt:5], nil];
-    _3nodeLine.stabilization = [NSNumber numberWithDouble:0.1666666666666666666666];
+    _3nodeLine.basis = @[@1, @2, @3];
+    _3nodeLine.gaussPoints = @[@3, @5];
+    _3nodeLine.stabilization = @0.1666666666666666666666;
     
     //---------------------
     // 4 nodes line element
     //---------------------
     _4nodeLine = [[FEMElementsDefinition alloc] init];
-    _4nodeLine.dimension = [NSNumber numberWithInt:1];
+    _4nodeLine.dimension = @1;
     _4nodeLine.topology = @"line";
-    _4nodeLine.code = [NSNumber numberWithInt:204];
-    _4nodeLine.nodes = [NSNumber numberWithInt:4];
+    _4nodeLine.code = @204;
+    _4nodeLine.nodes = @4;
     //          1     2     3     
-    _4nodeLine.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-0.333333333333333333],
-                        [NSNumber numberWithDouble:0.3333333333333333333], nil];
+    _4nodeLine.nodeU = @[@-1.0, @1.0, @-0.333333333333333333,
+                        @0.3333333333333333333];
     //          1  2   3   4
     //          1  u  u^2 u^3
-    _4nodeLine.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:4], nil];
-    _4nodeLine.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:4], [NSNumber numberWithInt:6], nil];
-    _4nodeLine.stabilization = [NSNumber numberWithDouble:0.03333333333333333333333];
+    _4nodeLine.basis = @[@1, @2, @3, @4];
+    _4nodeLine.gaussPoints = @[@4, @6];
+    _4nodeLine.stabilization = @0.03333333333333333333333;
     
     //-------------------------
     // 3 nodes triangle element
     //-------------------------
     _3nodeTriangle = [[FEMElementsDefinition alloc] init];
-    _3nodeTriangle.dimension = [NSNumber numberWithInt:2];
+    _3nodeTriangle.dimension = @2;
     _3nodeTriangle.topology = @"triangle";
-    _3nodeTriangle.code = [NSNumber numberWithInt:303];
-    _3nodeTriangle.nodes = [NSNumber numberWithInt:3];
+    _3nodeTriangle.code = @303;
+    _3nodeTriangle.nodes = @3;
     //          1     2     3
-    _3nodeTriangle.nodeU = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], nil];
-    _3nodeTriangle.nodeV = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], nil];
+    _3nodeTriangle.nodeU = @[@0.0, @1.0, @0.0];
+    _3nodeTriangle.nodeV = @[@0.0, @0.0, @1.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _3nodeTriangle.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5], nil];
-    _3nodeTriangle.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:3], [NSNumber numberWithInt:20], nil];
-    _3nodeTriangle.stabilization = [NSNumber numberWithDouble:0.333333333333333333333];
+    _3nodeTriangle.basis = @[@1, @2, @5];
+    _3nodeTriangle.gaussPoints = @[@3, @20];
+    _3nodeTriangle.stabilization = @0.333333333333333333333;
     
     //-------------------------
     // 6 nodes triangle element
     //-------------------------
     _6nodeTriangle = [[FEMElementsDefinition alloc] init];
-    _6nodeTriangle.dimension = [NSNumber numberWithInt:2];
+    _6nodeTriangle.dimension = @2;
     _6nodeTriangle.topology = @"triangle";
-    _6nodeTriangle.code = [NSNumber numberWithInt:306];
-    _6nodeTriangle.nodes = [NSNumber numberWithInt:6];
+    _6nodeTriangle.code = @306;
+    _6nodeTriangle.nodes = @6;
     //          1     2     3     4     5     6
-    _6nodeTriangle.nodeU = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                            [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.0], nil];
-    _6nodeTriangle.nodeV = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                            [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], nil];
+    _6nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, 
+                            @0.5, @0.5, @0.0];
+    _6nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, 
+                            @0.0, @0.5, @0.5];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _6nodeTriangle.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], 
-                            [NSNumber numberWithInt:5], [NSNumber numberWithInt:6], [NSNumber numberWithInt:9], nil];
-    _6nodeTriangle.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:6], [NSNumber numberWithInt:17], nil];
-    _6nodeTriangle.stabilization = [NSNumber numberWithDouble:0.041666666666666666];
+    _6nodeTriangle.basis = @[@1, @2, @3, 
+                            @5, @6, @9];
+    _6nodeTriangle.gaussPoints = @[@6, @17];
+    _6nodeTriangle.stabilization = @0.041666666666666666;
     
     //--------------------------
     // 10 nodes triangle element
     //--------------------------
     _10nodeTriangle = [[FEMElementsDefinition alloc] init];
-    _10nodeTriangle.dimension = [NSNumber numberWithInt:2];
+    _10nodeTriangle.dimension = @2;
     _10nodeTriangle.topology = @"triangle";
-    _10nodeTriangle.code = [NSNumber numberWithInt:310];
-    _10nodeTriangle.nodes = [NSNumber numberWithInt:10];
+    _10nodeTriangle.code = @310;
+    _10nodeTriangle.nodes = @10;
     //          1     2     3     ......
-    _10nodeTriangle.nodeU = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                             [NSNumber numberWithDouble:0.333333333333333333], [NSNumber numberWithDouble:0.666666666666666667], 
-                             [NSNumber numberWithDouble:0.666666666666666667], [NSNumber numberWithDouble:0.333333333333333333], 
-                             [NSNumber numberWithDouble:0.000000000000000000], [NSNumber numberWithDouble:0.000000000000000000], 
-                             [NSNumber numberWithDouble:0.333333333333333333], nil];
-    _10nodeTriangle.nodeV = [NSArray  arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                             [NSNumber numberWithDouble:0.000000000000000000], [NSNumber numberWithDouble:0.000000000000000000], 
-                             [NSNumber numberWithDouble:0.333333333333333333], [NSNumber numberWithDouble:0.666666666666666667], 
-                             [NSNumber numberWithDouble:0.666666666666666667], [NSNumber numberWithDouble:0.333333333333333333], 
-                             [NSNumber numberWithDouble:0.333333333333333333], nil];
+    _10nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, 
+                             @0.333333333333333333, @0.666666666666666667, 
+                             @0.666666666666666667, @0.333333333333333333, 
+                             @0.000000000000000000, @0.000000000000000000, 
+                             @0.333333333333333333];
+    _10nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, 
+                             @0.000000000000000000, @0.000000000000000000, 
+                             @0.333333333333333333, @0.666666666666666667, 
+                             @0.666666666666666667, @0.333333333333333333, 
+                             @0.333333333333333333];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _10nodeTriangle.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], 
-                             [NSNumber numberWithInt:4], [NSNumber numberWithInt:5], [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], 
-                             [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], [NSNumber numberWithInt:13], nil];
-    _10nodeTriangle.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:25], [NSNumber numberWithInt:64], nil];
-    _10nodeTriangle.stabilization = [NSNumber numberWithDouble:0.01341555597798937329];
+    _10nodeTriangle.basis = @[@1, @2, @3, 
+                             @4, @5, @6, @7, 
+                             @9, @10, @13];
+    _10nodeTriangle.gaussPoints = @[@25, @64];
+    _10nodeTriangle.stabilization = @0.01341555597798937329;
        
     //------------------------------
     // 4 nodes quadrilateral element
     //------------------------------
     _4nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
-    _4nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
+    _4nodeQuadrilateral.dimension = @2;
     _4nodeQuadrilateral.topology = @"quadrilateral";
-    _4nodeQuadrilateral.code = [NSNumber numberWithInt:404];
-    _4nodeQuadrilateral.nodes = [NSNumber numberWithInt:4];
+    _4nodeQuadrilateral.code = @404;
+    _4nodeQuadrilateral.nodes = @4;
     //          1     2     3     4
-    _4nodeQuadrilateral.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                                 [NSNumber numberWithDouble:-1.0], nil];
-    _4nodeQuadrilateral.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0],
-                                 [NSNumber numberWithDouble:1.0], nil];
+    _4nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0,
+                                 @-1.0];
+    _4nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0,
+                                 @1.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _4nodeQuadrilateral.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5],
-                                 [NSNumber numberWithInt:6], nil];
-    _4nodeQuadrilateral.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:4], [NSNumber numberWithInt:16], nil];
-    _4nodeQuadrilateral.stabilization = [NSNumber numberWithDouble:0.333333333333333333333];
+    _4nodeQuadrilateral.basis = @[@1, @2, @5,
+                                 @6];
+    _4nodeQuadrilateral.gaussPoints = @[@4, @16];
+    _4nodeQuadrilateral.stabilization = @0.333333333333333333333;
     
     //------------------------------
     // 8 nodes quadrilateral element
     //------------------------------
     _8nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
-    _8nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
+    _8nodeQuadrilateral.dimension = @2;
     _8nodeQuadrilateral.topology = @"quadrilateral";
-    _8nodeQuadrilateral.code = [NSNumber numberWithInt:408];
-    _8nodeQuadrilateral.nodes = [NSNumber numberWithInt:8];
+    _8nodeQuadrilateral.code = @408;
+    _8nodeQuadrilateral.nodes = @8;
     //          1     2     3     4     5     6      7      8
-    _8nodeQuadrilateral.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                                 [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0],
-                                 [NSNumber numberWithDouble:-1.0], nil];
-    _8nodeQuadrilateral.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                                 [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0],
-                                 [NSNumber numberWithDouble:0.0], nil];
+    _8nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
+                                 @-1.0, @0.0, @1.0, @0.0,
+                                 @-1.0];
+    _8nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
+                                 @1.0, @-1.0, @0.0, @1.0,
+                                 @0.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _8nodeQuadrilateral.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5],
-                                 [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], nil];
-    _8nodeQuadrilateral.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:9], [NSNumber numberWithInt:25], nil];
-    _8nodeQuadrilateral.stabilization = [NSNumber numberWithDouble:0.0833333333333333333333];
+    _8nodeQuadrilateral.basis = @[@1, @2, @3, @5,
+                                 @6, @7, @9, @10];
+    _8nodeQuadrilateral.gaussPoints = @[@9, @25];
+    _8nodeQuadrilateral.stabilization = @0.0833333333333333333333;
     
     //------------------------------
     // 9 nodes quadrilateral element
     //------------------------------
     _9nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
-    _9nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
+    _9nodeQuadrilateral.dimension = @2;
     _9nodeQuadrilateral.topology = @"quadrilateral";
-    _9nodeQuadrilateral.code = [NSNumber numberWithInt:409];
-    _9nodeQuadrilateral.nodes = [NSNumber numberWithInt:9];
+    _9nodeQuadrilateral.code = @409;
+    _9nodeQuadrilateral.nodes = @9;
     //          1     2     3     4     5     6      7      8      9
-    _9nodeQuadrilateral.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                                 [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0],
-                                 [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], nil];
-    _9nodeQuadrilateral.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                                 [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0],
-                                 [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], nil];
+    _9nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
+                                 @-1.0, @0.0, @1.0, @0.0,
+                                 @-1.0, @0.0];
+    _9nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
+                                 @1.0, @-1.0, @0.0, @1.0,
+                                 @0.0, @0.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _9nodeQuadrilateral.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5],
-                                 [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], 
-                                 [NSNumber numberWithInt:11], nil];
-    _9nodeQuadrilateral.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:9], [NSNumber numberWithInt:25], nil];
-    _9nodeQuadrilateral.stabilization = [NSNumber numberWithDouble:0.0833333333333333333333];
+    _9nodeQuadrilateral.basis = @[@1, @2, @3, @5,
+                                 @6, @7, @9, @10, 
+                                 @11];
+    _9nodeQuadrilateral.gaussPoints = @[@9, @25];
+    _9nodeQuadrilateral.stabilization = @0.0833333333333333333333;
     
     //-------------------------------
     // 12 nodes quadrilateral element
     //-------------------------------
     _12nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
-    _12nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
+    _12nodeQuadrilateral.dimension = @2;
     _12nodeQuadrilateral.topology = @"quadrilateral";
-    _12nodeQuadrilateral.code = [NSNumber numberWithInt:412];
-    _12nodeQuadrilateral.nodes = [NSNumber numberWithInt:12];
+    _12nodeQuadrilateral.code = @412;
+    _12nodeQuadrilateral.nodes = @12;
     //          1     2     3     ......
-    _12nodeQuadrilateral.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                                  [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333],
-                                  [NSNumber numberWithDouble:1.0000000000000000000], [NSNumber numberWithDouble:1.0000000000000000000], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:-1.0000000000000000000], [NSNumber numberWithDouble:-1.0000000000000000000], nil];
-    _12nodeQuadrilateral.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                                  [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0000000000000000000], [NSNumber numberWithDouble:-1.0000000000000000000],
-                                  [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:1.0000000000000000000], [NSNumber numberWithDouble:1.0000000000000000000], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], nil];
+    _12nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
+                                  @-1.0, @-0.3333333333333333333, @0.3333333333333333333,
+                                  @1.0000000000000000000, @1.0000000000000000000, 
+                                  @0.3333333333333333333, @-0.3333333333333333333, 
+                                  @-1.0000000000000000000, @-1.0000000000000000000];
+    _12nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
+                                  @1.0, @-1.0000000000000000000, @-1.0000000000000000000,
+                                  @-0.3333333333333333333, @0.3333333333333333333, 
+                                  @1.0000000000000000000, @1.0000000000000000000, 
+                                  @0.3333333333333333333, @-0.3333333333333333333];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _12nodeQuadrilateral.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:4],
-                                  [NSNumber numberWithInt:5], [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:8], 
-                                  [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], [NSNumber numberWithInt:13], [NSNumber numberWithInt:14], nil];
-    _12nodeQuadrilateral.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:16], [NSNumber numberWithInt:36], nil];
-    _12nodeQuadrilateral.stabilization = [NSNumber numberWithDouble:0.0];
+    _12nodeQuadrilateral.basis = @[@1, @2, @3, @4,
+                                  @5, @6, @7, @8, 
+                                  @9, @10, @13, @14];
+    _12nodeQuadrilateral.gaussPoints = @[@16, @36];
+    _12nodeQuadrilateral.stabilization = @0.0;
     
     //-------------------------------
     // 16 nodes quadrilateral element
     //-------------------------------
     _16nodeQuadrilateral = [[FEMElementsDefinition alloc] init];
-    _16nodeQuadrilateral.dimension = [NSNumber numberWithInt:2];
+    _16nodeQuadrilateral.dimension = @2;
     _16nodeQuadrilateral.topology = @"quadrilateral";
-    _16nodeQuadrilateral.code = [NSNumber numberWithInt:416];
-    _16nodeQuadrilateral.nodes = [NSNumber numberWithInt:16];
+    _16nodeQuadrilateral.code = @416;
+    _16nodeQuadrilateral.nodes = @16;
     //          1     2     3     ......
-    _16nodeQuadrilateral.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                                  [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333],
-                                  [NSNumber numberWithDouble:1.0000000000000000000], [NSNumber numberWithDouble:1.0000000000000000000], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:-1.0000000000000000000], [NSNumber numberWithDouble:-1.0000000000000000000], 
-                                  [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], nil];
-    _16nodeQuadrilateral.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                                  [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0000000000000000000], [NSNumber numberWithDouble:-1.0000000000000000000],
-                                  [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:1.0000000000000000000], [NSNumber numberWithDouble:1.0000000000000000000], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:-0.3333333333333333333], [NSNumber numberWithDouble:-0.3333333333333333333], 
-                                  [NSNumber numberWithDouble:0.3333333333333333333], [NSNumber numberWithDouble:0.3333333333333333333], nil];
-    _16nodeQuadrilateral.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:4],
-                                  [NSNumber numberWithInt:5], [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:8], 
-                                  [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], [NSNumber numberWithInt:11], [NSNumber numberWithInt:12], 
-                                  [NSNumber numberWithInt:13], [NSNumber numberWithInt:14], [NSNumber numberWithInt:15], [NSNumber numberWithInt:16], nil];
-    _16nodeQuadrilateral.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:16], [NSNumber numberWithInt:36], nil];
-    _16nodeQuadrilateral.stabilization = [NSNumber numberWithDouble:0.01766875890919188522];
+    _16nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
+                                  @-1.0, @-0.3333333333333333333, @0.3333333333333333333,
+                                  @1.0000000000000000000, @1.0000000000000000000, 
+                                  @0.3333333333333333333, @-0.3333333333333333333, 
+                                  @-1.0000000000000000000, @-1.0000000000000000000, 
+                                  @-0.3333333333333333333, @0.3333333333333333333, 
+                                  @0.3333333333333333333, @-0.3333333333333333333];
+    _16nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
+                                  @1.0, @-1.0000000000000000000, @-1.0000000000000000000,
+                                  @-0.3333333333333333333, @0.3333333333333333333, 
+                                  @1.0000000000000000000, @1.0000000000000000000, 
+                                  @0.3333333333333333333, @-0.3333333333333333333, 
+                                  @-0.3333333333333333333, @-0.3333333333333333333, 
+                                  @0.3333333333333333333, @0.3333333333333333333];
+    _16nodeQuadrilateral.basis = @[@1, @2, @3, @4,
+                                  @5, @6, @7, @8, 
+                                  @9, @10, @11, @12, 
+                                  @13, @14, @15, @16];
+    _16nodeQuadrilateral.gaussPoints = @[@16, @36];
+    _16nodeQuadrilateral.stabilization = @0.01766875890919188522;
     
     //----------------------------
     // 4 nodes tetrahedron element
     //----------------------------
     _4nodeTetrahedron = [[FEMElementsDefinition alloc] init];
-    _4nodeTetrahedron.dimension = [NSNumber numberWithInt:3];
+    _4nodeTetrahedron.dimension = @3;
     _4nodeTetrahedron.topology = @"tetrahedron";
-    _4nodeTetrahedron.code = [NSNumber numberWithInt:504];
-    _4nodeTetrahedron.nodes = [NSNumber numberWithInt:4];
+    _4nodeTetrahedron.code = @504;
+    _4nodeTetrahedron.nodes = @4;
     //          1     2     3     4
-    _4nodeTetrahedron.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                               [NSNumber numberWithDouble:0.0], nil];
-    _4nodeTetrahedron.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:0.0], nil];
-    _4nodeTetrahedron.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                               [NSNumber numberWithDouble:1.0], nil];
+    _4nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, 
+                               @0.0];
+    _4nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, 
+                               @0.0];
+    _4nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, 
+                               @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -391,28 +391,28 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _4nodeTetrahedron.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5], [NSNumber numberWithInt:17], nil];
-    _4nodeTetrahedron.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:4], [NSNumber numberWithInt:11], nil];
-    _4nodeTetrahedron.stabilization = [NSNumber numberWithDouble:0.333333333333333333];
+    _4nodeTetrahedron.basis = @[@1, @2, @5, @17];
+    _4nodeTetrahedron.gaussPoints = @[@4, @11];
+    _4nodeTetrahedron.stabilization = @0.333333333333333333;
     
     //-----------------------------
     // 10 nodes tetrahedron element
     //-----------------------------
     _10nodeTetrahedron = [[FEMElementsDefinition alloc] init];
-    _10nodeTetrahedron.dimension = [NSNumber numberWithInt:3];
+    _10nodeTetrahedron.dimension = @3;
     _10nodeTetrahedron.topology = @"tetrahedron";
-    _10nodeTetrahedron.code = [NSNumber numberWithInt:510];
-    _10nodeTetrahedron.nodes = [NSNumber numberWithInt:10];
+    _10nodeTetrahedron.code = @510;
+    _10nodeTetrahedron.nodes = @10;
     //          1     2     3     4     5     6      7      8      9     10
-    _10nodeTetrahedron.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                                [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.0], 
-                                [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.0], nil];
-    _10nodeTetrahedron.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                                [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], 
-                                [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], nil];
-    _10nodeTetrahedron.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                                [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                                [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], nil];
+    _10nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, 
+                                @0.0, @0.5, @0.5, @0.0, 
+                                @0.0, @0.5, @0.0];
+    _10nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, 
+                                @0.0, @0.0, @0.5, @0.5, 
+                                @0.0, @0.0, @0.5];
+    _10nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, 
+                                @1.0, @0.0, @0.0, @0.0, 
+                                @0.5, @0.5, @0.5];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -424,11 +424,11 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _10nodeTetrahedron.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5], 
-                                [NSNumber numberWithInt:6], [NSNumber numberWithInt:9], [NSNumber numberWithInt:17], [NSNumber numberWithInt:18], 
-                                [NSNumber numberWithInt:21], [NSNumber numberWithInt:33], nil];
-    _10nodeTetrahedron.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:27], [NSNumber numberWithInt:64], nil];
-    _10nodeTetrahedron.stabilization = [NSNumber numberWithDouble:0.0416666666666666666];
+    _10nodeTetrahedron.basis = @[@1, @2, @3, @5, 
+                                @6, @9, @17, @18, 
+                                @21, @33];
+    _10nodeTetrahedron.gaussPoints = @[@27, @64];
+    _10nodeTetrahedron.stabilization = @0.0416666666666666666;
     
 
     
@@ -436,17 +436,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // 5 nodes pyramid element
     //------------------------
     _5nodePyramid = [[FEMElementsDefinition alloc] init];
-    _5nodePyramid.dimension = [NSNumber numberWithInt:3];
+    _5nodePyramid.dimension = @3;
     _5nodePyramid.topology = @"pyramid";
-    _5nodePyramid.code = [NSNumber numberWithInt:605];
-    _5nodePyramid.nodes = [NSNumber numberWithInt:5];
+    _5nodePyramid.code = @605;
+    _5nodePyramid.nodes = @5;
     //          1     2     3     4     5
-    _5nodePyramid.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                           [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], nil];
-    _5nodePyramid.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                           [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], nil];
-    _5nodePyramid.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                           [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], nil];
+    _5nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, 
+                           @-1.0, @0.0];
+    _5nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, 
+                           @1.0, @0.0];
+    _5nodePyramid.nodeW = @[@0.0, @0.0, @0.0, 
+                           @0.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -458,32 +458,32 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _5nodePyramid.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5], [NSNumber numberWithInt:6], 
-                           [NSNumber numberWithInt:17], nil];
-    _5nodePyramid.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:8], [NSNumber numberWithInt:64], nil];
-    _5nodePyramid.stabilization = [NSNumber numberWithDouble:0.333333333333333333];
+    _5nodePyramid.basis = @[@1, @2, @5, @6, 
+                           @17];
+    _5nodePyramid.gaussPoints = @[@8, @64];
+    _5nodePyramid.stabilization = @0.333333333333333333;
     
     //-------------------------
     // 13 nodes pyramid element
     //-------------------------
     _13nodePyramid = [[FEMElementsDefinition alloc] init];
-    _13nodePyramid.dimension = [NSNumber numberWithInt:3];
+    _13nodePyramid.dimension = @3;
     _13nodePyramid.topology = @"pyramid";
-    _13nodePyramid.code = [NSNumber numberWithInt:613];
-    _13nodePyramid.nodes = [NSNumber numberWithInt:13];
+    _13nodePyramid.code = @613;
+    _13nodePyramid.nodes = @13;
     //          1     2     3     4     5     6      7      8      9     10    11    12    13
-    _13nodePyramid.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                            [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                            [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-0.5], [NSNumber numberWithDouble:0.5], 
-                            [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:-0.5], nil];
-    _13nodePyramid.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                            [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], 
-                            [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-0.5], [NSNumber numberWithDouble:-0.5], 
-                            [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], nil];
-    _13nodePyramid.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                            [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], 
-                            [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], 
-                            [NSNumber numberWithDouble:0.5], [NSNumber numberWithDouble:0.5], nil];
+    _13nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, 
+                            @-1.0, @0.0, @0.0, @1.0, 
+                            @0.0, @-1.0, @-0.5, @0.5, 
+                            @0.5, @-0.5];
+    _13nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, 
+                            @1.0, @0.0, @-1.0, @0.0, 
+                            @1.0, @0.0, @-0.5, @-0.5, 
+                            @0.5, @0.5];
+    _13nodePyramid.nodeW = @[@0.0, @0.0, @0.0, 
+                            @0.0, @1.0, @0.0, @0.0, 
+                            @0.0, @0.0, @0.5, @0.5, 
+                            @0.5, @0.5];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -495,27 +495,27 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _13nodePyramid.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5], 
-                            [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], [NSNumber numberWithInt:17],
-                            [NSNumber numberWithInt:18], [NSNumber numberWithInt:21], [NSNumber numberWithInt:22], [NSNumber numberWithInt:33], nil];
-    _13nodePyramid.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:27], [NSNumber numberWithInt:125], nil];
-    _13nodePyramid.stabilization = [NSNumber numberWithDouble:0.333333333333333333];
+    _13nodePyramid.basis = @[@1, @2, @3, @5, 
+                            @6, @7, @9, @10, @17,
+                            @18, @21, @22, @33];
+    _13nodePyramid.gaussPoints = @[@27, @125];
+    _13nodePyramid.stabilization = @0.333333333333333333;
     
     //----------------------
     // 6 nodes wedge element
     //----------------------
     _6nodeWedge = [[FEMElementsDefinition alloc] init];
-    _6nodeWedge.dimension = [NSNumber numberWithInt:3];
+    _6nodeWedge.dimension = @3;
     _6nodeWedge.topology = @"wedge";
-    _6nodeWedge.code = [NSNumber numberWithInt:706];
-    _6nodeWedge.nodes = [NSNumber numberWithInt:6];
+    _6nodeWedge.code = @706;
+    _6nodeWedge.nodes = @6;
     //          1     2     3     4     5     6
-    _6nodeWedge.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                         [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], nil];
-    _6nodeWedge.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                         [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], nil];
-    _6nodeWedge.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], 
-                         [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], nil];
+    _6nodeWedge.nodeU = @[@0.0, @1.0, @0.0, 
+                         @0.0, @1.0, @0.0];
+    _6nodeWedge.nodeV = @[@0.0, @0.0, @1.0, 
+                         @0.0, @0.0, @1.0];
+    _6nodeWedge.nodeW = @[@-1.0, @-1.0, @-1.0, 
+                         @1.0, @1.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -527,29 +527,29 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _6nodeWedge.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5], [NSNumber numberWithInt:17], 
-                         [NSNumber numberWithInt:18], [NSNumber numberWithInt:21], nil];
-    _6nodeWedge.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:8], [NSNumber numberWithInt:64], nil];
-    _6nodeWedge.stabilization = [NSNumber numberWithDouble:0.333333333333333333];
+    _6nodeWedge.basis = @[@1, @2, @5, @17, 
+                         @18, @21];
+    _6nodeWedge.gaussPoints = @[@8, @64];
+    _6nodeWedge.stabilization = @0.333333333333333333;
     
     //---------------------------
     // 8 nodes octahedron element
     //---------------------------
     _8nodeOctahedron = [[FEMElementsDefinition alloc] init];
-    _8nodeOctahedron.dimension = [NSNumber numberWithInt:3];
+    _8nodeOctahedron.dimension = @3;
     _8nodeOctahedron.topology = @"brick";
-    _8nodeOctahedron.code = [NSNumber numberWithInt:808];
-    _8nodeOctahedron.nodes = [NSNumber numberWithInt:8];
+    _8nodeOctahedron.code = @808;
+    _8nodeOctahedron.nodes = @8;
     //          1     2     3     4     5     6     7     8
-    _8nodeOctahedron.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                              [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                              [NSNumber numberWithDouble:-1.0], nil];
-    _8nodeOctahedron.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                              [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                              [NSNumber numberWithDouble:1.0], nil];
-    _8nodeOctahedron.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], 
-                              [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                              [NSNumber numberWithDouble:1.0], nil];
+    _8nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, 
+                              @-1.0, @-1.0, @1.0, @1.0, 
+                              @-1.0];
+    _8nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
+                              @1.0, @-1.0, @-1.0, @1.0, 
+                              @1.0];
+    _8nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
+                              @-1.0, @1.0, @1.0, @1.0, 
+                              @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -564,38 +564,38 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _8nodeOctahedron.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:5], [NSNumber numberWithInt:6],
-                              [NSNumber numberWithInt:17], [NSNumber numberWithInt:18], [NSNumber numberWithInt:21], [NSNumber numberWithInt:22], nil];
-    _8nodeOctahedron.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:8], [NSNumber numberWithInt:64], nil];
-    _8nodeOctahedron.stabilization = [NSNumber numberWithDouble:0.166666666666666666667];
+    _8nodeOctahedron.basis = @[@1, @2, @5, @6,
+                              @17, @18, @21, @22];
+    _8nodeOctahedron.gaussPoints = @[@8, @64];
+    _8nodeOctahedron.stabilization = @0.166666666666666666667;
     
     //----------------------------
     // 20 nodes octahedron element
     //----------------------------
     _20nodeOctahedron = [[FEMElementsDefinition alloc] init];
-    _20nodeOctahedron.dimension = [NSNumber numberWithInt:3];
+    _20nodeOctahedron.dimension = @3;
     _20nodeOctahedron.topology = @"brick";
-    _20nodeOctahedron.code = [NSNumber numberWithInt:820];
-    _20nodeOctahedron.nodes = [NSNumber numberWithInt:20];
+    _20nodeOctahedron.code = @820;
+    _20nodeOctahedron.nodes = @20;
     //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20
-    _20nodeOctahedron.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                               [NSNumber numberWithDouble:-1.0], nil];
-    _20nodeOctahedron.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:0.0], nil];
-    _20nodeOctahedron.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0],
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:1.0], nil];
+    _20nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, 
+                               @-1.0, @-1.0, @1.0, @1.0,
+                               @-1.0, @0.0, @1.0, @0.0,
+                               @-1.0, @-1.0, @1.0, @1.0,
+                               @-1.0, @0.0, @1.0, @0.0, 
+                               @-1.0];
+    _20nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
+                               @1.0, @-1.0, @-1.0, @1.0,
+                               @1.0, @-1.0, @0.0, @1.0,
+                               @0.0, @-1.0, @-1.0, @1.0,
+                               @1.0, @-1.0, @0.0, @1.0, 
+                               @0.0];
+    _20nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
+                               @-1.0, @1.0, @1.0, @1.0,
+                               @1.0, @-1.0, @-1.0, @-1.0,
+                               @-1.0, @0.0, @0.0, @0.0,
+                               @0.0, @1.0, @1.0, @1.0,
+                               @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -610,45 +610,45 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _20nodeOctahedron.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5],
-                               [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], [NSNumber numberWithInt:17],
-                               [NSNumber numberWithInt:18], [NSNumber numberWithInt:19], [NSNumber numberWithInt:21], [NSNumber numberWithInt:22], 
-                               [NSNumber numberWithInt:23], [NSNumber numberWithInt:25], [NSNumber numberWithInt:26], [NSNumber numberWithInt:33], 
-                               [NSNumber numberWithInt:34], [NSNumber numberWithInt:37], [NSNumber numberWithInt:38], nil];
-    _20nodeOctahedron.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:27], [NSNumber numberWithInt:125], nil];
-    _20nodeOctahedron.stabilization = [NSNumber numberWithDouble:0.08148148148148];
+    _20nodeOctahedron.basis = @[@1, @2, @3, @5,
+                               @6, @7, @9, @10, @17,
+                               @18, @19, @21, @22, 
+                               @23, @25, @26, @33, 
+                               @34, @37, @38];
+    _20nodeOctahedron.gaussPoints = @[@27, @125];
+    _20nodeOctahedron.stabilization = @0.08148148148148;
     
     //----------------------------
     // 27 nodes octahedron element
     //----------------------------
     _27nodeOctahedron = [[FEMElementsDefinition alloc] init];
-    _27nodeOctahedron.dimension = [NSNumber numberWithInt:3];
+    _27nodeOctahedron.dimension = @3;
     _27nodeOctahedron.topology = @"brick";
-    _27nodeOctahedron.code = [NSNumber numberWithInt:827];
-    _27nodeOctahedron.nodes = [NSNumber numberWithInt:27];
+    _27nodeOctahedron.code = @827;
+    _27nodeOctahedron.nodes = @27;
     //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20    21    22    23    24    25
     //          26    27
-    _27nodeOctahedron.nodeU = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], nil];
-    _27nodeOctahedron.nodeV = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0],
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], nil];
-    _27nodeOctahedron.nodeW = [NSArray arrayWithObjects:[NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:-1.0], 
-                               [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0],
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:1.0], 
-                               [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:0.0],
-                               [NSNumber numberWithDouble:0.0], [NSNumber numberWithDouble:-1.0], [NSNumber numberWithDouble:1.0], [NSNumber numberWithDouble:0.0], nil];
+    _27nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0,
+                               @-1.0, @-1.0, @1.0, @1.0,
+                               @-1.0, @0.0, @1.0, @0.0,
+                               @-1.0, @-1.0, @1.0, @1.0,
+                               @-1.0, @0.0, @1.0, @0.0, 
+                               @-1.0, @0.0, @1.0, @0.0, 
+                               @-1.0, @0.0, @0.0, @0.0];
+    _27nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
+                               @1.0, @-1.0, @-1.0, @1.0,
+                               @1.0, @-1.0, @0.0, @1.0,
+                               @0.0, @-1.0, @-1.0, @1.0, 
+                               @1.0, @-1.0, @0.0, @1.0, 
+                               @0.0, @-1.0, @0.0, @1.0, 
+                               @0.0, @0.0, @0.0, @0.0];
+    _27nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
+                               @-1.0, @1.0, @1.0, @1.0, 
+                               @1.0, @-1.0, @-1.0, @-1.0, 
+                               @-1.0, @0.0, @0.0, @0.0,
+                               @0.0, @1.0, @1.0, @1.0, 
+                               @1.0, @0.0, @0.0, @0.0,
+                               @0.0, @-1.0, @1.0, @0.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -663,15 +663,15 @@ static double AEPS = 10.0 * DBL_EPSILON;
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _27nodeOctahedron.basis = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], [NSNumber numberWithInt:5], 
-                               [NSNumber numberWithInt:6], [NSNumber numberWithInt:7], [NSNumber numberWithInt:9], [NSNumber numberWithInt:10], 
-                               [NSNumber numberWithInt:11], [NSNumber numberWithInt:17], [NSNumber numberWithInt:18], [NSNumber numberWithInt:19], 
-                               [NSNumber numberWithInt:21], [NSNumber numberWithInt:22], [NSNumber numberWithInt:23], [NSNumber numberWithInt:25], 
-                               [NSNumber numberWithInt:26], [NSNumber numberWithInt:27], [NSNumber numberWithInt:33], [NSNumber numberWithInt:34], 
-                               [NSNumber numberWithInt:35], [NSNumber numberWithInt:37], [NSNumber numberWithInt:38], [NSNumber numberWithInt:39], 
-                               [NSNumber numberWithInt:41], [NSNumber numberWithInt:42], [NSNumber numberWithInt:43], nil];
-    _27nodeOctahedron.gaussPoints = [NSArray arrayWithObjects:[NSNumber numberWithInt:27], [NSNumber numberWithInt:125], nil];
-    _27nodeOctahedron.stabilization = [NSNumber numberWithDouble:0.08148148148148];
+    _27nodeOctahedron.basis = @[@1, @2, @3, @5, 
+                               @6, @7, @9, @10, 
+                               @11, @17, @18, @19, 
+                               @21, @22, @23, @25, 
+                               @26, @27, @33, @34, 
+                               @35, @37, @38, @39, 
+                               @41, @42, @43];
+    _27nodeOctahedron.gaussPoints = @[@27, @125];
+    _27nodeOctahedron.stabilization = @0.08148148148148;
     
 }
 
@@ -779,10 +779,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
         _numberOfElementDefs = 21;
         
          // Array of objects describing each definition
-        _listOfDefinitions = [NSArray arrayWithObjects:_1nodePoint, _2nodePeriodic, _2nodeLine, _3nodeLine, _4nodeLine, _3nodeTriangle, _6nodeTriangle,
+        _listOfDefinitions = @[_1nodePoint, _2nodePeriodic, _2nodeLine, _3nodeLine, _4nodeLine, _3nodeTriangle, _6nodeTriangle,
                              _10nodeTriangle, _4nodeQuadrilateral, _8nodeQuadrilateral, _9nodeQuadrilateral, _12nodeQuadrilateral, _16nodeQuadrilateral,
                              _4nodeTetrahedron, _10nodeTetrahedron, _5nodePyramid, _13nodePyramid, _6nodeWedge, _8nodeOctahedron, _20nodeOctahedron,
-                             _27nodeOctahedron, nil];
+                             _27nodeOctahedron];
         
         _isTypeListInitialized = NO;
 
@@ -1072,7 +1072,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             element.NodeV = NULL;
             element.NodeW = NULL;
             
-            defs = [_listOfDefinitions objectAtIndex:i];
+            defs = _listOfDefinitions[i];
             
             element.dimension = [defs.dimension intValue];
             element.ElementCode = [defs.code intValue];
@@ -1080,30 +1080,30 @@ static double AEPS = 10.0 * DBL_EPSILON;
             if (element.dimension == 1) {
                 element.NodeU = doublevec(0, element.NumberOfNodes-1);
                 for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [[defs.nodeU objectAtIndex:k] doubleValue];
-                    basisTerms[k] = [[defs.basis objectAtIndex:k] intValue];
+                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                    basisTerms[k] = [(defs.basis)[k] intValue];
                 }
             } else if (element.dimension == 2) {
                 element.NodeU = doublevec(0, element.NumberOfNodes-1);
                 element.NodeV = doublevec(0, element.NumberOfNodes-1);
                 for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [[defs.nodeU objectAtIndex:k] doubleValue];
-                    element.NodeV[k] = [[defs.nodeV objectAtIndex:k] doubleValue];
-                    basisTerms[k] = [[defs.basis objectAtIndex:k] intValue];
+                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                    element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
+                    basisTerms[k] = [(defs.basis)[k] intValue];
                 }
             } else if (element.dimension == 3) {
                 element.NodeU = doublevec(0, element.NumberOfNodes-1);
                 element.NodeV = doublevec(0, element.NumberOfNodes-1);
                 element.NodeW = doublevec(0, element.NumberOfNodes-1);
                 for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [[defs.nodeU objectAtIndex:k] doubleValue];
-                    element.NodeV[k] = [[defs.nodeV objectAtIndex:k] doubleValue];
-                    element.NodeW[k] = [[defs.nodeW objectAtIndex:k] doubleValue];
-                    basisTerms[k] = [[defs.basis objectAtIndex:k] intValue];
+                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                    element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
+                    element.NodeW[k] = [(defs.nodeW)[k] doubleValue];
+                    basisTerms[k] = [(defs.basis)[k] intValue];
                 }
             }
-            element.GaussPoints = [[defs.gaussPoints objectAtIndex:0] intValue];
-            element.GaussPoints2 = [[defs.gaussPoints objectAtIndex:1] intValue];
+            element.GaussPoints = [(defs.gaussPoints)[0] intValue];
+            element.GaussPoints2 = [(defs.gaussPoints)[1] intValue];
             element.StabilizationMK = [defs.stabilization doubleValue];
             
             if (element.GaussPoints2 <= 0) element.GaussPoints2 = element.GaussPoints;

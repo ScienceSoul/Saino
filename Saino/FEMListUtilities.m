@@ -19,14 +19,14 @@
     count = 0;
     
     if ([str isEqualToString:@"Coordinate"] == NO) {
-        variable = [model.variables objectForKey:str];
+        variable = (model.variables)[str];
         if (variable == nil) {
             warnfunct("listParseStrToValues", "Can't find indpendent variable:");
             printf("%s\n", [str UTF8String]);
             errorfunct("listParseStrToValues", "Abort...");
         }
     } else {
-        variable = [model.variables objectForKey:@"Coordinate 1"];
+        variable = (model.variables)[@"Coordinate 1"];
     }
     
     varContainers = variable.getContainers;
@@ -36,17 +36,17 @@
     
     if (k1 > 0 && k1 <= varContainers->sizeValues) {
         if ([str isEqualToString:@"Coordinate"] == YES) {
-            cVar = [model.variables objectForKey:@"Coordinate 1"];
+            cVar = (model.variables)[@"Coordinate 1"];
             count++;
             cvarContainers = cVar.getContainers;
             t[0] = cvarContainers->Values[k1];
             
-            cVar = [model.variables objectForKey:@"Coordinate 2"];
+            cVar = (model.variables)[@"Coordinate 2"];
             count++;
             cvarContainers = cVar.getContainers;
             t[1] = cvarContainers->Values[k1];
             
-            cVar = [model.variables objectForKey:@"Coordinate 3"];
+            cVar = (model.variables)[@"Coordinate 3"];
             count++;
             cvarContainers = cVar.getContainers;
             t[2] = cvarContainers->Values[k1];

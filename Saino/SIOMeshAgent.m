@@ -93,25 +93,25 @@ static char *_parallel_extensions[] = {
         _clist = (cacheNode*) malloc( sizeof(cacheNode) * self.nodeCount );
         
         line = nil;
-        reader = [self.meshFileStreams objectAtIndex:NODES];
+        reader = (self.meshFileStreams)[NODES];
         [reader readLine];
         NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
         NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
         for (int i=0; i<self.nodeCount; i++) {
             if (self.parallel) { // assumes that everything is sorted by splitter 
-                _clist[i].tag = [[filteredArray objectAtIndex:0] intValue];
-                _clist[i].constraint = [[filteredArray objectAtIndex:1] intValue];
-                _clist[i].x = [[filteredArray objectAtIndex:2] doubleValue];
-                _clist[i].y = [[filteredArray objectAtIndex:3] doubleValue];
-                _clist[i].z = [[filteredArray objectAtIndex:4] doubleValue];                
+                _clist[i].tag = [filteredArray[0] intValue];
+                _clist[i].constraint = [filteredArray[1] intValue];
+                _clist[i].x = [filteredArray[2] doubleValue];
+                _clist[i].y = [filteredArray[3] doubleValue];
+                _clist[i].z = [filteredArray[4] doubleValue];                
             } else {
                 int tag;
-                tag = [[filteredArray objectAtIndex:0] intValue];
+                tag = [filteredArray[0] intValue];
                 _clist[tag-1].tag = tag;
-                _clist[tag-1].constraint = [[filteredArray objectAtIndex:1] intValue];
-                _clist[tag-1].x = [[filteredArray objectAtIndex:2] doubleValue];
-                _clist[tag-1].y = [[filteredArray objectAtIndex:3] doubleValue];
-                _clist[tag-1].z = [[filteredArray objectAtIndex:4] doubleValue];
+                _clist[tag-1].constraint = [filteredArray[1] intValue];
+                _clist[tag-1].x = [filteredArray[2] doubleValue];
+                _clist[tag-1].y = [filteredArray[3] doubleValue];
+                _clist[tag-1].z = [filteredArray[4] doubleValue];
             }
         }
         [reader rewind];
@@ -196,7 +196,7 @@ static char *_parallel_extensions[] = {
     [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
     @autoreleasepool {
         for (i=0; i<self.meshFiles; i++) {
-            [self.manager openStream:file :[NSString stringWithCString:filename encoding:NSASCIIStringEncoding] :@"write"];
+            [self.manager openStream:file :@(filename) :@"write"];
             [self.meshFileStreams insertObject:file atIndex:i];
         }
     }
@@ -220,7 +220,7 @@ static char *_parallel_extensions[] = {
                 
             } else [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
                 
-            reader = [[FileReader alloc] initWithFilePath:[NSString stringWithCString:filename encoding:NSASCIIStringEncoding]];
+            reader = [[FileReader alloc] initWithFilePath:@(filename)];
             if (!reader) {
                 return -1;
             } else {
@@ -235,7 +235,7 @@ static char *_parallel_extensions[] = {
     NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
     
     // Read Header
-    reader = [self.meshFileStreams objectAtIndex:HEADER];
+    reader = (self.meshFileStreams)[HEADER];
     line = nil;
     j = 0;
     @autoreleasepool {
@@ -246,18 +246,18 @@ static char *_parallel_extensions[] = {
             NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
             NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
             if ([filteredArray count] == 3) { // First line of header file, three elements
-                self.nodeCount = [[filteredArray objectAtIndex:0] intValue];
-                self.elementCount = [[filteredArray objectAtIndex:1] intValue];
-                self.boundaryElementCount = [[filteredArray objectAtIndex:2] intValue];
+                self.nodeCount = [filteredArray[0] intValue];
+                self.elementCount = [filteredArray[1] intValue];
+                self.boundaryElementCount = [filteredArray[2] intValue];
             } else if ([filteredArray count] == 1) { // Second line, one element
-                self.elementTypes = [[filteredArray objectAtIndex:0] intValue];
+                self.elementTypes = [filteredArray[0] intValue];
             } else if ([filteredArray count] == 2) { // The rest of the file, two elements                                
-                [self.elementTypeTags addObject:[filteredArray objectAtIndex:0]];
-                [self.elementTypeCount addObject:[filteredArray objectAtIndex:1]];
+                [self.elementTypeTags addObject:filteredArray[0]];
+                [self.elementTypeCount addObject:filteredArray[1]];
                 j++;
             } else if (self.parallel && lineCount == (2+self.elementTypes)+1) { // In case of a parallel mesh
-                self.sharedNodeCount = [[filteredArray objectAtIndex:0] intValue];
-                self.borderElementCount = [[filteredArray objectAtIndex:1] intValue];
+                self.sharedNodeCount = [filteredArray[0] intValue];
+                self.borderElementCount = [filteredArray[1] intValue];
             }
         }	
     }
@@ -275,7 +275,7 @@ static char *_parallel_extensions[] = {
     
     @autoreleasepool {
         for (i=0; i<self.meshFiles; i++) {
-            reader = [self.meshFileStreams objectAtIndex:i];
+            reader = (self.meshFileStreams)[i];
             [reader closeHandle];
         }
     }
@@ -296,8 +296,8 @@ static char *_parallel_extensions[] = {
     *usedElementTypes = self.elementTypes;
     
     for (i=0; i<self.elementTypes; i++) {
-        usedElementTypeTags[i] = [[self.elementTypeTags objectAtIndex:i] intValue];
-        usedElementTypeCount[i] = [[self.elementTypeCount objectAtIndex:i] intValue];
+        usedElementTypeTags[i] = [(self.elementTypeTags)[i] intValue];
+        usedElementTypeCount[i] = [(self.elementTypeCount)[i] intValue];
     }
     
     return 0;
@@ -322,7 +322,7 @@ static char *_parallel_extensions[] = {
     NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
 
     line = nil;
-    reader = [self.meshFileStreams objectAtIndex:ELEMENTS];
+    reader = (self.meshFileStreams)[ELEMENTS];
     if (step == self.elementCount) {
         
         [reader rewind];
@@ -333,15 +333,15 @@ static char *_parallel_extensions[] = {
     line = [reader readLine];
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-    tagstr = [filteredArray objectAtIndex:0];
-    *body = [[filteredArray objectAtIndex:1] intValue];
-    typestr = [filteredArray objectAtIndex:2];
+    tagstr = filteredArray[0];
+    *body = [filteredArray[1] intValue];
+    typestr = filteredArray[2];
     part = 0;
     subRange = [tagstr rangeOfString:@"/"];
     if (subRange.location != NSNotFound) {
         NSArray *components = [tagstr componentsSeparatedByString:@"/"];
-        *tag = [[components objectAtIndex:0] intValue];
-        *part = [[components objectAtIndex:1] intValue];        
+        *tag = [components[0] intValue];
+        *part = [components[1] intValue];        
     } else {
         *tag = [tagstr intValue];
     }
@@ -351,31 +351,31 @@ static char *_parallel_extensions[] = {
     @autoreleasepool {
         for (i=0; i<[typestr length]; i++) {
             character[0] = [typestr characterAtIndex:i];
-            str1 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+            str1 = @(character);
             if ([str1 isEqualToString:@"n"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[0] = [str2 intValue];
                 gotnodal = 1;
             } else if ([str1 isEqualToString:@"e"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[1] = [str2 intValue];
             } else if ([str1 isEqualToString:@"f"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[2] = [str2 intValue];
             } else if ([str1 isEqualToString:@"d"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[3] = [str2 intValue];
             } else if ([str1 isEqualToString:@"b"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[4] = [str2 intValue];
             } else if ([str1 isEqualToString:@"p"]) {
                 character[0] = [typestr characterAtIndex:i+1];
-                str2 = [NSString stringWithCString:character encoding:NSASCIIStringEncoding];
+                str2 = @(character);
                 pdofs[5] = [str2 intValue];
             }
         }
@@ -385,7 +385,7 @@ static char *_parallel_extensions[] = {
     int elNodes = [self SIOMeshAgent_elementNodes:*type];
     j = 3;
     for (i=0; i<elNodes; i++) {
-        nodes[i] = [[filteredArray objectAtIndex:j] intValue];
+        nodes[i] = [filteredArray[j] intValue];
         j++;
     }
     
@@ -407,7 +407,7 @@ static char *_parallel_extensions[] = {
     NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
 
     line = nil;
-    reader = [self.meshFileStreams objectAtIndex:ELEMENTS];
+    reader = (self.meshFileStreams)[ELEMENTS];
     if (step == self.elementCount) {
         
         [reader rewind];
@@ -421,14 +421,14 @@ static char *_parallel_extensions[] = {
     line = [reader readLine];
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-    *tag = [[filteredArray objectAtIndex:0] intValue];
-    *body = [[filteredArray objectAtIndex:1] intValue];
-    *type = [[filteredArray objectAtIndex:2] intValue];
+    *tag = [filteredArray[0] intValue];
+    *body = [filteredArray[1] intValue];
+    *type = [filteredArray[2] intValue];
 
     int elNodes = [self SIOMeshAgent_elementNodes:*type];
     j = 3;
     for (i=0; i<elNodes; i++) {
-        nodes[i] = [[filteredArray objectAtIndex:j] intValue];
+        nodes[i] = [filteredArray[j] intValue];
         j++;
     }
     for (i=0; i<elNodes; i++) {
@@ -454,7 +454,7 @@ static char *_parallel_extensions[] = {
     NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
     
     line = nil;
-    reader = [self.meshFileStreams objectAtIndex:BOUNDARY];
+    reader = (self.meshFileStreams)[BOUNDARY];
     if (step == self.boundaryElementCount) {
         [reader rewind];
         step = 0;
@@ -466,25 +466,25 @@ static char *_parallel_extensions[] = {
     line = [reader readLine];
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-    tagstr = [filteredArray objectAtIndex:0];
-    self.boundaryElementCount = [[filteredArray objectAtIndex:1] intValue];
-    *leftElement = [[filteredArray objectAtIndex:2] intValue];
-    *rightElement = [[filteredArray objectAtIndex:3] intValue];
+    tagstr = filteredArray[0];
+    self.boundaryElementCount = [filteredArray[1] intValue];
+    *leftElement = [filteredArray[2] intValue];
+    *rightElement = [filteredArray[3] intValue];
     part = 0;
     subRange = [tagstr rangeOfString:@"/"];
     if (subRange.location != NSNotFound) {
         NSArray *components = [tagstr componentsSeparatedByString:@"/"];
-        *tag = [[components objectAtIndex:0] intValue];
-        *part = [[components objectAtIndex:1] intValue];        
+        *tag = [components[0] intValue];
+        *part = [components[1] intValue];        
     } else {
         *tag = [tagstr intValue];
     }
     
-    *type = [[filteredArray objectAtIndex:4] intValue];
+    *type = [filteredArray[4] intValue];
     int elNodes = [self SIOMeshAgent_elementNodes:*type];
     j = 5;
     for (i=0; i<elNodes; i++) {
-        nodes[i] = [[filteredArray objectAtIndex:j] intValue];
+        nodes[i] = [filteredArray[j] intValue];
         j++;
     }
     if (self.parallel) {
@@ -540,7 +540,7 @@ static char *_parallel_extensions[] = {
     NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
     
     line = nil;
-    reader = [self.meshFileStreams objectAtIndex:SHARED];
+    reader = (self.meshFileStreams)[SHARED];
     if (step == self.sharedNodeCount) {
         
         [reader rewind];
@@ -553,11 +553,11 @@ static char *_parallel_extensions[] = {
     line = [reader readLine];
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-    *tag = [[filteredArray objectAtIndex:0] intValue];
-    *partcount = [[filteredArray objectAtIndex:1] intValue];
+    *tag = [filteredArray[0] intValue];
+    *partcount = [filteredArray[1] intValue];
     j = 2;
     for (i=0; i<*partcount; i++) {
-        partitions[i] = [[filteredArray objectAtIndex:j] intValue];
+        partitions[i] = [filteredArray[j] intValue];
         j++;
     }
     

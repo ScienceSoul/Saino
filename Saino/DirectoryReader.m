@@ -76,7 +76,7 @@
     NSMutableArray *fileAttributesResults = [NSMutableArray arrayWithCapacity:[fileNames count]];
     for (NSString *fileName in fileNames){
         NSMutableDictionary *extendedDictionary = [NSMutableDictionary dictionaryWithDictionary:[[NSFileManager defaultManager] attributesOfItemAtPath:fileName error:&fileIoError]];
-        [extendedDictionary setObject:fileName forKey:kFileAttributeFileNameKey];
+        extendedDictionary[kFileAttributeFileNameKey] = fileName;
         [fileAttributesResults addObject:extendedDictionary];
     }
     
@@ -90,10 +90,10 @@
     if (!success) // couldn't read directory
         return NO;
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"fileModificationDate" ascending:NO];
-    NSArray *sortedAttributes = [fileAttributes sortedArrayUsingDescriptors:[NSArray arrayWithObject:sortDescriptor]];
+    NSArray *sortedAttributes = [fileAttributes sortedArrayUsingDescriptors:@[sortDescriptor]];
     NSMutableArray *fileNames = [NSMutableArray arrayWithCapacity:[fileAttributes count]];
     for( NSDictionary *fileAttributeDictionary in sortedAttributes){
-        [fileNames addObject:[fileAttributeDictionary objectForKey:kFileAttributeFileNameKey]];
+        [fileNames addObject:fileAttributeDictionary[kFileAttributeFileNameKey]];
     }
     
     *files = [NSArray arrayWithArray:fileNames];
