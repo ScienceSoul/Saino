@@ -83,7 +83,28 @@ static int PRECOND_VANKA     =  560;
 
 @end
 
-@implementation FEMKernel
+@implementation FEMKernel {
+    
+    int *_indexStore;
+    double **_kernStiff, *_kernWork;           // kernStiff(maxElementDofs)(maxElementDofs), kernWork(maxElementDofs)
+    int *_g_Ind, *_l_Ind;                      // g_Ind(maxElementDofs), l_Ind(maxElementDofs)
+    int _sizeIndexStore;
+    int _size1kernStiff;
+    int _size2kernStiff;
+    int _sizekernWork;
+    int _size_g_Ind;
+    int _size_l_Ind;
+    
+    int **_lineEM;
+    int **_triangleEM;
+    int **_quadEM;
+    int **_tetraEM;
+    int **_prismEM;
+    int **_wedgeEM;
+    int **_brickEM;
+    
+    BOOL _initialized[8];
+}
 
 #pragma mark Private methods...
 
@@ -2460,20 +2481,20 @@ static int PRECOND_VANKA     =  560;
     self = [super init];
     if (self) {
         // Initialization code here.
-        indexStore = intvec(0, 511);
-        sizeIndexStore = 512;
-        memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
+        _indexStore = intvec(0, 511);
+        _sizeIndexStore = 512;
+        memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
         
-        lineEM = intmatrix(0, 0, 0, 1);
-        triangleEM = intmatrix(0, 2, 0, 1);
-        quadEM = intmatrix(0, 3, 0, 1);
-        tetraEM = intmatrix(0, 5, 0, 1);
-        prismEM = intmatrix(0, 7, 0, 1);
-        wedgeEM = intmatrix(0, 8, 0, 1);
-        brickEM = intmatrix(0, 11, 0, 1);
+        _lineEM = intmatrix(0, 0, 0, 1);
+        _triangleEM = intmatrix(0, 2, 0, 1);
+        _quadEM = intmatrix(0, 3, 0, 1);
+        _tetraEM = intmatrix(0, 5, 0, 1);
+        _prismEM = intmatrix(0, 7, 0, 1);
+        _wedgeEM = intmatrix(0, 8, 0, 1);
+        _brickEM = intmatrix(0, 11, 0, 1);
         
         for (i=0; i<8; i++) {
-            initialized[i] = NO;
+            _initialized[i] = NO;
         }
         
     }
@@ -2488,27 +2509,27 @@ static int PRECOND_VANKA     =  560;
 
 -(void)deallocation
 {
-    free_ivector(indexStore, 0, 511);
-    free_imatrix(lineEM, 0, 0, 0, 1);
-    free_imatrix(triangleEM, 0, 2, 0, 1);
-    free_imatrix(quadEM, 0, 3, 0, 1);
-    free_imatrix(tetraEM, 0, 5, 0, 1);
-    free_imatrix(prismEM, 0, 7, 0, 1);
-    free_imatrix(wedgeEM, 0, 8, 0, 1);
-    free_imatrix(brickEM, 0, 11, 0, 1);
+    free_ivector(_indexStore, 0, 511);
+    free_imatrix(_lineEM, 0, 0, 0, 1);
+    free_imatrix(_triangleEM, 0, 2, 0, 1);
+    free_imatrix(_quadEM, 0, 3, 0, 1);
+    free_imatrix(_tetraEM, 0, 5, 0, 1);
+    free_imatrix(_prismEM, 0, 7, 0, 1);
+    free_imatrix(_wedgeEM, 0, 8, 0, 1);
+    free_imatrix(_brickEM, 0, 11, 0, 1);
     
-    free_ivector(g_Ind, 0, size_g_Ind-1);
-    g_Ind = NULL;
+    free_ivector(_g_Ind, 0, _size_g_Ind-1);
+    _g_Ind = NULL;
     
-    free_ivector(l_Ind, 0, size_l_Ind-1);
-    l_Ind = NULL;
+    free_ivector(_l_Ind, 0, _size_l_Ind-1);
+    _l_Ind = NULL;
     
-    free_dmatrix(kernStiff, 0, size1kernStiff-1, 0, size2kernStiff-1);
-    kernStiff = NULL;
+    free_dmatrix(_kernStiff, 0, _size1kernStiff-1, 0, _size2kernStiff-1);
+    _kernStiff = NULL;
     
      
-    free_dvector(kernWork, 0, sizekernWork-1);
-    kernWork = NULL;
+    free_dvector(_kernWork, 0, _sizekernWork-1);
+    _kernWork = NULL;
     
 }
 
@@ -2573,13 +2594,13 @@ static int PRECOND_VANKA     =  560;
     
     sz1 = solution.mesh.sizeOfGlobalNodes;
     if (sz1 > solution.mesh.numberOfNodes) {
-        memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-        nb = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+        memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+        nb = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
         for (i=n; i<nb; i++) {
-            if (indexStore[i] >= 0 && indexStore[i] < sz1) {
-                nodes[i].x = globalNodes[indexStore[i]].x;
-                nodes[i].y = globalNodes[indexStore[i]].y;
-                nodes[i].z = globalNodes[indexStore[i]].z;
+            if (_indexStore[i] >= 0 && _indexStore[i] < sz1) {
+                nodes[i].x = globalNodes[_indexStore[i]].x;
+                nodes[i].y = globalNodes[_indexStore[i]].y;
+                nodes[i].z = globalNodes[_indexStore[i]].z;
             }
         }
     }
@@ -2936,30 +2957,30 @@ static int PRECOND_VANKA     =  560;
     
     switch (elementFamily) {
         case 2:
-            edgeMap = lineEM;
+            edgeMap = _lineEM;
             break;
         case 3:
-            edgeMap = triangleEM;
+            edgeMap = _triangleEM;
             break;
         case 4:
-            edgeMap = quadEM;
+            edgeMap = _quadEM;
             break;
         case 5:
-            edgeMap = tetraEM;
+            edgeMap = _tetraEM;
             break;
         case 6:
-            edgeMap = prismEM;
+            edgeMap = _prismEM;
             break;
         case 7:
-            edgeMap = wedgeEM;
+            edgeMap = _wedgeEM;
             break;
         case 8:
-            edgeMap = brickEM;
+            edgeMap = _brickEM;
             break;
     }
     
-    if (initialized[elementFamily-1] == NO) {
-        initialized[elementFamily-1] = YES;
+    if (_initialized[elementFamily-1] == NO) {
+        _initialized[elementFamily-1] = YES;
         switch (elementFamily) {
             case 2:
                 edgeMap[0][0] = 0;
@@ -3111,13 +3132,13 @@ static int PRECOND_VANKA     =  560;
     int *perm;
     variableArraysContainer *varContainers;
     
-    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
     if (all(perm, '>', 0, n) == 1) {
@@ -3487,7 +3508,7 @@ static int PRECOND_VANKA     =  560;
                                           basisDegree:NULL];
         sum = 0.0;
         for (i=0; i<nd; i++) {
-            sum = sum + load[i]*[numericIntegration basis:i];
+            sum = sum + load[i]*numericIntegration.basis[i];
         }
         l = sum;
         k = 0;
@@ -3497,7 +3518,7 @@ static int PRECOND_VANKA     =  560;
                 k++;
             }
         }
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, buffer, 3, [numericIntegration returnPointerToBasis], 1, 0, vl, 1);
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, buffer, 3, numericIntegration.basis, 1, 0, vl, 1);
         
         sum = 0.0;
         for (i=0; i<3; i++) {
@@ -3592,18 +3613,18 @@ static int PRECOND_VANKA     =  560;
         yip = 0.0;
         zip = 0.0;
         for (i=0; i<nd; i++) {
-            xip = xip + [numericIntegration basis:i]*nodes[i].x;
-            yip = yip + [numericIntegration basis:i]*nodes[i].y;
-            zip = zip + [numericIntegration basis:i]*nodes[i].z;
+            xip = xip + numericIntegration.basis[i]*nodes[i].x;
+            yip = yip + numericIntegration.basis[i]*nodes[i].y;
+            zip = zip + numericIntegration.basis[i]*nodes[i].z;
         }
         load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:stat minValue:NULL maxValue:NULL];
         
         // Build local stiffness matrix and force vector
         for (p=0; p<nd; p++) {
             for (q=0; q<nd; q++) {
-                stiff[p][q] = stiff[p][q] + s * [numericIntegration basis:p] * [numericIntegration basis:q];
+                stiff[p][q] = stiff[p][q] + s * numericIntegration.basis[p] * numericIntegration.basis[q];
             }
-            force[p] = force[p] + s * load * [numericIntegration basis:p];
+            force[p] = force[p] + s * load * numericIntegration.basis[p];
         }
     }
     
@@ -4359,13 +4380,13 @@ static int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers;
     
     dt = [solution dt];
-    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
     [self FEMKernel_addFirstOrderTime:model :solution :element :mass :stiff :force :dt :n :solution.variable.dofs :perm :rows :cols];
@@ -4384,8 +4405,8 @@ static int PRECOND_VANKA     =  560;
     
     dt = [solution dt];
     dofs = solution.variable.dofs;
-    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -4413,7 +4434,7 @@ static int PRECOND_VANKA     =  560;
     
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
 
     [self FEMKernel_addFirstOrderTime:model :solution :element :mass :stiff :force :dt :n :solution.variable.dofs :perm :rows :cols];
@@ -4445,13 +4466,13 @@ static int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
     
-    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     varContainers = NULL;
     
@@ -4514,13 +4535,13 @@ static int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
     
-    memset( indexStore, 0.0, (sizeIndexStore*sizeof(indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:indexStore];
+    memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
+    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     varContainers = NULL;
     
@@ -4632,40 +4653,40 @@ static int PRECOND_VANKA     =  560;
     
     n = solution.mesh.maxElementDofs;
     
-    if (g_Ind == NULL) {
-        g_Ind = intvec(0, n-1);
-        l_Ind = intvec(0, n-1);
-        kernStiff = doublematrix(0, n-1, 0, n-1);
-        kernWork = doublevec(0, n-1);
-        if (g_Ind == NULL || l_Ind == NULL || kernStiff == NULL || kernWork == NULL) 
+    if (_g_Ind == NULL) {
+        _g_Ind = intvec(0, n-1);
+        _l_Ind = intvec(0, n-1);
+        _kernStiff = doublematrix(0, n-1, 0, n-1);
+        _kernWork = doublevec(0, n-1);
+        if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
             errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
-        size1kernStiff = n;
-        size2kernStiff = n;
-        sizekernWork = n;
-        size_g_Ind = n;
-        size_l_Ind = n;
-    } else if (size_g_Ind < n) {
-        free_ivector(g_Ind, 0, size_g_Ind);
-        free_ivector(l_Ind, 0, size_l_Ind);
-        free_dmatrix(kernStiff, 0, size1kernStiff, 0, size2kernStiff);
-        free_dvector(kernWork, 0, sizekernWork);
+        _size1kernStiff = n;
+        _size2kernStiff = n;
+        _sizekernWork = n;
+        _size_g_Ind = n;
+        _size_l_Ind = n;
+    } else if (_size_g_Ind < n) {
+        free_ivector(_g_Ind, 0, _size_g_Ind);
+        free_ivector(_l_Ind, 0, _size_l_Ind);
+        free_dmatrix(_kernStiff, 0, _size1kernStiff, 0, _size2kernStiff);
+        free_dvector(_kernWork, 0, _sizekernWork);
         
-        g_Ind = intvec(0, n-1);
-        l_Ind = intvec(0, n-1);
-        kernStiff = doublematrix(0, n-1, 0, n-1);
-        kernWork = doublevec(0, n-1);
-        if (g_Ind == NULL || l_Ind == NULL || kernStiff == NULL || kernWork == NULL) 
+        _g_Ind = intvec(0, n-1);
+        _l_Ind = intvec(0, n-1);
+        _kernStiff = doublematrix(0, n-1, 0, n-1);
+        _kernWork = doublevec(0, n-1);
+        if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
             errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
 
-        size1kernStiff = n;
-        size2kernStiff = n;
-        sizekernWork = n;
-        size_g_Ind = n;
-        size_l_Ind = n;
+        _size1kernStiff = n;
+        _size2kernStiff = n;
+        _sizekernWork = n;
+        _size_g_Ind = n;
+        _size_l_Ind = n;
     }
     
     // Use the buffer for serializing the stiff matrix which is passed to lapack routine
-    buffer = doublevec(0, (size1kernStiff*size2kernStiff)-1);
+    buffer = doublevec(0, (_size1kernStiff*_size2kernStiff)-1);
     
     name = [NSMutableString stringWithString:solution.variable.name];
         
@@ -4711,14 +4732,14 @@ static int PRECOND_VANKA     =  560;
                 n = [self getNumberOfNodesForElement:element];
                 
                 if (parent->Pdefs != NULL) {
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
                 } else {
                     continue;
                 }
                 
                 // Contribute this boundary to global system (i.e., solve global boundary problem)
                 for (k=n; k<numEdgeDofs; k++) {
-                    nb = varContainers->Perm[g_Ind[k]];
+                    nb = varContainers->Perm[_g_Ind[k]];
                     if (nb < 0) continue;
                     nb = u_offset + solution.variable.dofs*nb + dof;
                     if (constantValue == YES) {
@@ -4790,18 +4811,18 @@ static int PRECOND_VANKA     =  560;
                                  }
                                  nb = parent->Type.NumberOfNodes;
                                  n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
-                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
                                  
-                                 n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:g_Ind];
+                                 n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
                                  for (k=solContainers->defDofs[0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
-                                     nb = varContainers->Perm[g_Ind[k]];
+                                     nb = varContainers->Perm[_g_Ind[k]];
                                      if (nb < 0) continue;
                                      nb = u_offset + solution.variable.dofs*nb + dof;
                                      if (solution.matrix.isSymmetric == YES) {
-                                         [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[0]];
+                                         [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
                                      } else {
                                          [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                         matContainers->RHS[nb] = kernWork[0];
+                                         matContainers->RHS[nb] = _kernWork[0];
                                          [self setMatrixElement:solution :nb :nb :1.0];
                                      }
                                  }
@@ -4823,18 +4844,18 @@ static int PRECOND_VANKA     =  560;
                                  for (j=0; j<faces[parent->FaceIndexes[j]].Type.NumberOfEdges; j++) {
                                      nb = edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].Type.NumberOfNodes;
                                      n = parent->Type.NumberOfNodes;
-                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:kernWork[0]];
+                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
                                      
-                                     n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:g_Ind];
+                                     n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
                                      for (k=solContainers->defDofs[0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
-                                         nb = varContainers->Perm[g_Ind[k]];
+                                         nb = varContainers->Perm[_g_Ind[k]];
                                          if (nb < 0) continue;
                                          nb = u_offset + solution.variable.dofs*nb + dof;
                                          if (solution.matrix.isSymmetric == YES) {
-                                             [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[0]];
+                                             [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
                                          } else {
                                              [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                             matContainers->RHS[nb] = kernWork[0];
+                                             matContainers->RHS[nb] = _kernWork[0];
                                              [self setMatrixElement:solution :nb :nb :1.0];
                                          }
                                      }
@@ -4842,15 +4863,15 @@ static int PRECOND_VANKA     =  560;
                          }
                      } // end associated edges
                  } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
-                     n = [self getElementDofs:solution forElement:element atIndexes:g_Ind];
+                     n = [self getElementDofs:solution forElement:element atIndexes:_g_Ind];
                      for (k=0; k<n; k++) {
-                         nb = varContainers->Perm[g_Ind[k]];
+                         nb = varContainers->Perm[_g_Ind[k]];
                          if (nb < 0) continue;
                          nb = u_offset + solution.variable.dofs+nb + dof;
                          
                          [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
                          [self setMatrixElement:solution :nb :nb :1.0];
-                         matContainers->RHS[nb] = kernWork[0];
+                         matContainers->RHS[nb] = _kernWork[0];
                      }
                  }
                  
@@ -4873,61 +4894,61 @@ static int PRECOND_VANKA     =  560;
                          n = element->Type.NumberOfNodes;
                          
                          // Get indexes for boundary and values dofs associated to them
-                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
-                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:kernStiff resultVector:kernWork];
+                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
                          
                          if (solution.matrix.isSymmetric == YES) {
                              
                              for (l=0; l<n; l++) {
-                                 nb = varContainers->Perm[g_Ind[l]];
+                                 nb = varContainers->Perm[_g_Ind[l]];
                                  if (nb < 0) continue;
                                  nb = u_offset + solution.variable.dofs*nb + dof;
                                  for (k=n; k<numEdgeDofs; k++) {
-                                     kernWork[k] = kernWork[k] - kernStiff[k][l]*matContainers->RHS[nb];
+                                     _kernWork[k] = _kernWork[k] - _kernStiff[k][l]*matContainers->RHS[nb];
                                  }
                              }
                              
                              for (k=n; k<numEdgeDofs; k++) {
                                  for (l=n; l<numEdgeDofs; l++) {
-                                     kernStiff[k-n][l-n] = kernStiff[k][l];
+                                     _kernStiff[k-n][l-n] = _kernStiff[k][l];
                                  }
-                                 kernWork[k-n] = kernWork[k];
+                                 _kernWork[k-n] = _kernWork[k];
                              }
                              l = numEdgeDofs - n;
                              if (l == 1) {
-                                 kernWork[0] = kernWork[0] / kernStiff[0][0];
+                                 _kernWork[0] = _kernWork[0] / _kernStiff[0][0];
                              } else {
-                                 memset( buffer, 0.0, (size1kernStiff*size2kernStiff)*sizeof(buffer) );
+                                 memset( buffer, 0.0, (_size1kernStiff*_size2kernStiff)*sizeof(buffer) );
                                  m = 0;
                                  for (j=0; j<l; j++) {
                                      for (k=0; k<l; k++) {
-                                         buffer[m] = kernStiff[j][k];
+                                         buffer[m] = _kernStiff[j][k];
                                          m++;
                                      }
                                  }
-                                 [self solveWithLapackMatrix:buffer andVector:kernWork size:l];
+                                 [self solveWithLapackMatrix:buffer andVector:_kernWork size:l];
                              }
                              for (k=n; k<numEdgeDofs; k++) {
-                                 nb = varContainers->Perm[g_Ind[k]];
+                                 nb = varContainers->Perm[_g_Ind[k]];
                                  if (nb < 0) continue;
                                  nb = u_offset + solution.variable.dofs*nb + dof;
-                                 [crsMatrix setSymmetricDirichletInGlobal:solution :nb :kernWork[k-n]];
+                                 [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[k-n]];
                              }
                          } else {
                              // Contribute this boundary to global system
                              // (i.e., solve global boundary problem)
                              for (k=n; k<numEdgeDofs; k++) {
-                                 nb = varContainers->Perm[g_Ind[k]];
+                                 nb = varContainers->Perm[_g_Ind[k]];
                                  if (nb < 0) continue;
                                  nb = u_offset + solution.variable.dofs*nb + dof;
-                                 matContainers->RHS[nb] = matContainers->RHS[nb] + kernWork[k];
+                                 matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
                                  for (l=0; l<numEdgeDofs; l++) {
-                                     mb = varContainers->Perm[g_Ind[l]];
+                                     mb = varContainers->Perm[_g_Ind[l]];
                                      if (mb < 0) continue;
                                      mb = u_offset + solution.variable.dofs*mb + dof;
                                      for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
                                          if (matContainers->Cols[kk] == mb) {
-                                             matContainers->Values[kk] = matContainers->Values[kk] + kernStiff[k][l];
+                                             matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
                                              break;
                                          }
                                      }
@@ -4944,22 +4965,22 @@ static int PRECOND_VANKA     =  560;
                          n = element->Type.NumberOfNodes;
                          
                          // Get global boundary indexes and solve dofs asscociated to them
-                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:g_Ind resultSize:numEdgeDofs];
+                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
                          
                          // If boundary face has no dofs, skip to next boundary element
                          if (numEdgeDofs == n) continue;
                          
                          // Get local solution
-                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:kernStiff resultVector:kernWork];
+                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
                          
                          n_start = 0;
                          if (solution.matrix.isSymmetric == YES) {
                              for (l=0; l<n; l++) {
-                                 nb = varContainers->Perm[g_Ind[l]];
+                                 nb = varContainers->Perm[_g_Ind[l]];
                                  if (nb < 0) continue;
                                  nb = u_offset + solution.variable.dofs*nb + dof;
                                  for (k=n; k<numEdgeDofs; k++) {
-                                     kernWork[k] = kernWork[k] - kernStiff[k][l] * matContainers->RHS[nb];
+                                     _kernWork[k] = _kernWork[k] - _kernStiff[k][l] * matContainers->RHS[nb];
                                  }
                              }
                              n_start++;
@@ -4967,17 +4988,17 @@ static int PRECOND_VANKA     =  560;
                          
                          // Contribute this entry to global boundary problem
                          for (k=n; k<numEdgeDofs; k++) {
-                             nb = varContainers->Perm[g_Ind[k]];
+                             nb = varContainers->Perm[_g_Ind[k]];
                              if (nb < 0) continue;
                              nb = u_offset + solution.variable.dofs*nb + dof;
-                             matContainers->RHS[nb] = matContainers->RHS[nb] + kernWork[k];
+                             matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
                              for (l=n_start; l<numEdgeDofs; l++) {
-                                 mb = varContainers->Perm[g_Ind[l]];
+                                 mb = varContainers->Perm[_g_Ind[l]];
                                  if (mb < 0) continue;
                                  mb = u_offset + solution.variable.dofs*mb + dof;
                                  for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
                                      if (matContainers->Cols[kk] == mb) {
-                                         matContainers->Values[kk] = matContainers->Values[kk] + kernStiff[k][l];
+                                         matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
                                          break;
                                      }
                                  }
@@ -4989,7 +5010,7 @@ static int PRECOND_VANKA     =  560;
          
      }
     
-    free_dvector(buffer, 0, (size1kernStiff*size2kernStiff)-1);
+    free_dvector(buffer, 0, (_size1kernStiff*_size2kernStiff)-1);
     matContainers = NULL;
     varContainers = NULL;
     solContainers = NULL;

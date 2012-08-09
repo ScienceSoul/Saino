@@ -1467,7 +1467,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                                                          basisDegree:NULL];
         for (i=0; i<n; i++) {
             for (j=0; j<3; j++) {
-                dNodalBasisdx[i][p][j] = [numericIntegration basisFirstDerivative:i :j];
+                dNodalBasisdx[i][p][j] = numericIntegration.basisFirstDerivative[i][j];
             }
         }
     }
@@ -1499,12 +1499,12 @@ static double AEPS = 10.0 * DBL_EPSILON;
                memset( ddp, 0.0, (3*sizeof(ddp)) );
                memset( ddq, 0.0, (3*sizeof(ddq)) );
                for (i=0; i<dim; i++) {
-                   g[p-1][q-1] = g[p-1][q-1] + s * [numericIntegration basisFirstDerivative:p :i] * [numericIntegration basisFirstDerivative:q :i];
+                   g[p-1][q-1] = g[p-1][q-1] + s * numericIntegration.basisFirstDerivative[p][i] * numericIntegration.basisFirstDerivative[q][i];
                    sum1 = 0.0;
                    sum2 = 0.0;
                    for (j=0; j<n; j++) {
-                       sum1 = sum1 + dNodalBasisdx[p][j][i] * [numericIntegration basisFirstDerivative:j :i];
-                       sum2= sum2 + dNodalBasisdx[q][j][i] * [numericIntegration basisFirstDerivative:j :i];
+                       sum1 = sum1 + dNodalBasisdx[p][j][i] * numericIntegration.basisFirstDerivative[j][i];
+                       sum2= sum2 + dNodalBasisdx[q][j][i] * numericIntegration.basisFirstDerivative[j][i];
                    }
                    ddp[i] = ddp[i] + sum1;
                    ddq[i] = ddq[i] + sum2;

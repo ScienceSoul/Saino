@@ -24,23 +24,7 @@
 #import "Constructors.h"
 
 @interface FEMKernel : NSObject {
-@private
-    int *indexStore, sizeIndexStore;
-    double **kernStiff, *kernWork;     // kernStiff(maxElementDofs)(maxElementDofs), kernWork(maxElementDofs)
-    int *g_Ind, *l_Ind;                // g_Ind(maxElementDofs), l_Ind(maxElementDofs)
-    int size1kernStiff, size2kernStiff, sizekernWork, size_g_Ind, size_l_Ind;
-    
-    int **lineEM;
-    int **triangleEM;
-    int **quadEM;
-    int **tetraEM;
-    int **prismEM;
-    int **wedgeEM;
-    int **brickEM;
-    
-    BOOL initialized[8];
-  
-    
+
 }
 
 -(void)deallocation;
