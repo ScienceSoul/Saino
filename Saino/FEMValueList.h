@@ -35,6 +35,7 @@
 @property(nonatomic, strong) NSString *dependName;
 @property(nonatomic, strong) NSString *cValue;
 
+-(void)deallocation;
 -(valueListArraysContainer *)getContainers;
 
 @end

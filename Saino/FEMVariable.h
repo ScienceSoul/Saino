@@ -12,14 +12,15 @@
 
 @interface FEMVariable : NSObject {
     
-    FEMVariable *_next;
     NSString *_name;
-    
+    id _primaryMesh;
+    id _solution;
     int _nameLength;
     int _dofs;
     int _nonLinConverged;
     int _steadyConverged;
     int _nonLinIter;
+    int _type;
     double _norm;
     double _prevNorm;
     double _nonLinChange;
@@ -32,13 +33,15 @@
     variableArraysContainer *_containers;
 }
 
-@property(nonatomic, strong) FEMVariable *next;
 @property(nonatomic, strong) NSString *name;
+@property(nonatomic, strong) id primaryMesh;
+@property(nonatomic, strong) id solution;
 @property(nonatomic, assign) int nameLength;
 @property(nonatomic, assign) int dofs;
 @property(nonatomic, assign) int nonLinConverged;
 @property(nonatomic, assign) int steadyConverged;
 @property(nonatomic, assign) int nonLinIter;
+@property(nonatomic, assign) int type;
 @property(nonatomic, assign) double norm;
 @property(nonatomic, assign) double prevNorm;
 @property(nonatomic, assign) double nonLinChange;
@@ -48,6 +51,7 @@
 @property(nonatomic, assign, getter = isValuesChanged) BOOL valuesChanged;
 @property(nonatomic, assign, getter =  isSecondary) BOOL secondary;
 
+-(void)deallocation;
 -(variableArraysContainer *)getContainers;
           
 @end

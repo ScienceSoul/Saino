@@ -546,4 +546,71 @@
     aContainers = NULL;
 }
 
+-(void)applyProjector:(FEMMatrix *)pMatrix: (double *)u: (int *)uperm: (double *)v: (int *)vperm: (BOOL *)trans {
+    
+    int i, j, k, l, n;
+    matrixArraysContainer *containers;
+    BOOL ltrans, any;
+    
+    ltrans = NO;
+    if (trans != NULL) {
+        ltrans = *trans;
+    }
+    
+    n = pMatrix.numberOfRows;
+    containers = pMatrix.getContainers;
+    
+    if (uperm != NULL && vperm != NULL) {
+        if (ltrans == YES) {
+            for (i=0; i<n; i++) {
+                k = uperm[i];
+                if (k >= 0) {
+                    for (j=containers->Rows[i]; j<=containers->Rows[i+1]-1; j++) {
+                        l = vperm[containers->Cols[j]];
+                        if (l >= 0) v[l] = v[l] + u[k] * containers->Values[j];
+                    }
+                }
+            }
+        } else {
+            for (i=0; i<n; i++) {
+                l = vperm[i];
+                if (l >= 0) {
+                    any = NO;
+                    for (j=containers->Rows[i]; j<=containers->Rows[i+1]-1; j++) {
+                        if (containers->Values[j] != 0.0) {
+                            any = YES;
+                            break;
+                        }
+                    }
+                    if (any == YES) v[l] = 0.0;
+                }
+            }
+            
+            for (i=0; i<n; i++) {
+                l = vperm[i];
+                if (l >= 0) {
+                    for (j=containers->Rows[i]; j<=containers->Rows[i+1]-1; j++) {
+                        k = uperm[containers->Cols[j]];
+                        if (k >= 0) v[l] = v[l] + u[k] * containers->Values[j];
+                    }
+                }
+            }
+        }
+    } else {
+        if (ltrans == YES) {
+            for (i=0; i<n; i++) {
+                for (j=containers->Rows[i]; j<=containers->Rows[i+1]-1; j++) {
+                    v[containers->Cols[j]] = v[containers->Cols[j]] + u[i] * containers->Values[j];
+                }
+            }
+        } else {
+            for (i=0; i<n; i++) {
+                for (j=containers->Rows[i]; j<=containers->Rows[i+1]-1; j++) {
+                    v[i] = v[i] + u[containers->Cols[j]] * containers->Values[j];
+                }
+            }
+        }
+    }
+}
+
 @end

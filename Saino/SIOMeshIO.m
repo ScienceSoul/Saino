@@ -81,14 +81,14 @@
 
 -(void)getMeshDescription:(int *)nodeCount :(int *)elementCount :(int *)boundaryElementCount :(int *)usedElementTypes :(int *)elementTypeTags :(int *)elementCountByType {
     
-    [self.meshAgent readDescriptor:nodeCount :elementCount :boundaryElementCount :usedElementTypes :elementTypeTags :elementCountByType];
-    self.info = 0;
+    self.info = -1;
+    self.info =  [self.meshAgent readDescriptor:nodeCount :elementCount :boundaryElementCount :usedElementTypes :elementTypeTags :elementCountByType];
 }
 
 -(void)getMeshNodes:(int *)tags: (double *)coord {
     
-    [self.meshAgent readAllNodes:tags :coord];
-    self.info = 0;
+    self.info = -1;
+    self.info = [self.meshAgent readAllNodes:tags :coord];
 }
 
 -(void)getMeshElementConnection:(int *)tag :(int *)body :(int *)type :(int *)pdofs :(int *)nodes {
@@ -109,8 +109,8 @@
 
 -(void)getPartDesription:(int *)sharedNodeCount {
     
-    [self.meshAgent readPartDescriptor:sharedNodeCount];
-    self.info = 0;
+    self.info = -1;
+    self.info = [self.meshAgent readPartDescriptor:sharedNodeCount];
 }
 
 -(void)getPartNode:(int *)tag :(int *)constraint :(double *)coord :(int *)partCount :(int *)parts {

@@ -12,6 +12,7 @@
 #import "FEMElementsDefinition.h"
 #import "FEMSolution.h"
 #import "FEMNumericIntegration.h"
+#import "FEMUtilities.h"
 
 #import "Constructors.h"
 #import "memory.h"
@@ -27,5 +28,15 @@
 -(double)elementDiameter:(Element_t *)element: (Nodes_t *)nodes;
 -(void)computeStabilizationParameter:(Element_t *)element: (Nodes_t *)nodes: (FEMMesh *)mesh: (int)n: (double)mk: (double *)hk;
 -(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab;
+-(double)firstDerivative1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
+-(double)firstDerivativeU2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;
+-(double)firstDerivativeV2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;
+-(double)firstDerivativeU3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
+-(double)firstDerivativeV3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
+-(double)firstDerivativeW3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
+-(double)interpolateInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double *)basis;
+-(void)checkNormalDirectionInBDElement:(Element_t *)boundary forNormals:(double *)normals mesh:(FEMMesh *)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL *)turn;
+-(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals;
+-(void)globalToLocalFromElement:(Element_t *)element elementNodes:(Nodes_t *)nodes localU:(double *)u localV:(double *)v localW:(double *)w x:(double)x y:(double)y z:(double)z model:(FEMModel *)aModel;
 
 @end

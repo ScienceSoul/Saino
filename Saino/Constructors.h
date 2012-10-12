@@ -13,7 +13,7 @@
 #define CONSTRUCTORS_H
 
 #define MAX_NAME_LEN 128
-
+#define MAX_ELEMENT_NODES 256
 
 enum {
     MATRIX_CRS = 1,
@@ -36,6 +36,13 @@ enum  {
     LIST_TYPE_VARIABLE_TENSOR_STR
 };
 
+enum {
+    VARIABLE_ON_NODES = 0,
+    VARIABLE_ON_EDGES,
+    VARIABLE_ON_FACES,
+    VARIABLE_ON_NODES_ON_ELEMENTS
+};
+
 typedef struct {
     
     int ID;                     // Node identificaton number
@@ -54,6 +61,19 @@ typedef struct {
     
     
 } BasisFunctions_t;
+
+typedef struct QuadrantPointer_t {
+    struct Quadrant_t *quadrant;
+} QuadrantPointer_t;
+
+typedef struct Quadrant_t {
+    
+    int nElementsInQuadrant;
+    double size, minElementSize, boundingBox[6];
+    int *elements;
+    struct QuadrantPointer_t *childQuadrants;
+    int numberOfchildQuadrants;
+} Quadrant_t;
 
 typedef struct ElementType_t {
     
@@ -78,22 +98,31 @@ typedef struct ElementType_t {
 
 typedef struct {
     
-    int Constraint;           // Initialize it to 0 somewhere!!
-    int Outbody;              // Initialize to -1 somewhere!!
-    struct Element_t *Left;   // Initialize to NULL somewhere!!
-    struct Element_t *Right;  // Initialize to NULL somewhere!!
+    int NumberOfFactors;
+    int NumberOfImplicitFactors;
+    int *Elements;
+    double *Factors;
     
+} Factors_t;
+
+typedef struct {
+    
+    Factors_t *GebhardtFactors;
+    int Constraint;            // Initialize it to 0 somewhere!!
+    int Outbody;               // Initialize to -1 somewhere!!
+    struct Element_t *Left;    // Initialize to NULL somewhere!!
+    struct Element_t *Right;   // Initialize to NULL somewhere!!
     
 } BoundaryInfo_t;
 
 typedef struct {
 
     int p;  
-    int TetraType;         // Type of p tetrahedron={0,1,2}
-    int isEdge;            // Is element an edge or face. 0 -> no; 1 -> yes
-    int GaussPoints;       // Number of gauss points to use when using p elements
-    int PyramidQuadEdge;   // Is element an edge pyramid quad face. 0 -> no; 1 -> yes
-    int LocalNumber;       // Local number of an edge or face for element on boundary
+    int TetraType;          // Type of p tetrahedron={0,1,2}
+    bool isEdge;            // Is element an edge or face.
+    int GaussPoints;        // Number of gauss points to use when using p elements
+    bool PyramidQuadEdge;   // Is element an edge pyramid quad face.
+    int LocalNumber;        // Local number of an edge or face for element on boundary
     
 } PElementDefs_t;
 
@@ -101,13 +130,15 @@ typedef struct Element_t {
     
     ElementType_t Type;
     BoundaryInfo_t *BoundaryInfo;
-    PElementDefs_t *Pdefs;                        // Initialize to NULL somewhere!!
+    PElementDefs_t *Pdefs;                         // Initialize to NULL somewhere!!
     
     int *NodeIndexes, *EdgeIndexes, *FaceIndexes, 
-        *BubbleIndexes, *DGIndexes;               // Initialize that to NULL somewhere!!
+        *BubbleIndexes, *DGIndexes;                // Initialize that to NULL somewhere!!
     
+    int sizeNodeIndexes, sizeEdgeIndexes,
+        sizeFaceIndexes, sizeBubbleIndexes, sizeDGIndexes;
     int BodyID;
-    int ElementIndex, NDOFs, BDOFs, DGDOFs;
+    int ElementIndex, PartIndex, NDOFs, BDOFs, DGDOFs;
     
     double StabilizationMK, hK;
     
@@ -183,7 +214,8 @@ typedef struct variableArraysContainer {
     double complex **EigenVectors;
     int sizePerm;
     int sizeValues;
-    int sizePrevValues;
+    int size1PrevValues;
+    int size2PrevValues;
     int sizePValues;
     int sizeNonLinValues;
     int sizeSteadyValues;
@@ -197,14 +229,15 @@ typedef struct solutionArraysContainer {
     int **ntElement;
     int *boundaryReorder;
     int *acticeElements;
-    int *defDofs;
+    int **defDofs;
     double **boundaryNormals;
     double **boundaryTangent1;
     double **boundaryTangent2;
     int sizeBoundaryReorder;
     int size1boundaryNormals;
     int size2boundaryNormals;
-    int sizeDefDofs;
+    int size1DefDofs;
+    int size2DefDofs;
     
 } solutionArraysContainer;
 
@@ -220,6 +253,38 @@ typedef struct valueListArraysContainer {
     int sizeIValues;
     
 } valueListArraysContainer;
+
+typedef struct modelArraysContainer {
+    
+    int *FreeSurfaceNodes;
+    double *BoundaryCurvatures;
+    
+} modelArraysContainer;
+
+typedef struct listBuffer {
+    
+    int *ivector;
+    double *vector;
+    double **matrix;
+    double ***tensor;
+    int m, n, p;
+    
+} listBuffer;
+
+typedef struct HashEntry_t {
+    
+    int node1, node2, face, edge;
+    struct HashEntry_t *next;
+     
+} HashEntry_t;
+
+typedef struct HashTable_t {
+    
+    HashEntry_t *head;
+
+} HashTable_t;
+
+
 
 #endif
 

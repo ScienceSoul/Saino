@@ -12,6 +12,52 @@
 #define M 7
 #define NSTACK 50
 
+int __attribute__((overloadable)) max(int x, int y) {
+    
+    return (x > y) ? x : y;
+}
+
+int __attribute__((overloadable)) max(int x, int y, int z) {
+    
+    int m = (x > y) ? x : y;
+    return (z > m) ? z : m;
+}
+
+int __attribute__((overloadable)) max(int w, int x, int y, int z) {
+    
+    int m = (w > x) ? w : x;
+    int n = (y > m) ? y : m;
+    return (z > n) ? z : n;
+}
+
+double __attribute__((overloadable)) max(double x, double y) {
+    
+    return (x > y) ? x : y;
+}
+
+int __attribute__((overloadable)) min(int x, int y) {
+    
+    return (x < y) ? x : y;
+}
+
+int __attribute__((overloadable)) min(int x, int y, int z) {
+    
+    int m = (x < y) ? x : y;
+    return (z < m) ? z : m;
+}
+
+int __attribute__((overloadable)) min(int w, int x, int y, int z) {
+ 
+    int m = (w < x) ? w : x;
+    int n = (y < m) ? y : m;
+    return (z < n) ? z : n;
+}
+
+double __attribute__((overloadable)) min(double x, double y) {
+    
+    return (x < y) ? x : y;
+}
+
 int __attribute__((overloadable)) max_array(int *a, int num_elements)
 {
     int i, max = -INT_MAX;
@@ -57,6 +103,76 @@ double __attribute__((overloadable)) min_array(double *a, int num_elements) {
             min = a[i];
         }
     }
+    return min;
+}
+
+double __attribute__((overloadable)) max_array(Nodes_t *nodes, char mask, int num_elements) {
+    
+    int i;
+    double max = -HUGE_VAL;
+    
+    switch (mask) {
+        case 'x':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].x>max) {
+                    max = nodes[i].x;
+                }
+            }
+            break;
+        case 'y':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].y>max) {
+                    max = nodes[i].y;
+                }
+            }
+            break;
+        case 'z':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].z>max) {
+                    max = nodes[i].z;
+                }
+            }
+            break;
+        default:
+            errorfunct("max_array", "Incorrect node field!!!");
+            break;
+    }
+    
+    return max;
+}
+
+double __attribute__((overloadable)) min_array(Nodes_t *nodes, char mask, int num_elements) {
+    
+    int i;
+    double min = HUGE_VAL;
+    
+    switch (mask) {
+        case 'x':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].x<min) {
+                    min = nodes[i].x;
+                }
+            }
+            break;
+        case 'y':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].y<min) {
+                    min = nodes[i].y;
+                }
+            }
+            break;
+        case 'z':
+            for (i=0; i<num_elements; i++) {
+                if (nodes[i].z<min) {
+                    min = nodes[i].z;
+                }
+            }
+            break;
+        default:
+            errorfunct("max_array", "Incorrect node field!!!");
+            break;
+    }
+    
     return min;
 }
 
@@ -777,4 +893,26 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, double *brr) 
         }
     }    
 }
+
+void __attribute((overloadable)) reverse(int *arr, size_t narr) {
+    
+    size_t i;
+    
+    for (i=0; i < narr / 2; ++i) {
+        int tmp = arr[i];
+        arr[i] = arr[narr-i-1];
+        arr[narr-i-1] = tmp;
+    }
+}
+
+/*******************************************************************************************
+ Circular shift an array. Only works for shift > 0
+*******************************************************************************************/
+void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shift) {
+    reverse(arr, shift);
+    reverse(arr + shift, narr - shift);
+    reverse(arr, narr);
+}
+
+
 

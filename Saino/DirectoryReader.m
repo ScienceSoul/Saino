@@ -43,7 +43,7 @@
  */
 - (BOOL)readDirectory:(NSArray**)files {
     
-	BOOL success = false;
+	BOOL success = NO;
 	
 	NSArray* fileNames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:m_path error:nil];
 	

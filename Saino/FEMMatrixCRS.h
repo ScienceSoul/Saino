@@ -22,6 +22,7 @@
 -(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n;
 -(void)sortInMatrix:(FEMMatrix *)a: (BOOL *)alsoValues;
 -(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value;
+-(void)applyProjector:(FEMMatrix *)pMatrix: (double *)u: (int *)uperm: (double *)v: (int *)vperm: (BOOL *)trans;
 
 
 @end

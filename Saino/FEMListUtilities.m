@@ -12,41 +12,63 @@
 
 -(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count {
 
-    int l, k1;
+    int i, l, k1, n;
     FEMVariable *variable, *cVar;
     variableArraysContainer *varContainers, *cvarContainers;
+    FEMUtilities *utilities;
+    Element_t *element;
+    BOOL found;
+    
+    utilities = [[FEMUtilities alloc] init];
+    
+    //TODO: This method only support one string passed at a time, not several strings separeted by a comma. 
     
     count = 0;
     
     if ([str isEqualToString:@"Coordinate"] == NO) {
-        variable = (model.variables)[str];
+        variable = [utilities getVariableFrom:model.variables model:model name:str onlySearch:NULL maskName:NULL info:&found];
         if (variable == nil) {
             warnfunct("listParseStrToValues", "Can't find indpendent variable:");
             printf("%s\n", [str UTF8String]);
             errorfunct("listParseStrToValues", "Abort...");
         }
     } else {
-        variable = (model.variables)[@"Coordinate 1"];
+        variable = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 1" onlySearch:NULL maskName:NULL info:&found];
     }
     
     varContainers = variable.getContainers;
     
     k1 = ind;
+    if (variable.type == VARIABLE_ON_NODES_ON_ELEMENTS) {
+        element = model.getCurrentElement;
+        if (element != NULL) {
+            if (element->DGIndexes != NULL) {
+                n = element->Type.NumberOfNodes;
+                if (element->sizeDGIndexes == n) {
+                    for (i=0; i<n; i++) {
+                        if (element->NodeIndexes[i] == ind) {
+                            k1 = element->DGIndexes[i];
+                        }
+                    }
+                }
+            }
+        }
+    }
     if (varContainers->Perm != NULL) k1 = varContainers->Perm[k1];
     
     if (k1 > 0 && k1 <= varContainers->sizeValues) {
         if ([str isEqualToString:@"Coordinate"] == YES) {
-            cVar = (model.variables)[@"Coordinate 1"];
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 1" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[0] = cvarContainers->Values[k1];
             
-            cVar = (model.variables)[@"Coordinate 2"];
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 2" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[1] = cvarContainers->Values[k1];
             
-            cVar = (model.variables)[@"Coordinate 3"];
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 3" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[2] = cvarContainers->Values[k1];
@@ -68,6 +90,7 @@
         } else {
             t[count] = varContainers->Values[0];
         }
+        count++;
     }
     
     variable = nil;
@@ -76,7 +99,24 @@
     cvarContainers = NULL;
 }
 
--(BOOL)listGetReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes resultArray:(double *)result minValue:(double *)minv maxValue:(double *)maxv {
+-(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
+    
+    NSString *s;
+    
+    *found = NO;
+    
+    for (FEMValueList *list in array) {
+        if ([varName isEqualToString:list.name] == YES) {
+            s = [NSString stringWithString:list.cValue];
+            break;
+            *found = YES;
+        }
+    }
+    
+    return s;
+}
+
+-(BOOL)listGetReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result minValue:(double *)minv maxValue:(double *)maxv {
 
     int i, j, k;
     double *buffer;
@@ -99,8 +139,12 @@
                     printf("%s\n", [varName UTF8String]);
                     errorfunct("listGetReal", "Program terminating now...");
                 }
+                // The buffer is allocated here, it's up to the caller to release this memory
+                result->vector = doublevec(0, n-1);
+                result->m = n;
+                memset( result->vector, 0.0, (n*sizeof(result->vector)) );
                 for (i=0; i<n; i++) {
-                    result[i] = containers->fValues[0][0][0];
+                    result->vector[i] = containers->fValues[0][0][0];
                 }
             } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 
@@ -111,6 +155,10 @@
                     buffer[i] = containers->fValues[0][0][i];
                 }
                 
+                // The buffer is allocated here but it's up to the caller to release this memory
+                result->vector = doublevec(0, n-1);
+                result->m = n;
+                memset( result->vector, 0.0, (n*sizeof(result->vector)) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
                     [self listParseStrToValues:model :list.dependName :k :list.name :t :j];
@@ -124,7 +172,7 @@
                             printf("%s\n", [varName UTF8String]);
                             errorfunct("listGetReal", "Program terminating now...");
                         }
-                        result[i] = [util interpolateCurve:containers->tValues :buffer :t[0] :containers->sizeTValues];
+                        result->vector[i] = [util interpolateCurve:containers->tValues :buffer :t[0] :containers->sizeTValues];
                     }
                 }
                 
@@ -142,17 +190,17 @@
     }
     
     if (minv != NULL) {
-        if (min_array(result, n) < *minv) {
+        if (min_array(result->vector, n) < *minv) {
             warnfunct("listGetReal", "Value smaller than given value:");
-            printf("Value: %f / Given value: %f / Property: %s\n", min_array(result, n), *minv, [varName UTF8String]);
+            printf("Value: %f / Given value: %f / Property: %s\n", min_array(result->vector, n), *minv, [varName UTF8String]);
             errorfunct("listGetReal", "Program terminating now...");
         }
     }
     
     if (maxv != NULL) {
-        if (max_array(result, n) > *maxv) {
+        if (max_array(result->vector, n) > *maxv) {
             warnfunct("listGetReal", "Value greater than given value:");
-            printf("Value: %f / Given value: %f / Property: %s\n", max_array(result, n), *minv, [varName UTF8String]);
+            printf("Value: %f / Given value: %f / Property: %s\n", max_array(result->vector, n), *minv, [varName UTF8String]);
             errorfunct("listGetReal", "Program terminating now...");
         }
     }
@@ -160,11 +208,11 @@
     return found;
 }
 
--(BOOL)listGetRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes resultArray:(double ***)result {
+-(BOOL)listGetRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result {
 
     int i, j, k, n1, n2;
     BOOL found;
-    double *buffer;
+    listBuffer buffer;
     valueListArraysContainer *containers;
     
     found = NO;
@@ -177,10 +225,23 @@
             
             if (list.type == LIST_TYPE_CONSTANT_TENSOR) {
                 
+                // The buffer is allocated here but it's up to the caller to release this memory
+                result->tensor = d3tensor(0, n1-1, 0, n2-1, 0, n-1);
+                result->m = n1;
+                result->n = n2;
+                result->p = n;
                 for (i=0; i<n1; i++) {
                     for (j=0; j<n2; j++) {
                         for (k=0; k<n; k++) {
-                            result[i][j][k] = containers->fValues[i][j][0];
+                            result->tensor[i][j][k] = 0.0;
+                        }
+                    }
+                }
+                
+                for (i=0; i<n1; i++) {
+                    for (j=0; j<n2; j++) {
+                        for (k=0; k<n; k++) {
+                            result->tensor[i][j][k] = containers->fValues[i][j][0];
                         }
                     }
                 }
@@ -192,26 +253,37 @@
                 // TODO: implement this case
                 
             } else {
-                
-                buffer = doublevec(0, n-1);
+                     
+                // The buffer is allocated here but it's up to the caller to release this memory
+                result->tensor = d3tensor(0, n1-1, 0, n2-1, 0, n-1);
+                result->m = n1;
+                result->n = n2;
+                result->p = n;
+                for (i=0; i<n1; i++) {
+                    for (j=0; j<n2; j++) {
+                        for (k=0; k<n; k++) {
+                            result->tensor[i][j][k] = 0.0;
+                        }
+                    }
+                }
                 
                 for (i=0; i<n1; i++) {
                     for (j=0; j<n2; j++) {
                         
                         for (k=0; k<n; k++) {
-                            result[i][j][k] = 0.0;
+                            result->tensor[i][j][k] = 0.0;
                         }
                     }
                 }
                 
-                found = [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes resultArray:buffer minValue:NULL maxValue:NULL];
+                found = [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 for (i=0; i<n1; i++) {
                     for (k=0; k<n; k++) {
-                        result[i][0][k] = buffer[k];
+                        result->tensor[i][0][k] = buffer.vector[k];
                     }
                 }
                 
-                free_dvector(buffer, 0, n-1);
+                free_dvector(buffer.vector, 0, buffer.m-1);
             }
             
             found = YES;
@@ -224,12 +296,12 @@
 }
 
 
--(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found minValue:(double *)minv maxValue:(double *)maxv {
+-(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f;
     valueListArraysContainer *containers;
     
-    found = NO;
+    *found = NO;
     
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES) {
@@ -248,7 +320,7 @@
                 
                 f = containers->fValues[0][0][0];
             }
-            found = YES;
+            *found = YES;
             containers = NULL;
             break;
         }
@@ -273,7 +345,7 @@
     return f;
 }
 
--(BOOL)listGetConstRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName resultArray:(double **)result {
+-(BOOL)listGetConstRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName buffer:(listBuffer *)result {
 
     int i, j, n1, n2;
     BOOL found;
@@ -287,9 +359,19 @@
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
             
+            // The buffer is allocated here but it's up to the caller to release this memory
+            result->matrix = doublematrix(0, n1-1, 0, n2-1);
+            result->m = n1;
+            result->n = n2;
             for (i=0; i<n1; i++) {
                 for (j=0; j<n2; j++) {
-                    result[i][j] = containers->fValues[i][j][0];
+                    result->matrix[i][j] = 0.0;
+                }
+            }
+            
+            for (i=0; i<n1; i++) {
+                for (j=0; j<n2; j++) {
+                    result->matrix[i][j] = containers->fValues[i][j][0];
                 }
             }
             
@@ -304,7 +386,7 @@
     return found;
 }
 
--(BOOL)listGetIntegerArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName resultArray:(int *)result {
+-(BOOL)listGetIntegerArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName buffer:(listBuffer *)result {
     
     int i, n;
     BOOL found;
@@ -321,9 +403,13 @@
                 errorfunct("listGetIntegerArray", "Program terminating now...");
             }
             
+           // The buffer is allocated here but it's up to the caller to release this memory
             n = containers->sizeIValues;
+            result->ivector = intvec(0, n-1);
+            result->m = n;
+            memset( result->ivector, 0, (n*sizeof(result->ivector)) );
             for (i=0; i<n; i++) {
-                result[i] = containers->iValues[i];
+                result->ivector[i] = containers->iValues[i];
             }
             
            // TODO: implement the call of a user provided method if required 
@@ -337,12 +423,12 @@
     return found;
 }
 
--(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found minValue:(int *)minv maxValue:(int *)maxv {
+-(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(int *)minv maxValue:(int *)maxv {
     
     int l;
     valueListArraysContainer *containers;
     
-    found = NO;
+    *found = NO;
     
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES) {
@@ -358,7 +444,7 @@
             
             l = containers->iValues[0];
             
-            found = YES;
+            *found = YES;
             containers = NULL;
             break;
             
@@ -384,18 +470,18 @@
     return l;
 }
 
--(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL)found {
+-(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
     BOOL l;
     
-    found = NO;
+    *found = NO;
     l = NO;
     
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES) {
             l = list.isLvalue;
             break;
-            found = YES;
+            *found = YES;
         }
     }
     

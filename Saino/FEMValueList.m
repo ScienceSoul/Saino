@@ -29,9 +29,14 @@
     if (self) {
         //TODO: Initialize here
         
+        _containers = (valueListArraysContainer*)malloc(sizeof(valueListArraysContainer) * 1 );
     }
     
     return self;
+}
+
+-(void)deallocation {
+    free(_containers);
 }
 
 -(valueListArraysContainer*)getContainers {

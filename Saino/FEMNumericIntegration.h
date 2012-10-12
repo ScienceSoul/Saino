@@ -7,12 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "FEMMesh.h"
 
+#import "FEMMesh.h"
 #import "GaussIntegration.h"
 #import "NodalBasisFunctions.h"
-
-//@class FEMMesh;
 
 @interface FEMNumericIntegration : NSObject {
 

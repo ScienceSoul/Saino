@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMVariable.h"
+#import "FEMSimulation.h"
 #import "Constructors.h"
 
 @interface FEMModel : NSObject {
@@ -17,14 +18,26 @@
     int _numberOfNodes;
     int _numberOfBulkElements;
     int _numberOfBoundaryElements;
+    int _numberOfBodies;
     int _numberOfBodyForces;
     int _numberOfBoundaries;
+    int _numberOfICs;
+    int _numberOfSolutions;
+    int _numberOfEquations;
     
-    NSArray *_bodies;                             // Array of dictionaries
-    NSArray *_bodyForces;                         // Array of FEMBodyForce objects
-    NSArray *_boundaries;                         // Array of FEMBoundaryCondition objects
-    NSArray *_simulations;                        // Array of FEMSimulation objects
-    NSMutableDictionary *_variables;              // Mutable dictionary holding FEMVariable classes
+    id _mesh;
+    NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
+    NSArray *_solutions;                            // Array of all solutions in the model
+    NSArray *_meshes;                               // Array of meshes used by the model
+    NSArray *_bodies;                               // Array of dictionaries
+    NSArray *_bodyForces;                           // Array of FEMBodyForce objects
+    NSArray *_boundaries;                           // Array of FEMBoundaryCondition objects
+    NSArray *_equations;                            // Array of FEMEquation objects
+    FEMSimulation *_simulation;                   
+    NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
+    
+    Element_t *_currentElement;
+    modelArraysContainer *_containers;
     
     /* Initialize bodies like this:
      NSArray* names = [NSArray arrayWithObjects:
@@ -48,12 +61,28 @@
 @property(nonatomic, assign) int numberOfNodes;
 @property(nonatomic, assign) int numberOfBulkElements;
 @property(nonatomic, assign) int numberOfBoundaryElements;
+@property(nonatomic, assign) int numberOfBodies;
 @property(nonatomic, assign) int numberOfBodyForces;
 @property(nonatomic, assign) int numberOfBoundaries;
+@property(nonatomic, assign) int numberOfICs;
+@property(nonatomic, assign) int numberOfSolutions;
+@property(nonatomic, assign) int numberOfEquations;
+@property(nonatomic, strong) id mesh;
+@property(nonatomic, strong) NSArray *boundaryID;
+@property(nonatomic, strong) NSArray *solutions;
+@property(nonatomic, strong) NSArray *meshes;
 @property(nonatomic, strong) NSArray *bodies;
 @property(nonatomic, strong) NSArray *bodyForces;
 @property(nonatomic, strong) NSArray *boundaries;
-@property(nonatomic, strong) NSArray *simulations;
-@property(nonatomic, strong) NSMutableDictionary *variables;
+@property(nonatomic, strong) NSArray *equations;
+@property(nonatomic, strong) FEMSimulation *simulation;
+@property(nonatomic, strong) NSMutableArray *variables;
+
+-(void)deallocation;
+
+// Elements getter
+-(Element_t *)getCurrentElement;
+
+-(modelArraysContainer *)getContainers;
 
 @end

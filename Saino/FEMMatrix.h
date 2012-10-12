@@ -47,6 +47,7 @@
 @property(nonatomic, assign, getter = isComplexMatrix) BOOL complexMatrix;
 @property(nonatomic, assign, getter = isDgmatrix) BOOL dgMatrix;
 
+-(void)deallocation;
 -(matrixArraysContainer *)getContainers;
 
 @end

@@ -28,7 +28,7 @@
 }
 
 -(void)deallocation;
--(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name resultArray:(double *)result;
+-(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name buffer:(listBuffer *)result;
 -(int)isPElement:(Element_t *)element;
 -(void)getNodes:(FEMSolution *)solution inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int)nd;
 -(int)getElementFamily:(Element_t *)element;
@@ -60,7 +60,7 @@
 
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset;
 
--(double)findSolution: (FEMSolution *)solution;
+-(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel;
 -(double)stopc:(FEMSolution *)solution: (double *)x: (double *)b: (double *)r: (int *)ipar;
 
 

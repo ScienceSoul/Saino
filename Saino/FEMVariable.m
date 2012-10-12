@@ -10,13 +10,15 @@
 
 @implementation FEMVariable
 
-@synthesize next = _next;
 @synthesize  name = _name;
+@synthesize primaryMesh = _primaryMesh;
+@synthesize solution = _solution;
 @synthesize nameLength = _nameLength;
 @synthesize dofs = _dofs;
 @synthesize nonLinConverged = _nonLinConverged;
 @synthesize steadyConverged = _steadyConverged;
 @synthesize nonLinIter = _nonLinIter;
+@synthesize type = _type;
 @synthesize norm = _norm;
 @synthesize prevNorm = _prevNorm;
 @synthesize nonLinChange = _nonLinChange;
@@ -30,18 +32,40 @@
 {
     self = [super init];
     if (self) {
-        // NOTE: The classe below needs to be assigned to allocated FEMVariable classes when used
-        _next = nil;
         
+        _primaryMesh = nil;
+        _solution = nil;
+        _type = VARIABLE_ON_NODES;
         _norm = 0.0;
         _prevNorm = 0.0;
         _nonLinChange = 0.0;
         _steadyChange = 0.0;
         _nonLinConverged = -1;
         _steadyConverged = -1;
+        
+        _containers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
+        _containers->Perm = NULL;
+        _containers->Values = NULL;
+        _containers->PrevValues = NULL;
+        _containers->PValues = NULL;
+        _containers->NonLinValues = NULL;
+        _containers->SteadyValues = NULL;
+        _containers->EigenValues = NULL;
+        _containers->EigenVectors = NULL;
+        _containers->sizePerm = 0;
+        _containers->sizeValues = 0;
+        _containers->size1PrevValues = 0;
+        _containers->size2PrevValues = 0;
+        _containers->sizePValues = 0;
+        _containers->sizeNonLinValues = 0;
+        _containers->sizeSteadyValues = 0;
     }
     
     return self;
+}
+
+-(void)deallocation {
+    free(_containers);
 }
 
 -(variableArraysContainer*)getContainers {

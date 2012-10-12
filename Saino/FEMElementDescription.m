@@ -19,7 +19,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 -(void)FEMElementDescription_initElementsDefinition;
 -(void)FEMElementDescription_compute1DPBasis:(double **)basis: (int)n;
-
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
+-(double)FEMElementDescription_interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;
+-(double)FEMElementDescription_interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
 @end
 
 @implementation FEMElementDescription {
@@ -744,6 +746,153 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
 }
 
+/**********************************************************************************************
+ 
+    Given element structure, return value of a quantity x given at element nodes at local
+    cooidinate point u inside the element. Element basis functions are used to compute the
+    value. Used for 1d elements
+ 
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u            ->  point at which to evaluate the partial derivative
+ 
+    Return y = x(u)
+ 
+**********************************************************************************************/
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u {
+    
+    int i, n;
+    int *p;
+    double y, s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                s = s + coeff[i] * pow(u, p[i]);
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of a quantity x given at element nodes at local
+    cooidinate points (u,v) inside the element. Element basis functions are used to compute the
+    value. Used for 2d elements
+ 
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u, v         ->  points at which to evaluate the partial derivative
+ 
+    Return y = x(u,v)
+ 
+**********************************************************************************************/
+-(double)FEMElementDescription_interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+    
+    int i, n;
+    int *p, *q;
+    double y, s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]);
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of a quantity x given at element nodes at local
+    cooidinate points (u,v,w) inside the element. Element basis functions are used to compute 
+    the value. Used for 3d elements
+ 
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u, v, w      ->  points at which to evaluate the partial derivative
+ 
+    Return y = x(u,v,w)
+ 
+**********************************************************************************************/
+-(double)FEMElementDescription_interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+    
+    int i, n;
+    int *p, *q, *r;
+    double y, s;
+    double *coeff;
+    
+    if (element->Type.ElementCode == 605) {
+        s = 0.0;
+        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        s = 1.0 / (1-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( (1.0-u) * (1.0-v) - w + u*v*w * s) / 4.0;
+        y = y + x[1] * ( (1.0+u) * (1.0-v) - w - u*v*w * s) / 4.0;
+        y = y + x[2] * ( (1.0+u) * (1.0+v) - w + u*v*w * s) / 4.0;
+        y = y + x[3] * ( (1.0-u) * (1.0+v) - w - u*v*w * s) / 4.0;
+        y = y + x[4] * w;
+        return y;
+    } else if (element->Type.ElementCode == 613) {
+        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        s = 1.0 / (1-w);
+        
+        y = 0.0;
+        y = y + x[0] * (-u-v-1.0) * ( (1.0-u) * (1.0-v) - w + u*v*w *s ) / 4.0;
+        y = y + x[1] * (u-v-1.0) * ( (1.0+u) * (1.0-v) - w - u*v*w *s ) / 4.0;
+        y = y + x[2] * (u+v-1.0) * ( (1.0+u) * (1.0+v) - w + u*v*w *s ) / 4.0;
+        y = y + x[3] * (-u+v-1.0) * ( (1.0-u) * (1.0+v) - w - u*v*w *s ) / 4.0;
+        y = y + x[4] * w*(2.0*w-1.0);
+        y = y + x[5] * (1.0+u-w) * (1.0-u-w) * (1.0-v-w) * s /2.0;
+        y = y + x[6] * (1.0+v-w) * (1.0-v-w) * (1.0+u-w) * s /2.0;
+        y = y + x[7] * (1.0+u-w) * (1.0-u-w) * (1.0+v-w) * s /2.0;
+        y = y + x[8] * (1.0+v-w) * (1.0-v-w) * (1.0-u-w) * s /2.0;
+        y = y + x[9] * w * (1.0-u-w) * (1.0-v-w) * s;
+        y = y + x[10] * w * (1.0+u-w) * (1.0-v-w) * s;
+        y = y + x[11] * w * (1.0+u-w) * (1.0+v-w) * s;
+        y = y + x[12] * w * (1.0-u-w) * (1.0+v-w) * s;
+        return y;
+    }
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            r = element->Type.BasisFunctions[n].r;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, r[i]);
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
 
 #pragma mark Public methods...
 
@@ -785,14 +934,18 @@ static double AEPS = 10.0 * DBL_EPSILON;
                              _27nodeOctahedron];
         
         _isTypeListInitialized = NO;
+        
+        [self initElementDescriptions];
 
     }
     
     return self;
 }
 
--(void)deallocation
-{
+-(void)deallocation {
+    
+    ElementType_t *ptr;
+    
     free_imatrix(_point, 0, 0, 0, 0);
     free_imatrix(_line, 0, 0, 0, 1);
     free_imatrix(_triangle, 0, 2, 0, 1);
@@ -801,6 +954,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_imatrix(_prism, 0, 7, 0, 1);
     free_imatrix(_wedge, 0, 8, 0, 1);
     free_imatrix(_brick, 0, 11, 0, 1);
+    
+    ptr = NULL;
+    while (_elementTypeList != NULL) {
+        ptr = _elementTypeList->NextElementType;
+        free(_elementTypeList);
+        _elementTypeList = ptr;
+    }
 }
 
 -(void)addDescriptionOfElement:(ElementType_t)element withBasisTerms:(int *)terms {
@@ -1129,6 +1289,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
+    free_ivector(basisTerms, 0, _maxDeg3-1);
 }
 
 -(int **)getEdgeMap:(int)elementFamily {
@@ -1661,6 +1822,832 @@ static double AEPS = 10.0 * DBL_EPSILON;
     *element = elm->Type;
     return element;
     
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of the first partial derivative with respect
+    to local coordinate of a quantity x given at element nodes at local coordinates
+    point u inside the element. Element basis functions are used to compute the value.
+ 
+    Element_t *element  ->  element structure
+    double u            ->  point at which to evaluate the partial derivative
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+ 
+    Return y = @x/@u
+ 
+**********************************************************************************************/
+-(double)firstDerivative1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u {
+    
+    int i, n;
+    int *p;
+    double y;
+    double s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (p[i] >= 1) {
+                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1));
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of the first partial derivative with respect to local
+    coordinate u of i quantity x given at element nodes at local coordinate points u, v inside
+    the element. Element basis functions are used to compute the value.
+ 
+    Element_t *element  ->  element struncture
+    double *x:          ->  nodal values of the quantity whose partial derivative is required
+    double u,v          ->  points at which to evaluate the partial derivative
+ 
+    Return first partial derivative in u of quantity x at point u,v y = @x(u,v)/@u
+    
+**********************************************************************************************/
+-(double)firstDerivativeU2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+    
+    int i, n;
+    int *p, *q;
+    double y, s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (p[i] >= 1) {
+                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1)) * pow(v, q[i]);
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of the first partial derivative with respect to local
+    coordinate v of i quantity x given at element nodes at local coordinate points u, v inside
+    the element. Element basis functions are used to compute the value.
+ 
+    Element_t *element  ->  element struncture
+    double *x:          ->  nodal values of the quantity whose partial derivative is required
+    double u,v          ->  points at which to evaluate the partial derivative
+ 
+    Return first partial derivative in v of quantity x at point u,v y = @x(u,v)/@v
+ 
+**********************************************************************************************/
+-(double)firstDerivativeV2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+    
+    int i, n;
+    int *p, *q;
+    double y, s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (q[i] >= 1) {
+                    s = s + q[i] * coeff[i] * pow(u, p[i]) * pow(v, (q[i]-1));
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of the first partial derivative with respect to
+    local coordinate u of a quantity x given at element nodes at local coordinate point
+    u, v, w inside the element. Element basis functions are used to compute the value.
+ 
+    Element_t *element  ->  element struncture
+    double *x:          ->  nodal values of the quantity whose partial derivative is required
+    double u,v, w       ->  points at which to evaluate the partial derivative
+ 
+    Return first partial derivative in u of quantity x at point u,v,w y = @x(u,v,w)/@u
+ 
+**********************************************************************************************/
+-(double)firstDerivativeU3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+    
+    int i, n;
+    int *p, *q, *r;
+    double y, s;
+    double *coeff;
+    
+    if (element->Type.ElementCode == 605) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( -(1.0-v) + v*w * s) / 4.0;
+        y = y + x[1] * ( (1.0-v) - v*w * s) / 4.0;
+        y = y + x[2] * ( (1.0+v) + v*w * s) / 4.0;
+        y = y + x[3] * ( -(1.0+v) - v*w * s) / 4.0;
+        return  y;
+    } else if (element->Type.ElementCode == 613) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( -( (1.0-u) * (1.0-v) - w + u*v*w * s ) + (-u-v-1.0) * ( -(1.0-v) + v*w *s ) ) / 4.0;
+        
+        y = y + x[1] * ( ( (1.0+u) * (1.0-v) - w - u*v*w * s ) + (u-v-1.0) * ( (1.0-v) - v*w *s ) ) / 4.0;
+        
+        y = y + x[2] * ( ( (1.0+u) * (1.0+v) - w + u*v*w * s ) + (u+v-1.0) * ( (1.0+v) + v*w *s ) ) / 4.0;
+        
+        y = y + x[3] * ( -( (1.0-u) * (1.0+v) - w - u*v*w * s ) + (-u+v-1.0) * ( -(1.0+v) - v*w *s ) ) / 4.0;
+        
+        y = y + x[4] * 0.0;
+        
+        y = y + x[5] * ( (1.0-u-w)*(1.0-v-w) - (1.0+u-w)*(1.0-v-w) * s ) / 2.0;
+        y = y + x[6] * ( (1.0+v-w)*(1.0-v-w) * s ) / 2.0;
+        y = y + x[7] * ( (1.0-u-w)*(1.0+v-w) - (1.0+u-w)*(1.0+v-w) * s ) / 2.0;
+        y = y + x[8] * ( -(1.0+v-w)*(1.0-v-w) * s ) / 2.0;
+        
+        y = y - x[9] * w * (1.0-v-w) * s;
+        y = y + x[10] * w * (1.0-v-w) * s;
+        y = y + x[11] * w * (1.0+v-w) * s;
+        y = y + x[12] * w * (1.0+v-w) * s;
+        
+        return y;
+    }
+    
+    y = 0.0;
+    for (n=0; element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            r = element->Type.BasisFunctions[n].r;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (p[i] >= 1) {
+                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1.0)) * pow(v, q[i]) * pow(w, r[i]);
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+    Given element structure, return value of the first partial derivative with respect to
+    local coordinate v of a quantity x given at element nodes at local coordinate point
+    u, v, w inside the element. Element basis functions are used to compute the value.
+ 
+    Element_t *element  ->  element struncture
+    double *x:          ->  nodal values of the quantity whose partial derivative is required
+    double u,v, w       ->  points at which to evaluate the partial derivative
+ 
+    Return first partial derivative in v of quantity x at point u,v,w y = @x(u,v,w)/@v
+ 
+**********************************************************************************************/
+-(double)firstDerivativeV3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+    
+    int i, n;
+    int *p, *q, *r;
+    double y, s;
+    double *coeff;
+    
+    if (element->Type.ElementCode == 605) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( -(1.0-u) + u*w *s ) / 4.0;
+        y = y + x[1] * ( -(1.0+u) - u*w *s ) / 4.0;
+        y = y + x[2] * ( (1.0+u) + u*w *s ) / 4.0;
+        y = y + x[3] * ( (1.0-u) - u*w *s ) / 4.0;
+        return y;
+    } else if (element->Type.ElementCode == 613) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( -( (1.0-u) * (1.0-v) - w + u*v*w *s ) + (-u-v-1.0) * ( -(1.0-u) + u*w *s ) ) / 4.0;
+        
+        y = y + x[1] * ( -( (1.0+u) * (1.0-v) - w - u*v*w *s ) + (u-v-1.0) * ( -(1.0+u) - u*w *s ) ) / 4.0;
+        
+        y = y + x[2] * ( ( (1.0+u) * (1.0+v) - w + u*v*w *s ) + (u+v-1.0) * ( (1.0+u) + u*w *s ) ) / 4.0;
+        
+        y = y + x[3] * ( ( (1.0-u) * (1.0+v) - w - u*v*w *s ) + (-u+v-1.0) * ( (1.0-u) - u*w *s ) ) / 4.0;
+        
+        y = y + x[4] * 0.0;
+        
+        y = y - x[5] * (1.0+u-w)*(1.0-u-w) * s / 2.0;
+        y = y + x[6] * ( (1.0-v-w)*(1.0+u-w) - (1.0+v-w)*(1.0+u-w) ) * s / 2.0;
+        y = y + x[7] * (1.0+u-w)*(1.0-u-w) * s / 2.0;
+        y = y + x[8] * ( (1.0-v-w)*(1.0-u-w) - (1.0+v-w)*(1.0-u-w) ) * s / 2.0;
+        
+        y = y - x[9] * w * (1.0-u-w) * s;
+        y = y - x[10] * w * (1.0+u-w) * s;
+        y = y + x[11] * w * (1.0+u-w) * s;
+        y = y + x[12] * w * (1.0-u-w) * s;
+        
+        return y;
+    }
+    
+    y = 0.0;
+    for (n=0; element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            r = element->Type.BasisFunctions[n].r;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (q[i] >= 1) {
+                    s = s + q[i] * coeff[i] * pow(u, p[i]) * pow(v, (q[i]-1.0)) * pow(w, r[i]);
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+
+    return y;
+}
+
+/**********************************************************************************************
+ 
+ Given element structure, return value of the first partial derivative with respect to
+ local coordinate v of a quantity x given at element nodes at local coordinate point
+ u, v, w inside the element. Element basis functions are used to compute the value.
+ 
+ Element_t *element  ->  element struncture
+ double *x:          ->  nodal values of the quantity whose partial derivative is required
+ double u,v, w       ->  points at which to evaluate the partial derivative
+ 
+ Return first partial derivative in w of quantity x at point u,v,w y = @x(u,v,w)/@w
+ 
+**********************************************************************************************/
+-(double)firstDerivativeW3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+    
+    int i, n;
+    int *p, *q, *r;
+    double y, s;
+    double *coeff;
+    
+    if (element->Type.ElementCode == 605) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[1] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[2] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[3] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[4];
+        return y;
+    } else if (element->Type.ElementCode == 613) {
+        if (w == 1) w = 1.0-1.0e-12;
+        s = 1.0 / (1.0-w);
+        
+        y = 0.0;
+        y = y + x[0] * (-u-v-1.0) * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[1] * (u-v-1.0) * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[2] * (u+v-1.0) * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[3] * (-u+v-1.0) * ( -1.0 - u*v*pow(s, 2.0) ) /4.0;
+        
+        y = y + x[4] * (4.0*w-1.0);
+        
+        y = y + x[5] * ( ( -(1.0-u-w)*(1.0-v-w) - (1.0+u-w)*(1.0-v-w) - (1.0+u-w)*(1.0-u-w) ) * s + (1.0+u-w)*(1.0-u-w)*(1.0-v-w) * pow(s, 2.0) ) / 2.0;
+        
+        y = y + x[6] * ( ( -(1.0-v-w)*(1.0+u-w) - (1.0+v-w)*(1.0+u-w) - (1.0+v-w)*(1.0-v-w) ) * s + (1.0+v-w)*(1.0-v-w)*(1.0+u-w) * pow(s, 2.0) ) / 2.0;
+        
+        y = y + x[7] * ( ( -(1.0-u-w)*(1.0+v-w) - (1.0+u-w)*(1.0+v-w) - (1.0+u-w)*(1.0-u-w) ) * s + (1.0+u-w)*(1.0-u-w)*(1.0+v-w) * pow(s, 2.0) ) / 2.0;
+        
+        y = y + x[8] * ( ( -(1.0-v-w)*(1.0-u-w) - (1.0+v-w)*(1.0-u-w) - (1.0+v-w)*(1.0-v-w) ) * s + (1.0+v-w)*(1.0-v-w)*(1.0-u-w) * pow(s, 2.0) ) / 2.0;
+        
+        y = y + x[9] * ( ( (1.0-u-w)*(1.0-v-w) - w * (1.0-v-w) - w * (1.0-u-w) ) * s + w * (1.0-u-w) * (1.0-v-w) * pow(s, 2.0) );
+        
+        y = y + x[10] * ( ( (1.0+u-w)*(1.0-v-w) - w * (1.0-v-w) - w * (1.0+u-w) ) * s + w * (1.0+u-w) * (1.0-v-w) * pow(s, 2.0) );
+        
+        y = y + x[11] * ( ( (1.0+u-w)*(1.0+v-w) - w * (1.0+v-w) - w * (1.0+u-w) ) * s + w * (1.0+u-w) * (1.0+v-w) * pow(s, 2.0) );
+        
+        y = y + x[12] * ( ( (1.0-u-w)*(1.0+v-w) - w * (1.0+v-w) - w * (1.0-u-w) ) * s + w * (1.0-u-w) * (1.0+v-w) * pow(s, 2.0) );
+        
+        return y;
+    }
+    
+    y = 0.0;
+    for (n=0; element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            r = element->Type.BasisFunctions[n].r;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                if (r[i] >= 1) {
+                    s = s + r[i] * coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, (r[i]-1.0));
+                }
+            }
+            y = y + s * x[n];
+        }
+    }
+
+    return y;
+}
+
+/**********************************************************************************************
+
+    Given element structure, return value of a quantity x given at element nodes at local
+    coordinates point u (1D), (u,v) (2D), (u,v,w) (3D) inside the element. Element basis
+    functions are used to compute the value. This wrapper method will call the corresponding
+    class private methods according to the element dimension.
+ 
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u, v, w      ->  points at which to evaluate the partial derivative
+    double *basis       ->  Values of the basis functions at the point (u,v,z) can be given if
+                            known, otherwise they will be computed from the definition.
+ 
+    Return y = x(u,v,w)
+
+**********************************************************************************************/
+-(double)interpolateInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double *)basis {
+    
+    int i, n;
+    double value, sum;
+    
+    if (basis != NULL) {
+        // Basis function values given, just sum the result
+        n = element->Type.NumberOfNodes;
+        sum = 0.0;
+        for (i=0; i<n; i++) {
+            sum = sum + (x[i]*basis[i]);
+        }
+        return value = sum;
+    } else {
+        // Otherwise compute from the definition
+        switch (element->Type.dimension) {
+            case 0:
+                value = x[0];
+                break;
+            case 1:
+                value = [self FEMElementDescription_interpolate1DInElement:element nodalValues:x evalutationPoint:u];
+                break;
+            case 2:
+                value = [self FEMElementDescription_interpolate2DInElement:element nodalValues:x evaluatedAt:u andAt:v];
+                break;
+            case 3:
+                value = [self FEMElementDescription_interpolate3DInElement:element nodalValues:x evaluatedAt:u andAt:v andAt:w];
+                break;
+        }
+        return value;
+    }
+}
+
+/***************************************************************************************
+ 
+    Normals will point from more dense material to less dense material or outwards, if
+    no elements of the other side.
+ 
+***************************************************************************************/
+ 
+-(void)checkNormalDirectionInBDElement:(Element_t *)boundary forNormals:(double *)normals mesh:(FEMMesh *)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL *)turn {
+    
+    int i, n, k;
+    double x1, y1, z1;
+    double *nx, *ny, *nz;
+    Element_t *element, *rightElement, *leftElement;
+    Nodes_t *nodes;
+    
+    if (boundary->BoundaryInfo == NULL) return;
+    
+    element = NULL;
+    rightElement = NULL;
+    leftElement = NULL;
+    nodes = NULL;
+    
+    nodes = mesh.getNodes;
+    
+    k = boundary->BoundaryInfo->Outbody;
+    
+    leftElement = boundary->BoundaryInfo->Left;
+    
+    if (leftElement != NULL) {
+        rightElement = boundary->BoundaryInfo->Right;
+        
+        if (rightElement != NULL) {
+            if (k > 0) {
+                if (leftElement->BodyID == k) {
+                    element = rightElement;
+                } else {
+                    element = leftElement;
+                }
+            } else {
+                if (leftElement->BodyID > rightElement->BodyID) {
+                    element = leftElement;
+                } else {
+                    element = rightElement;
+                }
+            }
+        } else {
+            element = leftElement;
+        }
+    } else {
+        element = boundary->BoundaryInfo->Right;
+    }
+    
+    if (element == NULL) return;
+    
+    n = element->Type.NumberOfNodes;
+    
+    nx = doublevec(0, n-1);
+    ny = doublevec(0, n-1);
+    nz = doublevec(0, n-1);
+    
+    for (i=0; i<n; i++) {
+        nx[i] = nodes[element->NodeIndexes[i]].x;
+        ny[i] = nodes[element->NodeIndexes[i]].y;
+        nz[i] = nodes[element->NodeIndexes[i]].z;
+    }
+    
+    switch (element->Type.ElementCode / 100) {
+        case 2:
+        case 4:
+        case 8:
+            x1 = [self interpolateInElement:element nodalValues:nx evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+            y1 = [self interpolateInElement:element nodalValues:ny evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+            z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+            break;
+        case 3:
+            x1 = [self interpolateInElement:element nodalValues:nx evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            y1 = [self interpolateInElement:element nodalValues:ny evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            break;
+        case 5:
+            x1 = [self interpolateInElement:element nodalValues:nx evaluatedAt:1.0/4.0 andAt:1.0/4.0 andAt:1.0/4.0 withBasis:NULL];
+            y1 = [self interpolateInElement:element nodalValues:ny evaluatedAt:1.0/4.0 andAt:1.0/4.0 andAt:1.0/4.0 withBasis:NULL];
+            z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:1.0/4.0 andAt:1.0/4.0 andAt:1.0/4.0 withBasis:NULL];
+            break;
+        case 6:
+            x1 = [self interpolateInElement:element nodalValues:nx evaluatedAt:0.0 andAt:0.0 andAt:1.0/3.0 withBasis:NULL];
+            y1 = [self interpolateInElement:element nodalValues:ny evaluatedAt:0.0 andAt:0.0 andAt:1.0/3.0 withBasis:NULL];
+            z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:0.0 andAt:0.0 andAt:1.0/3.0 withBasis:NULL];
+            break;
+        case 7:
+            x1 = [self interpolateInElement:element nodalValues:nx evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            y1 = [self interpolateInElement:element nodalValues:ny evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+            break;
+        default:
+            errorfunct("checkNormalDirectionInBDElement", "Invalid element code for parent element.");
+            break;
+    }
+    
+    x1 = x1 - x;
+    y1 = y1 - y;
+    z1 = z1 - z;
+    
+    if (turn != NULL) *turn = NO;
+    if (x1*normals[0] + y1*normals[1] + z1*normals[2] > 0) {
+        if (element->BodyID != k) {
+            for (i=0; i<3; i++) {
+                normals[i] = -normals[i];
+            }
+            if (turn != NULL) *turn = YES;
+        }
+    } else if (element->BodyID == k) {
+        for (i=0; i<3; i++) {
+            normals[i] = -normals[i];
+        }
+        if (turn != NULL) *turn = YES;
+    }
+    
+    free_dvector(nx, 0, n-1);
+    free_dvector(ny, 0, n-1);
+    free_dvector(nz, 0, n-1);
+}
+
+/***************************************************************************************
+ 
+    Gives the normal vector of a boundary element.
+    For non-curved elements, the normal vector does not depend on the local coordinate
+    while otherwise it does. There are different uses of the function where some do 
+    not have the luxury of knowing the local coordinates and hence the center point is
+    used as default.
+    
+***************************************************************************************/
+-(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals {
+    
+    int i;
+    double u, v, auu, auv, avv, detA, x, y, z;
+    double dxdu, dxdv, dydu, dydv, dzdu, dzdv;
+    double *nx, *ny, *nz;
+    BOOL doCheck;
+    
+    nx = doublevec(0, boundary->Type.NumberOfNodes-1);
+    ny = doublevec(0, boundary->Type.NumberOfNodes-1);
+    nz = doublevec(0, boundary->Type.NumberOfNodes-1);
+    
+    for (i=0; i<boundary->Type.NumberOfNodes; i++) {
+        nx[i] = nodes[i].x;
+        ny[i] = nodes[i].y;
+        nz[i] = nodes[i].z;
+    }
+    
+    switch (boundary->Type.dimension) {
+        case 0:
+            normals[0] = 1.0;
+            normals[1] = 0.0;
+            normals[2] = 0.0;
+            break;
+        case 1:
+            if (u0 != NULL) {
+                u = *u0;
+            } else u = 0.0;
+            
+            dxdu = [self firstDerivative1DInElement:boundary nodalValues:nx evalutationPoint:u];
+            dydu = [self firstDerivative1DInElement:boundary nodalValues:ny evalutationPoint:u];
+            
+            detA = dxdu*dxdu + dydu*dydu;
+            if (detA <= 0.0) {
+                memset( normals, 0.0, (3*sizeof(normals)) );
+                return;
+            }
+            detA = 1.0 / sqrt(detA);
+            normals[0] = -dydu * detA;
+            normals[1] = dxdu * detA;
+            normals[2] = 0.0;
+        case 2:
+            if (u0 != NULL) {
+                u = *u0;
+                v = *v0;
+            } else {
+                if (boundary->Type.ElementCode / 100 == 3) {
+                    u = 1.0 / 3.0;
+                    v = 1.0 / 3.0;
+                } else {
+                    u = 0.0;
+                    v = 0.0;
+                }
+            }
+            
+            dxdu = [self firstDerivativeU2DInElement:boundary nodalValues:nx evaluatedAt:u andAt:v];
+            dydu = [self firstDerivativeU2DInElement:boundary nodalValues:ny evaluatedAt:u andAt:v];
+            dzdu = [self firstDerivativeU2DInElement:boundary nodalValues:nz evaluatedAt:u andAt:v];
+            
+            dxdv = [self firstDerivativeV2DInElement:boundary nodalValues:nx evaluatedAt:u andAt:v];
+            dydv = [self firstDerivativeV2DInElement:boundary nodalValues:ny evaluatedAt:u andAt:v];
+            dzdv = [self firstDerivativeV2DInElement:boundary nodalValues:nz evaluatedAt:u andAt:v];
+            
+            auu = dxdu*dxdu + dydu*dydu + dzdu*dzdu;
+            auv = dxdu*dxdv + dydu*dydv + dzdu*dzdv;
+            avv = dxdv*dxdv + dydv*dydv + dzdv*dzdv;
+            
+            detA = 1.0 / sqrt(auu*avv - auv*auv);
+            
+            normals[0] = (dydu * dzdv - dydv * dzdu) * detA;
+            normals[1] = (dxdv * dzdu - dxdu * dzdv) * detA;
+            normals[2] = (dxdu * dydv - dxdv * dydu) * detA;
+            
+        default:
+            errorfunct("nomalVectorForBDElement", "Invalid dimension for determining normal!");
+            break;
+    }
+    
+    doCheck = NO;
+    if (check != NULL) doCheck = *check;
+    
+    if (doCheck == YES) {
+        switch (boundary->Type.ElementCode / 100) {
+            case 1:
+                x = nx[0];
+                y = nx[0]; // TODO: Is that really correct, isn't y = ny[0]?
+                z = nz[0];
+                break;
+            case 2:
+            case 4:
+                x = [self interpolateInElement:boundary nodalValues:nx evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                y = [self interpolateInElement:boundary nodalValues:ny evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                z = [self interpolateInElement:boundary nodalValues:nz evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                break;
+            case 3:
+                x = [self interpolateInElement:boundary nodalValues:nx evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                y = [self interpolateInElement:boundary nodalValues:ny evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                z = [self interpolateInElement:boundary nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                break;
+        }
+        [self checkNormalDirectionInBDElement:boundary forNormals:normals mesh:mesh x:x y:y z:z turn:NULL];
+    }
+    
+    free_dvector(nx, 0, boundary->Type.NumberOfNodes-1);
+    free_dvector(ny, 0, boundary->Type.NumberOfNodes-1);
+    free_dvector(nz, 0, boundary->Type.NumberOfNodes-1);
+}
+
+/***************************************************************************************************
+ 
+    Convert global coordinates x, y, z, inside element to local coordinates u, v, w, of the element
+    TODO: Needs support for p elements
+ 
+***************************************************************************************************/
+-(void)globalToLocalFromElement:(Element_t *)element elementNodes:(Nodes_t *)nodes localU:(double *)u localV:(double *)v localW:(double *)w x:(double)x y:(double)y z:(double)z model:(FEMModel *)aModel {
+    
+    int i, j, n;
+    int const maxIter = 50;
+    double r, s, t, delta[3], prevdelta[3], **J, bf[3], det, acc, err, sum;
+    double *nodesX, *nodesY, *nodesZ;
+    BOOL converged;
+    FEMUtilities *utilities;
+
+    *u = 0.0;
+    *v = 0.0;
+    *w = 0.0;
+    if (element->Type.dimension == 0) return;
+    
+    utilities = [[FEMUtilities alloc] init];
+    
+    J = doublematrix(0, 2, 0, 2);
+    
+    n = element->Type.NumberOfNodes;
+    nodesX = doublevec(0, n-1);
+    nodesY = doublevec(0, n-1);
+    nodesZ = doublevec(0, n-1);
+    
+    for (i=0; i<n; i++) {
+        nodesX[i] = nodes[i].x;
+        nodesY[i] = nodes[i].y;
+        nodesZ[i] = nodes[i].z;
+    }
+    
+    acc = DBL_EPSILON;
+    converged = NO;
+    
+    for (i=0; i<maxIter; i++) {
+        
+        r = [self interpolateInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - x;
+        s = [self interpolateInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - y;
+        t = [self interpolateInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - z;
+        
+        err = pow(r, 2.0) + pow(s, 2.0) + pow(t, 2.0);
+        
+        if (err < acc) {
+            converged = YES;
+            break;
+        }
+        
+        memcpy(prevdelta, delta, sizeof(delta));
+        memset( delta, 0.0, sizeof(delta) );
+        
+        switch (element->Type.dimension) {
+            case 1:
+                J[0][0] = [self firstDerivative1DInElement:element nodalValues:nodesX evalutationPoint:*u];
+                J[1][0] = [self firstDerivative1DInElement:element nodalValues:nodesY evalutationPoint:*u];
+                J[2][0] = [self firstDerivative1DInElement:element nodalValues:nodesZ evalutationPoint:*u];
+                
+                sum = 0.0;
+                for (j=0; j<3; j++) {
+                    sum = sum + pow(J[j][0], 2.0);
+                }
+                det = sum;
+                delta[0] = (r * J[0][0] + s * J[1][0] + t * J[2][0]) / det;
+                break;
+                
+            case 2:
+                J[0][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v];
+                J[0][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v];
+                J[1][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v];
+                J[1][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v];
+                
+                switch (aModel.dimension) {
+                    case 3:
+                        J[2][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v];
+                        J[2][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v];
+                        
+                        delta[0] = r;
+                        delta[1] = s;
+                        delta[2] = t;
+                        cblas_dgemv(CblasRowMajor, CblasTrans, 3, 3, 1.0, *J, 3, delta, 1, 0.0, delta, 1);
+                        r = delta[0];
+                        s = delta[1];
+                        
+                        cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, 3, 3, 2, 1.0, *J, 3, *J, 3, 0.0, *J, 3);
+                        delta[2] = 0.0;
+                        break;
+                }
+            
+                bf[0] = r;
+                bf[1] = s;
+                bf[2] = 0.0;
+                
+                [utilities solveLinearSystem2x2:J :delta :bf];
+                
+            case 3:
+                J[0][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
+                J[0][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
+                J[0][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
+                
+                J[1][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
+                J[1][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
+                J[1][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
+                
+                J[2][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
+                J[2][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
+                J[2][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
+                
+                bf[0] = r;
+                bf[1] = s;
+                bf[2] = t;
+                
+                
+                [utilities solveLinearSystem3x3:J :delta :bf];
+        }
+        
+        // If the iteration does not proceed, try with some relaxation
+        if (i > 9) {
+            for (j=0; j<3; j++) {
+                delta[j] = 0.5 * delta[j];
+            }
+        }
+        
+        *u = *u - delta[0];
+        *v = *v - delta[1];
+        *w = *w - delta[2];
+        
+        // If some values is suggested over and over again, then exit.
+        // This may be a sign that the node is off-plane and can not
+        // be described within the element.
+        sum = 0.0;
+        for (j=0; j<3; j++) {
+            sum = sum + fabs(delta[i]-prevdelta[j]);
+        }
+        if (sum < DBL_MIN) break;
+    }
+    
+    if (converged == NO) {
+        if (err > sqrt(acc)) {
+            if (i >= maxIter) {
+                NSLog(@"globalToLocalFromElement: did not converge\n");
+                NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
+                NSLog(@"err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
+                NSLog(@"delta, %f %f %f\n", delta[0], delta[1], delta[2]);
+                NSLog(@"prevdelta, %f %f %f\n", prevdelta[0], prevdelta[1], prevdelta[2]);
+                NSLog(@"dim, %d, delta, %f %f %f, uvw, %f, %f, %f\n", element->Type.dimension, delta[0], delta[1], delta[2], *u,*v,*w);
+                NSLog(@"x: %f\n", x);
+                for (i=0; i<element->Type.NumberOfNodes; i++) {
+                    NSLog(@"%f ", nodes[i].x);
+                }
+                printf("\n");
+                NSLog(@"y: %f\n", y);
+                for (i=0; i<element->Type.NumberOfNodes; i++) {
+                    NSLog(@"%f ", nodes[i].y);
+                }
+                printf("\n");
+                NSLog(@"y: %f\n", z);
+                for (i=0; i<element->Type.NumberOfNodes; i++) {
+                    NSLog(@"%f ", nodes[i].z);
+                }
+                printf("\n");
+            } else {
+                NSLog(@"globalToLocalFromElement: node may be out of element.");
+                NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
+            }
+        }
+    }
+    
+    free_dmatrix(J, 0, 2, 0, 2);
+    free_dvector(nodesX, 0, n-1);
+    free_dvector(nodesY, 0, n-1);
+    free_dvector(nodesZ, 0, n-1);
 }
     
 

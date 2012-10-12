@@ -49,9 +49,9 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber;
 -(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution;
 -(double)FEMKernel_computeNorm:(FEMSolution *)solution: (int)n: (double *)values;
--(void)FEMKernel_computeChange:(FEMSolution *)solution: (BOOL)steadyState: (int*)nsize: (double *)values: (double *)values0;
--(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution;
--(void)FEMKernel_solveSystem:(FEMSolution *)solution;
+-(void)FEMKernel_computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0;
+-(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel;
+-(void)FEMKernel_solveSystem:(FEMSolution *)solution model:(FEMModel *)aModel;
 
 // Check passive element
 -(BOOL)FEMKernel_checkPassiveElement:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element;
@@ -703,7 +703,7 @@ static int PRECOND_VANKA     =  560;
 }
 
 
--(void)FEMKernel_computeChange:(FEMSolution *)solution :(BOOL)steadyState :(int *)nsize :(double *)values :(double *)values0 {
+-(void)FEMKernel_computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 {
     
     NSString *convergenceType, *solverName;
     int i, n, relaxAfter, iterNo;
@@ -716,9 +716,12 @@ static int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers, *itervContainers, *containers;
     FEMPrecondition *preconditioning;
+    FEMUtilities *utilities;
     
     preconditioning = [[FEMPrecondition alloc] init];
     varContainers = solution.variable.getContainers;
+    
+    utilities = [[FEMUtilities alloc] init];
     
     relax = NO;
     
@@ -743,7 +746,7 @@ static int PRECOND_VANKA     =  560;
             relax = (relaxation != 1.0) ? YES: NO;
         }
         
-        iterV = (solution.mesh.variables)[@"coupled iter"];
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Coupled iter" onlySearch:NULL maskName:NULL info:&stat];
         itervContainers = iterV.getContainers;
         iterNo = (int)itervContainers->Values[0];
         itervContainers = NULL;
@@ -785,7 +788,7 @@ static int PRECOND_VANKA     =  560;
             convergenceAbsolute = NO;
         }
         
-        iterV = (solution.mesh.variables)[@"nonlin iter"];
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
         itervContainers = iterV.getContainers;
         iterNo = (int)itervContainers->Values[0];
         solution.variable.nonLinIter = (int)itervContainers->Values[0];
@@ -1011,13 +1014,13 @@ static int PRECOND_VANKA     =  560;
         }
         
         if (doIt == YES) {
-            timeStepVar = (solution.mesh.variables)[@"timestep size"];
+            timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Time step size" onlySearch:NULL maskName:NULL info:&stat];
             containers = timeStepVar.getContainers;
             dt = containers->Values[0];
             str2 = @" velocity";
             str1 = [NSMutableString stringWithString:solution.variable.name];
             [str1 appendString:str2];
-            veloVar = (solution.mesh.variables)[str1];
+            veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
             containers = veloVar.getContainers;
             for (i=0; i<n; i++) {
                 containers->Values[i] = (x[i] - varContainers->PrevValues[i][0]) / dt;
@@ -1036,7 +1039,7 @@ static int PRECOND_VANKA     =  560;
             if ([(solution.solutionInfo)[@"Calculate derivative"]  boolValue] == YES) {
                 
                 if (iterNo > 1) {
-                    timeStepVar = (solution.mesh.variables)[@"derivative eps"];
+                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Derivative eps" onlySearch:NULL maskName:NULL info:&stat];
                     if (timeStepVar != nil) {
                         containers = timeStepVar.getContainers;
                         eps = containers->Values[0];
@@ -1052,7 +1055,7 @@ static int PRECOND_VANKA     =  560;
                     str2 = @" derivative";
                     str1 = [NSMutableString stringWithString:solution.variable.name];
                     [str1 appendString:str2];
-                    veloVar = (solution.mesh.variables)[str1];
+                    veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
                     if (veloVar != nil) {
                         NSLog(@"FEMKernel_computeChange: Computing variable: %@\n", str1);
                         containers = veloVar.getContainers;
@@ -1074,7 +1077,7 @@ static int PRECOND_VANKA     =  560;
     varContainers = NULL;
 }
 
--(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution {
+-(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel {
     
     int i, j, n;
     
@@ -1305,14 +1308,14 @@ static int PRECOND_VANKA     =  560;
     [self FEMKernel_backRotateNTSystem:solution];
     
     // Compute the change of the solution with different methods
-    [self FEMKernel_computeChange:solution :NO :&n :varContainers->Values :NULL];
+    [self FEMKernel_computeChange:solution model:aModel isSteadyState:NO nsize:&n values:varContainers->Values values0:NULL];
     norm = solution.variable.norm;
     
     matContainers = NULL;
     varContainers = NULL;
 }
 
--(void)FEMKernel_solveSystem:(FEMSolution *)solution {
+-(void)FEMKernel_solveSystem:(FEMSolution *)solution model:(FEMModel *)aModel {
     
     int n, i;
     double relaxation, beta, gamma;
@@ -1368,7 +1371,7 @@ static int PRECOND_VANKA     =  560;
     
     // TODO: Add support for constrained matrix
     
-    [self FEMKernel_solveLinearSystem:solution];
+    [self FEMKernel_solveLinearSystem:solution model:aModel];
     
     if ([solution timeOrder] == 2) {
         if (varContainers->PrevValues != NULL) {
@@ -1404,7 +1407,7 @@ static int PRECOND_VANKA     =  560;
 -(BOOL)FEMKernel_checkPassiveElement:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element {
     
     int body_id, bf_id, nbNodes;
-    double *passive;
+    listBuffer passive = { NULL, NULL, NULL, NULL, 0, 0, 0};
     NSMutableString *passName;
     NSString *str;
     BOOL isPassive, found;
@@ -1420,7 +1423,6 @@ static int PRECOND_VANKA     =  560;
     listUtil = [[FEMListUtilities alloc] init];
     
     nbNodes = element->Type.NumberOfNodes;
-    passive = doublevec(0, nbNodes-1);
     
     if ((model.bodies)[body_id] == nil) {
         return isPassive;
@@ -1435,15 +1437,16 @@ static int PRECOND_VANKA     =  560;
     // Returns a bodyForce object at index bf_id
     bodyForceAtBodyID = (model.bodyForces)[bf_id-1];
     
-    found = [listUtil listGetReal:model inArray:bodyForceAtBodyID.valuesList forVariable:passName numberOfNodes:nbNodes indexes:element->NodeIndexes resultArray:passive minValue:NULL maxValue:NULL];
+    found = [listUtil listGetReal:model inArray:bodyForceAtBodyID.valuesList forVariable:passName numberOfNodes:nbNodes indexes:element->NodeIndexes buffer:&passive minValue:NULL maxValue:NULL];
     if (found == YES) {
-        if ( count(passive, '>', 0.0, nbNodes) > count(passive, '<', 0.0, nbNodes) ) {
+        if ( count(passive.vector, '>', 0.0, nbNodes) > count(passive.vector, '<', 0.0, nbNodes) ) {
             isPassive = YES;
         }
     
     }
     
-    free_dvector(passive, 0, nbNodes-1);
+    free_dvector(passive.vector, 0, passive.m-1);
+    passive.vector = NULL;
     
     return isPassive;
 }
@@ -1605,8 +1608,9 @@ static int PRECOND_VANKA     =  560;
     double s, t;
     double **prevSol, *matrixForce, *lForce, *buffer;
     double *dts;
-    BOOL constantDt;
+    BOOL constantDt, found;
     FEMTimeIntegration *timeIntegration;
+    FEMUtilities *utilities;
     NSString *method;
     FEMVariable *dtVar;
     matrixArraysContainer *matContainers;
@@ -1623,6 +1627,7 @@ static int PRECOND_VANKA     =  560;
     buffer = doublevec(0, (dofs*n)-1);
     
     timeIntegration = [[FEMTimeIntegration alloc] init];
+    utilities = [[FEMUtilities alloc] init];
     
     if (solution.matrix.isLumped == YES) {
         s = 0.0;
@@ -1682,7 +1687,7 @@ static int PRECOND_VANKA     =  560;
         dts[0] = dt;
         constantDt = NO;
         if (order > 1) {
-            dtVar = (solution.mesh.variables)[@"time step size"];
+            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"Time step size" onlySearch:NULL maskName:NULL info:&found];
             containers = dtVar.getContainers;
             for (i=1; i<order; i++) {
                 dts[i] = containers->PrevValues[0][i-1];
@@ -1807,40 +1812,29 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_setElementLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (BOOL *)doneLoad: (int)n: (int)dof: (int)ndofs {
     
     int j, k, l, k1;
-    double *work;
-    double ***workA;
+    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
-    FEMValueList *valueList;
     NSString *str;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
-    valueListArraysContainer *valContainers;
     BOOL stat;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
-    
-    work = doublevec(0, n-1);
-    
+        
     listUtil = [[FEMListUtilities alloc] init];
     
     if (dof >= 0) {
         
-        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         if (stat == NO) {
             [name appendString:@" dofs"];
             str = [NSString stringWithString:name];
-            stat = [listUtil listGetReal:model inArray:values forVariable:str numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
         }
         
     } else {
-        
-        valueList = [listUtil listFindVariable:name inArray:values];
-        if (valueList != nil) {
-            valContainers = valueList.getContainers;
-            workA = d3tensor(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2-1, 0, n-1);
-        }
-        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&workA];
     }
     
     if (stat == YES) {
@@ -1854,11 +1848,11 @@ static int PRECOND_VANKA     =  560;
             if (k >= 0) {
                 if (dof >= 0) {
                     k = ndofs * k + dof;
-                    matContainers->RHS[k] = matContainers->RHS[k] + work[j];
+                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j];
                 } else {
-                    for (l=0; l<min(ndofs, valContainers->sizeFValues1); l++) {
+                    for (l=0; l<min(ndofs, workA.m); l++) {
                         k1 = ndofs * k + l;
-                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA[l][0][j];
+                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j];
                     }
                 }
             }
@@ -1866,14 +1860,15 @@ static int PRECOND_VANKA     =  560;
     
     }
     
-    if (workA != NULL) {
-        free_d3tensor(workA, 0,  valContainers->sizeFValues1-1, 0,  valContainers->sizeFValues2-1, 0, n-1);
-        workA = NULL;
-        valContainers = NULL;
+    if (workA.tensor != NULL) {
+        free_d3tensor(workA.tensor, 0,  workA.m-1, 0,  workA.n-1, 0, workA.p-1);
+        workA.tensor = NULL;
+    }
+    if (work.vector != NULL) {
+        free_dvector(work.vector, 0, work.m-1);
+        work.vector = NULL;
     }
     
-    free_dvector(work, 0, n-1);
-    valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
 }
@@ -1881,35 +1876,25 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_setPointLoads:(FEMModel *)model: (FEMSolution *)solution: (Element_t *)element: (NSArray *)values: (NSMutableString *)name: (int*)indexes: (int)n: (int)dof: (int)ndofs {
     
     int j, k, l, k1;
-    double *work;
-    double ***workA;
+    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
-    FEMValueList *valueList;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
-    valueListArraysContainer *valContainers;
     BOOL stat;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    work = doublevec(0, n-1);
-    
     listUtil = [[FEMListUtilities alloc] init];
     
     if (dof >= 0) {
         
-        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         
     } else {
         
-        valueList = [listUtil listFindVariable:name inArray:values];
-        if (valueList != nil) {
-            valContainers = valueList.getContainers;
-            workA = d3tensor(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2-1, 0, n-1);
-        }
-        
-        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&workA];
     }
     
     if (stat == YES) {
@@ -1925,11 +1910,11 @@ static int PRECOND_VANKA     =  560;
             if (k >= 0) {
                 if (dof >= 0) {
                     k = ndofs * k + dof;
-                    matContainers->RHS[k] = matContainers->RHS[k] + work[j];
+                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j];
                 } else {
-                    for (l=0; l<min(ndofs, valContainers->sizeFValues1); l++) {
+                    for (l=0; l<min(ndofs, workA.m); l++) {
                         k1 = ndofs * k + l;
-                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA[l][0][j];
+                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j];
                     }
                 }
             }
@@ -1937,14 +1922,14 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    if (workA != NULL) {
-        free_d3tensor(workA, 0,  valContainers->sizeFValues1-1, 0,  valContainers->sizeFValues2-1, 0, n-1);
-        workA = NULL;
-        valContainers = NULL;
+    if (workA.tensor != NULL) {
+        free_d3tensor(workA.tensor, 0,  workA.m-1, 0,  workA.n-1, 0, workA.p-1);
+        workA.tensor = NULL;
     }
-    
-    free_dvector(work, 0, n-1);
-    valueList = nil;
+    if (work.vector != NULL) {
+        free_dvector(work.vector, 0, work.m-1);
+        work.vector = NULL;
+    }
     matContainers = NULL;
     varContainers = NULL;
 }
@@ -1955,17 +1940,17 @@ static int PRECOND_VANKA     =  560;
     
     int i, j, k, l, m, dim, k1;
     BOOL checkNT, stat, all;
-    double *condition, *work, *rotvec;
-    double ***workA;
+    double *rotvec;
+    listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     NSMutableString *str;
     FEMListUtilities *listUtil;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
-    FEMValueList *valueList;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
     solutionArraysContainer *solContainers;
-    valueListArraysContainer *valContainers;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -1973,8 +1958,6 @@ static int PRECOND_VANKA     =  560;
     
     listUtil = [[FEMListUtilities alloc] init];
     
-    condition = doublevec(0, n-1);
-    work = doublevec(0, n-1);
     rotvec = doublevec(0, 2);
     
     dim = [model dimension];
@@ -1982,23 +1965,18 @@ static int PRECOND_VANKA     =  560;
     str = [NSMutableString stringWithString:name];
     [str appendString:@" dofs"];
     if (dof >= 0) {
-        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         if (stat == NO) {
-            stat = [listUtil listGetReal:model inArray:values forVariable:str numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+            stat = [listUtil listGetReal:model inArray:values forVariable:str numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         }
     } else {
-        valueList = [listUtil listFindVariable:name inArray:values];
-        if (valueList != nil) {
-            valContainers = valueList.getContainers;
-            workA = d3tensor(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2-1, 0, n-1);
-        }
-        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&workA];
     }
     
     if (stat == YES) {
         
         if (conditional == YES) {
-            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&condition minValue:NULL maxValue:NULL];
             conditional = (conditional == YES && stat == YES) ? YES : NO;
         }
         
@@ -2017,12 +1995,12 @@ static int PRECOND_VANKA     =  560;
                 }
             }
             if (all == YES) checkNT = NO;
-            if ([listUtil listGetLogical:model inArray:values forVariable:[solution normalTangentialName] info:stat] == YES) checkNT = NO;
+            if ([listUtil listGetLogical:model inArray:values forVariable:[solution normalTangentialName] info:&stat] == YES) checkNT = NO;
         }
         
         @autoreleasepool {
             for (j=0; j<n; j++) {
-                if (conditional == YES && condition[j] < 0.0) continue;
+                if (conditional == YES && condition.vector[j] < 0.0) continue;
                 k = varContainers->Perm[indexes[j]];
                 
                 if (k >= 0) {
@@ -2043,7 +2021,7 @@ static int PRECOND_VANKA     =  560;
                                             [self setMatrixElement:solution :l :l :1.0];
                                             solContainers->ntZeroingDone[m][k] = true;
                                         }
-                                        matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k]+work[j];
+                                        matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k]+work.vector[j];
                                     }
                                 }
                             }
@@ -2051,27 +2029,27 @@ static int PRECOND_VANKA     =  560;
                             k = offset + solution.variable.dofs * k + dof;
                             if (solution.matrix.format == MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k :work[j]];
+                                [bandMatrix sBand_setDirichlet:solution :k :work.vector[j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k :work[j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k :work.vector[j]];
                             } else {
-                                matContainers->RHS[k] = work[j];
+                                matContainers->RHS[k] = work.vector[j];
                                 [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
                                 [self setMatrixElement:solution :k :k :1.0];
                             }
                         }
                     } else {
-                        for (l=0; l<min(solution.variable.dofs, valContainers->sizeFValues1); l++) {
+                        for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
                             k1 = offset + solution.variable.dofs*k + l;
                             if (solution.matrix.format == MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k1 :workA[l][0][j]];
+                                [bandMatrix sBand_setDirichlet:solution :k1 :workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA[l][0][j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA.tensor[l][0][j]];
                             } else {
-                                matContainers->RHS[k1] = workA[l][0][j];
+                                matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
                                 [self setMatrixElement:solution :k1 :k1 :1.0];
                             }
@@ -2083,15 +2061,19 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    valueList = nil;
-    free_dvector(condition, 0, n-1);
-    free_dvector(work, 0, n-1);
-    free_dvector(rotvec, 0, 2);
-    if (workA != NULL) {
-        free_d3tensor(workA, 0,  valContainers->sizeFValues1-1, 0,  valContainers->sizeFValues2-1, 0, n-1);
-        workA = NULL;
-        valContainers = NULL;
+    if (condition.vector != NULL) {
+        free_dvector(condition.vector, 0, condition.m-1);
+        condition.vector = NULL;
     }
+    if (work.vector != NULL) {
+        free_dvector(work.vector, 0, work.m-1);
+        work.vector = NULL;
+    }
+    if (workA.tensor != NULL) {
+        free_d3tensor(workA.tensor, 0,  workA.m-1, 0,  workA.n-1, 0, workA.p-1);
+        workA.tensor = NULL;
+    }
+    free_dvector(rotvec, 0, 2);
     matContainers = NULL;
     varContainers = NULL;
     solContainers = NULL;
@@ -2101,46 +2083,36 @@ static int PRECOND_VANKA     =  560;
     
     int j, k, l, k1;
     BOOL stat;
-    double *condition, *work;
-    double ***workA;
+    listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
-    FEMValueList *valueList;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
-    valueListArraysContainer *valContainers;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    condition = doublevec(0, n-1);
-    work = doublevec(0, n-1);
-    
     listUtil = [[FEMListUtilities alloc] init];
     
     if (dof >= 0) {
-        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:work minValue:NULL maxValue:NULL];
+        stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
     } else {
-        valueList = [listUtil listFindVariable:name inArray:values];
-        if (valueList != nil) {
-            valContainers = valueList.getContainers;
-            workA = d3tensor(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2-1, 0, n-1);
-        }
-        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes resultArray:workA];
+        stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&workA];
     }
     
     if (stat == YES) {
         
-        memset(condition, 1.0, (n*sizeof(condition)) );
         if (conditional == YES) {
-            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+            stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&condition minValue:NULL maxValue:NULL];
             conditional = (conditional == YES && stat == YES) ? YES : NO;
         }
         
         @autoreleasepool {
             for (j=0; j<n; j++) {
-                if (conditional == YES && condition[j] < 0.0) continue;
+                if (conditional == YES && condition.vector[j] < 0.0) continue;
                 if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
                     warnfunct("FEMKernel_setPointValues", "Invalid node number");
                     continue;
@@ -2153,26 +2125,26 @@ static int PRECOND_VANKA     =  560;
                         k = offset + solution.variable.dofs*k + dof;
                         if (solution.matrix.format == MATRIX_SBAND) {
                             bandMatrix = [[FEMMatrixBand alloc] init];
-                            [bandMatrix sBand_setDirichlet:solution :k :work[j]];                        
+                            [bandMatrix sBand_setDirichlet:solution :k :work.vector[j]];
                         } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                             crsMatrix = [[FEMMatrixCRS alloc] init];
-                            [crsMatrix setSymmetricDirichletInGlobal:solution :k :work[j]];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution :k :work.vector[j]];
                         } else {
-                            matContainers->RHS[k] = work[j];
+                            matContainers->RHS[k] = work.vector[j];
                             [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
                             [self setMatrixElement:solution :k :k :1.0];
                         }
                     } else {
-                        for (l=0; l<min(solution.variable.dofs, valContainers->sizeFValues1); l++) {
+                        for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
                             k1 = offset + solution.variable.dofs*k + l;
                             if (solution.matrix.format== MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k1 :workA[l][0][j]];                        
+                                [bandMatrix sBand_setDirichlet:solution :k1 :workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA[l][0][j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA.tensor[l][0][j]];
                             } else {
-                                matContainers->RHS[k1] = workA[l][0][j];
+                                matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
                                 [self setMatrixElement:solution :k1 :k1 :1.0];
                             }                        
@@ -2182,15 +2154,20 @@ static int PRECOND_VANKA     =  560;
             }
         }
     }
+
     
-    valueList = nil;
-    free_dvector(condition, 0, n-1);
-    free_dvector(work, 0, n-1);
+    if (condition.vector != NULL) {
+        free_dvector(condition.vector, 0, condition.m-1);
+        condition.vector = NULL;
+    }
+    if (work.vector != NULL) {
+        free_dvector(work.vector, 0, work.m-1);
+        work.vector = NULL;
+    }
     
-    if (workA != NULL) {
-        free_d3tensor(workA, 0,  valContainers->sizeFValues1-1, 0,  valContainers->sizeFValues2-1, 0, n-1);
-        workA = NULL;
-        valContainers = NULL;
+    if (workA.tensor != NULL) {
+        free_d3tensor(workA.tensor, 0,  workA.m, 0,  workA.n-1, 0, workA.p-1);
+        workA.tensor = NULL;
     }
     matContainers = NULL;
     varContainers = NULL;
@@ -2240,12 +2217,12 @@ static int PRECOND_VANKA     =  560;
 
     boundaryConditionAtId = (model.boundaries)[this];
     
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == YES) {
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) {
         scale = -1.0;
-    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == YES) {
+    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) {
         scale = 1.0;
     } else {
-        scale = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:str3 info:stat minValue:NULL maxValue:NULL];
+        scale = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:str3 info:&stat minValue:NULL maxValue:NULL];
         if (stat == NO) return;
     }
     
@@ -2259,9 +2236,9 @@ static int PRECOND_VANKA     =  560;
     // for implicit one (otherwise) do the assembly of the projector
     str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
     str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == YES) {
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) {
         
-        var = (model.variables)[name];
+        var = [util getVariableFrom:model.variables model:model name:name onlySearch:NULL maskName:NULL info:&stat];
         containers = var.getContainers;
         
         for (i=0; i<boundaryConditionAtId.pMatrix.numberOfRows; i++) {
@@ -2285,7 +2262,7 @@ static int PRECOND_VANKA     =  560;
         }
         containers = NULL;
         
-    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == YES) {
+    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) {
         
         b = nil;
         a = solution.matrix.constraint;
@@ -2426,12 +2403,12 @@ static int PRECOND_VANKA     =  560;
     
     boundaryConditionAtId = (model.boundaries)[this];
     
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == YES) {
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) {
         scale = -1.0;
-    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == YES) {
+    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) {
         scale = 1.0;
     } else {
-        scale = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:str3 info:stat minValue:NULL maxValue:NULL];
+        scale = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:str3 info:&stat minValue:NULL maxValue:NULL];
         if (stat == NO) return;
     }
     
@@ -2443,8 +2420,8 @@ static int PRECOND_VANKA     =  560;
     
     str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
     str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == YES) return;
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) return;
     
     // Do the assembly of the projector
     for (i=0; i<boundaryConditionAtId.pMatrix.numberOfRows; i++) {
@@ -2533,7 +2510,7 @@ static int PRECOND_VANKA     =  560;
     
 }
 
--(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name resultArray:(double *)result {
+-(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name buffer:(listBuffer *)result {
     
     int n;
     BOOL found;
@@ -2547,7 +2524,7 @@ static int PRECOND_VANKA     =  560;
     
     listUtil = [[FEMListUtilities alloc] init];
     
-    found = [listUtil listGetReal:model inArray:list forVariable:name numberOfNodes:n indexes:element->NodeIndexes resultArray:result minValue:NULL maxValue:NULL];
+    found = [listUtil listGetReal:model inArray:list forVariable:name numberOfNodes:n indexes:element->NodeIndexes buffer:result minValue:NULL maxValue:NULL];
     
     return found;
     
@@ -2615,7 +2592,7 @@ static int PRECOND_VANKA     =  560;
 
 -(int)getElementDofs:(FEMSolution *)solution forElement:(Element_t *)element atIndexes:(int *)indexes {
     
-    int nb, i, j, k, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
+    int nb, i, j, k, bid, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
     Element_t *parent, *edges, *faces;
     solutionArraysContainer *solContainers;
@@ -2656,18 +2633,26 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
+    bid = element->BodyID;
+    if (bid == 0 && element->BoundaryInfo != NULL) {
+        if (element->BoundaryInfo->Left != NULL) bid = element->BoundaryInfo->Left->BodyID;
+        if (element->BoundaryInfo->Right != NULL) bid = element->BoundaryInfo->Right->BodyID;
+    }
+    if (bid == 0) bid = 1;
+    
     solContainers = solution.getContainers;
     
-    if (solContainers->defDofs[0] > 0) {
+    if (solContainers->defDofs[bid-1][0] > 0) {
         for (i=0; i>element->NDOFs; i++) {
             indexes[nb] = element->NodeIndexes[i];
             nb++;
         }
     }
-    if (all_in_range(solContainers->defDofs, '<', 0, 1, solContainers->sizeDefDofs) == 1) {
-        
-        solContainers = NULL;
-        return nb;
+    for (i=1; i<solContainers->size2DefDofs; i++) {
+        if (solContainers->defDofs[bid-1][i] < 0) {
+            solContainers = NULL;
+            return nb;
+        }
     }
     
     faceDofs = solution.mesh.maxFaceDofs;
@@ -3157,7 +3142,8 @@ static int PRECOND_VANKA     =  560;
 -(void)checkNormalTangentiality:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes atBoundary:(int)bc variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
     
     int i, j, k, m, dim;
-    double *condition, *rotvec;
+    listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    double *rotvec;
     BOOL stat, all;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
@@ -3166,7 +3152,6 @@ static int PRECOND_VANKA     =  560;
     
     listUtil = [[FEMListUtilities alloc] init];
     
-    condition = doublevec(0, n-1);
     rotvec = doublevec(0, 2);
     
     dim = [model dimension];
@@ -3195,16 +3180,16 @@ static int PRECOND_VANKA     =  560;
     varContainers = solution.variable.getContainers;
     
     if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) return;
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:[solution normalTangentialName] info:stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:[solution normalTangentialName] info:&stat] == YES) return;
     
     if (conditional == YES) {
-        stat = [listUtil listGetReal:model inArray:boundaryConditionAtId.valuesList forVariable:condName numberOfNodes:n indexes:indexes resultArray:condition minValue:NULL maxValue:NULL];
+        stat = [listUtil listGetReal:model inArray:boundaryConditionAtId.valuesList forVariable:condName numberOfNodes:n indexes:indexes buffer:&condition minValue:NULL maxValue:NULL];
         conditional = (conditional == YES && stat == YES) ? YES : NO; 
     }
     
     // Check for nodes belonging to n-t boundary getting set by other bcs
     for (j=0; j<n; j++) {
-        if (conditional == YES && condition[j] < 0.0) continue;
+        if (conditional == YES && condition.vector[j] < 0.0) continue;
         k = varContainers->Perm[indexes[j]];
         if (k >= 0) {
             k = k + offset;
@@ -3220,7 +3205,10 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    free_dvector(condition, 0, n-1);
+    if (condition.vector != NULL) {
+        free_dvector(condition.vector, 0, condition.m-1);
+        condition.vector = NULL;
+    }
     free_dvector(rotvec, 0, 2);
     varContainers = NULL;
     solContainers = NULL;
@@ -3373,7 +3361,9 @@ static int PRECOND_VANKA     =  560;
     int i, j, k, n, jj, kk, t, size;
     int **edgeMap;
     double s, l, sum;
-    double *load, **vLoad, *buffer, *g, *vl;
+    double **vLoad, *bf, *g, *vl;
+    listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMElementDescription *elementDescription;
     FEMNumericIntegration *numericIntegration;
     ElementType_t savedType;
@@ -3395,9 +3385,6 @@ static int PRECOND_VANKA     =  560;
     [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
     [self getNodes:solution inElement:parent resultNodes:pNodes numberOfNodes:n];
     
-    load = doublevec(0, np-1);
-    memset( load, 0.0, (np*sizeof(load)) );
-    
     vLoad = doublematrix(0, 2, 0, np-1);
     for (i=0; i<3; i++) {
         for (j=0; j<np; j++) {
@@ -3408,13 +3395,10 @@ static int PRECOND_VANKA     =  560;
     vl = doublevec(0, 2);
     memset( vl, 0.0, (3*sizeof(vl)) );
     
-    buffer = doublevec(0, np-1);
-    memset( buffer, 0.0, (np*sizeof(buffer)) );
-    
     g = doublevec(0, 2);
     memset( g, 0.0, (3*sizeof(g)) );
     
-    [self getReal:model forElement:element inList:bc variableName:name resultArray:load];
+    [self getReal:model forElement:element inList:bc variableName:name buffer:&load];
     
     edgeMap = [self getEdgeMap:[self getElementFamily:parent]];
     
@@ -3451,26 +3435,36 @@ static int PRECOND_VANKA     =  560;
     
     string = [string initWithString:name];
     [string appendString:@" 1"];
-    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    [self getReal:model forElement:element inList:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
-        vLoad[0][i] = buffer[i];
+        vLoad[0][i] = buffer.vector[i];
+    }
+    if (buffer.vector != NULL) {
+        free_dvector(buffer.vector, 0, buffer.m-1);
+        buffer.vector = NULL;
     }
     
     string = [string initWithString:name];
     [string appendString:@" 2"];
-    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    [self getReal:model forElement:element inList:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
-        vLoad[1][i] = buffer[i];
+        vLoad[1][i] = buffer.vector[i];
+    }
+    if (buffer.vector != NULL) {
+        free_dvector(buffer.vector, 0, buffer.m-1);
+        buffer.vector = NULL;
     }
     
     string = [string initWithString:name];
     [string appendString:@" 3"];
-    [self getReal:model forElement:element inList:bc variableName:string resultArray:buffer];
+    [self getReal:model forElement:element inList:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
-        vLoad[2][i] = buffer[i];
+        vLoad[2][i] = buffer.vector[i];
     }
-    
-    free_dvector(buffer, 0, np-1);
+    if (buffer.vector != NULL) {
+        free_dvector(buffer.vector, 0, buffer.m-1);
+        buffer.vector = NULL;
+    }
 
     g[0] = pNodes[kk].x - pNodes[jj].x;
     g[1] = pNodes[kk].y - pNodes[jj].y;
@@ -3486,7 +3480,7 @@ static int PRECOND_VANKA     =  560;
     savedType = element->Type;
     if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:solution.mesh stabilization:NULL];
     
-    buffer = doublevec(0, (3*nd)-1);
+    bf = doublevec(0, (3*nd)-1);
     integral = 0.0;
     integCompound = GaussQuadrature(element);
     for (t=0; t<integCompound.n; t++) {
@@ -3508,17 +3502,17 @@ static int PRECOND_VANKA     =  560;
                                           basisDegree:NULL];
         sum = 0.0;
         for (i=0; i<nd; i++) {
-            sum = sum + load[i]*numericIntegration.basis[i];
+            sum = sum + load.vector[i]*numericIntegration.basis[i];
         }
         l = sum;
         k = 0;
         for (i=0; i<2; i++) {
             for (j=0; j<nd; j++) {
-                buffer[k] = vLoad[i][j];
+                bf[k] = vLoad[i][j];
                 k++;
             }
         }
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, buffer, 3, numericIntegration.basis, 1, 0, vl, 1);
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, bf, 3, numericIntegration.basis, 1, 0, vl, 1);
         
         sum = 0.0;
         for (i=0; i<3; i++) {
@@ -3526,7 +3520,7 @@ static int PRECOND_VANKA     =  560;
         }
         integral = integral + s * (l+sum);
     }
-    free_dvector(buffer, 0, (3*nd)-1);
+    free_dvector(bf, 0, (3*nd)-1);
     element->Type = savedType;
     
     jj = parent->NodeIndexes[jj];
@@ -3538,12 +3532,15 @@ static int PRECOND_VANKA     =  560;
     
     free(nodes);
     free(pNodes);
-    free_dvector(load, 0, np-1);
+    if (load.vector != NULL) {
+        free_dvector(load.vector, 0, load.m-1);
+    }
     free_dmatrix(vLoad, 0, 2, 0, np-1);
     free_dvector(vl, 0, 2);
     free_dvector(g, 0, 2);
     
     [numericIntegration deallocation:solution.mesh];
+    [elementDescription deallocation];
 }
 
 -(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
@@ -3617,7 +3614,7 @@ static int PRECOND_VANKA     =  560;
             yip = yip + numericIntegration.basis[i]*nodes[i].y;
             zip = zip + numericIntegration.basis[i]*nodes[i].z;
         }
-        load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:stat minValue:NULL maxValue:NULL];
+        load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:&stat minValue:NULL maxValue:NULL];
         
         // Build local stiffness matrix and force vector
         for (p=0; p<nd; p++) {
@@ -3710,19 +3707,19 @@ static int PRECOND_VANKA     =  560;
 *****************************************************************************************************************/
     
     int i, j, n, bc, t, bf_id, noNodes, noDims;
-    int *indexes, *inNodes, *nodeIndexes;
-    double **coordNodes, minDist, dist;
+    int *indexes, *inNodes;
+    double minDist, dist;
+    listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     BOOL *activePort, *activePortAll, *doneLoad, anyActive;
     Element_t *elements;
     Nodes_t *globalNodes;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
-    FEMValueList *valueList;
     NSMutableString *loadName, *str;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
-    valueListArraysContainer *valContainers;
     BOOL stat, nodesFound;
     
     matContainers = solution.matrix.getContainers;
@@ -3872,17 +3869,12 @@ static int PRECOND_VANKA     =  560;
             // At the first calling, the list of coordinates is transformed to list of nodes
             if (nodesFound == NO) {
                 
-                valueList = [listUtil listFindVariable:@"Target coordinates" inArray:boundaryConditionAtId.valuesList];
-                if (valueList != nil) {
-                    valContainers = valueList.getContainers;
-                    coordNodes = doublematrix(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2);
-                }
-                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" resultArray:coordNodes];
+                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
                 
                 if (stat == YES) {
                     
-                    noNodes = valContainers->sizeFValues1;
-                    noDims = valContainers->sizeFValues2;
+                    noNodes = coordNodes.m;
+                    noDims = coordNodes.n;
                     
                     if (noNodes > 0) {
                         inNodes = intvec(0, noNodes-1);
@@ -3891,9 +3883,9 @@ static int PRECOND_VANKA     =  560;
                             for (i=0; i<[model numberOfNodes]; i++) {
                                 if (varContainers->Perm[i] < 0) continue;
                                 
-                                dist = pow((globalNodes[i].x-coordNodes[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes[j][2]), 2.0);
+                                dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
                                 
                                 if (dist<minDist) {
                                     minDist = dist;
@@ -3909,23 +3901,19 @@ static int PRECOND_VANKA     =  560;
                 }
             }
             
-            if (coordNodes != NULL) {
-                free_dmatrix(coordNodes, 0, valContainers->sizeFValues1, 0, valContainers->sizeFValues2);
-                coordNodes = NULL;
-                valContainers = NULL;
+            if (coordNodes.matrix != NULL) {
+                free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
+                coordNodes.matrix = NULL;
             }
             
-            valueList = nil;
             if (nodesFound == YES) {
-                valueList = [listUtil listFindVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
-                valContainers = valueList.getContainers;
-                n = valContainers->sizeIValues;
-                nodeIndexes = intvec(0, n-1);
-                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" resultArray:nodeIndexes];
+                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
                 
-                [self FEMKernel_setPointLoads:model :solution :elements :boundaryConditionAtId.valuesList :loadName :nodeIndexes :n :dof :solution.variable.dofs];
-                free_ivector(nodeIndexes, 0, n-1);
-                valContainers = NULL;
+                [self FEMKernel_setPointLoads:model :solution :elements :boundaryConditionAtId.valuesList :loadName :nodeIndexes.ivector :n :dof :solution.variable.dofs];
+                if (nodeIndexes.ivector != NULL) {
+                    free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+                    nodeIndexes.ivector = NULL;
+                }
             }
         }
         
@@ -3935,7 +3923,6 @@ static int PRECOND_VANKA     =  560;
     
     elements = NULL;
     globalNodes = NULL;
-    valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
 }
@@ -3957,16 +3944,16 @@ static int PRECOND_VANKA     =  560;
 *****************************************************************************************************************/
     
     int i, j, k, n, bc, t, bf_id, noNodes, noDims, permOffset, numberOfNodesFound;
-    int *indexes, *inNodes, *nodeIndexes, bndry_start, bndry_end;
-    double **coordNodes, minDist, dist, eps;
+    int *indexes, *inNodes, bndry_start, bndry_end;
+    double minDist, dist, eps;
+    listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     BOOL *activePort, *activePortAll, *activeCond, *donePeriodic, anyActive, passive;
     Element_t *elements;
     Nodes_t *globalNodes;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
-    FEMSimulation *simulationAtId;
-    FEMValueList *valueList;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
@@ -4014,8 +4001,8 @@ static int PRECOND_VANKA     =  560;
         
         for (bc=0; bc<model.numberOfBoundaries; bc++) {
             boundaryConditionAtId = (model.boundaries)[bc];
-            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:stat] == NO) activePort[bc] = YES;
-            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:stat] == NO) activePort[bc] = YES;
+            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
+            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
         }
         
     }
@@ -4068,8 +4055,7 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    simulationAtId = (model.simulations)[[solution simulationID]];
-    orderByBCNumbering = [listUtil listGetLogical:model inArray:simulationAtId.valuesList forVariable:@"Set Dirichlet BCs by BC numbering" info:stat];
+    orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"Set Dirichlet BCs by BC numbering" info:&stat];
     
     bndry_start = [model numberOfBulkElements];
     bndry_end = bndry_start + [model numberOfBoundaryElements]-1;
@@ -4272,16 +4258,11 @@ static int PRECOND_VANKA     =  560;
             // At the first calling, the list of coordinates is transformed to a list of nodes
             if (nodesFound == NO) {
                 
-                valueList = [listUtil listFindVariable:@"Target coordinates" inArray:boundaryConditionAtId.valuesList];
-                if (valueList != nil) {
-                    valContainers = valueList.getContainers;
-                    coordNodes = doublematrix(0, valContainers->sizeFValues1-1, 0, valContainers->sizeFValues2);
-                }
-                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" resultArray:coordNodes];
+                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
                 
                 if (stat == YES) {
                     
-                    eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates eps" info:stat minValue:NULL maxValue:NULL];
+                    eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
                     if (stat == NO) {
                         eps = HUGE_VAL;
                     } else {
@@ -4299,9 +4280,9 @@ static int PRECOND_VANKA     =  560;
                             for (i=0; i<[model numberOfNodes]; i++) {
                                 if (varContainers->Perm[i] < 0) continue;
                                 
-                                dist = pow((globalNodes[i].x-coordNodes[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes[j][2]), 2.0);
+                                dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
+                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
+                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
 
                                 dist = sqrt(dist);
                                 
@@ -4329,25 +4310,23 @@ static int PRECOND_VANKA     =  560;
                     }
                 }
                 
-                if (coordNodes != NULL) {
-                    free_dmatrix(coordNodes, 0, valContainers->sizeFValues1, 0, valContainers->sizeFValues2);
-                    coordNodes = NULL;
-                    valContainers = NULL;
+                if (coordNodes.matrix != NULL) {
+                    free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
+                    coordNodes.matrix = NULL;
+
                 }
             }
             
             if (nodesFound == YES) {
                 conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
-                valueList = [listUtil listFindVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
-                valContainers = valueList.getContainers;
-                n = valContainers->sizeIValues;
-                nodeIndexes = intvec(0, n-1);
-                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" resultArray:nodeIndexes];
+                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
                 
-                [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 
-                free_ivector(nodeIndexes, 0, n-1);
-                valContainers = NULL;
+                if (nodeIndexes.ivector != NULL) {
+                    free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+                    nodeIndexes.ivector = NULL;
+                }
             }
         }
     }
@@ -4364,7 +4343,6 @@ static int PRECOND_VANKA     =  560;
     
     elements = NULL;
     globalNodes = NULL;
-    valueList = nil;
     matContainers = NULL;
     varContainers = NULL;
     solContainers = NULL;
@@ -4478,10 +4456,10 @@ static int PRECOND_VANKA     =  560;
     
     [self FEMKernel_updateGlobalEquations:model :solution :element :stiff :force :n :solution.variable.dofs :perm :rows :cols :NULL: NULL];
     
-    bupd = FALSE;
+    bupd = NO;
     if (bulkUpdate != NULL) {
         bupd = *bulkUpdate;
-        if (bupd == FALSE) return;
+        if (bupd == NO) return;
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
@@ -4566,10 +4544,10 @@ static int PRECOND_VANKA     =  560;
 
     [self FEMKernel_updateGlobalEquations:model :solution :element :stiff :force :n :solution.variable.dofs :perm :rows :cols :NULL: NULL];
     
-    bupd = FALSE;
+    bupd = NO;
     if (bulkUpdate != NULL) {
         bupd = *bulkUpdate;
-        if (bupd == FALSE) return;
+        if (bupd == NO) return;
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
@@ -4814,7 +4792,7 @@ static int PRECOND_VANKA     =  560;
                                  [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
                                  
                                  n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
-                                 for (k=solContainers->defDofs[0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                 for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                      nb = varContainers->Perm[_g_Ind[k]];
                                      if (nb < 0) continue;
                                      nb = u_offset + solution.variable.dofs*nb + dof;
@@ -4847,7 +4825,7 @@ static int PRECOND_VANKA     =  560;
                                      [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
                                      
                                      n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
-                                     for (k=solContainers->defDofs[0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                     for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                          nb = varContainers->Perm[_g_Ind[k]];
                                          if (nb < 0) continue;
                                          nb = u_offset + solution.variable.dofs*nb + dof;
@@ -5018,7 +4996,7 @@ static int PRECOND_VANKA     =  560;
 
 #pragma mark Solve
 
--(double)findSolution:(FEMSolution *)solution {
+-(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel {
     
     double norm;
     
@@ -5026,8 +5004,9 @@ static int PRECOND_VANKA     =  560;
         if ([(solution.solutionInfo)[@"Linear system solver disabled"] boolValue] == YES) return 0.0;
     }
     
+    //TODO: add support for dump system matrix and back rotated N-T solution
     
-    [self FEMKernel_solveSystem:solution];
+    [self FEMKernel_solveSystem:solution model:aModel];
     norm = solution.variable.norm;
     
     return norm;

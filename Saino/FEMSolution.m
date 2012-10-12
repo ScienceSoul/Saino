@@ -124,7 +124,7 @@
 @synthesize solutionInfo = _solutionInfo;
 @synthesize normalTangentialName = _normalTangentialName;
 @synthesize exportedVariables = _exportedVariables;
-@synthesize values = _values;
+@synthesize valuesList = _valuesList;
 
 #pragma mark Initializations
 
@@ -133,10 +133,16 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        
+        _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer) * 1 );
 
     }
     
     return self;
+}
+
+-(void)deallocation {
+    free(_containers);
 }
 
 -(solutionArraysContainer*)getContainers {

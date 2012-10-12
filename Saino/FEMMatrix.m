@@ -46,6 +46,7 @@
         _symmetric = NO;
         _dgMatrix = NO;
         
+        _containers = (matrixArraysContainer*)malloc(sizeof(matrixArraysContainer) * 1 );
         _containers->Perm = NULL;
         _containers->InvPerm = NULL;
         
@@ -85,6 +86,10 @@
     }
     
     return self;
+}
+
+-(void)deallocation {
+    free(_containers);
 }
 
 -(matrixArraysContainer *)getContainers {

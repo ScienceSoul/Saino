@@ -35,8 +35,8 @@
     FEMMesh *_mesh;
     NSMutableDictionary *_solutionInfo;
     NSString *_normalTangentialName;
-    NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes
-    FEMValueList *_values;
+    NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes for exported variables
+    NSMutableArray *_valuesList;                     // Array of FEMValueList objects
     
     solutionArraysContainer *_containers;
 }
@@ -60,8 +60,10 @@
 @property(nonatomic, strong) NSMutableDictionary *solutionInfo;
 @property(nonatomic, strong) NSString *normalTangentialName;
 @property(nonatomic, strong) NSMutableDictionary *exportedVariables;
-@property(nonatomic, strong) FEMValueList *values;
+@property(nonatomic, strong) NSMutableArray *valuesList;
 
+
+-(void)deallocation;
 -(solutionArraysContainer *)getContainers;
 
 #pragma mark Initializations
