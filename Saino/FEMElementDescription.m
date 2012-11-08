@@ -1224,69 +1224,67 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     // ... then the rest of them
-    @autoreleasepool {
         
-        for (i=0; i<_numberOfElementDefs; i++) {
-            
-            element.NodeU = NULL;
-            element.NodeV = NULL;
-            element.NodeW = NULL;
-            
-            defs = _listOfDefinitions[i];
-            
-            element.dimension = [defs.dimension intValue];
-            element.ElementCode = [defs.code intValue];
-            element.NumberOfNodes = [defs.nodes intValue];
-            if (element.dimension == 1) {
-                element.NodeU = doublevec(0, element.NumberOfNodes-1);
-                for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
-                    basisTerms[k] = [(defs.basis)[k] intValue];
-                }
-            } else if (element.dimension == 2) {
-                element.NodeU = doublevec(0, element.NumberOfNodes-1);
-                element.NodeV = doublevec(0, element.NumberOfNodes-1);
-                for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
-                    element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
-                    basisTerms[k] = [(defs.basis)[k] intValue];
-                }
-            } else if (element.dimension == 3) {
-                element.NodeU = doublevec(0, element.NumberOfNodes-1);
-                element.NodeV = doublevec(0, element.NumberOfNodes-1);
-                element.NodeW = doublevec(0, element.NumberOfNodes-1);
-                for (k=0; k<element.NumberOfNodes; k++) {
-                    element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
-                    element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
-                    element.NodeW[k] = [(defs.nodeW)[k] doubleValue];
-                    basisTerms[k] = [(defs.basis)[k] intValue];
-                }
+    for (i=0; i<_numberOfElementDefs; i++) {
+        
+        element.NodeU = NULL;
+        element.NodeV = NULL;
+        element.NodeW = NULL;
+        
+        defs = _listOfDefinitions[i];
+        
+        element.dimension = [defs.dimension intValue];
+        element.ElementCode = [defs.code intValue];
+        element.NumberOfNodes = [defs.nodes intValue];
+        if (element.dimension == 1) {
+            element.NodeU = doublevec(0, element.NumberOfNodes-1);
+            for (k=0; k<element.NumberOfNodes; k++) {
+                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                basisTerms[k] = [(defs.basis)[k] intValue];
             }
-            element.GaussPoints = [(defs.gaussPoints)[0] intValue];
-            element.GaussPoints2 = [(defs.gaussPoints)[1] intValue];
-            element.StabilizationMK = [defs.stabilization doubleValue];
-            
-            if (element.GaussPoints2 <= 0) element.GaussPoints2 = element.GaussPoints;
-            
-            // Reassign 0 to stabilization. Don't know why yet!!!
-            element.StabilizationMK = 0.0;
-            
-            if (element.NodeV == NULL) {
-                element.NodeV = doublevec(0, element.NumberOfNodes-1);
-                memset( element.NodeV, 0.0, (element.NumberOfNodes*sizeof(element.NodeV)) );
+        } else if (element.dimension == 2) {
+            element.NodeU = doublevec(0, element.NumberOfNodes-1);
+            element.NodeV = doublevec(0, element.NumberOfNodes-1);
+            for (k=0; k<element.NumberOfNodes; k++) {
+                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
+                basisTerms[k] = [(defs.basis)[k] intValue];
             }
-            if (element.NodeW == NULL) {
-                element.NodeW = doublevec(0, element.NumberOfNodes-1);
-                memset( element.NodeW, 0.0, (element.NumberOfNodes*sizeof(element.NodeW)) );
+        } else if (element.dimension == 3) {
+            element.NodeU = doublevec(0, element.NumberOfNodes-1);
+            element.NodeV = doublevec(0, element.NumberOfNodes-1);
+            element.NodeW = doublevec(0, element.NumberOfNodes-1);
+            for (k=0; k<element.NumberOfNodes; k++) {
+                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
+                element.NodeW[k] = [(defs.nodeW)[k] doubleValue];
+                basisTerms[k] = [(defs.basis)[k] intValue];
             }
-            
-            [self addDescriptionOfElement:element withBasisTerms:basisTerms];
-            
-            free_dvector(element.NodeU, 0, element.NumberOfNodes-1);
-            free_dvector(element.NodeV, 0, element.NumberOfNodes-1);
-            free_dvector(element.NodeW, 0, element.NumberOfNodes-1);
-            
         }
+        element.GaussPoints = [(defs.gaussPoints)[0] intValue];
+        element.GaussPoints2 = [(defs.gaussPoints)[1] intValue];
+        element.StabilizationMK = [defs.stabilization doubleValue];
+        
+        if (element.GaussPoints2 <= 0) element.GaussPoints2 = element.GaussPoints;
+        
+        // Reassign 0 to stabilization. Don't know why yet!!!
+        element.StabilizationMK = 0.0;
+        
+        if (element.NodeV == NULL) {
+            element.NodeV = doublevec(0, element.NumberOfNodes-1);
+            memset( element.NodeV, 0.0, (element.NumberOfNodes*sizeof(element.NodeV)) );
+        }
+        if (element.NodeW == NULL) {
+            element.NodeW = doublevec(0, element.NumberOfNodes-1);
+            memset( element.NodeW, 0.0, (element.NumberOfNodes*sizeof(element.NodeW)) );
+        }
+        
+        [self addDescriptionOfElement:element withBasisTerms:basisTerms];
+        
+        free_dvector(element.NodeU, 0, element.NumberOfNodes-1);
+        free_dvector(element.NodeV, 0, element.NumberOfNodes-1);
+        free_dvector(element.NodeW, 0, element.NumberOfNodes-1);
+        
     }
     
     free_ivector(basisTerms, 0, _maxDeg3-1);

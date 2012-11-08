@@ -1998,8 +1998,9 @@ static int PRECOND_VANKA     =  560;
             if ([listUtil listGetLogical:model inArray:values forVariable:[solution normalTangentialName] info:&stat] == YES) checkNT = NO;
         }
         
-        @autoreleasepool {
-            for (j=0; j<n; j++) {
+        for (j=0; j<n; j++) {
+            
+            @autoreleasepool {
                 if (conditional == YES && condition.vector[j] < 0.0) continue;
                 k = varContainers->Perm[indexes[j]];
                 
@@ -2057,8 +2058,8 @@ static int PRECOND_VANKA     =  560;
                     }
                 }
             }
+            
         }
-        
     }
     
     if (condition.vector != NULL) {
@@ -2110,8 +2111,9 @@ static int PRECOND_VANKA     =  560;
             conditional = (conditional == YES && stat == YES) ? YES : NO;
         }
         
-        @autoreleasepool {
-            for (j=0; j<n; j++) {
+        for (j=0; j<n; j++) {
+            
+            @autoreleasepool {
                 if (conditional == YES && condition.vector[j] < 0.0) continue;
                 if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
                     warnfunct("FEMKernel_setPointValues", "Invalid node number");
@@ -2152,6 +2154,7 @@ static int PRECOND_VANKA     =  560;
                     }
                 }
             }
+            
         }
     }
 
@@ -2893,10 +2896,8 @@ static int PRECOND_VANKA     =  560;
     
     for (i=0; i<model.numberOfBoundaries; i++) {
         bc_id++;
-        @autoreleasepool {
-            boundaryConditionAtId = (model.boundaries)[i];
-            if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
-        }
+        boundaryConditionAtId = (model.boundaries)[i];
+        if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
     }
     if (bc_id > model.numberOfBoundaries) bc_id = 0;
     
@@ -3747,15 +3748,11 @@ static int PRECOND_VANKA     =  560;
     str = [NSMutableString stringWithString:loadName];
     [str appendString:@" dofs"];
     
-    @autoreleasepool {
-       
-        for (bc=0; bc<model.numberOfBoundaries; bc++) {
-            boundaryConditionAtId = (model.boundaries)[bc];
-            if ([listUtil listCheckPresentVariable:@"Target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
-            activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
-            activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryConditionAtId.valuesList];
-        }
-        
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
+        boundaryConditionAtId = (model.boundaries)[bc];
+        if ([listUtil listCheckPresentVariable:@"Target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
+        activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
+        activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryConditionAtId.valuesList];
     }
     
     anyActive = NO;
@@ -3775,24 +3772,22 @@ static int PRECOND_VANKA     =  560;
         for (bc=0; bc<model.numberOfBoundaries; bc++) {
             if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
             
-            @autoreleasepool {
               
-                for (t=[model numberOfBulkElements]; t<[model numberOfBulkElements]+[model numberOfBoundaryElements]; t++) {
-                    
-                    boundaryConditionAtId = (model.boundaries)[bc];
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
-                    
-                    if (activePort[bc] == YES) {
-                        n = elements[t].Type.NumberOfNodes;
-                        for (i=0; i<n; i++) {
-                            indexes[i] = elements[t].NodeIndexes[i];
-                        }
-                    } else {
-                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+            for (t=[model numberOfBulkElements]; t<[model numberOfBulkElements]+[model numberOfBoundaryElements]; t++) {
+                
+                boundaryConditionAtId = (model.boundaries)[bc];
+                if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                
+                if (activePort[bc] == YES) {
+                    n = elements[t].Type.NumberOfNodes;
+                    for (i=0; i<n; i++) {
+                        indexes[i] = elements[t].NodeIndexes[i];
                     }
-                    
-                    [self FEMKernel_setElementLoads:model :solution :&elements[t] :boundaryConditionAtId.valuesList :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
+                } else {
+                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                 }
+                
+                [self FEMKernel_setElementLoads:model :solution :&elements[t] :boundaryConditionAtId.valuesList :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
             }
         }
     }
@@ -3802,14 +3797,10 @@ static int PRECOND_VANKA     =  560;
     memset( activePort, NO, (n*sizeof(activePort)) );
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
     
-    @autoreleasepool {
-    
-        for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-            bodyForceAtId = (model.bodyForces)[bf_id];
-            activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForceAtId.valuesList];
-            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForceAtId.valuesList];
-        }
-        
+    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+        bodyForceAtId = (model.bodyForces)[bf_id];
+        activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForceAtId.valuesList];
+        activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForceAtId.valuesList];
     }
     
     anyActive = NO;
@@ -3826,29 +3817,25 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<(matContainers->sizeRHS/solution.variable.dofs); i++) {
             doneLoad[i] = NO;
         }
-        
-        @autoreleasepool {
+        for (t=0; t<[model numberOfBulkElements]; t++) {
             
-            for (t=0; t<[model numberOfBulkElements]; t++) {
-                
-                bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
-                
-                if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
-                if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
-                
-                
-                if (activePort[bf_id] == YES) {
-                    n = elements[t].Type.NumberOfNodes;
-                    for (i=0; i<n; i++) {
-                        indexes[i] = elements[t].NodeIndexes[i];
-                    }
-                } else {
-                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
+            
+            if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
+            if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+            
+            
+            if (activePort[bf_id] == YES) {
+                n = elements[t].Type.NumberOfNodes;
+                for (i=0; i<n; i++) {
+                    indexes[i] = elements[t].NodeIndexes[i];
                 }
-                
-                bodyForceAtId = (model.bodyForces)[bf_id];
-                [self FEMKernel_setElementLoads:model :solution :&elements[t] :bodyForceAtId.valuesList :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
+            } else {
+                n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
             }
+            
+            bodyForceAtId = (model.bodyForces)[bf_id];
+            [self FEMKernel_setElementLoads:model :solution :&elements[t] :bodyForceAtId.valuesList :loadName :indexes :doneLoad :n :dof :solution.variable.dofs];
         }
     }
     
@@ -3857,68 +3844,63 @@ static int PRECOND_VANKA     =  560;
     if (doneLoad != NULL) free(doneLoad);
     
     // Go through the point loads which are created on the fly
-    
-    @autoreleasepool {
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
         
-        for (bc=0; bc<model.numberOfBoundaries; bc++) {
+        boundaryConditionAtId = (model.boundaries)[bc];
+        if ([listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList] == NO) continue;
+        nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+        
+        // At the first calling, the list of coordinates is transformed to list of nodes
+        if (nodesFound == NO) {
             
-            boundaryConditionAtId = (model.boundaries)[bc];
-            if ([listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList] == NO) continue;
-            nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
             
-            // At the first calling, the list of coordinates is transformed to list of nodes
-            if (nodesFound == NO) {
+            if (stat == YES) {
                 
-                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
+                noNodes = coordNodes.m;
+                noDims = coordNodes.n;
                 
-                if (stat == YES) {
-                    
-                    noNodes = coordNodes.m;
-                    noDims = coordNodes.n;
-                    
-                    if (noNodes > 0) {
-                        inNodes = intvec(0, noNodes-1);
-                        for (j=0; j<noNodes; j++) {
-                            minDist = HUGE_VAL;
-                            for (i=0; i<[model numberOfNodes]; i++) {
-                                if (varContainers->Perm[i] < 0) continue;
-                                
-                                dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
-                                
-                                if (dist<minDist) {
-                                    minDist = dist;
-                                    inNodes[j] = i;
-                                }
+                if (noNodes > 0) {
+                    inNodes = intvec(0, noNodes-1);
+                    for (j=0; j<noNodes; j++) {
+                        minDist = HUGE_VAL;
+                        for (i=0; i<[model numberOfNodes]; i++) {
+                            if (varContainers->Perm[i] < 0) continue;
+                            
+                            dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
+                            if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
+                            if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
+                            
+                            if (dist<minDist) {
+                                minDist = dist;
+                                inNodes[j] = i;
                             }
                         }
-                        // Add the found nodes to the list values
-                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:noNodes];
-                        free_ivector(inNodes, 0, noNodes-1);
-                        nodesFound = YES;
                     }
-                }
-            }
-            
-            if (coordNodes.matrix != NULL) {
-                free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
-                coordNodes.matrix = NULL;
-            }
-            
-            if (nodesFound == YES) {
-                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
-                
-                [self FEMKernel_setPointLoads:model :solution :elements :boundaryConditionAtId.valuesList :loadName :nodeIndexes.ivector :n :dof :solution.variable.dofs];
-                if (nodeIndexes.ivector != NULL) {
-                    free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
-                    nodeIndexes.ivector = NULL;
+                    // Add the found nodes to the list values
+                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:noNodes];
+                    free_ivector(inNodes, 0, noNodes-1);
+                    nodesFound = YES;
                 }
             }
         }
         
-    }
+        if (coordNodes.matrix != NULL) {
+            free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
+            coordNodes.matrix = NULL;
+        }
         
+        if (nodesFound == YES) {
+            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
+            
+            [self FEMKernel_setPointLoads:model :solution :elements :boundaryConditionAtId.valuesList :loadName :nodeIndexes.ivector :n :dof :solution.variable.dofs];
+            if (nodeIndexes.ivector != NULL) {
+                free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+                nodeIndexes.ivector = NULL;
+            }
+        }
+    }
+    
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
     
     elements = NULL;
@@ -3997,14 +3979,10 @@ static int PRECOND_VANKA     =  560;
     str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
     [str2 appendString:name];
 
-    @autoreleasepool {
-        
-        for (bc=0; bc<model.numberOfBoundaries; bc++) {
-            boundaryConditionAtId = (model.boundaries)[bc];
-            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
-            if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
-        }
-        
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
+        boundaryConditionAtId = (model.boundaries)[bc];
+        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
+        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
     }
     
     anyActive = NO;
@@ -4044,15 +4022,11 @@ static int PRECOND_VANKA     =  560;
     str1 = [NSMutableString stringWithString:name];
     [str1 appendString:@" dofs"];
     
-    @autoreleasepool {
-        
-        for (bc=0; bc<model.numberOfBoundaries; bc++) {
-            boundaryConditionAtId = (model.boundaries)[bc];
-            activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryConditionAtId.valuesList];
-            activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList];
-            activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
-        }
-        
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
+        boundaryConditionAtId = (model.boundaries)[bc];
+        activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryConditionAtId.valuesList];
+        activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList];
+        activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
     }
     
     orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"Set Dirichlet BCs by BC numbering" info:&stat];
@@ -4063,49 +4037,45 @@ static int PRECOND_VANKA     =  560;
     // Check and sey some flags for nodes belonging to n-t boundaries getting set by other bcs
     if ([solution normalTangentialNOFNodes] > 0) {
         if (orderByBCNumbering == YES) {
-            @autoreleasepool {
-                for (bc=0; bc<model.numberOfBoundaries; bc++) {
-                    
-                    if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
-                    conditional = activeCond[bc];
-                    
-                    boundaryConditionAtId = (model.boundaries)[bc];
-                    
-                    for (t=bndry_start; t<bndry_end; t++) {
-                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
-                        if (activePort[bc] == YES) {
-                            n = elements[t].Type.NumberOfNodes;
-                            for (i=0; i<n; i++) {
-                                indexes[i] = elements[t].NodeIndexes[i];
-                            }
-                        } else {
-                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+            for (bc=0; bc<model.numberOfBoundaries; bc++) {
+                
+                if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                conditional = activeCond[bc];
+                
+                boundaryConditionAtId = (model.boundaries)[bc];
+                
+                for (t=bndry_start; t<bndry_end; t++) {
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (activePort[bc] == YES) {
+                        n = elements[t].Type.NumberOfNodes;
+                        for (i=0; i<n; i++) {
+                            indexes[i] = elements[t].NodeIndexes[i];
                         }
-                        [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    } else {
+                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                     }
+                    [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
             }
         } else {
              for (t=bndry_start; t<bndry_end; t++) {
-                 @autoreleasepool {
-                     for (bc=0; bc<model.numberOfBoundaries; bc++) {
-                         if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
-                         conditional = activeCond[bc];
-                         
-                         boundaryConditionAtId = (model.boundaries)[bc];
-                         
-                         if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
-                         
-                         if (activePort[bc] == YES) {
-                             n = elements[t].Type.NumberOfNodes;
-                             for (i=0; i<n; i++) {
-                                 indexes[i] = elements[t].NodeIndexes[i];
-                             }
-                         } else {
-                             n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                 for (bc=0; bc<model.numberOfBoundaries; bc++) {
+                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                     conditional = activeCond[bc];
+                     
+                     boundaryConditionAtId = (model.boundaries)[bc];
+                     
+                     if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                     
+                     if (activePort[bc] == YES) {
+                         n = elements[t].Type.NumberOfNodes;
+                         for (i=0; i<n; i++) {
+                             indexes[i] = elements[t].NodeIndexes[i];
                          }
-                         [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                     } else {
+                         n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                      }
+                     [self checkNormalTangentiality:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                  }
              }
         }
@@ -4136,50 +4106,45 @@ static int PRECOND_VANKA     =  560;
     
     if (anyActive == YES) {
         if (orderByBCNumbering == YES) {
-            @autoreleasepool {
+            for (bc=0; bc<model.numberOfBoundaries; bc++) {
+                
+                if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                conditional = activeCond[bc];
+                
+                boundaryConditionAtId = (model.boundaries)[bc];
+                
+                for (t=bndry_start; t<bndry_end; t++) {
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (activePort[bc] == YES) {
+                        n = elements[t].Type.NumberOfNodes;
+                        for (i=0; i<n; i++) {
+                            indexes[i] = elements[t].NodeIndexes[i];
+                        }
+                    } else {
+                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                    }
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                }
+            }
+        } else {
+            for (t=bndry_start; t<bndry_end; t++) {
                 for (bc=0; bc<model.numberOfBoundaries; bc++) {
-                    
                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                     conditional = activeCond[bc];
                     
                     boundaryConditionAtId = (model.boundaries)[bc];
                     
-                    for (t=bndry_start; t<bndry_end; t++) {
-                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
-                        if (activePort[bc] == YES) {
-                            n = elements[t].Type.NumberOfNodes;
-                            for (i=0; i<n; i++) {
-                                indexes[i] = elements[t].NodeIndexes[i];
-                            }
-                        } else {
-                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    
+                    if (activePort[bc] == YES) {
+                        n = elements[t].Type.NumberOfNodes;
+                        for (i=0; i<n; i++) {
+                            indexes[i] = elements[t].NodeIndexes[i];
                         }
-                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    } else {
+                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                     }
-                }
-            }
-        } else {
-            for (t=bndry_start; t<bndry_end; t++) {
-                @autoreleasepool {
-                    for (bc=0; bc<model.numberOfBoundaries; bc++) {
-                        if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
-                        conditional = activeCond[bc];
-                        
-                        boundaryConditionAtId = (model.boundaries)[bc];
-                        
-                        if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
-                        
-                        if (activePort[bc] == YES) {
-                            n = elements[t].Type.NumberOfNodes;
-                            for (i=0; i<n; i++) {
-                                indexes[i] = elements[t].NodeIndexes[i];
-                            }
-                        } else {
-                            n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
-                        }
-                        [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
-                        
-                    }
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
             }
         }
@@ -4192,16 +4157,13 @@ static int PRECOND_VANKA     =  560;
     memset( activePortAll, NO, (n*sizeof(activePortAll)) );
     passive = NO;
     
-    @autoreleasepool {
+    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
+        bodyForceAtId = (model.bodyForces)[bf_id];
+        activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForceAtId.valuesList ];
+        activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForceAtId.valuesList];
+        activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForceAtId.valuesList];
         
-        for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-            bodyForceAtId = (model.bodyForces)[bf_id];
-            activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForceAtId.valuesList ];
-            activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForceAtId.valuesList];
-            activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForceAtId.valuesList];
-            
-            passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForceAtId.valuesList] == YES) ? YES : NO;
-        }
+        passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForceAtId.valuesList] == YES) ? YES : NO;
     }
     
     anyActive = NO;
@@ -4213,28 +4175,24 @@ static int PRECOND_VANKA     =  560;
     }
 
     if (anyActive == YES) {
-        
-        @autoreleasepool {
+        for (t=0; t<[model numberOfBulkElements]; t++) {
             
-            for (t=0; t<[model numberOfBulkElements]; t++) {
-                
-                bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
-                
-                if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
-                if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
-                conditional = activeCond[bf_id];
-                
-                if (activePort[bf_id] == YES) {
-                    n = elements[t].Type.NumberOfNodes;
-                    for (i=0; i<n; i++) {
-                        indexes[i] = elements[t].NodeIndexes[i];
-                    }
-                } else {
-                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
+            
+            if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
+            if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+            conditional = activeCond[bf_id];
+            
+            if (activePort[bf_id] == YES) {
+                n = elements[t].Type.NumberOfNodes;
+                for (i=0; i<n; i++) {
+                    indexes[i] = elements[t].NodeIndexes[i];
                 }
-                bodyForceAtId = (model.bodyForces)[bf_id];
-                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            } else {
+                n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
             }
+            bodyForceAtId = (model.bodyForces)[bf_id];
+            [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
         }
     }
     free(activePort);
@@ -4245,88 +4203,85 @@ static int PRECOND_VANKA     =  560;
     // Go through the pointwise Dirichlet BCs that are created on the fly.
     // Note that it is best that the coordinates are transformed to nodes using
     // the right variable. Otherwise, it could point to nodes that are not active
-    
-    @autoreleasepool {
 
-        for (bc=0; bc<model.numberOfBoundaries; bc++) {
+    for (bc=0; bc<model.numberOfBoundaries; bc++) {
+        
+        boundaryConditionAtId = (model.boundaries)[bc];
+        if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) continue;
+        nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+        
+        // The coodinates are only requested for a body that has no list of nodes.
+        // At the first calling, the list of coordinates is transformed to a list of nodes
+        if (nodesFound == NO) {
             
-            boundaryConditionAtId = (model.boundaries)[bc];
-            if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) continue;
-            nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
             
-            // The coodinates are only requested for a body that has no list of nodes.
-            // At the first calling, the list of coordinates is transformed to a list of nodes
-            if (nodesFound == NO) {
+            if (stat == YES) {
                 
-                stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
-                
-                if (stat == YES) {
-                    
-                    eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
-                    if (stat == NO) {
-                        eps = HUGE_VAL;
-                    } else {
-                        eps = pow(eps, 2.0);
-                    }
-                    
-                    noNodes = valContainers->sizeFValues1;
-                    noDims = valContainers->sizeFValues2;
-                    
-                    if (noNodes > 0) {
-                        inNodes = intvec(0, noNodes-1);
-                        memset( inNodes, -1, (noNodes*sizeof(inNodes)) );
-                        for (j=0; j<noNodes; j++) {
-                            minDist = HUGE_VAL;
-                            for (i=0; i<[model numberOfNodes]; i++) {
-                                if (varContainers->Perm[i] < 0) continue;
-                                
-                                dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
-                                if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
-                                if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
-
-                                dist = sqrt(dist);
-                                
-                                if (dist < minDist && dist <= eps) {
-                                    minDist = dist;
-                                    inNodes[j] = i;
-                                }
-                            }
-                        }
-                        
-                        numberOfNodesFound = 0;
-                        for (j=0; j<noNodes; j++) {
-                            if (inNodes[j] >= 0) {
-                                inNodes[numberOfNodesFound] = inNodes[j];
-                                numberOfNodesFound++;
-                            }
-                        }
-                        
-                        // In the first time add teh found nodes to the list
-                        if (numberOfNodesFound > 0) {
-                            [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
-                            free_ivector(inNodes, 0, noNodes-1);
-                            nodesFound = YES;
-                        }
-                    }
+                eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
+                if (stat == NO) {
+                    eps = HUGE_VAL;
+                } else {
+                    eps = pow(eps, 2.0);
                 }
                 
-                if (coordNodes.matrix != NULL) {
-                    free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
-                    coordNodes.matrix = NULL;
-
+                noNodes = valContainers->sizeFValues1;
+                noDims = valContainers->sizeFValues2;
+                
+                if (noNodes > 0) {
+                    inNodes = intvec(0, noNodes-1);
+                    memset( inNodes, -1, (noNodes*sizeof(inNodes)) );
+                    for (j=0; j<noNodes; j++) {
+                        minDist = HUGE_VAL;
+                        for (i=0; i<[model numberOfNodes]; i++) {
+                            if (varContainers->Perm[i] < 0) continue;
+                            
+                            dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
+                            if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
+                            if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
+                            
+                            dist = sqrt(dist);
+                            
+                            if (dist < minDist && dist <= eps) {
+                                minDist = dist;
+                                inNodes[j] = i;
+                            }
+                        }
+                    }
+                    
+                    numberOfNodesFound = 0;
+                    for (j=0; j<noNodes; j++) {
+                        if (inNodes[j] >= 0) {
+                            inNodes[numberOfNodesFound] = inNodes[j];
+                            numberOfNodesFound++;
+                        }
+                    }
+                    
+                    // In the first time add teh found nodes to the list
+                    if (numberOfNodesFound > 0) {
+                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
+                        free_ivector(inNodes, 0, noNodes-1);
+                        nodesFound = YES;
+                    }
                 }
             }
             
-            if (nodesFound == YES) {
-                conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
-                [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
+            if (coordNodes.matrix != NULL) {
+                free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
+                coordNodes.matrix = NULL;
                 
-                [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
-                
-                if (nodeIndexes.ivector != NULL) {
-                    free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
-                    nodeIndexes.ivector = NULL;
-                }
+            }
+        }
+        
+        if (nodesFound == YES) {
+            conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
+            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
+            
+            [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            
+            if (nodeIndexes.ivector != NULL) {
+                free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+                nodeIndexes.ivector = NULL;
             }
         }
     }
@@ -4675,318 +4630,311 @@ static int PRECOND_VANKA     =  560;
     constantValue = NO;
     
     // Set Dirichlet dofs for edges and faces
-    @autoreleasepool {
-
-        for (dof=0; dof<solution.variable.dofs; dof++) {
+    for (dof=0; dof<solution.variable.dofs; dof++) {
+        
+        componentName = [NSMutableString stringWithString:solution.variable.name];
+        if (solution.variable.dofs > 1) {
+            appendDof = @(dof+1);
+            [componentName appendString:@" "];
+            [componentName appendString:[appendDof stringValue]];
+        }
+        
+        // Clean BC face and edge dofs
+        for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
             
-            componentName = [NSMutableString stringWithString:solution.variable.name];
-            if (solution.variable.dofs > 1) {
-                appendDof = @(dof+1);
-                [componentName appendString:@" "];
-                [componentName appendString:[appendDof stringValue]];
+            element = [self getBoundaryElement:solution atIndex:i];
+            if ([self isActiveElement:element inSolution:solution] == NO) continue;
+            
+            // Get parent element
+            parent = element->BoundaryInfo->Left;
+            if (parent == NULL) parent = element->BoundaryInfo->Right;
+            
+            if (parent == NULL) continue;
+            
+            bc = [self getBoundaryCondition:model forElement:element];
+            if (bc == nil) continue;
+            
+            list = [listUtil listFindVariable:componentName inArray:bc];
+            if (list == nil) continue;
+            
+            constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
+            
+            // Get indexes for boudnary and values for dofs associated to them
+            n = [self getNumberOfNodesForElement:element];
+            
+            if (parent->Pdefs != NULL) {
+                [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+            } else {
+                continue;
             }
             
-            // Clean BC face and edge dofs
-            for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
-                
-                element = [self getBoundaryElement:solution atIndex:i];
-                if ([self isActiveElement:element inSolution:solution] == NO) continue;
-                
-                // Get parent element
-                parent = element->BoundaryInfo->Left;
-                if (parent == NULL) parent = element->BoundaryInfo->Right;
-                
-                if (parent == NULL) continue;
-                
-                bc = [self getBoundaryCondition:model forElement:element];
-                if (bc == nil) continue;
-                
-                list = [listUtil listFindVariable:componentName inArray:bc];
-                if (list == nil) continue;
-                
-                constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
-                
-                // Get indexes for boudnary and values for dofs associated to them
-                n = [self getNumberOfNodesForElement:element];
-                
-                if (parent->Pdefs != NULL) {
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
-                } else {
-                    continue;
-                }
-                
-                // Contribute this boundary to global system (i.e., solve global boundary problem)
-                for (k=n; k<numEdgeDofs; k++) {
-                    nb = varContainers->Perm[_g_Ind[k]];
-                    if (nb < 0) continue;
-                    nb = u_offset + solution.variable.dofs*nb + dof;
-                    if (constantValue == YES) {
-                        [crsMatrix setSymmetricDirichletInGlobal:solution :nb :0.0];
-                    }else {
-                        [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                        matContainers->RHS[nb] = 0.0;
-                    }
+            // Contribute this boundary to global system (i.e., solve global boundary problem)
+            for (k=n; k<numEdgeDofs; k++) {
+                nb = varContainers->Perm[_g_Ind[k]];
+                if (nb < 0) continue;
+                nb = u_offset + solution.variable.dofs*nb + dof;
+                if (constantValue == YES) {
+                    [crsMatrix setSymmetricDirichletInGlobal:solution :nb :0.0];
+                }else {
+                    [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                    matContainers->RHS[nb] = 0.0;
                 }
             }
         }
     }
     
-     @autoreleasepool {
-    
-         // Set Dirichlet dofs for edges and faces
-         for (dof=0; dof<solution.variable.dofs; dof++) {
-             
-             componentName = [NSMutableString stringWithString:solution.variable.name];
-             if (solution.variable.dofs > 1) {
-                 appendDof = @(dof+1);
-                 [componentName appendString:@" "];
-                 [componentName appendString:[appendDof stringValue]];
-             }
-             
-             [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
-             
-             [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset];
-             
-             // Dirichlet BCs for face and edge dofs
-             for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
-                 
-                 element = [self getBoundaryElement:solution atIndex:i];
-                 if ([self isActiveElement:element inSolution:solution] == NO) continue;
-                 
-                 bc = [self getBoundaryCondition:model forElement:element];
-                 if (bc == nil) continue;
-                 
-                 
-                 str1 = [NSString stringWithString:componentName];
-                 str2 = [NSString stringWithString:componentName];
-                 [str1 appendString:@" {e}"];
-                 [str2 appendString:@" {f}"];
-                 if ( [listUtil listCheckPresentVariable:componentName inArray:bc] == NO
-                     && [listUtil listCheckPresentVariable:str1 inArray:bc] == NO
-                     && [listUtil listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
-                 
-                 // Get parent element
-                 parent = element->BoundaryInfo->Left;
-                 if (parent == NULL) {
-                     parent = element->BoundaryInfo->Right;
-                 }
-                 if (parent == NULL) continue;
-                 
-                 if ([listUtil listCheckPresentVariable:str1 inArray:bc] == YES) {
-                     if (solution.mesh.isAssociatedEdges == YES) {
-                         switch ([self getElementFamily:element]) {
-                             case 1:
-                             case 2:
-                                 for (j=0; j<parent->Type.NumberOfEdges; j++) {
-                                     
-                                     n = 0;
-                                     for (k=0; k<element->Type.NumberOfNodes; k++) {
-                                         for (l=0; l<edges[parent->EdgeIndexes[j]].Type.NumberOfNodes; l++) {
-                                             if (element->NodeIndexes[k] == edges[parent->EdgeIndexes[j]].NodeIndexes[l]) n++;
-                                         }
-                                     }
-                                     if (n == element->Type.NumberOfNodes) break;
-                                 }
-                                 nb = parent->Type.NumberOfNodes;
-                                 n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
-                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
-                                 
-                                 n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
-                                 for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
-                                     nb = varContainers->Perm[_g_Ind[k]];
-                                     if (nb < 0) continue;
-                                     nb = u_offset + solution.variable.dofs*nb + dof;
-                                     if (solution.matrix.isSymmetric == YES) {
-                                         [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
-                                     } else {
-                                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                         matContainers->RHS[nb] = _kernWork[0];
-                                         [self setMatrixElement:solution :nb :nb :1.0];
-                                     }
-                                 }
-                                 break;
-                             case 3:
-                             case 4:
-                                 for (j=0; j<parent->Type.NumberOfFaces; j++) {
-                                     if (element->Type.ElementCode == faces[parent->FaceIndexes[j]].Type.ElementCode) {
-                                         n = 0;
-                                         for (k=0; k<element->Type.NumberOfNodes; k++) {
-                                             for (l=0; l<faces[parent->FaceIndexes[j]].Type.NumberOfNodes; l++) {
-                                                 if (element->NodeIndexes[k] == faces[parent->FaceIndexes[j]].NodeIndexes[l]) n++;
-                                             }
-                                         }
-                                         if (n == element->Type.NumberOfNodes) break;
-                                     }
-                                 }
-                                 
-                                 for (j=0; j<faces[parent->FaceIndexes[j]].Type.NumberOfEdges; j++) {
-                                     nb = edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].Type.NumberOfNodes;
-                                     n = parent->Type.NumberOfNodes;
-                                     [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
-                                     
-                                     n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
-                                     for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
-                                         nb = varContainers->Perm[_g_Ind[k]];
-                                         if (nb < 0) continue;
-                                         nb = u_offset + solution.variable.dofs*nb + dof;
-                                         if (solution.matrix.isSymmetric == YES) {
-                                             [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
-                                         } else {
-                                             [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                             matContainers->RHS[nb] = _kernWork[0];
-                                             [self setMatrixElement:solution :nb :nb :1.0];
-                                         }
-                                     }
-                                 }
-                         }
-                     } // end associated edges
-                 } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
-                     n = [self getElementDofs:solution forElement:element atIndexes:_g_Ind];
-                     for (k=0; k<n; k++) {
-                         nb = varContainers->Perm[_g_Ind[k]];
-                         if (nb < 0) continue;
-                         nb = u_offset + solution.variable.dofs+nb + dof;
-                         
-                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                         [self setMatrixElement:solution :nb :nb :1.0];
-                         matContainers->RHS[nb] = _kernWork[0];
-                     }
-                 }
-                 
-                 if (parent->Pdefs == NULL) continue;
-                 
-                 list = [listUtil listFindVariable:componentName inArray:bc];
-                 constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
-                 if (constantValue == YES) continue;
-                 
-                 switch (parent->Type.dimension) {
-                     case 2:
-                         // If no edges do not try to set boundary conditions
-                         // TODO: change to break instead of continue ??
-                         if (solution.mesh.isAssociatedEdges == NO) continue;
-                         
-                         // If boundary edge has not dofs, move on to next edge
-                         if (element->BDOFs <= 0) continue;
-                         
-                         // Number of nodes for this element
-                         n = element->Type.NumberOfNodes;
-                         
-                         // Get indexes for boundary and values dofs associated to them
-                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
-                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
-                         
-                         if (solution.matrix.isSymmetric == YES) {
-                             
-                             for (l=0; l<n; l++) {
-                                 nb = varContainers->Perm[_g_Ind[l]];
-                                 if (nb < 0) continue;
-                                 nb = u_offset + solution.variable.dofs*nb + dof;
-                                 for (k=n; k<numEdgeDofs; k++) {
-                                     _kernWork[k] = _kernWork[k] - _kernStiff[k][l]*matContainers->RHS[nb];
-                                 }
-                             }
-                             
-                             for (k=n; k<numEdgeDofs; k++) {
-                                 for (l=n; l<numEdgeDofs; l++) {
-                                     _kernStiff[k-n][l-n] = _kernStiff[k][l];
-                                 }
-                                 _kernWork[k-n] = _kernWork[k];
-                             }
-                             l = numEdgeDofs - n;
-                             if (l == 1) {
-                                 _kernWork[0] = _kernWork[0] / _kernStiff[0][0];
-                             } else {
-                                 memset( buffer, 0.0, (_size1kernStiff*_size2kernStiff)*sizeof(buffer) );
-                                 m = 0;
-                                 for (j=0; j<l; j++) {
-                                     for (k=0; k<l; k++) {
-                                         buffer[m] = _kernStiff[j][k];
-                                         m++;
-                                     }
-                                 }
-                                 [self solveWithLapackMatrix:buffer andVector:_kernWork size:l];
-                             }
-                             for (k=n; k<numEdgeDofs; k++) {
-                                 nb = varContainers->Perm[_g_Ind[k]];
-                                 if (nb < 0) continue;
-                                 nb = u_offset + solution.variable.dofs*nb + dof;
-                                 [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[k-n]];
-                             }
-                         } else {
-                             // Contribute this boundary to global system
-                             // (i.e., solve global boundary problem)
-                             for (k=n; k<numEdgeDofs; k++) {
-                                 nb = varContainers->Perm[_g_Ind[k]];
-                                 if (nb < 0) continue;
-                                 nb = u_offset + solution.variable.dofs*nb + dof;
-                                 matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
-                                 for (l=0; l<numEdgeDofs; l++) {
-                                     mb = varContainers->Perm[_g_Ind[l]];
-                                     if (mb < 0) continue;
-                                     mb = u_offset + solution.variable.dofs*mb + dof;
-                                     for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
-                                         if (matContainers->Cols[kk] == mb) {
-                                             matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
-                                             break;
-                                         }
-                                     }
-                                 }
-                             }
-                         }
-                         break;
-                     case 3:
-                         // If no faces present do not try to set boundary conditions
-                         // TODO: change to break instead of continue ??
-                         if (solution.mesh.isAssociatedFaces == NO) continue;
-                         
-                         // Parameters of element
-                         n = element->Type.NumberOfNodes;
-                         
-                         // Get global boundary indexes and solve dofs asscociated to them
-                         [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
-                         
-                         // If boundary face has no dofs, skip to next boundary element
-                         if (numEdgeDofs == n) continue;
-                         
-                         // Get local solution
-                         [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
-                         
-                         n_start = 0;
-                         if (solution.matrix.isSymmetric == YES) {
-                             for (l=0; l<n; l++) {
-                                 nb = varContainers->Perm[_g_Ind[l]];
-                                 if (nb < 0) continue;
-                                 nb = u_offset + solution.variable.dofs*nb + dof;
-                                 for (k=n; k<numEdgeDofs; k++) {
-                                     _kernWork[k] = _kernWork[k] - _kernStiff[k][l] * matContainers->RHS[nb];
-                                 }
-                             }
-                             n_start++;
-                         }
-                         
-                         // Contribute this entry to global boundary problem
-                         for (k=n; k<numEdgeDofs; k++) {
-                             nb = varContainers->Perm[_g_Ind[k]];
-                             if (nb < 0) continue;
-                             nb = u_offset + solution.variable.dofs*nb + dof;
-                             matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
-                             for (l=n_start; l<numEdgeDofs; l++) {
-                                 mb = varContainers->Perm[_g_Ind[l]];
-                                 if (mb < 0) continue;
-                                 mb = u_offset + solution.variable.dofs*mb + dof;
-                                 for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
-                                     if (matContainers->Cols[kk] == mb) {
-                                         matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
-                                         break;
-                                     }
-                                 }
-                             }
-                         }
-                 }
-             } //end loop over boundary elements
-         } //end loop over dofs
-         
-     }
+    // Set Dirichlet dofs for edges and faces
+    for (dof=0; dof<solution.variable.dofs; dof++) {
+        
+        componentName = [NSMutableString stringWithString:solution.variable.name];
+        if (solution.variable.dofs > 1) {
+            appendDof = @(dof+1);
+            [componentName appendString:@" "];
+            [componentName appendString:[appendDof stringValue]];
+        }
+        
+        [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
+        
+        [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset];
+        
+        // Dirichlet BCs for face and edge dofs
+        for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
+            
+            element = [self getBoundaryElement:solution atIndex:i];
+            if ([self isActiveElement:element inSolution:solution] == NO) continue;
+            
+            bc = [self getBoundaryCondition:model forElement:element];
+            if (bc == nil) continue;
+            
+            
+            str1 = [NSString stringWithString:componentName];
+            str2 = [NSString stringWithString:componentName];
+            [str1 appendString:@" {e}"];
+            [str2 appendString:@" {f}"];
+            if ( [listUtil listCheckPresentVariable:componentName inArray:bc] == NO
+                && [listUtil listCheckPresentVariable:str1 inArray:bc] == NO
+                && [listUtil listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
+            
+            // Get parent element
+            parent = element->BoundaryInfo->Left;
+            if (parent == NULL) {
+                parent = element->BoundaryInfo->Right;
+            }
+            if (parent == NULL) continue;
+            
+            if ([listUtil listCheckPresentVariable:str1 inArray:bc] == YES) {
+                if (solution.mesh.isAssociatedEdges == YES) {
+                    switch ([self getElementFamily:element]) {
+                        case 1:
+                        case 2:
+                            for (j=0; j<parent->Type.NumberOfEdges; j++) {
+                                
+                                n = 0;
+                                for (k=0; k<element->Type.NumberOfNodes; k++) {
+                                    for (l=0; l<edges[parent->EdgeIndexes[j]].Type.NumberOfNodes; l++) {
+                                        if (element->NodeIndexes[k] == edges[parent->EdgeIndexes[j]].NodeIndexes[l]) n++;
+                                    }
+                                }
+                                if (n == element->Type.NumberOfNodes) break;
+                            }
+                            nb = parent->Type.NumberOfNodes;
+                            n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
+                            [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
+                            
+                            n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
+                            for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                nb = varContainers->Perm[_g_Ind[k]];
+                                if (nb < 0) continue;
+                                nb = u_offset + solution.variable.dofs*nb + dof;
+                                if (solution.matrix.isSymmetric == YES) {
+                                    [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
+                                } else {
+                                    [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                                    matContainers->RHS[nb] = _kernWork[0];
+                                    [self setMatrixElement:solution :nb :nb :1.0];
+                                }
+                            }
+                            break;
+                        case 3:
+                        case 4:
+                            for (j=0; j<parent->Type.NumberOfFaces; j++) {
+                                if (element->Type.ElementCode == faces[parent->FaceIndexes[j]].Type.ElementCode) {
+                                    n = 0;
+                                    for (k=0; k<element->Type.NumberOfNodes; k++) {
+                                        for (l=0; l<faces[parent->FaceIndexes[j]].Type.NumberOfNodes; l++) {
+                                            if (element->NodeIndexes[k] == faces[parent->FaceIndexes[j]].NodeIndexes[l]) n++;
+                                        }
+                                    }
+                                    if (n == element->Type.NumberOfNodes) break;
+                                }
+                            }
+                            
+                            for (j=0; j<faces[parent->FaceIndexes[j]].Type.NumberOfEdges; j++) {
+                                nb = edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].Type.NumberOfNodes;
+                                n = parent->Type.NumberOfNodes;
+                                [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
+                                
+                                n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
+                                for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
+                                    nb = varContainers->Perm[_g_Ind[k]];
+                                    if (nb < 0) continue;
+                                    nb = u_offset + solution.variable.dofs*nb + dof;
+                                    if (solution.matrix.isSymmetric == YES) {
+                                        [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
+                                    } else {
+                                        [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                                        matContainers->RHS[nb] = _kernWork[0];
+                                        [self setMatrixElement:solution :nb :nb :1.0];
+                                    }
+                                }
+                            }
+                    }
+                } // end associated edges
+            } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
+                n = [self getElementDofs:solution forElement:element atIndexes:_g_Ind];
+                for (k=0; k<n; k++) {
+                    nb = varContainers->Perm[_g_Ind[k]];
+                    if (nb < 0) continue;
+                    nb = u_offset + solution.variable.dofs+nb + dof;
+                    
+                    [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
+                    [self setMatrixElement:solution :nb :nb :1.0];
+                    matContainers->RHS[nb] = _kernWork[0];
+                }
+            }
+            
+            if (parent->Pdefs == NULL) continue;
+            
+            list = [listUtil listFindVariable:componentName inArray:bc];
+            constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
+            if (constantValue == YES) continue;
+            
+            switch (parent->Type.dimension) {
+                case 2:
+                    // If no edges do not try to set boundary conditions
+                    // TODO: change to break instead of continue ??
+                    if (solution.mesh.isAssociatedEdges == NO) continue;
+                    
+                    // If boundary edge has not dofs, move on to next edge
+                    if (element->BDOFs <= 0) continue;
+                    
+                    // Number of nodes for this element
+                    n = element->Type.NumberOfNodes;
+                    
+                    // Get indexes for boundary and values dofs associated to them
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
+                    
+                    if (solution.matrix.isSymmetric == YES) {
+                        
+                        for (l=0; l<n; l++) {
+                            nb = varContainers->Perm[_g_Ind[l]];
+                            if (nb < 0) continue;
+                            nb = u_offset + solution.variable.dofs*nb + dof;
+                            for (k=n; k<numEdgeDofs; k++) {
+                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l]*matContainers->RHS[nb];
+                            }
+                        }
+                        
+                        for (k=n; k<numEdgeDofs; k++) {
+                            for (l=n; l<numEdgeDofs; l++) {
+                                _kernStiff[k-n][l-n] = _kernStiff[k][l];
+                            }
+                            _kernWork[k-n] = _kernWork[k];
+                        }
+                        l = numEdgeDofs - n;
+                        if (l == 1) {
+                            _kernWork[0] = _kernWork[0] / _kernStiff[0][0];
+                        } else {
+                            memset( buffer, 0.0, (_size1kernStiff*_size2kernStiff)*sizeof(buffer) );
+                            m = 0;
+                            for (j=0; j<l; j++) {
+                                for (k=0; k<l; k++) {
+                                    buffer[m] = _kernStiff[j][k];
+                                    m++;
+                                }
+                            }
+                            [self solveWithLapackMatrix:buffer andVector:_kernWork size:l];
+                        }
+                        for (k=n; k<numEdgeDofs; k++) {
+                            nb = varContainers->Perm[_g_Ind[k]];
+                            if (nb < 0) continue;
+                            nb = u_offset + solution.variable.dofs*nb + dof;
+                            [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[k-n]];
+                        }
+                    } else {
+                        // Contribute this boundary to global system
+                        // (i.e., solve global boundary problem)
+                        for (k=n; k<numEdgeDofs; k++) {
+                            nb = varContainers->Perm[_g_Ind[k]];
+                            if (nb < 0) continue;
+                            nb = u_offset + solution.variable.dofs*nb + dof;
+                            matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
+                            for (l=0; l<numEdgeDofs; l++) {
+                                mb = varContainers->Perm[_g_Ind[l]];
+                                if (mb < 0) continue;
+                                mb = u_offset + solution.variable.dofs*mb + dof;
+                                for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
+                                    if (matContainers->Cols[kk] == mb) {
+                                        matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 3:
+                    // If no faces present do not try to set boundary conditions
+                    // TODO: change to break instead of continue ??
+                    if (solution.mesh.isAssociatedFaces == NO) continue;
+                    
+                    // Parameters of element
+                    n = element->Type.NumberOfNodes;
+                    
+                    // Get global boundary indexes and solve dofs asscociated to them
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                    
+                    // If boundary face has no dofs, skip to next boundary element
+                    if (numEdgeDofs == n) continue;
+                    
+                    // Get local solution
+                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
+                    
+                    n_start = 0;
+                    if (solution.matrix.isSymmetric == YES) {
+                        for (l=0; l<n; l++) {
+                            nb = varContainers->Perm[_g_Ind[l]];
+                            if (nb < 0) continue;
+                            nb = u_offset + solution.variable.dofs*nb + dof;
+                            for (k=n; k<numEdgeDofs; k++) {
+                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l] * matContainers->RHS[nb];
+                            }
+                        }
+                        n_start++;
+                    }
+                    
+                    // Contribute this entry to global boundary problem
+                    for (k=n; k<numEdgeDofs; k++) {
+                        nb = varContainers->Perm[_g_Ind[k]];
+                        if (nb < 0) continue;
+                        nb = u_offset + solution.variable.dofs*nb + dof;
+                        matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
+                        for (l=n_start; l<numEdgeDofs; l++) {
+                            mb = varContainers->Perm[_g_Ind[l]];
+                            if (mb < 0) continue;
+                            mb = u_offset + solution.variable.dofs*mb + dof;
+                            for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
+                                if (matContainers->Cols[kk] == mb) {
+                                    matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+            }
+        } //end loop over boundary elements
+    } //end loop over dofs
     
     free_dvector(buffer, 0, (_size1kernStiff*_size2kernStiff)-1);
     matContainers = NULL;
@@ -5016,7 +4964,7 @@ static int PRECOND_VANKA     =  560;
 /*********************************************************************************
     We don't use the backward error estimate e = ||Ax-b||/||A|| ||X|| + ||b||
     as stoping criterion
-*********************************************************************************/ 
+*********************************************************************************/
     int i, n;
     double err, *res;
     double sum1, sum2, sum3, sum4;

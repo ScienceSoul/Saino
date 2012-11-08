@@ -194,11 +194,9 @@ static char *_parallel_extensions[] = {
     NSFileHandle *file;
     
     [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
-    @autoreleasepool {
-        for (i=0; i<self.meshFiles; i++) {
-            [self.manager openStream:file :@(filename) :@"write"];
-            [self.meshFileStreams insertObject:file atIndex:i];
-        }
+    for (i=0; i<self.meshFiles; i++) {
+        [self.manager openStream:file :@(filename) :@"write"];
+        [self.meshFileStreams insertObject:file atIndex:i];
     }
     
     return 0;
@@ -211,23 +209,21 @@ static char *_parallel_extensions[] = {
     FileReader *reader;
     NSString *line;
     
-    @autoreleasepool {
-        for (i=0; i<self.meshFiles; i++) {
+    for (i=0; i<self.meshFiles; i++) {
+        
+        if (self.parallel) {
+            snprintf(_newdir, sizeof(_newdir), "%s/partitioning.%d", [dir UTF8String], self.parts);
+            snprintf(filename, sizeof(filename), _extension[i], _newdir, self.me);
             
-            if (self.parallel) {
-                snprintf(_newdir, sizeof(_newdir), "%s/partitioning.%d", [dir UTF8String], self.parts);
-                snprintf(filename, sizeof(filename), _extension[i], _newdir, self.me);
-                
-            } else [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
-                
-            reader = [[FileReader alloc] initWithFilePath:@(filename)];
-            if (!reader) {
-                return -1;
-            } else {
-                [self.meshFileStreams insertObject:reader atIndex:i];
-            }
-            
+        } else [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
+        
+        reader = [[FileReader alloc] initWithFilePath:@(filename)];
+        if (!reader) {
+            return -1;
+        } else {
+            [self.meshFileStreams insertObject:reader atIndex:i];
         }
+        
     }
     
     // Used to separate strings and filter them from white spaces
@@ -238,28 +234,26 @@ static char *_parallel_extensions[] = {
     reader = (self.meshFileStreams)[HEADER];
     line = nil;
     j = 0;
-    @autoreleasepool {
-        while ((line = [reader readLine])) {
-            lineCount++;
-            NSLog(@"%3.d: %@", lineCount, line);
-            // Parse the line
-            NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
-            NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-            if ([filteredArray count] == 3) { // First line of header file, three elements
-                self.nodeCount = [filteredArray[0] intValue];
-                self.elementCount = [filteredArray[1] intValue];
-                self.boundaryElementCount = [filteredArray[2] intValue];
-            } else if ([filteredArray count] == 1) { // Second line, one element
-                self.elementTypes = [filteredArray[0] intValue];
-            } else if ([filteredArray count] == 2) { // The rest of the file, two elements                                
-                [self.elementTypeTags addObject:filteredArray[0]];
-                [self.elementTypeCount addObject:filteredArray[1]];
-                j++;
-            } else if (self.parallel && lineCount == (2+self.elementTypes)+1) { // In case of a parallel mesh
-                self.sharedNodeCount = [filteredArray[0] intValue];
-                self.borderElementCount = [filteredArray[1] intValue];
-            }
-        }	
+    while ((line = [reader readLine])) {
+        lineCount++;
+        NSLog(@"%3.d: %@", lineCount, line);
+        // Parse the line
+        NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
+        NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
+        if ([filteredArray count] == 3) { // First line of header file, three elements
+            self.nodeCount = [filteredArray[0] intValue];
+            self.elementCount = [filteredArray[1] intValue];
+            self.boundaryElementCount = [filteredArray[2] intValue];
+        } else if ([filteredArray count] == 1) { // Second line, one element
+            self.elementTypes = [filteredArray[0] intValue];
+        } else if ([filteredArray count] == 2) { // The rest of the file, two elements
+            [self.elementTypeTags addObject:filteredArray[0]];
+            [self.elementTypeCount addObject:filteredArray[1]];
+            j++;
+        } else if (self.parallel && lineCount == (2+self.elementTypes)+1) { // In case of a parallel mesh
+            self.sharedNodeCount = [filteredArray[0] intValue];
+            self.borderElementCount = [filteredArray[1] intValue];
+        }
     }
     
     step = 0;
@@ -273,13 +267,11 @@ static char *_parallel_extensions[] = {
     int i;
     FileReader *reader;
     
-    @autoreleasepool {
-        for (i=0; i<self.meshFiles; i++) {
-            reader = (self.meshFileStreams)[i];
-            [reader closeHandle];
-        }
+    for (i=0; i<self.meshFiles; i++) {
+        reader = (self.meshFileStreams)[i];
+        [reader closeHandle];
     }
-        
+
     free(_clist);
     _clist = NULL;
     
@@ -348,36 +340,34 @@ static char *_parallel_extensions[] = {
     
     memset( pdofs, 0.0, (6*sizeof(pdofs)) );
     gotnodal = 0;
-    @autoreleasepool {
-        for (i=0; i<[typestr length]; i++) {
-            character[0] = [typestr characterAtIndex:i];
-            str1 = @(character);
-            if ([str1 isEqualToString:@"n"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[0] = [str2 intValue];
-                gotnodal = 1;
-            } else if ([str1 isEqualToString:@"e"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[1] = [str2 intValue];
-            } else if ([str1 isEqualToString:@"f"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[2] = [str2 intValue];
-            } else if ([str1 isEqualToString:@"d"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[3] = [str2 intValue];
-            } else if ([str1 isEqualToString:@"b"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[4] = [str2 intValue];
-            } else if ([str1 isEqualToString:@"p"]) {
-                character[0] = [typestr characterAtIndex:i+1];
-                str2 = @(character);
-                pdofs[5] = [str2 intValue];
-            }
+    for (i=0; i<[typestr length]; i++) {
+        character[0] = [typestr characterAtIndex:i];
+        str1 = @(character);
+        if ([str1 isEqualToString:@"n"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[0] = [str2 intValue];
+            gotnodal = 1;
+        } else if ([str1 isEqualToString:@"e"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[1] = [str2 intValue];
+        } else if ([str1 isEqualToString:@"f"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[2] = [str2 intValue];
+        } else if ([str1 isEqualToString:@"d"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[3] = [str2 intValue];
+        } else if ([str1 isEqualToString:@"b"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[4] = [str2 intValue];
+        } else if ([str1 isEqualToString:@"p"]) {
+            character[0] = [typestr characterAtIndex:i+1];
+            str2 = @(character);
+            pdofs[5] = [str2 intValue];
         }
     }
     *type = [typestr intValue];
