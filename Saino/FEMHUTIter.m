@@ -295,7 +295,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rnrm0, rnrm, mxnrmx, mxnrmr, errorind, delta = 1.0e-2, bnrm;
     int i, j, rr, r, u, xp, bp, z, zz, y0, yl, y, k, rows, cols, nrhs, *iwork, round, info;
     double **work, **rwork, alpha, beta, omega, rho0,rho1, sigma, varrho, hatgamma;
-    double *buffer, *buffer2, *buffer3;
+    double *buffer, *buffer2;
     char str;
     BOOL rcmp, xpdt;
     
@@ -315,7 +315,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     buffer = doublevec(0, n-1);
     buffer2 = doublevec(0, n-1);
-    buffer3 = doublevec(0, n-1);
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -398,7 +397,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
         free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
         free_dvector(buffer, 0, n-1);
         free_dvector(buffer2, 0, n-1);
-        free_dvector(buffer3, 0, n-1);
         
         return;
     }
@@ -419,6 +417,12 @@ static double UPPERB_TOL_RATIO  =  10.0;
     for (i=0; i<n; i++) {
         xvec[i] = zero;
     }
+    
+    free_dvector(buffer, 0, n-1);
+    free_dvector(buffer2, 0, n-1);
+    
+    buffer = doublevec(0, (l+1)-1);
+    buffer2 = doublevec(0, (l+1)-1);
     
     for (round = 1; round <= rounds; round++) {
         
@@ -600,38 +604,31 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
         // Convex combination
         
-        memset( buffer, 0.0, (n*sizeof(buffer)) );
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
-        memset( buffer3, 0.0, (n*sizeof(buffer3)) );
+        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
+        memset( buffer2, 0.0, ((l+1)*sizeof(buffer2)) );
         for (i=0; i<l+1; i++) {
-            for (j=z; j<=z+l; j++) {
-                buffer[i] = rwork[i][j];
-            }
+             buffer[i] = rwork[i][y0];
         }
-        for (i=0; i<l+1; i++) {
-             buffer2[i] = rwork[i][y0];
-        }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l-1, one, buffer, l+1, buffer2, 1, zero, buffer3, 1);
-        kappa0 = sqrt( cblas_ddot(l+1, buffer2, 1, buffer3, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
+        kappa0 = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
+        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
         for (i=0; i<l+1; i++) {
-            buffer2[i] = rwork[i][yl];
+            buffer[i] = rwork[i][yl];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l-1, one, buffer, l+1, buffer2, 1, zero, buffer3, 1);
-        kappal = sqrt( cblas_ddot(l-1, buffer2, 1, buffer3, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
+        kappal = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
         
-        
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
+        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
         for (i=0; i<l+1; i++) {
-            buffer2[i] = rwork[i][y0];
+            buffer[i] = rwork[i][y0];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l-1, one, buffer, l-1, buffer2, 1, zero, buffer3, 1);
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
+        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
         for (i=0; i<l+1; i++) {
-            buffer2[i] = rwork[i][yl];
+            buffer[i] = rwork[i][yl];
         }
-        varrho = cblas_ddot(l+1, buffer2, 1, buffer3, 1) / (kappa0*kappal);
+        varrho = cblas_ddot(l+1, buffer, 1, buffer2, 1) / (kappa0*kappal);
         hatgamma = varrho / fabs(varrho) * max(fabs(varrho), 7e-1) * kappa0/kappal;
         for (i=0; i<l+1; i++) {
             rwork[i][y0] = rwork[i][y0] - hatgamma * rwork[i][yl];
@@ -648,12 +645,12 @@ static double UPPERB_TOL_RATIO  =  10.0;
             }
         }
         
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
+        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
         for (i=0; i<l+1; i++) {
-            buffer2[i] = rwork[i][y0];
+            buffer[i] = rwork[i][y0];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l-1, one, buffer, l-1, buffer2, 1, zero, buffer3, 1);
-        rnrm = sqrt( cblas_ddot(l-1, buffer2, 1, buffer3, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
+        rnrm = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
         
         // The reliable update part
         
@@ -744,10 +741,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(t, 0, n-1);
     free_dmatrix(work, 0, n-1, 0, (3+2*(l+1))-1);
     free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
-    free_dvector(buffer, 0, n-1);
-    free_dvector(buffer2, 0, n-1);
-    free_dvector(buffer3, 0, n-1);
-    
+    free_dvector(buffer, 0, (l+1)-1);
+    free_dvector(buffer2, 0, (l+1)-1);
 }
 
 -(void)HUTI_gcr:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)m: (SEL)pcondlMethod: (SEL)matvecMethod {
@@ -910,7 +905,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
         free_dmatrix(v, 0, n-1, 0, (m-1)-1);
         free_dmatrix(s, 0, n-1, 0, (m-1)-1);
     }
-
 }
 
 
@@ -1018,14 +1012,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [mstopInvocation setTarget:kernel];
     
     // Vector allocations
-    rtld = doublevec(0, ipar[2]-1);
-    p = doublevec(0, ipar[2]-1);
-    t1v = doublevec(0, ipar[2]-1);
-    v = doublevec(0, ipar[2]-1);
-    s = doublevec(0, ipar[2]-1);
-    t2v = doublevec(0, ipar[2]-1);
-    t = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
+    rtld = doublevec(0, ndim-1);
+    p = doublevec(0, ndim-1);
+    t1v = doublevec(0, ndim-1);
+    v = doublevec(0, ndim-1);
+    s = doublevec(0, ndim-1);
+    t2v = doublevec(0, ndim-1);
+    t = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
     
     // The actual BI-CGSTAB begins here (look at the pseudo-code in the book, page 27)
     
@@ -1063,13 +1057,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         r[i] = matContainers->RHS[i] - r[i];
         rtld[i] = r[i];
     }
     
-    memset( p, 0.0, (ipar[2]*sizeof(p)) );
-    memset( v, 0.0, (ipar[2]*sizeof(v)) );
+    memset( p, 0.0, (ndim*sizeof(p)) );
+    memset( v, 0.0, (ndim*sizeof(v)) );
     
     oldrho = 1;
     omega = 1;
@@ -1085,7 +1079,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         
         beta = ( rho * alpha) / ( oldrho * omega );
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             p[i] = r[i] + beta * (p[i] - omega * v[i]);
         }
         
@@ -1108,13 +1102,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [matvecInvocation invoke];
         
         alpha = rho / cblas_ddot(HUTI_NDIM, rtld, 1, v, 1);
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             s[i] = r[i] - alpha * v[i];
         }
         
         residual = cblas_dnrm2(HUTI_NDIM, s, 1);
         if (residual < HUTI_EPSILON) {
-            for (i=0; i<ipar[2]; i++) {
+            for (i=0; i<ndim; i++) {
                 varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i];
                 HUTI_INFO = HUTI_BICGSTAB_SNORM;
                 break;
@@ -1140,7 +1134,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [matvecInvocation invoke];
         
         omega = ( cblas_ddot(HUTI_NDIM, t, 1, s, 1) ) / ( cblas_ddot(HUTI_NDIM, t, 1, t, 1));
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i] + omega * t2v[i];
             r[i] = s[i] - omega * t[i];
         }
@@ -1153,7 +1147,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t2v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -1164,7 +1158,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t2v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / rhsnorm;
@@ -1179,7 +1173,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = alpha * t1v[i] + omega * t2v[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -1199,7 +1193,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t2v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -1242,14 +1236,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
     HUTI_ITERS = iter_count;
     
     // Release memory
-    free_dvector(rtld, 0, ipar[2]-1);
-    free_dvector(p, 0, ipar[2]-1);
-    free_dvector(t1v, 0, ipar[2]-1);
-    free_dvector(v, 0, ipar[2]-1);
-    free_dvector(s, 0, ipar[2]-1);
-    free_dvector(t2v, 0, ipar[2]-1);
-    free_dvector(t, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
+    free_dvector(rtld, 0, ndim-1);
+    free_dvector(p, 0, ndim-1);
+    free_dvector(t1v, 0, ndim-1);
+    free_dvector(v, 0, ndim-1);
+    free_dvector(s, 0, ndim-1);
+    free_dvector(t2v, 0, ndim-1);
+    free_dvector(t, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
     
     matContainers = NULL;
     varContainers = NULL;
@@ -1317,14 +1311,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [mstopInvocation setTarget:kernel];
     
     // Vector allocations
-    rtld = doublevec(0, ipar[2]-1);
-    u = doublevec(0, ipar[2]-1);
-    t1v = doublevec(0, ipar[2]-1);
-    v = doublevec(0, ipar[2]-1);
-    s = doublevec(0, ipar[2]-1);
-    w = doublevec(0, ipar[2]-1);
-    t = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
+    rtld = doublevec(0, ndim-1);
+    u = doublevec(0, ndim-1);
+    t1v = doublevec(0, ndim-1);
+    v = doublevec(0, ndim-1);
+    s = doublevec(0, ndim-1);
+    w = doublevec(0, ndim-1);
+    t = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
     
     // The actual BI-CGSTAB begins here (look at the pseudo-code in the book, page 27)
     
@@ -1369,7 +1363,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         u[i] = matContainers->RHS[i] - r[i];
     }
     
@@ -1379,10 +1373,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         rtld[i] = r[i];
     }
-    memset( u, 0.0, (ipar[2]*sizeof(u)) );
+    memset( u, 0.0, (ndim*sizeof(u)) );
     oldrho = 1;
     omega2 = 1;
     alpha = 0;
@@ -1401,7 +1395,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         beta = ( rho * alpha ) / oldrho;
         oldrho = rho;
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             u[i] = r[i] - beta * u[i];
         }
         
@@ -1424,7 +1418,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
 
         alpha = oldrho / cblas_ddot(HUTI_NDIM, rtld, 1, v, 1);
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             r[i] = r[i] - alpha * v[i];
         }
         
@@ -1446,7 +1440,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation setArgument:&ipar atIndex:5];
         [pcondlInvocation invoke];
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + alpha * u[i];
         }
         
@@ -1459,7 +1453,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
         beta = ( rho * alpha ) / oldrho;
         oldrho = rho;
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             v[i] = s[i] - beta * v[i];
         }
         
@@ -1482,7 +1476,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
         
         alpha = oldrho / cblas_ddot(HUTI_NDIM, rtld, 1, w, 1);
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             u[i] = r[i] - beta * u[i];
             r[i] = r[i] - alpha * v[i];
             s[i] = s[i] - alpha * w[i];
@@ -1517,7 +1511,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         omega2 = ( omega2 - ( delta * omega1 ) / myy ) / tau;
         omega1 = ( omega1 - delta * omega2 ) / myy;
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + omega1 * r[i] + omega2 * s[i] + alpha * u[i];
             r[i] = r[i] - omega1 * s[i] - omega2 * t[i];
         }
@@ -1536,7 +1530,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1558,7 +1552,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1578,7 +1572,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = omega1 * r[i] + omega2 * s[i] + alpha * u[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -1604,7 +1598,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1628,7 +1622,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             break;
         }
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             u[i] = u[i] - omega1 * v[i] - omega2 * w[i];
         }
         
@@ -1649,14 +1643,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
     HUTI_ITERS = iter_count;
 
     // Release memory
-    free_dvector(rtld, 0, ipar[2]-1);
-    free_dvector(u, 0, ipar[2]-1);
-    free_dvector(t1v, 0, ipar[2]-1);
-    free_dvector(v, 0, ipar[2]-1);
-    free_dvector(s, 0, ipar[2]-1);
-    free_dvector(w, 0, ipar[2]-1);
-    free_dvector(t, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
+    free_dvector(rtld, 0, ndim-1);
+    free_dvector(u, 0, ndim-1);
+    free_dvector(t1v, 0, ndim-1);
+    free_dvector(v, 0, ndim-1);
+    free_dvector(s, 0, ndim-1);
+    free_dvector(w, 0, ndim-1);
+    free_dvector(t, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
 
     matContainers = NULL;
     varContainers = NULL;
@@ -1723,16 +1717,16 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [mstopInvocation setTarget:kernel];
         
     // Vector allocations
-    v = doublevec(0, ipar[2]-1);
-    y = doublevec(0, ipar[2]-1);
-    ynew = doublevec(0, ipar[2]-1);
-    rtld = doublevec(0, ipar[2]-1);
-    t1v = doublevec(0, ipar[2]-1);
-    t2v = doublevec(0, ipar[2]-1);
-    w = doublevec(0, ipar[2]-1);
-    d = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
-    trv = doublevec(0, ipar[2]-1);
+    v = doublevec(0, ndim-1);
+    y = doublevec(0, ndim-1);
+    ynew = doublevec(0, ndim-1);
+    rtld = doublevec(0, ndim-1);
+    t1v = doublevec(0, ndim-1);
+    t2v = doublevec(0, ndim-1);
+    w = doublevec(0, ndim-1);
+    d = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
+    trv = doublevec(0, ndim-1);
     
     // The actual TFQMR begins here (look the pseudo code in the "A Transpose-Free...." paper, algorithm 5.1)
     
@@ -1780,7 +1774,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         d[i] = matContainers->RHS[i] - r[i];
     }
     
@@ -1790,7 +1784,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         y[i] = r[i];
         w[i] = r[i];
     }
@@ -1811,17 +1805,17 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondlInvocation setArgument:&d atIndex:4];
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         t2v[i] = v[i];
     }
     
-    memset( d, 0.0, (ipar[2]*sizeof(d)) );
+    memset( d, 0.0, (ndim*sizeof(d)) );
     tau = cblas_dnrm2(HUTI_NDIM, r, 1);
     oldgamma = 0;
     gamma = 0;
     eta = 0;
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         rtld[i] = r[i];
     }
     
@@ -1838,7 +1832,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     while (1) {
         
         alpha = oldrho / cblas_ddot(HUTI_NDIM, rtld, 1, v, 1);
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             ynew[i] = y[i] - alpha * v[i];
         }
         
@@ -1848,18 +1842,18 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // First the 2n-1
         // Note: We have already MATRIX * Y in t2v
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             w[i] = w[i] - alpha * t2v[i];
         }
         gamma = ( cblas_dnrm2(HUTI_NDIM, w, 1) ) / tau;
         c = 1 / sqrt( 1 + gamma * gamma );
         tau = tau * gamma * c;
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             d[i] = y[i] + ( ( oldgamma * oldgamma * eta ) / alpha ) * d[i];
         }
         eta = c * c * alpha;
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + eta * d[i];
         }
         
@@ -1879,7 +1873,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1901,7 +1895,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1917,7 +1911,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1933,7 +1927,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1949,7 +1943,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -1960,7 +1954,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, trv, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = eta * d[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1);
@@ -1979,7 +1973,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                     [matvecInvocation setArgument:&r atIndex:4];
                     [matvecInvocation setArgument:&ipar atIndex:5];
                     [matvecInvocation invoke];
-                    for (i=0; i<ipar[2]; i++) {
+                    for (i=0; i<ndim; i++) {
                         trv[i] = r[i] - matContainers->RHS[i];
                     }
                     [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2013,7 +2007,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2051,18 +2045,18 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation setArgument:&ipar atIndex:5];
         [pcondlInvocation invoke];
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             w[i] = w[i] - alpha * t1v[i];
         }
         gamma = ( cblas_dnrm2(HUTI_NDIM, w, 1) ) / tau;
         c = 1 / sqrt( 1 + gamma * gamma );
         tau = tau * gamma * c;
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             d[i] = ynew[i] + ( ( oldgamma * oldgamma * eta ) / alpha ) * d[i];
         }
         eta = c * c * alpha;
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + eta * d[i];
         }
         
@@ -2082,7 +2076,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2104,7 +2098,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2120,7 +2114,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2136,7 +2130,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2152,7 +2146,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2163,7 +2157,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, trv, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = eta * d[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1);
@@ -2182,7 +2176,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                     [matvecInvocation setArgument:&r atIndex:4];
                     [matvecInvocation setArgument:&ipar atIndex:5];
                     [matvecInvocation invoke];
-                    for (i=0; i<ipar[2]; i++) {
+                    for (i=0; i<ndim; i++) {
                         trv[i] = r[i] - matContainers->RHS[i];
                     }
                     [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2216,7 +2210,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     trv[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -2248,7 +2242,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         rho = cblas_ddot(HUTI_NDIM, rtld, 1, w, 1);
         beta = rho / oldrho;
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             ynew[i] = w[i] + beta * ynew[i];
         }
         
@@ -2272,7 +2266,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
         // Note: we still have MATRIX * YNEW in t1v
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             v[i] = t2v[i] + beta * t1v[i] + beta * beta * v[i];
             y[i] = ynew[i];
         }
@@ -2297,7 +2291,7 @@ jump:
     [pcondrInvocation setArgument:&varContainers->Values atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         varContainers->Values[i] = trv[i];
     }
     
@@ -2312,16 +2306,16 @@ jump:
     HUTI_ITERS = iter_count;
     
     // Release memory
-    free_dvector(v, 0, ipar[2]-1);
-    free_dvector(y, 0, ipar[2]-1);
-    free_dvector(ynew, 0, ipar[2]-1);
-    free_dvector(rtld, 0, ipar[2]-1);
-    free_dvector(t1v, 0, ipar[2]-1);
-    free_dvector(t2v, 0, ipar[2]-1);
-    free_dvector(w, 0, ipar[2]-1);
-    free_dvector(d, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
-    free_dvector(trv, 0, ipar[2]-1);
+    free_dvector(v, 0, ndim-1);
+    free_dvector(y, 0, ndim-1);
+    free_dvector(ynew, 0, ndim-1);
+    free_dvector(rtld, 0, ndim-1);
+    free_dvector(t1v, 0, ndim-1);
+    free_dvector(t2v, 0, ndim-1);
+    free_dvector(w, 0, ndim-1);
+    free_dvector(d, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
+    free_dvector(trv, 0, ndim-1);
     
     matContainers = NULL;
     varContainers = NULL;
@@ -2388,10 +2382,10 @@ jump:
     [mstopInvocation setTarget:kernel];
     
     // Vector allocations
-    z = doublevec(0, ipar[2]-1);
-    p = doublevec(0, ipar[2]-1);
-    q = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
+    z = doublevec(0, ndim-1);
+    p = doublevec(0, ndim-1);
+    q = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
     
     // The actual CG begins here (look at the pseudo-code in the book, page 27)
     
@@ -2430,7 +2424,7 @@ jump:
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         r[i] = matContainers->RHS[i] - r[i];
     }
     
@@ -2456,12 +2450,12 @@ jump:
         }
         
         if (iter_count == 1) {
-            for (i=0; i<ipar[2]; i++) {
+            for (i=0; i<ndim; i++) {
                 p[i] = z[i];
             }
         } else {
             beta = rho / oldrho;
-            for (i=0; i<ipar[2]; i++) {
+            for (i=0; i<ndim; i++) {
                 p[i] = z[i] + beta * p[i];
             }
         }
@@ -2474,7 +2468,7 @@ jump:
         
         alpha = rho / cblas_ddot(HUTI_NDIM, p, 1, q, 1);
         
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + alpha * p[i];
             r[i] = r[i] - alpha * q[i];
         }
@@ -2487,7 +2481,7 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     z[i] = z[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
@@ -2498,7 +2492,7 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     z[i] = z[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1) / rhsnorm;
@@ -2513,7 +2507,7 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     z[i] = alpha * p[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
@@ -2533,7 +2527,7 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     z[i] = z[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
@@ -2571,10 +2565,10 @@ jump:
     HUTI_ITERS = iter_count;
     
     // Release memory
-    free_dvector(z, 0, ipar[2]-1);
-    free_dvector(p, 0, ipar[2]-1);
-    free_dvector(q, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
+    free_dvector(z, 0, ndim-1);
+    free_dvector(p, 0, ndim-1);
+    free_dvector(q, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
     
     matContainers = NULL;
     varContainers = NULL;
@@ -2641,13 +2635,13 @@ jump:
     [mstopInvocation setTarget:kernel];
 
     // Vector allocations
-    rtld = doublevec(0, ipar[2]-1);
-    p = doublevec(0, ipar[2]-1);
-    q = doublevec(0, ipar[2]-1);
-    u = doublevec(0, ipar[2]-1);
-    t1v = doublevec(0, ipar[2]-1);
-    t2v = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
+    rtld = doublevec(0, ndim-1);
+    p = doublevec(0, ndim-1);
+    q = doublevec(0, ndim-1);
+    u = doublevec(0, ndim-1);
+    t1v = doublevec(0, ndim-1);
+    t2v = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
     
     // The actual CGS begins here (look at the pseudo-code in the book, page 27)
     
@@ -2686,7 +2680,7 @@ jump:
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         r[i] = matContainers->RHS[i] - r[i];
         rtld[i] = r[i];
     }
@@ -2701,13 +2695,13 @@ jump:
         }
         
         if (iter_count == 1) {
-            for (i=0; i<ipar[2]; i++) {
+            for (i=0; i<ndim; i++) {
                 u[i] = r[i];
                 p[i] = u[i];
             }
         } else {
             beta = rho / oldrho;
-            for (i=0; i<ipar[2]; i++) {
+            for (i=0; i<ndim; i++) {
                 u[i] = r[i] + beta * q[i];
                 p[i] = u[i] + beta * q[i] + beta * beta * p[i];
             }
@@ -2732,10 +2726,10 @@ jump:
         [matvecInvocation invoke];
 
         alpha = rho / cblas_ddot(HUTI_NDIM, rtld, 1, t2v, 1);
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             q[i] = u[i] - alpha * t2v[i];
         }
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             t2v[i] = u[i] + q[i];
         }
         
@@ -2750,7 +2744,7 @@ jump:
         [pcondrInvocation setArgument:&u atIndex:4];
         [pcondrInvocation setArgument:&ipar atIndex:5];
         [pcondrInvocation invoke];
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             varContainers->Values[i] = varContainers->Values[i] + alpha * t1v[i];
         }
         
@@ -2759,7 +2753,7 @@ jump:
         [matvecInvocation setArgument:&t2v atIndex:4];
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             r[i] = r[i] - alpha * t2v[i];
         }
         
@@ -2771,7 +2765,7 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -2782,7 +2776,7 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / rhsnorm;
@@ -2797,7 +2791,7 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = alpha * t1v[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -2817,7 +2811,7 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = t1v[i] - matContainers->RHS[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -2855,13 +2849,13 @@ jump:
     HUTI_ITERS = iter_count;
     
     // Release memory
-    free_dvector(rtld, 0, ipar[2]-1);
-    free_dvector(p, 0, ipar[2]-1);
-    free_dvector(q, 0, ipar[2]-1);
-    free_dvector(u, 0, ipar[2]-1);
-    free_dvector(t1v, 0, ipar[2]-1);
-    free_dvector(t2v, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
+    free_dvector(rtld, 0, ndim-1);
+    free_dvector(p, 0, ndim-1);
+    free_dvector(q, 0, ndim-1);
+    free_dvector(u, 0, ndim-1);
+    free_dvector(t1v, 0, ndim-1);
+    free_dvector(t2v, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
     
     matContainers = NULL;
     varContainers = NULL;
@@ -2882,12 +2876,12 @@ jump:
  
 **********************************************************************************************************************************/
     
-    int i, j, k, l, iter_count, m;
+    int i, j, k, iter_count, m;
     int s_ind, vtmp_ind, v_ind;
     double bnrm, alpha, beta;
     double temp, temp2, error;
-    double *w, *r, *s, *vtmp, *t1v, *v, *buffer, *buffer2;
-    double **h, *cs, *sn, *y, *mat; 
+    double *w, *r, *s, *vtmp, *t1v, *v, *buffer;
+    double **h, *cs, *sn, *y; 
     double residual, rhsnorm, precrhsnorm;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
@@ -2931,14 +2925,14 @@ jump:
     [mstopInvocation setTarget:kernel];
     
     // Vector allocations
-    w = doublevec(0, ipar[2]-1);
-    r = doublevec(0, ipar[2]-1);
-    s = doublevec(0, ipar[2]-1);
-    vtmp = doublevec(0, ipar[2]-1);
-    t1v = doublevec(0, ipar[2]-1);
-    v = doublevec(0, ipar[2]-1);
+    w = doublevec(0, ndim-1);
+    r = doublevec(0, ndim-1);
+    s = doublevec(0, ndim-1);
+    vtmp = doublevec(0, ndim-1);
+    t1v = doublevec(0, ndim-1);
+    v = doublevec(0, ndim-1);
     
-    buffer = doublevec(0, ipar[2]-1);
+    buffer = doublevec(0, ndim-1);
     
     cs = doublevec(0, (HUTI_GMRES_RESTART+1)-1);
     sn = doublevec(0, (HUTI_GMRES_RESTART+1)-1);
@@ -2990,7 +2984,7 @@ jump:
     [matvecInvocation setArgument:&r atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
-    for (i=0; i<ipar[2]; i++) {
+    for (i=0; i<ndim; i++) {
         t1v[i] = matContainers->RHS[i] - r[i];
     }
     [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3003,8 +2997,8 @@ jump:
     s_ind = 3;
     vtmp_ind = 4;
     v_ind = 6;
-    for (i=(v_ind-1)+1-1; i<v_ind+m+1-1; i++) {
-        for (j=0; j<ipar[2]; j++) {
+    for (i=(v_ind+1-1)-1; i<v_ind+m+1-1; i++) {
+        for (j=0; j<ndim; j++) {
             work[j][i] = 0.0;
         }
     }
@@ -3016,7 +3010,7 @@ jump:
     }
     memset( cs, 0.0, ((HUTI_GMRES_RESTART+1)*sizeof(cs)) );
     memset( sn, 0.0, ((HUTI_GMRES_RESTART+1)*sizeof(sn)) );
-    memset( vtmp, 0.0, (ipar[2]*sizeof(vtmp)) );
+    memset( vtmp, 0.0, (ndim*sizeof(vtmp)) );
     work[0][vtmp_ind-1] = 1.0;
     
     // This is where the loop starts
@@ -3033,7 +3027,7 @@ jump:
         [matvecInvocation setArgument:&r atIndex:4];
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
-        for (i=0; i<ipar[2]; i++) {
+        for (i=0; i<ndim; i++) {
             t1v[i] = matContainers->RHS[i] - r[i];
         }
         [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3048,8 +3042,8 @@ jump:
             break;
         }
 
-        for (i=0; i<ipar[2]; i++) {
-            work[i][(v_ind-1)+1-1] = r[i] / alpha;
+        for (i=0; i<ndim; i++) {
+            work[i][(v_ind+1-1)-1] = r[i] / alpha;
             s[i] = alpha * vtmp[i];
         }
         
@@ -3057,7 +3051,7 @@ jump:
         
         for (i=0; i<m; i++) {
             
-            for (j=0; j<ipar[2]; j++) {
+            for (j=0; j<ndim; j++) {
                 buffer[j] = work[j][v_ind+i-1];
             }
             
@@ -3081,11 +3075,11 @@ jump:
 
             for (k=0; k<=i; k++) {
                 
-                for (j=0; j<ipar[2]; j++) {
+                for (j=0; j<ndim; j++) {
                     buffer[j] = work[j][v_ind+k-1];
                 }
                 h[k][i] = cblas_ddot(HUTI_NDIM, w, 1, buffer, 1);
-                for (j=0; j<ipar[2]; j++) {
+                for (j=0; j<ndim; j++) {
                     w[j] = w[j] - h[k][i] * work[j][v_ind+k-1];
                 }
             }
@@ -3097,7 +3091,7 @@ jump:
             }
             
             h[i+1][i] = beta;
-            for (j=0; j<ipar[2]; j++) {
+            for (j=0; j<ndim; j++) {
                 work[j][v_ind+i+1-1] = w[j] / h[i+1][i];
             }
             
@@ -3135,65 +3129,27 @@ jump:
             error = fabs( work[i+1][s_ind-1] ) / bnrm;
             if (error < HUTI_TOLERANCE) {
                 
-                for (j=0; j<ipar[2]; j++) {
+                for (j=0; j<ndim; j++) {
                     buffer[j] = work[j][s_ind-1];
                 }
                 [self HUTI_dlusolve:i :h :y :buffer];
                 
-                mat = doublevec(0, ( ipar[2] * (( (v_ind+i-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
-                buffer2 = doublevec(0, i);
-                
-                l = 0;
-                for (k=0; k<ipar[2]; k++) {
-                    for (j=(v_ind-1)+1-1; j<=v_ind+i-1; j++) {
-                        mat[l] = work[k][j];
-                        l++;
-                    }
-                }
-                for (j=0; j<=i; j++) {
-                    buffer2[j] = y[j];
-                }
-                
                 // Matrix-vector product
-                cblas_dgemv(CblasRowMajor, CblasNoTrans, ipar[2], ( (v_ind+i-1)-((v_ind-1)+1-1) )+1, 1, mat, ipar[2], buffer2, 1, 0, buffer, 1);
-                
-                for (i=0; i<ipar[2]; i++) {
-                    varContainers->Values[i] = varContainers->Values[i] + buffer[i];
-                }
-                free_dvector(mat, 0, ( ipar[2] * (( (v_ind+i-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
-                free_dvector(buffer2, 0, i);
+                cblas_dgemv(CblasRowMajor, CblasNoTrans, solution.matrix.numberOfRows, ((v_ind+i)-(v_ind+1-1))+1, 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, varContainers->Values, 1);
                 break;
             }
-            
         }
         
         if (error < HUTI_TOLERANCE) {
             goto error_lower_than_tolerance;
         }
         
-        for (j=0; j<ipar[2]; j++) {
+        for (j=0; j<ndim; j++) {
             buffer[j] = work[j][s_ind-1];
         }
         [self HUTI_dlusolve:m-1 :h :y :buffer];
-        mat = doublevec(0, ( ipar[2] * (( ((v_ind-1)+m-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
-        buffer2 = doublevec(0, m-1);
-        l = 0;
-        for (k=0; k<ipar[2]; k++) {
-            for (j=(v_ind-1)+1-1; j<v_ind+m-1; j++) {
-                mat[l] = work[k][j];
-                l++;
-            }
-        }
-        for (j=0; j<m; j++) {
-            buffer2[j] = y[j];
-        }
         // Matrix-vector product
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, ipar[2], ( ((v_ind-1)+m-1)-((v_ind-1)+1-1) )+1, 1, mat, ipar[2], buffer2, 1, 0, buffer, 1);
-        for (i=0; i<ipar[2]; i++) {
-            varContainers->Values[i] = varContainers->Values[i] + buffer[i];
-        }
-        free_dvector(mat, 0, ( ipar[2] * (( ((v_ind-1)+m-1) - ((v_ind-1)+1-1) )+1) ) - 1 );
-        free_dvector(buffer2, 0, m-1);
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, solution.matrix.numberOfRows, (v_ind+m-1)-(v_ind+1-1), 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, varContainers->Values, 1);
         
     error_lower_than_tolerance:
         
@@ -3211,7 +3167,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = matContainers->RHS[i] - r[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3233,7 +3189,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = matContainers->RHS[i] - r[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3249,7 +3205,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3265,7 +3221,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3281,7 +3237,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     r[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3292,7 +3248,7 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = buffer[i];
                 }
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
@@ -3318,7 +3274,7 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ipar[2]; i++) {
+                for (i=0; i<ndim; i++) {
                     t1v[i] = r[i] - matContainers->RHS[i];
                 }
                 [pcondlInvocation setArgument:&solution atIndex:2];
@@ -3330,7 +3286,7 @@ jump:
                 break;
         }
         
-        work[(m-1)+1][s_ind-1] = cblas_dnrm2(HUTI_NDIM, r, 1);
+        work[(m+1)-1][s_ind-1] = cblas_dnrm2(HUTI_NDIM, r, 1);
 
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
@@ -3363,13 +3319,13 @@ jump:
     HUTI_ITERS = iter_count;
     
     // Release memory
-    free_dvector(w, 0, ipar[2]-1);
-    free_dvector(r, 0, ipar[2]-1);
-    free_dvector(s, 0, ipar[2]-1);
-    free_dvector(vtmp, 0, ipar[2]-1);
-    free_dvector(t1v, 0, ipar[2]-1);
-    free_dvector(v, 0, ipar[2]-1);
-    free_dvector(buffer, 0, ipar[2]-1);
+    free_dvector(w, 0, ndim-1);
+    free_dvector(r, 0, ndim-1);
+    free_dvector(s, 0, ndim-1);
+    free_dvector(vtmp, 0, ndim-1);
+    free_dvector(t1v, 0, ndim-1);
+    free_dvector(v, 0, ndim-1);
+    free_dvector(buffer, 0, ndim-1);
     free_dvector(cs, 0, (HUTI_GMRES_RESTART+1)-1);
     free_dvector(sn, 0, (HUTI_GMRES_RESTART+1)-1);
     free_dvector(y, 0, (HUTI_GMRES_RESTART+1)-1);
@@ -3447,6 +3403,8 @@ jump:
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
+    
+    //TODO: Add support for constraint matrix
     
     rounds = ipar[9];
     minTol = dpar[0];

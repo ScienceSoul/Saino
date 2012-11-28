@@ -3359,10 +3359,10 @@ static int PRECOND_VANKA     =  560;
 
 -(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double)integral {
     
-    int i, j, k, n, jj, kk, t, size;
+    int i, j, n, jj, kk, t, size;
     int **edgeMap;
     double s, l, sum;
-    double **vLoad, *bf, *g, *vl;
+    double **vLoad, *g, *vl;
     listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMElementDescription *elementDescription;
@@ -3481,7 +3481,6 @@ static int PRECOND_VANKA     =  560;
     savedType = element->Type;
     if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:solution.mesh stabilization:NULL];
     
-    bf = doublevec(0, (3*nd)-1);
     integral = 0.0;
     integCompound = GaussQuadrature(element);
     for (t=0; t<integCompound.n; t++) {
@@ -3506,22 +3505,13 @@ static int PRECOND_VANKA     =  560;
             sum = sum + load.vector[i]*numericIntegration.basis[i];
         }
         l = sum;
-        k = 0;
-        for (i=0; i<2; i++) {
-            for (j=0; j<nd; j++) {
-                bf[k] = vLoad[i][j];
-                k++;
-            }
-        }
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1, bf, 3, numericIntegration.basis, 1, 0, vl, 1);
-        
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1.0, *vLoad, np, numericIntegration.basis, 1, 0.0, vl, 1);
         sum = 0.0;
         for (i=0; i<3; i++) {
             sum = sum + vl[i] * g[i];
         }
         integral = integral + s * (l+sum);
     }
-    free_dvector(bf, 0, (3*nd)-1);
     element->Type = savedType;
     
     jj = parent->NodeIndexes[jj];
