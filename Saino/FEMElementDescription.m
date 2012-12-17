@@ -1567,9 +1567,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
     int i, j, k, p, q, t, dim;
     double *eigr, s, *ddp, *ddq, ***dNodalBasisdx;
-    double u, v, w, **l, **g, *work, sum1, sum2;
-    double *buffer1, *buffer2;
-    GaussIntegrationPoints integCompound;
+    double u, v, w, **l, **g, *l_transpose, *g_transpose, *work, sum1, sum2;
+    GaussIntegrationPoints *integCompound;
     FEMNumericIntegration *numericIntegration;
     BOOL stat;
     
@@ -1583,6 +1582,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     dNodalBasisdx = d3tensor(0, n-1, 0, n-1, 0, 2);
     l = doublematrix(0, (n-1)-1, 0, (n-1)-1);
     g = doublematrix(0, (n-1)-1, 0, (n-1)-1);
+    l_transpose = doublevec(0, ((n-1)*(n-1))-1);
+    g_transpose = doublevec(0, ((n-1)*(n-1))-1);
+
     work = doublevec(0, (16*n)-1);
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
@@ -1640,10 +1642,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
             g[i][j] = 0.0;
         }
     }
-    for (t =0; t<integCompound.n; t++) {
-        u = integCompound.u[t];
-        v = integCompound.v[t];
-        w = integCompound.w[t];
+    for (t =0; t<integCompound->n; t++) {
+        u = integCompound->u[t];
+        v = integCompound->v[t];
+        w = integCompound->w[t];
         
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes inMesh:mesh 
@@ -1651,7 +1653,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                                             secondEvaluationPoint:v 
                                              thirdEvaluationPoint:w];
         
-        s = [numericIntegration metricDeterminant] * integCompound.s[t];
+        s = [numericIntegration metricDeterminant] * integCompound->s[t];
         
         for (p=1; p<n; p++) {
             for (q=1; q<n; q++) {
@@ -1697,25 +1699,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         return;
     }
     
-    // TODO: Here we serialize the arrays l[][] and g[][] because we need to do that for using 
-    // them in dsygv_(). Later optimize so that we work initially on serialzed arrays so that 
-    // we don't need to do a copy.
-    
-    buffer1 = doublevec(0, ((n-1)*(n-1))-1);
-    buffer2 = doublevec(0, ((n-1)*(n-1))-1);
-    
-    k = 0;
+    // We need to transpose our matrices before we pass them to LAPACK since LAPACK needs
+    // two-dimensional arrays stored in column-order major.
+    // TODO: dsygv assumes symetric matrices, do we really need to transpose?
     for (i=0; i<n-1; i++) {
         for (j=0; j<n-1; j++) {
-            buffer1[k] = l[i][j];
-            k++;
-        }
-    }
-    k=0;
-    for (i=0; i<n-1; i++) {
-        for (j=0; j<n-1; j++) {
-            buffer2[k] = g[i][j];
-            k++;
+            l_transpose[j+(n-1)*i] = l[j][i];
+            g_transpose[j+(n-1)*i] = g[j][i];
         }
     }
     
@@ -1726,17 +1716,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     lda = n-1;
     ldb = n-1;
     lwork = 12*n;
-    dsygv_(&itype, jobz, uplo, &order, buffer1, &lda, buffer2, &ldb, eigr, work, &lwork, &info);
+    dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
         warnfunct("computeStabilizationParameter", "Error in lapack routine dsygv. Error code:");
         printf("%d\n", info);
         errorfunct("computeStabilizationParameter", "Program terminating now...");
     }
     mk = eigr[n-2];
-    
-    free_dvector(buffer1, 0, ((n-1)*(n-1))-1);
-    free_dvector(buffer2, 0, ((n-1)*(n-1))-1);
-    
+        
     if (mk < 10.0 * AEPS) {
         mk = 1.0 / 3.0;
         if (hk != NULL) {
@@ -1765,10 +1752,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_d3tensor(dNodalBasisdx, 0, n-1, 0, n-1, 0, 2);
     free_dmatrix(l, 0, (n-1)-1, 0, (n-1)-1);
     free_dmatrix(g, 0, (n-1)-1, 0, (n-1)-1);
+    free_dvector(l_transpose, 0, ((n-1)*(n-1))-1);
+    free_dvector(g_transpose, 0, ((n-1)*(n-1))-1);
     free_dvector(work, 0, (16*n)-1);
     
-    [numericIntegration deallocation:mesh];
+    free(integCompound);
     
+    [numericIntegration deallocation:mesh];
+
 }
 
 -(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab {

@@ -20,7 +20,7 @@
 void DerivPoly(int n, double *Q, double *P);
 double EvalPoly(int n, double *P, double x);
 void RefineRoots(int n, double *P, double *Q, double *Points);
-void GaussQuadraturePoints1D(double **PP, double **WW, int n);
+void GaussQuadraturePoints1D(int n);
 void GaussQuadratureInit(GaussIntegrationPoints *pt);
 void GaussQuadrature0D(int n, GaussIntegrationPoints *pt);
 void GaussQuadrature1D(int n, GaussIntegrationPoints *pt);
@@ -30,5 +30,5 @@ void GaussQuadratureTetra(int n, GaussIntegrationPoints *pt);
 void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt);
 void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt);
 void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt);
-GaussIntegrationPoints GaussQuadrature(Element_t *elm, ...);
+GaussIntegrationPoints* GaussQuadrature(Element_t *elm, ...);
 

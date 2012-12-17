@@ -13,14 +13,14 @@
 
 #include "GaussIntegration.h"
 
-static int GInit = 0;
+static bool GInit = false;
 
 /***************************************************************************/
-/* Storage for 1d Gauss points and the weights. The values are computed on */
+/* Storage for 1D Gauss points and the weights. The values are computed on */
 /* the fly (i.e., GaussQuadraturePoints1D). These vales are used for quads */
 /* and bricks as well.                                                     */
 /***************************************************************************/
-static double **AllPoints, **AllWeights;
+static double AllPoints[MAXN][MAXN], AllWeights[MAXN][MAXN];
 
 /***************************************************************************/
 /* Triangle - 1 point rule; exact integration of x^py^q, p+q=<=1           */
@@ -308,7 +308,6 @@ void DerivPoly(int n, double *Q, double *P) {
     for(i=0;i<n;i++) {
         Q[i] = P[i] * (n-(i+1)+1);
     }
-    
 }
 
 double EvalPoly(int n, double *P, double x) {
@@ -340,19 +339,24 @@ void RefineRoots(int n, double *P, double *Q, double *Points) {
             if( fabs(x-Points[i]) < 1.0e-8 ) Points[i] = x;
         }
     }
-    
 }
 
-void GaussQuadraturePoints1D(double **PP, double **WW, int n) {
-    
+/**************************************************************************************
+    Function to compute gaussian integration points and weights in [-1,1] as roots
+    of Legendre polynomials
+**************************************************************************************/
+void GaussQuadraturePoints1D(int n) {
+   
+    int i, j, k, np, info;
+    int arg1, arg2, arg3, arg4;
+    char ch1, ch2;
     double *Points, *Weights;
     double **A, *AT, s, *Work;
     double *P, *Q, *P0, *P1;
     double buffer;
-    int i, j, k, np, info;
-    int arg1, arg2, arg3, arg4;
-    char ch1, ch2;
     
+    Points = doublevec(0, n-1);
+    Weights = doublevec(0, n-1);
     A = doublematrix(0, (n/2)-1, 0, (n/2)-1);
     Work = doublevec(0, (8*n)-1);
     P = doublevec(0, (n+1)-1);
@@ -360,10 +364,10 @@ void GaussQuadraturePoints1D(double **PP, double **WW, int n) {
     P0 = doublevec(0, n-1);
     P1 = doublevec(0, (n+1)-1);
     
-    // One point is trivial-
+    // One point is trivial
     if (n <=1) {
-        Points[0] = 0.0;
-        Weights[0] = 2.0;
+        AllPoints[0][0] = 0.0;
+        AllWeights[0][0] = 2.0;
         return;
     }
     
@@ -433,10 +437,13 @@ void GaussQuadraturePoints1D(double **PP, double **WW, int n) {
     arg3 = 1;
     arg4 = 8*n;
     
+    // Transform the matrix for LAPACK, column-major order
     AT = doublevec(0, (n/2*n/2)-1);
-    
-    for(j=0;j<n/2;j++) {
-        for(i=0;i<n/2;i++) AT[j*np+i] = A[i][j];
+    for (i=0; i<n/2; i++) {
+        for (j=0; j<n/2; j++) {
+            AT[j+(n/2)*i] = A[j][i];
+        }
+        
     }
     
     dgeev_(&ch1, &ch2, &np, AT, &arg1, Points, P0, Work, &arg2, Work, &arg3, Work, &arg4, &info);
@@ -483,7 +490,6 @@ void GaussQuadraturePoints1D(double **PP, double **WW, int n) {
             printf("%f\n", sqrt(Points[i]));
              warnfunct("GaussQuadraturePoints1D", "-------------------------------------------------------");
         }
-        
     }
     
     // Finally, the integration weights computed by
@@ -507,36 +513,33 @@ void GaussQuadraturePoints1D(double **PP, double **WW, int n) {
         Weights[i] = 2.0 * Weights[i] / buffer; 
     }
     
-    //Copy data so that it is available later
+    //Copy data so that it's available later
     for(i=0;i<n;i++) {
         
-        AllPoints[i][n] = Points[i];
-        AllWeights[i][n] = Weights[i];
+        AllPoints[i][n-1] = Points[i];
+        AllWeights[i][n-1] = Weights[i];
     }
     
+    free_dvector(Points, 0, n-1);
+    free_dvector(Weights, 0, n-1);
     free_dmatrix(A, 0, (n/2)-1, 0, (n/2)-1);
+    free_dvector(AT, 0, (n/2*n/2)-1);
     free_dvector(Work, 0, (8*n)-1);
     free_dvector(P, 0, (n+1)-1);
     free_dvector(Q, 0, n-1);
     free_dvector(P0, 0, n-1);
     free_dvector(P1, 0, n-1);
-    
 }
 
 void GaussQuadratureInit(GaussIntegrationPoints *pt) {
     
-    int i;
+    int n;
     
-    GInit = 1;
-    
-    // Don't forget to deallocate this memory once not needed
-    // later in the program.....
-    AllPoints = doublematrix(0, MAXN-1, 0, MAXN-1);
-    AllWeights = doublematrix(0, MAXN-1, 0, MAXN-1);
-    
-    for(i=0;i<MAXN;i++) {
-        
-        GaussQuadraturePoints1D(AllPoints, AllWeights, i);
+    if (GInit == false) {
+        GInit = true;
+        for(n=1;n<=MAXN;n++) {
+            GaussQuadraturePoints1D(n);
+        }
     }
     
     pt->u = doublevec(0, MAX_INTEGRATION_POINTS-1);
@@ -544,18 +547,20 @@ void GaussQuadratureInit(GaussIntegrationPoints *pt) {
     pt->w = doublevec(0, MAX_INTEGRATION_POINTS-1);
     pt->s = doublevec(0, MAX_INTEGRATION_POINTS-1);
     
+    if (pt->u == NULL || pt->v == NULL || pt->w == NULL || pt->s == NULL) {
+        errorfunct("GaussQuadratureInit", "Memory allocation error.");
+    }
 }
 
 void GaussQuadrature0D(int n, GaussIntegrationPoints *pt) {
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     pt->n = 1;
     pt->u[0] = 0.0;
     pt->v[0] = 0.0;
     pt->w[0] = 0.0;
     pt->s[0] = 1.0;
-    
 }
 
 /****************************************************************************
@@ -570,7 +575,7 @@ void GaussQuadrature1D(int n, GaussIntegrationPoints *pt) {
     
     int i;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     if(n < 1 || n > MAXN) {
         pt->n = 0;
@@ -584,7 +589,6 @@ void GaussQuadrature1D(int n, GaussIntegrationPoints *pt) {
         pt->w[i] = 0.0;
         pt->s[i] = AllWeights[i][n];
     }
-    
 }
 
 /****************************************************************************
@@ -600,7 +604,7 @@ void GaussQuadratureTriangle(int n, GaussIntegrationPoints *pt) {
     int i;
     double buffer;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
 
     switch(n) {
         case 1:
@@ -694,7 +698,6 @@ void GaussQuadratureTriangle(int n, GaussIntegrationPoints *pt) {
     for(i=0;i<n;i++) {
         pt->w[i] = 0.0;
     }
-    
 }
 
 /****************************************************************************
@@ -710,7 +713,7 @@ void GaussQuadratureTetra(int n, GaussIntegrationPoints *pt) {
     int i;
     double ScaleFactor;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     switch(n) {
         case 1:
@@ -769,7 +772,6 @@ void GaussQuadratureTetra(int n, GaussIntegrationPoints *pt) {
             }
             break;
     }
-    
 }
 
 /****************************************************************************
@@ -784,7 +786,7 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     n = pow((double)np, 1.0/3.0) + 0.5;
     
@@ -813,14 +815,13 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
         pt->v[t] = pt->v[t] * (1.0-pt->w[t]);
         pt->s[t] = pt->s[t] * pow((1.0-pt->w[t]), 2.0/2.0);
     }
-    
 }
 
 void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     n = pow( (double)np, 1.0/3.0) + 0.5;
     
@@ -848,14 +849,13 @@ void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt) {
         pt->u[i] = ( pt->u[i] + 1.0 )/2.0 * (1.0-pt->v[i]);
         pt->s[i] = pt->s[i] * (1.0-pt->v[i])/4.0;
     }
-    
 }
 
 void GaussQuadratureQuad(int np, GaussIntegrationPoints *pt) {
     
     int i, j, n, t;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     n = sqrt( (double)np ) + 0.5;
     
@@ -874,14 +874,13 @@ void GaussQuadratureQuad(int np, GaussIntegrationPoints *pt) {
         }
     }
     pt->n = t;
-    
 }
 
 void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == 0) GaussQuadratureInit(pt);
+    if(GInit == false) GaussQuadratureInit(pt);
     
     n = pow( (double)np, 1.0/3.0) + 0.5;
     
@@ -903,12 +902,11 @@ void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
         }
     }
     pt->n = t;
-    
 }
 
-GaussIntegrationPoints GaussQuadrature(Element_t *elm, ...) {
+GaussIntegrationPoints* GaussQuadrature(Element_t *elm, ...) {
     
-    GaussIntegrationPoints IntegStuff;
+    GaussIntegrationPoints *IntegStuff;
     
     int n, np;
     va_list ap;
@@ -930,42 +928,47 @@ GaussIntegrationPoints GaussQuadrature(Element_t *elm, ...) {
         
     }
     
+    IntegStuff = (GaussIntegrationPoints*)malloc(sizeof(GaussIntegrationPoints) * 1 );
+    IntegStuff->u = NULL;
+    IntegStuff->v = NULL;
+    IntegStuff->w = NULL;
+    IntegStuff->s = NULL;
+    
     switch (elm->Type.ElementCode / 100) {
             
         case 1:
-            GaussQuadrature0D(n, &IntegStuff);
+            GaussQuadrature0D(n, IntegStuff);
             break;
             
         case 2:
-            GaussQuadrature1D(n, &IntegStuff);
+            GaussQuadrature1D(n, IntegStuff);
             break;
             
         case 3:
-            GaussQuadratureTriangle(n, &IntegStuff);
+            GaussQuadratureTriangle(n, IntegStuff);
             break;
           
         case 4:
-            GaussQuadratureQuad(n, &IntegStuff);
+            GaussQuadratureQuad(n, IntegStuff);
             break;
             
         case 5:
-            GaussQuadratureTetra(n, &IntegStuff);
+            GaussQuadratureTetra(n, IntegStuff);
             break;
             
         case 6:
-            GaussQuadraturePyramid(n, &IntegStuff);
+            GaussQuadraturePyramid(n, IntegStuff);
             break;
             
         case 7:
-            GaussQuadratureWedge(n, &IntegStuff);
+            GaussQuadratureWedge(n, IntegStuff);
             break;
             
         case 8:
-            GaussQuadratureBrick(n, &IntegStuff);
+            GaussQuadratureBrick(n, IntegStuff);
             break;
             
     }
     
     return IntegStuff;
-    
 }

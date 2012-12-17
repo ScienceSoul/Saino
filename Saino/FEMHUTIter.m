@@ -293,11 +293,11 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     double zero, one, *t, kappa0, kappal;
     double rnrm0, rnrm, mxnrmx, mxnrmr, errorind, delta = 1.0e-2, bnrm;
-    int i, j, rr, r, u, xp, bp, z, zz, y0, yl, y, k, rows, cols, nrhs, *iwork, round, info;
-    double **work, **rwork, alpha, beta, omega, rho0,rho1, sigma, varrho, hatgamma;
+    int i, j, rr, r, u, xp, bp, z, zz, y0, yl, y, k, rows, cols, lda, nrhs, order, *iwork, round, info;
+    double **work, **rwork, *rwork_transpose, alpha, beta, omega, rho0,rho1, sigma, varrho, hatgamma;
     double *buffer, *buffer2;
     char str;
-    BOOL rcmp, xpdt;
+    BOOL rcmp, xpdt, earlyExit;
     
     NSMethodSignature *pCondlSignature, *matvecSignature;
     NSInvocation *pcondlInvocation, *matvecInvocation;
@@ -311,6 +311,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     t = doublevec(0, n-1);
     work = doublematrix(0, n-1, 0, (3+2*(l+1))-1);
     rwork = doublematrix(0, (l+1)-1, 0, (3+2*(l+1))-1);
+    rwork_transpose = doublevec(0, ( (l+1)*(3+2*(l+1)) )-1);
     iwork = intvec(0, (l-1)-1);
     
     buffer = doublevec(0, n-1);
@@ -375,6 +376,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&buffer atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
+    // TODO: Add support for constraint matrix
     for (i=0; i<n; i++) {
         work[i][r] = buffer[i];
         work[i][r] = rhsvec[i] - work[i][r];
@@ -395,11 +397,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
         free_dvector(t, 0, n-1);
         free_dmatrix(work, 0, n-1, 0, (3+2*(l+1))-1);
         free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
+        free_dvector(rwork_transpose, 0, ( (l+1)*(3+2*(l+1)) )-1);
         free_dvector(buffer, 0, n-1);
         free_dvector(buffer2, 0, n-1);
         
         return;
     }
+    
+    earlyExit = NO;
     
     for (i=0; i<n; i++) {
         work[i][rr] = work[i][r];
@@ -508,7 +513,18 @@ static double UPPERB_TOL_RATIO  =  10.0;
             rnrm = cblas_dnrm2(n, buffer, 1);
             mxnrmx = max(mxnrmx, rnrm);
             mxnrmr = max(mxnrmr, rnrm);
+            
+            //  In some simple cases, a few BiCG updates may already be enough to
+            //  obtain the solution. The following is for handling this special case.
+            errorind = rnrm / bnrm;
+            converged = (errorind < minTolerance) ? YES : NO;
+            if (converged == YES) {
+                earlyExit = YES;
+                break;
+            }
         }
+        
+        if (earlyExit == YES) break;
         
         // The convex polynomial part
         for (i=1; i<=l+1; i++) {
@@ -534,73 +550,46 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 k++;
             }
         }
-         memset( buffer, 0.0, (n*sizeof(buffer)) );
-        k = 0;
-        for (i=1; i<l; i++) {
-            for (j=zz+1; j<=zz+l-1; j++) {
-                buffer[k] = rwork[i][j];
-                k++;
+        
+        // Transfrom rwork for LAPACK, column-major order
+        for (i=0; i<l+1; i++) {
+            for (j=0; j<(3+2*(l+1)); j++) {
+                rwork_transpose[j+(l+1)*i] = rwork[j][i];
             }
         }
+        
         rows = l-1;
         cols = l-1;
-        dgetrf_(&rows, &cols, buffer, &rows, iwork, &info);
+        lda = l+1;
+        dgetrf_(&rows, &cols, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, &info);
         
         // tild r0 and tild rl (small vectors)
         
-        rwork[0][y0] = -one;
-        for (i=1; i<l; i++) {
-            rwork[i][y0] = rwork[i][z];
+        rwork_transpose[((y0+1)*lda)-(l+1)] = -one;
+        for (i=2; i<=l; i++) {
+            rwork_transpose[((y0+1)*lda)-i] = rwork_transpose[((z+1)*lda)-i];
         }
-        memset( buffer, 0.0, (n*sizeof(buffer)) );
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
-        k = 0;
-        for (i=1; i<l; i++) {
-            for (j=zz+1; j<=zz+l-1; j++) {
-                buffer[k] = rwork[i][j];
-                k++;
-            }
-        }
-        k = 0;
-        for (i=1; i<l; i++) {
-            buffer2[k] = rwork[i][y0];
-            k++;
-        }
+        
+        order = l-1;
         nrhs = 1;
         str = 'N';
-        dgetrs_(&str, &cols, &nrhs, buffer, &cols, iwork, buffer2, &cols, &info);
-        k = 0;
-        for (i=1; i<l; i++) {
-            rwork[i][y0] = buffer2[k];
-            k++;
-        }
-        rwork[(l+1)-1][y0] = -one;
+        lda = l+1;
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, rwork_transpose+(((y0+1)*lda)-l), &lda, &info);
+        rwork[(l+1)-1][y0] = zero;
         
-        rwork[0][yl] = zero;
-        for (i=1; i<l; i++) {
-            rwork[i][yl] = rwork[i][z+l];
+        rwork_transpose[((yl+1)*lda)-(l+1)] = zero;
+        for (i=2; i<=l; i++) {
+            rwork_transpose[((yl+1)*lda)-i] = rwork_transpose[((z+1+l)*lda)-i];
         }
-        memset( buffer, 0.0, (n*sizeof(buffer)) );
-        memset( buffer2, 0.0, (n*sizeof(buffer2)) );
-        k = 0;
-        for (i=1; i<l; i++) {
-            for (j=zz+1; j<=zz+l-1; j++) {
-                buffer[k] = rwork[i][j];
-                k++;
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, rwork_transpose+(((yl+1)*lda)-l), &lda, &info);
+        rwork_transpose[((yl+1)*lda)-1] = -one;
+        
+        // Back to the original rwork matrix
+        for (i=0; i<l+1; i++) {
+            for (j=0; j<(3+2*(l+1)); j++) {
+                rwork[j][i] = rwork_transpose[j+(l+1)*i];
             }
         }
-        k = 0;
-        for (i=1; i<l; i++) {
-            buffer2[k] = rwork[i][yl];
-            k++;
-        }
-        dgetrs_(&str, &cols, &nrhs, buffer, &cols, iwork, buffer2, &cols, &info);
-        k = 0;
-        for (i=1; i<l; i++) {
-            rwork[i][yl] = buffer2[k];
-            k++;
-        }
-        rwork[(l+1)-1][yl] = -one;
 
         // Convex combination
         
@@ -741,6 +730,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(t, 0, n-1);
     free_dmatrix(work, 0, n-1, 0, (3+2*(l+1))-1);
     free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
+    free_dvector(rwork_transpose, 0, ( (l+1)*(3+2*(l+1)) )-1);
     free_dvector(buffer, 0, (l+1)-1);
     free_dvector(buffer2, 0, (l+1)-1);
 }

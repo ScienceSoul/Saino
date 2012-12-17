@@ -3368,7 +3368,7 @@ static int PRECOND_VANKA     =  560;
     FEMElementDescription *elementDescription;
     FEMNumericIntegration *numericIntegration;
     ElementType_t savedType;
-    GaussIntegrationPoints integCompound;
+    GaussIntegrationPoints *integCompound;
     Nodes_t *nodes, *pNodes;
     NSMutableString *string;
     BOOL stat;
@@ -3483,21 +3483,21 @@ static int PRECOND_VANKA     =  560;
     
     integral = 0.0;
     integCompound = GaussQuadrature(element);
-    for (t=0; t<integCompound.n; t++) {
+    for (t=0; t<integCompound->n; t++) {
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes 
                                                            inMesh:solution.mesh 
-                                             firstEvaluationPoint:integCompound.u[t] 
-                                            secondEvaluationPoint:integCompound.v[t] 
-                                             thirdEvaluationPoint:integCompound.w[t]];
-        s = integCompound.s[t] * [numericIntegration metricDeterminant];
+                                             firstEvaluationPoint:integCompound->u[t]
+                                            secondEvaluationPoint:integCompound->v[t]
+                                             thirdEvaluationPoint:integCompound->w[t]];
+        s = integCompound->s[t] * [numericIntegration metricDeterminant];
         
         stat = [numericIntegration setBasisForElement:element 
                                          elementNodes:nodes 
                                                inMesh:solution.mesh 
-                                 firstEvaluationPoint:integCompound.u[t] 
-                                secondEvaluationPoint:integCompound.v[t] 
-                                 thirdEvaluationPoint:integCompound.w[t] 
+                                 firstEvaluationPoint:integCompound->u[t]
+                                secondEvaluationPoint:integCompound->v[t]
+                                 thirdEvaluationPoint:integCompound->w[t]
                                           withBubbles:NO 
                                           basisDegree:NULL];
         sum = 0.0;
@@ -3529,6 +3529,7 @@ static int PRECOND_VANKA     =  560;
     free_dmatrix(vLoad, 0, 2, 0, np-1);
     free_dvector(vl, 0, 2);
     free_dvector(g, 0, 2);
+    free(integCompound);
     
     [numericIntegration deallocation:solution.mesh];
     [elementDescription deallocation];
@@ -3550,7 +3551,7 @@ static int PRECOND_VANKA     =  560;
  
 *************************************************************************************************************************************/
     
-    GaussIntegrationPoints integCompound;
+    GaussIntegrationPoints *integCompound;
     int i, j, n, p, q, t;
     double xip, yip, zip, s, load;
     FEMNumericIntegration *numericIntegration;
@@ -3577,22 +3578,22 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    for (t=0; t<integCompound.n; t++) {
+    for (t=0; t<integCompound->n; t++) {
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes 
                                                            inMesh:solution.mesh 
-                                             firstEvaluationPoint:integCompound.u[t] 
-                                            secondEvaluationPoint:integCompound.v[t] 
-                                             thirdEvaluationPoint:integCompound.w[t]];
+                                             firstEvaluationPoint:integCompound->u[t]
+                                            secondEvaluationPoint:integCompound->v[t]
+                                             thirdEvaluationPoint:integCompound->w[t]];
         
-        s = integCompound.s[t] * [numericIntegration metricDeterminant]; 
+        s = integCompound->s[t] * [numericIntegration metricDeterminant];
         
         stat = [numericIntegration setBasisForElement:element 
                                          elementNodes:nodes 
                                                inMesh:solution.mesh 
-                                 firstEvaluationPoint:integCompound.u[t] 
-                                secondEvaluationPoint:integCompound.v[t] 
-                                 thirdEvaluationPoint:integCompound.w[t] 
+                                 firstEvaluationPoint:integCompound->u[t]
+                                secondEvaluationPoint:integCompound->v[t]
+                                 thirdEvaluationPoint:integCompound->w[t]
                                           withBubbles:NO 
                                           basisDegree:NULL];
         
@@ -3617,10 +3618,11 @@ static int PRECOND_VANKA     =  560;
     }
     
     free(nodes);
+    free(integCompound);
     [numericIntegration deallocation:solution.mesh];
 }
 
--(void)solveWithLapackMatrix:(double *)a andVector:(double *)x size:(int)n {
+-(void)solveWithLapackMatrix:(double *)a andVector:(double *)x size:(int)n leadingDimension:(int)lda {
     
     int nhrs, info;
     int *ipiv;
@@ -3629,7 +3631,7 @@ static int PRECOND_VANKA     =  560;
     ipiv = intvec(0, n-1);
     
     if (n <= 0) return;
-    dgetrf_(&n, &n, a, &n, ipiv, &info);
+    dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
         warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrf. Error code:");
         printf("%d\n", info);
@@ -3638,7 +3640,7 @@ static int PRECOND_VANKA     =  560;
     
     trans = "N";
     nhrs = 1;
-    dgetrs_(trans, &n, &nhrs, a, &n, ipiv, x, &n, &info);
+    dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
         warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrs. Error code:");
         printf("%d\n", info);
@@ -3646,13 +3648,12 @@ static int PRECOND_VANKA     =  560;
     }
     
     free_ivector(ipiv, 0, n-1);
-    
 }
 
--(void)solveLinearSystemWithMatrix:(double **)a andVector:(double *)x size:(int)n {
+-(void)solveLinearSystemWithMatrix:(double **)a andVector:(double *)x size:(int)n leadingDimension:(int)lda {
     
-    int i;
-    double *b;
+    int i, j;
+    double *at, *b;
     FEMUtilities *util;
     
     util = [[FEMUtilities alloc] init];
@@ -3676,11 +3677,26 @@ static int PRECOND_VANKA     =  560;
             [util solveLinearSystem3x3:a :x :b];
             break;
         default:
+            at = doublevec(0, (lda*lda)-1);
+            // Transfrom the matrix for LAPACK, column-major order
+            for (i=0; i<lda; i++) {
+                for (j=0; j<lda; j++) {
+                    at[j+lda*i] = a[j][i];
+                }
+            }
+            [self solveWithLapackMatrix:at andVector:x size:n leadingDimension:lda];
+            
+            // Back to the original matrix
+            for (i=0; i<lda; i++) {
+                for (j=0; j<lda; j++) {
+                    a[j][i] = at[j+lda*i];
+                }
+            }
+            free_dvector(at, 0, (lda*lda)-1);
             break;
     }
     
     free_dvector(b, 0, n-1);
-    
 }
 
 -(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof {
@@ -4543,8 +4559,7 @@ static int PRECOND_VANKA     =  560;
 
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset {
     
-    int i, j, k, kk, l, m, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
-    double *buffer;
+    int i, j, k, kk, l, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
     Element_t *element, *parent, *edges, *faces;
     NSNumber *appendDof;
     NSMutableString *name, *componentName;
@@ -4607,9 +4622,6 @@ static int PRECOND_VANKA     =  560;
         _size_g_Ind = n;
         _size_l_Ind = n;
     }
-    
-    // Use the buffer for serializing the stiff matrix which is passed to lapack routine
-    buffer = doublevec(0, (_size1kernStiff*_size2kernStiff)-1);
     
     name = [NSMutableString stringWithString:solution.variable.name];
         
@@ -4836,15 +4848,7 @@ static int PRECOND_VANKA     =  560;
                         if (l == 1) {
                             _kernWork[0] = _kernWork[0] / _kernStiff[0][0];
                         } else {
-                            memset( buffer, 0.0, (_size1kernStiff*_size2kernStiff)*sizeof(buffer) );
-                            m = 0;
-                            for (j=0; j<l; j++) {
-                                for (k=0; k<l; k++) {
-                                    buffer[m] = _kernStiff[j][k];
-                                    m++;
-                                }
-                            }
-                            [self solveWithLapackMatrix:buffer andVector:_kernWork size:l];
+                            [self solveLinearSystemWithMatrix:_kernStiff andVector:_kernWork size:l leadingDimension:solution.mesh.maxElementDofs];
                         }
                         for (k=n; k<numEdgeDofs; k++) {
                             nb = varContainers->Perm[_g_Ind[k]];
@@ -4926,7 +4930,6 @@ static int PRECOND_VANKA     =  560;
         } //end loop over boundary elements
     } //end loop over dofs
     
-    free_dvector(buffer, 0, (_size1kernStiff*_size2kernStiff)-1);
     matContainers = NULL;
     varContainers = NULL;
     solContainers = NULL;
