@@ -45,11 +45,9 @@ enum {
 
 typedef struct {
     
-    int ID;                     // Node identificaton number
-    int p;                      // Partition index. -1 if no parallel partitions
-    double x;                   // First coordinate
-    double y;                   // Second coordinate
-    double z;                   // Third coordinate
+    double *x;                   // First coordinate
+    double *y;                   // Second coordinate
+    double *z;                   // Third coordinate
     
 } Nodes_t;
 

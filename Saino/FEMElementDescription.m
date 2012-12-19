@@ -1490,30 +1490,30 @@ static double AEPS = 10.0 * DBL_EPSILON;
             hk = 0.0;
             break;
         case 3: // Triangular element
-            j11 = nodes[1].x - nodes[0].x;
-            j12 = nodes[1].y - nodes[0].y;
-            j13 = nodes[1].z - nodes[0].z;
-            j21 = nodes[2].x - nodes[0].x;
-            j22 = nodes[2].y - nodes[0].y;
-            j23 = nodes[2].z - nodes[0].z;
+            j11 = nodes->x[1] - nodes->x[0];
+            j12 = nodes->y[1] - nodes->y[0];
+            j13 = nodes->z[1] - nodes->z[0];
+            j21 = nodes->x[2] - nodes->x[0];
+            j22 = nodes->y[2] - nodes->y[0];
+            j23 = nodes->z[2] - nodes->z[0];
             g11 = pow(j11, 2.0) + pow(j12, 2.0) + pow(j13, 2.0);
             g12 = j11*j21 + j12+j22 + j13*j23;
             g22 = pow(j21, 2.0) + pow(j22, 2.0) + pow(j23, 2.0);
             a = sqrt(g11*g22 - pow(g12, 2.0)) / 2.0;
             
-            cx = ( nodes[0].x + nodes[1].x + nodes[2].x ) / 3.0;
-            cy = ( nodes[0].y + nodes[1].y + nodes[2].y ) / 3.0;
-            cz = ( nodes[0].z + nodes[1].z + nodes[2].z ) / 3.0;
+            cx = ( nodes->x[0] + nodes->x[1] + nodes->x[2] ) / 3.0;
+            cy = ( nodes->y[0] + nodes->y[1] + nodes->y[2] ) / 3.0;
+            cz = ( nodes->z[0] + nodes->z[1] + nodes->z[2] ) / 3.0;
             
-            s = pow((nodes[0].x-cx), 2.0) + pow((nodes[0].y-cy), 2.0) + pow((nodes[0].z-cz), 2.0);
-            s = s + pow((nodes[1].x-cx), 2.0) + pow((nodes[1].y-cy), 2.0) + pow((nodes[1].z-cz), 2.0);
-            s = s + pow((nodes[2].x-cx), 2.0) + pow((nodes[2].y-cy), 2.0) + pow((nodes[2].z-cz), 2.0);
+            s = pow((nodes->x[0]-cx), 2.0) + pow((nodes->y[0]-cy), 2.0) + pow((nodes->z[0]-cz), 2.0);
+            s = s + pow((nodes->x[1]-cx), 2.0) + pow((nodes->y[1]-cy), 2.0) + pow((nodes->z[1]-cz), 2.0);
+            s = s + pow((nodes->x[2]-cx), 2.0) + pow((nodes->y[2]-cy), 2.0) + pow((nodes->z[2]-cz), 2.0);
             
             hk = 16.0 * a * a / (3.0 * s);
             break;
         case 4: // Quadrilateral element
-            cx = pow((nodes[1].x-nodes[0].x), 2.0) + pow((nodes[1].y-nodes[0].y), 2.0) + pow((nodes[1].z-nodes[0].z), 2.0);
-            cy = pow((nodes[3].x-nodes[0].x), 2.0) + pow((nodes[3].y-nodes[0].y), 2.0) + pow((nodes[3].z-nodes[0].z), 2.0);
+            cx = pow((nodes->x[1]-nodes->x[0]), 2.0) + pow((nodes->y[1]-nodes->y[0]), 2.0) + pow((nodes->z[1]-nodes->z[0]), 2.0);
+            cy = pow((nodes->x[3]-nodes->x[0]), 2.0) + pow((nodes->y[3]-nodes->y[0]), 2.0) + pow((nodes->z[3]-nodes->z[0]), 2.0);
             hk = 2.0 * cx * cy / (cx + cy);
         default:
             edgeMap = [self getEdgeMap:family];
@@ -1544,9 +1544,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
             for (i=0; i<size; i++) {
                 j = edgeMap[i][0];
                 k = edgeMap[i][1];
-                x0 = nodes[j].x - nodes[k].x;
-                y0 = nodes[j].y - nodes[k].y;
-                z0 = nodes[j].z - nodes[k].z;
+                x0 = nodes->x[j] - nodes->x[k];
+                y0 = nodes->y[j] - nodes->y[k];
+                z0 = nodes->z[j] - nodes->z[k];
                 hk = min( hk, (pow(x0, 2.0)+pow(y0, 2.0)+pow(z0, 2.0)) );
             }
             break;
@@ -1797,14 +1797,21 @@ static double AEPS = 10.0 * DBL_EPSILON;
         elm->DGIndexes = NULL;
         elm->FaceIndexes = NULL;
         elm->BubbleIndexes = NULL;
-        nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * element->NumberOfNodes );
+        nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+        nodes->x = doublevec(0, element->NumberOfNodes-1);
+        nodes->y = doublevec(0, element->NumberOfNodes-1);
+        nodes->z = doublevec(0, element->NumberOfNodes-1);
         for (i=0; i<element->NumberOfNodes; i++) {
-            nodes[i].x = element->NodeU[i];
-            nodes[i].y = element->NodeV[i];
-            nodes[i].z = element->NodeW[i];
+            nodes->x[i] = element->NodeU[i];
+            nodes->y[i] = element->NodeV[i];
+            nodes->z[i] = element->NodeW[i];
         }
         [self computeStabilizationParameter:elm :nodes :mesh :element->NumberOfNodes :element->StabilizationMK :NULL];
         free(elm);
+        
+        free_dvector(nodes->x, 0, element->NumberOfNodes-1);
+        free_dvector(nodes->y, 0, element->NumberOfNodes-1);
+        free_dvector(nodes->z, 0, element->NumberOfNodes-1);
         free(nodes);
     }
     
@@ -2284,9 +2291,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     nz = doublevec(0, n-1);
     
     for (i=0; i<n; i++) {
-        nx[i] = nodes[element->NodeIndexes[i]].x;
-        ny[i] = nodes[element->NodeIndexes[i]].y;
-        nz[i] = nodes[element->NodeIndexes[i]].z;
+        nx[i] = nodes->x[element->NodeIndexes[i]];
+        ny[i] = nodes->y[element->NodeIndexes[i]];
+        nz[i] = nodes->z[element->NodeIndexes[i]];
     }
     
     switch (element->Type.ElementCode / 100) {
@@ -2357,21 +2364,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
 ***************************************************************************************/
 -(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals {
     
-    int i;
     double u, v, auu, auv, avv, detA, x, y, z;
     double dxdu, dxdv, dydu, dydv, dzdu, dzdv;
-    double *nx, *ny, *nz;
     BOOL doCheck;
-    
-    nx = doublevec(0, boundary->Type.NumberOfNodes-1);
-    ny = doublevec(0, boundary->Type.NumberOfNodes-1);
-    nz = doublevec(0, boundary->Type.NumberOfNodes-1);
-    
-    for (i=0; i<boundary->Type.NumberOfNodes; i++) {
-        nx[i] = nodes[i].x;
-        ny[i] = nodes[i].y;
-        nz[i] = nodes[i].z;
-    }
     
     switch (boundary->Type.dimension) {
         case 0:
@@ -2384,8 +2379,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 u = *u0;
             } else u = 0.0;
             
-            dxdu = [self firstDerivative1DInElement:boundary nodalValues:nx evalutationPoint:u];
-            dydu = [self firstDerivative1DInElement:boundary nodalValues:ny evalutationPoint:u];
+            dxdu = [self firstDerivative1DInElement:boundary nodalValues:nodes->x evalutationPoint:u];
+            dydu = [self firstDerivative1DInElement:boundary nodalValues:nodes->y evalutationPoint:u];
             
             detA = dxdu*dxdu + dydu*dydu;
             if (detA <= 0.0) {
@@ -2410,13 +2405,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 }
             }
             
-            dxdu = [self firstDerivativeU2DInElement:boundary nodalValues:nx evaluatedAt:u andAt:v];
-            dydu = [self firstDerivativeU2DInElement:boundary nodalValues:ny evaluatedAt:u andAt:v];
-            dzdu = [self firstDerivativeU2DInElement:boundary nodalValues:nz evaluatedAt:u andAt:v];
+            dxdu = [self firstDerivativeU2DInElement:boundary nodalValues:nodes->x evaluatedAt:u andAt:v];
+            dydu = [self firstDerivativeU2DInElement:boundary nodalValues:nodes->y evaluatedAt:u andAt:v];
+            dzdu = [self firstDerivativeU2DInElement:boundary nodalValues:nodes->z evaluatedAt:u andAt:v];
             
-            dxdv = [self firstDerivativeV2DInElement:boundary nodalValues:nx evaluatedAt:u andAt:v];
-            dydv = [self firstDerivativeV2DInElement:boundary nodalValues:ny evaluatedAt:u andAt:v];
-            dzdv = [self firstDerivativeV2DInElement:boundary nodalValues:nz evaluatedAt:u andAt:v];
+            dxdv = [self firstDerivativeV2DInElement:boundary nodalValues:nodes->x evaluatedAt:u andAt:v];
+            dydv = [self firstDerivativeV2DInElement:boundary nodalValues:nodes->y evaluatedAt:u andAt:v];
+            dzdv = [self firstDerivativeV2DInElement:boundary nodalValues:nodes->z evaluatedAt:u andAt:v];
             
             auu = dxdu*dxdu + dydu*dydu + dzdu*dzdu;
             auv = dxdu*dxdv + dydu*dydv + dzdu*dzdv;
@@ -2439,28 +2434,24 @@ static double AEPS = 10.0 * DBL_EPSILON;
     if (doCheck == YES) {
         switch (boundary->Type.ElementCode / 100) {
             case 1:
-                x = nx[0];
-                y = nx[0]; // TODO: Is that really correct, isn't y = ny[0]?
-                z = nz[0];
+                x = nodes->x[0];
+                y = nodes->x[0]; // TODO: Elmer does that but is that really correct, isn't y = nodes->y[0]?
+                z = nodes->z[0];
                 break;
             case 2:
             case 4:
-                x = [self interpolateInElement:boundary nodalValues:nx evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
-                y = [self interpolateInElement:boundary nodalValues:ny evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
-                z = [self interpolateInElement:boundary nodalValues:nz evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                x = [self interpolateInElement:boundary nodalValues:nodes->x evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                y = [self interpolateInElement:boundary nodalValues:nodes->y evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
+                z = [self interpolateInElement:boundary nodalValues:nodes->z evaluatedAt:0.0 andAt:0.0 andAt:0.0 withBasis:NULL];
                 break;
             case 3:
-                x = [self interpolateInElement:boundary nodalValues:nx evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
-                y = [self interpolateInElement:boundary nodalValues:ny evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
-                z = [self interpolateInElement:boundary nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                x = [self interpolateInElement:boundary nodalValues:nodes->x evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                y = [self interpolateInElement:boundary nodalValues:nodes->y evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
+                z = [self interpolateInElement:boundary nodalValues:nodes->z evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
                 break;
         }
         [self checkNormalDirectionInBDElement:boundary forNormals:normals mesh:mesh x:x y:y z:z turn:NULL];
     }
-    
-    free_dvector(nx, 0, boundary->Type.NumberOfNodes-1);
-    free_dvector(ny, 0, boundary->Type.NumberOfNodes-1);
-    free_dvector(nz, 0, boundary->Type.NumberOfNodes-1);
 }
 
 /***************************************************************************************************
@@ -2474,7 +2465,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
     int i, j, n;
     int const maxIter = 50;
     double r, s, t, delta[3], prevdelta[3], **J, bf[3], det, acc, err, sum;
-    double *nodesX, *nodesY, *nodesZ;
     BOOL converged;
     FEMUtilities *utilities;
 
@@ -2488,24 +2478,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     J = doublematrix(0, 2, 0, 2);
     
     n = element->Type.NumberOfNodes;
-    nodesX = doublevec(0, n-1);
-    nodesY = doublevec(0, n-1);
-    nodesZ = doublevec(0, n-1);
-    
-    for (i=0; i<n; i++) {
-        nodesX[i] = nodes[i].x;
-        nodesY[i] = nodes[i].y;
-        nodesZ[i] = nodes[i].z;
-    }
-    
     acc = DBL_EPSILON;
     converged = NO;
     
     for (i=0; i<maxIter; i++) {
         
-        r = [self interpolateInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - x;
-        s = [self interpolateInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - y;
-        t = [self interpolateInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - z;
+        r = [self interpolateInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - x;
+        s = [self interpolateInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - y;
+        t = [self interpolateInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - z;
         
         err = pow(r, 2.0) + pow(s, 2.0) + pow(t, 2.0);
         
@@ -2519,9 +2499,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         switch (element->Type.dimension) {
             case 1:
-                J[0][0] = [self firstDerivative1DInElement:element nodalValues:nodesX evalutationPoint:*u];
-                J[1][0] = [self firstDerivative1DInElement:element nodalValues:nodesY evalutationPoint:*u];
-                J[2][0] = [self firstDerivative1DInElement:element nodalValues:nodesZ evalutationPoint:*u];
+                J[0][0] = [self firstDerivative1DInElement:element nodalValues:nodes->x evalutationPoint:*u];
+                J[1][0] = [self firstDerivative1DInElement:element nodalValues:nodes->y evalutationPoint:*u];
+                J[2][0] = [self firstDerivative1DInElement:element nodalValues:nodes->z evalutationPoint:*u];
                 
                 sum = 0.0;
                 for (j=0; j<3; j++) {
@@ -2532,15 +2512,15 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 break;
                 
             case 2:
-                J[0][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v];
-                J[0][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v];
-                J[1][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v];
-                J[1][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v];
+                J[0][0] = [self firstDerivativeU2DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v];
+                J[0][1] = [self firstDerivativeV2DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v];
+                J[1][0] = [self firstDerivativeU2DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v];
+                J[1][1] = [self firstDerivativeV2DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v];
                 
                 switch (aModel.dimension) {
                     case 3:
-                        J[2][0] = [self firstDerivativeU2DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v];
-                        J[2][1] = [self firstDerivativeV2DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v];
+                        J[2][0] = [self firstDerivativeU2DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v];
+                        J[2][1] = [self firstDerivativeV2DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v];
                         
                         delta[0] = r;
                         delta[1] = s;
@@ -2561,17 +2541,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 [utilities solveLinearSystem2x2:J :delta :bf];
                 
             case 3:
-                J[0][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
-                J[0][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
-                J[0][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesX evaluatedAt:*u andAt:*v andAt:*w];
+                J[0][0] = [self firstDerivativeU3DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w];
+                J[0][1] = [self firstDerivativeV3DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w];
+                J[0][2] = [self firstDerivativeW3DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w];
                 
-                J[1][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
-                J[1][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
-                J[1][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesY evaluatedAt:*u andAt:*v andAt:*w];
+                J[1][0] = [self firstDerivativeU3DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v andAt:*w];
+                J[1][1] = [self firstDerivativeV3DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v andAt:*w];
+                J[1][2] = [self firstDerivativeW3DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v andAt:*w];
                 
-                J[2][0] = [self firstDerivativeU3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
-                J[2][1] = [self firstDerivativeV3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
-                J[2][2] = [self firstDerivativeW3DInElement:element nodalValues:nodesZ evaluatedAt:*u andAt:*v andAt:*w];
+                J[2][0] = [self firstDerivativeU3DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v andAt:*w];
+                J[2][1] = [self firstDerivativeV3DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v andAt:*w];
+                J[2][2] = [self firstDerivativeW3DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v andAt:*w];
                 
                 bf[0] = r;
                 bf[1] = s;
@@ -2613,17 +2593,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 NSLog(@"dim, %d, delta, %f %f %f, uvw, %f, %f, %f\n", element->Type.dimension, delta[0], delta[1], delta[2], *u,*v,*w);
                 NSLog(@"x: %f\n", x);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes[i].x);
+                    NSLog(@"%f ", nodes->x[i]);
                 }
                 printf("\n");
                 NSLog(@"y: %f\n", y);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes[i].y);
+                    NSLog(@"%f ", nodes->y[i]);
                 }
                 printf("\n");
                 NSLog(@"y: %f\n", z);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes[i].z);
+                    NSLog(@"%f ", nodes->z[i]);
                 }
                 printf("\n");
             } else {
@@ -2634,9 +2614,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     free_dmatrix(J, 0, 2, 0, 2);
-    free_dvector(nodesX, 0, n-1);
-    free_dvector(nodesY, 0, n-1);
-    free_dvector(nodesZ, 0, n-1);
 }
     
 

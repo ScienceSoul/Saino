@@ -1168,7 +1168,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     n = mesh.maxElementNodes;
     
-    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    elementNodes->x = doublevec(0, n-1);
+    elementNodes->y = doublevec(0, n-1);
+    elementNodes->z = doublevec(0, n-1);
     
     // Fill in the mesh element structures with the boundary elements
     n1 = 0;
@@ -1196,9 +1199,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
         if (thisActive == YES || targetActive == YES) {
             n = elements[i].Type.NumberOfNodes;
             for (j=0; j<n; j++) {
-                elementNodes[j].x = nodes[elements[i].NodeIndexes[j]].x;
-                elementNodes[j].y = nodes[elements[i].NodeIndexes[j]].y;
-                elementNodes[j].z = nodes[elements[i].NodeIndexes[j]].z;
+                elementNodes->x[j] = nodes->x[elements[i].NodeIndexes[j]];
+                elementNodes->y[j] = nodes->y[elements[i].NodeIndexes[j]];
+                elementNodes->z[j] = nodes->z[elements[i].NodeIndexes[j]];
             }
             
             // Angle smaller than 180 is always chosen
@@ -1314,8 +1317,15 @@ static double AEPS = 10.0 * DBL_EPSILON;
     mesh1nodes = bmesh1.getNodes;
     mesh2nodes = bmesh2.getNodes;
     
-    mesh1nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * bmesh1.numberOfNodes );
-    mesh2nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * bmesh2.numberOfNodes );
+    mesh1nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    mesh1nodes->x = doublevec(0, bmesh1.numberOfNodes-1);
+    mesh1nodes->y = doublevec(0, bmesh1.numberOfNodes-1);
+    mesh1nodes->z = doublevec(0, bmesh1.numberOfNodes-1);
+    
+    mesh2nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    mesh2nodes->x = doublevec(0, bmesh2.numberOfNodes-1);
+    mesh2nodes->y = doublevec(0, bmesh2.numberOfNodes-1);
+    mesh2nodes->z = doublevec(0, bmesh2.numberOfNodes-1);
     
     invPerm1 = intvec(0, bmesh1.numberOfNodes-1);
     invPerm2 = intvec(0, bmesh2.numberOfNodes-1);
@@ -1428,23 +1438,23 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 n = elements[i].Type.NumberOfNodes;
                 
                 for (j=0; j<n; j++) {
-                    elementNodes[j].x = nodes[elements[i].NodeIndexes[j]].x;
-                    elementNodes[j].y = nodes[elements[i].NodeIndexes[j]].y;
-                    elementNodes[j].z = nodes[elements[i].NodeIndexes[j]].z;
+                    elementNodes->x[j] = nodes->x[elements[i].NodeIndexes[j]];
+                    elementNodes->y[j] = nodes->y[elements[i].NodeIndexes[j]];
+                    elementNodes->z[j] = nodes->z[elements[i].NodeIndexes[j]];
                 }
                 
                 for (j=0; j<n; j++) {
                     k = elements[i].NodeIndexes[j];
-                    x[0] = nodes[k].x;
-                    x[1] = nodes[k].y;
-                    x[2] = nodes[k].z;
+                    x[0] = nodes->x[k];
+                    x[1] = nodes->y[k];
+                    x[2] = nodes->z[k];
                     x[3] = 1.0;
                     
                     cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, (double *)rotMatrix, 4, x, 1, 0.0, x, 1);
                     
-                    elementNodes[j].x = x[0];
-                    elementNodes[j].y = x[1];
-                    elementNodes[j].z = x[2];
+                    elementNodes->x[j] = x[0];
+                    elementNodes->y[j] = x[1];
+                    elementNodes->z[j] = x[2];
                     
                 }
                 
@@ -1483,13 +1493,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
             perm1[i] = k1;
             invPerm1[k1] = i;
             
-            mesh1nodes[k1].x = nodes[i].x;
-            mesh1nodes[k1].y = nodes[i].y;
-            mesh1nodes[k1].z = nodes[i].z;
+            mesh1nodes->x[k1] = nodes->x[i];
+            mesh1nodes->y[k1] = nodes->y[i];
+            mesh1nodes->z[k1] = nodes->z[i];
             
-            x[0] = nodes[i].x;
-            x[1] = nodes[i].y;
-            x[2] = nodes[i].z;
+            x[0] = nodes->x[i];
+            x[1] = nodes->y[i];
+            x[2] = nodes->z[i];
             
             for (j=0; j<3; j++) {
                 x1Min[j] = min(x1Min[j], x[j]);
@@ -1502,9 +1512,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
             perm2[i] = k2;
             invPerm1[k2] = i;
             
-            x[0] = nodes[i].x;
-            x[1] = nodes[i].y;
-            x[2] = nodes[i].z;
+            x[0] = nodes->x[i];
+            x[1] = nodes->y[i];
+            x[2] = nodes->z[i];
             
             for (j=0; j<3; j++) {
                 x2Min[j] = min(x2Min[j], x[j]);
@@ -1520,9 +1530,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 }
             }
             
-            mesh2nodes[k2].x = x[0];
-            mesh2nodes[k2].y = x[1];
-            mesh2nodes[k2].z = x[2];
+            mesh2nodes->x[k2] = x[0];
+            mesh2nodes->y[k2] = x[1];
+            mesh2nodes->z[k2] = x[2];
             k2++;
         }
     }
@@ -1664,14 +1674,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // Now transform the coordinates
     for (i=0; i<bmesh2.numberOfNodes; i++) {
-        x[0] = mesh2nodes[i].x;
-        x[1] = mesh2nodes[i].y;
-        x[2] = mesh2nodes[i].z;
+        x[0] = mesh2nodes->x[i];
+        x[1] = mesh2nodes->y[i];
+        x[2] = mesh2nodes->z[i];
         x[3] = 1.0;
         cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, (double *)trfMatrix, 4, x, 1, 0.0, x, 1);
-        mesh2nodes[i].x = x[0] / x[3];
-        mesh2nodes[i].y = x[1] / x[3];
-        mesh2nodes[i].z = x[2] / x[3];
+        mesh2nodes->x[i] = x[0] / x[3];
+        mesh2nodes->y[i] = x[1] / x[3];
+        mesh2nodes->z[i] = x[2] / x[3];
     }
     
     // Get the mesh projector which now contains weights between the boundary nodes
@@ -1689,6 +1699,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     // Deallocate mesh structures
+    free_dvector(elementNodes->x, 0, mesh.maxElementNodes-1);
+    free_dvector(elementNodes->y, 0, mesh.maxElementNodes-1);
+    free_dvector(elementNodes->z, 0, mesh.maxElementNodes-1);
     free(elementNodes);
     
     for (i=0; i<bmesh1.numberOfBulkElements; i++) {
@@ -1701,7 +1714,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     [bmesh2 deallocateQuadrantTree];
     
+    free_dvector(mesh1nodes->x, 0, bmesh1.numberOfNodes-1);
+    free_dvector(mesh1nodes->y, 0, bmesh1.numberOfNodes-1);
+    free_dvector(mesh1nodes->z, 0, bmesh1.numberOfNodes-1);
     free(mesh1nodes);
+    
+    free_dvector(mesh2nodes->x, 0, bmesh2.numberOfNodes-1);
+    free_dvector(mesh2nodes->y, 0, bmesh2.numberOfNodes-1);
+    free_dvector(mesh2nodes->z, 0, bmesh2.numberOfNodes-1);
     free(mesh2nodes);
     
     if (perm1 != NULL) {

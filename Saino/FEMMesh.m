@@ -96,19 +96,19 @@
             n = element->Type.NumberOfNodes;
             sum = 0.0;
             for (i=0; i<element->Type.NumberOfNodes; i++) {
-                sum = sum + _globalNodes[element->NodeIndexes[i]].x;
+                sum = sum + _globalNodes->x[element->NodeIndexes[i]];
             }
             x = sum / n;
             
             sum = 0.0;
             for (i=0; i<element->Type.NumberOfNodes; i++) {
-                sum = sum + _globalNodes[element->NodeIndexes[i]].y;
+                sum = sum + _globalNodes->y[element->NodeIndexes[i]];
             }
             y = sum / n;
             
             sum = 0.0;
             for (i=0; i<element->Type.NumberOfNodes; i++) {
-                sum = sum + _globalNodes[element->NodeIndexes[i]].z;
+                sum = sum + _globalNodes->z[element->NodeIndexes[i]];
             }
             z = sum / n;
             // TODO: The rest depends on a call to MATC. So we need to decide what to do here.
@@ -321,7 +321,6 @@
     FEMPElementMaps *pMaps;
     FEMMeshUtils *meshUtils;
     ElementType_t *elmType;
-    Nodes_t *cnodes;
     NSArray *bList;
     NSString *elementDef0, *elementDef;
     NSMutableString *str;
@@ -369,8 +368,11 @@
         self.maxElementNodes = max( self.maxElementNodes, types[i]-100*(types[i]/100) );
     }
     
-    _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * self.numberOfNodes );
+    _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     if (_globalNodes == NULL) errorfunct("loadMeshForModel", "Failure to allocate nodes structure.");
+    _globalNodes->x = doublevec(0, self.numberOfNodes-1);
+    _globalNodes->y = doublevec(0, self.numberOfNodes-1);
+    _globalNodes->z = doublevec(0, self.numberOfNodes-1);
     
     _elements = (Element_t*) malloc( sizeof(Element_t) * self.numberOfBulkElements );
     if (_elements == NULL) errorfunct("loadMeshForModel", "Failure to allocate elements structure.");
@@ -393,41 +395,41 @@
             errorfunct("loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
         }
         for (i=coordMap.ivector[0]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].x = cCoord[i];
+            _globalNodes->x[i] = cCoord[i];
         }
         for (i=coordMap.ivector[1]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].y = cCoord[i];
+            _globalNodes->y[i] = cCoord[i];
         }
         for (i=coordMap.ivector[2]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].z = cCoord[i];
+            _globalNodes->z[i] = cCoord[i];
         }
     } else {
         for (i=0; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].x = cCoord[i];
+            _globalNodes->x[i] = cCoord[i];
         }
         for (i=1; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].x = cCoord[i];
+            _globalNodes->y[i] = cCoord[i];
         }
         for (i=2; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes[i].x = cCoord[i];
+            _globalNodes->z[i] = cCoord[i];
         }
     }
     
     meshDim = 0;
     for (i=0; i<self.numberOfNodes; i++) {
-        if (_globalNodes[i].x != _globalNodes[0].x) {
+        if (_globalNodes->x[i] != _globalNodes->x[0]) {
             meshDim++;
             break;
         }
     }
     for (i=0; i<self.numberOfNodes; i++) {
-         if (_globalNodes[i].y != _globalNodes[0].y) {
+         if (_globalNodes->y[i] != _globalNodes->y[0]) {
              meshDim++;
              break;
          }
      }
      for (i=0; i<self.numberOfNodes; i++) {
-         if (_globalNodes[i].z != _globalNodes[i].z) {
+         if (_globalNodes->z[i] != _globalNodes->z[0]) {
              meshDim++;
              break;
          }
@@ -465,9 +467,9 @@
         }
         NSLog(@"Scaling coordinates: %f %f %f\n", coordScale[0], coordScale[1], coordScale[2]);
         for (i=0; i<self.numberOfNodes; i++) {
-            _globalNodes[i].x = coordScale[0] * _globalNodes[i].x;
-            if (meshDim > 1) _globalNodes[i].y = coordScale[1] * _globalNodes[i].y;
-            if (meshDim > 2) _globalNodes[i].z = coordScale[2] * _globalNodes[i].z;
+            _globalNodes->x[i] = coordScale[0] * _globalNodes->x[i];
+            if (meshDim > 1) _globalNodes->y[i] = coordScale[1] * _globalNodes->y[i];
+            if (meshDim > 2) _globalNodes->z[i] = coordScale[2] * _globalNodes->z[i];
         }
     }
     
@@ -914,19 +916,29 @@
     n = self.numberOfNodes + self.maxEdgeDofs * self.numberOfEdges + self.maxFaceDofs * self.numberOfFaces + self.maxBdofs * self.numberOfBulkElements;
     
     if (n>self.numberOfNodes) {
-        cnodes = _globalNodes;
-        _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
-        for (i=0; i<n; i++) {
-            _globalNodes[i].x = 0.0;
-            _globalNodes[i].y = 0.0;
-            _globalNodes[i].z = 0.0;
-        }
+        cCoord = _globalNodes->x;
+        _globalNodes->x = doublevec(0, n-1);
+        memset( _globalNodes->x, 0.0, (n*sizeof(_globalNodes->x)) );
         for (i=0; i<self.numberOfNodes; i++) {
-            _globalNodes[i].x = cnodes[i].x;
-            _globalNodes[i].y = cnodes[i].y;
-            _globalNodes[i].z = cnodes[i].z;
+            _globalNodes->x[i] = cCoord[i];
         }
-        free(cnodes);
+        free_dvector(cCoord, 0, self.numberOfNodes-1);
+        
+        cCoord = _globalNodes->y;
+        _globalNodes->y = doublevec(0, n-1);
+        memset( _globalNodes->y, 0.0, (n*sizeof(_globalNodes->y)) );
+        for (i=0; i<self.numberOfNodes; i++) {
+            _globalNodes->y[i] = cCoord[i];
+        }
+        free_dvector(cCoord, 0, self.numberOfNodes-1);
+        
+        cCoord = _globalNodes->z;
+        _globalNodes->z = doublevec(0, n-1);
+        memset( _globalNodes->z, 0.0, (n*sizeof(_globalNodes->z)) );
+        for (i=0; i<self.numberOfNodes; i++) {
+            _globalNodes->z[i]= cCoord[i];
+        }
+        free_dvector(cCoord, 0, self.numberOfNodes-1);
     }
     
     if (parallel) {
@@ -1031,6 +1043,12 @@
     }
 }
 
+#pragma mark Deallocation
+
+-(void)deallocation {
+    // TODO: free-up memory
+}
+
 -(void)deallocateQuadrantTree {
     
     [self FEMMesh_deallocateQuadrantTree:_rootQuadrant];
@@ -1103,11 +1121,9 @@
     for (i=0; i<=intervals[0]; i++) {
         for (j=0; j<=intervals[1]; j++) {
             
-            _globalNodes[k].ID = l;
-            _globalNodes[k].p = -1;
-            _globalNodes[k].x = incri;
-            _globalNodes[k].y = incrj;
-            _globalNodes[k].z = 0.0;
+            _globalNodes->x[k] = incri;
+            _globalNodes->y[k] = incrj;
+            _globalNodes->z[k] = 0.0;
             incrj = incrj + meshsize2;
             l++;
             k++;
@@ -1160,8 +1176,6 @@
         // Top boundary elements
         for (j=1;j<(intervals[1]+1);j++) {
             if ( i == 0+(j*(intervals[1]+1)-1) ) {
-                side3[o][0] = _globalNodes[0+((j+1)*(intervals[1]+1)-1)].ID;
-                side3[o][1] = _globalNodes[i].ID;
                 side3[o][2] = k-1;
                 o++;
                 ct = YES;
@@ -1177,15 +1191,9 @@
         _elements[k].ElementIndex = l;
         _elements[k].BodyID = 1;
         _elements[k].Type.ElementCode = 404;
-        _elements[k].NodeIndexes[0] =  _globalNodes[i].ID;
-        _elements[k].NodeIndexes[1] = _globalNodes[i+(intervals[1]+1)].ID;
-        _elements[k].NodeIndexes[2] = _globalNodes[i+((intervals[1]+1)+1)].ID;
-        _elements[k].NodeIndexes[3] = _globalNodes[i+1].ID;
         
         // Left boundary elements
         if ( i < (intervals[1]+1) ) {
-            side4[p][0] = _globalNodes[i+1].ID;
-            side4[p][1] = _globalNodes[i].ID;
             side4[p][2] = k;
             p++;
         }
@@ -1193,8 +1201,6 @@
         // Bottom boundary elements
         for ( j=0;j<(intervals[1]+1);j++ ) {
             if ( i == 0+j*(intervals[1]+1) ) {
-                side1[m][0] = _globalNodes[i].ID;
-                side1[m][1] = _globalNodes[i+(intervals[1]+1)].ID;
                 side1[m][2] = k;
                 m++;
                 break;
@@ -1203,8 +1209,6 @@
         
         // Right boundary elements
         if ( i >= ((intervals[0]+1)*(intervals[1]+1))-(2*(intervals[1]+1)) ) {
-            side2[n][0] = _globalNodes[i+(intervals[1]+1)].ID;
-            side2[n][1] = _globalNodes[i+((intervals[1]+1)+1)].ID;
             side2[n][2] = k;
             n++;
             break;

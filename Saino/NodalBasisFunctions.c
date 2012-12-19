@@ -44,7 +44,6 @@ void NodalBasisFunctions1D(double *y, Element_t *element, double u) {
         y[n] = s;
         
     }
-    
 }
 
 
@@ -79,7 +78,6 @@ void NodalFirstDerivatives1D(double **y, Element_t *element, double u) {
         }
         y[n][0] = s;
     }
-    
 }
 
 
@@ -115,7 +113,6 @@ void NodalBasisFunctions2D(double *y, Element_t *element, double u, double v) {
         }
         y[n] = s;
     }
-    
 }
 
 void NodalFirstDerivatives2D(double **y, Element_t *element, double u, double v) {
@@ -154,7 +151,6 @@ void NodalFirstDerivatives2D(double **y, Element_t *element, double u, double v)
         y[n][0] = s;
         y[n][1] = t;
     }
-    
 }
 
 
@@ -239,7 +235,6 @@ double InterpolateInElement3D(Element_t *element, double *x, double u, double v,
     }
     
     return y;
-    
 }
 
 
@@ -277,7 +272,6 @@ void NodalBasisFunctions3D(double *y, Element_t *element, double u, double v, do
         }
         y[n] = s;
     }
-    
 }
 
 
@@ -365,7 +359,6 @@ double FirstDerivativeInU3D(Element_t *element, double *x, double u, double v, d
     }
     
     return y;
-    
 }
 
 
@@ -454,7 +447,6 @@ double FirstDerivativeInV3D(Element_t *element, double *x, double u, double v, d
     }
     
     return y;
-    
 }
 
 
@@ -546,7 +538,6 @@ double FirstDerivativeInW3D(Element_t *element, double *x, double u, double v, d
     }
     
     return y;
-    
 }
 
 
@@ -590,7 +581,6 @@ void NodalFirstDerivatives3D(double **y, Element_t *element, double u, double v,
         y[n][1] = t;
         y[n][2] = z;
     }
-    
 }
 
 
@@ -633,7 +623,6 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
     }
     
     free_dvector(NodalBasis, 0, n-1);
-    
 }
 
 void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double u, double v, double w) {
@@ -674,7 +663,6 @@ void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double
     }
     
     free_dvector(NodalBasis, 0, n-1);
-    
 }
 
 double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
@@ -689,7 +677,7 @@ double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
  
  Arguments:
  Element_t *element -> element structure
- Nodes_t *nodes     -> Nodal values of the quantity whose partial derivative we want to know
+ double *nodes      -> Nodal values of the quantity whose partial derivative we want to know
  double u           -> Point at which evaluate the partial derivative
  
  Function return value:
@@ -733,9 +721,8 @@ void SecondDerivatives2D(double **ddx, Element_t* element, double *nodes, double
 
  Arguments:
  double **ddx       -> Return matrix of second partial derivatives
- chat str           -> char representing the field in Nodes_t to use
  Element_t *element -> element structure
- Nodes_t *nodes     -> Nodal values of the quantity whose partial derivative we want to know
+ double *nodes      -> Nodal values of the quantity whose partial derivative we want to know
  double u, v        -> Points at which evaluate the partial derivative
  
  Function return value:
@@ -787,7 +774,6 @@ void SecondDerivatives2D(double **ddx, Element_t* element, double *nodes, double
     }
     
     ddx[1][0] = ddx[0][1];
-    
 }
 
 void SecondDerivatives3D(double **ddx, Element_t* element, double *nodes, double u, double v, double w) {
@@ -802,9 +788,8 @@ void SecondDerivatives3D(double **ddx, Element_t* element, double *nodes, double
  
  Arguments:
  double **ddx       -> Return matrix of second partial derivatives
- chat str           -> char representing the field in Nodes_t to use
  Element_t *element -> element structure
- Nodes_t *nodes     -> Nodal values of the quantity whose partial derivative we want to know
+ double *nodes      -> Nodal values of the quantity whose partial derivative we want to know
  double u, v, w      -> Points at which evaluate the partial derivative
  
  Function return value:
@@ -880,7 +865,6 @@ void SecondDerivatives3D(double **ddx, Element_t* element, double *nodes, double
     ddx[1][0] = ddx[0][1];
     ddx[2][0] = ddx[0][2];
     ddx[2][1] = ddx[1][2];
-    
 }
 
 

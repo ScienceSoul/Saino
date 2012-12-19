@@ -144,40 +144,40 @@
         
         minx = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].x < minx) {
-                minx = nodes[i].x;
+            if (nodes->x[i] < minx) {
+                minx = nodes->x[i];
             }
         }
         maxx = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].x > maxx) {
-                maxx = nodes[i].x;
+            if (nodes->x[i] > maxx) {
+                maxx = nodes->x[i];
             }
         }
         
         miny = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].y < miny) {
-                miny = nodes[i].y;
+            if (nodes->y[i] < miny) {
+                miny = nodes->y[i];
             }
         }
         maxy = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].y > maxy) {
-                maxy = nodes[i].y;
+            if (nodes->y[i] > maxy) {
+                maxy = nodes->y[i];
             }
         }
         
         minz = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].z < minz) {
-                minz = nodes[i].z;
+            if (nodes->z[i] < minz) {
+                minz = nodes->z[i];
             }
         }
         maxz = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].z > maxz) {
-                maxz = nodes[i].z;
+            if (nodes->z[i] > maxz) {
+                maxz = nodes->z[i];
             }
         }
         
@@ -195,14 +195,14 @@
         
         minx = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].x < minx) {
-                minx = nodes[i].x;
+            if (nodes->x[i] < minx) {
+                minx = nodes->x[i];
             }
         }
         maxx = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].x > maxx) {
-                maxx = nodes[i].x;
+            if (nodes->x[i] > maxx) {
+                maxx = nodes->x[i];
             }
         }
         xdist = max(max(aPoint[0] - maxx, 0.0), minx - aPoint[0]);
@@ -211,14 +211,14 @@
         
         miny = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].y < miny) {
-                miny = nodes[i].y;
+            if (nodes->y[i] < miny) {
+                miny = nodes->y[i];
             }
         }
         maxy = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].y > maxy) {
-                maxy = nodes[i].y;
+            if (nodes->y[i] > maxy) {
+                maxy = nodes->y[i];
             }
         }
         ydist = max(max(aPoint[1] - maxy, 0.0), miny - aPoint[1]);
@@ -226,14 +226,14 @@
         
         minz = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].z < minz) {
-                minz = nodes[i].z;
+            if (nodes->z[i] < minz) {
+                minz = nodes->z[i];
             }
         }
         maxz = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[i].z > maxz) {
-                maxz = nodes[i].z;
+            if (nodes->z[i] > maxz) {
+                maxz = nodes->z[i];
             }
         }
         zdist = max(max(aPoint[2] - maxz, 0.0), minz - aPoint[2]);
@@ -354,48 +354,48 @@
         // Get element coordinates
         minval = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].x < minval ) {
-                minval = nodes[elements[mother->elements[t]].NodeIndexes[i]].x;
+            if (nodes->x[elements[mother->elements[t]].NodeIndexes[i]] < minval ) {
+                minval = nodes->x[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         xmin = minval;
         
         maxval = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].x > maxval ) {
-                maxval = nodes[elements[mother->elements[t]].NodeIndexes[i]].x;
+            if (nodes->x[elements[mother->elements[t]].NodeIndexes[i]] > maxval ) {
+                maxval = nodes->x[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         xmax = maxval;
         
         minval = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].y < minval ) {
-                minval = nodes[elements[mother->elements[t]].NodeIndexes[i]].y;
+            if (nodes->y[elements[mother->elements[t]].NodeIndexes[i]] < minval ) {
+                minval = nodes->y[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         ymin = minval;
         
         maxval = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].y > maxval ) {
-                maxval = nodes[elements[mother->elements[t]].NodeIndexes[i]].y;
+            if (nodes->y[elements[mother->elements[t]].NodeIndexes[i]] > maxval ) {
+                maxval = nodes->y[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         ymax = maxval;
         
         minval = HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].z < minval ) {
-                minval = nodes[elements[mother->elements[t]].NodeIndexes[i]].z;
+            if (nodes->z[elements[mother->elements[t]].NodeIndexes[i]] < minval ) {
+                minval = nodes->z[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         zmin = minval;
 
         maxval = -HUGE_VAL;
         for (i=0; i<n; i++) {
-            if (nodes[elements[mother->elements[t]].NodeIndexes[i]].z > maxval ) {
-                maxval = nodes[elements[mother->elements[t]].NodeIndexes[i]].z;
+            if (nodes->z[elements[mother->elements[t]].NodeIndexes[i]] > maxval ) {
+                maxval = nodes->z[elements[mother->elements[t]].NodeIndexes[i]];
             }
         }
         zmax = maxval;

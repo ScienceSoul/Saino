@@ -101,13 +101,13 @@
 
 -(void)deallocation:(FEMMesh *)mesh {
     
-    free_dvector(_basis, 0, [mesh maxElementNodes]-1);
-    free_dmatrix(_basisFirstDerivative, 0, [mesh maxElementNodes]-1, 0, 2);
-    free_d3tensor(_basisSecondDerivative, 0, [mesh maxElementNodes]-1, 0, 2, 0, 2);
+    free_dvector(_basis, 0, mesh.maxElementNodes-1);
+    free_dmatrix(_basisFirstDerivative, 0, mesh.maxElementNodes-1, 0, 2);
+    free_d3tensor(_basisSecondDerivative, 0, mesh.maxElementNodes-1, 0, 2, 0, 2);
     free_dmatrix(_elementMetric, 0, 2, 0, 2);
-    free_dmatrix(_covariantMetrixTensor, 0, [mesh dimension]-1, 0, [mesh dimension]-1);
-    free_dmatrix(_ltoGMap, 0, [mesh dimension]-1, 0, [mesh dimension]-1);
-    free_dmatrix(_dx, 0, 2, 0, [mesh dimension]-1);
+    free_dmatrix(_covariantMetrixTensor, 0, mesh.dimension-1, 0, mesh.dimension-1);
+    free_dmatrix(_ltoGMap, 0, mesh.dimension-1, 0, mesh.dimension-1);
+    free_dmatrix(_dx, 0, 2, 0, mesh.dimension-1);
 }
 
 
@@ -383,9 +383,9 @@
         accum2 = 0.0;
         accum3 = 0.0;
         for (j=0; j<n; j++) {
-            accum1 = accum1 + (nodes[n].x * dLBasisdx[n][i]);
-            accum2 = accum2 + (nodes[n].y * dLBasisdx[n][i]);
-            accum3 = accum3 + (nodes[n].z * dLBasisdx[n][i]);
+            accum1 = accum1 + (nodes->x[j] * dLBasisdx[j][i]);
+            accum2 = accum2 + (nodes->y[j] * dLBasisdx[j][i]);
+            accum3 = accum3 + (nodes->z[j] * dLBasisdx[j][i]);
         }
         self.dx[0][i] = accum1;
         self.dx[1][i] = accum2;
@@ -499,11 +499,9 @@
 -(void)globalSecondDerivatives:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w: (double*)f: (double**)dLBasisdx: (double **)values {
     
     int i, j, k, l, n, dim, cdim;
-    
     double ***C1, ***C2, ***ddx;
     double *df;
-    double **cddf, **ddf, **dxx;
-    double **bf, *vecnodes;
+    double **cddf, **ddf, **dxx, **bf;
     double accum1, accum2, accum3, accum4;
     double s;
 
@@ -523,8 +521,6 @@
     cddf = doublematrix(0, 2, 0, 2);
     ddf = doublematrix(0, 2, 0, 2);
     dxx = doublematrix(0, 2, 0, 2);
-    
-    vecnodes = doublevec(0, n-1);
 
     // Partial derivatives of the basis functions are given, just
     // sum for the first partial derivatives.
@@ -541,8 +537,8 @@
                 accum1 = 0.0;
                 accum2 = 0.0;
                 for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes[n].x * dLBasisdx[n][i];
-                    accum2 = accum2 + f[n] * dLBasisdx[n][i];
+                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
+                    accum2 = accum2 + f[j] * dLBasisdx[j][i];
                 }
                 dxx[0][i] = accum1;
                 df[i] = accum2;
@@ -555,9 +551,9 @@
                 accum2 = 0.0;
                 accum3 = 0.0;
                 for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes[n].x * dLBasisdx[n][i];
-                    accum2 = accum2 + nodes[n].y * dLBasisdx[n][i];
-                    accum3 = accum3 + f[n] * dLBasisdx[n][i];
+                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
+                    accum2 = accum2 + nodes->y[j] * dLBasisdx[j][i];
+                    accum3 = accum3 + f[j] * dLBasisdx[j][i];
                 }
                 dxx[0][i] = accum1;
                 dxx[1][i] = accum2;
@@ -572,10 +568,10 @@
                 accum3 = 0.0;
                 accum4 = 0.0;
                 for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes[n].x * dLBasisdx[n][i];
-                    accum2 = accum2 + nodes[n].y * dLBasisdx[n][i];
-                    accum3 = accum3 + nodes[n].z * dLBasisdx[n][i];
-                    accum4 = accum4 + f[n] * dLBasisdx[n][i];
+                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
+                    accum2 = accum2 + nodes->y[j] * dLBasisdx[j][i];
+                    accum3 = accum3 + nodes->z[j] * dLBasisdx[j][i];
+                    accum4 = accum4 + f[j] * dLBasisdx[j][i];
                 }
                 dxx[0][i] = accum1;
                 dxx[1][i] = accum2;
@@ -593,47 +589,29 @@
     switch (dim) {
         case 1:
             // Line elements
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].x;
-            }
-            ddx[0][0][0] = SecondDerivatives1D(element, vecnodes, u);
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].y;
-            }
-            ddx[1][0][0] = SecondDerivatives1D(element, vecnodes, u);
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].z;
-            }
-            ddx[2][0][0] = SecondDerivatives1D(element, vecnodes, u);
+            ddx[0][0][0] = SecondDerivatives1D(element, nodes->x, u);
+            ddx[1][0][0] = SecondDerivatives1D(element, nodes->y, u);
+            ddx[2][0][0] = SecondDerivatives1D(element, nodes->z, u);
             break;
             
         case 2:
             // Surface elements
             bf = doublematrix(0, 1, 0, 1);
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].x;
-            }
-            SecondDerivatives2D(bf, element, vecnodes, u, v);
+            SecondDerivatives2D(bf, element, nodes->x, u, v);
             for (i=0; i<2; i++) {
                 for (j=0; j<2; j++) {
                     ddx[0][i][j] = bf[i][j];
                 }
             }
             
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].y;
-            }
-            SecondDerivatives2D(bf, element, vecnodes, u, v);
+            SecondDerivatives2D(bf, element, nodes->y, u, v);
             for (i=0; i<2; i++) {
                 for (j=0; j<2; j++) {
                     ddx[1][i][j] = bf[i][j];
                 }
             }
             
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].z;
-            }
-            SecondDerivatives2D(bf, element, vecnodes, u, v);
+            SecondDerivatives2D(bf, element, nodes->z, u, v);
             for (i=0; i<2; i++) {
                 for (j=0; j<2; j++) {
                     ddx[2][i][j] = bf[i][j];
@@ -646,30 +624,21 @@
         case 3:
             // Volume elements
             bf = doublematrix(0, 2, 0, 2);
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].x;
-            }
-            SecondDerivatives3D(bf, element, vecnodes, u, v, w);
+            SecondDerivatives3D(bf, element, nodes->x, u, v, w);
             for (i=0; i<3; i++) {
                 for (j=0; j<3; j++) {
                     ddx[0][i][j] = bf[i][j];
                 }
             }
             
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].y;
-            }
-            SecondDerivatives3D(bf, element, vecnodes, u, v, w);
+            SecondDerivatives3D(bf, element, nodes->y, u, v, w);
             for (i=0; i<3; i++) {
                 for (j=0; j<3; j++) {
                     ddx[1][i][j] = bf[i][j];
                 }
             }
             
-            for (i=0; i<n; i++) {
-                vecnodes[n] = nodes[n].z;
-            }
-            SecondDerivatives3D(bf, element, vecnodes, u, v, w);
+            SecondDerivatives3D(bf, element, nodes->z, u, v, w);
             for (i=0; i<3; i++) {
                 for (j=0; j<3; j++) {
                     ddx[2][i][j] = bf[i][j];
@@ -797,9 +766,6 @@
     free_dmatrix(cddf, 0, 2, 0, 2);
     free_dmatrix(ddf, 0, 2, 0, 2);
     free_dmatrix(dxx, 0, 2, 0, 2);
-    
-    free_dvector(vecnodes, 0, n-1);
-    
 }
 
 @end

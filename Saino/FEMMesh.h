@@ -66,7 +66,6 @@
 -(void)loadMeshForModel:(FEMModel *)model meshDirectory:(NSString *)dir meshName:(NSString *)name boundariesOnly:(BOOL)bd numberOfPartitions:(int *)numParts partitionID:(int *)partID definitions:(int *)defDofs;
 
 //Allocations methods
-// TODO: Add diallocation methods........
 -(BOOL)AllocateNodes: (int)nl: (int)nh;
 -(void)allocatePDefinitionsForElement:(Element_t *)element;
 
@@ -90,6 +89,7 @@
 -(BOOL)isAssociatedFaces;
 
 // Deallocation
+-(void)deallocation;
 -(void)deallocateQuadrantTree;
 
 -(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) meshSize elemetCode:(int) elementID;

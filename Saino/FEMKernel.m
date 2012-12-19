@@ -2558,17 +2558,17 @@ static int PRECOND_VANKA     =  560;
     n = element->Type.NumberOfNodes;
     
     for (i=0; i<n; i++) {
-        nodes[i].x = globalNodes[element->NodeIndexes[i]].x;
-        nodes[i].y = globalNodes[element->NodeIndexes[i]].y;
-        nodes[i].z = globalNodes[element->NodeIndexes[i]].z;
+        nodes->x[i] = globalNodes->x[element->NodeIndexes[i]];
+        nodes->y[i] = globalNodes->y[element->NodeIndexes[i]];
+        nodes->z[i] = globalNodes->z[element->NodeIndexes[i]];
     }
     
     sz = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs); 
     if ( sz > n) {
         for (i=n; i<sz; i++) {
-            nodes[i].x = 0.0;
-            nodes[i].y = 0.0;
-            nodes[i].z = 0.0;
+            nodes->x[i] = 0.0;
+            nodes->y[i] = 0.0;
+            nodes->z[i] = 0.0;
         }
     }
     
@@ -2578,9 +2578,9 @@ static int PRECOND_VANKA     =  560;
         nb = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
         for (i=n; i<nb; i++) {
             if (_indexStore[i] >= 0 && _indexStore[i] < sz1) {
-                nodes[i].x = globalNodes[_indexStore[i]].x;
-                nodes[i].y = globalNodes[_indexStore[i]].y;
-                nodes[i].z = globalNodes[_indexStore[i]].z;
+                nodes->x[i] = globalNodes->x[_indexStore[i]];
+                nodes->y[i] = globalNodes->y[_indexStore[i]];
+                nodes->z[i] = globalNodes->z[_indexStore[i]];
             }
         }
     }
@@ -3380,8 +3380,15 @@ static int PRECOND_VANKA     =  560;
     numericIntegration = [[FEMNumericIntegration alloc] init];
     [numericIntegration allocation:solution.mesh];
     
-    nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
-    pNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    nodes->x = doublevec(0, n-1);
+    nodes->y = doublevec(0, n-1);
+    nodes->z = doublevec(0, n-1);
+    
+    pNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    pNodes->x = doublevec(0, n-1);
+    pNodes->y = doublevec(0, n-1);
+    pNodes->z = doublevec(0, n-1);
     
     [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
     [self getNodes:solution inElement:parent resultNodes:pNodes numberOfNodes:n];
@@ -3467,9 +3474,9 @@ static int PRECOND_VANKA     =  560;
         buffer.vector = NULL;
     }
 
-    g[0] = pNodes[kk].x - pNodes[jj].x;
-    g[1] = pNodes[kk].y - pNodes[jj].y;
-    g[2] = pNodes[kk].z - pNodes[jj].z;
+    g[0] = pNodes->x[kk] - pNodes->x[jj];
+    g[1] = pNodes->y[kk] - pNodes->y[jj];
+    g[2] = pNodes->z[kk] - pNodes->z[jj];
     sum = 0.0;
     for (i=0; i<3; i++) {
         sum = sum + pow(g[i], 2.0);
@@ -3521,8 +3528,16 @@ static int PRECOND_VANKA     =  560;
     
     edgeMap = NULL;
     
+    free_dvector(nodes->x, 0, n-1);
+    free_dvector(nodes->y, 0, n-1);
+    free_dvector(nodes->z, 0, n-1);
     free(nodes);
+    
+    free_dvector(pNodes->x, 0, n-1);
+    free_dvector(pNodes->y, 0, n-1);
+    free_dvector(pNodes->z, 0, n-1);
     free(pNodes);
+    
     if (load.vector != NULL) {
         free_dvector(load.vector, 0, load.m-1);
     }
@@ -3567,7 +3582,11 @@ static int PRECOND_VANKA     =  560;
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
     // Get nodes of boundary elements parent and gauss points for boundary
-    nodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    nodes->x = doublevec(0, n-1);
+    nodes->y = doublevec(0, n-1);
+    nodes->z = doublevec(0, n-1);
+    
     [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
     integCompound = GaussQuadrature(element);
     
@@ -3602,9 +3621,9 @@ static int PRECOND_VANKA     =  560;
         yip = 0.0;
         zip = 0.0;
         for (i=0; i<nd; i++) {
-            xip = xip + numericIntegration.basis[i]*nodes[i].x;
-            yip = yip + numericIntegration.basis[i]*nodes[i].y;
-            zip = zip + numericIntegration.basis[i]*nodes[i].z;
+            xip = xip + numericIntegration.basis[i]*nodes->x[i];
+            yip = yip + numericIntegration.basis[i]*nodes->y[i];
+            zip = zip + numericIntegration.basis[i]*nodes->z[i];
         }
         load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:&stat minValue:NULL maxValue:NULL];
         
@@ -3617,6 +3636,9 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
+    free_dvector(nodes->x, 0, n-1);
+    free_dvector(nodes->y, 0, n-1);
+    free_dvector(nodes->z, 0, n-1);
     free(nodes);
     free(integCompound);
     [numericIntegration deallocation:solution.mesh];
@@ -3873,9 +3895,9 @@ static int PRECOND_VANKA     =  560;
                         for (i=0; i<[model numberOfNodes]; i++) {
                             if (varContainers->Perm[i] < 0) continue;
                             
-                            dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
-                            if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
-                            if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
+                            dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
+                            if (noDims >= 2) dist = dist + pow((globalNodes->y[i]-coordNodes.matrix[j][1]), 2.0);
+                            if (noDims == 3) dist = dist + pow((globalNodes->z[i]-coordNodes.matrix[j][2]), 2.0);
                             
                             if (dist<minDist) {
                                 minDist = dist;
@@ -4242,9 +4264,9 @@ static int PRECOND_VANKA     =  560;
                         for (i=0; i<[model numberOfNodes]; i++) {
                             if (varContainers->Perm[i] < 0) continue;
                             
-                            dist = pow((globalNodes[i].x-coordNodes.matrix[j][0]), 2.0);
-                            if (noDims >= 2) dist = dist + pow((globalNodes[i].y-coordNodes.matrix[j][1]), 2.0);
-                            if (noDims == 3) dist = dist + pow((globalNodes[i].z-coordNodes.matrix[j][2]), 2.0);
+                            dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
+                            if (noDims >= 2) dist = dist + pow((globalNodes->y[i]-coordNodes.matrix[j][1]), 2.0);
+                            if (noDims == 3) dist = dist + pow((globalNodes->z[i]-coordNodes.matrix[j][2]), 2.0);
                             
                             dist = sqrt(dist);
                             

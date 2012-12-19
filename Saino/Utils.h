@@ -32,9 +32,6 @@ double __attribute__((overloadable)) max_array(double *a, int num_elements);
 int __attribute__((overloadable)) min_array(int *a, int num_elements);
 double __attribute__((overloadable)) min_array(double *a, int num_elements);
 
-double __attribute__((overloadable)) max_array(Nodes_t *nodes, char mask, int num_elements);
-double __attribute__((overloadable)) min_array(Nodes_t *nodes, char mask, int num_elements);
-
 void __attribute__((overloadable)) sort(unsigned long n, int *arr);
 int __attribute__((overloadable)) all(int *v, char mask, int val, int range);
 int __attribute__((overloadable)) all(float *v, char mask, float val, int range);

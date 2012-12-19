@@ -156,12 +156,13 @@
     if (useQTree == YES) {
         if (rootQuadrant == NULL) {
             oldNodes = oldMesh.getNodes;
-            boundingBox[0] = min_array(oldNodes, 'x', oldMesh.numberOfNodes);
-            boundingBox[1] = min_array(oldNodes, 'y', oldMesh.numberOfNodes);
-            boundingBox[2] = min_array(oldNodes, 'z', oldMesh.numberOfNodes);
-            boundingBox[3] = max_array(oldNodes, 'x', oldMesh.numberOfNodes);
-            boundingBox[4] = max_array(oldNodes, 'y', oldMesh.numberOfNodes);
-            boundingBox[5] = max_array(oldNodes, 'z', oldMesh.numberOfNodes);
+            
+            boundingBox[0] = min_array(oldNodes->x, oldMesh.numberOfNodes);
+            boundingBox[1] = min_array(oldNodes->y, oldMesh.numberOfNodes);
+            boundingBox[2] = min_array(oldNodes->z, oldMesh.numberOfNodes);
+            boundingBox[3] = max_array(oldNodes->x, oldMesh.numberOfNodes);
+            boundingBox[4] = max_array(oldNodes->y, oldMesh.numberOfNodes);
+            boundingBox[5] = max_array(oldNodes->z, oldMesh.numberOfNodes);
             
             max = -HUGE_VAL;
             k = 3;
@@ -190,7 +191,11 @@
     maskExists = (maskName != nil) ? YES : NO;
     
     n = oldMesh.maxElementNodes;
-    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t) * n );
+    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    elementNodes->x = doublevec(0, n-1);
+    elementNodes->y = doublevec(0, n-1);
+    elementNodes->z = doublevec(0, n-1);
+    
     elementValues = doublevec(0, n-1);
     newValues = doublevec(0, newMesh.numberOfNodes-1);
     
@@ -213,9 +218,9 @@
     for (i=0; i<newMesh.numberOfNodes; i++) {
         
         element = NULL;
-        point[0] = newNodes[i].x;
-        point[1] = newNodes[i].y;
-        point[2] = newNodes[i].z;
+        point[0] = newNodes->x[i];
+        point[1] = newNodes->y[i];
+        point[2] = newNodes->z[i];
         
         // Find in which old mesh bulk element the point belongs to
         found = NO;
@@ -245,9 +250,9 @@
                         
                         n = oldElements[leafQuadrant->elements[k]].Type.NumberOfNodes;
                         for (l=0; l<n; l++) {
-                            elementNodes[l].x = oldNodes[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]].x;
-                            elementNodes[l].y = oldNodes[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]].y;
-                            elementNodes[l].z = oldNodes[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]].z;
+                            elementNodes->x[l] = oldNodes->x[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]];
+                            elementNodes->y[l] = oldNodes->y[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]];
+                            elementNodes->z[l] = oldNodes->z[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]];
                         }
                         found = [interpolation isPointInElement:&oldElements[leafQuadrant->elements[k]] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:&eps1 localEpsilon:&eps2 numericEpsilon:&numericEps globalDistance:NULL localDistance:NULL model:aModel];
                         if (found == YES) break;
@@ -269,9 +274,9 @@
                 n = oldElements[k].Type.NumberOfNodes;
                 
                 for (l=0; l<n; l++) {
-                    elementNodes[l].x = oldNodes[oldElements[k].NodeIndexes[l]].x;
-                    elementNodes[l].y = oldNodes[oldElements[k].NodeIndexes[l]].y;
-                    elementNodes[l].z = oldNodes[oldElements[k].NodeIndexes[l]].z;
+                    elementNodes->x[l] = oldNodes->x[oldElements[k].NodeIndexes[l]];
+                    elementNodes->y[l] = oldNodes->y[oldElements[k].NodeIndexes[l]];
+                    elementNodes->z[l] = oldNodes->z[oldElements[k].NodeIndexes[l]];
                 }
                 
                 found = [interpolation isPointInElement:&oldElements[k] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:aModel];
@@ -478,7 +483,12 @@
     }
     
     [elementDescription deallocation];
+    
+    free_dvector(elementNodes->x, 0, oldMesh.maxElementNodes-1);
+    free_dvector(elementNodes->y, 0, oldMesh.maxElementNodes-1);
+    free_dvector(elementNodes->z, 0, oldMesh.maxElementNodes-1);
     free(elementNodes);
+    
     free_dvector(elementValues, 0, oldMesh.maxElementNodes-1);
     free_dvector(newValues, 0,  newMesh.numberOfNodes-1);
 }
