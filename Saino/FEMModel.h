@@ -20,6 +20,7 @@
     int _numberOfBoundaryElements;
     int _numberOfBodies;
     int _numberOfBodyForces;
+    int _numberOfBoundaryConditions;
     int _numberOfBoundaries;
     int _numberOfICs;
     int _numberOfSolutions;
@@ -31,7 +32,8 @@
     NSArray *_meshes;                               // Array of meshes used by the model
     NSArray *_bodies;                               // Array of dictionaries
     NSArray *_bodyForces;                           // Array of FEMBodyForce objects
-    NSArray *_boundaries;                           // Array of FEMBoundaryCondition objects
+    NSArray *_boundaryConditions;                   // Array of FEMBoundaryCondition objects
+    NSArray *_boundaries;                           // Array of FEMBoundary objects
     NSArray *_equations;                            // Array of FEMEquation objects
     FEMSimulation *_simulation;                   
     NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
@@ -63,6 +65,7 @@
 @property(nonatomic, assign) int numberOfBoundaryElements;
 @property(nonatomic, assign) int numberOfBodies;
 @property(nonatomic, assign) int numberOfBodyForces;
+@property(nonatomic, assign) int numberOfBoundaryConditions;
 @property(nonatomic, assign) int numberOfBoundaries;
 @property(nonatomic, assign) int numberOfICs;
 @property(nonatomic, assign) int numberOfSolutions;
@@ -73,6 +76,7 @@
 @property(nonatomic, strong) NSArray *meshes;
 @property(nonatomic, strong) NSArray *bodies;
 @property(nonatomic, strong) NSArray *bodyForces;
+@property(nonatomic, strong) NSArray *boundaryConditions;
 @property(nonatomic, strong) NSArray *boundaries;
 @property(nonatomic, strong) NSArray *equations;
 @property(nonatomic, strong) FEMSimulation *simulation;

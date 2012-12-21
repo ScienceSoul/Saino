@@ -1,31 +1,23 @@
 //
-//  FEMBoundaryCondition.h
+//  FEMBoundary.h
 //  Saino
 //
-//  Created by Hakime Seddik on 27/03/12.
+//  Created by Seddik hakime on 21/12/12.
 //  Copyright (c) 2012 Institute of Low Temperature Science. All rights reserved.
 //
 //------------------------------------------------------------------------------
 //
-// Boundary conditions
+// Boundary to boundary condition mapping
 //
 //------------------------------------------------------------------------------
 
 #import <Foundation/Foundation.h>
 
-#import "FEMMatrix.h"
-#import "Constructors.h"
-
-@interface FEMBoundaryCondition : NSObject {
+@interface FEMBoundary : NSObject {
     
-    int _tag;
     NSMutableArray *_valuesList;  // Array of FEMValueList objects
-    FEMMatrix *_pMatrix;
-
 }
-@property(nonatomic, assign) int tag;
-@property(nonatomic, strong) NSMutableArray *valuesList;
-@property(nonatomic, strong) FEMMatrix *pMatrix;
 
+@property(nonatomic, strong) NSMutableArray *valuesList;
 
 @end

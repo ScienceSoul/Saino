@@ -1142,10 +1142,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
     n2 = 0;
     for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
         constraint = elements[i].BoundaryInfo->Constraint;
-        boundaryConditionAtId = (model.boundaries)[this];
+        boundaryConditionAtId = (model.boundaryConditions)[this];
         if (boundaryConditionAtId.tag == constraint) n1++;
         
-        boundaryConditionAtId = (model.boundaries)[trgt];
+        boundaryConditionAtId = (model.boundaryConditions)[trgt];
         if (boundaryConditionAtId.tag == constraint) n2++;
     }
     
@@ -1190,10 +1190,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         constraint = elements[i].BoundaryInfo->Constraint;
         
-        boundaryConditionAtId = (model.boundaries)[this];
+        boundaryConditionAtId = (model.boundaryConditions)[this];
         thisActive = (boundaryConditionAtId.tag == constraint) ? YES : NO;
         
-        boundaryConditionAtId = (model.boundaries)[trgt];
+        boundaryConditionAtId = (model.boundaryConditions)[trgt];
         targetActive = (boundaryConditionAtId.tag == constraint) ? YES : NO;
         
         if (thisActive == YES || targetActive == YES) {
@@ -1360,7 +1360,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Rotations:
     // These are called first since they are not accounted for in the
     // automatic scaling and translation.
-    boundaryConditionAtId = (model.boundaries)[this];
+    boundaryConditionAtId = (model.boundaryConditions)[this];
     gotRotate = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC rotate" buffer:&pArray];
     if (gotRotate == YES) {
         for (i=0; i<3; i++) {
@@ -1432,7 +1432,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 
                 constraint = elements[i].BoundaryInfo->Constraint;
                 
-                boundaryConditionAtId = (model.boundaries)[trgt];
+                boundaryConditionAtId = (model.boundaryConditions)[trgt];
                 if (boundaryConditionAtId.tag != constraint) continue;
                 
                 n = elements[i].Type.NumberOfNodes;
@@ -1564,7 +1564,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
         pArray.matrix = NULL;
     }
-    boundaryConditionAtId = (model.boundaries)[this];
+    boundaryConditionAtId = (model.boundaryConditions)[this];
     found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC scale" buffer:&pArray];
 
     if (found == YES) {
@@ -1622,7 +1622,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
         pArray.matrix = NULL;
     }
-    boundaryConditionAtId = (model.boundaries)[this];
+    boundaryConditionAtId = (model.boundaryConditions)[this];
     found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC translate" buffer:&pArray];
     // Define translations so that the lower left corner is the same
     if (found == NO) {
@@ -1643,7 +1643,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
         pArray.matrix = NULL;
     }
-    boundaryConditionAtId = (model.boundaries)[this];
+    boundaryConditionAtId = (model.boundaryConditions)[this];
     found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC matrix" buffer:&pArray];
     if (found == YES) {
         for (i=0; i<pArray.m; i++) {

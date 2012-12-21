@@ -691,7 +691,7 @@
             for (j=0; j<model.numberOfBoundaries; j++) {
                 if ([(model.boundaryID)[j] intValue] == bndry) {
                     addr1 = 1;
-                    addr2 = model.numberOfBoundaries;
+                    addr2 = model.numberOfBoundaryConditions;
                     _elements[i].BoundaryInfo->Constraint = [listUtil listGetInteger:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"Boundary condition" info:&found minValue:&addr1 maxValue:&addr2];
                     break;
                 }
@@ -703,36 +703,36 @@
             _elements[i].BodyID = 0;
         
             defaultTargetBC = 0;
-            for (j=0; j<model.numberOfBoundaries; j++) {
-                if ([listUtil listGetLogical:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"Default target" info:&found] == YES)
+            for (j=0; j<model.numberOfBoundaryConditions; j++) {
+                if ([listUtil listGetLogical:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Default target" info:&found] == YES)
                     defaultTargetBC = j+1;
                 
-                gotIt = [listUtil listGetIntegerArray:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"Target boundaries" buffer:&bdList];
+                gotIt = [listUtil listGetIntegerArray:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Target boundaries" buffer:&bdList];
                 if (gotIt == YES) {
                     for (k=0; k<bdList.m; k++) {
                         if (bdList.ivector[k] == bndry) {
                             _elements[i].BoundaryInfo->Constraint = j+1;
                             addr1 = 1;
                             addr2 = model.numberOfBodies;
-                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
+                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
                         }
                     }
                 }
             }
             
             j = _elements[i].BoundaryInfo->Constraint;
-            if ((j<=0 || j>model.numberOfBoundaries) && defaultTargetBC > 0); {
+            if ((j<=0 || j>model.numberOfBoundaryConditions) && defaultTargetBC > 0); {
                 _elements[i].BoundaryInfo->Constraint = defaultTargetBC;
                 addr1 = 1;
                 addr2 = model.numberOfBodies;
-                _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaries)[defaultTargetBC-1] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
+                _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[defaultTargetBC-1] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
             }
             
             _elements[i].BoundaryInfo->Outbody = -1;
             j = _elements[i].BoundaryInfo->Constraint;
-            if (j>0 && j<=model.numberOfBoundaries) {
+            if (j>0 && j<=model.numberOfBoundaryConditions) {
                 addr1 = model.numberOfBodies;
-                _elements[i].BoundaryInfo->Outbody = [listUtil listGetInteger:model inArray:[(model.boundaries)[j-1] valuesList] forVariable:@"Normal target body" info:&found minValue:NULL maxValue:&addr1];
+                _elements[i].BoundaryInfo->Outbody = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j-1] valuesList] forVariable:@"Normal target body" info:&found minValue:NULL maxValue:&addr1];
             }
             
             _elements[i].NodeIndexes = intvec(0, n-1);
@@ -952,14 +952,14 @@
     [meshIO close];
     
     // If periodic BC given, compute boundary mesh projector    
-    for (FEMBoundaryCondition *boundary in model.boundaries) {
+    for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
         boundary.pMatrix = nil;
     }
     
     i = 0;
-    for (FEMBoundaryCondition *boundary in model.boundaries) {
+    for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
         addr1 = 1;
-        addr2 = model.numberOfBoundaries;
+        addr2 = model.numberOfBoundaryConditions;
         k = [listUtil listGetInteger:model inArray:boundary.valuesList forVariable:@"Periodic BC" info:&gotIt minValue:&addr1 maxValue:&addr2];
         projector = [meshUtils periodicProjectorInModel:model forMesh:self boundary:i target:k-1];
         if (projector != nil) boundary.pMatrix = projector;

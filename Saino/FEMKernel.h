@@ -39,7 +39,7 @@
 -(NSArray *)getBoundaryCondition:(FEMModel *)model forElement:(Element_t *)element;
 -(Element_t *)getBoundaryElement:(FEMSolution *)solution atIndex:(int)index;
 -(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution;
--(void)checkNormalTangentiality:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes atBoundary:(int)bc variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
+-(void)checkNormalTangential:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes atBoundary:(int)bc variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 -(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int)indSize;
 -(int **)getEdgeMap:(int)elementFamily;
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution;

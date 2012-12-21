@@ -16,6 +16,7 @@
 @synthesize numberOfBoundaryElements = _numberOfBoundaryElements;
 @synthesize numberOfBodies = _numberOfBodies;
 @synthesize numberOfBodyForces = _numberOfBodyForces;
+@synthesize numberOfBoundaryConditions = _numberOfBoundaryConditions;
 @synthesize numberOfBoundaries = _numberOfBoundaries;
 @synthesize numberOfICs = _numberOfICs;
 @synthesize numberOfSolutions = _numberOfSolutions;
@@ -25,6 +26,7 @@
 @synthesize solutions = _solutions;
 @synthesize meshes = _meshes;
 @synthesize bodyForces = _bodyForces;
+@synthesize boundaryConditions = _boundaryConditions;
 @synthesize boundaries = _boundaries;
 @synthesize equations = _equations;
 @synthesize simulation = _simulation;
@@ -35,11 +37,13 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _dimension = 0;
         _numberOfNodes = 0;
         _numberOfBulkElements = 0;
         _numberOfBoundaryElements = 0;
         _numberOfBodies = 0;
         _numberOfBodyForces = 0;
+        _numberOfBoundaryConditions = 0;
         _numberOfBoundaries = 0;
         _numberOfICs = 0;
         _numberOfSolutions = 0;
