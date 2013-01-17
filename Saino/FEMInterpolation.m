@@ -73,6 +73,16 @@
 
 #pragma mark Public methods
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(void)findLeafElementsForPoint:(double *)point dimension:(int)dim rootQuadrant:(Quadrant_t *)root leafQuadrant:(Quadrant_t *)leaf {
     
     leaf = root;

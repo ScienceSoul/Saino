@@ -1027,6 +1027,16 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 #pragma mark Public methods
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(void)CRS_MatrixVectorMultiply:(FEMSolution *)solution: (double *)u: (double *)v {
     /*******************************************************************************************
      

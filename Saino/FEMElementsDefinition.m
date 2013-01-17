@@ -21,4 +21,14 @@
 @synthesize gaussPoints;
 @synthesize stabilization;
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 @end

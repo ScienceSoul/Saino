@@ -1957,7 +1957,7 @@ static int PRECOND_VANKA     =  560;
         }
         
         if (a != b) {
-            a = [util allocateMatrix];
+            a = [[FEMMatrix alloc] init];
             a.constraint = solution.matrix.constraint;
             solution.matrix.constraint = a;
             

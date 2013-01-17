@@ -13,6 +13,16 @@
 
 @implementation FEMLinearAlgebra
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(void)LUDecompositionOfMatrix:(double **)a ofSize:(int)n resultPivot:(int *)pivot {
     
     int i, j, k, l;

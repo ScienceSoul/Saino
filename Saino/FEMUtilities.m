@@ -502,6 +502,16 @@
 
 #pragma mark Public methods
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(FEMMatrix *)allocateMatrix {
     
     FEMMatrix *matrix;

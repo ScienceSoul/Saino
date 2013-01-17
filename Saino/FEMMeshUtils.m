@@ -155,6 +155,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 #pragma mark Public methods
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
+    
+    return self;
+}
+
 /************************************************************************
 
     Find 2D mesh edges.
