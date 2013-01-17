@@ -30,5 +30,5 @@ void GaussQuadratureTetra(int n, GaussIntegrationPoints *pt);
 void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt);
 void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt);
 void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt);
-GaussIntegrationPoints* GaussQuadrature(Element_t *elm, ...);
+GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrder);
 

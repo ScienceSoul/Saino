@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+#import "Constructors.h"
 #import "FEMVariable.h"
 #import "FEMSimulation.h"
-#import "Constructors.h"
 
 @interface FEMModel : NSObject {
     
@@ -22,21 +22,25 @@
     int _numberOfBodyForces;
     int _numberOfBoundaryConditions;
     int _numberOfBoundaries;
-    int _numberOfICs;
+    int _numberOfInitialConditions;
     int _numberOfSolutions;
     int _numberOfEquations;
+    int _numberOfMaterials;
+    int _coordinates;
+    int _totalMatrixElements;
     
     id _mesh;
+    id _solution;
     NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
     NSArray *_solutions;                            // Array of all solutions in the model
-    NSArray *_meshes;                               // Array of meshes used by the model
+    NSMutableArray *_meshes;                        // Array of meshes used by the model
     NSArray *_bodies;                               // Array of dictionaries
     NSArray *_bodyForces;                           // Array of FEMBodyForce objects
     NSArray *_boundaryConditions;                   // Array of FEMBoundaryCondition objects
     NSArray *_boundaries;                           // Array of FEMBoundary objects
     NSArray *_equations;                            // Array of FEMEquation objects
-    FEMSimulation *_simulation;                   
     NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
+    FEMSimulation *_simulation;                   
     
     Element_t *_currentElement;
     modelArraysContainer *_containers;
@@ -67,13 +71,17 @@
 @property(nonatomic, assign) int numberOfBodyForces;
 @property(nonatomic, assign) int numberOfBoundaryConditions;
 @property(nonatomic, assign) int numberOfBoundaries;
-@property(nonatomic, assign) int numberOfICs;
+@property(nonatomic, assign) int numberOfInitialConditions;
 @property(nonatomic, assign) int numberOfSolutions;
 @property(nonatomic, assign) int numberOfEquations;
+@property(nonatomic, assign) int numberOfMaterials;
+@property(nonatomic, assign) int coordinates;
+@property(nonatomic, assign) int totalMatrixElements;
 @property(nonatomic, strong) id mesh;
+@property(nonatomic, strong) id solution;
 @property(nonatomic, strong) NSArray *boundaryID;
 @property(nonatomic, strong) NSArray *solutions;
-@property(nonatomic, strong) NSArray *meshes;
+@property(nonatomic, strong) NSMutableArray *meshes;
 @property(nonatomic, strong) NSArray *bodies;
 @property(nonatomic, strong) NSArray *bodyForces;
 @property(nonatomic, strong) NSArray *boundaryConditions;
@@ -83,6 +91,9 @@
 @property(nonatomic, strong) NSMutableArray *variables;
 
 -(void)deallocation;
+
+// The dummy arguments are placeholders for future arguments related to MPI support
+-(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2;
 
 // Elements getter
 -(Element_t *)getCurrentElement;

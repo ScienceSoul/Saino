@@ -44,8 +44,7 @@ static int PRECOND_VANKA     =  560;
 @interface FEMKernel ()
 
 // Solving linear systems and compute norms
--(void)iterCall:(int)iterType: (FEMSolution *)solution: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod;
--(void)FEMKernel_iterSolver:(FEMSolution *)solution;
+-(void)FEMKernel_iterCall:(int)iterType: (FEMSolution *)solution: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod;
 -(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber;
 -(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution;
 -(double)FEMKernel_computeNorm:(FEMSolution *)solution: (int)n: (double *)values;
@@ -110,7 +109,7 @@ static int PRECOND_VANKA     =  560;
 
 #pragma mark Solve linear systems and norms
 
--(void)iterCall:(int)iterType :(FEMSolution *)solution :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)FEMKernel_iterCall:(int)iterType :(FEMSolution *)solution :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
     
     FEMHUTIter *hutisolver;
     
@@ -161,328 +160,6 @@ static int PRECOND_VANKA     =  560;
         [hutisolver dgcrSolve:solution :ipar[2] :ipar[3] :ipar :dpar :work :pcondlMethod :pcondrMethod :matvecMethod :mstopMethod];
     }
     
-}
-
--(void)FEMKernel_iterSolver:(FEMSolution *)solution {
-    
-    NSString *str;
-    int i, n, iterType, pCondType=0, *ipar, wsize, ilun;
-    double *dpar, **work;
-    double ilut_tol;
-    variableArraysContainer *varContainers;
-    BOOL abortNotConverged;
-    SEL pcondSelector=0, pcondrSelector=0, mvSelector=0;
-    
-    n = solution.matrix.numberOfRows;
-    ipar = intvec(0, 49);
-    dpar = doublevec(0, 49);
-    
-    varContainers = solution.variable.getContainers;
-    
-    for (i=0; i<50; i++) {
-        ipar[i] = 0;
-        dpar[i] = 0.0;
-    }
-    
-    str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system iteration method"]];
-    
-    if ([str isEqualToString:@"Bi-CGSTAB2"] == YES) 
-    {
-        iterType = ITER_BICGSTAB2;
-    } 
-    else if ([str isEqualToString:@"Bi-CGSTAB(l)"] == YES) 
-    {
-        iterType = ITER_BICGSTABL;
-    } 
-    else if ([str isEqualToString:@"Bi-CGSTAB"] == YES) 
-    {
-        iterType = ITER_BICGSTAB;
-    } 
-    else if ([str isEqualToString:@"TFQMR"] == YES) 
-    {
-        iterType = ITER_TFQMR;
-    } 
-    else if ([str isEqualToString:@"CGS"] == YES) 
-    {
-        iterType = ITER_CGS;
-    } 
-    else if ([str isEqualToString:@"CG"] == YES) 
-    {
-        iterType = ITER_CG;
-    } 
-    else if ([str isEqualToString:@"GMRES"] == YES) 
-    {
-        iterType = ITER_GMRES;
-    } 
-    else if ([str isEqualToString:@"SGS"] == YES) 
-    {
-        iterType = ITER_SGS;
-    } 
-    else if ([str isEqualToString:@"JACOBI"] == YES) 
-    {
-        iterType = ITER_JACOBI;
-    } 
-    else if ([str isEqualToString:@"GCR"] == YES) 
-    {
-        iterType = ITER_GCR;
-    } 
-    else 
-    {
-        iterType = ITER_BICGSTAB;
-    }
-    
-    ipar[3] = 0;
-    wsize = ipar[3];
-    
-    if (iterType == ITER_BICGSTAB) 
-    {
-        ipar[3] = 8;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_BICGSTAB2) 
-    {
-        ipar[3] = 8;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_TFQMR)
-    {
-        ipar[3] = 10;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_CG)
-    {
-        ipar[3] = 4;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_CGS)
-    {
-        ipar[3] = 7;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_GMRES)
-    {
-        if ((solution.solutionInfo)[@"Linear system GMRES restart"] != nil) {
-            
-            ipar[14] = [(solution.solutionInfo)[@"Linear system GMRES restart"] intValue];
-        } else {
-            ipar[14] = 10;
-        }
-        ipar[3] = 7 + ipar[14];
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_SGS)
-    {
-        ipar[3] = 1;
-        wsize =ipar[3];
-        if ((solution.solutionInfo)[@"SGS over relaxation factor"] != nil) {
-            dpar[2] = [(solution.solutionInfo)[@"SGS over relaxation factor"] doubleValue];
-            if (dpar[2] < 0.0 || dpar[2] > 2.0) {
-                errorfunct("FEMKernel_iterSolver", "Value for SGS over relaxation factor out of bounds (min:0; max:2).");
-            }
-        } else {
-            dpar[2] = 1.8;
-        }
-    }
-    else if (iterType == ITER_JACOBI)
-    {
-        ipar[3] = 1;
-        wsize = ipar[3];
-    }
-    else if (iterType == ITER_GCR) 
-    {
-        ipar[3] = 1;
-        wsize = ipar[3];
-        if ((solution.solutionInfo)[@"Linear system GCR restart"] != nil) {
-            ipar[16] = [(solution.solutionInfo)[@"Linear system GCR restart"] intValue];
-        } else {
-            if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
-                ipar[16] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
-                if (ipar[16] < 1) errorfunct("FEMKernel_iterSolver", "Parameter for GCR should be equal or greater than 1.");
-            } else {
-                ipar[16] = 1;
-            }
-        }
-    }
-    else if (iterType == ITER_BICGSTABL)
-    {
-        ipar[3] = 1;
-        wsize = ipar[3];
-        if ((solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] != nil) {
-            ipar[15] = [(solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] intValue];
-            if (ipar[15] < 2) errorfunct("FEMKernel_iterSolver", "Polynomial degree for Bi-CGSTAB(l) should be equal or greater than 2");
-        } else {
-            ipar[15] = 2;
-        }
-    }
-    
-    ipar[11] = 1;
-    ipar[2] = n;
-    
-    if ((solution.solutionInfo)[@"Linear system residual output"] != nil) {
-        ipar[4] = [(solution.solutionInfo)[@"Linear system residual output"] intValue];
-    } else {
-        ipar[4] = 1;
-    }
-    
-    if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
-        ipar[9] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
-    } else {
-        ipar[9] = 1;
-    }
-    
-    work = doublematrix(0, n-1, 0, wsize-1);
-    if (work == NULL) {
-        errorfunct("FEMKernel_iterSolver", "Memory allocation error");
-    }
-    
-    if (all(varContainers->Values, '=', 0.0, varContainers->sizeValues) == 1) {
-        for (i=0; i<varContainers->sizeValues; i++) {
-            varContainers->Values[i] = 1.0e-8;
-        }
-    }
-    ipar[13] = 1;
-    
-    if ((solution.solutionInfo)[@"Linear system convergence tolerance"] != nil) {
-        dpar[0] = [(solution.solutionInfo)[@"Linear system convergence tolerance"] doubleValue];
-    }
-    
-    if ((solution.solutionInfo)[@"Linear system divergence tolerance"] != nil) {
-        dpar[1] = [(solution.solutionInfo)[@"Linear system divergence tolerance"] doubleValue];
-    } else {
-        dpar[1] = HUGE_VAL;
-    }
-    
-    if ((solution.solutionInfo)[@"Linear system preconditioning"] != nil) {
-        str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system preconditioning"]];
-    } else {
-        str = @"none";
-    }
-    
-    if ([str isEqualToString:@"none"] == YES) 
-    {
-        pCondType = PRECOND_NONE;
-    }
-    else if ([str isEqualToString:@"Diagonal"] == YES) 
-    {
-        pCondType = PRECOND_DIAGONAL;
-    }
-    else if ([str isEqualToString:@"ILUT"] == YES)
-    {
-        if ((solution.solutionInfo)[@"Linear system ILUT tolerance"] != nil) {
-            ilut_tol = [(solution.solutionInfo)[@"Linear system ILUT tolerance"] doubleValue];
-        } else {
-            errorfunct("FEMKernel_iterSolver", "Linear system ILUT tolerance not found.");
-        }
-        pCondType = PRECOND_ILUT;
-    }
-    else if ([str isEqualToString:@"ILU"] == YES) 
-    {
-        if ((solution.solutionInfo)[@"Linear system ILU order"] != nil) {
-            ilun = [(solution.solutionInfo)[@"Linear system ILU order"] intValue];
-        } else {
-            ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:3]] intValue] -  0;
-            if (ilun < 0 || ilun > 9 ) ilun = 0;
-            pCondType = PRECOND_ILUN;
-            
-        }
-    }
-    else if ([str isEqualToString:@"BILU"] == YES)
-    {
-        ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:4]] intValue] -  0;
-        if (ilun < 0 || ilun > 9 ) ilun = 0;
-        if (solution.variable.dofs == 1) {
-            warnfunct("FEMKernel_iterSolver", "BILU for one dofs is equal to ILU!");
-            pCondType = PRECOND_ILUN;
-        } else {
-            pCondType = PRECOND_BILUN;
-        }
-    }
-    else if ([str isEqualToString:@"Multigrid"] == YES)
-    {
-        pCondType = PRECOND_MG;
-    }
-    else if ([str isEqualToString:@"Vanka"] == YES) 
-    {
-        pCondType = PRECOND_VANKA;
-    }
-    else {
-        pCondType = PRECOND_NONE;
-        warnfunct("FEMKernel_iterSolver", "Unknown preconditioner type, feature disabled.");
-    }
-    
-    if ((solution.solutionInfo)[@"No precondition recompute"] != nil) {
-        if ([(solution.solutionInfo)[@"No precondition recompute"] boolValue] == NO) {
-            // TODO: Implement the code if we choose not to compute the preconditioner
-            // for each method call.
-        }
-    }
-    
-    solution.matrix.solveCount = solution.matrix.solveCount + 1;
-    
-    if ((solution.solutionInfo)[@"Linear system abort not converged"] != nil) {
-        abortNotConverged = [(solution.solutionInfo)[@"Linear system abort not converged"] boolValue];
-    } else {
-        abortNotConverged = YES;
-    }
-    
-    // Get the selector for the matrix-vector multiplication method we want to use
-    if (solution.matrix.isComplexMatrix == YES) {
-        mvSelector = @selector(CRS_ComplexMatrixVectorProd::::);
-    } else {
-        mvSelector= @selector(CRS_MatrixVectorProd::::);
-    }
-    
-    // Get the selector for the preconditioning method we want to use
-    if (pCondType == PRECOND_NONE) {
-        
-        pcondSelector = @selector(CRS_pcond_dummy::::);
-    } 
-    else if (pCondType == PRECOND_DIAGONAL) {
-        if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRS_ComplexDiagPrecondition::::);
-        } else {
-            pcondSelector = @selector(CRS_DiagPrecondition::::);
-        }
-    } 
-    else if (pCondType == PRECOND_ILUN == pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
-        if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRS_ComplexLUPrecondition::::);
-        } else {
-            pcondSelector = @selector(CRS_LUPrecondition::::);
-        }
-    }
-    
-    if (solution.matrix.isComplexMatrix == NO) {
-        
-        if (iterType == ITER_SGS || iterType == ITER_JACOBI || iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
-            if (ipar[4] == 0) ipar[4] = HUGE_VAL;
-        }
-    } else {
-        
-        ipar[2] = ipar[2] / 2;
-        if (iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
-            if (ipar[4] == 0) ipar[4] = HUGE_VAL;
-        }
-    }
-    
-    // Everything is happening in this method...
-    [self iterCall:iterType :solution :ipar :dpar :work :pcondSelector :pcondrSelector :mvSelector :@selector(stopc:::::)];
-    
-    if (solution.matrix.isComplexMatrix == YES) ipar[2] = ipar[2] * 2;
-    
-    if (ipar[29] != 1) {
-        if (ipar[29] == 3) {
-            errorfunct("FEMKernel_iterSolver", "System diverged over tolerance.");
-        } else if (abortNotConverged == YES) {
-            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
-        } else {
-            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
-        }
-    }
-        
-    free_dmatrix(work, 0, n-1, 0, wsize-1);
-    work = NULL;
-    varContainers = NULL;
 }
 
 -(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution: (double *)vec: (int)nodeNumber {
@@ -1254,13 +931,13 @@ static int PRECOND_VANKA     =  560;
    
     if ([method isEqualToString:@"iterative"] == YES) {
         
-        [self FEMKernel_iterSolver:solution];
+        [self iterativeSolve:solution];
     } 
     else if ([method isEqualToString:@"multigrid"] == YES) {
         // TODO: Need to be implemented
     }
     else { // By default we use the direct solver
-        // TODO: Need to be implemented
+           // TODO: Need to be implemented
     }
     
     if (scaleSystem == YES) {
@@ -2482,11 +2159,6 @@ static int PRECOND_VANKA     =  560;
     return self;
 }
 
-- (void)dealloc
-{
-
-}
-
 -(void)deallocation
 {
     free_ivector(_indexStore, 0, 511);
@@ -2507,10 +2179,8 @@ static int PRECOND_VANKA     =  560;
     free_dmatrix(_kernStiff, 0, _size1kernStiff-1, 0, _size2kernStiff-1);
     _kernStiff = NULL;
     
-     
     free_dvector(_kernWork, 0, _sizekernWork-1);
     _kernWork = NULL;
-    
 }
 
 -(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name buffer:(listBuffer *)result {
@@ -3127,7 +2797,7 @@ static int PRECOND_VANKA     =  560;
         perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
-    if (all(perm, '>', 0, n) == 1) {
+    if (all(perm, '>', 0, n) == true) {
         l = YES;
     } else {
         l = NO;
@@ -3381,7 +3051,7 @@ static int PRECOND_VANKA     =  560;
     elementDescription = [[FEMElementDescription alloc] init];
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    [numericIntegration allocation:solution.mesh];
+    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
     
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     nodes->x = doublevec(0, n-1);
@@ -3492,7 +3162,7 @@ static int PRECOND_VANKA     =  560;
     if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:solution.mesh stabilization:NULL];
     
     integral = 0.0;
-    integCompound = GaussQuadrature(element);
+    integCompound = GaussQuadrature(element, NULL, NULL);
     for (t=0; t<integCompound->n; t++) {
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes 
@@ -3547,6 +3217,11 @@ static int PRECOND_VANKA     =  560;
     free_dmatrix(vLoad, 0, 2, 0, np-1);
     free_dvector(vl, 0, 2);
     free_dvector(g, 0, 2);
+    
+    free_dvector(integCompound->u, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->v, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->w, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->s, 0, MAX_INTEGRATION_POINTS-1);
     free(integCompound);
     
     [numericIntegration deallocation:solution.mesh];
@@ -3578,7 +3253,8 @@ static int PRECOND_VANKA     =  560;
     BOOL stat;
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    [numericIntegration allocation:solution.mesh];
+    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("localBoundaryBDOFs", "Allocation error in FEMNumericIntegration!");
+    
     
     listUtil = [[FEMListUtilities alloc] init];
     
@@ -3591,7 +3267,7 @@ static int PRECOND_VANKA     =  560;
     nodes->z = doublevec(0, n-1);
     
     [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
-    integCompound = GaussQuadrature(element);
+    integCompound = GaussQuadrature(element, NULL, NULL);
     
     memset( force, 0.0, (nd*sizeof(force)) );
     for (i=0; i<nd; i++) {
@@ -3643,7 +3319,13 @@ static int PRECOND_VANKA     =  560;
     free_dvector(nodes->y, 0, n-1);
     free_dvector(nodes->z, 0, n-1);
     free(nodes);
+    
+    free_dvector(integCompound->u, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->v, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->w, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->s, 0, MAX_INTEGRATION_POINTS-1);
     free(integCompound);
+    
     [numericIntegration deallocation:solution.mesh];
 }
 
@@ -4961,6 +4643,328 @@ static int PRECOND_VANKA     =  560;
 }
 
 #pragma mark Solve
+
+-(void)iterativeSolve:(FEMSolution *)solution {
+    
+    NSString *str;
+    int i, n, iterType, pCondType=0, *ipar, wsize, ilun;
+    double *dpar, **work;
+    double ilut_tol;
+    variableArraysContainer *varContainers;
+    BOOL abortNotConverged;
+    SEL pcondSelector=0, pcondrSelector=0, mvSelector=0;
+    
+    n = solution.matrix.numberOfRows;
+    ipar = intvec(0, 49);
+    dpar = doublevec(0, 49);
+    
+    varContainers = solution.variable.getContainers;
+    
+    for (i=0; i<50; i++) {
+        ipar[i] = 0;
+        dpar[i] = 0.0;
+    }
+    
+    str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system iteration method"]];
+    
+    if ([str isEqualToString:@"Bi-CGSTAB2"] == YES)
+    {
+        iterType = ITER_BICGSTAB2;
+    }
+    else if ([str isEqualToString:@"Bi-CGSTAB(l)"] == YES)
+    {
+        iterType = ITER_BICGSTABL;
+    }
+    else if ([str isEqualToString:@"Bi-CGSTAB"] == YES)
+    {
+        iterType = ITER_BICGSTAB;
+    }
+    else if ([str isEqualToString:@"TFQMR"] == YES)
+    {
+        iterType = ITER_TFQMR;
+    }
+    else if ([str isEqualToString:@"CGS"] == YES)
+    {
+        iterType = ITER_CGS;
+    }
+    else if ([str isEqualToString:@"CG"] == YES)
+    {
+        iterType = ITER_CG;
+    }
+    else if ([str isEqualToString:@"GMRES"] == YES)
+    {
+        iterType = ITER_GMRES;
+    }
+    else if ([str isEqualToString:@"SGS"] == YES)
+    {
+        iterType = ITER_SGS;
+    }
+    else if ([str isEqualToString:@"JACOBI"] == YES)
+    {
+        iterType = ITER_JACOBI;
+    }
+    else if ([str isEqualToString:@"GCR"] == YES)
+    {
+        iterType = ITER_GCR;
+    }
+    else
+    {
+        iterType = ITER_BICGSTAB;
+    }
+    
+    ipar[3] = 0;
+    wsize = ipar[3];
+    
+    if (iterType == ITER_BICGSTAB)
+    {
+        ipar[3] = 8;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_BICGSTAB2)
+    {
+        ipar[3] = 8;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_TFQMR)
+    {
+        ipar[3] = 10;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_CG)
+    {
+        ipar[3] = 4;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_CGS)
+    {
+        ipar[3] = 7;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_GMRES)
+    {
+        if ((solution.solutionInfo)[@"Linear system GMRES restart"] != nil) {
+            
+            ipar[14] = [(solution.solutionInfo)[@"Linear system GMRES restart"] intValue];
+        } else {
+            ipar[14] = 10;
+        }
+        ipar[3] = 7 + ipar[14];
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_SGS)
+    {
+        ipar[3] = 1;
+        wsize =ipar[3];
+        if ((solution.solutionInfo)[@"SGS over relaxation factor"] != nil) {
+            dpar[2] = [(solution.solutionInfo)[@"SGS over relaxation factor"] doubleValue];
+            if (dpar[2] < 0.0 || dpar[2] > 2.0) {
+                errorfunct("FEMKernel_iterSolver", "Value for SGS over relaxation factor out of bounds (min:0; max:2).");
+            }
+        } else {
+            dpar[2] = 1.8;
+        }
+    }
+    else if (iterType == ITER_JACOBI)
+    {
+        ipar[3] = 1;
+        wsize = ipar[3];
+    }
+    else if (iterType == ITER_GCR)
+    {
+        ipar[3] = 1;
+        wsize = ipar[3];
+        if ((solution.solutionInfo)[@"Linear system GCR restart"] != nil) {
+            ipar[16] = [(solution.solutionInfo)[@"Linear system GCR restart"] intValue];
+        } else {
+            if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
+                ipar[16] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
+                if (ipar[16] < 1) errorfunct("FEMKernel_iterSolver", "Parameter for GCR should be equal or greater than 1.");
+            } else {
+                ipar[16] = 1;
+            }
+        }
+    }
+    else if (iterType == ITER_BICGSTABL)
+    {
+        ipar[3] = 1;
+        wsize = ipar[3];
+        if ((solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] != nil) {
+            ipar[15] = [(solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] intValue];
+            if (ipar[15] < 2) errorfunct("FEMKernel_iterSolver", "Polynomial degree for Bi-CGSTAB(l) should be equal or greater than 2");
+        } else {
+            ipar[15] = 2;
+        }
+    }
+    
+    ipar[11] = 1;
+    ipar[2] = n;
+    
+    if ((solution.solutionInfo)[@"Linear system residual output"] != nil) {
+        ipar[4] = [(solution.solutionInfo)[@"Linear system residual output"] intValue];
+    } else {
+        ipar[4] = 1;
+    }
+    
+    if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
+        ipar[9] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
+    } else {
+        ipar[9] = 1;
+    }
+    
+    work = doublematrix(0, n-1, 0, wsize-1);
+    if (work == NULL) {
+        errorfunct("FEMKernel_iterSolver", "Memory allocation error");
+    }
+    
+    if (all(varContainers->Values, '=', 0.0, varContainers->sizeValues) == true) {
+        for (i=0; i<varContainers->sizeValues; i++) {
+            varContainers->Values[i] = 1.0e-8;
+        }
+    }
+    ipar[13] = 1;
+    
+    if ((solution.solutionInfo)[@"Linear system convergence tolerance"] != nil) {
+        dpar[0] = [(solution.solutionInfo)[@"Linear system convergence tolerance"] doubleValue];
+    }
+    
+    if ((solution.solutionInfo)[@"Linear system divergence tolerance"] != nil) {
+        dpar[1] = [(solution.solutionInfo)[@"Linear system divergence tolerance"] doubleValue];
+    } else {
+        dpar[1] = HUGE_VAL;
+    }
+    
+    if ((solution.solutionInfo)[@"Linear system preconditioning"] != nil) {
+        str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system preconditioning"]];
+    } else {
+        str = @"none";
+    }
+    
+    if ([str isEqualToString:@"none"] == YES)
+    {
+        pCondType = PRECOND_NONE;
+    }
+    else if ([str isEqualToString:@"Diagonal"] == YES)
+    {
+        pCondType = PRECOND_DIAGONAL;
+    }
+    else if ([str isEqualToString:@"ILUT"] == YES)
+    {
+        if ((solution.solutionInfo)[@"Linear system ILUT tolerance"] != nil) {
+            ilut_tol = [(solution.solutionInfo)[@"Linear system ILUT tolerance"] doubleValue];
+        } else {
+            errorfunct("FEMKernel_iterSolver", "Linear system ILUT tolerance not found.");
+        }
+        pCondType = PRECOND_ILUT;
+    }
+    else if ([str isEqualToString:@"ILU"] == YES)
+    {
+        if ((solution.solutionInfo)[@"Linear system ILU order"] != nil) {
+            ilun = [(solution.solutionInfo)[@"Linear system ILU order"] intValue];
+        } else {
+            ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:3]] intValue] -  0;
+            if (ilun < 0 || ilun > 9 ) ilun = 0;
+            pCondType = PRECOND_ILUN;
+            
+        }
+    }
+    else if ([str isEqualToString:@"BILU"] == YES)
+    {
+        ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:4]] intValue] -  0;
+        if (ilun < 0 || ilun > 9 ) ilun = 0;
+        if (solution.variable.dofs == 1) {
+            warnfunct("FEMKernel_iterSolver", "BILU for one dofs is equal to ILU!");
+            pCondType = PRECOND_ILUN;
+        } else {
+            pCondType = PRECOND_BILUN;
+        }
+    }
+    else if ([str isEqualToString:@"Multigrid"] == YES)
+    {
+        pCondType = PRECOND_MG;
+    }
+    else if ([str isEqualToString:@"Vanka"] == YES)
+    {
+        pCondType = PRECOND_VANKA;
+    }
+    else {
+        pCondType = PRECOND_NONE;
+        warnfunct("FEMKernel_iterSolver", "Unknown preconditioner type, feature disabled.");
+    }
+    
+    if ((solution.solutionInfo)[@"No precondition recompute"] != nil) {
+        if ([(solution.solutionInfo)[@"No precondition recompute"] boolValue] == NO) {
+            // TODO: Implement the code if we choose not to compute the preconditioner
+            // for each method call.
+        }
+    }
+    
+    solution.matrix.solveCount = solution.matrix.solveCount + 1;
+    
+    if ((solution.solutionInfo)[@"Linear system abort not converged"] != nil) {
+        abortNotConverged = [(solution.solutionInfo)[@"Linear system abort not converged"] boolValue];
+    } else {
+        abortNotConverged = YES;
+    }
+    
+    // Get the selector for the matrix-vector multiplication method we want to use
+    if (solution.matrix.isComplexMatrix == YES) {
+        mvSelector = @selector(CRS_ComplexMatrixVectorProd::::);
+    } else {
+        mvSelector= @selector(CRS_MatrixVectorProd::::);
+    }
+    
+    // Get the selector for the preconditioning method we want to use
+    if (pCondType == PRECOND_NONE) {
+        
+        pcondSelector = @selector(CRS_pcond_dummy::::);
+    }
+    else if (pCondType == PRECOND_DIAGONAL) {
+        if (solution.matrix.isComplexMatrix == YES) {
+            pcondSelector = @selector(CRS_ComplexDiagPrecondition::::);
+        } else {
+            pcondSelector = @selector(CRS_DiagPrecondition::::);
+        }
+    }
+    else if (pCondType == PRECOND_ILUN == pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
+        if (solution.matrix.isComplexMatrix == YES) {
+            pcondSelector = @selector(CRS_ComplexLUPrecondition::::);
+        } else {
+            pcondSelector = @selector(CRS_LUPrecondition::::);
+        }
+    }
+    
+    if (solution.matrix.isComplexMatrix == NO) {
+        
+        if (iterType == ITER_SGS || iterType == ITER_JACOBI || iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
+            if (ipar[4] == 0) ipar[4] = HUGE_VAL;
+        }
+    } else {
+        
+        ipar[2] = ipar[2] / 2;
+        if (iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
+            if (ipar[4] == 0) ipar[4] = HUGE_VAL;
+        }
+    }
+    
+    // Everything is happening in this method...
+    [self FEMKernel_iterCall:iterType :solution :ipar :dpar :work :pcondSelector :pcondrSelector :mvSelector :@selector(stopc:::::)];
+    
+    if (solution.matrix.isComplexMatrix == YES) ipar[2] = ipar[2] * 2;
+    
+    if (ipar[29] != 1) {
+        if (ipar[29] == 3) {
+            errorfunct("FEMKernel_iterSolver", "System diverged over tolerance.");
+        } else if (abortNotConverged == YES) {
+            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
+        } else {
+            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
+        }
+    }
+    
+    free_dmatrix(work, 0, n-1, 0, wsize-1);
+    work = NULL;
+    varContainers = NULL;
+}
 
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel {
     

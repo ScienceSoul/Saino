@@ -48,7 +48,7 @@
 -(BOOL)setLtoGMap:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w;
 -(void)setdx:(Element_t *)element: (int)nDOFs: (Nodes_t*)nodes: (double **)dLBasisdx;
 
--(double)detG:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w;
+-(double)detJ:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w;
 -(void)invertMatrix3x3:(double **)GI: (double)detG;
 -(void)globalSecondDerivatives:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w: (double*)f: (double**)dLBasisdx: (double **)values;
 

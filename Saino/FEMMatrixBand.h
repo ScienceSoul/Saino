@@ -13,6 +13,7 @@
 
 @interface FEMMatrixBand : NSObject
 
+-(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues;
 -(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n;
 -(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
 -(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;

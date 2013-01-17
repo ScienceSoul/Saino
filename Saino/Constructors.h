@@ -43,6 +43,14 @@ enum {
     VARIABLE_ON_NODES_ON_ELEMENTS
 };
 
+enum {
+    cartesian = 1,
+    cylindric,
+    cylindric_symmetric,
+    axis_symmetric,
+    polar
+};
+
 typedef struct {
     
     double *x;                   // First coordinate
@@ -85,7 +93,8 @@ typedef struct ElementType_t {
         dimension;                         // 1=Line; 2=Surface; 3=Volume
     
     int GaussPoints,                       // Number of Gauss points to use
-        GaussPoints2;
+        GaussPoints2,
+        GaussPoints0;
     
     double StabilizationMK;
     double *NodeU, *NodeV, *NodeW;         // They have size of NumberOfNodes
@@ -168,10 +177,16 @@ typedef struct ListMatrixEntry_t {
 
 typedef struct {
     
+    int sizeOfContainer;     // If ListMatrix_t is contained within an array, the size of this array is given by
+                             // this variable
     int Degree, Level;
     ListMatrixEntry_t *Head;
     
 } ListMatrix_t;
+
+typedef struct {
+    ListMatrixEntry_t *p;
+} Stack_t;
 
 typedef struct matrixArraysContainer {
     
@@ -180,6 +195,8 @@ typedef struct matrixArraysContainer {
     int *Perm, *InvPerm, *RowOwner;
     int *GRows, *GOrder;
     int *Rows, *Cols, *Diag;
+    int sizePerm, sizeInvPerm, sizeRowOwner;
+    int sizeGRows, sizeGOrder;
     int sizeRows, sizeCols, sizeDiag;
     
     double *RHS, *BulkRHS, *RHS_im, **Force;
@@ -196,7 +213,8 @@ typedef struct matrixArraysContainer {
     double complex *CRHS, *CForce;
     double complex *CValues, *CILUValues;
     double complex *CMassValues, *CDampValues;
-    int sizeCILUValues;
+    int sizeCRHS, sizeCForce, sizeCValues, sizeCILUValues,
+        sizeCMassValues, sizeCDampValues;
     
 } matrixArraysContainer;
 
@@ -226,7 +244,6 @@ typedef struct solutionArraysContainer {
     int *activeElements;
     int **ntElement;
     int *boundaryReorder;
-    int *acticeElements;
     int **defDofs;
     double **boundaryNormals;
     double **boundaryTangent1;
@@ -254,8 +271,12 @@ typedef struct valueListArraysContainer {
 
 typedef struct modelArraysContainer {
     
-    int *FreeSurfaceNodes;
-    double *BoundaryCurvatures;
+    int *freeSurfaceNodes;
+    int *rowNonZeros;
+    double *boundaryCurvatures;
+    int sizeFreeSurfaceNodes;
+    int sizeRowNonZeros;
+    int sizeBoundaryCurvatures;
     
 } modelArraysContainer;
 

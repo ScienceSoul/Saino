@@ -542,6 +542,8 @@ void GaussQuadratureInit(GaussIntegrationPoints *pt) {
         }
     }
     
+    // The caller which gets the pointer to the structure of Gauss integration points
+    // is responsible for releasing this memory
     pt->u = doublevec(0, MAX_INTEGRATION_POINTS-1);
     pt->v = doublevec(0, MAX_INTEGRATION_POINTS-1);
     pt->w = doublevec(0, MAX_INTEGRATION_POINTS-1);
@@ -554,7 +556,7 @@ void GaussQuadratureInit(GaussIntegrationPoints *pt) {
 
 void GaussQuadrature0D(int n, GaussIntegrationPoints *pt) {
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     pt->n = 1;
     pt->u[0] = 0.0;
@@ -575,7 +577,7 @@ void GaussQuadrature1D(int n, GaussIntegrationPoints *pt) {
     
     int i;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     if(n < 1 || n > MAXN) {
         pt->n = 0;
@@ -604,7 +606,7 @@ void GaussQuadratureTriangle(int n, GaussIntegrationPoints *pt) {
     int i;
     double buffer;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
 
     switch(n) {
         case 1:
@@ -713,7 +715,7 @@ void GaussQuadratureTetra(int n, GaussIntegrationPoints *pt) {
     int i;
     double ScaleFactor;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     switch(n) {
         case 1:
@@ -786,7 +788,7 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     n = pow((double)np, 1.0/3.0) + 0.5;
     
@@ -821,7 +823,7 @@ void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     n = pow( (double)np, 1.0/3.0) + 0.5;
     
@@ -855,7 +857,7 @@ void GaussQuadratureQuad(int np, GaussIntegrationPoints *pt) {
     
     int i, j, n, t;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     n = sqrt( (double)np ) + 0.5;
     
@@ -880,7 +882,7 @@ void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
     
     int i, j, k, n, t;
     
-    if(GInit == false) GaussQuadratureInit(pt);
+    GaussQuadratureInit(pt);
     
     n = pow( (double)np, 1.0/3.0) + 0.5;
     
@@ -904,37 +906,55 @@ void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
     pt->n = t;
 }
 
-GaussIntegrationPoints* GaussQuadrature(Element_t *elm, ...) {
+GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrder) {
     
+    int n, eldim, p1d;
     GaussIntegrationPoints *IntegStuff;
+    bool pElement;
     
-    int n, np;
-    va_list ap;
+    pElement = (element->Pdefs != NULL) ? true : false;
     
-    np = 0;
-    
-    va_start(ap,elm);
-    np = va_arg(ap, int);
-    va_end(ap);
-    
-    if (np > 0) {
-        
-        n = np;
-        
+    if (np != NULL) {
+        n = *np;
+    } else if (relOrder != NULL) {
+        if (pElement == true) {
+            n = element->Pdefs->GaussPoints;
+            if (*relOrder == 0) {
+               //No ops
+            } else {
+                eldim = element->Type.dimension;
+                p1d = (int)ceil(pow((double)n, (1.0/(double)eldim))) + *relOrder;
+                if (p1d < 1) {
+                    errorfunct("GaussIntegrationPoints", "Number of integration points must remain positive!");
+                }
+                n = (int)pow((double)p1d, (double)eldim);
+            }
+        } else {
+            if (*relOrder == 0) {
+                n = element->Type.GaussPoints;
+            } else if (*relOrder == 1) {
+                n = element->Type.GaussPoints2;
+            } else if (*relOrder == -1) {
+                n = element->Type.GaussPoints0;
+            } else {
+                warnfunct("GaussQuadrature", "RelOrder can only be {-1, 0, 1}!");
+            }
+        }
+    } else {
+        if (pElement == true) {
+            n = element->Pdefs->GaussPoints;
+        } else {
+            n = element->Type.GaussPoints;
+        }
     }
-    else {
     
-        n = elm->Type.GaussPoints;
-        
-    }
-    
-    IntegStuff = (GaussIntegrationPoints*)malloc(sizeof(GaussIntegrationPoints) * 1 );
+    IntegStuff = (GaussIntegrationPoints*)malloc(sizeof(GaussIntegrationPoints));
     IntegStuff->u = NULL;
     IntegStuff->v = NULL;
     IntegStuff->w = NULL;
     IntegStuff->s = NULL;
     
-    switch (elm->Type.ElementCode / 100) {
+    switch (element->Type.ElementCode / 100) {
             
         case 1:
             GaussQuadrature0D(n, IntegStuff);

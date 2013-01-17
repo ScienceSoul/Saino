@@ -134,8 +134,21 @@
     if (self) {
         //TODO: Initialize here
         
-        _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer) * 1 );
-
+        _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer));
+        _containers->ntZeroingDone = NULL;
+        _containers->activeElements = NULL;
+        _containers->ntElement = NULL;
+        _containers->boundaryReorder = NULL;
+        _containers->defDofs = NULL;
+        _containers->boundaryNormals = NULL;
+        _containers->boundaryTangent1 = NULL;
+        _containers->boundaryTangent2 = NULL;
+        _containers->sizeBoundaryReorder = 0;
+        _containers->size1boundaryNormals = 0;
+        _containers->size2boundaryNormals = 0;
+        _containers->size1DefDofs = 0;
+        _containers->size2DefDofs = 0;
+        
     }
     
     return self;

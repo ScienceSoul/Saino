@@ -336,7 +336,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     converged = NO;
     diverged = NO;
 
-    if (all(xvec, '=', 0.0, n) == 1) {
+    if (all(xvec, '=', 0.0, n) == true) {
         for (i=0; i<n; i++) {
             xvec[i] = rhsvec[i];
         }

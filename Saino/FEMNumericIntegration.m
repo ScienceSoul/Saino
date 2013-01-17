@@ -30,7 +30,13 @@
     if (self) {
         // TODO: Initialization code here.
         _metricDeterminant = 0.0;
-        
+        _basis = NULL;
+        _basisFirstDerivative = NULL;
+        _basisSecondDerivative = NULL;
+        _elementMetric = NULL;
+        _covariantMetrixTensor = NULL;
+        _ltoGMap = NULL;
+        _dx = NULL;
     }
     
     return self;
@@ -40,23 +46,23 @@
     
     int i, j, k;
     
-    _basis = doublevec(0, [mesh maxElementNodes]-1);
+    _basis = doublevec(0, mesh.maxElementNodes-1);
     if (_basis == NULL) return NO;
-    for (i=0; i<[mesh maxElementNodes]; i++) {
+    for (i=0; i<mesh.maxElementNodes; i++) {
         _basis[i] = 0.0;
     }
     
-    _basisFirstDerivative = doublematrix(0, [mesh maxElementNodes]-1, 0, 2);
+    _basisFirstDerivative = doublematrix(0, mesh.maxElementNodes-1, 0, 2);
     if (_basisFirstDerivative == NULL) return NO;
-    for (i=0; i<[mesh maxElementNodes]; i++) {
+    for (i=0; i<mesh.maxElementNodes; i++) {
         for (j=0; j<3; j++) {
             _basisFirstDerivative[i][j] = 0.0;
         }
     }
     
-    _basisSecondDerivative = d3tensor(0, [mesh maxElementNodes]-1, 0, 2, 0, 2);
+    _basisSecondDerivative = d3tensor(0, mesh.maxElementNodes-1, 0, 2, 0, 2);
     if (_basisSecondDerivative == NULL) return NO;
-    for (i=0; i<[mesh maxElementNodes]; i++) {
+    for (i=0; i<mesh.maxElementNodes; i++) {
         for (j=0; j<3; j++) {
             for (k=0; k<3; k++) {
                 _basisSecondDerivative[i][j][k] = 0.0;
@@ -72,26 +78,26 @@
         }
     }
     
-    _covariantMetrixTensor = doublematrix(0, [mesh dimension]-1, 0, [mesh dimension]-1);
+    _covariantMetrixTensor = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
     if (_covariantMetrixTensor == NULL) return NO;
-    for (i=0; i<[mesh dimension]; i++) {
-        for (j=0; j<[mesh dimension]; j++) {
+    for (i=0; i<mesh.dimension; i++) {
+        for (j=0; j<mesh.dimension; j++) {
             _covariantMetrixTensor[i][j] = 0.0;
         }
     }
     
-    _ltoGMap = doublematrix(0, [mesh dimension]-1, 0, [mesh dimension]-1);
+    _ltoGMap = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
     if (_ltoGMap == NULL) return NO;
-    for (i=0; i<[mesh dimension]; i++) {
-        for (j=0; j<[mesh dimension]; j++) {
+    for (i=0; i<mesh.dimension; i++) {
+        for (j=0; j<mesh.dimension; j++) {
             _ltoGMap[i][j] = 0.0;
         }
     }
     
-    _dx = doublematrix(0, 2, 0, [mesh dimension]-1);
+    _dx = doublematrix(0, 2, 0, mesh.dimension-1);
     if (_dx == NULL) return NO;
     for (i=0; i<3; i++) {
-        for (j=0; j<[mesh dimension]; j++) {
+        for (j=0; j<mesh.dimension; j++) {
             _dx[i][j] = 0.0;
         }
     }
@@ -114,6 +120,22 @@
 #pragma mark Setters
 
 -(BOOL)setBasisForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree {
+/***************************************************************************************************************
+    Basis function values at (u,v,w)
+    
+    Element_t *element ->  Element structure
+    Nodes_t *nodes     ->  Element nodal coordinates
+    FEMMesh *mesh      ->  Finite element mesh
+    double u           ->  1st Local coordinate at which to calculate the basis function
+    double v           ->  2nd local coordinate
+    double w           ->  3rd local coordinate
+    BOOL bubbles       ->  Are the bubbles to be avaluated
+    int *degree        ->  Degree of each basis function in Basis(:) vector.
+                           !! May be used with P element basis functions
+ 
+    Retun NO if element is degenerate
+ 
+***************************************************************************************************************/
     
     int i, n, dim, cdim;
     
@@ -136,11 +158,23 @@
 }
 
 -(BOOL)setBasisFirstDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree {
-/*******************************************************************************
+/********************************************************************************************
  
-    Global first derivatives                
+    Global first derivatives of basis functions at (u, v, w)
  
-*******************************************************************************/
+    Element_t *element ->  Element structure
+    Nodes_t *nodes     ->  Element nodal coordinates
+    FEMMesh *mesh      ->  Finite element mesh
+    double u           ->  1st Local coordinate at which to calculate the basis function
+    double v           ->  2nd local coordinate
+    double w           ->  3rd local coordinate
+    BOOL bubbles       ->  Are the bubbles to be avaluated
+    int *degree        ->  Degree of each basis function in Basis(:) vector.
+                           !! May be used with P element basis functions
+ 
+    Retun NO if element is degenerate
+ 
+********************************************************************************************/
     
     int i, j, k, n, q, dim, cdim;
     double **dLBasisdx;
@@ -191,6 +225,24 @@
 
 
 -(BOOL)setBasisSecondDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree {
+/********************************************************************************************
+ 
+    Global second derivatives of basis functions at (u, v, w)
+ 
+    Element_t *element ->  Element structure
+    Nodes_t *nodes     ->  Element nodal coordinates
+    FEMMesh *mesh      ->  Finite element mesh
+    double u           ->  1st Local coordinate at which to calculate the basis function
+    double v           ->  2nd local coordinate
+    double w           ->  3rd local coordinate
+    BOOL bubbles       ->  Are the bubbles to be avaluated
+    int *degree        ->  Degree of each basis function in Basis(:) vector.
+                           !! May be used with P element basis functions
+ 
+    Retun NO if element is degenerate
+ 
+********************************************************************************************/
+
     
     int i, j, k, n, q, dim, cdim;
     double *NodalBasis, **dLBasisdx;
@@ -246,8 +298,12 @@
 }
 
 -(BOOL)setMetricDeterminantForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
-    
-    self.metricDeterminant = [self detG:element :nodes :mesh :u :v :w];
+/***************************************************************************************************************************
+ 
+    Square root of determinant of covariant metric tensor (=sqrt(det(J^TJ))).
+
+***************************************************************************************************************************/
+    self.metricDeterminant = [self detJ:element :nodes :mesh :u :v :w];
     
     self.metricDeterminant = sqrt(self.metricDeterminant);
     
@@ -267,7 +323,7 @@
     dim = element->Type.dimension;
     cdim = [mesh dimension];
     
-    detG = [self detG:element :nodes :mesh :u :v :w];
+    detG = [self detJ:element :nodes :mesh :u :v :w];
     
     // Convert the metric to contravariant base
     switch (dim) {
@@ -393,10 +449,10 @@
     }
 }
 
--(double)detG:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w {
+-(double)detJ:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w {
 /**********************************************************************************************
-    Compute determinant of covariant metric tensor det(J^TJ) and square root of determinant 
-    of covariant metric tensor (=sqrt(det(J^TJ))).
+    Compute determinant of covariant metric tensor det(J^TJ) and determinant 
+    of covariant metric tensor det(J^TJ).
  
     Arguments:
         Element_t *element  -> element structure
@@ -432,16 +488,15 @@
     [self setCovariantMetrixTensor:element :n :nodes :mesh :dLBasisdx];
     
     switch (dim) {
-            // Line elements
-        case 1:
+           
+        case 1:  // Line elements
             detG = self.covariantMetrixTensor[1][1];
             if (detG <= 0.0) {
                 errorfunct("ElementMetric", "Degenerate 1D element");
             }
             break;
             
-            // Surface elements
-        case 2:
+        case 2: // Surface elements
             detG = ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {
@@ -451,8 +506,7 @@
             }
             break;
             
-            // Volume elements    
-        case 3:
+        case 3: // Volume elements 
             detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] ) + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] ) + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {

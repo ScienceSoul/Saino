@@ -15,6 +15,49 @@
 
 @implementation FEMMatrixBand
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
+/********************************************************************************************************************
+ 
+    Create the structures required for a Band format matrix
+ 
+    int rows            ->  Number of rows in the matrix
+    int subBand         ->  max(abs(Col-Diag(Row))) of the matrix
+    BOOL symmetric      ->  Symmetric or not  
+    BOOL allocateValues ->  Should the values arrays be allocated?
+ 
+ *********************************************************************************************************************/
+-(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
+    
+    FEMMatrix *matrix;
+    matrixArraysContainer *matContainers;
+    
+    matrix = [[FEMMatrix alloc] init];
+    
+    matrix.subband = subBand;
+    matrix.numberOfRows = rows;
+    
+    matContainers = matrix.getContainers;
+    
+    if (allocateValues == YES) {
+        if (symmetric == YES) {
+            matContainers->Values = doublevec(0, ((matrix.subband+1)*rows)-1);
+        } else {
+            matContainers->Values = doublevec(0, ((3*matrix.subband+1)*rows)-1);
+        }
+    }
+    
+    return matrix;
+}
+
 -(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n {
     
     int j;

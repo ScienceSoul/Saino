@@ -13,6 +13,7 @@
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMSimulation.h"
+#import "FEMEquation.h"
 #import "FEMUtilities.h"
 
 #import "Utils.h"
@@ -37,7 +38,13 @@
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array;
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array;
 
+-(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value;
+-(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value;
+-(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value;
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n;
+-(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str;
+
+-(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation;
 
 
 @end

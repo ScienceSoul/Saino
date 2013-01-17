@@ -43,7 +43,7 @@
         _nonLinConverged = -1;
         _steadyConverged = -1;
         
-        _containers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
+        _containers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
         _containers->Perm = NULL;
         _containers->Values = NULL;
         _containers->PrevValues = NULL;

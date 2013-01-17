@@ -33,15 +33,15 @@ int __attribute__((overloadable)) min_array(int *a, int num_elements);
 double __attribute__((overloadable)) min_array(double *a, int num_elements);
 
 void __attribute__((overloadable)) sort(unsigned long n, int *arr);
-int __attribute__((overloadable)) all(int *v, char mask, int val, int range);
-int __attribute__((overloadable)) all(float *v, char mask, float val, int range);
-int __attribute__((overloadable)) all(double *v, char mask, double val, int range);
+bool __attribute__((overloadable)) all(int *v, char mask, int val, int range);
+bool __attribute__((overloadable)) all(float *v, char mask, float val, int range);
+bool __attribute__((overloadable)) all(double *v, char mask, double val, int range);
 
-int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range);
+bool __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range);
 
-int __attribute__((overloadable)) any(int *v, char mask, int val, int range);
-int __attribute__((overloadable)) any(float *v, char mask, float val, int range);
-int __attribute__((overloadable)) any(double *v, char mask, double val, int range);
+bool __attribute__((overloadable)) any(int *v, char mask, int val, int range);
+bool __attribute__((overloadable)) any(float *v, char mask, float val, int range);
+bool __attribute__((overloadable)) any(double *v, char mask, double val, int range);
 
 int __attribute__((overloadable)) count(int *v, char mask, int val, int range);
 int __attribute__((overloadable)) count(float *v, char mask, float val, int range);

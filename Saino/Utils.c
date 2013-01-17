@@ -106,14 +106,14 @@ double __attribute__((overloadable)) min_array(double *a, int num_elements) {
     return min;
 }
 
-int __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
+bool __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
 /*************************************************************************************************
     Test if all values in v satisfies the mask for value val for the range of data range
     Work on an array of int values
 *************************************************************************************************/
 
     int i;
-    int rlt = 1;
+    bool rlt = true;
     
     switch (mask) {
         case '=':
@@ -121,7 +121,7 @@ int __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
                 if (v[i] == val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -131,7 +131,7 @@ int __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
                 if (v[i] > val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -141,7 +141,7 @@ int __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
                 if (v[i] < val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -151,14 +151,14 @@ int __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
     return rlt;
 }
 
-int __attribute__((overloadable)) all(float *v, char mask, float val, int range) {
+bool __attribute__((overloadable)) all(float *v, char mask, float val, int range) {
 /*************************************************************************************************
     Test if all values in v satisfies the mask for value val for the range of data range
     Work on an array of float values
 *************************************************************************************************/
     
     int i;
-    int rlt = 1;
+    bool rlt = true;
     
     switch (mask) {
         case '=':
@@ -166,7 +166,7 @@ int __attribute__((overloadable)) all(float *v, char mask, float val, int range)
                 if (v[i] == val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -176,7 +176,7 @@ int __attribute__((overloadable)) all(float *v, char mask, float val, int range)
                 if (v[i] > val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -186,7 +186,7 @@ int __attribute__((overloadable)) all(float *v, char mask, float val, int range)
                 if (v[i] < val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -196,14 +196,14 @@ int __attribute__((overloadable)) all(float *v, char mask, float val, int range)
     return rlt;
 }
 
-int __attribute__((overloadable)) all(double *v, char mask, double val, int range) {
+bool __attribute__((overloadable)) all(double *v, char mask, double val, int range) {
 /*************************************************************************************************
     Test if all values in v satisfies the mask for value val for the range of data range
     Work on an array of float values
 *************************************************************************************************/
     
     int i;
-    int rlt = 1;
+    bool rlt = true;
     
     switch (mask) {
         case '=':
@@ -211,7 +211,7 @@ int __attribute__((overloadable)) all(double *v, char mask, double val, int rang
                 if (v[i] == val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -221,7 +221,7 @@ int __attribute__((overloadable)) all(double *v, char mask, double val, int rang
                 if (v[i] > val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -231,7 +231,7 @@ int __attribute__((overloadable)) all(double *v, char mask, double val, int rang
                 if (v[i] < val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -241,14 +241,14 @@ int __attribute__((overloadable)) all(double *v, char mask, double val, int rang
     return rlt;
 }
 
-int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range) {
+bool __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range) {
 /*************************************************************************************************
     Test if all values in v satisfies the mask for value val for the range of data range 
     starting at start
 *************************************************************************************************/
     
     int i;
-    int rlt = 1;
+    bool rlt = true;
     
     switch (mask) {
         case '=':
@@ -256,7 +256,7 @@ int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int s
                 if (v[i] == val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -266,7 +266,7 @@ int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int s
                 if (v[i] > val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -276,7 +276,7 @@ int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int s
                 if (v[i] < val) { 
                     continue;
                 } else {
-                    rlt = 0;
+                    rlt = false;
                     return rlt;
                 }
             }
@@ -288,16 +288,16 @@ int __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int s
 }
 
 
-int __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
+bool __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
     
     int i;
-    int rlt = 0;
+    bool rlt = false;
     
     switch (mask) {
         case '=':
             for (i=0; i<range; i++) {
                 if (v[i] == val) {
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -307,7 +307,7 @@ int __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
         case '>':
             for (i=0; i<range; i++) {
                 if (v[i] > val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                      continue;
@@ -317,7 +317,7 @@ int __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
         case '<':
             for (i=0; i<range; i++) {
                 if (v[i] < val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -330,16 +330,16 @@ int __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
     
 }
 
-int __attribute__((overloadable)) any(float *v, char mask, float val, int range) {
+bool __attribute__((overloadable)) any(float *v, char mask, float val, int range) {
     
     int i;
-    int rlt = 0;
+    bool rlt = false;
     
     switch (mask) {
         case '=':
             for (i=0; i<range; i++) {
                 if (v[i] == val) {
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -349,7 +349,7 @@ int __attribute__((overloadable)) any(float *v, char mask, float val, int range)
         case '>':
             for (i=0; i<range; i++) {
                 if (v[i] > val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -359,7 +359,7 @@ int __attribute__((overloadable)) any(float *v, char mask, float val, int range)
         case '<':
             for (i=0; i<range; i++) {
                 if (v[i] < val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -372,16 +372,16 @@ int __attribute__((overloadable)) any(float *v, char mask, float val, int range)
     
 }
 
-int __attribute__((overloadable)) any(double *v, char mask, double val, int range) {
+bool __attribute__((overloadable)) any(double *v, char mask, double val, int range) {
     
     int i;
-    int rlt = 0;
+    bool rlt = false;
     
     switch (mask) {
         case '=':
             for (i=0; i<range; i++) {
                 if (v[i] == val) {
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -391,7 +391,7 @@ int __attribute__((overloadable)) any(double *v, char mask, double val, int rang
         case '>':
             for (i=0; i<range; i++) {
                 if (v[i] > val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;
@@ -401,7 +401,7 @@ int __attribute__((overloadable)) any(double *v, char mask, double val, int rang
         case '<':
             for (i=0; i<range; i++) {
                 if (v[i] < val) { 
-                    rlt = 1;
+                    rlt = true;
                     return rlt;
                 } else {
                     continue;

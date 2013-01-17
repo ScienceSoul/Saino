@@ -10,6 +10,16 @@
 
 @implementation FEMListUtilities
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count {
 
     int i, l, k1, n;
@@ -163,7 +173,7 @@
                     k = nodeIndexes[i];
                     [self listParseStrToValues:model :list.dependName :k :list.name :t :j];
                     
-                    if (any(t, '=', HUGE_VAL, j) == 0) {
+                    if (any(t, '=', HUGE_VAL, j) == false) {
                         
                         // TODO: implement the call of a user provided method if required
                         
@@ -510,6 +520,158 @@
     return NO;
 }
 
+/**********************************************************************************
+ Adds a string to a given class list of values
+ **********************************************************************************/
+-(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value {
+    
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
+    FEMValueList *newValueList;
+    NSMutableArray *valuesArray;
+    BOOL found;
+    
+    found = NO;
+    
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = simulation.valuesList;
+    }
+    
+    for (FEMValueList *list in valuesArray) {
+        if ([varName isEqualToString:list.name] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    
+    if (found == NO) {
+        
+        newValueList = [[FEMValueList alloc] init];
+        newValueList.type = LIST_TYPE_STRING;
+        
+        newValueList.cValue = [NSString stringWithString:value];
+        
+        newValueList.name = varName;
+        [valuesArray addObject:newValueList];
+    }
+    
+    boundary = nil;
+    bodyForce = nil;
+    simulation = nil;    
+}
+
+/**********************************************************************************
+ Adds a logical entry to a given class list of values
+ **********************************************************************************/
+-(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value {
+    
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
+    FEMValueList *newValueList;
+    NSMutableArray *valuesArray;
+    BOOL found;
+    
+    found = NO;
+    
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = simulation.valuesList;
+    }
+    
+    for (FEMValueList *list in valuesArray) {
+        if ([varName isEqualToString:list.name] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    
+    if (found == NO) {
+        
+        newValueList = [[FEMValueList alloc] init];
+        newValueList.type = LIST_TYPE_LOGICAL;
+        
+        newValueList.lValue = value;
+        
+        newValueList.name = varName;
+        [valuesArray addObject:newValueList];
+    }
+
+    boundary = nil;
+    bodyForce = nil;
+    simulation = nil;
+}
+
+/**********************************************************************************
+ Adds an integer to a given class list of values
+ **********************************************************************************/
+-(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value {
+    
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
+    FEMValueList *newValueList;
+    NSMutableArray *valuesArray;
+    BOOL found;
+    valueListArraysContainer *containers;
+    
+    found = NO;
+    
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = simulation.valuesList;
+    }
+    
+    for (FEMValueList *list in valuesArray) {
+        if ([varName isEqualToString:list.name] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    
+    if (found == NO) {
+        
+        newValueList = [[FEMValueList alloc] init];
+        newValueList.type = LIST_TYPE_INTEGER;
+        
+        containers = newValueList.getContainers;
+        containers->iValues = intvec(0, 0);
+        containers->sizeIValues = 1;
+        containers->iValues[0] = value;
+        
+        newValueList.name = varName;
+        [valuesArray addObject:newValueList];
+        containers = NULL;
+    }
+    
+    boundary = nil;
+    bodyForce = nil;
+    simulation = nil;
+}
+
+/**********************************************************************************
+    Adds an integer array to a given class list of values
+**********************************************************************************/
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n {
     
     int i;
@@ -548,6 +710,7 @@
         
         containers = newValueList.getContainers;
         containers->iValues = intvec(0, n-1);
+        containers->sizeIValues = n;
         for (i=0; i<n; i++) {
             containers->iValues[i] = values[i];
         }
@@ -560,6 +723,89 @@
     boundary = nil;
     bodyForce = nil;
     simulation = nil;
+}
+
+/**********************************************************************************
+ Adds an constant real value to a given class list of values
+ **********************************************************************************/
+-(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str {
+    
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
+    FEMValueList *newValueList;
+    NSMutableArray *valuesArray;
+    BOOL found;
+    valueListArraysContainer *containers;
+    
+    found = NO;
+
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = simulation.valuesList;
+    }
+    
+    for (FEMValueList *list in valuesArray) {
+        if ([varName isEqualToString:list.name] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    
+    if (found == NO) {
+        
+        newValueList = [[FEMValueList alloc] init];
+        newValueList.type = LIST_TYPE_CONSTANT_SCALAR;
+        
+        containers = newValueList.getContainers;
+        containers->tValues = NULL;
+        containers->fValues = d3tensor(0, 0, 0, 0, 0, 0);
+        containers->sizeFValues1 = 1;
+        containers->sizeFValues2 = 1;
+        containers->sizeFValues3 = 1;
+        containers->fValues[0][0][0] = value;
+        
+        if (str != nil) {
+            newValueList.cValue = [NSString stringWithString:str];
+            newValueList.type = LIST_TYPE_CONSTANT_SCALAR_STR;
+        }
+        
+        newValueList.name = varName;
+        [valuesArray addObject:newValueList];
+        containers = NULL;
+    }
+    
+    boundary = nil;
+    bodyForce = nil;
+    simulation = nil;
+}
+
+/*****************************************************************************************
+    Check if given element belongs to a body for which a given equation should be solved
+*****************************************************************************************/
+-(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation {
+    
+    int k, bodyId;
+    BOOL flag, found;
+    FEMEquation *equationAtId;
+    
+    flag = NO;
+    bodyId = element->BodyID;
+    if ( bodyId > 0 && bodyId <= model.numberOfBodies) {
+        k = [(model.bodies)[bodyId-1][@"Equation"] intValue];
+        if (k > 0 && k <= model.numberOfEquations) {
+            equationAtId = (model.equations)[k-1];
+            flag = [self listGetLogical:model inArray:equationAtId.valuesList forVariable:equation info:&found];
+        }
+    }
+    
+    return flag;
 }
 
 @end

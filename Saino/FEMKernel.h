@@ -60,6 +60,7 @@
 
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset;
 
+-(void)iterativeSolve:(FEMSolution *)solution;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel;
 -(double)stopc:(FEMSolution *)solution: (double *)x: (double *)b: (double *)r: (int *)ipar;
 

@@ -1588,7 +1588,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     work = doublevec(0, (16*n)-1);
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    [numericIntegration allocation:mesh];
+    if ([numericIntegration allocation:mesh] == NO) errorfunct("computeStabilizationParameter", "Allocation error in FEMNumericIntegration!");
     
     if (element->Type.BasisFunctionDegree <= 1) {
         switch (element->Type.ElementCode) {
@@ -1634,7 +1634,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     dim = [mesh dimension];
-    integCompound = GaussQuadrature(element);
+    integCompound = GaussQuadrature(element, NULL, NULL);
     
     for (i=0; i<n-1; i++) {
         for (j=0; j<n-1; j++) {
@@ -1756,6 +1756,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_dvector(g_transpose, 0, ((n-1)*(n-1))-1);
     free_dvector(work, 0, (16*n)-1);
     
+    free_dvector(integCompound->u, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->v, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->w, 0, MAX_INTEGRATION_POINTS-1);
+    free_dvector(integCompound->s, 0, MAX_INTEGRATION_POINTS-1);
     free(integCompound);
     
     [numericIntegration deallocation:mesh];

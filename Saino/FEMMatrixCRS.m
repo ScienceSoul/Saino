@@ -56,6 +56,78 @@
 
 #pragma mark Public methods
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
+/********************************************************************************************************************
+ 
+    Create the structures required for a CRS format matrix
+    
+    int rows            ->  Number of rows in the matrix
+    int totalNonZeros   ->  Total number of nonzero entries in the matrix
+    int *rowNonZeros    ->  Number of nonzero entries in the rows of the matrix
+    int degreesFreedom  ->  N degrees of freedom
+    int *reorder        ->  Permutation index for bandwidth reduction
+    int sizeOfReorder   ->  Size of permutation array
+    BOOL allocateValues ->  Should the values arrays be allocated?
+ 
+*********************************************************************************************************************/
+-(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows totalNonZeros:(int)totalNonZeros rowNonZeros:(int *)rowNonZeros degreesFreedom:(int)degreesFreedom reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder allocateValues:(BOOL)allocateValues {
+    
+    int i, j, k;
+    FEMMatrix *matrix;
+    matrixArraysContainer *matContainers;
+    
+    matrix = [[FEMMatrix alloc] init];
+    
+    k = degreesFreedom*degreesFreedom*totalNonZeros;
+    
+    matContainers = matrix.getContainers;
+    matContainers->Rows = intvec(0, (rows+1)-1);
+    matContainers->Diag = intvec(0, rows-1);
+    matContainers->Cols = intvec(0, k-1);
+    matContainers->sizeRows = rows+1;
+    matContainers->sizeDiag = rows;
+    matContainers->sizeCols = k;
+    
+    if (allocateValues == YES) {
+        matContainers->Values = doublevec(0, k-1);
+        matContainers->sizeValues = k;
+    }
+
+    j = 0;
+    for (i=0; i<sizeOfReorder; i++) {
+        if (reorder[i] >= 0) {
+            matContainers->Diag[reorder[i]] = j;
+            j++;
+        }
+    }
+    
+    matrix.numberOfRows = rows;
+    matContainers->Rows[0] = 0;
+    for (i=1; i<rows; i++) {
+        j = matContainers->Diag[(i-2)/degreesFreedom+1];
+        matContainers->Rows[i] = matContainers->Rows[i-1] + degreesFreedom*rowNonZeros[j];
+    }
+    j = matContainers->Diag[(rows-2)/degreesFreedom+1];
+    matContainers->Rows[rows] = matContainers->Rows[rows-1] + degreesFreedom*rowNonZeros[j];
+    
+    // Because those arrays contains indexes ranging from 0 to n, we initialize them at -1
+    memset( matContainers->Cols, -1, (matContainers->sizeCols*sizeof(matContainers->Cols)) );
+    memset( matContainers->Diag, -1, (matContainers->sizeDiag*sizeof(matContainers->Diag)) );
+    
+    matrix.ordered = NO;
+    
+    return matrix;
+}
+
 -(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n {
     
     int i;
@@ -262,7 +334,7 @@
                                    added to the CRS format matrix
         int n                   -> number of nodes in element
         int dofs                -> number of degrees of freemdom for one node
-        int **indexes           -> Maps element node number to global (or partition) node number
+        int *indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
  
 ************************************************************************************************************/
@@ -392,6 +464,118 @@
     matContainers = NULL;
 }
 
+
+-(void)glueLocalMatrixInMatrix:(FEMMatrix *)matrix localMatrix:(double **)localMatrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes {
+/*************************************************************************************************************
+ 
+    Add a set of values (i.e., element stiffness matrix) to a CRS format matrix
+ 
+    Arguments:
+ 
+    FEMMatrix *matrix       -> Solution class holding the global matrix
+    double **localMatrix         -> (n x dofs) x (n x dofs) matrix holding the values to be
+                                    added to the CRS format matrix
+    int n                   -> number of nodes in element
+    int dofs                -> number of degrees of freemdom for one node
+    int *indexes           -> Maps element node number to global (or partition) node number
+                               (to matrix rows and cols if dofs = 1)
+ 
+************************************************************************************************************/
+    
+    int i, j, k, l, c, row, col;
+    matrixArraysContainer *matContainers;
+    
+    matContainers = matrix.getContainers;
+    
+    if (dofs == 1) {
+        for (i=0; i<numberOfNodes; i++) {
+            row = indexes[i];
+            if (row < 0) continue;
+            for (j=0; j<numberOfNodes; j++) {
+                col = indexes[j];
+                if (col < 0) continue;
+                if (col >= row) {
+                    for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
+                        if (matContainers->Cols[c] == col) {
+                            matContainers->Values[c] = matContainers->Values[c] + localMatrix[i][j];
+                            break;
+                        }
+                    }
+                } else {
+                    for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
+                        if (matContainers->Cols[c] == col) {
+                            matContainers->Values[c] = matContainers->Values[c] + localMatrix[i][j];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for (i=0; i<numberOfNodes; i++) {
+            for (k=1; k<=dofs; k++) {
+                if (indexes[i] < 0) continue;
+                row = dofs * (indexes[i]+1) - k;
+                for (j=0; j<numberOfNodes; j++) {
+                    for (l=1; l<=dofs; l++) {
+                        if (indexes[j] < 0) continue;
+                        col = dofs * (indexes[j]+1) - l;
+                        if (col >= row) {
+                            for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
+                                if (matContainers->Cols[c] == col) {
+                                    matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                }
+                            }
+                        } else {
+                            for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
+                                if (matContainers->Cols[c] == col) {
+                                    matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    matContainers = NULL;
+}
+
+-(void)makeMatrixIndex:(FEMMatrix *)a atIndex:(int)i  andIndex:(int)j {
+/*****************************************************************************************
+ 
+    Fill-in the column number to a CRS format matrix (values are not affected in any way)
+ 
+    FEMMatrix *a -> the matrix class
+    int i        -> row number of the matrix element
+    int j        -> column number of the matrix element
+ 
+*****************************************************************************************/
+    
+    int k, n;
+    matrixArraysContainer *aContainers;
+    
+    aContainers = a.getContainers;
+    
+    n = aContainers->Rows[i];
+    for (k=aContainers->Rows[i]; k<=aContainers->Rows[i+1]-1; k++) {
+        if (aContainers->Cols[k] == j) {
+            return;
+        } else if (aContainers->Cols[k] < 0) {
+            n = k;
+            break;
+        }
+    }
+    
+    if (aContainers->Cols[n] < 0) {
+        printf("makeMatrixIndex: trying to access non-existent column: %d, %d\n", n, aContainers->Cols[n]);
+        errorfunct("makeMatrixIndex", "Programm terminating now...\n");
+    }
+    
+    aContainers->Cols[n] = j;
+}
+
 -(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n {
     
     int i;
@@ -427,7 +611,7 @@
     Sort columns to ascending order for rows of a CRS format matrix
  
     Arguments:
-    Matrix_t *a             ->  solution class containing the matrix
+    Matrix_t *a             ->  the matrix class
     BOOL *alsoValues        ->  whether values are sorted
  
 ************************************************************************************************/
@@ -510,7 +694,7 @@
     Set a given value to an element of a CRS format Matrix
  
     Arguments:
-        Matrix_t *a             ->  the matrix
+        Matrix_t *a             ->  the matrix class
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
  

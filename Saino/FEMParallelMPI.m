@@ -10,6 +10,16 @@
 
 @implementation FEMParallelMPI
 
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+    }
+    
+    return self;
+}
+
 -(double)parallelReduction:(double)r: (int *)oper_arg {
     
     double rsum;
