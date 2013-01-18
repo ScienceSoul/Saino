@@ -1449,14 +1449,13 @@ static int PRECOND_VANKA     =  560;
     if (solution.matrix.format == MATRIX_CRS) {
         
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix glueLocalMatrixInGlobal:solution :stiffMatrix :n :dofs :nodeIndexes];
+        [crsMatrix glueLocalMatrixInGlobal:solution matrix:stiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
         
     }
     else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix glueLocalMatrixInGlobal:solution :stiffMatrix :n :dofs :nodeIndexes];
-        
+        [bandMatrix glueLocalMatrixInGlobal:solution matrix:stiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
     }
     
     
@@ -1707,10 +1706,10 @@ static int PRECOND_VANKA     =  560;
                             k = offset + solution.variable.dofs * k + dof;
                             if (solution.matrix.format == MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k :work.vector[j]];
+                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k :work.vector[j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]];
                             } else {
                                 matContainers->RHS[k] = work.vector[j];
                                 [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
@@ -1722,10 +1721,10 @@ static int PRECOND_VANKA     =  560;
                             k1 = offset + solution.variable.dofs*k + l;
                             if (solution.matrix.format == MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k1 :workA.tensor[l][0][j]];
+                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA.tensor[l][0][j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]];
                             } else {
                                 matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
@@ -1804,10 +1803,10 @@ static int PRECOND_VANKA     =  560;
                         k = offset + solution.variable.dofs*k + dof;
                         if (solution.matrix.format == MATRIX_SBAND) {
                             bandMatrix = [[FEMMatrixBand alloc] init];
-                            [bandMatrix sBand_setDirichlet:solution :k :work.vector[j]];
+                            [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
                         } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                             crsMatrix = [[FEMMatrixCRS alloc] init];
-                            [crsMatrix setSymmetricDirichletInGlobal:solution :k :work.vector[j]];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]];
                         } else {
                             matContainers->RHS[k] = work.vector[j];
                             [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
@@ -1818,10 +1817,10 @@ static int PRECOND_VANKA     =  560;
                             k1 = offset + solution.variable.dofs*k + l;
                             if (solution.matrix.format== MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution :k1 :workA.tensor[l][0][j]];
+                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution :k1 :workA.tensor[l][0][j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]];
                             } else {
                                 matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
@@ -2000,7 +1999,7 @@ static int PRECOND_VANKA     =  560;
                     
                 }
             }
-            [crsMatrix sortInMatrix:a :NULL];
+            [crsMatrix sortInMatrix:a alsoValues:NULL];
             
             memset( aContainers->RHS, 0.0, (n*sizeof(aContainers->RHS)) );
             memset( aContainers->Values, 0.0, ((projectorContainers->sizeValues*pow(solution.variable.dofs, 2.0)+n)*sizeof(aContainers->Values)) );
@@ -2200,7 +2199,6 @@ static int PRECOND_VANKA     =  560;
     found = [listUtil listGetReal:model inArray:list forVariable:name numberOfNodes:n indexes:element->NodeIndexes buffer:result minValue:NULL maxValue:NULL];
     
     return found;
-    
 }
 
 -(int)isPElement:(Element_t *)element {
@@ -2589,7 +2587,6 @@ static int PRECOND_VANKA     =  560;
     } else {
         return nil;
     }
-    
 }
 
 -(Element_t *)getBoundaryElement:(FEMSolution *)solution atIndex:(int)index {
@@ -2778,7 +2775,6 @@ static int PRECOND_VANKA     =  560;
     }
     
     return edgeMap;
-    
 }
 
 -(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution {
@@ -2807,7 +2803,6 @@ static int PRECOND_VANKA     =  560;
     varContainers = NULL;
     
     return l;
-    
 }
 
 /********************************************************************************************************************
@@ -2969,7 +2964,6 @@ static int PRECOND_VANKA     =  560;
             errorfunct("getBoundaryIndexes", "Unsupported dimension.");
             break;
     }
-    
 }
 
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution {
@@ -2979,7 +2973,7 @@ static int PRECOND_VANKA     =  560;
     
     if (solution.matrix.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix zeroRowInGlobal:solution :n];
+        [crsMatrix zeroRowInGlobal:solution numberOfRows:n];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         
@@ -2987,9 +2981,8 @@ static int PRECOND_VANKA     =  560;
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix zeroRowInGlobal:solution :n];
+        [bandMatrix zeroRowInGlobal:solution numberOfRows:n];
     }
-    
 }
 
 -(void)setMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value {
@@ -2999,16 +2992,15 @@ static int PRECOND_VANKA     =  560;
     
     if (solution.matrix.format == MATRIX_CRS) {
          crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix setMatrixElementInGlobal:solution :i :j :value];
+        [crsMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix setMatrixElementInGlobal:solution :i :j :value];
+        [bandMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
     }
-    
 }
 
 -(void)addToMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value {
@@ -3018,16 +3010,15 @@ static int PRECOND_VANKA     =  560;
     
     if (solution.matrix.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix addToMatrixElementInGlobal:solution :i :j :value];
+        [crsMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix addToMatrixElementInGlobal:solution :i :j :value];
+        [bandMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
     }
-
 }
 
 -(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double)integral {
@@ -4383,7 +4374,7 @@ static int PRECOND_VANKA     =  560;
                 if (nb < 0) continue;
                 nb = u_offset + solution.variable.dofs*nb + dof;
                 if (constantValue == YES) {
-                    [crsMatrix setSymmetricDirichletInGlobal:solution :nb :0.0];
+                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:0.0];
                 }else {
                     [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
                     matContainers->RHS[nb] = 0.0;
@@ -4456,7 +4447,7 @@ static int PRECOND_VANKA     =  560;
                                 if (nb < 0) continue;
                                 nb = u_offset + solution.variable.dofs*nb + dof;
                                 if (solution.matrix.isSymmetric == YES) {
-                                    [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
+                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]];
                                 } else {
                                     [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
                                     matContainers->RHS[nb] = _kernWork[0];
@@ -4489,7 +4480,7 @@ static int PRECOND_VANKA     =  560;
                                     if (nb < 0) continue;
                                     nb = u_offset + solution.variable.dofs*nb + dof;
                                     if (solution.matrix.isSymmetric == YES) {
-                                        [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[0]];
+                                        [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]];
                                     } else {
                                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
                                         matContainers->RHS[nb] = _kernWork[0];
@@ -4561,7 +4552,7 @@ static int PRECOND_VANKA     =  560;
                             nb = varContainers->Perm[_g_Ind[k]];
                             if (nb < 0) continue;
                             nb = u_offset + solution.variable.dofs*nb + dof;
-                            [crsMatrix setSymmetricDirichletInGlobal:solution :nb :_kernWork[k-n]];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[k-n]];
                         }
                     } else {
                         // Contribute this boundary to global system

@@ -48,7 +48,8 @@
             oldContainers = oldSol.getContainers;
             newContainers = newSol.getContainers;
             
-            [crsMatrix applyProjector:projector.matrix :oldContainers->Values :oldContainers->Perm :newContainers->Values :newContainers->Perm :NULL];
+            [crsMatrix applyProjector:projector.matrix values:oldContainers->Values permutation:oldContainers->Perm values:newContainers->Values permutation:newContainers->Perm transpose:NULL];
+            
             
             if (oldContainers->PrevValues != NULL) {
                 bf1 = doublevec(0, oldContainers->size1PrevValues-1);
@@ -60,7 +61,7 @@
                     for (j=0; j<newContainers->size1PrevValues; j++) {
                         bf2[j] = newContainers->PrevValues[j][i];
                     }
-                    [crsMatrix applyProjector:projector.matrix :bf1 :oldContainers->Perm :bf2 :newContainers->Perm :NULL];
+                    [crsMatrix applyProjector:projector.matrix values:bf1 permutation:oldContainers->Perm values:bf2 permutation:newContainers->Perm transpose:NULL];
                     for (j=0; j<oldContainers->size1PrevValues; j++) {
                         newContainers->PrevValues[j][i] = bf2[j];
                     }
@@ -528,7 +529,7 @@
     
     if (a.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix zeroRowInMatrix:a :n];
+        [crsMatrix zeroRowInMatrix:a numberOfRows:n];
         
     } else if (a.format == MATRIX_LIST) {
         
@@ -536,10 +537,8 @@
         
     } else if (a.format == MATRIX_BAND || a.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix zeroRowInMatrix:a :n];
-        
+        [bandMatrix zeroRowInMatrix:a numberOfRows:n];
     }
-    
 }
 
 -(void)setMatrixElement:(FEMMatrix *)a: (int)i: (int)j: (double)value {
@@ -549,16 +548,15 @@
     
     if (a.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix setMatrixElementInMatrix:a :i :j :value];
+        [crsMatrix setMatrixElementInMatrix:a atIndex:i andIndex:j value:value];
         
     } else if (a.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (a.format == MATRIX_BAND || a.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix setMatrixElementInMatrix:a :i :j :value];
+        [bandMatrix setMatrixElementInMatrix:a atIndex:i andIndex:j value:value];
     }
-    
 }
 
 /******************************************************************************************************

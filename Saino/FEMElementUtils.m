@@ -316,7 +316,7 @@
         }
     }
     
-    if (matrix.format == MATRIX_CRS) [crsMatrix sortInMatrix:matrix :NULL];
+    if (matrix.format == MATRIX_CRS) [crsMatrix sortInMatrix:matrix alsoValues:NULL];
 }
 
 #pragma mark Public methods
@@ -641,7 +641,7 @@
                 }
             }
         }
-        [crsMatrix sortInMatrix:matrix.constraint:NULL];
+        [crsMatrix sortInMatrix:matrix.constraint alsoValues:NULL];
     }
     
     free_ivector(modelContainers->rowNonZeros, 0, modelContainers->sizeRowNonZeros-1);

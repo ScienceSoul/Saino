@@ -128,7 +128,7 @@
     return matrix;
 }
 
--(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n {
+-(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
     
     int i;
     matrixArraysContainer *matContainers;
@@ -159,7 +159,7 @@
     matContainers = NULL;
 }
 
--(void)sortInGlobal:(FEMSolution *)solution: (BOOL *)alsoValues {
+-(void)sortInGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues {
 /************************************************************************************************
     Sort columns to ascending order for rows of a CRS format matrix
  
@@ -243,8 +243,8 @@
     
 }
 
--(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value {
-/************************************************************************************************
+-(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+/*********************************************************************************************************
     Set a given value to an element of a CRS format Matrix
  
     Arguments:
@@ -252,7 +252,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
  
-************************************************************************************************/
+*********************************************************************************************************/
     
     int ii, jj, k;
     int *buffer;
@@ -283,8 +283,8 @@
     matContainers = NULL;
 }
 
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value {
-/************************************************************************************************
+-(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+/************************************************************************************************************
     Add a given value to an element of a CRS format Matrix
  
     Arguments:
@@ -292,7 +292,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be added
  
-************************************************************************************************/
+************************************************************************************************************/
     
     int k, ii, jj;
     int *buffer;
@@ -322,22 +322,22 @@
 }
 
 
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes {
-/*************************************************************************************************************
+-(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
+/******************************************************************************************************************************************
    
     Add a set of values (i.e., element stiffness matrix) to a CRS format matrix
  
     Arguments:
     
-        FEMSolution *solution   -> Solution class holding the global matrix
-        double **matrix         -> (n x dofs) x (n x dofs) matrix holding the values to be
-                                   added to the CRS format matrix
-        int n                   -> number of nodes in element
-        int dofs                -> number of degrees of freemdom for one node
+        FEMSolution *solution  -> Solution class holding the global matrix
+        double **matrix        -> (n x dofs) x (n x dofs) matrix holding the values to be
+                                  added to the CRS format matrix
+        int n                  -> number of nodes in element
+        int dofs               -> number of degrees of freemdom for one node
         int *indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
  
-************************************************************************************************************/
+*******************************************************************************************************************************************/
     
     int i, j, k, l, c, row, col;
     matrixArraysContainer *matContainers;
@@ -399,7 +399,19 @@
     matContainers = NULL;
 }
 
--(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution: (int)n: (double)val {
+-(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value {
+/*************************************************************************************************************
+ 
+    When the Dirichlet conditions are set by zeroing the row except for setting the diagonal entry to one, 
+    the matrix symmetry is broken. This routine maintains the symmetric structure of the matrix equation.
+ 
+    Arguments:
+ 
+        FEMMatrix *matrix    -> solution class holding the global matrix
+        int n                -> index of the dofs to be fixed
+        double value         -> Dirichlet value to be set
+ 
+************************************************************************************************************/
     
     int i, j, k, l, m, k1, k2;
     int *buffer;
@@ -429,7 +441,7 @@
         if (k <= 30) {
             for (j=k1; j<=k2; j++) {
                 if (matContainers->Cols[j] == n) {
-                    matContainers->Rows[i] = matContainers->RHS[i] - matContainers->Values[j] * val;
+                    matContainers->Rows[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
                     matContainers->Values[j] = 0.0;
                     if (isMass == YES) matContainers->MassValues[j] = 0.0;
                     if (isDamp == YES) matContainers->DampValues[j] = 0.0;
@@ -448,7 +460,7 @@
             j = [self CRS_Search:k1 :buffer :n];
             if (j >= 0) {
                 j = j + k1;
-                matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * val;
+                matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
                 matContainers->Values[j] = 0.0;
                 if (isMass == YES) matContainers->MassValues[j] = 0.0;
                 if (isDamp == YES) matContainers->DampValues[j] = 0.0;
@@ -457,8 +469,8 @@
         }
     }
     
-    [self zeroRowInGlobal:solution :n];
-    matContainers->RHS[n] = val;
+    [self zeroRowInGlobal:solution numberOfRows:n];
+    matContainers->RHS[n] = value;
     matContainers->Values[matContainers->Diag[n]] = 1.0;
     
     matContainers = NULL;
@@ -473,11 +485,11 @@
     Arguments:
  
     FEMMatrix *matrix       -> Solution class holding the global matrix
-    double **localMatrix         -> (n x dofs) x (n x dofs) matrix holding the values to be
-                                    added to the CRS format matrix
+    double **localMatrix    -> (n x dofs) x (n x dofs) matrix holding the values to be
+                               added to the CRS format matrix
     int n                   -> number of nodes in element
     int dofs                -> number of degrees of freemdom for one node
-    int *indexes           -> Maps element node number to global (or partition) node number
+    int *indexes            -> Maps element node number to global (or partition) node number
                                (to matrix rows and cols if dofs = 1)
  
 ************************************************************************************************************/
@@ -576,7 +588,7 @@
     aContainers->Cols[n] = j;
 }
 
--(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n {
+-(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
     
     int i;
     matrixArraysContainer *aContainers;
@@ -606,7 +618,7 @@
     aContainers = NULL;
 }
 
--(void)sortInMatrix:(FEMMatrix *)a: (BOOL *)alsoValues {
+-(void)sortInMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues {
 /************************************************************************************************
     Sort columns to ascending order for rows of a CRS format matrix
  
@@ -689,7 +701,7 @@
     aContainers = NULL;
 }
 
--(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value {
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
 /************************************************************************************************
     Set a given value to an element of a CRS format Matrix
  
@@ -730,7 +742,7 @@
     aContainers = NULL;
 }
 
--(void)applyProjector:(FEMMatrix *)pMatrix: (double *)u: (int *)uperm: (double *)v: (int *)vperm: (BOOL *)trans {
+-(void)applyProjector:(FEMMatrix *)pMatrix values:(double *)u permutation:(int *)uperm values:(double *)v permutation:(int *)vperm transpose:(BOOL *)trans {
     
     int i, j, k, l, n;
     matrixArraysContainer *containers;

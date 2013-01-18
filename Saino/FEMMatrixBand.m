@@ -58,7 +58,7 @@
     return matrix;
 }
 
--(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n {
+-(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers;
@@ -79,8 +79,8 @@
     
 }
 
--(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value {
-/************************************************************************************************
+-(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+/**********************************************************************************************************
     Set a given value to an element of a Band format Matrix
  
     Arguments:
@@ -88,7 +88,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
  
-************************************************************************************************/
+**********************************************************************************************************/
     
     matrixArraysContainer *matContainers;
     
@@ -104,8 +104,8 @@
     
 }
 
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value {
-/************************************************************************************************
+-(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+/***********************************************************************************************************
     Add a given value to an element of a Band format matrix
  
     Arguments:
@@ -113,7 +113,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
  
- ************************************************************************************************/
+ **********************************************************************************************************/
     int k;
     matrixArraysContainer *matContainers;
     
@@ -131,8 +131,8 @@
     
 }
 
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes {
-/*************************************************************************************************************
+-(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
+/*****************************************************************************************************************************************
     
     Add a set of values (i.e., element stiffness matrix) to a Band format matrix
  
@@ -146,7 +146,7 @@
         int **indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
  
-************************************************************************************************************/
+*****************************************************************************************************************************************/
     
     int i, j, k, l, ind, row, col;
     matrixArraysContainer *matContainers;
@@ -188,7 +188,7 @@
     
 }
 
--(void)sBand_setDirichlet:(FEMSolution *)solution: (int)n: (double)value {
+-(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value {
 /*************************************************************************************************************
  
     Set value of unknown x(n) to given value for symmetric band matrix. This is done by replacing the
@@ -226,7 +226,7 @@
     
 }
 
--(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n {
+-(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers;
@@ -247,7 +247,7 @@
     
 }
 
--(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value {
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
 /************************************************************************************************
     Set a given value to an element of a Band format Matrix
  

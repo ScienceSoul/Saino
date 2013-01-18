@@ -14,14 +14,14 @@
 @interface FEMMatrixBand : NSObject
 
 -(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues;
--(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n;
--(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes;
--(void)sBand_setDirichlet:(FEMSolution *)solution: (int)n: (double)value;
+-(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n;
+-(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
+-(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value;
 
--(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n;
--(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value;
+-(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value;
 
 
 @end

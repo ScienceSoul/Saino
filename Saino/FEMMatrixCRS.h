@@ -13,19 +13,18 @@
 @interface FEMMatrixCRS : NSObject
 
 -(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows totalNonZeros:(int)totalNonZeros rowNonZeros:(int *)rowNonZeros degreesFreedom:(int)degreesFreedom reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder allocateValues:(BOOL)allocateValues;
--(void)zeroRowInGlobal:(FEMSolution *)solution: (int)n;
--(void)sortInGlobal:(FEMSolution *)solution: (BOOL *)alsoValues;
--(void)setMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution: (int)i: (int)j: (double)value;
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution: (double **)matrix: (int)n: (int)dofs: (int *)indexes;
--(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution: (int)n: (double)val;
+-(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n;
+-(void)sortInGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues;
+-(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
+-(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value;
 
 -(void)glueLocalMatrixInMatrix:(FEMMatrix *)matrix localMatrix:(double **)localMatrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes;
 -(void)makeMatrixIndex:(FEMMatrix *)a atIndex:(int)i  andIndex:(int)j;
--(void)zeroRowInMatrix:(FEMMatrix *)a: (int)n;
--(void)sortInMatrix:(FEMMatrix *)a: (BOOL *)alsoValues;
--(void)setMatrixElementInMatrix:(FEMMatrix *)a: (int)i: (int)j: (double)value;
--(void)applyProjector:(FEMMatrix *)pMatrix: (double *)u: (int *)uperm: (double *)v: (int *)vperm: (BOOL *)trans;
-
+-(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
+-(void)sortInMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues;
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)applyProjector:(FEMMatrix *)pMatrix values:(double *)u permutation:(int *)uperm values:(double *)v permutation:(int *)vperm transpose:(BOOL *)trans;
 
 @end
