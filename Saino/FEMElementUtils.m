@@ -200,8 +200,8 @@
     if (indexes != NULL) free_ivector(indexes, 0, indexSize-1);
     
     // Diffuse gray radiation condition
-    radiation = [listUtilities listGetLogical:model inArray:solution.valuesList forVariable:@"Radiation solver" info:&found];
-    if (found == NO && equation != nil) radiation = (radiation == YES || [equation isEqualToString:@"Heat equation"] == YES) ? YES : NO;
+    radiation = [listUtilities listGetLogical:model inArray:solution.valuesList forVariable:@"radiation solver" info:&found];
+    if (found == NO && equation != nil) radiation = (radiation == YES || [equation isEqualToString:@"heat equation"] == YES) ? YES : NO;
     
     if (radiation == YES) {
         for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements + mesh.numberOfBoundaryElements; i++) {
@@ -247,7 +247,7 @@
         projector = boundaryConditions.pMatrix;
         if (projector == nil) continue;
         
-        if ([listUtilities listGetLogical:model inArray:boundaryConditions.valuesList forVariable:@"Periodic BC explicit" info:&found] == YES) continue;
+        if ([listUtilities listGetLogical:model inArray:boundaryConditions.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
         
         matContainers = projector.getContainers;
         for (i=0; i<projector.numberOfRows; i++) {
@@ -407,10 +407,10 @@
         if (perm[i] >= 0 ) invInitialReorder[perm[i]] = i;
     }
     
-    useOptimized = [listUtils listGetLogical:model inArray:solution.valuesList forVariable:@"Optimize bandwidth use always" info:&found];
+    useOptimized = [listUtils listGetLogical:model inArray:solution.valuesList forVariable:@"optimize bandwidth use always" info:&found];
     
     // Check if matrix class really need to be created
-    if ([listUtils listGetLogical:model inArray:solution.valuesList forVariable:@"No matrix" info:&found] == YES) return nil;
+    if ([listUtils listGetLogical:model inArray:solution.valuesList forVariable:@"no matrix" info:&found] == YES) return nil;
     
     //Compute matrix structure and do bandwidth optimization if requested
     modelContainers->rowNonZeros = intvec(0, k-1);
@@ -455,7 +455,7 @@
     matrix.complexMatrix = NO;
     matrix.format = matrixFormat;
     
-    n = [listUtils listGetInteger:model inArray:solution.valuesList forVariable:@"Constraint dofs" info:&found minValue:NULL maxValue:NULL];
+    n = [listUtils listGetInteger:model inArray:solution.valuesList forVariable:@"constraint dofs" info:&found minValue:NULL maxValue:NULL];
     if (n > 0) {
         constraint = [[FEMMatrix alloc] init];
         matrix.constraint = constraint;
@@ -466,7 +466,7 @@
         matContainers->RHS = doublevec(0, n-1);
         
         for (i=0; i<n; i++) {
-            str1 = [NSMutableString stringWithString:@"Constraint dof "];
+            str1 = [NSMutableString stringWithString:@"constraint dof "];
             str2 = [NSString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" value"];
@@ -478,7 +478,7 @@
         cols = 0;
         matContainers->Rows[0] = 0;
         for (i=0; i<n; i++) {
-            str1 = [NSMutableString stringWithString:@"Constraint dof "];
+            str1 = [NSMutableString stringWithString:@"constraint dof "];
             str2 = [NSString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" body"];
@@ -515,7 +515,7 @@
                 cols = cols + dofs * count(invInitialReorder, '=', 0, k);
             }
             
-            str1 = [NSMutableString stringWithString:@"Constraint dof "];
+            str1 = [NSMutableString stringWithString:@"constraint dof "];
             str2 = [NSString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" bc"];
@@ -563,7 +563,7 @@
         memset( matContainers->Values, 0.0, (cols*sizeof(matContainers->Values)) );
         
         for (i=0; i<n; i++) {
-            str1 = [NSMutableString stringWithString:@"Constraint dof "];
+            str1 = [NSMutableString stringWithString:@"constraint dof "];
             str2 = [NSString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" body"];
@@ -602,7 +602,7 @@
                 }
             }
             
-            str1 = [NSMutableString stringWithString:@"Constraint dof "];
+            str1 = [NSMutableString stringWithString:@"constraint dof "];
             str2 = [NSString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" bc"];

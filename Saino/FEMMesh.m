@@ -77,7 +77,7 @@
         solContainers->defDofs[bodyID][3] = l;
         defDofs[3] = max(defDofs[3], l);
     } else {
-        if ([[solution.solutionInfo objectForKey:@"Discountinuous galerkin"] boolValue] == YES) {
+        if ([[solution.solutionInfo objectForKey:@"discountinuous galerkin"] boolValue] == YES) {
             solContainers->defDofs[bodyID][3] = l;
             defDofs[3] = max(defDofs[3], 0);
         }
@@ -385,7 +385,7 @@
     
     [meshIO getMeshNodes:nodeTags :cCoord];
     
-    found = [listUtil listGetIntegerArray:model inArray:model.simulation.valuesList forVariable:@"Coordinate mapping" buffer:&coordMap];
+    found = [listUtil listGetIntegerArray:model inArray:model.simulation.valuesList forVariable:@"coordinate mapping" buffer:&coordMap];
     if (found == YES) {
         if (coordMap.m != 3) {
             warnfunct("loadMeshForModel", "Inconsistent coordinate mapping:");
@@ -458,7 +458,7 @@
     // Scaling of coordinates
     coordScale = doublevec(0, 2);
 
-    found = [listUtil listGetConstRealArray:model inArray:model.simulation.valuesList forVariable:@"Coordinate scaling" buffer:&wrk];
+    found = [listUtil listGetConstRealArray:model inArray:model.simulation.valuesList forVariable:@"coordinate scaling" buffer:&wrk];
     if (found == YES) {
         memset( coordScale, 1.0, (3*sizeof(coordScale)) );
         for (i=0; i<meshDim; i++) {
@@ -530,7 +530,7 @@
             
             _elements[i].BodyID = body;
             for (j=0; j<model.numberOfBodies; j++) {
-                bList = [(model.bodies)[j] objectForKey:@"Target bodies"];
+                bList = [(model.bodies)[j] objectForKey:@"target bodies"];
                 if (bList != nil) {
                     for (k=0; k<bList.count; k++) {
                         if (body == [bList[k] intValue]) _elements[i].BodyID = j+1;
@@ -539,13 +539,13 @@
             }
             
             bid = _elements[i].BodyID;
-            if ([(model.bodies)[bid-1] objectForKey:@"Equation"] != nil) {
-                j = [[(model.bodies)[bid-1] objectForKey:@"Equation"] intValue];
-                elementDef0 = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:@"Element" info:&found];
+            if ([(model.bodies)[bid-1] objectForKey:@"equation"] != nil) {
+                j = [[(model.bodies)[bid-1] objectForKey:@"equation"] intValue];
+                elementDef0 = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:@"element" info:&found];
                 k = 1;
                 for (FEMSolution *solution in model.solutions) {
-                    if (found == NO) elementDef0 = solution.solutionInfo[@"Element"];
-                    str = [NSMutableString stringWithString:@"Element{"];
+                    if (found == NO) elementDef0 = solution.solutionInfo[@"element"];
+                    str = [NSMutableString stringWithString:@"element{"];
                     [str appendString:[[NSNumber numberWithInt:k] stringValue]];
                     [str appendString:@"}"];
                     elementDef = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:str info:&gotIt];
@@ -692,7 +692,7 @@
                 if ([(model.boundaryID)[j] intValue] == bndry) {
                     addr1 = 1;
                     addr2 = model.numberOfBoundaryConditions;
-                    _elements[i].BoundaryInfo->Constraint = [listUtil listGetInteger:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"Boundary condition" info:&found minValue:&addr1 maxValue:&addr2];
+                    _elements[i].BoundaryInfo->Constraint = [listUtil listGetInteger:model inArray:[(model.boundaries)[j] valuesList] forVariable:@"boundary condition" info:&found minValue:&addr1 maxValue:&addr2];
                     break;
                 }
             }
@@ -704,17 +704,17 @@
         
             defaultTargetBC = 0;
             for (j=0; j<model.numberOfBoundaryConditions; j++) {
-                if ([listUtil listGetLogical:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Default target" info:&found] == YES)
+                if ([listUtil listGetLogical:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"default target" info:&found] == YES)
                     defaultTargetBC = j+1;
                 
-                gotIt = [listUtil listGetIntegerArray:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Target boundaries" buffer:&bdList];
+                gotIt = [listUtil listGetIntegerArray:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"target boundaries" buffer:&bdList];
                 if (gotIt == YES) {
                     for (k=0; k<bdList.m; k++) {
                         if (bdList.ivector[k] == bndry) {
                             _elements[i].BoundaryInfo->Constraint = j+1;
                             addr1 = 1;
                             addr2 = model.numberOfBodies;
-                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
+                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"body id" info:&found minValue:&addr1 maxValue:&addr2];
                         }
                     }
                 }
@@ -725,14 +725,14 @@
                 _elements[i].BoundaryInfo->Constraint = defaultTargetBC;
                 addr1 = 1;
                 addr2 = model.numberOfBodies;
-                _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[defaultTargetBC-1] valuesList] forVariable:@"Body id" info:&found minValue:&addr1 maxValue:&addr2];
+                _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[defaultTargetBC-1] valuesList] forVariable:@"body id" info:&found minValue:&addr1 maxValue:&addr2];
             }
             
             _elements[i].BoundaryInfo->Outbody = -1;
             j = _elements[i].BoundaryInfo->Constraint;
             if (j>0 && j<=model.numberOfBoundaryConditions) {
                 addr1 = model.numberOfBodies;
-                _elements[i].BoundaryInfo->Outbody = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j-1] valuesList] forVariable:@"Normal target body" info:&found minValue:NULL maxValue:&addr1];
+                _elements[i].BoundaryInfo->Outbody = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j-1] valuesList] forVariable:@"normal target body" info:&found minValue:NULL maxValue:&addr1];
             }
             
             _elements[i].NodeIndexes = intvec(0, n-1);
@@ -960,7 +960,7 @@
     for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
         addr1 = 1;
         addr2 = model.numberOfBoundaryConditions;
-        k = [listUtil listGetInteger:model inArray:boundary.valuesList forVariable:@"Periodic BC" info:&gotIt minValue:&addr1 maxValue:&addr2];
+        k = [listUtil listGetInteger:model inArray:boundary.valuesList forVariable:@"periodic bc" info:&gotIt minValue:&addr1 maxValue:&addr2];
         projector = [meshUtils periodicProjectorInModel:model forMesh:self boundary:i target:k-1];
         if (projector != nil) boundary.pMatrix = projector;
         projector = nil;

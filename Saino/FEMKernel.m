@@ -277,15 +277,15 @@ static int PRECOND_VANKA     =  560;
         x = varContainers->Values;
     }
     
-    if ((solution.solutionInfo)[@"Non linear system norm degree"] != nil) {
-        normDim = [(solution.solutionInfo)[@"Non linear system norm degree"] intValue];
+    if ((solution.solutionInfo)[@"non linear system norm degree"] != nil) {
+        normDim = [(solution.solutionInfo)[@"non linear system norm degree"] intValue];
     } else {
         normDim = 2;
     }
     
     dofs = solution.variable.dofs;
-    if ((solution.solutionInfo)[@"Non linear system norm dofs"] != nil) {
-        normDofs = [(solution.solutionInfo)[@"Non linear system norm dofs"] intValue];
+    if ((solution.solutionInfo)[@"non linear system norm dofs"] != nil) {
+        normDofs = [(solution.solutionInfo)[@"non linear system norm dofs"] intValue];
     } else {
         normDofs = dofs;
     }
@@ -403,89 +403,89 @@ static int PRECOND_VANKA     =  560;
     relax = NO;
     
     if (steadyState == YES) {
-        skip = [(solution.solutionInfo)[@"Skip compute steady state change"] boolValue];
+        skip = [(solution.solutionInfo)[@"skip compute steady state change"] boolValue];
         if (skip == YES) return;
         
-        if ((solution.solutionInfo)[@"Steady state convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"Steady state convergence measure"]];
+        if ((solution.solutionInfo)[@"steady state convergence measure"] != nil) {
+            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"steady state convergence measure"]];
         } else {
             convergenceType = @"norm";
         }
         
-        if ((solution.solutionInfo)[@"Steady state convergence absolute"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"Steady state convergence absolute"] boolValue];
-        } else if ((solution.solutionInfo)[@"Use absolute norm for convergence"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"Use absolute norm for convergence"] boolValue];
+        if ((solution.solutionInfo)[@"steady state convergence absolute"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"steady state convergence absolute"] boolValue];
+        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
         }
         
-        if ((solution.solutionInfo)[@"Steady state relaxation factor"] != nil) {
-            relaxation = [(solution.solutionInfo)[@"Steady state relaxation factor"] doubleValue];
+        if ((solution.solutionInfo)[@"steady state relaxation factor"] != nil) {
+            relaxation = [(solution.solutionInfo)[@"steady state relaxation factor"] doubleValue];
             relax = (relaxation != 1.0) ? YES: NO;
         }
         
-        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Coupled iter" onlySearch:NULL maskName:NULL info:&stat];
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"coupled iter" onlySearch:NULL maskName:NULL info:&stat];
         itervContainers = iterV.getContainers;
         iterNo = (int)itervContainers->Values[0];
         itervContainers = NULL;
         
         if (relax == YES) {
-            if ((solution.solutionInfo)[@"Steady state relaxation after"] != nil) {
-                relaxAfter = [(solution.solutionInfo)[@"Steady state relaxation after"] intValue];
+            if ((solution.solutionInfo)[@"steady state relaxation after"] != nil) {
+                relaxAfter = [(solution.solutionInfo)[@"steady state relaxation after"] intValue];
                 if (relaxAfter >= iterNo ) relax = NO;
             }    
         }
         
         if (relax == YES) {
-            if ((solution.solutionInfo)[@"Steady state relaxation before"] != nil) {
-                relaxBefore = [(solution.solutionInfo)[@"Steady state relaxation before"] boolValue];
+            if ((solution.solutionInfo)[@"steady state relaxation before"] != nil) {
+                relaxBefore = [(solution.solutionInfo)[@"steady state relaxation before"] boolValue];
             } else {
                 relaxBefore = YES;
             }
         }
     } else {
     
-        if ((solution.solutionInfo)[@"Skip compute non linear change"] != nil) {
-            skip  = [(solution.solutionInfo)[@"Skip compute non linear change"] boolValue];
+        if ((solution.solutionInfo)[@"skip compute non linear change"] != nil) {
+            skip  = [(solution.solutionInfo)[@"skip compute non linear change"] boolValue];
         } else {
             skip = NO;
         }
         if (skip == YES) return;
         
-        if ((solution.solutionInfo)[@"Non linear system convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"Non linear system convergence measure"]];
+        if ((solution.solutionInfo)[@"non linear system convergence measure"] != nil) {
+            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"non linear system convergence measure"]];
         } else {
             convergenceType = @"norm";
         }
         
-        if ((solution.solutionInfo)[@"Non linear system convergence absolute"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"Non linear system convergence absolute"] boolValue];
-        } else if ((solution.solutionInfo)[@"Use absolute norm for convergence"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"Use absolute norm for convergence"] boolValue];
+        if ((solution.solutionInfo)[@"non linear system convergence absolute"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"non linear system convergence absolute"] boolValue];
+        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
         } else {
             convergenceAbsolute = NO;
         }
         
-        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
         itervContainers = iterV.getContainers;
         iterNo = (int)itervContainers->Values[0];
         solution.variable.nonLinIter = (int)itervContainers->Values[0];
         itervContainers->Values[0] = itervContainers->Values[0]+1;
         itervContainers = NULL;
         
-        if ((solution.solutionInfo)[@"Non linear system relaxation factor"] != nil) {
-            relaxation = [(solution.solutionInfo)[@"Non linear system relaxation factor"] doubleValue];
+        if ((solution.solutionInfo)[@"non linear system relaxation factor"] != nil) {
+            relaxation = [(solution.solutionInfo)[@"non linear system relaxation factor"] doubleValue];
             relax = (relaxation != 1.0) ? YES: NO;
         }
         if (relax == YES) {
-            if ((solution.solutionInfo)[@"Non linear system relaxation after"] != nil) {
-                relaxAfter = [(solution.solutionInfo)[@"Non linear system relaxation after"] boolValue];
+            if ((solution.solutionInfo)[@"non linear system relaxation after"] != nil) {
+                relaxAfter = [(solution.solutionInfo)[@"non linear system relaxation after"] boolValue];
                 if (relaxAfter >= solution.variable.nonLinIter) relax = NO;
             }
         }
         
         if (relax == YES) {
-            if ((solution.solutionInfo)[@"Non linear system relaxation before"] != nil) {
-                relaxBefore = [(solution.solutionInfo)[@"Non linear system relaxation before"] boolValue];
+            if ((solution.solutionInfo)[@"non linear system relaxation before"] != nil) {
+                relaxBefore = [(solution.solutionInfo)[@"non linear system relaxation before"] boolValue];
             } else {
                 relaxBefore = YES;
             }
@@ -553,8 +553,8 @@ static int PRECOND_VANKA     =  560;
     solution.variable.norm = norm;
     
     // The norm should be bounded in order to reach convergence
-    if ((solution.solutionInfo)[@"Non linear system max norm"] != nil) {
-        maxNorm = [(solution.solutionInfo)[@"Non linear system max norm"] doubleValue];
+    if ((solution.solutionInfo)[@"non linear system max norm"] != nil) {
+        maxNorm = [(solution.solutionInfo)[@"non linear system max norm"] doubleValue];
     } else {
         maxNorm = HUGE_VAL;
     }
@@ -633,8 +633,8 @@ static int PRECOND_VANKA     =  560;
     // Check for convergence: 0/1
     if (steadyState == YES) {
         solution.variable.steadyChange = change;
-        if ((solution.solutionInfo)[@"Steady state convergence tolerance"] != nil) {
-            tolerance = [(solution.solutionInfo)[@"Steady state convergence tolerance"] doubleValue];
+        if ((solution.solutionInfo)[@"steady state convergence tolerance"] != nil) {
+            tolerance = [(solution.solutionInfo)[@"steady state convergence tolerance"] doubleValue];
             if (change <= tolerance) {
                 solution.variable.steadyConverged = 1;
             } else {
@@ -643,8 +643,8 @@ static int PRECOND_VANKA     =  560;
         }
     } else {
         solution.variable.nonLinChange = change;
-        if ((solution.solutionInfo)[@"Non linear system convergence tolerance"] != nil) {
-            tolerance = [(solution.solutionInfo)[@"Non linear system convergence tolerance"] doubleValue];
+        if ((solution.solutionInfo)[@"non linear system convergence tolerance"] != nil) {
+            tolerance = [(solution.solutionInfo)[@"non linear system convergence tolerance"] doubleValue];
             if (change <= tolerance) {
                 solution.variable.nonLinConverged = 1;
             } else {
@@ -660,8 +660,8 @@ static int PRECOND_VANKA     =  560;
         solution.variable.norm = [self FEMKernel_computeNorm:solution :n :x];
     }
     
-    if ((solution.solutionInfo)[@"Equation"] != nil) {
-        solverName = [NSString stringWithString:(solution.solutionInfo)[@"Equation"]];
+    if ((solution.solutionInfo)[@"equation"] != nil) {
+        solverName = [NSString stringWithString:(solution.solutionInfo)[@"equation"]];
     } else {
         solverName = solution.variable.name;
     }
@@ -677,21 +677,21 @@ static int PRECOND_VANKA     =  560;
         doIt = YES;
         
         if (steadyState == YES) {
-            if ((solution.solutionInfo)[@"Calculate velocity"] != nil) {
-                doIt = [(solution.solutionInfo)[@"Calculate velocity"] boolValue];
+            if ((solution.solutionInfo)[@"calculate velocity"] != nil) {
+                doIt = [(solution.solutionInfo)[@"calculate velocity"] boolValue];
             } else {
                 doIt = NO;
             }
         } else {
-            if ((solution.solutionInfo)[@"Non Linear calculate velocity"] != nil) {
-                doIt = [(solution.solutionInfo)[@"Non Linear calculate velocity"] boolValue];
+            if ((solution.solutionInfo)[@"non linear calculate velocity"] != nil) {
+                doIt = [(solution.solutionInfo)[@"non linear calculate velocity"] boolValue];
             } else {
                 doIt = NO;
             }
         }
         
         if (doIt == YES) {
-            timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Time step size" onlySearch:NULL maskName:NULL info:&stat];
+            timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"time step size" onlySearch:NULL maskName:NULL info:&stat];
             containers = timeStepVar.getContainers;
             dt = containers->Values[0];
             str2 = @" velocity";
@@ -712,11 +712,11 @@ static int PRECOND_VANKA     =  560;
     
         stat = NO;
         
-        if ((solution.solutionInfo)[@"Calculate derivative"] != nil) {
-            if ([(solution.solutionInfo)[@"Calculate derivative"]  boolValue] == YES) {
+        if ((solution.solutionInfo)[@"calculate derivative"] != nil) {
+            if ([(solution.solutionInfo)[@"calculate derivative"]  boolValue] == YES) {
                 
                 if (iterNo > 1) {
-                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"Derivative eps" onlySearch:NULL maskName:NULL info:&stat];
+                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"derivative eps" onlySearch:NULL maskName:NULL info:&stat];
                     if (timeStepVar != nil) {
                         containers = timeStepVar.getContainers;
                         eps = containers->Values[0];
@@ -778,8 +778,8 @@ static int PRECOND_VANKA     =  560;
         
         x = varContainers->Values;
         
-        if ((solution.solutionInfo)[@"Time stepping Method"] != nil) {
-            method = [NSString stringWithString:(solution.solutionInfo)[@"Time stepping Method"]];
+        if ((solution.solutionInfo)[@"time stepping method"] != nil) {
+            method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
             if ([method isEqualToString:@"runge-kutta"] == YES || [method isEqualToString:@"explicit euler"] == YES) {
                 for (i=0; i<n; i++) {
                     if (fabs(matContainers->Values[matContainers->Diag[i]]) > 0.0)
@@ -793,17 +793,16 @@ static int PRECOND_VANKA     =  560;
                 return;
             }
         }
-        
     }
     
-    if ((solution.solutionInfo)[@"Linear system scaling"] != nil) {
-        scaleSystem = [(solution.solutionInfo)[@"Linear system scaling"] boolValue];
+    if ((solution.solutionInfo)[@"linear system scaling"] != nil) {
+        scaleSystem = [(solution.solutionInfo)[@"linear system scaling"] boolValue];
     } else {
         scaleSystem = YES;
     }
     
-    eigenAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"Eigen analysis"] boolValue] == YES) ? YES: NO;
-    harmonicAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"Harmonic analysis"] boolValue] == YES) ? YES: NO;
+    eigenAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"eigen analysis"] boolValue] == YES) ? YES: NO;
+    harmonicAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES: NO;
     
     if ( harmonicAnalysis == NO && eigenAnalysis == NO ) {
         sum = 0.0;
@@ -923,8 +922,8 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    if ((solution.solutionInfo)[@"Linear system solver"] != nil) {
-        method = [NSString stringWithString:(solution.solutionInfo)[@"Linear system solver"]];
+    if ((solution.solutionInfo)[@"linear system solver"] != nil) {
+        method = [NSString stringWithString:(solution.solutionInfo)[@"linear system solver"]];
     } else {
         method = @"iterative";
     }
@@ -1001,8 +1000,8 @@ static int PRECOND_VANKA     =  560;
     NSString *method;
     variableArraysContainer *varContainers;
     
-    if ((solution.solutionInfo)[@"Linear system timing"] != nil) {
-        if ([(solution.solutionInfo)[@"Linear system timing"] boolValue] == YES) {
+    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
+        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
             t0 = cputime();
             rt0 = realtime();
         }
@@ -1014,14 +1013,14 @@ static int PRECOND_VANKA     =  560;
 
     // The allocation of previous values has to be here in order to work properly
     // with the Dirichlet elimination
-    if ((solution.solutionInfo)[@"Non linear system relaxation factor"] != nil) {
-        relaxation = [(solution.solutionInfo)[@"Non linear system relaxation factor"] doubleValue];
+    if ((solution.solutionInfo)[@"non linear system relaxation factor"] != nil) {
+        relaxation = [(solution.solutionInfo)[@"non linear system relaxation factor"] doubleValue];
         needPrevSol = (relaxation != 0.0) ? YES: NO;
     }
     
     if (needPrevSol == NO) {
-        if ((solution.solutionInfo)[@"Non linear system convergence measure"] != nil) {
-            method = [NSString stringWithString:(solution.solutionInfo)[@"Non linear system convergence measure"]];
+        if ((solution.solutionInfo)[@"non linear system convergence measure"] != nil) {
+            method = [NSString stringWithString:(solution.solutionInfo)[@"non linear system convergence measure"]];
             needPrevSol = ([method isEqualToString:@"residual"] == YES || [method isEqualToString:@"solution"] == YES) ? YES: NO;
         }
     }
@@ -1064,8 +1063,8 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    if ((solution.solutionInfo)[@"Linear system timing"] != nil) {
-        if ([(solution.solutionInfo)[@"Linear system timing"] boolValue] == YES) {
+    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
+        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
             st = cputime() - t0;
             rst = realtime() - rt0;
             
@@ -1104,7 +1103,7 @@ static int PRECOND_VANKA     =  560;
     if ((model.bodies)[body_id] == nil) {
         return isPassive;
     } else {
-        bf_id = [(model.bodies)[body_id][@"Body force"] intValue];
+        bf_id = [(model.bodies)[body_id][@"body force"] intValue];
     }
     
     passName = [NSMutableString stringWithString:solution.variable.name];
@@ -1347,8 +1346,8 @@ static int PRECOND_VANKA     =  560;
     
     [self FEMKernel_updateGlobalForce:model :solution :element :matrixForce :lForce :n :dofs :nodeIndexes :NULL];
     
-    if ((solution.solutionInfo)[@"Time stepping method"] != nil) {
-        method = [NSString stringWithString:(solution.solutionInfo)[@"Time stepping method"]];
+    if ((solution.solutionInfo)[@"time stepping method"] != nil) {
+        method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
     } else {
         method = @"bdf";
     }
@@ -1364,7 +1363,7 @@ static int PRECOND_VANKA     =  560;
         dts[0] = dt;
         constantDt = NO;
         if (order > 1) {
-            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"Time step size" onlySearch:NULL maskName:NULL info:&found];
+            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
             containers = dtVar.getContainers;
             for (i=1; i<order; i++) {
                 dts[i] = containers->PrevValues[0][i-1];
@@ -1885,13 +1884,13 @@ static int PRECOND_VANKA     =  560;
     util = [[FEMUtilities alloc] init];
     crsMatrix = [[FEMMatrixCRS alloc] init];
     
-    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    str1 = [NSMutableString stringWithString:@"periodic bc "];
     [str1 appendString:name];
     
-    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
     [str2 appendString:name];
     
-    str3 = [NSMutableString stringWithString:@"Periodic BC scale "];
+    str3 = [NSMutableString stringWithString:@"periodic bc scale "];
     [str3 appendString:name];
 
     boundaryConditionAtId = (model.boundaryConditions)[this];
@@ -1913,8 +1912,8 @@ static int PRECOND_VANKA     =  560;
     
     // For explicit conditions just create the dependency almost like a normal Dirichlet BC, 
     // for implicit one (otherwise) do the assembly of the projector
-    str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
-    str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
+    str1 = [NSMutableString stringWithString:@"periodic bc explicit"];
+    str2 = [NSMutableString stringWithString:@"periodic bc use lagrange coefficient"];
     if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) {
         
         var = [util getVariableFrom:model.variables model:model name:name onlySearch:NULL maskName:NULL info:&stat];
@@ -2071,13 +2070,13 @@ static int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers;
     listUtil = [[FEMListUtilities alloc] init];
 
-    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    str1 = [NSMutableString stringWithString:@"periodic bc "];
     [str1 appendString:name];
     
-    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
     [str2 appendString:name];
     
-    str3 = [NSMutableString stringWithString:@"Periodic BC scale "];
+    str3 = [NSMutableString stringWithString:@"periodic bc scale "];
     [str3 appendString:name];
     
     boundaryConditionAtId = (model.boundaryConditions)[this];
@@ -2097,8 +2096,8 @@ static int PRECOND_VANKA     =  560;
     projectorContainers = boundaryConditionAtId.pMatrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    str1 = [NSMutableString stringWithString:@"Periodic BC explicit"];
-    str2 = [NSMutableString stringWithString:@"Periodic BC use Lagrange coefficient"];
+    str1 = [NSMutableString stringWithString:@"periodic bc explicit"];
+    str2 = [NSMutableString stringWithString:@"periodic bc use lagrange coefficient"];
     if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) return;
     if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) return;
     
@@ -2273,8 +2272,8 @@ static int PRECOND_VANKA     =  560;
     
     nb = 0;
     
-    if ((solution.solutionInfo)[@"Discontinuous galerkin"] != nil) {
-        if ([(solution.solutionInfo)[@"Discontinuous galerkin"] boolValue] == YES) {
+    if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+        if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
             
             for (i=0; i<element->DGDOFs; i++) {
                 indexes[nb] = element->DGIndexes[i];
@@ -2351,8 +2350,8 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    if ((solution.solutionInfo)[@"Bubbles in global system"] != nil) {
-        gb = [(solution.solutionInfo)[@"Bubbles in global system"] boolValue];
+    if ((solution.solutionInfo)[@"bubbles in global system"] != nil) {
+        gb = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
     } else {
         gb = YES;
     }
@@ -2442,8 +2441,8 @@ static int PRECOND_VANKA     =  560;
     
     nb = 0;
     
-    if ((solution.solutionInfo)[@"Discontinuous galerkin"] != nil) {
-        if ([(solution.solutionInfo)[@"Discontinuous galerkin"] boolValue] == YES) {
+    if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+        if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
             
             for (i=0; i<element->DGDOFs; i++) {
                 indexes[nb] = element->DGIndexes[i];
@@ -2503,8 +2502,8 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    if ((solution.solutionInfo)[@"Bubbles in global system"] != nil) {
-        gb = [(solution.solutionInfo)[@"Bubbles in global system"] boolValue];
+    if ((solution.solutionInfo)[@"bubbles in global system"] != nil) {
+        gb = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
     } else {
         gb = YES;
     }
@@ -3454,7 +3453,7 @@ static int PRECOND_VANKA     =  560;
     
     for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
         boundaryConditionAtId = (model.boundaryConditions)[bc];
-        if ([listUtil listCheckPresentVariable:@"Target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
+        if ([listUtil listCheckPresentVariable:@"target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
         activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
         activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryConditionAtId.valuesList];
     }
@@ -3523,9 +3522,9 @@ static int PRECOND_VANKA     =  560;
         }
         for (t=0; t<[model numberOfBulkElements]; t++) {
             
-            bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
             
-            if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
+            if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
             if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
             
             
@@ -3552,12 +3551,12 @@ static int PRECOND_VANKA     =  560;
         
         boundaryConditionAtId = (model.boundaryConditions)[bc];
         if ([listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryConditionAtId.valuesList];
         
         // At the first calling, the list of coordinates is transformed to list of nodes
         if (nodesFound == NO) {
             
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
             
             if (stat == YES) {
                 
@@ -3582,7 +3581,7 @@ static int PRECOND_VANKA     =  560;
                         }
                     }
                     // Add the found nodes to the list values
-                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:noNodes];
+                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes numberOfNodes:noNodes];
                     free_ivector(inNodes, 0, noNodes-1);
                     nodesFound = YES;
                 }
@@ -3595,7 +3594,7 @@ static int PRECOND_VANKA     =  560;
         }
         
         if (nodesFound == YES) {
-            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
+            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
             
             [self FEMKernel_setPointLoads:model :solution :elements :boundaryConditionAtId.valuesList :loadName :nodeIndexes.ivector :n :dof :solution.variable.dofs];
             if (nodeIndexes.ivector != NULL) {
@@ -3677,10 +3676,10 @@ static int PRECOND_VANKA     =  560;
     
     memset( activePort, NO, (n*sizeof(activePort)) );
     
-    str1 = [NSMutableString stringWithString:@"Periodic BC "];
+    str1 = [NSMutableString stringWithString:@"periodic bc "];
     [str1 appendString:name];
     
-    str2 = [NSMutableString stringWithString:@"Anti periodic BC "];
+    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
     [str2 appendString:name];
 
     for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
@@ -3733,7 +3732,7 @@ static int PRECOND_VANKA     =  560;
         activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
     }
     
-    orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"Set Dirichlet BCs by BC numbering" info:&stat];
+    orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
     
     bndry_start = [model numberOfBulkElements];
     bndry_end = bndry_start + [model numberOfBoundaryElements]-1;
@@ -3881,9 +3880,9 @@ static int PRECOND_VANKA     =  560;
     if (anyActive == YES) {
         for (t=0; t<[model numberOfBulkElements]; t++) {
             
-            bf_id = [(model.bodies)[elements[t].BodyID-1][@"Body force"] intValue];
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
             
-            if ((model.bodies)[elements[t].BodyID-1][@"Body force"] == nil) continue;
+            if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
             if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
             conditional = activeCond[bf_id];
             
@@ -3912,17 +3911,17 @@ static int PRECOND_VANKA     =  560;
         
         boundaryConditionAtId = (model.boundaryConditions)[bc];
         if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"Target nodes" inArray:boundaryConditionAtId.valuesList];
+        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryConditionAtId.valuesList];
         
         // The coodinates are only requested for a body that has no list of nodes.
         // At the first calling, the list of coordinates is transformed to a list of nodes
         if (nodesFound == NO) {
             
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates" buffer:&coordNodes];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
             
             if (stat == YES) {
                 
-                eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
+                eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
                 if (stat == NO) {
                     eps = HUGE_VAL;
                 } else {
@@ -3963,7 +3962,7 @@ static int PRECOND_VANKA     =  560;
                     
                     // In the first time add teh found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"Target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
+                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
                         free_ivector(inNodes, 0, noNodes-1);
                         nodesFound = YES;
                     }
@@ -3979,7 +3978,7 @@ static int PRECOND_VANKA     =  560;
         
         if (nodesFound == YES) {
             conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
-            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Target nodes" buffer:&nodeIndexes];
+            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
             
             [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
             
@@ -4122,8 +4121,8 @@ static int PRECOND_VANKA     =  560;
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
-    if ((solution.solutionInfo)[@"Calculate loads"] != nil) {
-        bupd = (bupd == YES || [(solution.solutionInfo)[@"Calculate loads"] boolValue] == YES) ? YES : NO;
+    if ((solution.solutionInfo)[@"calculate loads"] != nil) {
+        bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
     }
     
     matContainers = solution.matrix.getContainers;
@@ -4210,8 +4209,8 @@ static int PRECOND_VANKA     =  560;
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
-    if ((solution.solutionInfo)[@"Calculate loads"] != nil) {
-        bupd = (bupd == YES || [(solution.solutionInfo)[@"Calculate loads"] boolValue] == YES) ? YES : NO;
+    if ((solution.solutionInfo)[@"calculate loads"] != nil) {
+        bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
     }
     
     matContainers = solution.matrix.getContainers;
@@ -4656,45 +4655,45 @@ static int PRECOND_VANKA     =  560;
         dpar[i] = 0.0;
     }
     
-    str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system iteration method"]];
+    str = [NSString stringWithString:(solution.solutionInfo)[@"linear system iteration method"]];
     
-    if ([str isEqualToString:@"Bi-CGSTAB2"] == YES)
+    if ([str isEqualToString:@"bi-cgstab2"] == YES)
     {
         iterType = ITER_BICGSTAB2;
     }
-    else if ([str isEqualToString:@"Bi-CGSTAB(l)"] == YES)
+    else if ([str isEqualToString:@"bi-cgstab(l)"] == YES)
     {
         iterType = ITER_BICGSTABL;
     }
-    else if ([str isEqualToString:@"Bi-CGSTAB"] == YES)
+    else if ([str isEqualToString:@"bi-cgstab"] == YES)
     {
         iterType = ITER_BICGSTAB;
     }
-    else if ([str isEqualToString:@"TFQMR"] == YES)
+    else if ([str isEqualToString:@"tfqmr"] == YES)
     {
         iterType = ITER_TFQMR;
     }
-    else if ([str isEqualToString:@"CGS"] == YES)
+    else if ([str isEqualToString:@"cgs"] == YES)
     {
         iterType = ITER_CGS;
     }
-    else if ([str isEqualToString:@"CG"] == YES)
+    else if ([str isEqualToString:@"cg"] == YES)
     {
         iterType = ITER_CG;
     }
-    else if ([str isEqualToString:@"GMRES"] == YES)
+    else if ([str isEqualToString:@"gmres"] == YES)
     {
         iterType = ITER_GMRES;
     }
-    else if ([str isEqualToString:@"SGS"] == YES)
+    else if ([str isEqualToString:@"sgs"] == YES)
     {
         iterType = ITER_SGS;
     }
-    else if ([str isEqualToString:@"JACOBI"] == YES)
+    else if ([str isEqualToString:@"jacobi"] == YES)
     {
         iterType = ITER_JACOBI;
     }
-    else if ([str isEqualToString:@"GCR"] == YES)
+    else if ([str isEqualToString:@"gcr"] == YES)
     {
         iterType = ITER_GCR;
     }
@@ -4733,9 +4732,9 @@ static int PRECOND_VANKA     =  560;
     }
     else if (iterType == ITER_GMRES)
     {
-        if ((solution.solutionInfo)[@"Linear system GMRES restart"] != nil) {
+        if ((solution.solutionInfo)[@"linear system gmres restart"] != nil) {
             
-            ipar[14] = [(solution.solutionInfo)[@"Linear system GMRES restart"] intValue];
+            ipar[14] = [(solution.solutionInfo)[@"linear system gmres restart"] intValue];
         } else {
             ipar[14] = 10;
         }
@@ -4746,8 +4745,8 @@ static int PRECOND_VANKA     =  560;
     {
         ipar[3] = 1;
         wsize =ipar[3];
-        if ((solution.solutionInfo)[@"SGS over relaxation factor"] != nil) {
-            dpar[2] = [(solution.solutionInfo)[@"SGS over relaxation factor"] doubleValue];
+        if ((solution.solutionInfo)[@"sgs over relaxation factor"] != nil) {
+            dpar[2] = [(solution.solutionInfo)[@"sgs over relaxation factor"] doubleValue];
             if (dpar[2] < 0.0 || dpar[2] > 2.0) {
                 errorfunct("FEMKernel_iterSolver", "Value for SGS over relaxation factor out of bounds (min:0; max:2).");
             }
@@ -4764,11 +4763,11 @@ static int PRECOND_VANKA     =  560;
     {
         ipar[3] = 1;
         wsize = ipar[3];
-        if ((solution.solutionInfo)[@"Linear system GCR restart"] != nil) {
-            ipar[16] = [(solution.solutionInfo)[@"Linear system GCR restart"] intValue];
+        if ((solution.solutionInfo)[@"linear system gcr restart"] != nil) {
+            ipar[16] = [(solution.solutionInfo)[@"linear system gcr restart"] intValue];
         } else {
-            if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
-                ipar[16] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
+            if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
+                ipar[16] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
                 if (ipar[16] < 1) errorfunct("FEMKernel_iterSolver", "Parameter for GCR should be equal or greater than 1.");
             } else {
                 ipar[16] = 1;
@@ -4779,8 +4778,8 @@ static int PRECOND_VANKA     =  560;
     {
         ipar[3] = 1;
         wsize = ipar[3];
-        if ((solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] != nil) {
-            ipar[15] = [(solution.solutionInfo)[@"Bi-CGSTAB(l) polynomial degree"] intValue];
+        if ((solution.solutionInfo)[@"bi-cgstab(l) polynomial degree"] != nil) {
+            ipar[15] = [(solution.solutionInfo)[@"bi-cgstab(l) polynomial degree"] intValue];
             if (ipar[15] < 2) errorfunct("FEMKernel_iterSolver", "Polynomial degree for Bi-CGSTAB(l) should be equal or greater than 2");
         } else {
             ipar[15] = 2;
@@ -4790,14 +4789,14 @@ static int PRECOND_VANKA     =  560;
     ipar[11] = 1;
     ipar[2] = n;
     
-    if ((solution.solutionInfo)[@"Linear system residual output"] != nil) {
-        ipar[4] = [(solution.solutionInfo)[@"Linear system residual output"] intValue];
+    if ((solution.solutionInfo)[@"linear system residual output"] != nil) {
+        ipar[4] = [(solution.solutionInfo)[@"linear system residual output"] intValue];
     } else {
         ipar[4] = 1;
     }
     
-    if ((solution.solutionInfo)[@"Linear system maximum iterations"] != nil) {
-        ipar[9] = [(solution.solutionInfo)[@"Linear system maximum iterations"] intValue];
+    if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
+        ipar[9] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
     } else {
         ipar[9] = 1;
     }
@@ -4814,18 +4813,18 @@ static int PRECOND_VANKA     =  560;
     }
     ipar[13] = 1;
     
-    if ((solution.solutionInfo)[@"Linear system convergence tolerance"] != nil) {
-        dpar[0] = [(solution.solutionInfo)[@"Linear system convergence tolerance"] doubleValue];
+    if ((solution.solutionInfo)[@"linear system convergence tolerance"] != nil) {
+        dpar[0] = [(solution.solutionInfo)[@"linear system convergence tolerance"] doubleValue];
     }
     
-    if ((solution.solutionInfo)[@"Linear system divergence tolerance"] != nil) {
-        dpar[1] = [(solution.solutionInfo)[@"Linear system divergence tolerance"] doubleValue];
+    if ((solution.solutionInfo)[@"linear system divergence tolerance"] != nil) {
+        dpar[1] = [(solution.solutionInfo)[@"linear system divergence tolerance"] doubleValue];
     } else {
         dpar[1] = HUGE_VAL;
     }
     
-    if ((solution.solutionInfo)[@"Linear system preconditioning"] != nil) {
-        str = [NSString stringWithString:(solution.solutionInfo)[@"Linear system preconditioning"]];
+    if ((solution.solutionInfo)[@"linear system preconditioning"] != nil) {
+        str = [NSString stringWithString:(solution.solutionInfo)[@"linear system preconditioning"]];
     } else {
         str = @"none";
     }
@@ -4834,23 +4833,23 @@ static int PRECOND_VANKA     =  560;
     {
         pCondType = PRECOND_NONE;
     }
-    else if ([str isEqualToString:@"Diagonal"] == YES)
+    else if ([str isEqualToString:@"diagonal"] == YES)
     {
         pCondType = PRECOND_DIAGONAL;
     }
-    else if ([str isEqualToString:@"ILUT"] == YES)
+    else if ([str isEqualToString:@"ilut"] == YES)
     {
-        if ((solution.solutionInfo)[@"Linear system ILUT tolerance"] != nil) {
-            ilut_tol = [(solution.solutionInfo)[@"Linear system ILUT tolerance"] doubleValue];
+        if ((solution.solutionInfo)[@"linear system ilut tolerance"] != nil) {
+            ilut_tol = [(solution.solutionInfo)[@"linear system ilut tolerance"] doubleValue];
         } else {
             errorfunct("FEMKernel_iterSolver", "Linear system ILUT tolerance not found.");
         }
         pCondType = PRECOND_ILUT;
     }
-    else if ([str isEqualToString:@"ILU"] == YES)
+    else if ([str isEqualToString:@"ilu"] == YES)
     {
-        if ((solution.solutionInfo)[@"Linear system ILU order"] != nil) {
-            ilun = [(solution.solutionInfo)[@"Linear system ILU order"] intValue];
+        if ((solution.solutionInfo)[@"linear system ilu order"] != nil) {
+            ilun = [(solution.solutionInfo)[@"linear system ilu order"] intValue];
         } else {
             ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:3]] intValue] -  0;
             if (ilun < 0 || ilun > 9 ) ilun = 0;
@@ -4858,7 +4857,7 @@ static int PRECOND_VANKA     =  560;
             
         }
     }
-    else if ([str isEqualToString:@"BILU"] == YES)
+    else if ([str isEqualToString:@"bilu"] == YES)
     {
         ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:4]] intValue] -  0;
         if (ilun < 0 || ilun > 9 ) ilun = 0;
@@ -4869,11 +4868,11 @@ static int PRECOND_VANKA     =  560;
             pCondType = PRECOND_BILUN;
         }
     }
-    else if ([str isEqualToString:@"Multigrid"] == YES)
+    else if ([str isEqualToString:@"multigrid"] == YES)
     {
         pCondType = PRECOND_MG;
     }
-    else if ([str isEqualToString:@"Vanka"] == YES)
+    else if ([str isEqualToString:@"vanka"] == YES)
     {
         pCondType = PRECOND_VANKA;
     }
@@ -4882,8 +4881,8 @@ static int PRECOND_VANKA     =  560;
         warnfunct("FEMKernel_iterSolver", "Unknown preconditioner type, feature disabled.");
     }
     
-    if ((solution.solutionInfo)[@"No precondition recompute"] != nil) {
-        if ([(solution.solutionInfo)[@"No precondition recompute"] boolValue] == NO) {
+    if ((solution.solutionInfo)[@"no precondition recompute"] != nil) {
+        if ([(solution.solutionInfo)[@"no precondition recompute"] boolValue] == NO) {
             // TODO: Implement the code if we choose not to compute the preconditioner
             // for each method call.
         }
@@ -4891,8 +4890,8 @@ static int PRECOND_VANKA     =  560;
     
     solution.matrix.solveCount = solution.matrix.solveCount + 1;
     
-    if ((solution.solutionInfo)[@"Linear system abort not converged"] != nil) {
-        abortNotConverged = [(solution.solutionInfo)[@"Linear system abort not converged"] boolValue];
+    if ((solution.solutionInfo)[@"linear system abort not converged"] != nil) {
+        abortNotConverged = [(solution.solutionInfo)[@"linear system abort not converged"] boolValue];
     } else {
         abortNotConverged = YES;
     }
@@ -4961,8 +4960,8 @@ static int PRECOND_VANKA     =  560;
     
     double norm;
     
-    if ((solution.solutionInfo)[@"Linear system solver disabled"] != nil) {
-        if ([(solution.solutionInfo)[@"Linear system solver disabled"] boolValue] == YES) return 0.0;
+    if ((solution.solutionInfo)[@"linear system solver disabled"] != nil) {
+        if ([(solution.solutionInfo)[@"linear system solver disabled"] boolValue] == YES) return 0.0;
     }
     
     //TODO: add support for dump system matrix and back rotated N-T solution

@@ -38,7 +38,7 @@
         if (varContainers->sizeValues == variable.dofs) continue;
         if (variable.secondary == YES) continue;
         
-        if (variable.dofs == 1 && [variable.name isEqualToString:@"Coordinate"] == YES) {
+        if (variable.dofs == 1 && [variable.name isEqualToString:@"coordinate"] == YES) {
             only = YES;
             oldSol = [self getVariableFrom:oldMesh.variables model:aModel name:variable.name onlySearch:&only maskName:NULL info:&stat];
             newSol = [self getVariableFrom:newMesh.variables model:aModel name:variable.name onlySearch:&only maskName:NULL info:&stat];
@@ -200,11 +200,11 @@
     elementValues = doublevec(0, n-1);
     newValues = doublevec(0, newMesh.numberOfNodes-1);
     
-    epsGlobal = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"Interpolation global epsilon" info:&found minValue:NULL maxValue:NULL];
+    epsGlobal = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"interpolation global epsilon" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) epsGlobal = 2.0e-10;
-    epsLocal = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"Interpolation local epsilon" info:&found minValue:NULL maxValue:NULL];
+    epsLocal = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"interpolation local epsilon" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) epsLocal = 1.0e-10;
-    epsTries = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"Interpolation maximum iterations" info:&found minValue:NULL maxValue:NULL];
+    epsTries = [listUtilities listGetConstReal:aModel inArray:aModel.simulation.valuesList forVariable:@"interpolation maximum iterations" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) epsTries = 12;
     
     qTreeFails = 0;
@@ -244,8 +244,8 @@
                         element = &oldElements[leafQuadrant->elements[k]];
                         
                         if (maskExists == YES) {
-                            if ((aModel.bodies)[oldElements[leafQuadrant->elements[k]].BodyID-1][@"Body force"] == nil) continue;
-                            bfId = [(aModel.bodies)[oldElements[leafQuadrant->elements[k]].BodyID][@"Body force"] intValue];
+                            if ((aModel.bodies)[oldElements[leafQuadrant->elements[k]].BodyID-1][@"body force"] == nil) continue;
+                            bfId = [(aModel.bodies)[oldElements[leafQuadrant->elements[k]].BodyID][@"body force"] intValue];
                             if ([listUtilities listCheckPresentVariable:maskName inArray:(aModel.bodyForces)[bfId-1]] == NO) continue;
                         }
                         
@@ -318,7 +318,7 @@
             
             newSol = nil;
             oldSol = nil;
-            if (variable.dofs == 1 && [variable.name isEqualToString:@"Coordinate"] == NO) {
+            if (variable.dofs == 1 && [variable.name isEqualToString:@"coordinate"] == NO) {
                 
                 // Interpolate variable at point in element
                 newSol = [self getVariableFrom:newMesh.variables model:aModel name:variable.name onlySearch:&searchOnly maskName:NULL info:&found];
@@ -576,7 +576,7 @@
     flag = NO;
     bodyID = element->BodyID;
     if (bodyID > 0 && bodyID <= aModel.numberOfBodies) {
-        k = [(aModel.bodies)[bodyID][@"Equation"] intValue];
+        k = [(aModel.bodies)[bodyID][@"equation"] intValue];
         if (k < 1 || k > aModel.numberOfEquations) errorfunct("checkEquationForElement", "Equation number not in range");
         equation = (aModel.equations)[k];
         if (k > 0) flag = [listUtilities listGetLogical:aModel inArray:equation.valuesList forVariable:str info:&found];
@@ -821,8 +821,8 @@
         t++;
     }
     
-    radiation = [(aSolution.solutionInfo)[@"Radiation solver"] boolValue];
-    if (radiation == YES || [str isEqualToString:@"Heat equation"]) {
+    radiation = [(aSolution.solutionInfo)[@"radiation solver"] boolValue];
+    if (radiation == YES || [str isEqualToString:@"heat equation"]) {
         t = aMesh.numberOfBulkElements;
         n = aMesh.numberOfBulkElements + aMesh.numberOfBoundaryElements;
         while (t < n) {
@@ -977,8 +977,8 @@
     if (found == NO ) {
         listUtilities = [[FEMListUtilities alloc] init];
         solution = (FEMSolution *)pVar.solution;
-        if ( (solution.solutionInfo)[@"Bubbles in global system"] != nil ) {
-            globalBubbles = [(solution.solutionInfo)[@"Bubbles in global system"] boolValue];
+        if ( (solution.solutionInfo)[@"bubbles in global system"] != nil ) {
+            globalBubbles = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
         } else {
             globalBubbles = YES;
         }
@@ -999,7 +999,7 @@
             varContainers->sizePerm = dofs/pVar.dofs;
             memset( varContainers->Perm, -1, ((dofs/pVar.dofs)*sizeof(varContainers->Perm)) );
             
-            n = [self initialPermutationInMesh:mesh model:aModel solution:solution equation:(solution.solutionInfo)[@"Equation"] permutation:varContainers->Perm DGSolution:NULL globalBubbles:&globalBubbles];
+            n = [self initialPermutationInMesh:mesh model:aModel solution:solution equation:(solution.solutionInfo)[@"equation"] permutation:varContainers->Perm DGSolution:NULL globalBubbles:&globalBubbles];
             
             if (n == 0) n = mesh.numberOfNodes;
             
@@ -1027,7 +1027,7 @@
             varContainers->size2PrevValues = pvarContainers->size2PrevValues;
         }
         
-        if ([pVar.name isEqualToString:@"Flow solution"] == YES) {
+        if ([pVar.name isEqualToString:@"flow solution"] == YES) {
             bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
             bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
             k = 0;
@@ -1044,7 +1044,7 @@
             free(bufferContainers);
             bufferContainers = NULL;
             onlyThis = YES;
-            tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 1" onlySearch:&onlyThis maskName:NULL info:&stat];
+            tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 1" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
                 bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
@@ -1076,7 +1076,7 @@
             free(bufferContainers);
             bufferContainers = NULL;
             onlyThis = YES;
-            tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
+            tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
                 bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
@@ -1103,15 +1103,15 @@
             bufferContainers->Perm = varContainers->Perm;
             bufferContainers->sizePerm = dofs/pVar.dofs;
             if (pVar.dofs == 3) {
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"Pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
             } else {
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"Velocity 3" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 3" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
                 
                 tmp = nil;
                 free(bufferContainers);
                 bufferContainers = NULL;
                 onlyThis = YES;
-                tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 3" onlySearch:&onlyThis maskName:NULL info:&stat];
+                tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 3" onlySearch:&onlyThis maskName:NULL info:&stat];
                 bufferContainers = tmp.getContainers;
                 if (varContainers->PrevValues != NULL) {
                     bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
@@ -1137,14 +1137,14 @@
                 bufferContainers->sizeValues = dofs/pVar.dofs;
                 bufferContainers->Perm = varContainers->Perm;
                 bufferContainers->sizePerm = dofs/pVar.dofs;
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"Pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
             }
             
             tmp = nil;
             free(bufferContainers);
             bufferContainers = NULL;
             onlyThis = YES;
-            tmp = [self getVariableFrom:anArray model:aModel name:@"Pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
+            tmp = [self getVariableFrom:anArray model:aModel name:@"pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
                 bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
@@ -1210,11 +1210,11 @@
     NSMutableArray *tmpArryay;
     mesh = nil;
     mesh = (FEMMesh *)pVar.primaryMesh;
-    if ([pVar.name isEqualToString:@"Flow solution"]) {
-        tmpArryay = [NSMutableArray arrayWithObjects:[self getVariableFrom:mesh.variables model:aModel name:@"Velocity 1" onlySearch:NULL maskName:NULL info:&stat],
-                     [self getVariableFrom:mesh.variables model:aModel name:@"Velocity 2" onlySearch:NULL maskName:NULL info:&stat],
-                     [self getVariableFrom:mesh.variables model:aModel name:@"Velocity 3" onlySearch:NULL maskName:NULL info:&stat],
-                     [self getVariableFrom:mesh.variables model:aModel name:@"Pressure" onlySearch:NULL maskName:NULL info:&stat], nil];
+    if ([pVar.name isEqualToString:@"flow solution"]) {
+        tmpArryay = [NSMutableArray arrayWithObjects:[self getVariableFrom:mesh.variables model:aModel name:@"velocity 1" onlySearch:NULL maskName:NULL info:&stat],
+                     [self getVariableFrom:mesh.variables model:aModel name:@"velocity 2" onlySearch:NULL maskName:NULL info:&stat],
+                     [self getVariableFrom:mesh.variables model:aModel name:@"velocity 3" onlySearch:NULL maskName:NULL info:&stat],
+                     [self getVariableFrom:mesh.variables model:aModel name:@"pressure" onlySearch:NULL maskName:NULL info:&stat], nil];
     } else if (pVar.dofs > 1){
         for (i=0; i<pVar.dofs; i++) {
             tmpname = [NSMutableString stringWithString:pVar.name];
@@ -1237,15 +1237,15 @@
     tmp = nil;
     onlyThis = YES;
     var = [self getVariableFrom:anArray model:aModel name:name onlySearch:&onlyThis maskName:NULL info:&stat];
-    if ([var.name isEqualToString:@"Flow solution"]) {
-        tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 1" onlySearch:&onlyThis maskName:NULL info:&stat];
+    if ([var.name isEqualToString:@"flow solution"]) {
+        tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 1" onlySearch:&onlyThis maskName:NULL info:&stat];
         if (tmp != nil) {
             tmp.valid = YES;
             tmp.valuesChanged = YES;
         }
         
         tmp = nil;
-        tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
+        tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
         if (tmp != nil) {
             tmp.valid = YES;
             tmp.valuesChanged = YES;
@@ -1253,7 +1253,7 @@
         
         if (var.dofs == 4) {
             tmp = nil;
-            tmp = [self getVariableFrom:anArray model:aModel name:@"Velocity 3" onlySearch:&onlyThis maskName:NULL info:&stat];
+            tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 3" onlySearch:&onlyThis maskName:NULL info:&stat];
             if (tmp != nil) {
                 tmp.valid = YES;
                 tmp.valuesChanged = YES;
@@ -1261,7 +1261,7 @@
         }
         
         tmp = nil;
-        tmp = [self getVariableFrom:anArray model:aModel name:@"Pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
+        tmp = [self getVariableFrom:anArray model:aModel name:@"pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
         if (tmp != nil) {
             tmp.valid = YES;
             tmp.valuesChanged = YES;

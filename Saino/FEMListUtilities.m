@@ -35,7 +35,7 @@
     
     count = 0;
     
-    if ([str isEqualToString:@"Coordinate"] == NO) {
+    if ([str isEqualToString:@"coordinate"] == NO) {
         variable = [utilities getVariableFrom:model.variables model:model name:str onlySearch:NULL maskName:NULL info:&found];
         if (variable == nil) {
             warnfunct("listParseStrToValues", "Can't find indpendent variable:");
@@ -43,7 +43,7 @@
             errorfunct("listParseStrToValues", "Abort...");
         }
     } else {
-        variable = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 1" onlySearch:NULL maskName:NULL info:&found];
+        variable = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
     }
     
     varContainers = variable.getContainers;
@@ -67,18 +67,18 @@
     if (varContainers->Perm != NULL) k1 = varContainers->Perm[k1];
     
     if (k1 > 0 && k1 <= varContainers->sizeValues) {
-        if ([str isEqualToString:@"Coordinate"] == YES) {
-            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 1" onlySearch:NULL maskName:NULL info:&found];
+        if ([str isEqualToString:@"coordinate"] == YES) {
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[0] = cvarContainers->Values[k1];
             
-            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 2" onlySearch:NULL maskName:NULL info:&found];
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 2" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[1] = cvarContainers->Values[k1];
             
-            cVar = [utilities getVariableFrom:model.variables model:model name:@"Coordinate 3" onlySearch:NULL maskName:NULL info:&found];
+            cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 3" onlySearch:NULL maskName:NULL info:&found];
             count++;
             cvarContainers = cVar.getContainers;
             t[2] = cvarContainers->Values[k1];
@@ -798,7 +798,7 @@
     flag = NO;
     bodyId = element->BodyID;
     if ( bodyId > 0 && bodyId <= model.numberOfBodies) {
-        k = [(model.bodies)[bodyId-1][@"Equation"] intValue];
+        k = [(model.bodies)[bodyId-1][@"equation"] intValue];
         if (k > 0 && k <= model.numberOfEquations) {
             equationAtId = (model.equations)[k-1];
             flag = [self listGetLogical:model inArray:equationAtId.valuesList forVariable:equation info:&found];

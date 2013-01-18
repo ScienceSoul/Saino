@@ -1372,14 +1372,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // These are called first since they are not accounted for in the
     // automatic scaling and translation.
     boundaryConditionAtId = (model.boundaryConditions)[this];
-    gotRotate = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC rotate" buffer:&pArray];
+    gotRotate = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc rotate" buffer:&pArray];
     if (gotRotate == YES) {
         for (i=0; i<3; i++) {
             angles[i] = pArray.matrix[i][0];
         }
     } else {
         memset( angles, 0.0, sizeof(angles) );
-        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC rotate automatic" info:&found] == YES) {
+        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc rotate automatic" info:&found] == YES) {
             
             if (constantNormals == NO) {
                 errorfunct("periodicProjectorInModel", "Normals are not constant, can not test for rotation!");
@@ -1576,7 +1576,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         pArray.matrix = NULL;
     }
     boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC scale" buffer:&pArray];
+    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc scale" buffer:&pArray];
 
     if (found == YES) {
         for (i=0; i<pArray.m; i++) {
@@ -1634,7 +1634,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         pArray.matrix = NULL;
     }
     boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC translate" buffer:&pArray];
+    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc translate" buffer:&pArray];
     // Define translations so that the lower left corner is the same
     if (found == NO) {
         for (i=0; i<3; i++) {
@@ -1655,7 +1655,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         pArray.matrix = NULL;
     }
     boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"Periodic BC matrix" buffer:&pArray];
+    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc matrix" buffer:&pArray];
     if (found == YES) {
         for (i=0; i<pArray.m; i++) {
             for (j=0; j<pArray.n; j++) {
@@ -1696,7 +1696,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     // Get the mesh projector which now contains weights between the boundary nodes
-    useQuadrantTree = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"Use quadrant tree" info:&found];
+    useQuadrantTree = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"use quadrant tree" info:&found];
     if (found == NO) useQuadrantTree = YES;
     
     projector = [utilities meshProjector:bmesh2 secondmesh:bmesh1 model:model useQuadrantTree:&useQuadrantTree transpose:NULL];

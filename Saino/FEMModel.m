@@ -61,7 +61,7 @@
     
     listUtil = [[FEMListUtilities alloc] init];
     
-    csys = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"Coordinate system" info:&found];
+    csys = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"coordinate system" info:&found];
     if (found == NO) csys = @"cartesian";
     
     if ([csys isEqualToString:@"cartesian"] || [csys isEqualToString:@"polar"]) {
@@ -231,12 +231,12 @@
     solution = [[FEMSolution alloc] init];
     solution.mesh = self.mesh;
     
-    [listUtil addStringInClassList:solution theVariable:@"Linear system iterative method" withValue:@"CG"];
-    [listUtil addLogicalInClassList:solution theVariable:@"Linear system symmetric" withValue:YES];
-    [listUtil addIntegerInClassList:solution theVariable:@"Linear system maximum iterations" withValue:5000];
-    [listUtil addStringInClassList:solution theVariable:@"Linear system preconditioning" withValue:@"ILU0"];
-    [listUtil addIntegerInClassList:solution theVariable:@"Linear system residual output" withValue:100];
-    [listUtil addConstRealInClassList:solution theVariable:@"Linear system convergence tolerance" withValue:1.0E-9 string:nil];
+    [listUtil addStringInClassList:solution theVariable:@"linear system iterative method" withValue:@"cg"];
+    [listUtil addLogicalInClassList:solution theVariable:@"linear system symmetric" withValue:YES];
+    [listUtil addIntegerInClassList:solution theVariable:@"linear system maximum iterations" withValue:5000];
+    [listUtil addStringInClassList:solution theVariable:@"linear system preconditioning" withValue:@"ilu0"];
+    [listUtil addIntegerInClassList:solution theVariable:@"linear system residual output" withValue:100];
+    [listUtil addConstRealInClassList:solution theVariable:@"linear system convergence tolerance" withValue:1.0E-9 string:nil];
     
     cperm = intvec(0, solution.mesh.numberOfNodes-1);
     
@@ -395,7 +395,7 @@
     
     //TODO: Here comes the Model Description File (MDF) parser
     
-    transient = ([[listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"Simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
+    transient = ([[listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
     
     memset( defDofs, -1, sizeof(defDofs) );
     defDofs[0] = 1;
@@ -408,7 +408,7 @@
         // TODO: Here Elmer calls a procedure post-fixed with "_Init0" for a given solver.
         // Do we need to do that?
         
-        gotMesh = [listUtil listCheckPresentVariable:@"Mesh" inArray:solution.valuesList];
+        gotMesh = [listUtil listCheckPresentVariable:@"mesh" inArray:solution.valuesList];
         
         solContainers = solution.getContainers;
         if (solContainers->defDofs == NULL) {
@@ -426,10 +426,10 @@
         }
         
         // Define what kind of element we are working with this solver
-        elementDef = [listUtil listGetString:self inArray:solution.valuesList forVariable:@"Element" info:&found];
+        elementDef = [listUtil listGetString:self inArray:solution.valuesList forVariable:@"element" info:&found];
         
         if (found == NO) {
-            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"Discontinuous galerkin" info:&found] == YES) {
+            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"discontinuous galerkin" info:&found] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
@@ -476,7 +476,7 @@
             }
             if (gotMesh == NO) defDofs[2] = max(defDofs[3], l);
         } else {
-            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"Discontinuous galerkin" info:&found] == YES) {
+            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"discontinuous galerkin" info:&found] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
@@ -512,7 +512,7 @@
     }
     
     // Check the mesh
-    meshString = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"Mesh" info:&found];
+    meshString = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"mesh" info:&found];
     
     oneMeshName = NO;
     if (found == YES) {
@@ -542,14 +542,14 @@
         
         [self FEMModel_setCoordinateSystem];
         
-        meshLevels = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"Mesh levels" info:&found minValue:NULL maxValue:NULL];
+        meshLevels = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh levels" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) meshLevels = 1;
         
-        meshKeep = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"Mesh keep" info:&found minValue:NULL maxValue:NULL];
+        meshKeep = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh keep" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) meshKeep = meshLevels;
         
-        meshPower = [listUtil listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"Mesh grading power" info:&found minValue:NULL maxValue:NULL];
-        meshGrading = [listUtil listGetLogical:self inArray:self.simulation.valuesList forVariable:@"Mesh keep grading" info:&found];
+        meshPower = [listUtil listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"mesh grading power" info:&found minValue:NULL maxValue:NULL];
+        meshGrading = [listUtil listGetLogical:self inArray:self.simulation.valuesList forVariable:@"mesh keep grading" info:&found];
         
         for (i=2; i<=meshLevels; i++) {
             oldMesh = self.meshes[0];

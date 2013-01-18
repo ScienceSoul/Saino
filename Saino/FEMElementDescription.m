@@ -2561,7 +2561,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 bf[1] = s;
                 bf[2] = t;
                 
-                
                 [utilities solveLinearSystem3x3:J :delta :bf];
         }
         
