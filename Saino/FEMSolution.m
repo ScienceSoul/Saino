@@ -148,7 +148,6 @@
         _containers->size2boundaryNormals = 0;
         _containers->size1DefDofs = 0;
         _containers->size2DefDofs = 0;
-        
     }
     
     return self;

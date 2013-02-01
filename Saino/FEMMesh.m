@@ -233,19 +233,23 @@
 @synthesize numberOfEdges = _numberOfEdges;
 @synthesize numberOfFaces = _numberOfFaces;
 @synthesize numberOfBoundaryElements = _numberOfBoundaryElements;
+@synthesize numberOfViewFactors = _numberOfViewFactors;
 @synthesize maxElementNodes = _maxElementNodes;
 @synthesize maxElementDofs = _maxElementDofs;
 @synthesize maxEdgeDofs = _maxEdgeDofs;
 @synthesize maxFaceDofs = _maxFaceDofs;
 @synthesize maxBdofs = _maxBdofs;
-@synthesize sizeOfGlobalNodes = _sizeOfGlobalNodes;
 @synthesize savesDone = _savesDone;
 @synthesize outputActive = _outputActive;
 @synthesize adaptiveMesh = _adaptiveMesh;
 @synthesize changed = _changed;
 @synthesize stabilize = _stabilize;
+@synthesize name = _name;
 @synthesize variables = _variables;
 @synthesize projectors = _projectors;
+@synthesize next = _next;
+@synthesize parent = _parent;
+@synthesize child = _child;
 
 - (id)init
 {
@@ -270,14 +274,13 @@
         _maxBdofs = 0;
         _maxElementDofs = 0;
         _maxElementNodes = 0;
-        
-        _sizeOfGlobalNodes = 0;
-        
+                
         _elements = NULL;
         _edges = NULL;
         _faces = NULL;
         _globalNodes = NULL;
         _rootQuadrant = NULL;
+        _viewFactors = NULL;
         
         _variables = [[NSMutableArray alloc] init];
         _projectors = [[NSMutableArray alloc] init];
@@ -357,6 +360,8 @@
         errorfunct("loadMeshForModel", "Program terminating now...");
     }
     
+    _globalNodes->numberOfNodes = self.numberOfNodes;
+    
     if (bd == YES) self.numberOfBulkElements = 0;
     
     self.maxElementNodes = 0;
@@ -370,12 +375,14 @@
     
     _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     if (_globalNodes == NULL) errorfunct("loadMeshForModel", "Failure to allocate nodes structure.");
+    initNodes(_globalNodes);
     _globalNodes->x = doublevec(0, self.numberOfNodes-1);
     _globalNodes->y = doublevec(0, self.numberOfNodes-1);
     _globalNodes->z = doublevec(0, self.numberOfNodes-1);
     
-    _elements = (Element_t*) malloc( sizeof(Element_t) * self.numberOfBulkElements );
+    _elements = (Element_t*) malloc( sizeof(Element_t) * self.numberOfBulkElements+self.numberOfBoundaryElements );
     if (_elements == NULL) errorfunct("loadMeshForModel", "Failure to allocate elements structure.");
+    initElements(_elements, self.numberOfBulkElements+self.numberOfBoundaryElements);
     
     // Mesh nodes
     cCoord = doublevec(0, (3*self.numberOfNodes)-1);
@@ -685,6 +692,7 @@
             
             _elements[i].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
             if (_elements[i].BoundaryInfo == NULL) errorfunct("loadMeshForModel", "Unable to allocate the boundary info.");
+            initBoundaryInfo(_elements[i].BoundaryInfo);
             
             _elements[i].BoundaryInfo->Constraint = 0;
             
@@ -976,19 +984,6 @@
     free_ivector(types, 0, 63);
 }
 
-#pragma mark Nodes_t and Element_t allocations
-
--(BOOL)AllocateNodes:(int)nl :(int)nh {
-    
-    _globalNodes = nodesvec(nl,nh-1);
-    if (_globalNodes == NULL) {
-        return NO;
-    }
-    else {
-        return YES;
-    }
-}
-
 #pragma mark Nodes getter
 
 -(Nodes_t *)getNodes {
@@ -1045,8 +1040,126 @@
 
 #pragma mark Deallocation
 
--(void)deallocation {
-    // TODO: free-up memory
+-(void)deallocationMeshVariables {
+    
+    variableArraysContainer *varContainers;
+    
+    for (FEMVariable *variable in self.variables) {
+        varContainers = variable.getContainers;
+        
+        // Used to skip variables such as time, timestep, timestep size etc
+        if (varContainers->sizeValues == variable.dofs) continue;
+        
+        if ([variable.name isEqualToString:@"coordinate 1"] || [variable.name isEqualToString:@"coordinate 2"] ||
+                [variable.name isEqualToString:@"coordinate 3"]) continue;
+        
+        if (variable.secondary == YES) continue;
+        
+        if (varContainers->Perm != NULL) {
+            free_ivector(varContainers->Perm, 0, varContainers->sizePerm-1);
+            varContainers->Perm = NULL;
+        }
+        
+        if (varContainers->Values != NULL) {
+            free_dvector(varContainers->Values, 0, varContainers->sizeValues-1);
+            varContainers->Values = NULL;
+        }
+        
+        if (varContainers->PrevValues != NULL) {
+            free_dmatrix(varContainers->PrevValues, 0, varContainers->size1PrevValues-1, 0, varContainers->size2PrevValues-1);
+            varContainers->PrevValues = NULL;
+        }
+        
+        if (varContainers->EigenValues != NULL) {
+            free_cdvector(varContainers->EigenValues, 0, varContainers->sizeEigenValues-1);
+            varContainers->EigenValues = NULL;
+        }
+        
+        if (varContainers->EigenVectors != NULL) {
+            free_cdmatrix(varContainers->EigenVectors, 0, varContainers->size1EigenVectors-1, 0, varContainers->size2EigenVectors-1);
+            varContainers->EigenVectors = NULL;
+        }
+        
+        if (varContainers->SteadyValues != NULL) {
+            free_dvector(varContainers->SteadyValues, 0, varContainers->sizeSteadyValues-1);
+            varContainers->SteadyValues = NULL;
+        }
+        
+        if (varContainers->NonLinValues != NULL) {
+            free_dvector(varContainers->NonLinValues, 0, varContainers->sizeNonLinValues-1);
+            varContainers->NonLinValues = NULL;
+        }
+    }
+    free(varContainers);
+    varContainers = NULL;
+    self.variables = nil;
+}
+
+-(void)deallocateMeshEdgeTables {
+    
+    int i;
+    
+    if (_edges != NULL) {
+        for (i=0; i<self.numberOfEdges; i++) {
+            if (_edges[i].NodeIndexes != NULL) {
+                free_ivector(_edges[i].NodeIndexes, 0, _edges[i].sizeNodeIndexes-1);
+            }
+            if (_edges[i].BoundaryInfo != NULL) {
+                free(_edges[i].BoundaryInfo);
+                _edges[i].BoundaryInfo = NULL;
+            }
+        }
+        free(_edges);
+    }
+    _edges = NULL;
+    self.numberOfEdges = 0;
+    
+    for (i=0; i<self.numberOfBulkElements; i++) {
+        if (_elements[i].EdgeIndexes != NULL) {
+            free_ivector(_elements[i].EdgeIndexes, 0, _elements[i].sizeEdgeIndexes-1);
+            _elements[i].EdgeIndexes = NULL;
+        }
+    }
+}
+
+-(void)deallocateMeshFaceTables {
+    
+    int i;
+    
+    if (_faces != NULL) {
+        for (i=0; i<self.numberOfFaces; i++) {
+            if (_faces[i].NodeIndexes != NULL) {
+                free_ivector(_faces[i].NodeIndexes, 0, _faces[i].sizeNodeIndexes-1);
+            }
+            if (_faces[i].BoundaryInfo != NULL) {
+                free(_faces[i].BoundaryInfo);
+                _faces[i].BoundaryInfo = NULL;
+            }
+        }
+        free(_faces);
+    }
+    _faces = NULL;
+    self.numberOfFaces = 0;
+    
+    for (i=0; i<self.numberOfBulkElements; i++) {
+        if (_elements[i].FaceIndexes != NULL) {
+            free_ivector(_elements[i].FaceIndexes, 0, _elements[i].sizeFaceIndexes-1);
+            _elements[i].FaceIndexes = NULL;
+        }
+    }
+}
+
+-(void)deallocateMeshViewFactorTables {
+    
+    int i;
+    
+    if (_viewFactors != NULL) {
+        for (i=0; i<self.numberOfViewFactors; i++) {
+            if (_viewFactors[i].Factors != NULL) free_dvector(_viewFactors[i].Factors, 0, _viewFactors[i].sizeFactors-1);
+            if (_viewFactors[i].Elements != NULL) free_ivector(_viewFactors[i].Elements, 0, _viewFactors[i].sizeElements-1);
+        }
+        free(_viewFactors);
+    }
 }
 
 -(void)deallocateQuadrantTree {
@@ -1054,7 +1167,88 @@
     [self FEMMesh_deallocateQuadrantTree:_rootQuadrant];
 }
 
--(void)Simple2DMesh:Borders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {
+-(void)deallocation {
+    
+    int i;
+    
+    //Deallocate mesh variables
+    [self deallocationMeshVariables];
+    
+    // Deallocate mesh geometry (nodes, elements and edges)
+    if (_globalNodes != NULL) {
+        if (_globalNodes->x != NULL) free_dvector(_globalNodes->x, 0, self.numberOfNodes-1);
+        if (_globalNodes->y != NULL) free_dvector(_globalNodes->y, 0, self.numberOfNodes-1);
+        if (_globalNodes->z != NULL) free_dvector(_globalNodes->z, 0, self.numberOfNodes-1);
+        
+        //TODO: Add support for parallel runs
+        
+        free(_globalNodes);
+    }
+    _globalNodes = NULL;
+    
+    if (_edges != NULL) [self deallocateMeshEdgeTables];
+    _edges = NULL;
+    
+    if (_faces != NULL) [self deallocateMeshFaceTables];
+    _faces = NULL;
+    
+    if (_viewFactors != NULL) [self deallocateMeshViewFactorTables];
+    _viewFactors = NULL;
+    
+    if (_elements != NULL) {
+        for (i=0; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
+            // Boundary structure for boundary elements
+            if (_elements[i].copy == true) continue;
+            
+            if (i >= self.numberOfBulkElements) {
+                if (_elements[i].BoundaryInfo != NULL) {
+                    if (_elements[i].BoundaryInfo->GebhardtFactors != NULL) {
+                        if (_elements[i].BoundaryInfo->GebhardtFactors->Elements != NULL) {
+                            free_ivector(_elements[i].BoundaryInfo->GebhardtFactors->Elements, 0, _elements[i].BoundaryInfo->GebhardtFactors->sizeElements-1);
+                            free_dvector(_elements[i].BoundaryInfo->GebhardtFactors->Factors, 0, _elements[i].BoundaryInfo->GebhardtFactors->sizeFactors-1);
+                        }
+                        free(_elements[i].BoundaryInfo->GebhardtFactors);
+                    }
+                    free(_elements[i].BoundaryInfo);
+                }
+                _elements[i].BoundaryInfo = NULL;
+            }
+            
+            if (_elements[i].NodeIndexes != NULL) free_ivector(_elements[i].NodeIndexes, 0, _elements[i].sizeNodeIndexes-1);
+            _elements[i].NodeIndexes = NULL;
+            
+            if (_elements[i].EdgeIndexes != NULL) free_ivector(_elements[i].EdgeIndexes, 0, _elements[i].sizeEdgeIndexes-1);
+            _elements[i].EdgeIndexes = NULL;
+            
+            if (_elements[i].FaceIndexes != NULL) free_ivector(_elements[i].FaceIndexes, 0, _elements[i].sizeFaceIndexes-1);
+            _elements[i].FaceIndexes = NULL;
+            
+            if (_elements[i].DGIndexes != NULL) free_ivector(_elements[i].DGIndexes, 0, _elements[i].sizeDGIndexes-1);
+            _elements[i].DGIndexes = NULL;
+            
+            if (_elements[i].BubbleIndexes != NULL) free_ivector(_elements[i].BubbleIndexes, 0, _elements[i].sizeBubbleIndexes-1);
+            _elements[i].BubbleIndexes = NULL;
+            
+            if (_elements[i].Pdefs != NULL) free(_elements[i].Pdefs);
+            _elements[i].Pdefs = NULL;
+        }
+        free(_elements);
+    }
+    _elements = NULL;
+    
+    // Deallocate mesh to mesh projector structures
+    for (FEMProjector *projector in _projectors) {
+        [projector.matrix deallocation];
+        [projector.tMatrix deallocation];
+    }
+    _projectors = nil;
+
+    // Deallocate quadrant tree (used in mesh to mesh interpolation)
+    [self FEMMesh_deallocateQuadrantTree:_rootQuadrant];
+    _rootQuadrant = NULL;
+}
+
+-(void)Simple2DMeshBorders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {
     
     int i, j, k, l;
     int m, n, o, p;
@@ -1090,7 +1284,7 @@
             intervals[1] = intervals[0];
             
             // Allocate memory for the GlobalNodes
-            [self AllocateNodes:0 :((intervals[0]+1)*(intervals[0]+1))-1];
+            // TODO: [self AllocateNodes:0 :((intervals[0]+1)*(intervals[0]+1))-1];
             
             break;
             
@@ -1104,7 +1298,7 @@
             meshsize2 = (maxy-miny) / intervals[1];
             
             // Allocate memory for the GlobalNodes
-            [self AllocateNodes:0 :((intervals[0]+1)*(intervals[1]+1))-1];
+            //TODO: [self AllocateNodes:0 :((intervals[0]+1)*(intervals[1]+1))-1];
             
             break;
             

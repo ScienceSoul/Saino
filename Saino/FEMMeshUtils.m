@@ -264,6 +264,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 edges[edge].ElementIndex = edge+1;
                 edges[edge].NodeIndexes = intvec(0, (degree+1)-1);
                 edges[edge].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(edges[edge].BoundaryInfo);
                 elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:NO];
                 edges[edge].Type = *elmType;
                 
@@ -562,6 +563,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 
                 element->EdgeIndexes[k] = edge;
                 edges[edge].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(edges[edge].BoundaryInfo);
                 edges[edge].BoundaryInfo->Left = NULL;
                 edges[edge].BoundaryInfo->Right = NULL;
                 
@@ -939,6 +941,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 element->FaceIndexes[k] = face;
                 
                 faces[face].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(faces[face].BoundaryInfo);
                 faces[face].BoundaryInfo->Left = element;
                 faces[face].BoundaryInfo->Right = NULL;
                 
@@ -1172,7 +1175,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     mesh2elements = bmesh2.getElements;
     
     mesh1elements = (Element_t*) malloc( sizeof(Element_t) * n1 );
+    initElements(mesh1elements, n1);
     mesh2elements = (Element_t*) malloc( sizeof(Element_t) * n2 );
+    initElements(mesh2elements, n2);
     
     perm1 = intvec(0, mesh.numberOfNodes-1);
     perm2 = intvec(0, mesh.numberOfNodes-1);
@@ -1180,6 +1185,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     n = mesh.maxElementNodes;
     
     elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(elementNodes);
     elementNodes->x = doublevec(0, n-1);
     elementNodes->y = doublevec(0, n-1);
     elementNodes->z = doublevec(0, n-1);
@@ -1329,11 +1335,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
     mesh2nodes = bmesh2.getNodes;
     
     mesh1nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(mesh1nodes);
     mesh1nodes->x = doublevec(0, bmesh1.numberOfNodes-1);
     mesh1nodes->y = doublevec(0, bmesh1.numberOfNodes-1);
     mesh1nodes->z = doublevec(0, bmesh1.numberOfNodes-1);
     
     mesh2nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(mesh2nodes);
     mesh2nodes->x = doublevec(0, bmesh2.numberOfNodes-1);
     mesh2nodes->y = doublevec(0, bmesh2.numberOfNodes-1);
     mesh2nodes->z = doublevec(0, bmesh2.numberOfNodes-1);
@@ -1748,6 +1756,1393 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     [elmDescription deallocation];
     return projector;
+}
+
+/********************************************************************************************
+ 
+    Split a mesh equally to smaller pieces by performing a uniform split. Also know as 
+    mesh mulyiplication. A 2D element splits into 4 elemenrs of same form and a #d element 
+    into 8 elements.
+    Currently works only for linear elements
+ 
+********************************************************************************************/
+-(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal {
+    
+    int i, j, k, l, n, newElCnt, nodeCnt, edgeCnt, node, parentID, diag, minVal, maxVal;
+    int faceNumber, edge1, edge2, edge3, edge4, node12, node23, node34, node41, node31;
+    int n1, n2, n3, *eoldNodes, *faceNodes, *edgeNodes;        // Only linear so far
+    int **child;
+    double *nodals, *xh = NULL;
+    double dxyz[3][3], dist[3], r, s, t, h1, h2, sum;
+    BOOL found;
+    Element_t *elements, *newElements, *faces, *edges, *eptr, *eParent;
+    Nodes_t *nodes, *newNodes;
+    FEMMesh *newMesh;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    FEMElementDescription *elementDescription;
+    FEMListUtilities *listUtil;
+    
+    if (mesh == nil) return nil;
+    
+    newMesh = [[FEMMesh alloc] init];
+    
+    elementDescription = [[FEMElementDescription alloc] init];
+    
+    [self findEdgesForMesh:mesh findEdges:NULL];
+    
+    NSLog(@"splitMeshEqual: ********** Old mesh **********\n");
+    NSLog(@"Nodes: %d\n", mesh.numberOfNodes);
+    NSLog(@"splitMeshEqual: bulk elements: %d\n", mesh.numberOfBulkElements);
+    NSLog(@"splitMeshEqual: boundary elements: %d\n", mesh.numberOfBoundaryElements);
+    NSLog(@"splitMeshEqual: edges: %d\n", mesh.numberOfEdges);
+    NSLog(@"splitMeshEqual: faces: %d\n", mesh.numberOfFaces);
+    
+    // Update nodal coordinates
+    nodeCnt = mesh.numberOfNodes + mesh.numberOfEdges;
+    
+    elements = mesh.getElements;
+    faces = mesh.getFaces;
+    edges = mesh.getEdges;
+    nodes = mesh.getNodes;
+    
+    // For bricks, count faces
+    for (i=0; i<mesh.numberOfFaces; i++) {
+        if (faces[i].Type.NumberOfNodes == 4) nodeCnt++;
+    }
+    
+    // For quads and bricks, count centerpoints
+    for (i=0; i<mesh.numberOfBulkElements; i++) {
+        switch (elements[i].Type.ElementCode / 100) {
+            case 4:
+            case 8:
+                nodeCnt++;
+                break;
+        }
+    }
+    
+    // New mesh node coordinate arrays
+    newNodes = newMesh.getNodes;
+    newNodes->x = doublevec(0, nodeCnt-1);
+    newNodes->y = doublevec(0, nodeCnt-1);
+    newNodes->z = doublevec(0, nodeCnt-1);
+    
+    // New mesh includes old mesh nodes
+    for (i=0; i<mesh.numberOfNodes; i++) {
+        newNodes->x[i] = nodes->x[i];
+        newNodes->y[i] = nodes->y[i];
+        newNodes->z[i] = nodes->z[i];
+    }
+    
+    if (h != NULL) {
+        xh = doublevec(0, nodeCnt-1);
+        for (i=0; i<*sizeNodal; i++) {
+            xh[i] = h[i];
+        }
+    }
+    
+    // Add edge centers
+    for (i=0; i<mesh.numberOfEdges; i++) {
+        k = edges[i].Type.NumberOfNodes;
+        j = i + mesh.numberOfNodes;
+        if (h != NULL) {
+            h1 = h[edges[i].NodeIndexes[0]];
+            h2 = h[edges[i].NodeIndexes[1]];
+            r = 1.0 / (1.0 + h1/h2);
+            newNodes->x[j] = r*nodes->x[edges[i].NodeIndexes[0]] + (1.0-r)*nodes->x[edges[i].NodeIndexes[1]];
+            newNodes->y[j] = r*nodes->y[edges[i].NodeIndexes[0]] + (1.0-r)*nodes->y[edges[i].NodeIndexes[1]];
+            newNodes->z[j] = r*nodes->z[edges[i].NodeIndexes[0]] + (1.0-r)*nodes->z[edges[i].NodeIndexes[1]];
+            xh[j] = r*h1+(1.0-r)*h2;
+        } else {
+            sum = 0.0;
+            for (l=0; l<edges[i].Type.NumberOfNodes; l++) {
+                sum = sum + nodes->x[edges[i].NodeIndexes[l]];
+            }
+            newNodes->x[j] = sum / k;
+            
+            sum = 0.0;
+            for (l=0; l<edges[i].Type.NumberOfNodes; l++) {
+                sum = sum + nodes->y[edges[i].NodeIndexes[l]];
+            }
+            newNodes->y[j] = sum / k;
+            
+            sum = 0.0;
+            for (l=0; l<edges[i].Type.NumberOfNodes; l++) {
+                sum = sum + nodes->z[edges[i].NodeIndexes[l]];
+            }
+            newNodes->z[j] = sum / k;
+        }
+    }
+    
+    nodals = doublevec(0, mesh.maxElementNodes-1);
+    memset( nodals, 0.0, (mesh.maxElementNodes*sizeof(nodals)) );
+    
+    // Add face centers for bricks
+    for (i=0; i<mesh.numberOfFaces; i++) {
+        k = faces[i].Type.NumberOfNodes;
+        if (k == 4) {
+            j = i + mesh.numberOfNodes + mesh.numberOfEdges;
+            if (h != NULL) {
+                n = mesh.numberOfNodes;
+                h1 = xh[n+faces[i].EdgeIndexes[1]];
+                h2 = xh[n+faces[i].EdgeIndexes[3]];
+                r = 2.0/(1.0 + h1/h2) - 1.0 ;
+                h1 = xh[n+faces[i].EdgeIndexes[2]];
+                h2 = xh[n+faces[i].EdgeIndexes[0]];
+                s = 2.0/(1.0 + h1/h2) - 1.0;
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    nodals[l] = nodes->x[faces[i].NodeIndexes[l]];
+                }
+                newNodes->x[j] = [elementDescription interpolate2DInElement:&faces[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    nodals[l] = nodes->y[faces[i].NodeIndexes[l]];
+                }
+                newNodes->y[j] = [elementDescription interpolate2DInElement:&faces[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    nodals[l] = nodes->z[faces[i].NodeIndexes[l]];
+                }
+                newNodes->z[j] = [elementDescription interpolate2DInElement:&faces[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    nodals[l] = h[faces[i].NodeIndexes[l]];
+                }
+                xh[j] = [elementDescription interpolate2DInElement:&faces[i] nodalValues:nodals evaluatedAt:r andAt:s];
+            } else {
+                sum = 0.0;
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    sum = sum + nodes->x[faces[i].NodeIndexes[l]];
+                }
+                newNodes->x[j] = sum / k;
+                
+                sum = 0.0;
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    sum = sum + nodes->y[faces[i].NodeIndexes[l]];
+                }
+                newNodes->y[j] = sum / k;
+                
+                sum = 0.0;
+                for (l=0; l<faces[i].Type.NumberOfNodes; l++) {
+                    sum = sum + nodes->z[faces[i].NodeIndexes[l]];
+                }
+                newNodes->z[j] = sum / k;
+            }
+        }
+    }
+    
+    memset( nodals, 0.0, (mesh.maxElementNodes*sizeof(nodals)) );
+    
+    // Add centerpoint for quads & bricks
+    for (i=0; i<mesh.numberOfBulkElements; i++) {
+        k = elements[i].Type.NumberOfNodes;
+        switch (elements[i].Type.ElementCode / 100) {
+            case 4:
+                j++;
+                if (h != NULL) {
+                    n = mesh.numberOfNodes;
+                    h1 = xh[n+elements[i].EdgeIndexes[1]];
+                    h2 = xh[n+elements[i].EdgeIndexes[3]];
+                    r = 2.0/(1.0 + h1/h2) - 1.0;
+                    h1 = xh[n+elements[i].EdgeIndexes[2]];
+                    h2 = xh[n+elements[i].EdgeIndexes[0]];
+                    s = 2.0/(1.0 + h1/h2) - 1.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->x[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->x[j] = [elementDescription interpolate2DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                    
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->y[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->y[j] = [elementDescription interpolate2DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                    
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->z[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->z[j] = [elementDescription interpolate2DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s];
+                } else {
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->x[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->x[j] = sum / k;
+                    
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->y[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->y[j] = sum / k;
+                    
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->z[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->z[j] = sum / k;
+                }
+                break;
+                
+            case 8:
+                j++;
+                if (h != NULL) {
+                    n = mesh.numberOfNodes + mesh.numberOfEdges;
+                    h1 = xh[n+elements[i].FaceIndexes[3]];
+                    h2 = xh[n+elements[i].FaceIndexes[5]];
+                    r = 2.0/(1.0 + h1/h2) - 1.0;
+                    
+                    h1 = xh[n+elements[i].FaceIndexes[4]];
+                    h2 = xh[n+elements[i].FaceIndexes[2]];
+                    s = 2.0/(1.0 + h1/h2) - 1.0;
+                    
+                    h1 = xh[n+elements[i].FaceIndexes[1]];
+                    h2 = xh[n+elements[i].FaceIndexes[0]];
+                    t = 2.0/(1.0 + h1/h2) - 1.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->x[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->x[j] = [elementDescription interpolate3DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s andAt:t];
+                    
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->y[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->y[j] = [elementDescription interpolate3DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s andAt:t];
+                    
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        nodals[l] = nodes->z[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->z[j] = [elementDescription interpolate3DInElement:&elements[i] nodalValues:nodals evaluatedAt:r andAt:s andAt:t];
+                } else {
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->x[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->x[j] = sum / k;
+                    
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->y[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->y[j] = sum / k;
+                    
+                    sum = 0.0;
+                    for (l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                        sum = sum + nodes->z[elements[i].NodeIndexes[l]];
+                    }
+                    newNodes->z[j] = sum / k;
+                }
+                break;
+        }
+    }
+    
+    if (xh != NULL) {
+        free_dvector(xh, 0, nodeCnt-1);
+    }
+    free_dvector(nodals, 0, mesh.maxElementNodes-1);
+    [elementDescription deallocation];
+    
+    // Update new mesh node count
+    newMesh.numberOfEdges = 0;
+    newMesh.numberOfFaces = 0;
+    newMesh.maxBdofs = mesh.maxBdofs;
+    newMesh.maxEdgeDofs = mesh.maxEdgeDofs;
+    newMesh.maxFaceDofs = mesh.maxFaceDofs;
+    newMesh.maxElementDofs = mesh.maxElementDofs;
+    newMesh.dimension = mesh.dimension;
+    
+    newMesh.numberOfNodes = nodeCnt;
+    newNodes->numberOfNodes = nodeCnt;
+    
+    // Update bulk elements
+    
+    // First count new elements
+    newElCnt = 0;
+    for (i=0; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
+        
+        switch (elements[i].Type.ElementCode / 100) {
+            // Each element will be divided into 2^dim new elements
+            case 2:
+                newElCnt = newElCnt + 2;  // Lines
+                break;
+            case 3:
+                newElCnt = newElCnt + 4;  // Trias
+                break;
+            case 4:
+                newElCnt = newElCnt + 4;  // Quads
+                break;
+            case 5:
+                newElCnt = newElCnt + 8;  // Tetras
+                break;
+            case 8:
+                newElCnt = newElCnt + 8;  // Hexas
+                break;
+        }
+    }
+    newElements = newMesh.getElements;
+    newElements = (Element_t*) malloc( sizeof(Element_t) * newElCnt);
+    initElements(newElements, newElCnt);
+    for (i=0; i<newElCnt; i++) {
+        newElements[i].EdgeIndexes = NULL;
+        newElements[i].FaceIndexes = NULL;
+    }
+    
+    child = intmatrix(0, mesh.numberOfBulkElements-1, 0, 7);
+    newElCnt = 0;
+    nodeCnt = mesh.numberOfNodes;
+    edgeCnt = mesh.numberOfEdges;
+    
+    // Index to old quad/hexa centerpoint node in the new nodal arrays
+    node = nodeCnt + mesh.numberOfEdges + mesh.numberOfFaces;
+
+    // Now update all new mesh elements
+    for (i=0; i<mesh.numberOfBulkElements; i++) {
+        
+        switch (elements[i].Type.ElementCode) {
+            case 303:
+                // Split triangle to four triangles from
+                // edge centerpoints
+                
+                // 1st new element
+                child[i][0] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElCnt++;
+                
+                // 2nd new element
+                child[i][1] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElCnt++;
+                
+                // 3rd new element
+                child[i][2] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElCnt++;
+                
+                // 4th new element
+                child[i][3] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].NodeIndexes[2];
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElCnt++;
+                break;
+                
+            case 404:
+                // Index to old quad centerpoint node in the
+                // new mesh nodal arrays
+                // node = node not node = node + 1 as it's the case in Elmer
+                
+                // Spit quad to four new quads from edge
+                // centerpoints and centerpoint of the element
+                
+                // 1st new element
+                child[i][0] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = node;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElCnt++;
+                
+                // 2nd new element
+                child[i][1] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = node;
+                newElCnt++;
+                
+                // 3rd new element
+                child[i][2] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = node;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].NodeIndexes[2];
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElCnt++;
+                
+                // 4th new element
+                child[i][3] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = node;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].NodeIndexes[3];
+                newElCnt++;
+                break;
+                
+            case 504:
+                // Split tetra to 8 new elements from
+                // corners and edge centerpoints
+                
+                // 1st new element
+                child[i][0] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElCnt++;
+                
+                // 2nd new element
+                child[i][1] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[4] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElCnt++;
+                
+                // 3rd new element
+                child[i][2] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[2];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[5] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElCnt++;
+                
+                // 4th new element
+                child[i][3] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[3];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[5] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[4] + nodeCnt;
+                newElCnt++;
+                
+                // Then the annoying part; we will have to split the remaining octahedron into four elements. This can be done in three ways
+                // of which only one preserves the minimum angle condition (Delaunay splitting)
+                dxyz[0][0] = newNodes->x[elements[i].EdgeIndexes[3] + nodeCnt] - newNodes->x[elements[i].EdgeIndexes[1] + nodeCnt];
+                dxyz[1][0] = newNodes->y[elements[i].EdgeIndexes[3] + nodeCnt] - newNodes->y[elements[i].EdgeIndexes[1] + nodeCnt];
+                dxyz[2][0] = newNodes->z[elements[i].EdgeIndexes[3] + nodeCnt] - newNodes->z[elements[i].EdgeIndexes[1] + nodeCnt];
+                
+                dxyz[0][1] = newNodes->x[elements[i].EdgeIndexes[4] + nodeCnt] - newNodes->x[elements[i].EdgeIndexes[2] + nodeCnt];
+                dxyz[1][1] = newNodes->y[elements[i].EdgeIndexes[4] + nodeCnt] - newNodes->y[elements[i].EdgeIndexes[2] + nodeCnt];
+                dxyz[2][1] = newNodes->z[elements[i].EdgeIndexes[4] + nodeCnt] - newNodes->z[elements[i].EdgeIndexes[2] + nodeCnt];
+                
+                dxyz[0][2] = newNodes->x[elements[i].EdgeIndexes[5] + nodeCnt] - newNodes->x[elements[i].EdgeIndexes[0] + nodeCnt];
+                dxyz[1][2] = newNodes->y[elements[i].EdgeIndexes[5] + nodeCnt] - newNodes->y[elements[i].EdgeIndexes[0] + nodeCnt];
+                dxyz[2][2] = newNodes->z[elements[i].EdgeIndexes[5] + nodeCnt] - newNodes->z[elements[i].EdgeIndexes[0] + nodeCnt];
+                
+                dist[0] = sqrt( pow(dxyz[0][0], 2.0) + pow(dxyz[1][0], 2.0) + pow(dxyz[2][0], 2.0) );
+                dist[1] = sqrt( pow(dxyz[0][1], 2.0) + pow(dxyz[1][1], 2.0) + pow(dxyz[2][1], 2.0) );
+                dist[2] = sqrt( pow(dxyz[0][2], 2.0) + pow(dxyz[1][2], 2.0) + pow(dxyz[2][2], 2.0) );
+                
+                diag = 1; // The default diaginal for splitting is between edges 2-4
+                if (dist[1] < dist[0] && dist[1] < dist[2]) diag = 2; // Edges 3-5
+                if (dist[2] < dist[0] && dist[2] < dist[1]) diag = 3; // Edges 1-6
+                
+                switch (diag) {
+                    case 1:
+                        // 5th new element
+                        child[i][4] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 6th new element
+                        child[i][5] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 7th new element
+                        child[i][6] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 8th new element
+                        child[i][7] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElCnt++;
+                        break;
+                        
+                    case 2:
+                        // 5th new element
+                        child[i][4] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 6th new element
+                        child[i][5] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 7th new element
+                        child[i][6] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 8th new element
+                        child[i][7] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElCnt++;
+                        break;
+                        
+                    case 3:
+                        // 5th new element
+                        child[i][4] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 6th new element
+                        child[i][5] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 7th new element
+                        child[i][6] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[4] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElCnt++;
+                        
+                        // 8th new element
+                        child[i][7] = newElCnt;
+                        newElements[newElCnt] = elements[i];
+                        newElements[newElCnt].ElementIndex = newElCnt+1;
+                        newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                        newElements[newElCnt].sizeNodeIndexes = 4;
+                        newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[2] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[3] + nodeCnt;
+                        newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[5] + nodeCnt;
+                        newElCnt++;
+                        break;
+                }
+                
+            case 808:
+                // Index to old quad centerpoints node in the new mesh nodal arrays
+                // node = node not node = node + 1 as it's the case in Elmer
+                
+                // Split brick to 8 new bricks from edge centerpoints
+                // and centerpoint of the element
+                
+                // 1st new element
+                child[i][0] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].FaceIndexes[0] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].EdgeIndexes[8] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].FaceIndexes[2] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[6] = node;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].FaceIndexes[5] + nodeCnt + edgeCnt;
+                newElCnt++;
+                
+                // 2nd new element
+                child[i][1] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[0] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].FaceIndexes[0] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].FaceIndexes[2] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].EdgeIndexes[9] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].FaceIndexes[3] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[7] = node;
+                newElCnt++;
+                
+                // 3rd new element
+                child[i][2] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[3] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].FaceIndexes[0] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].NodeIndexes[3];
+                newElements[newElCnt].NodeIndexes[4] = elements[i].FaceIndexes[5] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[5] = node;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].FaceIndexes[4] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].EdgeIndexes[11] + nodeCnt;
+                newElCnt++;
+                
+                // 4th new element
+                child[i][3] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].FaceIndexes[0] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[1] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].NodeIndexes[2];
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[2] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[4] = node;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].FaceIndexes[3] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].EdgeIndexes[10] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].FaceIndexes[4] + nodeCnt + edgeCnt;
+                newElCnt++;
+                
+                // 5th new element
+                child[i][4] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].EdgeIndexes[8] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].FaceIndexes[2] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[2] = node;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].FaceIndexes[5] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].NodeIndexes[4];
+                newElements[newElCnt].NodeIndexes[5] = elements[i].EdgeIndexes[4] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].FaceIndexes[1] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].EdgeIndexes[7] + nodeCnt;
+                newElCnt++;
+                
+                // 6th new element
+                child[i][5] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].FaceIndexes[2] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].EdgeIndexes[9] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].FaceIndexes[3] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[3] = node;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].EdgeIndexes[4] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].NodeIndexes[5];
+                newElements[newElCnt].NodeIndexes[6] = elements[i].EdgeIndexes[5] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].FaceIndexes[1] + nodeCnt + edgeCnt;
+                newElCnt++;
+                
+                // 7th new element
+                child[i][6] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = elements[i].FaceIndexes[5] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[1] = node;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].FaceIndexes[4] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].EdgeIndexes[11] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].EdgeIndexes[7] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].FaceIndexes[1] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].EdgeIndexes[6] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[7] = elements[i].NodeIndexes[7];
+                newElCnt++;
+                
+                // 8th new element
+                child[i][7] = newElCnt;
+                newElements[newElCnt] = elements[i];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 7);
+                newElements[newElCnt].sizeNodeIndexes = 8;
+                newElements[newElCnt].NodeIndexes[0] = node;
+                newElements[newElCnt].NodeIndexes[1] = elements[i].FaceIndexes[3] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[2] = elements[i].EdgeIndexes[10] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[3] = elements[i].FaceIndexes[4] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[4] = elements[i].FaceIndexes[1] + nodeCnt + edgeCnt;
+                newElements[newElCnt].NodeIndexes[5] = elements[i].EdgeIndexes[5] + nodeCnt;
+                newElements[newElCnt].NodeIndexes[6] = elements[i].NodeIndexes[6];
+                newElements[newElCnt].NodeIndexes[7] = elements[i].EdgeIndexes[6] + nodeCnt;
+                newElCnt++;
+                break;
+                
+            default:
+                printf("Element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
+                errorfunct("splitMeshEqual", "Program terminating now...");
+        }
+    }
+    
+    
+    // Update new mesh element counts
+    newMesh.numberOfBulkElements = newElCnt;
+    
+    // Update boundary elements
+    // Note:  internal boundaries not taken care of....!!!
+    eoldNodes = intvec(0, 3);
+    faceNodes = intvec(0, 3);
+    edgeNodes = intvec(0, 1);
+    for (i=0; i<mesh.numberOfBoundaryElements; i++) {
+                
+        // Get parent of the boundary element
+        eParent = elements[i+mesh.numberOfBulkElements].BoundaryInfo->Left;
+        if (eParent == NULL) eParent = elements[i+mesh.numberOfBulkElements].BoundaryInfo->Right;
+        if (eParent == NULL) continue;
+        
+        parentID = eParent->ElementIndex-1;
+        
+        switch (elements[i+mesh.numberOfBulkElements].Type.ElementCode / 100) {
+            case 2:
+                // Line segments
+                
+                // Which edge of the parent element are we?
+                for (edge1=0; edge1<eParent->sizeEdgeIndexes; edge1++) {
+                    if ((elements[i+mesh.numberOfBulkElements].NodeIndexes[0] == edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0]
+                         && elements[i+mesh.numberOfBulkElements].NodeIndexes[1] == edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1]) ||
+                        (elements[i+mesh.numberOfBulkElements].NodeIndexes[1] == edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0] &&
+                         elements[i+mesh.numberOfBulkElements].NodeIndexes[0] == edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1])) break;
+                }
+                
+                // Index of the old edge centerpoint in the
+                // new mesh nodal arrays
+                node = eParent->EdgeIndexes[edge1] + mesh.numberOfNodes;
+                
+                // 1st new element
+                newElements[newElCnt] = elements[i+mesh.numberOfBulkElements];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 1);
+                newElements[newElCnt].sizeNodeIndexes = 2;
+                newElements[newElCnt].NodeIndexes[0] = elements[i+mesh.numberOfBulkElements].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = node;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfBulkElements].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<4; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    found = NO;
+                    for (k=0; k<n-1; k++) {
+                        if ((newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[k] &&
+                            newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[k+1]) ||
+                            (newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[k] &&
+                             newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[k+1])) {
+                                found = YES;
+                                break;
+                        }
+                    }
+                    if ((newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[n-1] &&
+                         newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[0]) ||
+                        (newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[n-1] &&
+                         newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[0])) {
+                            found = YES;
+                    }
+                    if (found == YES) break;
+                }
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 2nd new element
+                newElements[newElCnt] = elements[i+mesh.numberOfBulkElements];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 1);
+                newElements[newElCnt].sizeNodeIndexes = 2;
+                newElements[newElCnt].NodeIndexes[0] = node;
+                newElements[newElCnt].NodeIndexes[1] = elements[i+mesh.numberOfBulkElements].NodeIndexes[1];
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfBulkElements].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<4; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    found = NO;
+                    for (k=0; k<n-1; k++) {
+                        if ((newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[k] &&
+                             newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[k+1]) ||
+                            (newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[k] &&
+                             newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[k+1])) {
+                                found = YES;
+                                break;
+                        }
+                    }
+                    if ((newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[n-1] &&
+                         newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[0]) ||
+                        (newElements[newElCnt].NodeIndexes[1] == newElements[child[parentID][j]].NodeIndexes[n-1] &&
+                         newElements[newElCnt].NodeIndexes[0] == newElements[child[parentID][j]].NodeIndexes[0])) {
+                            found = YES;
+                    }
+                    if (found == YES) break;
+                }
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                break;
+                
+            case 3:
+                // Trias
+                
+                // On which face of the parent element are we?
+                for (j=0; j<3; j++) {
+                    eoldNodes[j] = elements[i+mesh.numberOfBulkElements].NodeIndexes[j];
+                }
+                sort(3, eoldNodes-1);
+                
+                for (faceNumber=0; faceNumber<eParent->sizeFaceIndexes; faceNumber++) {
+                    for (j=0; j<3; j++) {
+                        faceNodes[j] = faces[eParent->FaceIndexes[faceNumber]].NodeIndexes[j];
+                    }
+                    sort(3, faceNodes-1);
+                    
+                    if (eoldNodes[0] == faceNodes[0] && eoldNodes[1] == faceNodes[1] && eoldNodes[2] == faceNodes[2]) break;
+                }
+                
+                // Then what are the edges on this face?
+                
+                // First edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfBulkElements].NodeIndexes[0], elements[i+mesh.numberOfBulkElements].NodeIndexes[1]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfBulkElements].NodeIndexes[0], elements[i+mesh.numberOfBulkElements].NodeIndexes[1]);
+                for (edge1=0; edge1<eParent->sizeEdgeIndexes; edge1++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Second edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfBulkElements].NodeIndexes[1], elements[i+mesh.numberOfBulkElements].NodeIndexes[2]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfBulkElements].NodeIndexes[1], elements[i+mesh.numberOfBulkElements].NodeIndexes[2]);
+                for (edge2=0; edge2<eParent->sizeEdgeIndexes; edge2++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge2]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge2]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge2]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge2]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Third edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfBulkElements].NodeIndexes[2], elements[i+mesh.numberOfBulkElements].NodeIndexes[0]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfBulkElements].NodeIndexes[2], elements[i+mesh.numberOfBulkElements].NodeIndexes[0]);
+                for (edge3=0; edge3<eParent->sizeEdgeIndexes; edge3++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge3]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge3]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge3]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge3]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Index of the old face and edge centerpoints
+                // in the new mesh nodal arrays
+                node12 = eParent->EdgeIndexes[edge1] + mesh.numberOfNodes;
+                node23 = eParent->EdgeIndexes[edge2] + mesh.numberOfNodes;
+                node31 = eParent->EdgeIndexes[edge3] + mesh.numberOfNodes;
+                
+                // 1st new element
+                newElements[newElCnt] = elements[i+mesh.numberOfBulkElements];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = elements[i+mesh.numberOfBulkElements].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = node12;
+                newElements[newElCnt].NodeIndexes[2] = node31;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfBulkElements].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0; // Count matches
+                    for (n1=0; n1<3; n1++) {
+                        for (n2=0; n2<4; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 2nd new element
+                newElements[newElCnt] = elements[i+mesh.numberOfBulkElements];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = node12;
+                newElements[newElCnt].NodeIndexes[1] = elements[i+mesh.numberOfBulkElements].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[2] = node23;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfBulkElements].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<3; n1++) {
+                        for (n2=0; n2<4; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 3rd new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = node12;
+                newElements[newElCnt].NodeIndexes[1] = node23;
+                newElements[newElCnt].NodeIndexes[2] = node31;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among the children
+                // of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<3; n1++) {
+                        for (n2=0; n2<4; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 4th new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 2);
+                newElements[newElCnt].sizeNodeIndexes = 3;
+                newElements[newElCnt].NodeIndexes[0] = node31;
+                newElements[newElCnt].NodeIndexes[1] = node23;
+                newElements[newElCnt].NodeIndexes[2] = elements[i+mesh.numberOfNodes].NodeIndexes[2];
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mesh parent element among
+                // the children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<3; n1++) {
+                        for (n2=0; n2<4; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                break;
+                
+            case 4:
+                // Quads
+                
+                // On which face of the parent element are we?
+                for (j=0; j<4; j++) {
+                    eoldNodes[j] = elements[i+mesh.numberOfNodes].NodeIndexes[j];
+                }
+                sort(4, eoldNodes-1);
+                
+                for (faceNumber=0; faceNumber<eParent->sizeFaceIndexes; faceNumber++) {
+                    for (j=0; j<4; j++) {
+                        faceNodes[j] = faces[eParent->FaceIndexes[faceNumber]].NodeIndexes[j];
+                    }
+                    sort(4, faceNodes-1);
+                    
+                    if (eoldNodes[0] == faceNodes[0] && eoldNodes[1] == faceNodes[1] && eoldNodes[2] == faceNodes[2]) break;
+                }
+                
+                // Then what are the edges on this face?
+                
+                // First edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfNodes].NodeIndexes[0], elements[i+mesh.numberOfNodes].NodeIndexes[1]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfNodes].NodeIndexes[0], elements[i+mesh.numberOfNodes].NodeIndexes[1]);
+                for (edge1=0; edge1<eParent->sizeEdgeIndexes; edge1++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge1]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge1]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Second edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfNodes].NodeIndexes[1], elements[i+mesh.numberOfNodes].NodeIndexes[2]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfNodes].NodeIndexes[1], elements[i+mesh.numberOfNodes].NodeIndexes[2]);
+                for (edge2=0; edge2<eParent->sizeEdgeIndexes; edge2++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge2]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge2]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge2]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge2]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Third edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfNodes].NodeIndexes[2], elements[i+mesh.numberOfNodes].NodeIndexes[3]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfNodes].NodeIndexes[2], elements[i+mesh.numberOfNodes].NodeIndexes[3]);
+                for (edge3=0; edge3<eParent->sizeEdgeIndexes; edge3++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge3]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge3]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge3]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge3]].NodeIndexes[1]);
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Fourth edge
+                eoldNodes[0] = min(elements[i+mesh.numberOfNodes].NodeIndexes[3], elements[i+mesh.numberOfNodes].NodeIndexes[0]);
+                eoldNodes[1] = max(elements[i+mesh.numberOfNodes].NodeIndexes[3], elements[i+mesh.numberOfNodes].NodeIndexes[0]);
+                for (edge4=0; edge4<eParent->sizeEdgeIndexes; edge4++) {
+                    edgeNodes[0] = min(edges[eParent->EdgeIndexes[edge4]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge4]].NodeIndexes[1]);
+                    edgeNodes[1] = max(edges[eParent->EdgeIndexes[edge4]].NodeIndexes[0], edges[eParent->EdgeIndexes[edge4]].NodeIndexes[1]);
+                    
+                    if (eoldNodes[0] == edgeNodes[0] && eoldNodes[1] == edgeNodes[1]) break;
+                }
+                
+                // Index of the old face and edge centerpoints
+                // in the new mesh nodal arrays
+                node = eParent->FaceIndexes[faceNumber] + // Face mid-point
+                        mesh.numberOfNodes + mesh.numberOfEdges;
+                node12 = eParent->EdgeIndexes[edge1] + mesh.numberOfNodes;
+                node23 = eParent->EdgeIndexes[edge2] + mesh.numberOfNodes;
+                node34 = eParent->EdgeIndexes[edge3] + mesh.numberOfNodes;
+                node41 = eParent->EdgeIndexes[edge4] + mesh.numberOfNodes;
+                
+                // 1st new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = elements[i+mesh.numberOfNodes].NodeIndexes[0];
+                newElements[newElCnt].NodeIndexes[1] = node12;
+                newElements[newElCnt].NodeIndexes[2] = node;
+                newElements[newElCnt].NodeIndexes[3] = node41;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mech parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<4; n1++) {
+                        for (n2=0; n2<8; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 2nd new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = node12;
+                newElements[newElCnt].NodeIndexes[1] = elements[i+mesh.numberOfNodes].NodeIndexes[1];
+                newElements[newElCnt].NodeIndexes[2] = node23;
+                newElements[newElCnt].NodeIndexes[3] = node;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mech parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<4; n1++) {
+                        for (n2=0; n2<8; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 3rd new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = node41;
+                newElements[newElCnt].NodeIndexes[1] = node;
+                newElements[newElCnt].NodeIndexes[2] = node34;
+                newElements[newElCnt].NodeIndexes[3] = elements[i+mesh.numberOfNodes].NodeIndexes[3];
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mech parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0;  // Count matches
+                    for (n1=0; n1<4; n1++) {
+                        for (n2=0; n2<8; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2)  break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                // 4th new element
+                newElements[newElCnt] = elements[i+mesh.numberOfNodes];
+                newElements[newElCnt].ElementIndex = newElCnt+1;
+                newElements[newElCnt].NodeIndexes = intvec(0, 3);
+                newElements[newElCnt].sizeNodeIndexes = 4;
+                newElements[newElCnt].NodeIndexes[0] = node;
+                newElements[newElCnt].NodeIndexes[1] = node23;
+                newElements[newElCnt].NodeIndexes[2] = elements[i+mesh.numberOfNodes].NodeIndexes[2];
+                newElements[newElCnt].NodeIndexes[3] = node34;
+                newElements[newElCnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+                initBoundaryInfo(newElements[newElCnt].BoundaryInfo);
+                newElements[newElCnt].BoundaryInfo = elements[i+mesh.numberOfNodes].BoundaryInfo;
+                newElements[newElCnt].BoundaryInfo->Left = NULL;
+                newElements[newElCnt].BoundaryInfo->Right = NULL;
+                
+                // Search the new mech parent element among the
+                // children of the old mesh parent element
+                for (j=0; j<8; j++) {
+                    eptr = &newElements[child[parentID][j]];
+                    n = newElements[child[parentID][j]].Type.NumberOfNodes;
+                    n3 = 0; // Count matches
+                    for (n1=0; n1<4; n1++) {
+                        for (n2=0; n2<8; n2++) {
+                            if (newElements[newElCnt].NodeIndexes[n1] == newElements[child[parentID][j]].NodeIndexes[n2]) n3++;
+                        }
+                    }
+                    if (n3 > 2) break;
+                }
+                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                newElements[newElCnt].BoundaryInfo->Left = eptr;
+                newElCnt++;
+                
+                break;
+        }
+        
+    }
+    free_ivector(eoldNodes, 0, 3);
+    free_ivector(faceNodes, 0, 3);
+    free_ivector(edgeNodes, 0, 1);
+    
+    // Update new mesh boundary element counts
+    newMesh.numberOfBoundaryElements = newElCnt - newMesh.numberOfBulkElements;
+    newMesh.maxElementDofs = mesh.maxElementDofs;
+    newMesh.maxElementNodes = mesh.maxElementNodes;
+    
+    for (i=0; i<newMesh.numberOfBulkElements+newMesh.numberOfBoundaryElements; i++) {
+        newElements[i].EdgeIndexes = NULL;
+        newElements[i].FaceIndexes = NULL;
+    }
+    
+    NSLog(@"splitMeshEqual: ********** New mesh **********\n");
+    NSLog(@"Nodes: %d\n", newMesh.numberOfNodes);
+    NSLog(@"splitMeshEqual: bulk elements: %d\n", newMesh.numberOfBulkElements);
+    NSLog(@"splitMeshEqual: boundary elements: %d\n", newMesh.numberOfBoundaryElements);
+    
+    // TODO: add support for parallel run
+    
+    // If periodic BC given, compute boundary mesh projector
+    listUtil = [[FEMListUtilities alloc] init];
+    for (i=0; i<model.numberOfBoundaryConditions; i++) {
+        boundaryConditionAtId = (model.boundaryConditions)[i];
+        minVal = 1;
+        maxVal = model.numberOfBoundaryConditions;
+        k = [listUtil listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc" info:&found minValue:&minVal maxValue:&maxVal];
+        boundaryConditionAtId.pMatrix = [self periodicProjectorInModel:model forMesh:mesh boundary:i target:k-1];
+    }
+    
+    free_imatrix(child, 0, mesh.numberOfBulkElements-1, 0, 7);
+    
+    [mesh deallocateMeshEdgeTables];
+    [mesh deallocateMeshFaceTables];
+    
+    return newMesh;
+}
+
+-(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model {
+    
+    int i, j, n;
+    Element_t *elements;
+    Nodes_t *nodes, *meshNodes;
+    FEMElementDescription *elmDescription;
+    
+    for (FEMSolution *solution in model.solutions) {
+        if (mesh == solution.mesh) {
+            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilize"] boolValue] == YES) ? YES : NO;
+            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilization method"] isEqualToString:@"vms"] == YES) ? YES : NO;
+            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilization method"] isEqualToString:@"stabilized"] == YES) ? YES : NO;
+        }
+    }
+    
+    nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    nodes->x = doublevec(0, mesh.maxElementNodes-1);
+    nodes->y = doublevec(0, mesh.maxElementNodes-1);
+    nodes->z = doublevec(0, mesh.maxElementNodes-1);
+    
+    elements = mesh.getElements;
+    meshNodes = mesh.getNodes;
+    
+    elmDescription = [[FEMElementDescription alloc] init];
+    
+    for (i=0; i<mesh.numberOfBulkElements; i++) {
+        n = elements[i].Type.NumberOfNodes;
+        for (j=0; i<n; j++) {
+            nodes->x[j] = meshNodes->x[elements[i].NodeIndexes[j]];
+            nodes->y[j] = meshNodes->y[elements[i].NodeIndexes[j]];
+            nodes->z[j] = meshNodes->z[elements[i].NodeIndexes[j]];
+        }
+        if (mesh.stabilize == YES) {
+            [elmDescription computeStabilizationParameterInElement:&elements[i] nodes:nodes mesh:mesh numberOfNodes:n mk:elements[i].StabilizationMK hk:&elements[i].hK];
+        } else {
+            [elmDescription elementDiameter:&elements[i] nodes:nodes];
+        }
+    }
+    
+    free_dvector(nodes->x, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
+    [elmDescription deallocation];
 }
 
 @end

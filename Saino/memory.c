@@ -19,7 +19,6 @@ bool *boolvec(long nl, long nh) {
 	v = (bool *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(bool)));
 	if (!v) errorfunct("intvec", "Allocation failure for the bool vector");
 	return v-nl+FI_END;
-    
 }
 
 int *intvec(long nl, long nh)
@@ -29,7 +28,6 @@ int *intvec(long nl, long nh)
 	v = (int *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(int)));
 	if (!v) errorfunct("intvec", "Allocation failure for the integer vector");
 	return v-nl+FI_END;
-	
 }
 
 unsigned long *ulongvec(long nl, long nh)
@@ -39,7 +37,6 @@ unsigned long *ulongvec(long nl, long nh)
 	v = (unsigned long *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(unsigned long)));
 	if (!v) errorfunct("intvec", "Allocation failure for the long vector");
 	return v-nl+FI_END;
-    
 }
 
 double *doublevec(long nl, long nh)
@@ -51,7 +48,6 @@ double *doublevec(long nl, long nh)
 	if (!v) errorfunct("doublevec", "Allocation failure for the double vector");
 	
 	return v-nl+FI_END;
-	
 }
 
 float *floatvec(long nl, long nh)
@@ -62,7 +58,6 @@ float *floatvec(long nl, long nh)
 	if (!v) errorfunct("floatvec", "Allocation failure for the float vector");
 	
 	return v-nl+FI_END;
-	
 }
 
 double complex *cdoublevec(long nl, long nh)
@@ -74,7 +69,6 @@ double complex *cdoublevec(long nl, long nh)
 	if (!v) errorfunct("cdoublevec", "Allocation failure for the complex double vector");
 	
 	return v-nl+FI_END;
-	
 }
 
 bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
@@ -93,48 +87,6 @@ bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
 	m[nrl] -= ncl;
 	
 	for (i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
-	
-	return m;
-    
-}
-
-double **doublematrix(long nrl, long nrh, long ncl, long nch)
-{
-	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
-	double **m;
-	
-	m = (double **) malloc((size_t) ((nrow+FI_END)*sizeof(double*)));
-	if (!m) errorfunct("doublematrix", "Allocation failure for the double matrix 1");
-	m += FI_END;
-	m -= nrl;
-	
-	m[nrl]=(double *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double)));
-	if (!m[nrl]) errorfunct("doublematrix", "Allocation failure for the double matrix 2");
-	m[nrl] += FI_END;
-	m[nrl] -= ncl;
-	
-	for(i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
-	
-	return m;
-	
-}
-
-float **floatmatrix(long nrl, long nrh, long ncl, long nch)
-{
-	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
-	float **m;
-	
-	m = (float **) malloc((size_t) ((nrow+FI_END)*sizeof(float*)));
-	if (!m) errorfunct("floatmatrix", "Allocation failure for the float matrix 1");
-	m += FI_END;
-	m -= nrl;
-	
-	m[nrl]=(float *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(float)));
-	if (!m[nrl]) errorfunct("floatmatrix", "Allocation failure for the float matrix 2");
-	m[nrl] += FI_END;
-	m[nrl] -= ncl;
-	
-	for(i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
 	
 	return m;
 }
@@ -158,7 +110,66 @@ int **intmatrix(long nrl, long nrh, long ncl, long nch)
 	for (i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
 	
 	return m;
+}
+
+double **doublematrix(long nrl, long nrh, long ncl, long nch)
+{
+	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
+	double **m;
 	
+	m = (double **) malloc((size_t) ((nrow+FI_END)*sizeof(double*)));
+	if (!m) errorfunct("doublematrix", "Allocation failure for the double matrix 1");
+	m += FI_END;
+	m -= nrl;
+	
+	m[nrl]=(double *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double)));
+	if (!m[nrl]) errorfunct("doublematrix", "Allocation failure for the double matrix 2");
+	m[nrl] += FI_END;
+	m[nrl] -= ncl;
+	
+	for(i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
+	
+	return m;
+}
+
+float **floatmatrix(long nrl, long nrh, long ncl, long nch)
+{
+	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
+	float **m;
+	
+	m = (float **) malloc((size_t) ((nrow+FI_END)*sizeof(float*)));
+	if (!m) errorfunct("floatmatrix", "Allocation failure for the float matrix 1");
+	m += FI_END;
+	m -= nrl;
+	
+	m[nrl]=(float *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(float)));
+	if (!m[nrl]) errorfunct("floatmatrix", "Allocation failure for the float matrix 2");
+	m[nrl] += FI_END;
+	m[nrl] -= ncl;
+	
+	for(i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
+	
+	return m;
+}
+
+double complex **cdoublematrix(long nrl, long nrh, long ncl, long nch) {
+    
+    long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
+	double complex **m;
+	
+	m = (double complex**) malloc((size_t) ((nrow+FI_END)*sizeof(double complex*)));
+	if (!m) errorfunct("cdoublematrix", "Allocation failure for the double matrix 1");
+	m += FI_END;
+	m -= nrl;
+	
+	m[nrl]=(double complex*) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double complex)));
+	if (!m[nrl]) errorfunct("cdoublematrix", "Allocation failure for the double matrix 2");
+	m[nrl] += FI_END;
+	m[nrl] -= ncl;
+	
+	for(i=nrl+1;i<=nrh;i++) m[i]=m[i-1]+ncol;
+	
+	return m;
 }
 
 double ***d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
@@ -227,7 +238,6 @@ float ***f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	
 	/*Return pointer to array of pointers to rows*/
 	return t;	    
-	
 }
 
 int ***i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
@@ -318,6 +328,12 @@ void free_imatrix(int **m, long nrl, long nrh, long ncl, long nch)
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
+void free_cdmatrix(double complex **m, long nrl, long nrh, long ncl, long nch) {
+    
+    free((FREE_ARG) (m[nrl]+ncl-FI_END));
+	free((FREE_ARG) (m+nrl-FI_END));
+}
+
 void free_d3tensor(double ***t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
 {
 	/*Free a double d3tensor allocated by d3tensor*/
@@ -342,37 +358,6 @@ void free_i3tensor(int ***t, long nrl, long nrh, long ncl, long nch, long ndl, l
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-Nodes_t *nodesvec(long nl, long nh)
-{
-    Nodes_t *v;
-    
-    v = (Nodes_t *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(Nodes_t)));
-    if (!v) errorfunct("nodesvec", "Allocation failure for the nodes vector");
-    
-    return v-nl+FI_END;
-    
-}
-
-Element_t *elementsvec(long nl, long nh)
-{
-    Element_t *v;
-    
-    v = (Element_t *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(Element_t)));
-    if (!v) errorfunct("elementsvec", "Allocation failure for the elements vector");
-    
-    return v-nl+FI_END;
-}
-
-BDElement_t *BDElementVec(long nl, long nh)
-{
-    BDElement_t *v;
-    
-    v = (BDElement_t *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(BDElement_t)));
-    if (!v) errorfunct("BDElementVec", "Allocation failure for the boundary elements vector");
-    
-    return v-nl+FI_END;
-}
-
 void errorfunct(char head[], char message[], ...)
 {   
     int np;
@@ -391,7 +376,6 @@ void errorfunct(char head[], char message[], ...)
         printf("%s: %s\n", head, message);
         exit(-1); 
     }
-
 }
 
 void warnfunct(char head[], char message[], ...) {
@@ -410,7 +394,6 @@ void warnfunct(char head[], char message[], ...) {
     } else {
         printf("%s: %s\n", head, message);
     }
-    
 }
 
 

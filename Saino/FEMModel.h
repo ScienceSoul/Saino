@@ -31,6 +31,7 @@
     
     id _mesh;
     id _solution;
+    NSMutableString *_outputPath;
     NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
     NSArray *_solutions;                            // Array of all solutions in the model
     NSMutableArray *_meshes;                        // Array of meshes used by the model
@@ -79,6 +80,7 @@
 @property(nonatomic, assign) int totalMatrixElements;
 @property(nonatomic, strong) id mesh;
 @property(nonatomic, strong) id solution;
+@property(nonatomic, strong) NSMutableString *outputPath;
 @property(nonatomic, strong) NSArray *boundaryID;
 @property(nonatomic, strong) NSArray *solutions;
 @property(nonatomic, strong) NSMutableArray *meshes;

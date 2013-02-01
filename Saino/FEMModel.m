@@ -12,6 +12,7 @@
 #import "FEMListUtilities.h"
 #import "FEMElementUtils.h"
 #import "FEMUtilities.h"
+#import "FEMMeshUtils.h"
 
 @interface FEMModel ()
 -(void)FEMModel_setCoordinateSystem;
@@ -37,6 +38,7 @@
 @synthesize totalMatrixElements = _totalMatrixElements;
 @synthesize mesh = _mesh;
 @synthesize solution = _solution;
+@synthesize outputPath = _outputPath;
 @synthesize boundaryID = _boundaryID;
 @synthesize solutions = _solutions;
 @synthesize meshes = _meshes;
@@ -352,6 +354,7 @@
         _totalMatrixElements = 0;
         _mesh = nil;
         
+        _outputPath = [NSMutableString stringWithString:@" "];
         _boundaryID = [[NSArray alloc] init];
         _solutions = [[NSArray alloc] init];
         _meshes = [[NSMutableArray alloc] init];
@@ -378,41 +381,38 @@
 
 -(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2 {
     
-    int i, j, k, l, s, nlen, eqn, meshKeep, meshLevels;
+    int i, j, l, nlen, meshKeep, meshLevels, sizeNodal, numberPartitions, partitionID;
     int defDofs[6];
-    double meshPower, *h;
-    BOOL transient, gotMesh, oneMeshName, meshGrading, found;
+    double meshPower, *h, maxvalue;
+    BOOL transient, gotMesh, oneMeshName, meshGrading, found, single;
     unsigned long loc;
     NSString *elementDef, *meshString, *aString;
     NSMutableString *meshDir, *meshName;
-    FEMMesh *mesh, *oldMesh;
-    FEMSolution *solution;
-    FEMListUtilities *listUtil;
+    FEMMesh *mesh, *newMesh, *oldMesh, *modelMesh;
+    FEMListUtilities *listUtils;
+    FEMMeshUtils *meshUtils;
     solutionArraysContainer *solContainers;
-    NSRange substr;
+    NSRange substr1;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtils = [[FEMListUtilities alloc] init];
     
     //TODO: Here comes the Model Description File (MDF) parser
     
-    transient = ([[listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
+    transient = ([[listUtils listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
     
     memset( defDofs, -1, sizeof(defDofs) );
     defDofs[0] = 1;
     
-    i = 1;
-    while (i <= self.numberOfSolutions) {
-        
-        solution = self.solutions[i];
+    for (FEMSolution *solution in self.solutions) {
         
         // TODO: Here Elmer calls a procedure post-fixed with "_Init0" for a given solver.
         // Do we need to do that?
         
-        gotMesh = [listUtil listCheckPresentVariable:@"mesh" inArray:solution.valuesList];
+        gotMesh = [listUtils listCheckPresentVariable:@"mesh" inArray:solution.valuesList];
         
         solContainers = solution.getContainers;
         if (solContainers->defDofs == NULL) {
-            solContainers->defDofs = intmatrix(0, self.numberOfBodies, 0, 6);
+            solContainers->defDofs = intmatrix(0, self.numberOfBodies-1, 0, 5);
             solContainers->size1DefDofs = self.numberOfBodies;
             solContainers->size2DefDofs = 6;
             for (i=0; i<self.numberOfBodies; i++) {
@@ -426,57 +426,56 @@
         }
         
         // Define what kind of element we are working with this solver
-        elementDef = [listUtil listGetString:self inArray:solution.valuesList forVariable:@"element" info:&found];
-        
-        if (found == NO) {
-            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"discontinuous galerkin" info:&found] == YES) {
+        if ((solution.solutionInfo)[@"element"] == nil) {
+            if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
                 if (gotMesh == NO) defDofs[3] = max(defDofs[3], 0);
-                i++;
                 continue;
             } else {
                 elementDef = @"n:1";
             }
+        } else {
+            elementDef = (solution.solutionInfo)[@"element"];
         }
         
-        substr = [elementDef rangeOfString:@"n:"];
-        if (substr.location != NSNotFound) {
-            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+        substr1 = [elementDef rangeOfString:@"n:"];
+        if (substr1.location != NSNotFound) {
+            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
             for (i=0; i<self.numberOfBodies; i++) {
                 solContainers->defDofs[i][0] = l;
             }
             if (gotMesh == NO) defDofs[0] = max(defDofs[0], l);
         }
         
-        substr = [elementDef rangeOfString:@"e:"];
-        if (substr.location != NSNotFound) {
-            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+        substr1 = [elementDef rangeOfString:@"e:"];
+        if (substr1.location != NSNotFound) {
+            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
             for (i=0; i<self.numberOfBodies; i++) {
                 solContainers->defDofs[i][1] = l;
             }
             if (gotMesh == NO) defDofs[1] = max(defDofs[1], l);
         }
         
-        substr = [elementDef rangeOfString:@"f:"];
-        if (substr.location != NSNotFound) {
-            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+        substr1 = [elementDef rangeOfString:@"f:"];
+        if (substr1.location != NSNotFound) {
+            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
             for (i=0; i<self.numberOfBodies; i++) {
                 solContainers->defDofs[i][2] = l;
             }
             if (gotMesh == NO) defDofs[2] = max(defDofs[2], l);
         }
         
-        substr = [elementDef rangeOfString:@"d:"];
-        if (substr.location != NSNotFound) {
-            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+        substr1 = [elementDef rangeOfString:@"d:"];
+        if (substr1.location != NSNotFound) {
+            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
             for (i=0; i<self.numberOfBodies; i++) {
                 solContainers->defDofs[i][3] = l;
             }
             if (gotMesh == NO) defDofs[2] = max(defDofs[3], l);
         } else {
-            if ([listUtil listGetLogical:self inArray:solution.valuesList forVariable:@"discontinuous galerkin" info:&found] == YES) {
+            if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
@@ -484,56 +483,60 @@
             }
         }
         
-        substr = [elementDef rangeOfString:@"b:"];
-        if (substr.location != NSNotFound) {
-            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+        substr1 = [elementDef rangeOfString:@"b:"];
+        if (substr1.location != NSNotFound) {
+            l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
             for (i=0; i<self.numberOfBodies; i++) {
                 solContainers->defDofs[i][4] = l;
             }
             if (gotMesh == NO) defDofs[4] = max(defDofs[4], l);
         }
         
-        substr = [elementDef rangeOfString:@"p:"];
-        if (substr.location != NSNotFound) {
-            if ([elementDef characterAtIndex:(substr.location+2)] == '%') {
+        substr1 = [elementDef rangeOfString:@"p:"];
+        if (substr1.location != NSNotFound) {
+            if ([elementDef characterAtIndex:(substr1.location+2)] == '%') {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][5] = 0;
                 }
             } else {
-                l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr.location+2)]] intValue];
+                l = [[NSString stringWithFormat:@"%c", [elementDef characterAtIndex:(substr1.location+2)]] intValue];
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][5] = l;
                 }
                 if (gotMesh == NO) defDofs[5] = max(defDofs[5], l);
             }
         }
-        
-        i++;
     }
     
     // Check the mesh
-    meshString = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"mesh" info:&found];
+    meshString = [listUtils listGetString:self inArray:self.simulation.valuesList forVariable:@"mesh" info:&found];
     
     oneMeshName = NO;
     if (found == YES) {
-        substr = [meshString rangeOfString:@" "];
-        aString = [meshString substringToIndex:substr.location];
-        meshDir = [NSMutableString stringWithString:aString];
-        meshName = [NSMutableString stringWithString:aString];
+        substr1 = [meshString rangeOfString:@" "];
+        if (substr1.location == NSNotFound) {
+            substr1.location = [meshString length];
+            meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+        } else {
+            meshDir = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+            meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+        }
         
-        loc = substr.location;
-        while (loc <= [meshString length] && [meshString characterAtIndex:loc] == ' ') {
+        loc = substr1.location;
+        while (loc < [meshString length] && [meshString characterAtIndex:loc] == ' ') {
             loc++;
         }
         
-        if (loc <= [meshString length]) {
+        if (loc < [meshString length]) {
             [meshName appendString:@"/"];
-            [meshName appendString:[meshString substringFromIndex:loc+1]];
+            [meshName appendString:[meshString substringFromIndex:loc]];
         } else {
             oneMeshName = YES;
             meshDir = [NSMutableString stringWithString:@"."];
         }
     }
+    
+    meshUtils = [[FEMMeshUtils alloc] init];
     
     if ([meshDir characterAtIndex:0] != ' ') {
         mesh = [[FEMMesh alloc] init];
@@ -542,14 +545,14 @@
         
         [self FEMModel_setCoordinateSystem];
         
-        meshLevels = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh levels" info:&found minValue:NULL maxValue:NULL];
+        meshLevels = [listUtils listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh levels" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) meshLevels = 1;
         
-        meshKeep = [listUtil listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh keep" info:&found minValue:NULL maxValue:NULL];
+        meshKeep = [listUtils listGetInteger:self inArray:self.simulation.valuesList forVariable:@"mesh keep" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) meshKeep = meshLevels;
         
-        meshPower = [listUtil listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"mesh grading power" info:&found minValue:NULL maxValue:NULL];
-        meshGrading = [listUtil listGetLogical:self inArray:self.simulation.valuesList forVariable:@"mesh keep grading" info:&found];
+        meshPower = [listUtils listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"mesh grading power" info:&found minValue:NULL maxValue:NULL];
+        meshGrading = [listUtils listGetLogical:self inArray:self.simulation.valuesList forVariable:@"mesh keep grading" info:&found];
         
         for (i=2; i<=meshLevels; i++) {
             oldMesh = self.meshes[0];
@@ -557,20 +560,188 @@
             if (meshGrading == YES) {
                 h = doublevec(0, oldMesh.numberOfNodes-1);
                 self.mesh = oldMesh;
-                [self FEMModel_getNodalElementSize:meshPower weighting:NO nodal:h sizeNodal:oldMesh.numberOfNodes];
-                
+                sizeNodal = oldMesh.numberOfNodes;
+                [self FEMModel_getNodalElementSize:meshPower weighting:NO nodal:h sizeNodal:sizeNodal];
+                 newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:h sizeNodal:&sizeNodal];
+                free_dvector(h, 0, oldMesh.numberOfNodes-1);
+            } else {
+                newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:NULL sizeNodal:NULL];
             }
             
+            if (i>meshLevels-meshKeep+1) {
+                [newMesh.next addObject:oldMesh];
+                [newMesh.parent addObject:oldMesh];
+                [oldMesh.child addObject:newMesh];
+                [newMesh.name setString:oldMesh.name];
+                newMesh.outputActive = YES;
+                oldMesh.outputActive = NO;
+            } else {
+                [oldMesh deallocation];
+                oldMesh = nil;
+            }
+            self.meshes[0] = newMesh;
         }
         
+        if (oneMeshName == YES) {
+            i = 0;
+        } else {
+            i = (int)[meshName length]-1;
+            while (i >= 0 && [meshName characterAtIndex:i] != '/') {
+                i--;
+            }
+            i++;
+        }
         
+        modelMesh = self.meshes[0];
+        modelMesh.name = [NSString stringWithString:[meshName substringFromIndex:i]];
         
-        
-        
+        for (FEMSolution *solution in self.solutions) {
+            solution.mesh = self.meshes[0];
+        }
     }
     
+    for (FEMSolution *solution in self.solution) {
+        
+        if ((solution.solutionInfo)[@"mesh"] != nil) {
+            aString = (solution.solutionInfo)[@"mesh"];
+            single = NO;
+            if ([[aString substringToIndex:8] isEqualToString:@"-single "] == YES) {
+                single = YES;
+                aString = [NSString stringWithString:[aString substringFromIndex:8]];
+            }
+            oneMeshName = NO;
+            nlen = (int)[aString length];
+            substr1 = [aString rangeOfString:@" "];
+            if (substr1.location == NSNotFound) {
+                substr1.location = [aString length];
+                meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+            } else {
+                meshDir = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+                meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+            }
+            
+            loc = substr1.location;
+            while (loc < nlen && [aString characterAtIndex:loc] == ' ') {
+                loc++;
+            }
+            if (loc < nlen) {
+                [meshName appendString:@"/"];
+                [meshName appendString:[aString substringFromIndex:loc]];
+            } else {
+                oneMeshName = YES;
+                 meshDir = [NSMutableString stringWithString:@"."];
+            }
+            
+            if (oneMeshName == YES) {
+                i = 0;
+            } else {
+                i = (int)[meshName length]-1;
+                while (i >= 0 && [meshName characterAtIndex:i] != '/') {
+                    i--;
+                }
+                i++;
+            }
+            
+            found = NO;
+            for (FEMMesh *mesh in self.meshes) {
+                found = YES;
+                if ([mesh.name isEqualToString:[meshName substringFromIndex:i]] != YES) found = NO;
+                if ([mesh.name length] != [[meshName substringFromIndex:i] length]) found = NO;
+                if (found == YES) {
+                    solution.mesh = mesh;
+                    break;
+                }
+            }
+            
+            if (found) continue;
+            
+            solContainers = solution.getContainers;
+            
+            for (i=0; i<6; i++) {
+                maxvalue = -HUGE_VAL;
+                for (j=0; j<solContainers->size1DefDofs; j++) {
+                    if (solContainers->defDofs[j][i]>maxvalue) {
+                        maxvalue = solContainers->defDofs[j][i];
+                    }
+                }
+                defDofs[i] = maxvalue;
+            }
+            
+            if (single == YES) {
+                numberPartitions = 1;
+                partitionID = 0;
+                solution.mesh = [[FEMMesh alloc] init];
+                [solution.mesh loadMeshForModel:self meshDirectory:meshDir meshName:meshName boundariesOnly:bd numberOfPartitions:&numberPartitions partitionID:&partitionID definitions:defDofs];
+            } else {
+                // TODO: add support for parallel run
+                // We are not supporting parallel runs yet, so we should never reach here
+                solution.mesh = [[FEMMesh alloc] init];
+                [solution.mesh loadMeshForModel:self meshDirectory:meshDir meshName:meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
+            }
+            
+            if ((solution.solutionInfo)[@"mesh levels"] != nil) {
+                meshLevels = [(solution.solutionInfo)[@"mesh levels"] intValue];
+            } else meshLevels = 1;
+            
+            if ((solution.solutionInfo)[@"mesh keep"] != nil) {
+                meshKeep = [(solution.solutionInfo)[@"mesh keep"] intValue];
+            } else meshKeep = meshLevels;
+            
+            meshPower = [listUtils listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"mesh grading power" info:&found minValue:NULL maxValue:NULL];
+            meshGrading = [listUtils listGetLogical:self inArray:self.simulation.valuesList forVariable:@"mesh keep grading" info:&found];
+            
+            for (i=2; i<=meshLevels; i++) {
+                oldMesh = solution.mesh;
+                
+                if (meshGrading == YES) {
+                    h = doublevec(0, oldMesh.numberOfNodes-1);
+                    self.mesh = oldMesh;
+                    sizeNodal = oldMesh.numberOfNodes;
+                    [self FEMModel_getNodalElementSize:meshPower weighting:NO nodal:h sizeNodal:sizeNodal];
+                    newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:h sizeNodal:&sizeNodal];
+                    free_dvector(h, 0, oldMesh.numberOfNodes-1);
+                } else {
+                    newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:NULL sizeNodal:NULL];
+                }
+                
+                if (i>meshLevels-meshKeep+1) {
+                    [newMesh.next addObject:oldMesh];
+                    [newMesh.parent addObject:oldMesh];
+                    [oldMesh.child addObject:newMesh];
+                    [newMesh.name setString:oldMesh.name];
+                    newMesh.outputActive = YES;
+                    oldMesh.outputActive = NO;
+                } else {
+                    [oldMesh deallocation];
+                    oldMesh = nil;
+                }
+                solution.mesh = newMesh;
+            }
+            
+            if (oneMeshName == YES) {
+                i = 0;
+            } else {
+                i = (int)[meshName length]-1;
+                while (i >= 0 && [meshName characterAtIndex:i] != '/') {
+                    i--;
+                }
+                i++;
+            }
+            
+            solution.mesh.name = [NSMutableString stringWithString:[meshName substringFromIndex:i]];
+            
+            // Just add this solver mesh to the global model meshes table
+            [self.meshes addObject:solution.mesh];
+        }
+    }
     
+    [self FEMModel_setCoordinateSystem];
     
+    [self.outputPath setString:meshDir];
+
+    for (FEMMesh *mesh in self.meshes) {
+        [meshUtils SetStabilizationParametersInMesh:mesh model:self];
+    }
 }
 
 #pragma mark Elements getter

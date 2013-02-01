@@ -53,6 +53,7 @@ enum {
 
 typedef struct {
     
+    int numberOfNodes;
     double *x;                   // First coordinate
     double *y;                   // Second coordinate
     double *z;                   // Third coordinate
@@ -109,6 +110,7 @@ typedef struct {
     int NumberOfImplicitFactors;
     int *Elements;
     double *Factors;
+    int sizeElements, sizeFactors;
     
 } Factors_t;
 
@@ -139,13 +141,16 @@ typedef struct Element_t {
     BoundaryInfo_t *BoundaryInfo;
     PElementDefs_t *Pdefs;                         // Initialize to NULL somewhere!!
     
+    bool copy;
     int *NodeIndexes, *EdgeIndexes, *FaceIndexes, 
         *BubbleIndexes, *DGIndexes;                // Initialize that to NULL somewhere!!
     
     int sizeNodeIndexes, sizeEdgeIndexes,
         sizeFaceIndexes, sizeBubbleIndexes, sizeDGIndexes;
     int BodyID;
-    int ElementIndex, PartIndex, NDOFs, BDOFs, DGDOFs;
+    int Splitted;
+    int ElementIndex, // Index counted from 1 to n
+        PartIndex, NDOFs, BDOFs, DGDOFs;
     
     double StabilizationMK, hK;
     
@@ -235,6 +240,9 @@ typedef struct variableArraysContainer {
     int sizePValues;
     int sizeNonLinValues;
     int sizeSteadyValues;
+    int sizeEigenValues;
+    int size1EigenVectors;
+    int size2EigenVectors;
     
 } variableArraysContainer;
 
@@ -307,6 +315,6 @@ typedef struct HashTable_t {
 
 #endif
 
-Nodes_t *nodesvec(long nl, long nh);
-Element_t *elementsvec(long nl, long nh);
-BDElement_t *BDElementVec(long nl, long nh);
+void initNodes(Nodes_t *nodes);
+void initElements(Element_t *elements, int n);
+void initBoundaryInfo(BoundaryInfo_t *boundaryInfo);

@@ -24,5 +24,7 @@
 -(void)findEdgesForMesh:(FEMMesh *)mesh findEdges:(BOOL *)edges;
 -(void)assignLocalNumberToEdgeElement:(Element_t *)edge fromElement:(Element_t *)element inMesh:(FEMMesh *)mesh;
 -(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh boundary:(int)this target:(int)trgt;
+-(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal;
+-(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model;
 
 @end

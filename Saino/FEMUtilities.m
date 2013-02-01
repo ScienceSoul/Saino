@@ -193,6 +193,7 @@
     
     n = oldMesh.maxElementNodes;
     elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(elementNodes);
     elementNodes->x = doublevec(0, n-1);
     elementNodes->y = doublevec(0, n-1);
     elementNodes->z = doublevec(0, n-1);

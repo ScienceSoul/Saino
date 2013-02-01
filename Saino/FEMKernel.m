@@ -2239,7 +2239,7 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    sz1 = solution.mesh.sizeOfGlobalNodes;
+    sz1 = globalNodes->numberOfNodes;
     if (sz1 > solution.mesh.numberOfNodes) {
         memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
         nb = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
@@ -3044,11 +3044,13 @@ static int PRECOND_VANKA     =  560;
     if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
     
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(nodes);
     nodes->x = doublevec(0, n-1);
     nodes->y = doublevec(0, n-1);
     nodes->z = doublevec(0, n-1);
     
     pNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(pNodes);
     pNodes->x = doublevec(0, n-1);
     pNodes->y = doublevec(0, n-1);
     pNodes->z = doublevec(0, n-1);
@@ -3252,6 +3254,7 @@ static int PRECOND_VANKA     =  560;
     
     // Get nodes of boundary elements parent and gauss points for boundary
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(nodes);
     nodes->x = doublevec(0, n-1);
     nodes->y = doublevec(0, n-1);
     nodes->z = doublevec(0, n-1);

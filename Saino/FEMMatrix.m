@@ -94,130 +94,139 @@
     
     // TODO: Specific deallocations relative to direct solvers
     
-    if (_containers->Perm != NULL) {
-        free_ivector(_containers->Perm, 0, _containers->sizePerm-1);
-        _containers->Perm = NULL;
-    }
+    if (_containers != NULL) {
     
-    if (_containers->InvPerm != NULL) {
-        free_ivector(_containers->InvPerm, 0, _containers->sizeInvPerm-1);
-        _containers->InvPerm = NULL;
+        if (_containers->Perm != NULL) {
+            free_ivector(_containers->Perm, 0, _containers->sizePerm-1);
+            _containers->Perm = NULL;
+        }
+        
+        if (_containers->InvPerm != NULL) {
+            free_ivector(_containers->InvPerm, 0, _containers->sizeInvPerm-1);
+            _containers->InvPerm = NULL;
+        }
+        
+        if (_containers->Cols != NULL) {
+            if (_containers->ILUCols == _containers->Cols) _containers->ILUCols = NULL;
+            free_ivector(_containers->Cols, 0, _containers->sizeCols-1);
+            _containers->Cols = NULL;
+        }
+        
+        if (_containers->Rows != NULL) {
+            if (_containers->ILURows == _containers->Rows) _containers->ILURows = NULL;
+            free_ivector(_containers->Rows, 0, _containers->sizeRows-1);
+            _containers->Rows = NULL;
+        }
+        
+        if (_containers->Diag != NULL) {
+            if (_containers->ILUDiag == _containers->Diag) _containers->ILUDiag = NULL;
+            free_ivector(_containers->Diag, 0, _containers->sizeDiag-1);
+            _containers->Diag = NULL;
+        }
+        
+        if (_containers->RHS != NULL) {
+            free_dvector(_containers->RHS, 0, _containers->sizeRHS-1);
+            _containers->RHS = NULL;
+        }
+        
+        if (_containers->Force != NULL) {
+            free_dmatrix(_containers->Force, 0, _containers->size1force-1, 0, _containers->size2Force-1);
+            _containers->Force = NULL;
+        }
+        
+        if (_containers->RHS_im != NULL) {
+            free_dvector(_containers->RHS_im, 0, _containers->sizeRHS_im-1);
+            _containers->RHS_im = NULL;
+        }
+        
+        if (_containers->Values != NULL) {
+            free_dvector(_containers->Values, 0, _containers->sizeValues-1);
+            _containers->Values = NULL;
+        }
+        
+        if (_containers->MassValues != NULL) {
+            free_dvector(_containers->MassValues, 0, _containers->sizeMassValues-1);
+            _containers->MassValues = NULL;
+        }
+        
+        if (_containers->DampValues != NULL) {
+            free_dvector(_containers->DampValues, 0, _containers->sizeDampValues-1);
+            _containers->DampValues = NULL;
+        }
+        
+        if (_containers->ILUValues != NULL) {
+            free_dvector(_containers->ILUValues, 0, _containers->sizeILUValues-1);
+            _containers->ILUValues = NULL;
+        }
+        
+        if (_containers->ILUCols != NULL) {
+            free_ivector(_containers->ILUCols, 0, _containers->sizeILUCols-1);
+            _containers->ILUCols = NULL;
+        }
+        
+        if (_containers->ILURows != NULL) {
+            free_ivector(_containers->ILURows, 0, _containers->sizeILURows-1);
+            _containers->ILURows = NULL;
+        }
+        
+        if (_containers->ILUDiag != NULL) {
+            free_ivector(_containers->ILUDiag, 0, _containers->sizeILUDiag-1);
+            _containers->ILUDiag = NULL;
+        }
+        
+        if (_containers->CRHS != NULL) {
+            free_cdvector(_containers->CRHS, 0, _containers->sizeCRHS-1);
+            _containers->CRHS = NULL;
+        }
+        
+        if (_containers->CForce != NULL) {
+            free_cdvector(_containers->CForce, 0, _containers->sizeCForce-1);
+            _containers->CForce = NULL;
+        }
+        
+        if (_containers->CValues != NULL) {
+            free_cdvector(_containers->CValues, 0, _containers->sizeCValues-1);
+            _containers->CValues = NULL;
+        }
+        
+        if (_containers->CILUValues != NULL) {
+            free_cdvector(_containers->CILUValues, 0, _containers->sizeCILUValues-1);
+            _containers->CILUValues = NULL;
+        }
+        
+        if (_containers->CMassValues != NULL) {
+            free_cdvector(_containers->CMassValues, 0, _containers->sizeCMassValues-1);
+            _containers->CMassValues = NULL;
+        }
+        
+        if (_containers->CDampValues != NULL) {
+            free_cdvector(_containers->CDampValues, 0, _containers->sizeCDampValues-1);
+            _containers->CDampValues = NULL;
+        }
+        
+        if (_containers->GRows != NULL) {
+            free_ivector(_containers->GRows, 0, _containers->sizeGRows-1);
+            _containers->GRows = NULL;
+        }
+        
+        if (_containers->RowOwner != NULL) {
+            free_ivector(_containers->RowOwner, 0, _containers->sizeRowOwner-1);
+            _containers->RowOwner = NULL;
+        }
+        
+        if (_containers->GOrder != NULL) {
+            free_ivector(_containers->GOrder, 0, _containers->sizeGOrder-1);
+            _containers->GOrder = NULL;
+        }
+        
+        free(_containers);
     }
+    _containers = NULL;
     
-    if (_containers->Cols != NULL) {
-        if (_containers->ILUCols == _containers->Cols) _containers->ILUCols = NULL;
-        free_ivector(_containers->Cols, 0, _containers->sizeCols-1);
-        _containers->Cols = NULL;
-    }
-    
-    if (_containers->Rows != NULL) {
-        if (_containers->ILURows == _containers->Rows) _containers->ILURows = NULL;
-        free_ivector(_containers->Rows, 0, _containers->sizeRows-1);
-        _containers->Rows = NULL;
-    }
-    
-    if (_containers->Diag != NULL) {
-        if (_containers->ILUDiag == _containers->Diag) _containers->ILUDiag = NULL;
-        free_ivector(_containers->Diag, 0, _containers->sizeDiag-1);
-        _containers->Diag = NULL;
-    }
-    
-    if (_containers->RHS != NULL) {
-        free_dvector(_containers->RHS, 0, _containers->sizeRHS-1);
-        _containers->RHS = NULL;
-    }
-    
-    if (_containers->Force != NULL) {
-        free_dmatrix(_containers->Force, 0, _containers->size1force-1, 0, _containers->size2Force-1);
-        _containers->Force = NULL;
-    }
-    
-    if (_containers->RHS_im != NULL) {
-        free_dvector(_containers->RHS_im, 0, _containers->sizeRHS_im-1);
-        _containers->RHS_im = NULL;
-    }
-    
-    if (_containers->Values != NULL) {
-        free_dvector(_containers->Values, 0, _containers->sizeValues-1);
-        _containers->Values = NULL;
-    }
-    
-    if (_containers->MassValues != NULL) {
-        free_dvector(_containers->MassValues, 0, _containers->sizeMassValues-1);
-        _containers->MassValues = NULL;
-    }
-    
-    if (_containers->DampValues != NULL) {
-        free_dvector(_containers->DampValues, 0, _containers->sizeDampValues-1);
-        _containers->DampValues = NULL;
-    }
-    
-    if (_containers->ILUValues != NULL) {
-        free_dvector(_containers->ILUValues, 0, _containers->sizeILUValues-1);
-        _containers->ILUValues = NULL;
-    }
-    
-    if (_containers->ILUCols != NULL) {
-        free_ivector(_containers->ILUCols, 0, _containers->sizeILUCols-1);
-        _containers->ILUCols = NULL;
-    }
-    
-    if (_containers->ILURows != NULL) {
-        free_ivector(_containers->ILURows, 0, _containers->sizeILURows-1);
-        _containers->ILURows = NULL;
-    }
-    
-    if (_containers->ILUDiag != NULL) {
-        free_ivector(_containers->ILUDiag, 0, _containers->sizeILUDiag-1);
-        _containers->ILUDiag = NULL;
-    }
-    
-    if (_containers->CRHS != NULL) {
-        free_cdvector(_containers->CRHS, 0, _containers->sizeCRHS-1);
-        _containers->CRHS = NULL;
-    }
-    
-    if (_containers->CForce != NULL) {
-        free_cdvector(_containers->CForce, 0, _containers->sizeCForce-1);
-        _containers->CForce = NULL;
-    }
-    
-    if (_containers->CValues != NULL) {
-        free_cdvector(_containers->CValues, 0, _containers->sizeCValues-1);
-        _containers->CValues = NULL;
-    }
-    
-    if (_containers->CILUValues != NULL) {
-        free_cdvector(_containers->CILUValues, 0, _containers->sizeCILUValues-1);
-        _containers->CILUValues = NULL;
-    }
-    
-    if (_containers->CMassValues != NULL) {
-        free_cdvector(_containers->CMassValues, 0, _containers->sizeCMassValues-1);
-        _containers->CMassValues = NULL;
-    }
-    
-    if (_containers->CDampValues != NULL) {
-        free_cdvector(_containers->CDampValues, 0, _containers->sizeCDampValues-1);
-        _containers->CDampValues = NULL;
-    }
-    
-    if (_containers->GRows != NULL) {
-        free_ivector(_containers->GRows, 0, _containers->sizeGRows-1);
-        _containers->GRows = NULL;
-    }
-    
-    if (_containers->RowOwner != NULL) {
-        free_ivector(_containers->RowOwner, 0, _containers->sizeRowOwner-1);
-        _containers->RowOwner = NULL;
-    }
-    
-    if (_containers->GOrder != NULL) {
-        free_ivector(_containers->GOrder, 0, _containers->sizeGOrder-1);
-        _containers->GOrder = NULL;
-    }
-    
-    free(_containers);
+    if (_ematrix != nil) [self deallocation];
+    if (_constraint != nil) [self deallocation];
+    _ematrix = nil;
+    _constraint = nil;
 }
 
 -(matrixArraysContainer *)getContainers {

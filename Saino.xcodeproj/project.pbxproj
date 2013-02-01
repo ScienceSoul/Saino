@@ -58,6 +58,7 @@
 		73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD31594560F009A83C6 /* DirectoryReader.m */; };
 		73BBD72715DB8AC700B5735D /* FEMPElementMaps.m in Sources */ = {isa = PBXBuildFile; fileRef = 73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */; };
 		73DB203215D3A951006C5F1C /* FEMJob.m in Sources */ = {isa = PBXBuildFile; fileRef = 73DB203115D3A951006C5F1C /* FEMJob.m */; };
+		73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */ = {isa = PBXBuildFile; fileRef = 73DE8B1B16B2627000DA2D7D /* Constructors.c */; };
 		73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */ = {isa = PBXBuildFile; fileRef = 73ED563413AA10BB00F088CC /* GaussIntegration.c */; };
 		73F0090D15D90D57004B7DCE /* FEMEquation.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F0090C15D90D57004B7DCE /* FEMEquation.m */; };
 		73F2105514E3D41000D52906 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 73F2105414E3D41000D52906 /* memory.c */; };
@@ -183,6 +184,7 @@
 		73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPElementMaps.m; sourceTree = "<group>"; };
 		73DB203015D3A951006C5F1C /* FEMJob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMJob.h; sourceTree = "<group>"; };
 		73DB203115D3A951006C5F1C /* FEMJob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMJob.m; sourceTree = "<group>"; };
+		73DE8B1B16B2627000DA2D7D /* Constructors.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Constructors.c; sourceTree = "<group>"; };
 		73ED563413AA10BB00F088CC /* GaussIntegration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GaussIntegration.c; sourceTree = "<group>"; };
 		73ED563513AA10BB00F088CC /* GaussIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = GaussIntegration.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		73ED563713AA16F200F088CC /* Numerics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Numerics.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -320,6 +322,7 @@
 			isa = PBXGroup;
 			children = (
 				736C02E513BC6C0900979806 /* Constructors.h */,
+				73DE8B1B16B2627000DA2D7D /* Constructors.c */,
 				737B0D7614E2281E00ED409D /* TimeProfile.h */,
 				737B0D7414E2274B00ED409D /* TimeProfile.c */,
 				73F2105414E3D41000D52906 /* memory.c */,
@@ -627,6 +630,7 @@
 				73206776168D7D9700BAE816 /* FEMElementUtils.m in Sources */,
 				7320677A169A6EA900BAE816 /* FEMListMatrix.m in Sources */,
 				7320677D169C00DF00BAE816 /* FEMBandwidthOptimize.m in Sources */,
+				73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

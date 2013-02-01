@@ -20,8 +20,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
 -(void)FEMElementDescription_initElementsDefinition;
 -(void)FEMElementDescription_compute1DPBasis:(double **)basis: (int)n;
 -(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
--(double)FEMElementDescription_interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;
--(double)FEMElementDescription_interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
 @end
 
 @implementation FEMElementDescription {
@@ -783,117 +781,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return y;
 }
 
-/**********************************************************************************************
- 
-    Given element structure, return value of a quantity x given at element nodes at local
-    cooidinate points (u,v) inside the element. Element basis functions are used to compute the
-    value. Used for 2d elements
- 
-    Element_t *element  ->  element structure
-    double *x           ->  nodal values of the quantity whose partial derivative is required
-    double u, v         ->  points at which to evaluate the partial derivative
- 
-    Return y = x(u,v)
- 
-**********************************************************************************************/
--(double)FEMElementDescription_interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
-    
-    int i, n;
-    int *p, *q;
-    double y, s;
-    double *coeff;
-    
-    y = 0.0;
-    for (n=0; n<element->Type.NumberOfNodes; n++) {
-        if (x[n] != 0.0) {
-            p = element->Type.BasisFunctions[n].p;
-            q = element->Type.BasisFunctions[n].q;
-            coeff = element->Type.BasisFunctions[n].coeff;
-            
-            s = 0.0;
-            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
-                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]);
-            }
-            y = y + s * x[n];
-        }
-    }
-    
-    return y;
-}
-
-/**********************************************************************************************
- 
-    Given element structure, return value of a quantity x given at element nodes at local
-    cooidinate points (u,v,w) inside the element. Element basis functions are used to compute 
-    the value. Used for 3d elements
- 
-    Element_t *element  ->  element structure
-    double *x           ->  nodal values of the quantity whose partial derivative is required
-    double u, v, w      ->  points at which to evaluate the partial derivative
- 
-    Return y = x(u,v,w)
- 
-**********************************************************************************************/
--(double)FEMElementDescription_interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
-    
-    int i, n;
-    int *p, *q, *r;
-    double y, s;
-    double *coeff;
-    
-    if (element->Type.ElementCode == 605) {
-        s = 0.0;
-        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
-        s = 1.0 / (1-w);
-        
-        y = 0.0;
-        y = y + x[0] * ( (1.0-u) * (1.0-v) - w + u*v*w * s) / 4.0;
-        y = y + x[1] * ( (1.0+u) * (1.0-v) - w - u*v*w * s) / 4.0;
-        y = y + x[2] * ( (1.0+u) * (1.0+v) - w + u*v*w * s) / 4.0;
-        y = y + x[3] * ( (1.0-u) * (1.0+v) - w - u*v*w * s) / 4.0;
-        y = y + x[4] * w;
-        return y;
-    } else if (element->Type.ElementCode == 613) {
-        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
-        s = 1.0 / (1-w);
-        
-        y = 0.0;
-        y = y + x[0] * (-u-v-1.0) * ( (1.0-u) * (1.0-v) - w + u*v*w *s ) / 4.0;
-        y = y + x[1] * (u-v-1.0) * ( (1.0+u) * (1.0-v) - w - u*v*w *s ) / 4.0;
-        y = y + x[2] * (u+v-1.0) * ( (1.0+u) * (1.0+v) - w + u*v*w *s ) / 4.0;
-        y = y + x[3] * (-u+v-1.0) * ( (1.0-u) * (1.0+v) - w - u*v*w *s ) / 4.0;
-        y = y + x[4] * w*(2.0*w-1.0);
-        y = y + x[5] * (1.0+u-w) * (1.0-u-w) * (1.0-v-w) * s /2.0;
-        y = y + x[6] * (1.0+v-w) * (1.0-v-w) * (1.0+u-w) * s /2.0;
-        y = y + x[7] * (1.0+u-w) * (1.0-u-w) * (1.0+v-w) * s /2.0;
-        y = y + x[8] * (1.0+v-w) * (1.0-v-w) * (1.0-u-w) * s /2.0;
-        y = y + x[9] * w * (1.0-u-w) * (1.0-v-w) * s;
-        y = y + x[10] * w * (1.0+u-w) * (1.0-v-w) * s;
-        y = y + x[11] * w * (1.0+u-w) * (1.0+v-w) * s;
-        y = y + x[12] * w * (1.0-u-w) * (1.0+v-w) * s;
-        return y;
-    }
-    
-    y = 0.0;
-    for (n=0; n<element->Type.NumberOfNodes; n++) {
-        if (x[n] != 0.0) {
-            p = element->Type.BasisFunctions[n].p;
-            q = element->Type.BasisFunctions[n].q;
-            r = element->Type.BasisFunctions[n].r;
-            coeff = element->Type.BasisFunctions[n].coeff;
-            
-            s = 0.0;
-            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
-                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, r[i]);
-            }
-            y = y + s * x[n];
-        }
-    }
-    
-    return y;
-}
-
-
 #pragma mark Public methods...
 
 - (id)init
@@ -936,7 +823,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
         _isTypeListInitialized = NO;
         
         [self initElementDescriptions];
-
     }
     
     return self;
@@ -958,6 +844,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     ptr = NULL;
     while (_elementTypeList != NULL) {
         ptr = _elementTypeList->NextElementType;
+        // TODO: deallocation in element type list
         free(_elementTypeList);
         _elementTypeList = ptr;
     }
@@ -1469,7 +1356,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
 }
 
--(double)elementDiameter:(Element_t *)element: (Nodes_t *)nodes {
+-(double)elementDiameter:(Element_t *)element nodes:(Nodes_t *)nodes {
 /*****************************************************************************************
     Retrive element diameter parameter for stabilization
  
@@ -1555,7 +1442,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return sqrt(hk);
 }
 
--(void)computeStabilizationParameter:(Element_t *)element: (Nodes_t *)nodes: (FEMMesh *)mesh: (int)n: (double)mk: (double *)hk {
+-(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double)mk hk:(double *)hk {
 /*******************************************************************************************************
     Compute convection diffusion equation stabilization parameter for each and every element of the 
     model by solving the largest eigenvalue of
@@ -1603,7 +1490,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             case 808:
                 mk = 1.0 / 6.0;
         }
-        if (hk != NULL) *hk = [self elementDiameter:element :nodes];
+        if (hk != NULL) *hk = [self elementDiameter:element nodes:nodes];
         return;
     }
     
@@ -1694,7 +1581,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     if (stat == YES) {
         mk = 1.0 / 3.0;
         if (hk != NULL) {
-            *hk = [self elementDiameter:element :nodes];
+            *hk = [self elementDiameter:element nodes:nodes];
         }
         return;
     }
@@ -1727,7 +1614,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     if (mk < 10.0 * AEPS) {
         mk = 1.0 / 3.0;
         if (hk != NULL) {
-            *hk = [self elementDiameter:element :nodes];
+            *hk = [self elementDiameter:element nodes:nodes];
         }
         return;
     }
@@ -1794,6 +1681,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     if (element->StabilizationMK == 0.0) {
         elm = (Element_t*) malloc( sizeof(Element_t));
+        initElements(elm, 1);
         elm->Type = *element;
         elm->BDOFs = 0;
         elm->DGDOFs = 0;
@@ -1802,6 +1690,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         elm->FaceIndexes = NULL;
         elm->BubbleIndexes = NULL;
         nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+        initNodes(nodes);
         nodes->x = doublevec(0, element->NumberOfNodes-1);
         nodes->y = doublevec(0, element->NumberOfNodes-1);
         nodes->z = doublevec(0, element->NumberOfNodes-1);
@@ -1810,7 +1699,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             nodes->y[i] = element->NodeV[i];
             nodes->z[i] = element->NodeW[i];
         }
-        [self computeStabilizationParameter:elm :nodes :mesh :element->NumberOfNodes :element->StabilizationMK :NULL];
+        [self computeStabilizationParameterInElement:elm nodes:nodes mesh:mesh numberOfNodes:element->NumberOfNodes mk:element->StabilizationMK hk:NULL];
         free(elm);
         
         free_dvector(nodes->x, 0, element->NumberOfNodes-1);
@@ -2224,10 +2113,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 value = [self FEMElementDescription_interpolate1DInElement:element nodalValues:x evalutationPoint:u];
                 break;
             case 2:
-                value = [self FEMElementDescription_interpolate2DInElement:element nodalValues:x evaluatedAt:u andAt:v];
+                value = [self interpolate2DInElement:element nodalValues:x evaluatedAt:u andAt:v];
                 break;
             case 3:
-                value = [self FEMElementDescription_interpolate3DInElement:element nodalValues:x evaluatedAt:u andAt:v andAt:w];
+                value = [self interpolate3DInElement:element nodalValues:x evaluatedAt:u andAt:v andAt:w];
                 break;
         }
         return value;
@@ -2618,6 +2507,115 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     free_dmatrix(J, 0, 2, 0, 2);
 }
+
+/**********************************************************************************************
+ 
+ Given element structure, return value of a quantity x given at element nodes at local
+ cooidinate points (u,v) inside the element. Element basis functions are used to compute the
+ value. Used for 2d elements
+ 
+ Element_t *element  ->  element structure
+ double *x           ->  nodal values of the quantity whose partial derivative is required
+ double u, v         ->  points at which to evaluate the partial derivative
+ 
+ Return y = x(u,v)
+ 
+ **********************************************************************************************/
+-(double)interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
     
+    int i, n;
+    int *p, *q;
+    double y, s;
+    double *coeff;
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]);
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
+
+/**********************************************************************************************
+ 
+ Given element structure, return value of a quantity x given at element nodes at local
+ cooidinate points (u,v,w) inside the element. Element basis functions are used to compute
+ the value. Used for 3d elements
+ 
+ Element_t *element  ->  element structure
+ double *x           ->  nodal values of the quantity whose partial derivative is required
+ double u, v, w      ->  points at which to evaluate the partial derivative
+ 
+ Return y = x(u,v,w)
+ 
+ **********************************************************************************************/
+-(double)interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+    
+    int i, n;
+    int *p, *q, *r;
+    double y, s;
+    double *coeff;
+    
+    if (element->Type.ElementCode == 605) {
+        s = 0.0;
+        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        s = 1.0 / (1-w);
+        
+        y = 0.0;
+        y = y + x[0] * ( (1.0-u) * (1.0-v) - w + u*v*w * s) / 4.0;
+        y = y + x[1] * ( (1.0+u) * (1.0-v) - w - u*v*w * s) / 4.0;
+        y = y + x[2] * ( (1.0+u) * (1.0+v) - w + u*v*w * s) / 4.0;
+        y = y + x[3] * ( (1.0-u) * (1.0+v) - w - u*v*w * s) / 4.0;
+        y = y + x[4] * w;
+        return y;
+    } else if (element->Type.ElementCode == 613) {
+        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        s = 1.0 / (1-w);
+        
+        y = 0.0;
+        y = y + x[0] * (-u-v-1.0) * ( (1.0-u) * (1.0-v) - w + u*v*w *s ) / 4.0;
+        y = y + x[1] * (u-v-1.0) * ( (1.0+u) * (1.0-v) - w - u*v*w *s ) / 4.0;
+        y = y + x[2] * (u+v-1.0) * ( (1.0+u) * (1.0+v) - w + u*v*w *s ) / 4.0;
+        y = y + x[3] * (-u+v-1.0) * ( (1.0-u) * (1.0+v) - w - u*v*w *s ) / 4.0;
+        y = y + x[4] * w*(2.0*w-1.0);
+        y = y + x[5] * (1.0+u-w) * (1.0-u-w) * (1.0-v-w) * s /2.0;
+        y = y + x[6] * (1.0+v-w) * (1.0-v-w) * (1.0+u-w) * s /2.0;
+        y = y + x[7] * (1.0+u-w) * (1.0-u-w) * (1.0+v-w) * s /2.0;
+        y = y + x[8] * (1.0+v-w) * (1.0-v-w) * (1.0-u-w) * s /2.0;
+        y = y + x[9] * w * (1.0-u-w) * (1.0-v-w) * s;
+        y = y + x[10] * w * (1.0+u-w) * (1.0-v-w) * s;
+        y = y + x[11] * w * (1.0+u-w) * (1.0+v-w) * s;
+        y = y + x[12] * w * (1.0-u-w) * (1.0+v-w) * s;
+        return y;
+    }
+    
+    y = 0.0;
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
+        if (x[n] != 0.0) {
+            p = element->Type.BasisFunctions[n].p;
+            q = element->Type.BasisFunctions[n].q;
+            r = element->Type.BasisFunctions[n].r;
+            coeff = element->Type.BasisFunctions[n].coeff;
+            
+            s = 0.0;
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
+                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, r[i]);
+            }
+            y = y + s * x[n];
+        }
+    }
+    
+    return y;
+}
 
 @end
