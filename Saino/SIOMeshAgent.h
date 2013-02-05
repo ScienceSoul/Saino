@@ -56,17 +56,17 @@
 @property(nonatomic, assign) int parallel;
 @property(nonatomic, assign) int meshFiles;
 
-- (id)initWithManager:(SIOModelManager *)mm: (int)split: (int)part;
+-(id)initWithManager:(SIOModelManager *)mm split:(int)split part:(int)part;
 -(int)createMesh:(NSString *)dir;
 -(int)openMesh:(NSString *)dir;
 -(int)closeMesh;
 
 // Reading methods
--(int)readDescriptor:(int *)nodeC: (int *)elementC: (int *)boundaryElementC: (int *)usedElementTypes: (int *)usedElementTypeTags: (int *)usedElementTypeCount;
--(int)readNextElementConnections:(int *)tag: (int *)part: (int *)body: (int *)type: (int *)pdofs: (int *)nodes;
--(int)readNextElementCoordinates:(int *)tag: (int *)body: (int *)type: (int *)nodes: (double *)coord;
--(int)readNextBoundaryElement:(int *)tag: (int *)part: (int *)boundary: (int *)leftElement: (int *)rightElement: (int *)type: (int *)nodes: (double *)coord;
--(int)readAllNodes:(int *)tags: (double *)coord;
+-(int)readDescriptorNode:(int *)nodeC element:(int *)elementC boundaryElement:(int *)boundaryElementC usedElementTypes:(int *)usedElementTypes usedElementTypeTags:(int *)usedElementTypeTags usedElementTypeCount:(int *)usedElementTypeCount;
+-(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes;
+-(int)readNextElementCoordinates:(int *)tag body:(int *)body type:(int *)type nodes:(int *)nodes coord:(double *)coord;
+-(int)readNextBoundaryElement:(int *)tag part:(int *)part boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord;
+-(int)readAllNodes:(int *)tags coord:(double *)coord;
 
 // Writing methods
 //-(int)writeDescriptor:(int)nodeC: (int)elementC: (int)boundaryElementC: (int)usedElementTypes: (int *)elementTypeTags: (int *)elementCountByType;
@@ -76,6 +76,6 @@
 //-(int)writeBoundaryElement:(int)tag: (int)boundary: (int)leftElement: (int)rightElement: (int)type: (int *)nodes;
 
 -(int)readPartDescriptor:(int *)shared;
--(int)readSharedNode:(int *)tag: (int *)constraint: (double *)coord: (int *)partcount: (int *)partitions;
+-(int)readSharedNode:(int *)tag constraint:(int *)constraint coord:(double *)coord partCount:(int *)partcount partitions:(int *)partitions;
 
 @end

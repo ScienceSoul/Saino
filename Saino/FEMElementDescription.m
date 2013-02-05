@@ -18,7 +18,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
 @interface FEMElementDescription ()
 
 -(void)FEMElementDescription_initElementsDefinition;
--(void)FEMElementDescription_compute1DPBasis:(double **)basis: (int)n;
+-(void)FEMElementDescription_compute1DPBasis:(double **)basis sizeOfBasis:(int)n;
 -(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
 @end
 
@@ -675,7 +675,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
 }
 
--(void)FEMElementDescription_compute1DPBasis:(double **)basis :(int)n {
+-(void)FEMElementDescription_compute1DPBasis:(double **)basis sizeOfBasis:(int)n {
 /***************************************************************************
     Method to compute the 1D P-basis from Legendre polynomials
 ***************************************************************************/
@@ -1015,7 +1015,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                     a[i][j] = 0.0;
                 }
             }
-            [self FEMElementDescription_compute1DPBasis:a :14];
+            [self FEMElementDescription_compute1DPBasis:a sizeOfBasis:14];
             
             for (i=2; i<14; i++) {
                 element.BasisFunctions[i].p = intvec(0, i);
@@ -2431,7 +2431,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 bf[1] = s;
                 bf[2] = 0.0;
                 
-                [utilities solveLinearSystem2x2:J :delta :bf];
+                [utilities solveLinearSystem2x2:J afterSolve:delta rightHandSide:bf];
                 
             case 3:
                 J[0][0] = [self firstDerivativeU3DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w];
@@ -2450,7 +2450,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 bf[1] = s;
                 bf[2] = t;
                 
-                [utilities solveLinearSystem3x3:J :delta :bf];
+                [utilities solveLinearSystem3x3:J afterSolve:delta rightHandSide:bf];
         }
         
         // If the iteration does not proceed, try with some relaxation

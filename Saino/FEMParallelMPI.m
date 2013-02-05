@@ -20,7 +20,7 @@
     return self;
 }
 
--(double)parallelReduction:(double)r: (int *)oper_arg {
+-(double)parallelReductionOfValue:(double)r operArg:(int *)oper_arg{
     
     double rsum;
     //int oper;

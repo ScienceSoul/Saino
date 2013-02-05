@@ -26,7 +26,7 @@
 -(int)openModel:(NSString *)dir;
 -(int)closeModel;
 
--(int)openStream:(NSFileHandle *)fstr: (NSString *)name: (NSString *)mode;
+-(int)openStream:(NSFileHandle *)fstr name:(NSString *)name mode:(NSString *)mode;
 -(int)closeStrem:(NSFileHandle *)fstr;
 
 -(int)makeDirectory:(NSString *)dir;

@@ -542,7 +542,7 @@
     }
 }
 
--(void)setMatrixElement:(FEMMatrix *)a: (int)i: (int)j: (double)value {
+-(void)setMatrixElement:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
@@ -1285,9 +1285,10 @@
     return var;
 }
 
-
-
--(double)interpolateCurve:(double *)tValues: (double *)fValues: (double)t: (int)n {
+/*********************************************************************************************************
+ Interpolate values in a curve given by linear table or splines.
+*********************************************************************************************************/
+-(double)interpolateCurveTvalues:(double *)tValues fValues:(double *)fValues value:(double)t sizeOfTValues:(int)n {
     
     int i;
     double f;
@@ -1304,7 +1305,7 @@
     return f;
 }
 
--(void)solveLinearSystem2x2:(double **)a :(double *)x :(double *)b {
+-(void)solveLinearSystem2x2:(double **)a afterSolve:(double *)x rightHandSide:(double *)b {
     
     double detA;
     
@@ -1321,7 +1322,7 @@
     
 }
 
--(void)solveLinearSystem3x3:(double **)a: (double *)x: (double *)b {
+-(void)solveLinearSystem3x3:(double **)a afterSolve:(double *)x rightHandSide:(double *)b {
     
     double **c, *y, *g, s, t, q;
     
@@ -1340,7 +1341,7 @@
         
         g[0] = b[1] - s * b[0];
         g[1] = b[2] - t * b[0];
-        [self solveLinearSystem2x2:c :y :g];
+        [self solveLinearSystem2x2:c afterSolve:y rightHandSide:g];
         
         x[1] = y[0];
         x[2] = y[1];
@@ -1356,7 +1357,7 @@
         
         g[0] = b[1] - s * b[0];
         g[1] = b[2] - t * b[0];
-        [self solveLinearSystem2x2:c :y :g];
+        [self solveLinearSystem2x2:c afterSolve:y rightHandSide:g];
         
         x[0] = y[0];
         x[2] = y[1];
@@ -1372,7 +1373,7 @@
         
         g[0] = b[1] - s * b[0];
         g[1] = b[2] - t * b[0];
-        [self solveLinearSystem2x2:c :y :g];
+        [self solveLinearSystem2x2:c afterSolve:y rightHandSide:g];
         
         x[0] = y[0];
         x[1] = y[1];

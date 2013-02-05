@@ -19,33 +19,33 @@
 @interface FEMPrecondition : NSObject
 
 // Diagonal preconditioning
--(void)CRS_DiagPrecondition:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar;
--(void)CRS_ComplexDiagPrecondition:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar;
+-(void)CRSDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(void)CRSComplexDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
 
--(void)CRS_BlockDiagonal:(FEMSolution *)solution: (FEMMatrix *) B: (int)blocks;
+-(void)CRSBlockDiagonalInSolution:(FEMSolution *)solution blockDiagMatrix:(FEMMatrix *) B numberOfBlocks:(int)blocks;
 
 // ILU(n) preconditioning
--(BOOL)CRS_IncompleteLU:(FEMSolution *)solution: (int)ilun;
--(BOOL)CRS_ComplexIncompleteLU:(FEMSolution *)solution: (int)ilun;
+-(BOOL)CRSIncompleteLUInSolution:(FEMSolution *)solution fillsOrder:(int)ilun;
+-(BOOL)CRSComplexIncompleteLUInSolution:(FEMSolution *)solution fillsOrder: (int)ilun;
 
 // ILU(T) preconditioning
--(BOOL)CRS_ILUT:(FEMSolution *)solution: (int)tol;
--(BOOL)CRS_ComplexILUT:(FEMSolution *)solution: (int)tol;
+-(BOOL)CRSIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol;
+-(BOOL)CRSComplexIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol;
 
 // LU Solve
--(BOOL)CRS_LUPrecondition: (FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar;
--(BOOL)CRS_ComplexLUPrecondition: (FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar;
+-(BOOL)CRSLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(BOOL)CRSComplexLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
 
 // Matrix-vector product
--(void)CRS_MatrixVectorProd:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar;
--(void)CRS_ComplexMatrixVectorProd:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar;
+-(void)CRSMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v info:(int *)ipar;
+-(void)CRSComplexMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v info:(int *)ipar;
 
 // Dummy method when preconditioning is not needed
--(void)CRS_pcond_dummy:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar;
+-(void)CRSPCondDummyInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
 
 // CRS Matrix-vector multiply
--(void)CRS_MatrixVectorMultiply:(FEMSolution *)solution: (double *)u: (double *)v;
--(void)CRS_ComplexMatrixVectorMultiply:(FEMSolution *)solution: (double complex *)u: (double complex *)v;
+-(void)CRSMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
+-(void)CRSComplexMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v;
 
 @end
 

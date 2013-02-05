@@ -14,10 +14,10 @@
 @interface FEMTimeIntegration : NSObject
 
 
--(void)fractionStep:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double *)prevSolution: (int *)rows;
--(void)bdfLocal:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double **)prevSolution: (int)order: (int *)rows: (int *)cols;
--(void)vbdfLocal:(FEMSolution *)solution: (int)n: (double *)dts: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double **)prevSolution: (int)order: (int *)rows: (int *)cols;
--(void)newMarkBeta:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double *)prevSolution: (double)beta: (int *)rows;
+-(void)fractionalStepInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution rows:(int *)rows;
+-(void)bdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols;
+-(void)vbdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dts:(double *)dts massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols;
+-(void)newMarkBetaInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution beta:(double)beta rows:(int *)rows;
 
 
 @end

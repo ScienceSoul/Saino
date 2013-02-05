@@ -43,8 +43,8 @@
 -(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int)indSize;
 -(int **)getEdgeMap:(int)elementFamily;
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution;
--(void)setMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value;
--(void)addToMatrixElement:(FEMSolution *)solution: (int)i: (int)j: (double)value;
+-(void)setMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)addToMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
 -(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double)integral;
 -(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force;
 -(void)solveWithLapackMatrix:(double *)a andVector:(double *)x size:(int)n leadingDimension:(int)lda;
@@ -62,7 +62,7 @@
 
 -(void)iterativeSolve:(FEMSolution *)solution;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel;
--(double)stopc:(FEMSolution *)solution: (double *)x: (double *)b: (double *)r: (int *)ipar;
+-(double)stopc:(FEMSolution *)solution multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar;
 
 
 

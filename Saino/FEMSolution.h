@@ -70,8 +70,8 @@
 
 -(void)initializeILU:(int)ilun;
 -(void)initializeCILU:(int)ilun;
--(void)ilutWorkspaceCheck:(int)i: (int)n;
--(void)ilutComplexWorkspaceCheck:(int)i: (int)n;
+-(void)ilutWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n;
+-(void)ilutComplexWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n;
 
 
 

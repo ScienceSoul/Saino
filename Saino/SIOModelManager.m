@@ -191,7 +191,7 @@
     return 0;
 }
 
--(int)openStream:(NSFileHandle *)fstr :(NSString *)name :(NSString *)mode {
+-(int)openStream:(NSFileHandle *)fstr name:(NSString *)name mode:(NSString *)mode {
     
     if ([mode isEqualToString:@"read"]) {
         fstr = [NSFileHandle fileHandleForReadingAtPath:name];

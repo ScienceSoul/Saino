@@ -10,7 +10,7 @@
 
 @implementation FEMTimeIntegration
 
--(void)fractionStep:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double *)prevSolution: (int *)rows {
+-(void)fractionalStepInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution rows:(int *)rows {
     
     int i, j, nb;
     double s, fsStep, fsTheta, fsdTheta, fsAlpha, fsBeta, massCoeff, forceCoeff;
@@ -66,7 +66,7 @@
     
 }
 
--(void)bdfLocal:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double **)prevSolution: (int)order: (int *)rows: (int *)cols {
+-(void)bdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols {
     
     int i, j, nb1, nb2;
     double s;
@@ -155,7 +155,7 @@
     }
 }
 
--(void)vbdfLocal:(FEMSolution *)solution: (int)n: (double *)dts: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double **)prevSolution: (int)order: (int *)rows: (int *)cols {
+-(void)vbdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dts:(double *)dts massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols {
 /***********************************************************************************************************************************************
     Variable time step BDF
 ***********************************************************************************************************************************************/
@@ -212,7 +212,7 @@
     free_dvector(a, 0, 3);
 }
 
--(void)newMarkBeta:(FEMSolution *)solution: (int)n: (double)dt: (double **)massMatrix: (double **)stiffMatrix: (double *)force: (double *)prevSolution: (double)beta: (int *)rows {
+-(void)newMarkBetaInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution beta:(double)beta rows:(int *)rows {
     
     int i, j, nb;
     double s;

@@ -10,7 +10,7 @@
 
 @interface FEMSolution ()
 
--(int)initializeILU1:(matrixArraysContainer *)containers: (int)n;
+-(int)FEMSolution_initializeILU1:(matrixArraysContainer *)containers :(int)n;
 
 @end
 
@@ -18,7 +18,7 @@
 
 #pragma mark Private methods...
 
--(int)initializeILU1:(matrixArraysContainer *)containers: (int)n {
+-(int)FEMSolution_initializeILU1:(matrixArraysContainer *)containers :(int)n {
     
     int i, j, k, l, nonZeros, rowMin, rowMax;
     int *C;
@@ -186,7 +186,7 @@
         matContainers->sizeILUDiag = matContainers->sizeDiag;
     } else {
 
-        matContainers->sizeILUCols = [self initializeILU1:matContainers :n];
+        matContainers->sizeILUCols = [self FEMSolution_initializeILU1:matContainers :n];
         matContainers->sizeILURows = n+1;
         matContainers->sizeILUDiag = n;
         
@@ -198,7 +198,7 @@
                 a1Containers->Rows = matContainers->ILURows;
                 a1Containers->Diag = matContainers->ILUDiag;
                 
-                m = [self initializeILU1:a1Containers :n];
+                m = [self FEMSolution_initializeILU1:a1Containers :n];
                 
                 matContainers->ILUCols = a1Containers->ILUCols;
                 matContainers->ILURows = a1Containers->ILURows;
@@ -262,7 +262,7 @@
         matContainers->sizeILUDiag = matContainers->sizeDiag;
     } else {
         
-        matContainers->sizeILUCols = [self initializeILU1:a1Containers :n/2];
+        matContainers->sizeILUCols = [self FEMSolution_initializeILU1:a1Containers :n/2];
         matContainers->ILUCols = a1Containers->ILUCols;
         matContainers->ILURows = a1Containers->ILURows;
         matContainers->ILUDiag = a1Containers->ILUDiag;
@@ -285,7 +285,7 @@
                 a1Containers->Rows = matContainers->ILURows;
                 a1Containers->Diag = matContainers->ILUDiag;
                 
-                k = [self initializeILU1:a1Containers :n/2];
+                k = [self FEMSolution_initializeILU1:a1Containers :n/2];
                 
                 matContainers->ILUCols = a1Containers->ILUCols;
                 matContainers->ILURows = a1Containers->ILURows;
@@ -307,7 +307,7 @@
     a1Containers = NULL;
 }
 
--(void)ilutWorkspaceCheck:(int)i: (int)n {
+-(void)ilutWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
     int *iWork;
@@ -350,7 +350,7 @@
     matContainers = NULL;
 }
 
--(void)ilutComplexWorkspaceCheck:(int)i: (int)n {
+-(void)ilutComplexWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
     int *iWork;

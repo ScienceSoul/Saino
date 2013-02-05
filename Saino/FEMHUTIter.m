@@ -17,12 +17,12 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 @interface FEMHUTIter ()
 
--(void)HUTI_drandvec:(double *)u: (int *)ipar;
--(void)HUTI_dlusolve:(int)n: (double **)lumat: (double *)u: (double *)v;
--(void)HUTI_sgs:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (double)omega: (SEL)matvecMethod;
--(void)HUTI_jacobi:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (SEL)matvecMethod;
--(void)HUTI_BICGStabl:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)l: (SEL)pcondlMethod: (SEL)matvecMethod;
--(void)HUTI_gcr:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)m: (SEL)pcondlMethod: (SEL)matvecMethod;
+-(void)HUTI_dRandVector:(double *)u ipar:(int *)ipar;
+-(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v;
+-(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_BICGStablNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval polynomialDegree:(int)l pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 
 
 
@@ -33,7 +33,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 #pragma mark private methods
 
--(void)HUTI_drandvec:(double *)u :(int *)ipar {
+-(void)HUTI_dRandVector:(double *)u ipar:(int *)ipar {
 /**********************************************************
     This method fills a vector with pseudo random numbers
 **********************************************************/
@@ -45,7 +45,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
 }
 
--(void)HUTI_dlusolve:(int)n :(double **)lumat :(double *)u :(double *)v {
+-(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v {
 /*******************************************************************
     This method constructs LU decomposition of the given matrix 
     and solve LUu = v 
@@ -55,8 +55,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // This is from Saad's book, algorithm 10.4
     
-    for (i=1; i<n; i++) {
-        for (k=0; k<i-1; k++) {
+    for (i=1; i<=n; i++) {
+        for (k=0; k<=i-1; k++) {
             
             // Check for small pivot
             if ( fabs(lumat[k][k]) < 1.0e-16 ) {
@@ -67,7 +67,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             
             lumat[i][k] = lumat[i][k] / lumat[k][k];
             
-            for (j=k+1; j<n; j++) {
+            for (j=k+1; j<=n; j++) {
                 // Compute a_ij = a_ij - a_ik * a_kj
                 lumat[i][j] = lumat[i][j] - lumat[i][k] * lumat[k][j];
             }
@@ -75,11 +75,11 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
     
     // Forward solve, Lu = v
-    for (i=0; i<n; i++) {
+    for (i=0; i<=n; i++) {
         
         // Compute u(i) = v(i) - sum L(i,j) u(j)
         u[i] = v[i];
-        for (k=0; k<i-1; k++) {
+        for (k=0; k<=i-1; k++) {
             u[i] = u[i] - lumat[i][k] * u[k];
         }
     }
@@ -89,17 +89,16 @@ static double UPPERB_TOL_RATIO  =  10.0;
     for (i=n; i>=0; i--) {
         
         // Compute u(i) = u(i) - sum U(i,j) u(j)
-        for (k=i+1; k<n; k++) {
+        for (k=i+1; k<=n; k++) {
             u[i] = u[i] - lumat[i][k] * u[k];
         }
         
         // Ccompute u(i) = u(i) / U(i,i)
         u[i] = u[i] / lumat[i][i];
     }
-    
 }
 
--(void)HUTI_sgs:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (double)omega: (SEL)matvecMethod {
+-(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod {
     
     int i, j, k;
     double *r;
@@ -194,7 +193,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     matContainers = NULL;
 }
 
--(void)HUTI_jacobi:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (SEL)matvecMethod {
+-(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
     
     int i, k;
     double *r;
@@ -279,7 +278,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
 }
 
--(void)HUTI_BICGStabl:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)l: (SEL)pcondlMethod: (SEL)matvecMethod {
+-(void)HUTI_BICGStablNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval polynomialDegree:(int)l pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
 /**********************************************************************************************************************************
  
  This method solves real linear system Ax = b by usinf the BICGStab(l) algorithm wirh l ≥ 2 and the right-oriented ILU(n) 
@@ -735,7 +734,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(buffer2, 0, (l+1)-1);
 }
 
--(void)HUTI_gcr:(int)n: (FEMSolution *)solution: (double *)xvec: (double *)rhsvec: (int *)ipar: (double)rounds: (double)minTolerance: (double)maxTolerance: (double)residual: (BOOL)converged: (BOOL)diverged: (int)outputInterval: (int)m: (SEL)pcondlMethod: (SEL)matvecMethod {
+-(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
     
     int i, j, k, l;
     double bnorm, rnorm;
@@ -943,7 +942,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 #pragma mark BI-CGSTAB
 
--(void)dbicgstabSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dbicgstabSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
 /**********************************************************************************************************************************
  
     This method is based on Barret et al. book: "Templates for the Solution of Linear Systems: Building blocks for 
@@ -1034,7 +1033,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -1241,7 +1240,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 #pragma mark BI-CGSTAB(2)
 
--(void)dbicgstab2Solve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dbicgstab2SolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
 /**********************************************************************************************************************************
  
     This method is based on the Henk A. Van der Vorst paper: "Parallel Iretative Solution Methods for the Linear Systems
@@ -1334,7 +1333,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -1648,7 +1647,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 #pragma mark TFQMR
 
--(void)dtfqmrSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dtfqmrSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
 /**********************************************************************************************************************************
  
     This method is based on the Roland W. Freund paper: "A Transpose-Free Quasi-Minimal Residual Algorithm for Non-Hermitian
@@ -1745,7 +1744,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     //  Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -2313,7 +2312,7 @@ jump:
 
 #pragma mark CG
 
--(void)dcgSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dcgSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
 /**********************************************************************************************************************************
  
     This method is based on Barret et al. book: "Templates for the Solution of Linear Systems: Building blocks for 
@@ -2401,7 +2400,7 @@ jump:
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -2566,7 +2565,7 @@ jump:
 
 #pragma mark CGS
 
--(void)dcgsSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dcgsSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
 /**********************************************************************************************************************************
  
     This method is based on Barret et al. book: "Templates for the Solution of Linear Systems: Building blocks for 
@@ -2657,7 +2656,7 @@ jump:
     
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -2853,7 +2852,7 @@ jump:
 
 #pragma mark GMRES
 
--(void)dgmresSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dgmresSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod{
 /**********************************************************************************************************************************
  
     This method is based on Barret et al. book: "Templates for the Solution of Linear Systems: Building blocks for 
@@ -2956,7 +2955,7 @@ jump:
 
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
-        [self HUTI_drandvec:varContainers->Values :ipar];
+        [self HUTI_dRandVector:varContainers->Values ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
         for (i=0; i<varContainers->sizeValues; i++) {
             varContainers->Values[i] = 1;
@@ -3122,7 +3121,7 @@ jump:
                 for (j=0; j<ndim; j++) {
                     buffer[j] = work[j][s_ind-1];
                 }
-                [self HUTI_dlusolve:i :h :y :buffer];
+                [self HUTI_dLuSolveAt:i luMatrix:h afterSolve:y rightHandSide:buffer];
                 
                 // Matrix-vector product
                 cblas_dgemv(CblasRowMajor, CblasNoTrans, solution.matrix.numberOfRows, ((v_ind+i)-(v_ind+1-1))+1, 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, varContainers->Values, 1);
@@ -3137,7 +3136,7 @@ jump:
         for (j=0; j<ndim; j++) {
             buffer[j] = work[j][s_ind-1];
         }
-        [self HUTI_dlusolve:m-1 :h :y :buffer];
+        [self HUTI_dLuSolveAt:m-1 luMatrix:h afterSolve:y rightHandSide:buffer];
         // Matrix-vector product
         cblas_dgemv(CblasRowMajor, CblasNoTrans, solution.matrix.numberOfRows, (v_ind+m-1)-(v_ind+1-1), 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, varContainers->Values, 1);
         
@@ -3328,7 +3327,7 @@ jump:
 
 #pragma mark SGS
 
--(void)dsgsSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)dsgsSolveInsolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual, omega;
@@ -3345,7 +3344,7 @@ jump:
     outputInterval = ipar[4];
     omega = dpar[2];
     
-    [self HUTI_sgs:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :omega :matvecMethod];
+    [self HUTI_sgsNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval omega:omega matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3356,7 +3355,7 @@ jump:
 
 #pragma mark JACOBI
 
--(void)djacobiSolve:(FEMSolution *)solution :(int)ndim :(int)wrkdim :(int *)ipar :(double *)dpar :(double **)work :(SEL)pcondlMethod :(SEL)pcondrMethod :(SEL)matvecMethod :(SEL)mstopMethod {
+-(void)djacobiSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;
@@ -3372,7 +3371,7 @@ jump:
     maxTol = dpar[1];
     outputInterval = ipar[4];
     
-    [self HUTI_jacobi:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :matvecMethod];
+    [self HUTI_jacobiNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3383,7 +3382,7 @@ jump:
 
 #pragma mark BI-CGSTAB(l)
 
--(void)dbicgstablSolve:(FEMSolution *)solution: (int)ndim: (int)wrkdim: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod {
+-(void)dbicgstablSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
@@ -3402,7 +3401,7 @@ jump:
     outputInterval = ipar[4];
     polynomialDegree = ipar[15];
     
-    [self HUTI_BICGStabl:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :converged :diverged :outputInterval :polynomialDegree :pcondlMethod :matvecMethod];
+    [self HUTI_BICGStablNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:converged diverged:diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3413,7 +3412,7 @@ jump:
 
 #pragma mark GCR
 
--(void)dgcrSolve:(FEMSolution *)solution: (int)ndim: (int)wrkdim: (int *)ipar: (double *)dpar: (double **)work: (SEL)pcondlMethod: (SEL)pcondrMethod: (SEL)matvecMethod: (SEL)mstopMethod {
+-(void)dgcrSolveInSolution:(FEMSolution *)solution ndim:(int)ndim wrkdim:(int)wrkdim ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval, restartN;
     double minTol, maxTol, residual;
@@ -3430,7 +3429,7 @@ jump:
     outputInterval = ipar[4];
     restartN = ipar[16];
     
-    [self HUTI_gcr:ndim :solution :varContainers->Values :matContainers->RHS :ipar :rounds :minTol :maxTol :residual :converged :diverged :outputInterval :restartN :pcondlMethod :matvecMethod];
+    [self HUTI_gcrNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;

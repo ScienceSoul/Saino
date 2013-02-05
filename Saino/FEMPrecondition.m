@@ -14,10 +14,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 @interface FEMPrecondition ()
 
--(void)FEMPrecondition_computeILUT:(FEMSolution *)solution: (int)n: (int)tol;
--(void)FEMPrecondition_computeComplexILUT:(FEMSolution *)solution: (int)n: (int)tol;
--(void)FEMPrecondition_LUSolve:(int)n: (FEMSolution *)solution: (double *)b;
--(void)FEMPrecondition_ComplexLUSolve:(int)n: (FEMSolution *)solution: (double complex *)b;
+-(void)FEMPrecondition_computeIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_computeComplexIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double *)b;
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double complex *)b;
 
 @end
 
@@ -25,7 +25,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 #pragma mark Private methods
 
--(void)FEMPrecondition_computeILUT:(FEMSolution *)solution :(int)n :(int)tol {
+-(void)FEMPrecondition_computeIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     int *C;                         //Booleans
@@ -124,7 +124,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
                 
                 t = cputime();
-                [solution ilutWorkspaceCheck:i :n];
+                [solution ilutWorkspaceCheckAtIndex:i numberOfRows:n];
                 cptime = cptime + (cputime() - t);
                 
             }
@@ -144,7 +144,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)FEMPrecondition_computeComplexILUT:(FEMSolution *)solution: (int)n: (int)tol {
+-(void)FEMPrecondition_computeComplexIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     int *C;                         //Boolean
@@ -238,8 +238,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             
             // Check if still enough workspace
             if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
-                
-                [solution ilutComplexWorkspaceCheck:i :n];
+                [solution ilutComplexWorkspaceCheckAtIndex:i numberOfRows:n];
             }
         }
     }
@@ -257,22 +256,22 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)FEMPrecondition_LUSolve:(int)n: (FEMSolution *)solution: (double *)b {
-    /*******************************************************************************************
-     
-     Description:
-     Solve a system  (Ax=b) after factorization A=LUD has been done. This method is
-     meant as a part of a preconditioner for an iterative solver. Real version
-     
-     Arguments:
-     
-     int n                    -> Size of the system.
-     
-     FEMSolution *solution    -> Class holding input matrix.
-     
-     double *b                -> On entry the RHS vector, on exit the solution vector.
-     
-     *******************************************************************************************/
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double *)b {
+/*******************************************************************************************
+ 
+    Description:
+    Solve a system  (Ax=b) after factorization A=LUD has been done. This method is
+    meant as a part of a preconditioner for an iterative solver. Real version
+ 
+    Arguments:
+ 
+    int n                    -> Size of the system.
+ 
+    FEMSolution *solution    -> Class holding input matrix.
+ 
+    double *b                -> On entry the RHS vector, on exit the solution vector.
+ 
+*******************************************************************************************/
     
     int i, j;
     double s;
@@ -310,22 +309,22 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)FEMPrecondition_ComplexLUSolve:(int)n: (FEMSolution *)solution: (double complex *)b {
-    /*******************************************************************************************
-     
-     Description:
-     Solve a system  (Ax=b) after factorization A=LUD has been done. This method is
-     meant as a part of a preconditioner for an iterative solver. Complex version
-     
-     Arguments:
-     
-     int n                  -> Size of the system.
-     
-     FEMSolution *solution  -> Class holding input matrix.
-     
-     double complex *b      -> On entry the RHS vector, on exit the solution vector.
-     
-     *******************************************************************************************/
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double complex *)b {
+/*******************************************************************************************
+ 
+    Description:
+    Solve a system  (Ax=b) after factorization A=LUD has been done. This method is
+    meant as a part of a preconditioner for an iterative solver. Complex version
+ 
+    Arguments:
+ 
+    int n                  -> Size of the system.
+ 
+    FEMSolution *solution  -> Class holding input matrix.
+ 
+    double complex *b      -> On entry the RHS vector, on exit the solution vector.
+ 
+*******************************************************************************************/
     
     int i, j;
     double complex s, x;
@@ -378,7 +377,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
 }
 
 
--(void)CRS_DiagPrecondition:(FEMSolution *)solution :(double *)u :(double *)v :(int *)ipar {
+-(void)CRSDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
 /*******************************************************************************************
                                                                              
     Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from   
@@ -386,9 +385,11 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
     Arguments:
        
-        double u, v;
- 
-        int ipar    -> Input stucture holding info from the HUTIter iterative solver
+        double u  ->  Resulting approximate solution after preconditioning
+
+        double v  -> Given right-hand-side
+
+        int ipar  -> Input stucture holding info from the HUTIter iterative solver
  
 *******************************************************************************************/
     int i, j, n;
@@ -438,7 +439,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)CRS_ComplexDiagPrecondition:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar {
+-(void)CRSComplexDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
 /*******************************************************************************************
  
     Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from   
@@ -446,11 +447,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
     Arguments:
  
-    double complex u, v;
+        double u  ->  Resulting approximate solution after preconditioning
  
-    int ipar    -> Input stucture holding info from the HUTIter iterative solver
+        double v  -> Given right-hand-side
  
- *******************************************************************************************/
+        int ipar  -> Input stucture holding info from the HUTIter iterative solver
+
+*******************************************************************************************/
     
     int i, j, n;
     double complex A;
@@ -497,12 +500,15 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)CRS_BlockDiagonal:(FEMSolution *)solution: (FEMMatrix *) B: (int)blocks {
+-(void)CRSBlockDiagonalInSolution:(FEMSolution *)solution blockDiagMatrix:(FEMMatrix *) B numberOfBlocks:(int)blocks {
 /*******************************************************************************************
     Description: 
         Pics the block diagonal entries form matrix solution.matrix to build matrix B.
  
- *******************************************************************************************/
+        FEMMatrix *B  ->  The block diagonal matrix
+        int blocks    ->  Number of blocks used in the decomposition
+
+*******************************************************************************************/
     
     int n;
     int i, k, l, kb;
@@ -544,7 +550,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     bContainers = NULL;
 }
 
--(BOOL)CRS_IncompleteLU:(FEMSolution *)solution: (int)ilun {
+-(BOOL)CRSIncompleteLUInSolution:(FEMSolution *)solution fillsOrder:(int)ilun {
 /*******************************************************************************************
  
     Description: 
@@ -642,7 +648,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return YES;
 }
 
--(BOOL)CRS_ComplexIncompleteLU:(FEMSolution *)solution: (int)ilun {
+-(BOOL)CRSComplexIncompleteLUInSolution:(FEMSolution *)solution fillsOrder: (int)ilun {
 /*******************************************************************************************
  
     Description: 
@@ -741,7 +747,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return YES;
 }
 
--(BOOL)CRS_ILUT:(FEMSolution *)solution: (int)tol {
+-(BOOL)CRSIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol {
 /*******************************************************************************************
  
     Description: 
@@ -754,7 +760,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                                   the factorization on exit.
  
         int tol                -> Drop tolerance: if ILUT(i,j) <= NORM(A(i.;))*tol
-                                 the value is dropped.
+                                  the value is dropped.
  
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
@@ -778,7 +784,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_dvector(matContainers->ILUValues, 0, matContainers->sizeILUValues-1);
     }
     
-    [self FEMPrecondition_computeILUT:solution :n :tol];
+    [self FEMPrecondition_computeIlutInSolution:solution numberOfRows:n tolerance:tol];
     
     warnfunct("CRS_ILUT", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
     warnfunct("CRS_ILUT", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
@@ -789,7 +795,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return YES;
 }
 
--(BOOL)CRS_ComplexILUT:(FEMSolution *)solution: (int)tol {
+-(BOOL)CRSComplexIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol {
 /*******************************************************************************************
  
     Description: 
@@ -826,7 +832,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_cdvector(matContainers->CILUValues, 0, matContainers->sizeCILUValues-1);
     }
     
-    [self FEMPrecondition_computeComplexILUT:solution :n :tol];
+    [self FEMPrecondition_computeComplexIlutInSolution:solution numberOfRows:n tolerance:tol];
     
     warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
     warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
@@ -837,7 +843,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     return YES;
 }
 
--(BOOL)CRS_LUPrecondition: (FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar {
+-(BOOL)CRSLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
 /*******************************************************************************************
  
     Description: 
@@ -848,10 +854,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
     FEMSolution *solution  -> Class holding input matrix.
  
-    double *u 
-    
-    double *v
- 
+    double *u              -> Solution vector
+
+    double *v              -> Right-hand-side vector
+
     int ipar               -> Structure holding info from the HUTIter iterative solver.
 
 *******************************************************************************************/
@@ -862,13 +868,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         u[i] = v[i];
     }
     
-    [self FEMPrecondition_LUSolve:ipar[2] :solution :u];
+    [self FEMPrecondition_LUSolveSystemSize:ipar[2] solution:solution rightHandSide:u];
     
     return YES;
     
 }
 
--(BOOL)CRS_ComplexLUPrecondition: (FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar {
+-(BOOL)CRSComplexLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
 /*****************************************************************************************************************
  
     Description: 
@@ -879,9 +885,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
         FEMSolution *solution  -> Class holding input matrix.
  
-        double complex *u 
+        double complex *u      -> Solution vector
  
-        double complex *v
+        double complex *v      -> Right-hand-side vector
  
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
@@ -893,13 +899,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         u[i] = v[i];
     }
     
-    [self FEMPrecondition_ComplexLUSolve:ipar[2] :solution :u];
+    [self FEMPrecondition_ComplexLUSolveSystemSize:ipar[2] solution:solution rightHandSide:u];
 
     return YES;
     
 }
 
--(void)CRS_MatrixVectorProd:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar {
+-(void)CRSMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v info:(int *)ipar {
 /*******************************************************************************************
  
     Description: 
@@ -910,9 +916,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
         FEMSolution *solution  -> Class holding input matrix.
  
-        double *u 
- 
-        double *v
+        double *u              -> Vector to multiply
+
+        double *v              -> Result vector
  
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
@@ -950,7 +956,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)CRS_ComplexMatrixVectorProd:(FEMSolution *)solution: (double complex *)u: (double complex *)v: (int *)ipar {
+-(void)CRSComplexMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v info:(int *)ipar {
 /*******************************************************************************************
  
     Description: 
@@ -961,9 +967,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
     FEMSolution *solution  -> Class holding input matrix.
  
-    double complex *u 
+    double complex *u      -> Vector to multiply
  
-    double complex *v
+    double complex *v      -> Result vector
  
     int ipar               -> Structure holding info from the HUTIter iterative solver.
  
@@ -1003,7 +1009,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)CRS_pcond_dummy:(FEMSolution *)solution: (double *)u: (double *)v: (int *)ipar {
+-(void)CRSPCondDummyInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
     
     int i;
     
@@ -1012,7 +1018,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)CRS_MatrixVectorMultiply:(FEMSolution *)solution: (double *)u: (double *)v {
+-(void)CRSMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
     /*******************************************************************************************
      
      Description: 
@@ -1023,9 +1029,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
      
      FEMSolution *solution  -> Class holding input matrix.
      
-     double *u 
+     double *u              -> Vector to multiply
      
-     double *v
+     double *v              -> Result vector
      
      *******************************************************************************************/
     
@@ -1048,7 +1054,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers = NULL;
 }
 
--(void)CRS_ComplexMatrixVectorMultiply:(FEMSolution *)solution: (double complex *)u: (double complex *)v {
+-(void)CRSComplexMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v {
     /*******************************************************************************************
      
      Description: 

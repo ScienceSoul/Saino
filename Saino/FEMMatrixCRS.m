@@ -10,7 +10,7 @@
 
 @interface FEMMatrixCRS ()
 
--(int)CRS_Search:(int)n: (int *)array: (int)value;
+-(int)FEMMatrixCRS_Search:(int)n :(int *)array :(int)value;
 
 @end
 
@@ -19,7 +19,7 @@
 
 #pragma mark Private methods
 
--(int)CRS_Search:(int)n: (int *)array: (int)value {
+-(int)FEMMatrixCRS_Search:(int)n :(int *)array :(int)value {
     
     int lower, upper, lou, index;
     
@@ -267,7 +267,7 @@
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = matContainers->Cols[ii];
         }
-        k = [self CRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
         if (k < 0) {
             warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
             printf("%d %d %f\n", i, j, value);
@@ -307,7 +307,7 @@
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = matContainers->Cols[ii];
         }
-        k = [self CRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
         if (k < 0 && value != 0) warnfunct("addToMatrixElement", "Trying to add value to non existent element:");
         printf("%d %d %f\n", i, j, value);
         if (k < 0) return;
@@ -457,7 +457,7 @@
                 buffer[m] = matContainers->Cols[i];
                 m++;
             }
-            j = [self CRS_Search:k1 :buffer :n];
+            j = [self FEMMatrixCRS_Search:k1 :buffer :n];
             if (j >= 0) {
                 j = j + k1;
                 matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
@@ -725,7 +725,7 @@
         for (ii=aContainers->Rows[i]; ii<=aContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = aContainers->Cols[ii];
         }
-        k = [self CRS_Search:aContainers->Rows[i+1]-aContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_Search:aContainers->Rows[i+1]-aContainers->Rows[i] :buffer :j];
         if (k < 0) {
             warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
             printf("%d %d %f\n", i, j, value);

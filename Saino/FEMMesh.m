@@ -16,7 +16,7 @@
 #include "memory.h"
 
 @interface FEMMesh ()
--(void)FEMMesh_getMaxdefs:(FEMModel *)model: (Element_t *)element: (NSString *)elementDef: (int)solverID: (int)bodyID: (int *)defDofs;
+-(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs;
 -(void)FEMMesh_convertToACTetra:(Element_t *)tetra;
 -(void)FEMMesh_deallocateQuadrantTree:(Quadrant_t *)root;
 @end
@@ -25,7 +25,7 @@
 
 #pragma mark Private methods
 
--(void)FEMMesh_getMaxdefs:(FEMModel *)model: (Element_t *)element: (NSString *)elementDef: (int)solverID: (int)bodyID: (int *)defDofs {
+-(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs {
     
     int i, j, l, n;
     double x, y, z, sum;
@@ -354,7 +354,7 @@
         errorfunct("loadMeshForModel", "Program terminating now...");
     }
     
-    [meshIO getMeshDescription:&_numberOfNodes :&_numberOfBulkElements :&_numberOfBoundaryElements :&typeCount :types :countByType];
+    [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
         NSLog(@"Unable to read mesh header for mesh: %@\n", name);
         errorfunct("loadMeshForModel", "Program terminating now...");
@@ -390,7 +390,7 @@
     memset( cCoord, 0, ((3*self.numberOfNodes)*sizeof(cCoord)) );
     memset( nodeTags, 0, (self.numberOfNodes*sizeof(nodeTags)) );
     
-    [meshIO getMeshNodes:nodeTags :cCoord];
+    [meshIO getMeshNodes:nodeTags coord:cCoord];
     
     found = [listUtil listGetIntegerArray:model inArray:model.simulation.valuesList forVariable:@"coordinate mapping" buffer:&coordMap];
     if (found == YES) {
@@ -508,7 +508,7 @@
     nodes = intvec(0, MAX_ELEMENT_NODES-1);
     for (i=0; i<self.numberOfBulkElements; i++) {
         memset( inDofs, 0, (7*sizeof(inDofs)) );
-        [meshIO getMeshElementConnection:&elementTags[i] :&body :&type :inDofs :nodes];
+        [meshIO getMeshElementConnection:&elementTags[i] body:&body type:&type pdofs:inDofs nodes:nodes];
         if (meshIO.info != 0) break;
         
         if (defDofs != NULL) {
@@ -557,9 +557,9 @@
                     [str appendString:@"}"];
                     elementDef = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:str info:&gotIt];
                     if (gotIt == YES) {
-                        [self FEMMesh_getMaxdefs:model :&_elements[i] :elementDef :k-1 :bid-1 :inDofs];
+                        [self FEMMesh_getMaxdefs:model element:&_elements[i] elementDef:elementDef solverID:k-1 bodyID:bid-1 defDofs:inDofs];
                     } else {
-                        [self FEMMesh_getMaxdefs:model :&_elements[i] :elementDef0 :k-1 :bid-1 :inDofs];
+                        [self FEMMesh_getMaxdefs:model element:&_elements[i] elementDef:elementDef0 solverID:k-1 bodyID:bid-1 defDofs:inDofs];
                     }
                     k++;
                 }
@@ -660,7 +660,7 @@
     memset( coord, 0.0, (self.maxElementNodes*sizeof(coord)) );
     for (i=self.numberOfBulkElements; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
         
-        [meshIO getMeshBoundaryElement:&tag :&bndry :&left :&right :&type :nodes :coord];
+        [meshIO getMeshBoundaryElement:&tag boundary:&bndry leftElement:&left rightElement:&right type:&type nodes:nodes coord:coord];
         if (meshIO.info != 0) {
             self.numberOfBoundaryElements = i - self.numberOfBulkElements;
             break;

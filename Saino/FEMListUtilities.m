@@ -20,7 +20,7 @@
     return self;
 }
 
--(void)listParseStrToValues:(FEMModel *)model: (NSString *)str: (int)ind: (NSString *)name: (double *)t: (int)count {
+-(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int)count {
 
     int i, l, k1, n;
     FEMVariable *variable, *cVar;
@@ -171,7 +171,7 @@
                 memset( result->vector, 0.0, (n*sizeof(result->vector)) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
-                    [self listParseStrToValues:model :list.dependName :k :list.name :t :j];
+                    [self listParseStrToValues:model string:list.dependName index:k name:list.name values:t count:j];
                     
                     if (any(t, '=', HUGE_VAL, j) == false) {
                         
@@ -182,7 +182,7 @@
                             printf("%s\n", [varName UTF8String]);
                             errorfunct("listGetReal", "Program terminating now...");
                         }
-                        result->vector[i] = [util interpolateCurve:containers->tValues :buffer :t[0] :containers->sizeTValues];
+                        result->vector[i] = [util interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues];
                     }
                 }
                 

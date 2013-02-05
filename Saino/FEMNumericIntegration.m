@@ -207,7 +207,7 @@
         }
     }
     
-    [self setLtoGMap:element :nodes :mesh :u :v :w];
+    [self setLtoGMapForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     for (i=0; i<q; i++) {
         for (j=0; j<cdim; j++) {
@@ -280,7 +280,7 @@
     
     for (q=0; q<n; q++) {
         NodalBasis[q] = 1.0;
-        [self globalSecondDerivatives:element :nodes :mesh :u :v :w :NodalBasis :dLBasisdx :Values];
+        [self globalSecondDerivativesForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w nodalValues:NodalBasis dLBasisdx:dLBasisdx values:Values];
         for (i=0; i<2; i++) {
             for (j=0; j<2; j++) {
                 self.basisSecondDerivative[q][i][j] = Values[i][j];
@@ -303,7 +303,7 @@
     Square root of determinant of covariant metric tensor (=sqrt(det(J^TJ))).
 
 ***************************************************************************************************************************/
-    self.metricDeterminant = [self detJ:element :nodes :mesh :u :v :w];
+    self.metricDeterminant = [self detJForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     self.metricDeterminant = sqrt(self.metricDeterminant);
     
@@ -323,7 +323,7 @@
     dim = element->Type.dimension;
     cdim = [mesh dimension];
     
-    detG = [self detJ:element :nodes :mesh :u :v :w];
+    detG = [self detJForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     // Convert the metric to contravariant base
     switch (dim) {
@@ -338,7 +338,7 @@
             break;
         case 3:
             GI = doublematrix(0, 2, 0, 2);
-            [self invertMatrix3x3:GI :detG];
+            [self invertMatrix3x3:GI detJ:detG];
             for (i=0; i<3; i++) {
                 for (j=0; j<3; j++) {
                     self.elementMetric[i][j] = GI[i][j];
@@ -356,7 +356,7 @@
     
 }
 
--(void)setCovariantMetrixTensor:(Element_t *)element: (int)nDOFs: (Nodes_t*)nodes: (FEMMesh *)mesh: (double **)dLBasisdx {
+-(void)setCovariantMetrixTensorForElement:(Element_t *)element nDOFs:(int)nDOFs nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh dLBasisdx:(double **)dLBasisdx {
 /******************************************************************************************************
     Compute the covariant metric tensor of the element coordinate system
  
@@ -376,7 +376,7 @@
     dim = element->Type.dimension;
     cdim = [mesh dimension];
     
-    [self setdx:element :nDOFs :nodes :dLBasisdx];
+    [self setDxForElement:element nDOFs:nDOFs nodes:nodes dLBasisdx:dLBasisdx];
     
     for (i=0; i<dim; i++) {
         for (j=0; j<dim; j++) {
@@ -389,7 +389,7 @@
     }
 }
 
--(BOOL)setLtoGMap:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w {
+-(BOOL)setLtoGMapForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
     
     int i, j, k, dim, cdim;
     double s;
@@ -413,7 +413,7 @@
     
 }
 
--(void)setdx:(Element_t *)element: (int)nDOFs: (Nodes_t*)nodes: (double **)dLBasisdx {
+-(void)setDxForElement:(Element_t *)element nDOFs:(int)nDOFs nodes:(Nodes_t*)nodes dLBasisdx:(double **)dLBasisdx {
 /***********************************************************************************
     Partial derivatives of global coordinates with respect to local coordinates
     
@@ -449,7 +449,7 @@
     }
 }
 
--(double)detJ:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w {
+-(double)detJForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
 /**********************************************************************************************
     Compute determinant of covariant metric tensor det(J^TJ) and determinant 
     of covariant metric tensor det(J^TJ).
@@ -485,7 +485,7 @@
     
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     
-    [self setCovariantMetrixTensor:element :n :nodes :mesh :dLBasisdx];
+    [self setCovariantMetrixTensorForElement:element nDOFs:n nodes:nodes mesh:mesh dLBasisdx:dLBasisdx];
     
     switch (dim) {
            
@@ -525,7 +525,7 @@
     return detG;
 }
 
--(void)invertMatrix3x3:(double **)GI :(double)detG {
+-(void)invertMatrix3x3:(double **)GI detJ:(double)detG {
     
     double s;
     
@@ -550,7 +550,18 @@
     GI[2][2] = s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[0][1] );
 }
 
--(void)globalSecondDerivatives:(Element_t*)element: (Nodes_t*)nodes: (FEMMesh *)mesh: (double)u: (double)v: (double)w: (double*)f: (double**)dLBasisdx: (double **)values {
+-(void)globalSecondDerivativesForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w nodalValues:(double*)f dLBasisdx:(double**)dLBasisdx values:(double **)values {
+/******************************************************************************************************
+    Arguments:
+        Element_t* element -> structure describing the element
+        Nodes_t* nodes     -> nodal coordinates
+        FEMMesh *mesh      -> mesh
+        double u,v,w       -> point at which to evaluate
+        double *f          -> nodal values of the quantity
+ 
+    Output: 3x3 matrix (values) of partial derivatives
+
+******************************************************************************************************/
     
     int i, j, k, l, n, dim, cdim;
     double ***C1, ***C2, ***ddx;

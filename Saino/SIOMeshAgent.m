@@ -33,10 +33,10 @@ static char *_parallel_extensions[] = {
 
 @interface SIOMeshAgent ()
 
--(void)SIOMeshAgent_makeFilename:(char *)buf: (const char *)model: (const char *)suffix;
+-(void)SIOMeshAgent_makeFilename:(char *)buf model:(const char *)model suffix:(const char *)suffix;
 -(int)SIOMeshAgent_elementNodes:(const int)type;
 -(void)SIOMeshAgent_cacheNodes;
--(int)SIOMeshAgent_copyCoords:(double *)target: (const int)address;
+-(int)SIOMeshAgent_copyCoords:(double *)target address:(const int)address;
 -(cacheNode *)SIOMeshAgent_searchNode:(const int)address;
 
 @end
@@ -65,7 +65,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Private methods
 
--(void)SIOMeshAgent_makeFilename:(char *)buf :(const char *)model :(const char *)suffix {
+-(void)SIOMeshAgent_makeFilename:(char *)buf model:(const char *)model suffix:(const char *)suffix {
     
     buf[0] = '\0';
     strcat(buf, model);
@@ -128,7 +128,7 @@ static char *_parallel_extensions[] = {
     return retval;
 }
 
--(int)SIOMeshAgent_copyCoords:(double *)target :(const int)address {
+-(int)SIOMeshAgent_copyCoords:(double *)target address:(const int)address {
     
     int found = 1;
     if (self.parallel) {
@@ -153,7 +153,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Public methods
 
--(id)initWithManager:(SIOModelManager *)mm: (int)split: (int)part
+-(id)initWithManager:(SIOModelManager *)mm split:(int)split part:(int)part
 {
     self = [super init];
     if (self) {
@@ -193,9 +193,9 @@ static char *_parallel_extensions[] = {
     char filename[PATH_MAX];
     NSFileHandle *file;
     
-    [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
+    [self SIOMeshAgent_makeFilename:filename model:[dir UTF8String] suffix:_extension[i]];
     for (i=0; i<self.meshFiles; i++) {
-        [self.manager openStream:file :@(filename) :@"write"];
+        [self.manager openStream:file name:@(filename) mode:@"write"];
         [self.meshFileStreams insertObject:file atIndex:i];
     }
     
@@ -215,7 +215,7 @@ static char *_parallel_extensions[] = {
             snprintf(_newdir, sizeof(_newdir), "%s/partitioning.%d", [dir UTF8String], self.parts);
             snprintf(filename, sizeof(filename), _extension[i], _newdir, self.me);
             
-        } else [self SIOMeshAgent_makeFilename:filename :[dir UTF8String] :_extension[i]];
+        } else  [self SIOMeshAgent_makeFilename:filename model:[dir UTF8String] suffix:_extension[i]];
         
         reader = [[FileReader alloc] initWithFilePath:@(filename)];
         if (!reader) {
@@ -278,7 +278,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readDescriptor:(int *)nodeC :(int *)elementC :(int *)boundaryElementC :(int *)usedElementTypes :(int *)usedElementTypeTags :(int *)usedElementTypeCount {
+-(int)readDescriptorNode:(int *)nodeC element:(int *)elementC boundaryElement:(int *)boundaryElementC usedElementTypes:(int *)usedElementTypes usedElementTypeTags:(int *)usedElementTypeTags usedElementTypeCount:(int *)usedElementTypeCount {
     
     int i;
     
@@ -301,7 +301,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextElementConnections:(int *)tag :(int *)part :(int *)body :(int *)type :(int *)pdofs :(int *)nodes {
+-(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes {
     
     int i, j, gotnodal;
     FileReader *reader;
@@ -386,7 +386,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextElementCoordinates:(int *)tag :(int *)body :(int *)type :(int *)nodes :(double *)coord {
+-(int)readNextElementCoordinates:(int *)tag body:(int *)body type:(int *)type nodes:(int *)nodes coord:(double *)coord {
     
     int i, j;
     FileReader *reader;
@@ -422,7 +422,7 @@ static char *_parallel_extensions[] = {
         j++;
     }
     for (i=0; i<elNodes; i++) {
-        if (![self SIOMeshAgent_copyCoords:coord+i*3 :nodes[i]]) {
+        if (![self SIOMeshAgent_copyCoords:coord+i*3 address:nodes[i]]) {
             NSLog(@"readNextElementCoordinates: Error! Program terminating.");
             exit(14);
         }
@@ -432,7 +432,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextBoundaryElement:(int *)tag :(int *)part :(int *)boundary :(int *)leftElement :(int *)rightElement :(int *)type :(int *)nodes :(double *)coord {
+-(int)readNextBoundaryElement:(int *)tag part:(int *)part boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord {
     
     int i, j;
     FileReader *reader;
@@ -487,13 +487,12 @@ static char *_parallel_extensions[] = {
         }
         if (!ok) {
             step++;
-            return [self readNextBoundaryElement:tag :part :boundary :leftElement :rightElement :type :nodes :coord];
-            
+            return [self readNextBoundaryElement:tag part:part boundary:boundary leftElement:leftElement rightElement:rightElement type:type nodes:nodes coord:coord];
         }
     }
     
     for (i=0; i<elNodes; i++) {
-        if (![self SIOMeshAgent_copyCoords:coord+i*3 :nodes[i]]) {
+        if (![self SIOMeshAgent_copyCoords:coord+i*3 address:nodes[i]]) {
             exit(14);
         }
     }
@@ -502,7 +501,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readAllNodes:(int *)tags :(double *)coord {
+-(int)readAllNodes:(int *)tags coord:(double *)coord {
     
     int i = 0;
     int pt = 0;
@@ -519,7 +518,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readSharedNode:(int *)tag :(int *)constraint :(double *)coord :(int *)partcount :(int *)partitions {
+-(int)readSharedNode:(int *)tag constraint:(int *)constraint coord:(double *)coord partCount:(int *)partcount partitions:(int *)partitions {
     
     int i, j;
     FileReader *reader;
