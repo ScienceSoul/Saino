@@ -256,7 +256,7 @@
     // Currently the eps of global coordinates is mixed with the eps of local
     // coordinates which is not totally satisfying. There could be a sloppier
     // global coordinate search and a more rigorous local coordinate search.
-    
+    sumdist = 0.0;
     switch (element->Type.ElementCode / 100) {
         case 1:
             sumdist = ug;

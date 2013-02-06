@@ -26,7 +26,7 @@
     
     int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs, this;
     int indexSize, numberOfFactors;
-    int *invPerm, *indexes;
+    int invPerm[localNodes], *indexes;
     BOOL foundDG, gb, found, radiation;
     FEMMatrix *projector;
     FEMListUtilities *listUtilities;

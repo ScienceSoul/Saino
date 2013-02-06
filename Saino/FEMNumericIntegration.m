@@ -487,6 +487,7 @@
     
     [self setCovariantMetrixTensorForElement:element nDOFs:n nodes:nodes mesh:mesh dLBasisdx:dLBasisdx];
     
+    detG = 0.0;
     switch (dim) {
            
         case 1:  // Line elements

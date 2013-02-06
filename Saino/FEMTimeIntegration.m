@@ -21,18 +21,23 @@
         nb = solution.mesh.maxElementNodes;
     }
     
+    fsStep = 0.0;
     if ((solution.solutionInfo)[@"fsstep"] != nil) {
         fsStep = [(solution.solutionInfo)[@"fsstep"] doubleValue];
     }
+    fsTheta = 0.0;
     if ((solution.solutionInfo)[@"fstheta"] != nil) {
         fsTheta = [(solution.solutionInfo)[@"fstheta"] doubleValue];
     }
+    fsdTheta = 0.0;
     if ((solution.solutionInfo)[@"fsdtheta"] != nil) {
         fsdTheta = [(solution.solutionInfo)[@"fsdtheta"] doubleValue];
     }
+    fsAlpha = 0.0;
     if ((solution.solutionInfo)[@"fsalpha"] != nil) {
         fsAlpha = [(solution.solutionInfo)[@"fsalpha"] doubleValue];
     }
+    fsBeta = 0.0;
     if ((solution.solutionInfo)[@"fsbeta"] != nil) {
         fsBeta = [(solution.solutionInfo)[@"fsbeta"] doubleValue];
     }

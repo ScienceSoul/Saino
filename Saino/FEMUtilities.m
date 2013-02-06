@@ -97,7 +97,7 @@
     Nodes_t *elementNodes;
     double point[3], localCoordinates[3];
     FEMVariable *oldSol, *newSol;
-    double *oldValues, *newValues, *elementValues;
+    double *newValues, *elementValues;
     Element_t *element, *oldElements;
     Nodes_t *oldNodes, *newNodes;
     Quadrant_t *leafQuadrant, *rootQuadrant, *oldMeshQuadrant;
@@ -230,6 +230,7 @@
         
         if (tryQtree) {
             // Find the last existing quadrant that the point belongs to
+            leafQuadrant = NULL;
             [interpolation findLeafElementsForPoint:point dimension:dim rootQuadrant:rootQuadrant leafQuadrant:leafQuadrant];
             
             if (leafQuadrant != NULL) {
@@ -481,7 +482,7 @@
         }
         
         free_ivector(rInd, 0,  oldMesh.numberOfNodes-1);
-        if (oldValues != nil) [self FEMUtils_applyProjector:oldVar model:aModel fromMesh:oldMesh toMesh:newMesh projector:projector];
+        if (oldVar != nil) [self FEMUtils_applyProjector:oldVar model:aModel fromMesh:oldMesh toMesh:newMesh projector:projector];
     }
     
     [elementDescription deallocation];
@@ -688,9 +689,9 @@
         }
     }
     
+    solContainers = aSolution.getContainers;
     defDofs = intvec(0, solContainers->size2DefDofs-1);
     
-    solContainers = aSolution.getContainers;
     any = NO;
     for (i=0; i<solContainers->size1DefDofs; i++) {
         if (solContainers->defDofs[i][5] >= 0) {

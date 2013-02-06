@@ -193,8 +193,8 @@ static char *_parallel_extensions[] = {
     char filename[PATH_MAX];
     NSFileHandle *file;
     
-    [self SIOMeshAgent_makeFilename:filename model:[dir UTF8String] suffix:_extension[i]];
     for (i=0; i<self.meshFiles; i++) {
+        [self SIOMeshAgent_makeFilename:filename model:[dir UTF8String] suffix:_extension[i]];
         [self.manager openStream:file name:@(filename) mode:@"write"];
         [self.meshFileStreams insertObject:file atIndex:i];
     }

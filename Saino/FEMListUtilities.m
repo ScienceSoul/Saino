@@ -20,7 +20,7 @@
     return self;
 }
 
--(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int)count {
+-(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count {
 
     int i, l, k1, n;
     FEMVariable *variable, *cVar;
@@ -85,20 +85,20 @@
         }
         else {
             if (variable.dofs == 1) {
-                t[count] = varContainers->Values[k1];
+                t[*count] = varContainers->Values[k1];
                 count++;
             } else {
                 for (l=0; l<variable.dofs; l++) {
-                    t[count] = varContainers->Values[variable.dofs*(k1-1)+l];
+                    t[*count] = varContainers->Values[variable.dofs*(k1-1)+l];
                     count++;
                 }
             }
         }
     } else {
         if (varContainers->Perm != NULL) {
-            t[count] = HUGE_VAL;
+            t[*count] = HUGE_VAL;
         } else {
-            t[count] = varContainers->Values[0];
+            t[*count] = varContainers->Values[0];
         }
         count++;
     }
@@ -171,7 +171,7 @@
                 memset( result->vector, 0.0, (n*sizeof(result->vector)) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
-                    [self listParseStrToValues:model string:list.dependName index:k name:list.name values:t count:j];
+                    [self listParseStrToValues:model string:list.dependName index:k name:list.name values:t count:&j];
                     
                     if (any(t, '=', HUGE_VAL, j) == false) {
                         
@@ -313,6 +313,7 @@
     
     *found = NO;
     
+    f = 0.0;
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES) {
             containers = list.getContainers;

@@ -19,10 +19,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 -(void)HUTI_dRandVector:(double *)u ipar:(int *)ipar;
 -(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v;
--(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
--(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
--(void)HUTI_BICGStablNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval polynomialDegree:(int)l pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
--(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_BICGStabLNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 
 
 
@@ -98,7 +98,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
 }
 
--(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod {
+-(void)HUTI_sgsNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod {
     
     int i, j, k;
     double *r;
@@ -140,10 +140,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
     bnorm = cblas_dnrm2(n, rhsvec, 1);
     rnorm = cblas_dnrm2(n, r, 1);
     
-    residual = rnorm / bnorm;
-    converged = (residual < minTolerance) ? YES : NO;
-    diverged = (residual > maxTolerance) ? YES : NO;
-    if (converged == YES || diverged == YES) {
+    *residual = rnorm / bnorm;
+    *converged = (*residual < minTolerance) ? YES : NO;
+    *diverged = (*residual > maxTolerance) ? YES : NO;
+    if (*converged == YES || *diverged == YES) {
             
         free_dvector(r, 0, n-1);
 
@@ -178,14 +178,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         rnorm = cblas_dnrm2(n, r, 1);
         
-        residual = rnorm / bnorm;
+        *residual = rnorm / bnorm;
         if ( (k % outputInterval) == 0) {
-            NSLog(@"%d %lf %lf\n", k, rnorm, residual);
+            NSLog(@"%d %lf %lf\n", k, rnorm, *residual);
         }
         
-        converged = (residual < minTolerance) ? YES : NO;
-        diverged = (residual > maxTolerance) ? YES : NO;
-        if (converged == YES || diverged == YES) break;
+        *converged = (*residual < minTolerance) ? YES : NO;
+        *diverged = (*residual > maxTolerance) ? YES : NO;
+        if (*converged == YES || *diverged == YES) break;
 
     }
     
@@ -193,7 +193,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     matContainers = NULL;
 }
 
--(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
+-(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
     
     int i, k;
     double *r;
@@ -235,10 +235,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
     bnorm = cblas_dnrm2(n, rhsvec, 1);
     rnorm = cblas_dnrm2(n, r, 1);
 
-    residual = rnorm / bnorm;
-    converged = (residual < minTolerance) ? YES : NO;
-    diverged = (residual > maxTolerance) ? YES : NO;
-    if (converged == YES || diverged == YES) {
+    *residual = rnorm / bnorm;
+    *converged = (*residual < minTolerance) ? YES : NO;
+    *diverged = (*residual > maxTolerance) ? YES : NO;
+    if (*converged == YES || *diverged == YES) {
         
         free_dvector(r, 0, n-1);
     
@@ -261,15 +261,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         rnorm = cblas_dnrm2(n, r, 1);
         
-        residual = rnorm / bnorm;
+        *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"%d %lf %lf\n", k, rnorm, residual);
+            NSLog(@"%d %lf %lf\n", k, rnorm, *residual);
         }
         
-        converged = (residual < minTolerance) ? YES : NO;
-        diverged = (residual > maxTolerance) ? YES : NO;
-        if (converged == YES || diverged == YES) break;
+        *converged = (*residual < minTolerance) ? YES : NO;
+        *diverged = (*residual > maxTolerance) ? YES : NO;
+        if (*converged == YES || *diverged == YES) break;
         
     }
 
@@ -278,7 +278,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
 }
 
--(void)HUTI_BICGStablNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval polynomialDegree:(int)l pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+-(void)HUTI_BICGStabLNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
 /**********************************************************************************************************************************
  
  This method solves real linear system Ax = b by usinf the BICGStab(l) algorithm wirh l ≥ 2 and the right-oriented ILU(n) 
@@ -303,15 +303,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     FEMPrecondition *preconditioning;
     
-    if (l < 2) {
+    if (polyDegree < 2) {
         errorfunct("HUTI_realBICGStabl", "Polynomial degree < 2.");
     }
     
     t = doublevec(0, n-1);
-    work = doublematrix(0, n-1, 0, (3+2*(l+1))-1);
-    rwork = doublematrix(0, (l+1)-1, 0, (3+2*(l+1))-1);
-    rwork_transpose = doublevec(0, ( (l+1)*(3+2*(l+1)) )-1);
-    iwork = intvec(0, (l-1)-1);
+    work = doublematrix(0, n-1, 0, (3+2*(polyDegree+1))-1);
+    rwork = doublematrix(0, (polyDegree+1)-1, 0, (3+2*(polyDegree+1))-1);
+    rwork_transpose = doublevec(0, ( (polyDegree+1)*(3+2*(polyDegree+1)) )-1);
+    iwork = intvec(0, (polyDegree-1)-1);
     
     buffer = doublevec(0, n-1);
     buffer2 = doublevec(0, n-1);
@@ -345,25 +345,25 @@ static double UPPERB_TOL_RATIO  =  10.0;
     one = 1.0;
     
     for (i=0; i<n; i++) {
-        for (j=0; j<3+2*(l+1); j++) {
+        for (j=0; j<3+2*(polyDegree+1); j++) {
             work[i][j] = 0.0;
         }
     }
-    for (i=0; i<l+1; i++) {
-        for (j=0; j<3+2*(l+1); j++) {
+    for (i=0; i<polyDegree+1; i++) {
+        for (j=0; j<3+2*(polyDegree+1); j++) {
             rwork[i][j] = 0.0;
         }
     }
     
     rr = 0;
     r = rr + 1;
-    u = r+(l+1);
-    xp = u+(l+1);
+    u = r+(polyDegree+1);
+    xp = u+(polyDegree+1);
     bp = xp+1;
     
     z = 0;
-    zz = z+(l+1);
-    y0 = zz+(l+1);
+    zz = z+(polyDegree+1);
+    y0 = zz+(polyDegree+1);
     yl = y0+1;
     y = yl+1;
     
@@ -388,15 +388,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // Check whether the initial guess satisfies the stopping criterion
     errorind = rnrm0 / bnrm;
-    converged = (errorind < minTolerance) ? YES : NO;
-    diverged = (errorind > maxTolerance) ? YES : NO;
+    *converged = (errorind < minTolerance) ? YES : NO;
+    *diverged = (errorind > maxTolerance) ? YES : NO;
     
-    if (converged == YES || diverged == YES) {
+    if (*converged == YES || *diverged == YES) {
         
         free_dvector(t, 0, n-1);
-        free_dmatrix(work, 0, n-1, 0, (3+2*(l+1))-1);
-        free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
-        free_dvector(rwork_transpose, 0, ( (l+1)*(3+2*(l+1)) )-1);
+        free_dmatrix(work, 0, n-1, 0, (3+2*(polyDegree+1))-1);
+        free_dmatrix(rwork, 0, (polyDegree+1)-1, 0, (3+2*(polyDegree+1))-1);
+        free_dvector(rwork_transpose, 0, ( (polyDegree+1)*(3+2*(polyDegree+1)) )-1);
         free_dvector(buffer, 0, n-1);
         free_dvector(buffer2, 0, n-1);
         
@@ -425,8 +425,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(buffer, 0, n-1);
     free_dvector(buffer2, 0, n-1);
     
-    buffer = doublevec(0, (l+1)-1);
-    buffer2 = doublevec(0, (l+1)-1);
+    buffer = doublevec(0, (polyDegree+1)-1);
+    buffer2 = doublevec(0, (polyDegree+1)-1);
     
     for (round = 1; round <= rounds; round++) {
         
@@ -434,7 +434,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         rho0 = -omega*rho0;
         
-        for (k=1; k<=l; k++) {
+        for (k=1; k<=polyDegree; k++) {
             
             for (i=0; i<n; i++) {
                 buffer[i] = work[i][rr];
@@ -516,8 +516,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
             //  In some simple cases, a few BiCG updates may already be enough to
             //  obtain the solution. The following is for handling this special case.
             errorind = rnrm / bnrm;
-            converged = (errorind < minTolerance) ? YES : NO;
-            if (converged == YES) {
+            *converged = (errorind < minTolerance) ? YES : NO;
+            if (*converged == YES) {
                 earlyExit = YES;
                 break;
             }
@@ -526,7 +526,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         if (earlyExit == YES) break;
         
         // The convex polynomial part
-        for (i=1; i<=l+1; i++) {
+        for (i=1; i<=polyDegree+1; i++) {
             for (j=1; j<=i; j++) {
                 for (k=0; k<n; k++) {
                     buffer[k] = work[k][r+i-1];
@@ -536,96 +536,96 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 
             }
         }
-        for (j=1; j<l+1; j++) {
+        for (j=1; j<polyDegree+1; j++) {
             for (i=0; i<=j-1; i++) {
                 rwork[i][j] = rwork[j][i];
             }
         }
         
         k = z;
-        for (i=0; i<l+1; i++) {
-            for (j=zz; j<=zz+l; j++) {
+        for (i=0; i<polyDegree+1; i++) {
+            for (j=zz; j<=zz+polyDegree; j++) {
                 rwork[i][zz] = rwork[i][k];
                 k++;
             }
         }
         
         // Transfrom rwork for LAPACK, column-major order
-        for (i=0; i<l+1; i++) {
-            for (j=0; j<(3+2*(l+1)); j++) {
-                rwork_transpose[j+(l+1)*i] = rwork[j][i];
+        for (i=0; i<polyDegree+1; i++) {
+            for (j=0; j<(3+2*(polyDegree+1)); j++) {
+                rwork_transpose[j+(polyDegree+1)*i] = rwork[j][i];
             }
         }
         
-        rows = l-1;
-        cols = l-1;
-        lda = l+1;
-        dgetrf_(&rows, &cols, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, &info);
+        rows = polyDegree-1;
+        cols = polyDegree-1;
+        lda = polyDegree+1;
+        dgetrf_(&rows, &cols, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, &info);
         
         // tild r0 and tild rl (small vectors)
         
-        rwork_transpose[((y0+1)*lda)-(l+1)] = -one;
-        for (i=2; i<=l; i++) {
+        rwork_transpose[((y0+1)*lda)-(polyDegree+1)] = -one;
+        for (i=2; i<=polyDegree; i++) {
             rwork_transpose[((y0+1)*lda)-i] = rwork_transpose[((z+1)*lda)-i];
         }
         
-        order = l-1;
+        order = polyDegree-1;
         nrhs = 1;
         str = 'N';
-        lda = l+1;
-        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, rwork_transpose+(((y0+1)*lda)-l), &lda, &info);
-        rwork[(l+1)-1][y0] = zero;
+        lda = polyDegree+1;
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, rwork_transpose+(((y0+1)*lda)-polyDegree), &lda, &info);
+        rwork[(polyDegree+1)-1][y0] = zero;
         
-        rwork_transpose[((yl+1)*lda)-(l+1)] = zero;
-        for (i=2; i<=l; i++) {
-            rwork_transpose[((yl+1)*lda)-i] = rwork_transpose[((z+1+l)*lda)-i];
+        rwork_transpose[((yl+1)*lda)-(polyDegree+1)] = zero;
+        for (i=2; i<=polyDegree; i++) {
+            rwork_transpose[((yl+1)*lda)-i] = rwork_transpose[((z+1+polyDegree)*lda)-i];
         }
-        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-l), &lda, iwork, rwork_transpose+(((yl+1)*lda)-l), &lda, &info);
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, rwork_transpose+(((yl+1)*lda)-polyDegree), &lda, &info);
         rwork_transpose[((yl+1)*lda)-1] = -one;
         
         // Back to the original rwork matrix
-        for (i=0; i<l+1; i++) {
-            for (j=0; j<(3+2*(l+1)); j++) {
-                rwork[j][i] = rwork_transpose[j+(l+1)*i];
+        for (i=0; i<polyDegree+1; i++) {
+            for (j=0; j<(3+2*(polyDegree+1)); j++) {
+                rwork[j][i] = rwork_transpose[j+(polyDegree+1)*i];
             }
         }
 
         // Convex combination
         
-        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
-        memset( buffer2, 0.0, ((l+1)*sizeof(buffer2)) );
-        for (i=0; i<l+1; i++) {
+        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        memset( buffer2, 0.0, ((polyDegree+1)*sizeof(buffer2)) );
+        for (i=0; i<polyDegree+1; i++) {
              buffer[i] = rwork[i][y0];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
-        kappa0 = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
+        kappa0 = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
-        for (i=0; i<l+1; i++) {
+        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
-        kappal = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
+        kappal = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
-        for (i=0; i<l+1; i++) {
+        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
-        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
-        for (i=0; i<l+1; i++) {
+        cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
+        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
-        varrho = cblas_ddot(l+1, buffer, 1, buffer2, 1) / (kappa0*kappal);
+        varrho = cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) / (kappa0*kappal);
         hatgamma = varrho / fabs(varrho) * max(fabs(varrho), 7e-1) * kappa0/kappal;
-        for (i=0; i<l+1; i++) {
+        for (i=0; i<polyDegree+1; i++) {
             rwork[i][y0] = rwork[i][y0] - hatgamma * rwork[i][yl];
         }
         
         // Update
     
-        omega = rwork[(l+1)-1][y0];
-        for (j=1; j<=l; j++) {
+        omega = rwork[(polyDegree+1)-1][y0];
+        for (j=1; j<=polyDegree; j++) {
             for (i=0; i<n; i++) {
                 work[i][u] = work[i][u] - rwork[(j+1)-1][y0] * work[i][u+j];
                 xvec[i] = xvec[i] + rwork[(j+1)-1][y0] * work[i][r+j-1];
@@ -633,12 +633,12 @@ static double UPPERB_TOL_RATIO  =  10.0;
             }
         }
         
-        memset( buffer, 0.0, ((l+1)*sizeof(buffer)) );
-        for (i=0; i<l+1; i++) {
+        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
-        cblas_dsymv(CblasRowMajor, CblasUpper, l+1, one, *rwork, (3+2*(l+1)), buffer, 1, zero, buffer2, 1);
-        rnrm = sqrt( cblas_ddot(l+1, buffer, 1, buffer2, 1) );
+        cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
+        rnrm = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
         // The reliable update part
         
@@ -702,9 +702,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
             NSLog(@"%d %lf %lf\n", round, rnrm, errorind);
         }
         
-        converged = (errorind < minTolerance) ? YES: NO;
-        diverged = (errorind > maxTolerance) ? YES : NO;
-        if (converged == YES || diverged == YES) break;
+        *converged = (errorind < minTolerance) ? YES: NO;
+        *diverged = (errorind > maxTolerance) ? YES : NO;
+        if (*converged == YES || *diverged == YES) break;
     
     } // end of rounds
     
@@ -727,14 +727,14 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
     
     free_dvector(t, 0, n-1);
-    free_dmatrix(work, 0, n-1, 0, (3+2*(l+1))-1);
-    free_dmatrix(rwork, 0, (l+1)-1, 0, (3+2*(l+1))-1);
-    free_dvector(rwork_transpose, 0, ( (l+1)*(3+2*(l+1)) )-1);
-    free_dvector(buffer, 0, (l+1)-1);
-    free_dvector(buffer2, 0, (l+1)-1);
+    free_dmatrix(work, 0, n-1, 0, (3+2*(polyDegree+1))-1);
+    free_dmatrix(rwork, 0, (polyDegree+1)-1, 0, (3+2*(polyDegree+1))-1);
+    free_dvector(rwork_transpose, 0, ( (polyDegree+1)*(3+2*(polyDegree+1)) )-1);
+    free_dvector(buffer, 0, (polyDegree+1)-1);
+    free_dvector(buffer2, 0, (polyDegree+1)-1);
 }
 
--(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double)residual converged:(BOOL)converged diverged:(BOOL)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+-(void)HUTI_gcrNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
     
     int i, j, k, l;
     double bnorm, rnorm;
@@ -797,10 +797,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
     bnorm = cblas_dnrm2(n, rhsvec, 1);
     rnorm = cblas_dnrm2(n, r, 1);
     
-    residual = rnorm / bnorm;
-    converged = (residual < minTolerance) ? YES: NO;
-    diverged = (residual > maxTolerance) ? YES: NO;
-    if (converged == YES || diverged == YES) {
+    *residual = rnorm / bnorm;
+    *converged = (*residual < minTolerance) ? YES: NO;
+    *diverged = (*residual > maxTolerance) ? YES: NO;
+    if (*converged == YES || *diverged == YES) {
         
         free_dvector(r, 0, n-1);
         free_dvector(t1, 0, n-1);
@@ -874,15 +874,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // Check whether the convergence criterion is fulfilled
         
         rnorm = cblas_dnrm2(n, r, 1);
-        residual = rnorm / bnorm;
+        *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"%d %lf\n", k, residual);
+            NSLog(@"%d %lf\n", k, *residual);
         }
         
-        converged = (residual < minTolerance) ? YES: NO;
-        diverged = (residual > maxTolerance) ? YES: NO;
-        if (converged == YES || diverged == YES) break;
+        *converged = (*residual < minTolerance) ? YES: NO;
+        *diverged = (*residual > maxTolerance) ? YES: NO;
+        if (*converged == YES || *diverged == YES) break;
         
     }
     
@@ -3344,7 +3344,7 @@ jump:
     outputInterval = ipar[4];
     omega = dpar[2];
     
-    [self HUTI_sgsNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval omega:omega matvecMethod:matvecMethod];
+    [self HUTI_sgsNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval omega:omega matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3371,7 +3371,7 @@ jump:
     maxTol = dpar[1];
     outputInterval = ipar[4];
     
-    [self HUTI_jacobiNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval matvecMethod:matvecMethod];
+    [self HUTI_jacobiNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3401,7 +3401,7 @@ jump:
     outputInterval = ipar[4];
     polynomialDegree = ipar[15];
     
-    [self HUTI_BICGStablNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:converged diverged:diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    [self HUTI_BICGStabLNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
@@ -3429,7 +3429,7 @@ jump:
     outputInterval = ipar[4];
     restartN = ipar[16];
     
-    [self HUTI_gcrNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:residual converged:converged diverged:diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    [self HUTI_gcrNumberOfDimension:ndim solution:solution afterSolve:varContainers->Values rightHandSide:matContainers->RHS ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;

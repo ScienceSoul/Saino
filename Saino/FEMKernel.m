@@ -290,7 +290,7 @@ static int PRECOND_VANKA     =  560;
         normDofs = dofs;
     }
     
-    totn = [parallelUtil parallelReductionOfValue:(1.0*norm) operArg:NULL];
+    totn = [parallelUtil parallelReductionOfValue:(1.0*n) operArg:NULL];
     nscale = normDofs * totn/(1.0*dofs);
     
     // Zero is used instead of infinity as the sign for the max norm
@@ -1013,6 +1013,7 @@ static int PRECOND_VANKA     =  560;
 
     // The allocation of previous values has to be here in order to work properly
     // with the Dirichlet elimination
+    needPrevSol = NO;
     if ((solution.solutionInfo)[@"non linear system relaxation factor"] != nil) {
         relaxation = [(solution.solutionInfo)[@"non linear system relaxation factor"] doubleValue];
         needPrevSol = (relaxation != 0.0) ? YES: NO;
@@ -1026,6 +1027,7 @@ static int PRECOND_VANKA     =  560;
     }
     
     if (needPrevSol == YES) {
+        stat = NO;
         if (varContainers->NonLinValues != NULL) {
             stat = YES;
             if (varContainers->sizeNonLinValues != n) {
@@ -2554,14 +2556,13 @@ static int PRECOND_VANKA     =  560;
 
 -(int)getBoundaryConditionID:(FEMModel *)model forElement:(Element_t *)element {
     
-    int i, bc_id;
-    FEMBoundaryCondition *boundaryConditionAtId;
+    int bc_id = 0;
     
-    for (i=0; i<model.numberOfBoundaryConditions; i++) {
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
         bc_id++;
-        boundaryConditionAtId = (model.boundaryConditions)[i];
-        if (element->BoundaryInfo->Constraint == [boundaryConditionAtId tag]) break;
+        if (element->BoundaryInfo->Constraint == boundaryCondition.tag) break;
     }
+    
     if (bc_id > model.numberOfBoundaryConditions) bc_id = 0;
     
     return bc_id;
@@ -2575,7 +2576,7 @@ static int PRECOND_VANKA     =  560;
     
     // Returns a boundaryCondition object at index bc_id
     bc_id = [self getBoundaryConditionID:model forElement:element];
-    boundaryConditionAtId = (model.boundaryConditions)[bc_id-1];
+    if (bc_id > 0) boundaryConditionAtId = (model.boundaryConditions)[bc_id-1];
     
     if (boundaryConditionAtId != nil) {
         return boundaryConditionAtId.valuesList;
@@ -2878,7 +2879,7 @@ static int PRECOND_VANKA     =  560;
     solContainers = NULL;
 }
 
--(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int)indSize {
+-(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int *)indSize {
 /****************************************************************************************************************************************************
     Calculate global indexes of boundary dofs for given element and its boundary
  
@@ -2919,7 +2920,7 @@ static int PRECOND_VANKA     =  560;
                 indexes[n] = mesh.numberOfNodes + parent->EdgeIndexes[element->Pdefs->LocalNumber-1] * mesh.maxEdgeDofs + i;
                 n++;
             }
-            indSize = n;
+            *indSize = n;
             break;
         case 3:            
             // Add indexes of faces edges
@@ -2951,7 +2952,7 @@ static int PRECOND_VANKA     =  560;
                 n++;
             }
             
-            indSize = n;
+            *indSize = n;
             faces = NULL;
             edges = NULL;
             break;
@@ -3636,13 +3637,11 @@ static int PRECOND_VANKA     =  560;
     Element_t *elements;
     Nodes_t *globalNodes;
     FEMListUtilities *listUtil;
-    FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     NSMutableString *condName, *passName, *str1, *str2;
     matrixArraysContainer *matContainers;
     variableArraysContainer *varContainers;
     solutionArraysContainer *solContainers;
-    valueListArraysContainer *valContainers;
     BOOL stat, nodesFound, orderByBCNumbering, conditional;
     
     matContainers = solution.matrix.getContainers;
@@ -3681,10 +3680,11 @@ static int PRECOND_VANKA     =  560;
     str2 = [NSMutableString stringWithString:@"anti periodic bc "];
     [str2 appendString:name];
 
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        boundaryConditionAtId = (model.boundaryConditions)[bc];
-        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
-        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
+    bc = 0;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
+        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
+        bc++;
     }
     
     anyActive = NO;
@@ -3722,11 +3722,12 @@ static int PRECOND_VANKA     =  560;
     str1 = [NSMutableString stringWithString:name];
     [str1 appendString:@" dofs"];
     
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        boundaryConditionAtId = (model.boundaryConditions)[bc];
-        activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryConditionAtId.valuesList];
-        activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList];
-        activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
+    bc = 0;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryCondition.valuesList];
+        activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
+        activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
+        bc++;
     }
     
     orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
@@ -3737,15 +3738,14 @@ static int PRECOND_VANKA     =  560;
     // Check and set some flags for nodes belonging to n-t boundaries getting set by other bcs
     if ([solution normalTangentialNOFNodes] > 0) {
         if (orderByBCNumbering == YES) {
-            for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+            bc = 0;
+            for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
                 if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                 conditional = activeCond[bc];
                 
-                boundaryConditionAtId = (model.boundaryConditions)[bc];
-                
                 for (t=bndry_start; t<bndry_end; t++) {
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
                     if (activePort[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
@@ -3756,16 +3756,16 @@ static int PRECOND_VANKA     =  560;
                     }
                     [self checkNormalTangential:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
+                bc++;
             }
         } else {
              for (t=bndry_start; t<bndry_end; t++) {
-                 for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+                 bc = 0;
+                 for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                      if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                      conditional = activeCond[bc];
                      
-                     boundaryConditionAtId = (model.boundaryConditions)[bc];
-                     
-                     if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                     if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
                      
                      if (activePort[bc] == YES) {
                          n = elements[t].Type.NumberOfNodes;
@@ -3776,6 +3776,7 @@ static int PRECOND_VANKA     =  560;
                          n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                      }
                      [self checkNormalTangential:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                     bc++;
                  }
              }
         }
@@ -3806,15 +3807,14 @@ static int PRECOND_VANKA     =  560;
     
     if (anyActive == YES) {
         if (orderByBCNumbering == YES) {
-            for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+            bc = 0;
+            for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
                 if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                 conditional = activeCond[bc];
                 
-                boundaryConditionAtId = (model.boundaryConditions)[bc];
-                
                 for (t=bndry_start; t<bndry_end; t++) {
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
                     if (activePort[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
@@ -3823,18 +3823,18 @@ static int PRECOND_VANKA     =  560;
                     } else {
                         n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
+                bc++;
             }
         } else {
             for (t=bndry_start; t<bndry_end; t++) {
-                for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+                bc = 0;
+                for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
                     conditional = activeCond[bc];
                     
-                    boundaryConditionAtId = (model.boundaryConditions)[bc];
-                    
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
                     
                     if (activePort[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
@@ -3844,7 +3844,8 @@ static int PRECOND_VANKA     =  560;
                     } else {
                         n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    bc++;
                 }
             }
         }
@@ -3904,29 +3905,28 @@ static int PRECOND_VANKA     =  560;
     // Note that it is best that the coordinates are transformed to nodes using
     // the right variable. Otherwise, it could point to nodes that are not active
 
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
         
-        boundaryConditionAtId = (model.boundaryConditions)[bc];
-        if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryConditionAtId.valuesList];
+        if ([listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList] == NO) continue;
+        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
         
         // The coodinates are only requested for a body that has no list of nodes.
         // At the first calling, the list of coordinates is transformed to a list of nodes
         if (nodesFound == NO) {
             
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
             
             if (stat == YES) {
                 
-                eps = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
+                eps = [listUtil listGetConstReal:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
                 if (stat == NO) {
                     eps = HUGE_VAL;
                 } else {
                     eps = pow(eps, 2.0);
                 }
                 
-                noNodes = valContainers->sizeFValues1;
-                noDims = valContainers->sizeFValues2;
+                noNodes = coordNodes.m;
+                noDims = coordNodes.n;
                 
                 if (noNodes > 0) {
                     inNodes = intvec(0, noNodes-1);
@@ -3959,7 +3959,7 @@ static int PRECOND_VANKA     =  560;
                     
                     // In the first time add teh found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
                         free_ivector(inNodes, 0, noNodes-1);
                         nodesFound = YES;
                     }
@@ -3974,10 +3974,10 @@ static int PRECOND_VANKA     =  560;
         }
         
         if (nodesFound == YES) {
-            conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryConditionAtId.valuesList];
-            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
+            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
             
-            [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryConditionAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
             
             if (nodeIndexes.ivector != NULL) {
                 free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
@@ -4359,7 +4359,7 @@ static int PRECOND_VANKA     =  560;
             n = [self getNumberOfNodesForElement:element];
             
             if (parent->Pdefs != NULL) {
-                [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
             } else {
                 continue;
             }
@@ -4518,7 +4518,7 @@ static int PRECOND_VANKA     =  560;
                     n = element->Type.NumberOfNodes;
                     
                     // Get indexes for boundary and values dofs associated to them
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
                     [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
                     
                     if (solution.matrix.isSymmetric == YES) {
@@ -4581,7 +4581,7 @@ static int PRECOND_VANKA     =  560;
                     n = element->Type.NumberOfNodes;
                     
                     // Get global boundary indexes and solve dofs asscociated to them
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:numEdgeDofs];
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
                     
                     // If boundary face has no dofs, skip to next boundary element
                     if (numEdgeDofs == n) continue;

@@ -17,7 +17,7 @@
 @interface FEMModel ()
 -(void)FEMModel_setCoordinateSystem;
 -(void)FEMModel_localMatrix:(double **)stiff force:(double*)force mesh:(FEMMesh *)mesh element:(Element_t *)element numberOfNodes:(int)numberOfNodes power:(double)power noWeight:(BOOL)noWeight elemMin:(double *)elemMin elemMax:(double *)elemMax;
--(void)FEMModel_getNodalElementSize:(double)expo weighting:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal;
+-(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal;
 @end
 
 @implementation FEMModel
@@ -212,13 +212,13 @@
     [integration deallocation:mesh];
 }
 
--(void)FEMModel_getNodalElementSize:(double)expo weighting:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal {
+-(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal {
     
     int i, j, n, t, active;
     int *cperm;
     double power, elemMin, elemMax;
     double **stiff, *force;
-    BOOL noWeight, onlySearch, found;
+    BOOL onlySearch, found;
     Element_t *elements;
     FEMSolution *solution;
     FEMMatrix *matrix;
@@ -295,7 +295,7 @@
         n = elements[t].Type.NumberOfNodes;
         
         // Get element local matrix and rhs vector
-        [self FEMModel_localMatrix:stiff force:force mesh:solution.mesh element:&elements[t] numberOfNodes:n power:power noWeight:noWeight elemMin:&elemMin elemMax:&elemMax];
+        [self FEMModel_localMatrix:stiff force:force mesh:solution.mesh element:&elements[t] numberOfNodes:n power:power noWeight:weight elemMin:&elemMin elemMax:&elemMax];
         
         // Update global matrix and rhs  vector from local matrix and vector
         [crsMatrix glueLocalMatrixInMatrix:matrix localMatrix:stiff numberOfNodes:n dofs:1 indexes:elements[t].NodeIndexes];
@@ -561,7 +561,7 @@
                 h = doublevec(0, oldMesh.numberOfNodes-1);
                 self.mesh = oldMesh;
                 sizeNodal = oldMesh.numberOfNodes;
-                [self FEMModel_getNodalElementSize:meshPower weighting:NO nodal:h sizeNodal:sizeNodal];
+                [self FEMModel_getNodalElementSize:meshPower weight:NO nodal:h sizeNodal:sizeNodal];
                  newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:h sizeNodal:&sizeNodal];
                 free_dvector(h, 0, oldMesh.numberOfNodes-1);
             } else {
@@ -697,7 +697,7 @@
                     h = doublevec(0, oldMesh.numberOfNodes-1);
                     self.mesh = oldMesh;
                     sizeNodal = oldMesh.numberOfNodes;
-                    [self FEMModel_getNodalElementSize:meshPower weighting:NO nodal:h sizeNodal:sizeNodal];
+                    [self FEMModel_getNodalElementSize:meshPower weight:NO nodal:h sizeNodal:sizeNodal];
                     newMesh = [meshUtils splitMeshEqual:oldMesh model:self nodal:h sizeNodal:&sizeNodal];
                     free_dvector(h, 0, oldMesh.numberOfNodes-1);
                 } else {

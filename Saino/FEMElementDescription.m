@@ -1679,6 +1679,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         if (*computeStab == NO) return element;
     }
     
+    elm = NULL;
     if (element->StabilizationMK == 0.0) {
         elm = (Element_t*) malloc( sizeof(Element_t));
         initElements(elm, 1);
@@ -1708,9 +1709,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free(nodes);
     }
     
-    *element = elm->Type;
+    if (elm != NULL) *element = elm->Type;
     return element;
-    
 }
 
 /**********************************************************************************************
@@ -2189,6 +2189,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         nz[i] = nodes->z[element->NodeIndexes[i]];
     }
     
+    x1 = 0.0; y1 = 0.0; z1 = 0.0;
     switch (element->Type.ElementCode / 100) {
         case 2:
         case 4:
