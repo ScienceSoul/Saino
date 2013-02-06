@@ -269,11 +269,13 @@ typedef struct valueListArraysContainer {
     int *iValues;
     double *tValues;
     double ***fValues;
+    double *cubicCoeff;
     int sizeTValues;
     int sizeFValues1;
     int sizeFValues2;
     int sizeFValues3;
     int sizeIValues;
+    int sizeCubicCoeff;
     
 } valueListArraysContainer;
 

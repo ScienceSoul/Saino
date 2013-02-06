@@ -1289,10 +1289,18 @@
 /*********************************************************************************************************
  Interpolate values in a curve given by linear table or splines.
 *********************************************************************************************************/
--(double)interpolateCurveTvalues:(double *)tValues fValues:(double *)fValues value:(double)t sizeOfTValues:(int)n {
+-(double)interpolateCurveTvalues:(double *)tValues fValues:(double *)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double *)cubicCoeff {
     
     int i;
     double f;
+    BOOL cubic;
+    double tval[2], fval[2], coeffval[2];
+    
+    // This is a misuse of the interpolation in case of standard
+    // dependency of type y = a*x
+    if (n == 1) {
+        return fValues[0] * t;
+    }
     
     for (i=0; i<n; i++) {
         if (tValues[i] >= t) break;
@@ -1300,9 +1308,22 @@
     if (i > n-1) i = n-1;
     if (i < 1) i = 1;
     
-    f = (t - tValues[i-1]) / (tValues[i] - tValues[i-1]);
-    f = (1.0 - f)*fValues[i-1] + f*fValues[i];
+    cubic = NO;
+    if (cubicCoeff != NULL) cubic = YES;
+    cubic = (cubic == YES && t >= tValues[0] && t <=tValues[n-1]) ? YES : NO;
     
+    if (cubic == YES) {
+        tval[0] = tValues[i-1];
+        tval[1] = tValues[i];
+        fval[0] = fValues[i-1];
+        fval[1] = fValues[i];
+        coeffval[0] = cubicCoeff[i-1];
+        coeffval[1] = cubicCoeff[i];
+        f = [self cublicSplineX:tval Y:fval R:coeffval T:t];
+    } else {
+        f = (t - tValues[i-1]) / (tValues[i] - tValues[i-1]);
+        f = (1.0 - f)*fValues[i-1] + f*fValues[i];
+    }
     return f;
 }
 
@@ -1406,6 +1427,21 @@
     }
     
     return projectorMatrix;
+}
+
+-(double)cublicSplineX:(double *)x Y:(double *)y R:(double *)r T:(double)t {
+    
+    double s, a, b, c, h, lt;
+    
+    h = x[1] - x[0];
+    a = -2.0 * (y[1] - y[0]) + (r[0] + r[1]) * h;
+    b = 3.0 * (y[1] - y[0]) - (2.0*r[0] + r[1]) * h;
+    c = r[0] * h;
+    
+    lt = (t - x[0]) / h;
+    s = ( (a*lt + b) * lt + c ) / h;
+    
+    return s;
 }
 
 

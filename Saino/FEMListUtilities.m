@@ -182,7 +182,7 @@
                             printf("%s\n", [varName UTF8String]);
                             errorfunct("listGetReal", "Program terminating now...");
                         }
-                        result->vector[i] = [util interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues];
+                        result->vector[i] = [util interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
                     }
                 }
                 
