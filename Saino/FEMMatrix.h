@@ -22,6 +22,7 @@
     int _solveCount;
     int _comm;
     int _umfPackNumeric;
+    double _rhsScaling;
     BOOL _ordered;
     BOOL _lumped;
     BOOL _symmetric;
@@ -41,6 +42,7 @@
 @property(nonatomic, assign) int solveCount;
 @property(nonatomic, assign) int comm;
 @property(nonatomic, assign) int umfPackNumeric;
+@property(nonatomic, assign) double rhsScaling;
 @property(nonatomic, assign, getter = isOrdered) BOOL ordered;
 @property(nonatomic, assign, getter = isLumped) BOOL lumped;
 @property(nonatomic, assign, getter = isSymmetric) BOOL symmetric;

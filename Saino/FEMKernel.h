@@ -51,6 +51,8 @@
 -(void)solveLinearSystemWithMatrix:(double **)a andVector:(double *)x size:(int)n leadingDimension:(int)lda;
 -(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof;
 -(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset;
+-(void)scaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling applyScaling:(BOOL *)applyScaling rhsScaling:(BOOL *)rhsScaling;
+-(void)backScaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling sizeOFDiagScaling:(int *)sizeOfDiagScaling;
 
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols;
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols;

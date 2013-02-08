@@ -75,10 +75,16 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 -(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 
-//Periodic
+// Periodic
 -(void)FEMKernel_setPeriodicBoundariesPass1Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done;
 -(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done;
 
+// Limiter
+-(void)FEMKernel_determineSoftLimiterInSolution:(FEMSolution *)solution model:(FEMModel *)model;
+
+// Rows equilibration
+-(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel;
+-(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution;
 
 @end
 
@@ -756,28 +762,28 @@ static int PRECOND_VANKA     =  560;
 
 -(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel {
     
-    int i, j, n;
-    
-    double *diag, *x;
-    double diagReal, diagImag, bnorm, sum;
-    double complex cmpx;
+    int i, n;
+    double bnorm, sum;
     NSString *method;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     FEMParallelMPI *parallelUtil;
-    BOOL scaleSystem, eigenAnalysis, harmonicAnalysis;
+    BOOL scaleSystem, eigenAnalysis, harmonicAnalysis, backRotation, applyLimiter, skipZeroRhs, applyRowEquilibration, parallel,
+         rhsScaling;
     
     parallelUtil = [[FEMParallelMPI alloc] init];
     matContainers = solution.matrix.getContainers;
     
     n = solution.matrix.numberOfRows;
-    
     varContainers = solution.variable.getContainers;
     
-    if (solution.matrix.isLumped == YES && [solution timeOrder] == 1)  {
-        
-        x = varContainers->Values;
-        
+    if ((solution.solutionInfo)[@"back rotate n-t solution"] != nil) {
+        backRotation = [(solution.solutionInfo)[@"back rotate n-t solution"] boolValue];
+    } else {
+        backRotation = YES;
+    }
+    
+    if (solution.matrix.isLumped == YES && solution.timeOrder == 1)  {
         if ((solution.solutionInfo)[@"time stepping method"] != nil) {
             method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
             if ([method isEqualToString:@"runge-kutta"] == YES || [method isEqualToString:@"explicit euler"] == YES) {
@@ -786,14 +792,17 @@ static int PRECOND_VANKA     =  560;
                         varContainers->Values[i] = matContainers->RHS[i] / matContainers->Values[matContainers->Diag[i]];
                 }
                 [self FEMKernel_backRotateNTSystem:solution];
-                [self FEMKernel_computeNormInSolution:solution size:n values:x];
-                x = NULL;
-                matContainers = NULL;
-                varContainers = NULL;
+                [self FEMKernel_computeNormInSolution:solution size:n values:varContainers->Values];
                 return;
             }
         }
     }
+    
+    // These definitions are needed if changing the iterative solver on the fly
+    if ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"]) solution.multigridSolution = YES;
+    solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"mg levels"] intValue]);
+    solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"multigrid levels"] intValue]);
+    solution.multigridLevel = solution.multiGridTotal;
     
     if ((solution.solutionInfo)[@"linear system scaling"] != nil) {
         scaleSystem = [(solution.solutionInfo)[@"linear system scaling"] boolValue];
@@ -803,91 +812,33 @@ static int PRECOND_VANKA     =  560;
     
     eigenAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"eigen analysis"] boolValue] == YES) ? YES: NO;
     harmonicAnalysis = (solution.nOfEigenValues  > 0 && [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES: NO;
+
+    applyLimiter = NO;
+    if ((solution.solutionInfo)[@"apply limiter"] != nil) {
+        applyLimiter = [(solution.solutionInfo)[@"apply limiter"] boolValue];
+    }
     
-    if ( harmonicAnalysis == NO && eigenAnalysis == NO ) {
+    skipZeroRhs = NO;
+    if ((solution.solutionInfo)[@"skip zero rhs test"] != nil) {
+        skipZeroRhs = [(solution.solutionInfo)[@"skip zero rhs test"] boolValue];
+    }
+    
+    if ( harmonicAnalysis == NO || eigenAnalysis == NO || applyLimiter == NO || skipZeroRhs == NO) {
         sum = 0.0;
         for (i=0; i<n; i++) {
             sum = sum + pow(matContainers->RHS[i], 2.0);
         }
         bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
-        if (bnorm == 0.0) {
+        if (bnorm <= DBL_MIN) {
             warnfunct("SolveSystem", "Solution trivially zero");
             for (i=0; i<n; i++) {
                 varContainers->Values[i] = 0.0;
             }
-            matContainers = NULL;
-            varContainers = NULL;
             return;
         }
     }
     
-    if ( scaleSystem == YES && harmonicAnalysis == NO ) {
-        
-        // Scale System Ax = b as:
-        // (DAD)y = Db, where D = 1/sqrt(diag(A)) and y = D^-1 x
-        diag = doublevec(0, n-1);
-        
-        if (solution.matrix.isComplexMatrix == YES) {
-            for (i=0; i<n; i+=2) {
-                j = matContainers->Diag[i];
-                diag[i] = matContainers->Values[j];
-                diag[i+1] = matContainers->Values[j+1];
-            }
-        } else {
-            for (i=0; i<n; i++) {
-                diag[i] = matContainers->Values[matContainers->Diag[i]];
-            }
-        }
-        
-        if (solution.matrix.isComplexMatrix == YES) {
-            for (i=0; i<n; i+=2) {
-                diagReal = diag[i];
-                diagImag = -diag[i+1];
-                cmpx = diagReal + diagImag * I;
-                if (cabs(cmpx) != 0.0) {
-                    diag[i] = 1.0 / (sqrt(cabs(cmpx)));
-                    diag[i+1] = 1.0 / (sqrt(cabs(cmpx)));
-                } else {
-                    diag[i] = 1.0;
-                    diag[i+1] = 1.0;
-                }
-            }
-        } else {
-            for (i=0; i<n; i++) {
-                if (fabs(diag[i]) != 0.0) {
-                    diag[i] = 1.0 / sqrt(fabs(diag[i])); 
-                } else {
-                    diag[i] = 1.0;
-                }
-            }
-        }
-        
-        for (i=0; i<n; i++) {
-            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                matContainers->Values[j] = matContainers->Values[j] * (diag[i] * diag[matContainers->Cols[j]]);
-            }
-        }
-        
-        if (matContainers->MassValues != NULL) {
-            if (matContainers->sizeValues == matContainers->sizeMassValues) {
-                for (i=0; i<n; i++) {
-                    for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                        matContainers->MassValues[j] = matContainers->MassValues[j] * (diag[i] * diag[matContainers->Cols[j]]);
-                    }
-                }
-            }
-        }
-        
-        if (matContainers->DampValues != NULL) {
-            if (matContainers->sizeValues == matContainers->sizeDampValues) {
-                for (i=0; i<n; i++) {
-                    for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                        matContainers->DampValues[j] = matContainers->DampValues[j] * (diag[i] * diag[matContainers->Cols[j]]);
-                    }
-                }
-            }
-        }
-    }
+    if (solution.multigridLevel == -1) return;
         
     // If solving harmonic anaysis go there:
     if (harmonicAnalysis == YES) {
@@ -903,22 +854,35 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    // Convert rhs & initial value to the scaled system
-    if (scaleSystem == YES) {
-        for (i=0; i<n; i++) {
-            matContainers->RHS[i] = matContainers->RHS[i] * diag[i];
-        }
-    }
+    // If whether b=0 sice then equation Ax=b has only the trivial solution, x=0.
+    // In case of a limiter one still may need to check the limiter for contact
     sum = 0.0;
     for (i=0; i<n; i++) {
         sum = sum + pow(matContainers->RHS[i], 2.0);
     }
     bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
+    if (bnorm <= DBL_MIN && skipZeroRhs == NO) {
+        warnfunct("SolveSystem", "Solution trivially zero");
+        memset( varContainers->Values, 0.0, (varContainers->sizeValues*sizeof(varContainers->Values)) );
+        if (applyLimiter == YES) {
+            [self FEMKernel_determineSoftLimiterInSolution:solution model:aModel];
+        }
+        return;
+    }
     
+    // Convert rhs & initial value to the scaled system
     if (scaleSystem == YES) {
-        for (i=0; i<n; i++) {
-            matContainers->RHS[i] = matContainers->RHS[i] / bnorm;
-            varContainers->Values[i] = varContainers->Values[i] / diag[i] / bnorm;
+        if ((solution.solutionInfo)[@"linear system row equilibration"] != nil) {
+            applyRowEquilibration = [(solution.solutionInfo)[@"linear system row equilibration"] boolValue];
+        } else applyRowEquilibration = NO;
+        
+        if (applyRowEquilibration == YES) {
+            // TODO: Test wheter we are in a parallel run, for now it's never the case
+            parallel = NO;
+            [self FEMKernel_rowEquilibrationInSolution:solution parallel:parallel];
+        } else {
+            rhsScaling = (bnorm != 0.0) ? YES : NO;
+            [self scaleLinearSystem:solution scaleSolutionMatrixRHS:YES scaleSolutionVariable:YES diagScaling:NULL applyScaling:NULL rhsScaling:&rhsScaling];
         }
     }
     
@@ -927,7 +891,7 @@ static int PRECOND_VANKA     =  560;
     } else {
         method = @"iterative";
     }
-   
+
     if ([method isEqualToString:@"iterative"] == YES) {
         
         [self iterativeSolve:solution];
@@ -935,60 +899,49 @@ static int PRECOND_VANKA     =  560;
     else if ([method isEqualToString:@"multigrid"] == YES) {
         // TODO: Need to be implemented
     }
-    else { // By default we use the direct solver
+    else if ([method isEqualToString:@"feti"] == YES) {
+        // TODO: Need to be implemented
+    }
+    else if ([method isEqualToString:@"block"]) {
+        // TODO: Need to be implemented
+    }
+    else if ([method isEqualToString:@"mortar"]) {
+        // TODO: Need to be implemented
+    }
+    else { // Direct solver
            // TODO: Need to be implemented
     }
     
-    if (scaleSystem == YES) {
-        
-        // Solve x: INV(D)x = y, scale b back to original
-        for (i=0; i<n; i++) {
-            varContainers->Values[i] = varContainers->Values[i]* diag[i] * bnorm;
-            matContainers->RHS[i] = matContainers->RHS[i] / diag[i] * bnorm;
-        }
-        
-        // Scale the system back to original
-        for (i=0; i<n; i++) {
-            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                matContainers->Values[j] = matContainers->Values[j] / (diag[i] * diag[matContainers->Cols[j]]);
-            }
-        }
-        
-        if (matContainers->MassValues != NULL) {
-            if (matContainers->sizeValues == matContainers->sizeMassValues) {
-                for (i=0; i<n; i++) {
-                    for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                        matContainers->MassValues[j] = matContainers->MassValues[j] / (diag[i] * diag[matContainers->Cols[j]]);
-                    }
-                }
-            }
-        }
-        
-        if (matContainers->DampValues != NULL) {
-            if (matContainers->sizeValues != matContainers->sizeDampValues) {
-                for (i=0; i<n; i++) {
-                    for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                        matContainers->DampValues[j] = matContainers->DampValues[j] / (diag[i] * diag[matContainers->Cols[j]]);
-                    }
-                }
-            }
-        }
+    // TODO: Add suport for parallel run in which case parallel linear solvers must
+    // be called
     
-        free_dvector(diag, 0, n-1);
+    if (scaleSystem == YES) {
+        if (applyRowEquilibration == YES) {
+            [self FEMKernel_reverseRowEquilibrationInSolution:solution];
+        } else {
+            [self backScaleLinearSystem:solution scaleSolutionMatrixRHS:YES scaleSolutionVariable:YES diagScaling:NULL sizeOFDiagScaling:NULL];
+        }
     }
     
     // TODO: Add support for the treatment of variable loads and constrained matrix here
     // ....
     
-    [self FEMKernel_backRotateNTSystem:solution];
+    if (backRotation == YES) [self FEMKernel_backRotateNTSystem:solution];
     
     // Compute the change of the solution with different methods
     [self FEMKernel_computeChange:solution model:aModel isSteadyState:NO nsize:&n values:varContainers->Values values0:NULL];
-    // TODO: Is that really needed?
-    solution.variable.norm = solution.variable.norm;
+    // The following is what Elmer does because it takes a norm as arument in the linear solver routine. We don't need
+    // to do that because we work on the soluton class directly. But we would have to do the same if a method takes
+    // separately as arguments a matrix, the matrix RHS, the variable values and the variable norm.
+    // norm = solution.variable.norm;
     
-    matContainers = NULL;
-    varContainers = NULL;
+    // Create soft limiters to be later applied by the dirichlet conditions in the next round.
+    // Within apply a hard limiter after the set is determined.
+    if (applyLimiter == YES) {
+        [self FEMKernel_determineSoftLimiterInSolution:solution model:aModel];
+    }
+    
+    //TODO: Complete the implementation here
 }
 
 -(void)FEMKernel_solveSystem:(FEMSolution *)solution model:(FEMModel *)aModel {
@@ -2123,6 +2076,366 @@ static int PRECOND_VANKA     =  560;
     matContainers = NULL;
     projectorContainers = NULL;
     varContainers = NULL;
+}
+
+
+#pragma mark Limiter
+
+/************************************************************************************************
+    Determine soft limiters set. This is called after solution and can therefore be active
+    only on the second non-linear iteation round.
+************************************************************************************************/
+-(void)FEMKernel_determineSoftLimiterInSolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, n, t, ind, dofs, dof, bf, upper, removed, added, elemFirst, elemLast, totSize, count;
+    double limitSign, eps;
+    BOOL found, onlySearch, newLimiter, anyDofActive, anyLimitBC, anyLimitBF, set;
+    bool *limitActive, *limitDone = NULL;
+    listBuffer elemLimit = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    NSString *str;
+    NSMutableString *name, *limitName;
+    Element_t *elements;
+    FEMVariable *loadVar;
+    FEMBodyForce *bodyForceAtID;
+    FEMUtilities *utilities;
+    FEMListUtilities *listUtilities;
+    variableArraysContainer *varContainers, *loadVarContainers;
+    
+    utilities = [[FEMUtilities alloc] init];
+    listUtilities = [[FEMListUtilities alloc] init];
+    
+    name = [NSMutableString stringWithString:solution.variable.name];
+    [name appendString:@" loads"];
+    onlySearch = YES;
+    loadVar = [utilities getVariableFrom:model.variables model:model name:name onlySearch:&onlySearch maskName:NULL info:&found];
+    if (loadVar == nil) {
+        NSLog(@"FEMKernel_determineSoftLimiterInSolution: no loads associated wit variable %@\n", solution.variable.name);
+        return;
+    }
+    
+    varContainers = solution.variable.getContainers;
+    loadVarContainers = loadVar.getContainers;
+    
+    dofs = solution.variable.dofs;
+    totSize = varContainers->sizeValues;
+    newLimiter = NO;
+    
+    // Loop though upper and lower limits
+    for (upper=0; upper<=1; upper++) {
+        removed = 0;
+        added = 0;
+        
+        // If the limiter already exists then check the corresponding load to
+        // determine whether the node needs to be released from the set.
+        limitActive = NULL;
+        
+        // Check that active set vectors for limiters exist, otherwise allocate
+        if (upper == 0) {
+            if (varContainers->lowerLimitActive == NULL) {
+                varContainers->lowerLimitActive = boolvec(0, totSize-1);
+                varContainers->sizeLowerLimitActive = totSize;
+                memset( varContainers->lowerLimitActive, 0, (totSize*sizeof(varContainers->lowerLimitActive)) );
+            }
+            limitActive = varContainers->lowerLimitActive;
+        } else {
+            if (varContainers->upperLimitActive == NULL) {
+                varContainers->upperLimitActive = boolvec(0, totSize-1);
+                varContainers->sizeUpperLimitActive = totSize;
+                memset( varContainers->upperLimitActive, 0, (totSize*sizeof(varContainers->upperLimitActive)) );
+            }
+            limitActive = varContainers->upperLimitActive;
+        }
+        
+        if ((solution.solutionInfo)[@"limiter load tolerance"] != nil) {
+            eps = [(solution.solutionInfo)[@"limiter load tolerance"] doubleValue];
+        } else eps = DBL_EPSILON;
+        
+        if (limitDone == NULL) {
+            n = model.maxElementNodes;
+            limitDone = boolvec(0, totSize-1);
+            memset( limitDone, 0, (totSize*sizeof(limitDone)) );
+        }
+        
+        // These are the default sign that come from standard formulation
+        // of Laplace equation
+        if (upper == 0) {
+            limitSign = 1.0;
+        } else {
+            limitSign = 1.0;
+        }
+        
+        // The user may want to toggle the sign for other kinds of equations
+        if ((solution.solutionInfo)[@"limiter load sign negative"] != nil) {
+            if ([(solution.solutionInfo)[@"limiter load sign negative"] boolValue] == YES) limitSign = -1.0 * limitSign;
+        }
+        
+        // Go through the active set and free nodes with wrong sign
+        for (i=0; i<totSize; i++) {
+            if (limitActive[i] == true) {
+                if (limitSign * loadVarContainers->Values[i] > limitSign * eps) {
+                    removed++;
+                    limitActive[i] = false;
+                    limitDone[i] = true;
+                }
+            }
+        }
+        
+        // Go through the field variables one dof at a time since typically
+        // for vector valued field, the limiter is given component wise
+        anyDofActive = NO;
+        for (dof=0; dof<dofs; dof++) {
+            name = [NSMutableString stringWithString:solution.variable.name];
+            if (solution.variable.dofs > 1) {
+                str = [NSString stringWithFormat:@"%d",dof+1];
+                [name appendString:@" "];
+                [name appendString:str];
+            }
+            
+            if (upper == 0) {
+                limitName = [NSMutableString stringWithString:name];
+                [limitName appendString:@" lower limit"];
+            } else {
+                limitName = [NSMutableString stringWithString:name];
+                [limitName appendString:@" upper limit"];
+            }
+            
+            // Check whether limiters exist at all
+            anyLimitBC = [listUtilities listCheckPresentAnyBoundaryCondition:model name:limitName];
+            anyLimitBF = [listUtilities listCheckPresentAnyBodyForce:model name:limitName];
+            
+            if (anyLimitBC == NO || anyLimitBF == NO) continue;
+            anyDofActive = YES;
+            
+            if (limitDone == NULL) {
+                n = model.maxElementNodes;
+                limitDone = boolvec(0, totSize-1);
+                memset( limitDone, 0, (totSize*sizeof(limitDone)) );
+            }
+            
+            if ((solution.solutionInfo)[@"limiter value tolerance"] != nil) {
+                eps = [(solution.solutionInfo)[@"limiter value tolerance"] doubleValue];
+            } else eps = DBL_EPSILON;
+            
+            // Define the range of elements for which the limiters are active
+            elemFirst = model.numberOfBulkElements;
+            elemLast = model.numberOfBulkElements;
+            
+            if (anyLimitBF == YES) elemFirst = 0;
+            if (anyLimitBC) elemLast = model.numberOfBulkElements + model.numberOfBoundaryElements;
+            
+            // Go through the elements
+            elements = model.getElements;
+            for (t=elemFirst; t<elemLast; t++) {
+                n = elements[t].Type.NumberOfNodes;
+                
+                if (t >= model.numberOfBulkElements) {
+                    found = NO;
+                    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+                        if (elements[t].BoundaryInfo->Constraint == boundaryCondition.tag) {
+                            found = [listUtilities listGetReal:model inArray:boundaryCondition.valuesList forVariable:limitName numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&elemLimit minValue:NULL maxValue:NULL];
+                            break;
+                        }
+                    }
+                    if (found == NO) continue;
+                } else {
+                    if ((model.bodies)[elements[t].BodyID-1][@"body force"] != nil) {
+                        bf = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+                    } else {
+                        continue;
+                    }
+                    bodyForceAtID = (model.bodyForces)[bf-1];
+                    found = [listUtilities listGetReal:model inArray:bodyForceAtID.valuesList forVariable:limitName numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&elemLimit minValue:NULL maxValue:NULL];
+                    if (found == NO) continue;
+                    
+                }
+                
+                for (i=0; i<n; i++) {
+                    j = varContainers->Perm[elements[t].NodeIndexes[i]];
+                    if (j < 0) continue;
+                    ind = dofs * j + dof;
+                    
+                    if (limitDone[ind] == YES) continue;
+                    
+                    if (upper == 0) {
+                        set = (varContainers->Values[ind] < elemLimit.vector[i] - eps) ? YES : NO;
+                    } else {
+                        set = (varContainers->Values[ind] > elemLimit.vector[i] + eps) ? YES : NO;
+                    }
+                    
+                    if (set == YES) {
+                        if (limitActive[ind] == NO) added++;
+                        limitActive[ind] = YES;
+                        limitDone[ind] = YES;
+                    }
+                    
+                    // Enforce the value to limits because nonlinear material models
+                    // may oltherwise lead to divergence of the iteration
+                    if (upper == 0) {
+                        varContainers->Values[ind] = max(varContainers->Values[ind], elemLimit.vector[i]);
+                    } else {
+                        varContainers->Values[ind] = min(varContainers->Values[ind], elemLimit.vector[i]);
+                    }
+                }
+            }
+        }
+        
+        if (anyDofActive == NO) continue;
+        
+        // Output some information before exiting
+        if (upper == 0) {
+            NSLog(@"FEMKernel_determineSoftLimiterInSolution: determined lower soft limit set");
+        } else {
+            NSLog(@"FEMKernel_determineSoftLimiterInSolution: determined upper soft limit set");
+        }
+        count = 0;
+        for (i=0; i<totSize; i++) {
+            if (limitActive[i] == YES) count++;
+        }
+        NSLog(@"FEMKernel_determineSoftLimiterInSolution:Number of dofs in set is %d\n", count);
+        
+        if (added > 0) {
+            NSLog(@"FEMKernel_determineSoftLimiterInSolution: added %d dofs to the set\n", added);
+        }
+        if (removed > 0) {
+            NSLog(@"FEMKernel_determineSoftLimiterInSolution: removed %d dofs to the set\n", removed);
+        }
+    }
+    
+    if (limitDone != NULL) {
+        free_bvector(limitDone, 0, totSize-1);
+    }
+    
+    if (elemLimit.vector != NULL) {
+        free_dvector(elemLimit.vector, 0, elemLimit.m-1);
+    }
+}
+
+#pragma mark Rows equilibration
+/****************************************************************************************
+    Equilibrate the rows of the coefficient matrix in solution to minimize the condition 
+    number. The associated rhs vector is also scaled
+*****************************************************************************************/
+-(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel {
+    
+    int i, j, n;
+    double norm, tmp;
+    double complex cmpx;
+    BOOL complexMatrix;
+    matrixArraysContainer *matContainers;
+    
+    n = solution.matrix.numberOfRows;
+    complexMatrix = solution.matrix.complexMatrix;
+    
+    matContainers = solution.matrix.getContainers;
+    
+    if (matContainers->DiagScaling == NULL) {
+        matContainers->DiagScaling = doublevec(0, n-1);
+        matContainers->sizeDiagScaling = n;
+    }
+    
+    memset( matContainers->DiagScaling, 0.0, (n*sizeof(matContainers->DiagScaling)) );
+    norm = 0.0;
+
+    // Compute 1-norm of each row
+    if (complexMatrix == YES) {
+        for (i=0; i<n; i+=2) {
+            tmp = 0.0;
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j+=2) {
+                cmpx = matContainers->Values[j] + (-matContainers->Values[j+1] * I);
+                tmp = tmp + cabs(cmpx);
+            }
+            
+            if (parallel == NO) {
+                if (tmp > norm) norm = tmp;
+            }
+            
+            if (tmp > 0.0) {
+                matContainers->DiagScaling[i] = tmp;
+                matContainers->DiagScaling[i+1] = tmp;
+            }
+        }
+    } else {
+        for (i=0; i<n; i++) {
+            tmp = 0.0;
+            for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                tmp = tmp + fabs(matContainers->Values[j]);
+            }
+            
+            if (parallel == NO) {
+                if (tmp > norm) norm = tmp;
+            }
+            
+            if (tmp > 0.0) matContainers->DiagScaling[i] = tmp;
+        }
+    }
+    
+    if (parallel == YES) {
+        //TODO: Add parallel run support
+    }
+    
+    // Now define the scalig matrix by inversion and perform
+    // the actual scaling of the linear system
+    if (complexMatrix == YES) {
+        for (i=0; i<n; i+=2) {
+            if (matContainers->DiagScaling[i] > 0.0) {
+                matContainers->DiagScaling[i] = 1.0 / matContainers->DiagScaling[i];
+                matContainers->DiagScaling[i+1] = 1.0 / matContainers->DiagScaling[i+1];
+            } else {
+                matContainers->DiagScaling[i] = 1.0;
+                matContainers->DiagScaling[i+1] = 1.0;
+            }
+        }
+    } else {
+        for (i=0; i<n; i++) {
+            if (matContainers->DiagScaling[i] > 0.0) {
+                matContainers->DiagScaling[i] = 1.0 / matContainers->DiagScaling[i];
+            } else {
+                matContainers->DiagScaling[i] = 1.0;
+            }
+        }
+    }
+    
+    for (i=0; i<n; i++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            matContainers->Values[j] = matContainers->Values[j] * matContainers->DiagScaling[i];
+        }
+        matContainers->RHS[i] = matContainers->DiagScaling[i] * matContainers->RHS[i];
+    }
+    
+    NSLog(@"FEMKernel_rowEquilibrationInSolution: unscaled matrix norm: %f\n", norm);
+}
+
+/****************************************************************************************
+    Scale the linear system back to original when the linear system scaling has been
+    done by row equilibration.
+*****************************************************************************************/
+-(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution {
+    
+    int i, j, n;
+    matrixArraysContainer *matContainers;
+    
+    n = solution.matrix.numberOfRows;
+    matContainers = solution.matrix.getContainers;
+    
+    if (matContainers->DiagScaling == NULL) {
+        errorfunct("FEMKernel_reverseRowEquilibrationInSolution", "Diag is a null pointer!");
+    }
+    if (matContainers->sizeDiagScaling != n) {
+        errorfunct("FEMKernel_reverseRowEquilibrationInSolution", "Diag of wrong size!");
+    }
+    
+    for (i=0; i<n; i++) {
+        matContainers->RHS[i] = matContainers->RHS[i] / matContainers->DiagScaling[i];
+    }
+    for (i=0; i<n; i++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            matContainers->Values[j] = matContainers->Values[j] / matContainers->Diag[i];
+        }
+    }
+    
+    free_dvector(matContainers->DiagScaling, 0, matContainers->sizeDiagScaling-1);
+    matContainers->sizeDiagScaling = 0;
+    matContainers->DiagScaling = NULL;
 }
 
 #pragma mark Public methods...
@@ -4001,6 +4314,232 @@ static int PRECOND_VANKA     =  560;
     matContainers = NULL;
     varContainers = NULL;
     solContainers = NULL;
+}
+
+/****************************************************************************************************************
+    Scale system Ax = b as:
+    (DAD) = Db, where D = 1/sqrt(Diag(A)) and y = D^-1 x
+*****************************************************************************************************************/
+-(void)scaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling applyScaling:(BOOL *)applyScaling rhsScaling:(BOOL *)rhsScaling {
+    
+    int i, j, n;
+    double *diag, bnorm, sum;
+    double complex diagC;
+    BOOL complexMatrix, doRHS;
+    matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
+    FEMParallelMPI *parallelUtil;
+    
+    n = solution.matrix.numberOfRows;
+    matContainers = solution.matrix.getContainers;
+    
+    if (diagScaling != NULL) {
+        diag = diagScaling;
+    } else {
+        if (matContainers->DiagScaling == NULL) {
+            matContainers->DiagScaling = doublevec(0, n-1);
+            matContainers->sizeDiagScaling = n;
+        }
+        diag = matContainers->DiagScaling;
+        
+        complexMatrix = solution.matrix.complexMatrix;
+        
+        if (complexMatrix == YES) {
+            for (i=0; i<n; i+=2) {
+                j = matContainers->Diag[i];
+                diag[i] = matContainers->Values[j];
+                diag[i+1] = matContainers->Values[j+1];
+            }
+        } else {
+            for (i=0; i<n; i++) {
+                diag[i] = matContainers->Values[matContainers->Diag[i]];
+            }
+        }
+        
+        // TODO: Add support for parallel run
+        
+        if (complexMatrix == YES) {
+            for (i=0; i<n; i+=2) {
+                diagC = diag[i] + (-diag[i+1] * I);
+                if (cabs(diagC) != 0.0) {
+                    diag[i] = 1.0 / sqrt(cabs(diagC));
+                    diag[i+1] = 1.0 / sqrt(cabs(diagC));
+                } else {
+                    diag[i] = 1.0;
+                    diag[i+1] = 1.0;
+                }
+            }
+        } else {
+            for (i=0; i<n; i++) {
+                if (fabs(diag[i]) != 0.0) {
+                    diag[i] = 1.0 / sqrt(fabs(diag[i]));
+                } else {
+                    diag[i] = 1.0;
+                }
+            }
+        }
+    }
+    
+    // Optionally we may just create the diag and leave the scaling undone
+    if (applyScaling != NULL) {
+        if (applyScaling == NO) return;
+    }
+    
+    for (i=0; i<n; i++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            matContainers->Values[j] = matContainers->Values[j] * ( diag[i] * diag[matContainers->Cols[j]]);
+        }
+    }
+    
+    if (matContainers->MassValues != NULL) {
+        if (matContainers->sizeValues == matContainers->sizeMassValues) {
+            for (i=0; i<n; i++) {
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->MassValues[j] = matContainers->MassValues[j] * (diag[i] * diag[matContainers->Cols[j]]);
+                }
+            }
+        }
+    }
+    
+    if (matContainers->DampValues != NULL) {
+        if (matContainers->sizeValues == matContainers->sizeDampValues) {
+            for (i=0; i<n; i++) {
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->DampValues[j] = matContainers->DampValues[j] * (diag[i] * diag[matContainers->Cols[j]]);
+                }
+            }
+        }
+    }
+    
+    // Scale r.h.s and initial guess
+    if (scaleSolutionMatrixRHS == YES) {
+        for (i=0; i<n; i++) {
+            matContainers->RHS[i] = matContainers->RHS[i] * diag[i];
+        }
+        doRHS = YES;
+        if (rhsScaling != NULL) doRHS = *rhsScaling;
+        if (doRHS == YES) {
+            parallelUtil = [[FEMParallelMPI alloc] init];
+            sum = 0.0;
+            for (i=0; i<matContainers->sizeRHS; i++) {
+                sum = sum + pow(matContainers->RHS[i], 2.0);
+            }
+            bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
+        } else {
+            bnorm = 1.0;
+        }
+        solution.matrix.rhsScaling = bnorm;
+        
+        for (i=0; i<n; i++) {
+            diag[i] = diag[i] * bnorm;
+        }
+        for (i=0; i<n; i++) {
+            matContainers->RHS[i] = matContainers->RHS[i] / bnorm;
+        }
+        if (scaleSolutionVariable == YES) {
+            varContainers = solution.variable.getContainers;
+            for (i=0; i<n; i++) {
+                varContainers->Values[i] = varContainers->Values[i] / diag[i];
+            }
+        }
+    }
+}
+
+/************************************************************************************
+    Scale the system back to original.
+    diagscaling is optional and if given, its size sizeOFDiagScaling should also
+    be given.
+************************************************************************************/
+-(void)backScaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling sizeOFDiagScaling:(int *)sizeOfDiagScaling {
+    
+    int i, j, k, n;
+    double *diag, bnorm;
+    matrixArraysContainer *matContainers;
+    variableArraysContainer *varContainers;
+    
+    n = solution.matrix.numberOfRows;
+    matContainers = solution.matrix.getContainers;
+    
+    if (diagScaling != NULL) {
+        diag = diagScaling;
+    } else {
+        diag = matContainers->DiagScaling;
+    }
+    
+    if (diag == NULL) {
+        errorfunct("backScaleLinearSystem", "Diag is a null pointer");
+    }
+    if (diagScaling != NULL) {
+        if (*sizeOfDiagScaling != n) errorfunct("backScaleLinearSystem", "Diag of wrong size");
+    } else {
+        if (matContainers->sizeDiagScaling != n) errorfunct("backScaleLinearSystem", "Diag of wrong size");
+    }
+    
+    if (scaleSolutionMatrixRHS == YES) {
+        
+        // Solve x: INV(D)x = y, scale b back to original
+        if (scaleSolutionVariable == YES) {
+            varContainers = solution.variable.getContainers;
+            for (i=0; i<n; i++) {
+                varContainers->Values[i] = varContainers->Values[i] * diag[i];
+            }
+        }
+        bnorm = solution.matrix.rhsScaling;
+        for (i=0; i<n; i++) {
+            diag[i] = diag[i] / bnorm;
+        }
+        for (i=0; i<n; i++) {
+            matContainers->RHS[i] = matContainers->RHS[i] / diag[i] * bnorm;
+        }
+    }
+    
+    for (i=0; i<solution.nOfEigenValues; i++) {
+        
+        // Solve x: INV(D)x = y
+        if (solution.matrix.complexMatrix == YES) {
+            varContainers = solution.variable.getContainers;
+            k = 0;
+            for (j=0; j<n/2; j++) {
+                varContainers->EigenVectors[i][j] = varContainers->EigenVectors[i][j] * diag[k];
+                k+=2;
+            }
+        } else {
+            for (j=0; j<n; j++) {
+                varContainers->EigenVectors[i][j] = varContainers->EigenVectors[i][j] * diag[j];
+            }
+            
+        }
+    }
+    
+    for (i=0; i<n; i++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            matContainers->Values[j] = matContainers->Values[j] / (diag[i] * diag[matContainers->Cols[j]]);
+        }
+    }
+    
+    if (matContainers->MassValues != NULL) {
+        if (matContainers->sizeValues == matContainers->sizeMassValues) {
+            for (i=0; i<n; i++) {
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->MassValues[j] = matContainers->MassValues[j] / (diag[i] * diag[matContainers->Cols[j]]);
+                }
+            }
+        }
+    }
+    
+    if (matContainers->DampValues != NULL) {
+        if (matContainers->sizeValues == matContainers->sizeDampValues) {
+            for (i=0; i<n; i++) {
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->DampValues[j] = matContainers->DampValues[j] / (diag[i] * diag[matContainers->Cols[j]]);
+                }
+            }
+        }
+    }
+    
+    free_dvector(matContainers->DiagScaling, 0, matContainers->sizeDiagScaling-1);
+    matContainers->sizeDiagScaling = 0;
+    matContainers->DiagScaling = NULL;
 }
 
 #pragma mark First order time

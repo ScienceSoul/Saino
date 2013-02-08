@@ -28,6 +28,7 @@
     int _numberOfMaterials;
     int _coordinates;
     int _totalMatrixElements;
+    int _maxElementNodes;
     
     id _mesh;
     id _solution;
@@ -43,6 +44,7 @@
     NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
     FEMSimulation *_simulation;                   
     
+    Element_t *_elements;
     Element_t *_currentElement;
     modelArraysContainer *_containers;
     
@@ -78,6 +80,7 @@
 @property(nonatomic, assign) int numberOfMaterials;
 @property(nonatomic, assign) int coordinates;
 @property(nonatomic, assign) int totalMatrixElements;
+@property(nonatomic, assign) int maxElementNodes;
 @property(nonatomic, strong) id mesh;
 @property(nonatomic, strong) id solution;
 @property(nonatomic, strong) NSMutableString *outputPath;
@@ -98,6 +101,7 @@
 -(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2;
 
 // Elements getter
+-(Element_t *)getElements;
 -(Element_t *)getCurrentElement;
 
 -(modelArraysContainer *)getContainers;

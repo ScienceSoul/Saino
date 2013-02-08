@@ -809,4 +809,38 @@
     return flag;
 }
 
+/*****************************************************************************
+    Check if the keyword is present in any boundary condition
+*****************************************************************************/
+-(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name {
+    
+    BOOL found;
+    
+    found = NO;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        found = [self listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
+        if (found == YES) break;
+    }
+    
+    return found;
+}
+
+/*****************************************************************************
+ Check if the keyword is present in any body force
+*****************************************************************************/
+-(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name {
+    
+    BOOL found;
+    
+    found = NO;
+    for (FEMBodyForce *bodyForce in model.bodyForces) {
+        found = [self listCheckPresentVariable:name inArray:bodyForce.valuesList];
+        if (found == YES) break;
+    }
+    
+    return found;
+}
+
+
+
 @end

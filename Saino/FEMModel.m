@@ -36,6 +36,7 @@
 @synthesize numberOfMaterials = _numberOfMaterials;
 @synthesize coordinates = _coordinates;
 @synthesize totalMatrixElements = _totalMatrixElements;
+@synthesize maxElementNodes = _maxElementNodes;
 @synthesize mesh = _mesh;
 @synthesize solution = _solution;
 @synthesize outputPath = _outputPath;
@@ -365,6 +366,9 @@
         _equations = [[NSArray alloc] init];
         _variables = [[NSMutableArray alloc] init];
         _simulation = [[FEMSimulation alloc] init];
+        
+        _elements = NULL;
+        _currentElement = NULL;
             
         _containers = (modelArraysContainer*)malloc(sizeof(modelArraysContainer));
         _containers->freeSurfaceNodes = NULL;
@@ -745,6 +749,11 @@
 }
 
 #pragma mark Elements getter
+
+-(Element_t *)getElements {
+    
+    return _elements;
+}
 
 -(Element_t *)getCurrentElement {
     

@@ -208,8 +208,8 @@ typedef struct matrixArraysContainer {
     int sizeRHS, sizeBulkRHS, sizeRHS_im, size1force, size2Force;
     
     double *Values, *ILUValues;
-    double *MassValues, *DampValues, *BulkValues;
-    int sizeValues, sizeILUValues, sizeMassValues, sizeDampValues, sizeBulkValues;
+    double *MassValues, *DampValues, *BulkValues, *DiagScaling;
+    int sizeValues, sizeILUValues, sizeMassValues, sizeDampValues, sizeBulkValues, sizeDiagScaling;
     
     int *ILURows, *ILUCols, *ILUDiag;
     int sizeILURows, sizeILUCols, sizeILUDiag;
@@ -233,6 +233,8 @@ typedef struct variableArraysContainer {
     double *SteadyValues;
     double complex *EigenValues;
     double complex **EigenVectors;
+    bool *lowerLimitActive;
+    bool *upperLimitActive;
     int sizePerm;
     int sizeValues;
     int size1PrevValues;
@@ -243,6 +245,8 @@ typedef struct variableArraysContainer {
     int sizeEigenValues;
     int size1EigenVectors;
     int size2EigenVectors;
+    int sizeLowerLimitActive;
+    int sizeUpperLimitActive;
     
 } variableArraysContainer;
 

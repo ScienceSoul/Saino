@@ -52,6 +52,8 @@
         _containers->SteadyValues = NULL;
         _containers->EigenValues = NULL;
         _containers->EigenVectors = NULL;
+        _containers->lowerLimitActive = NULL;
+        _containers->upperLimitActive = NULL;
         _containers->sizePerm = 0;
         _containers->sizeValues = 0;
         _containers->size1PrevValues = 0;
@@ -59,6 +61,8 @@
         _containers->sizePValues = 0;
         _containers->sizeNonLinValues = 0;
         _containers->sizeSteadyValues = 0;
+        _containers->sizeLowerLimitActive = 0;
+        _containers->sizeUpperLimitActive = 0;
     }
     
     return self;

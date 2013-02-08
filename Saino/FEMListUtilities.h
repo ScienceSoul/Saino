@@ -46,5 +46,8 @@
 
 -(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation;
 
+-(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name;
+-(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name;
+
 
 @end

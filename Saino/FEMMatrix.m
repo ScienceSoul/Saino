@@ -22,6 +22,7 @@
 @synthesize solveCount = _solveCount;
 @synthesize comm = _comm;
 @synthesize umfPackNumeric = _umfPackNumeric;
+@synthesize rhsScaling = _rhsScaling;
 @synthesize ordered = _ordered;
 @synthesize lumped = _lumped;
 @synthesize symmetric = _symmetric;
@@ -68,6 +69,7 @@
         
         _containers->BulkRHS = NULL;
         _containers->BulkValues = NULL;
+        _containers->DiagScaling = NULL;
         
         _containers->ILUCols = NULL;
         _containers->ILURows = NULL;
