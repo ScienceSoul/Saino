@@ -106,7 +106,6 @@
 
 #pragma mark Public methods...
 @synthesize simulationID = _simulationID;
-@synthesize normalTangentialNOFNodes = _normalTangentialNOFNodes;
 @synthesize coordinateSystemDimension  = _coordinateSystemDimension;
 @synthesize timeOrder = _timeOrder;
 @synthesize doneTime = _doneTime;
@@ -143,14 +142,7 @@
         _containers->ntZeroingDone = NULL;
         _containers->activeElements = NULL;
         _containers->ntElement = NULL;
-        _containers->boundaryReorder = NULL;
         _containers->defDofs = NULL;
-        _containers->boundaryNormals = NULL;
-        _containers->boundaryTangent1 = NULL;
-        _containers->boundaryTangent2 = NULL;
-        _containers->sizeBoundaryReorder = 0;
-        _containers->size1boundaryNormals = 0;
-        _containers->size2boundaryNormals = 0;
         _containers->size1DefDofs = 0;
         _containers->size2DefDofs = 0;
     }

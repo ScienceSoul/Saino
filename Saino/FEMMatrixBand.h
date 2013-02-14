@@ -19,9 +19,11 @@
 -(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
 -(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
 -(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value;
+// Band Matrix-vector multiply
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
 
 -(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
 -(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value;
-
+-(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v;
 
 @end

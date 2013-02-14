@@ -30,4 +30,8 @@
 -(FEMMatrix *)meshProjector:(FEMMesh *)mesh1 secondmesh:(FEMMesh *)mesh2 model:(FEMModel *)aModel useQuadrantTree:(BOOL *)quadrantTree transpose:(BOOL *)trans;
 -(double)cublicSplineX:(double *)x Y:(double *)y R:(double *)r T:(double)t;
 
+// Following methods correspond to ComponentName routines in Elmer
+-(NSString *)appendNameFromString:(NSString *)string component:(int *)component;
+-(NSString *)appendNameFromVariable:(FEMVariable *)variable component:(int *)component;
+
 @end

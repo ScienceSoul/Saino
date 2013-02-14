@@ -18,7 +18,6 @@
 @interface FEMSolution : NSObject {
     
     int _simulationID;
-    int _normalTangentialNOFNodes;
     int _coordinateSystemDimension;
     int _timeOrder;
     int _doneTime;
@@ -47,7 +46,6 @@
 }
 
 @property(nonatomic, assign) int simulationID;
-@property(nonatomic, assign) int normalTangentialNOFNodes;
 @property(nonatomic, assign) int coordinateSystemDimension;
 @property(nonatomic, assign) int timeOrder;
 @property(nonatomic, assign) int doneTime;

@@ -43,9 +43,5 @@
 // Dummy method when preconditioning is not needed
 -(void)CRSPCondDummyInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
 
-// CRS Matrix-vector multiply
--(void)CRSMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
--(void)CRSComplexMatrixVectorMultiplyInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v;
-
 @end
 

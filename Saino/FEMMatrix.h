@@ -17,7 +17,7 @@
     FEMMatrix *_constraint;
     FEMMatrix *_ematrix;
     int _numberOfRows;
-    int _subband;
+    int _subband;          // >= 1
     int _format;
     int _solveCount;
     int _comm;

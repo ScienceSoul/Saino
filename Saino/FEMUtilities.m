@@ -934,12 +934,12 @@
 -(FEMVariable *)getVariableFrom:(NSMutableArray *)anArray model:(FEMModel *)aModel name:(NSString *)name onlySearch:(BOOL *)only maskName:(NSString *)maskName info:(BOOL *)found {
     
     int i, j, k, l, n, dofs;
-    FEMVariable *var, *pVar, *tmp;
+    FEMVariable *var = nil, *pVar = nil, *tmp = nil;
     FEMListUtilities *listUtilities;
     FEMSolution *solution;
     FEMMesh *mesh, *currentMesh;
     FEMProjector *projector;
-    variableArraysContainer *varContainers, *pvarContainers, *bufferContainers;
+    variableArraysContainer *varContainers = NULL, *pvarContainers = NULL, *bufferContainers = NULL;
     NSMutableString *tmpname;
     NSNumber *aNumber;
     BOOL onlyThis, stat, globalBubbles, output;
@@ -950,18 +950,17 @@
         if ([variable.name isEqualToString:name] == YES) {
             if (variable.valid == YES) {
                 *found = YES;
-                return variable;
+                var = variable;
             }
         }
     }
     
     if (only != NULL) {
         if (*only == YES) {
-            return nil;
+            return var;
         }
     }
     
-    pVar = nil;
     for (FEMMesh *mesh in aModel.meshes) {
         if ([anArray isEqualToArray:mesh.variables] == NO) {
             onlyThis = YES;
@@ -974,9 +973,9 @@
         }
        
     }
-    if (pVar != nil) return nil;
+    if (pVar == nil) return var;
     
-    if (found == NO ) {
+    if (*found == NO ) {
         listUtilities = [[FEMListUtilities alloc] init];
         solution = (FEMSolution *)pVar.solution;
         if ( (solution.solutionInfo)[@"bubbles in global system"] != nil ) {
@@ -1017,7 +1016,6 @@
         varContainers->Perm = NULL;
         varContainers->Values = NULL;
         [var deallocation];
-        var = nil;
         
         onlyThis = YES;
         var = [self getVariableFrom:anArray model:aModel name:name onlySearch:&onlyThis maskName:NULL info:&stat];
@@ -1074,7 +1072,6 @@
             bufferContainers->sizePerm = dofs/pVar.dofs;
             [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 2" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
             
-            tmp = nil;
             free(bufferContainers);
             bufferContainers = NULL;
             onlyThis = YES;
@@ -1109,7 +1106,6 @@
             } else {
                 [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 3" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
                 
-                tmp = nil;
                 free(bufferContainers);
                 bufferContainers = NULL;
                 onlyThis = YES;
@@ -1142,7 +1138,6 @@
                 [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
             }
             
-            tmp = nil;
             free(bufferContainers);
             bufferContainers = NULL;
             onlyThis = YES;
@@ -1181,7 +1176,6 @@
                     [tmpname appendString:[aNumber stringValue]];
                     [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:tmpname dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
                     
-                    tmp = nil;
                     free(bufferContainers);
                     bufferContainers = NULL;
                     onlyThis = YES;
@@ -1202,8 +1196,6 @@
                 }
             }
         }
-        varContainers = NULL;
-        var = nil;
         onlyThis = YES;
         var = [self getVariableFrom:anArray model:aModel name:name onlySearch:&onlyThis maskName:NULL info:&stat];
     }
@@ -1235,8 +1227,6 @@
         [self FEMUtils_interpolateMesh:mesh toMesh:currentMesh oldVariables:tmpArryay newVariables:anArray model:aModel quadrantTree:NULL withProjector:YES projector:projector mask:nil];
     }
     
-    var = nil;
-    tmp = nil;
     onlyThis = YES;
     var = [self getVariableFrom:anArray model:aModel name:name onlySearch:&onlyThis maskName:NULL info:&stat];
     if ([var.name isEqualToString:@"flow solution"]) {
@@ -1246,7 +1236,6 @@
             tmp.valuesChanged = YES;
         }
         
-        tmp = nil;
         tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
         if (tmp != nil) {
             tmp.valid = YES;
@@ -1262,7 +1251,6 @@
             }
         }
         
-        tmp = nil;
         tmp = [self getVariableFrom:anArray model:aModel name:@"pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
         if (tmp != nil) {
             tmp.valid = YES;
@@ -1444,5 +1432,54 @@
     return s;
 }
 
+-(NSString *)appendNameFromString:(NSString *)string component:(int *)component {
+    
+    int comp;
+    NSString *str;
+    NSMutableString *str1;
+    NSRange location;
+    
+    location = [string rangeOfString:@"["];
+    
+    comp = 0;
+    if (component != NULL) comp = *component;
+    
+    if (location.location == NSNotFound) {
+        str1 = [NSMutableString stringWithString:string];
+        if (comp > 0) {
+            [str1 appendString:@" "];
+            [str1 appendString:[NSString stringWithFormat:@"%d",comp]];
+            str = [NSString stringWithString:str1];
+        }
+    } else {
+        //TODO: Implement this particular part
+    }
+    
+    return str;
+}
+
+-(NSString *)appendNameFromVariable:(FEMVariable *)variable component:(int *)component {
+    
+    NSString *str;
+    NSMutableString *str1;
+    
+    if ([variable.name isEqualToString:@"flow solution"]) {
+        str = @"flow solution";
+        if (component == NULL) return str;
+        if (*component == variable.dofs) {
+            str = @"pressure";
+            return str;
+        } else {
+            str1 = [NSMutableString stringWithString:@"velocity"];
+            [str1 appendString:@" "];
+            [str1 appendString:[NSString stringWithFormat:@"%d",*component]];
+            str = [NSString stringWithString:str1];
+        }
+    } else {
+        str = [self appendNameFromString:variable.name component:component];
+    }
+    
+    return str;
+}
 
 @end

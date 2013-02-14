@@ -255,14 +255,7 @@ typedef struct solutionArraysContainer {
     bool **ntZeroingDone;
     int *activeElements;
     int **ntElement;
-    int *boundaryReorder;
     int **defDofs;
-    double **boundaryNormals;
-    double **boundaryTangent1;
-    double **boundaryTangent2;
-    int sizeBoundaryReorder;
-    int size1boundaryNormals;
-    int size2boundaryNormals;
     int size1DefDofs;
     int size2DefDofs;
     
