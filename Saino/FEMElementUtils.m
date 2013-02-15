@@ -34,8 +34,8 @@
     FEMBoundaryCondition *boundaryConditions;
     ListMatrixEntry_t *cList, *lptr;
     Element_t *elements, *element, *edges, *faces;
-    matrixArraysContainer *matContainers;
-    modelArraysContainer *modelContainers;
+    matrixArraysContainer *matContainers = NULL;
+    modelArraysContainer *modelContainers = NULL;
     
     gb = NO;
     if (globalBubbles != NULL) gb = *globalBubbles;
@@ -338,7 +338,7 @@
     BOOL dg, gb, useOptimized, found, all;
     NSMutableString *str1, *str2;
     Element_t *elements, *edges, *faces;
-    modelArraysContainer *modelContainers;
+    modelArraysContainer *modelContainers = NULL;
     ListMatrix_t *listMatrix;
     FEMMatrix *matrix, *constraint;
     FEMListUtilities *listUtils;

@@ -23,8 +23,8 @@
 -(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count {
 
     int i, l, k1, n;
-    FEMVariable *variable, *cVar;
-    variableArraysContainer *varContainers, *cvarContainers;
+    FEMVariable *variable = nil, *cVar = nil;
+    variableArraysContainer *varContainers = NULL, *cvarContainers = NULL;
     FEMUtilities *utilities;
     Element_t *element;
     BOOL found;
@@ -102,11 +102,6 @@
         }
         count++;
     }
-    
-    variable = nil;
-    cVar = nil;
-    varContainers = NULL;
-    cvarContainers = NULL;
 }
 
 -(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
@@ -133,7 +128,7 @@
     double t[32];
     FEMUtilities *util;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -194,7 +189,6 @@
             }
             
             found = YES;
-            containers = NULL;
             break;
         }
     }
@@ -223,7 +217,7 @@
     int i, j, k, n1, n2;
     BOOL found;
     listBuffer buffer;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -297,7 +291,6 @@
             }
             
             found = YES;
-            containers = NULL;
             break; 
         }
     }
@@ -309,7 +302,7 @@
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
@@ -332,7 +325,6 @@
                 f = containers->fValues[0][0][0];
             }
             *found = YES;
-            containers = NULL;
             break;
         }
     }
@@ -360,7 +352,7 @@
 
     int i, j, n1, n2;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -389,7 +381,6 @@
             // TODO: implement the call of a user provided method
             
             found = YES;
-            containers = NULL;
             break;
         }
     }
@@ -401,7 +392,7 @@
     
     int i, n;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -426,7 +417,6 @@
            // TODO: implement the call of a user provided method if required 
             
             found = YES;
-            containers = NULL;
             break;
         }
     }
@@ -437,7 +427,7 @@
 -(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(int *)minv maxValue:(int *)maxv {
     
     int l;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
@@ -456,7 +446,6 @@
             l = containers->iValues[0];
             
             *found = YES;
-            containers = NULL;
             break;
             
         }
@@ -622,13 +611,13 @@
  **********************************************************************************/
 -(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value {
     
-    FEMBoundaryCondition *boundary;
-    FEMBodyForce *bodyForce;
-    FEMSimulation *simulation;
+    FEMBoundaryCondition *boundary = nil;
+    FEMBodyForce *bodyForce = nil;
+    FEMSimulation *simulation = nil;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -662,12 +651,7 @@
         
         newValueList.name = varName;
         [valuesArray addObject:newValueList];
-        containers = NULL;
     }
-    
-    boundary = nil;
-    bodyForce = nil;
-    simulation = nil;
 }
 
 /**********************************************************************************
@@ -676,13 +660,13 @@
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n {
     
     int i;
-    FEMBoundaryCondition *boundary;
-    FEMBodyForce *bodyForce;
-    FEMSimulation *simulation;
+    FEMBoundaryCondition *boundary = nil;
+    FEMBodyForce *bodyForce = nil;
+    FEMSimulation *simulation = nil;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
     
@@ -718,12 +702,7 @@
         
         newValueList.name = varName;
         [valuesArray addObject:newValueList];
-        containers = NULL;
     }
-    
-    boundary = nil;
-    bodyForce = nil;
-    simulation = nil;
 }
 
 /**********************************************************************************
@@ -731,13 +710,13 @@
  **********************************************************************************/
 -(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str {
     
-    FEMBoundaryCondition *boundary;
-    FEMBodyForce *bodyForce;
-    FEMSimulation *simulation;
+    FEMBoundaryCondition *boundary = nil;
+    FEMBodyForce *bodyForce = nil;
+    FEMSimulation *simulation = nil;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
-    valueListArraysContainer *containers;
+    valueListArraysContainer *containers = NULL;
     
     found = NO;
 
@@ -779,12 +758,7 @@
         
         newValueList.name = varName;
         [valuesArray addObject:newValueList];
-        containers = NULL;
     }
-    
-    boundary = nil;
-    bodyForce = nil;
-    simulation = nil;
 }
 
 /*****************************************************************************************

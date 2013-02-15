@@ -305,9 +305,9 @@ static int PRECOND_VANKA     =  560;
     
     int normDim, normDofs, dofs, i, j, k, l, totn;
     double norm, nscale, sum;
-    double *x, *buffer;
+    double *x = NULL, *buffer;
     FEMParallelMPI *parallelUtil;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     parallelUtil = [[FEMParallelMPI alloc] init];
     varContainers = solution.variable.getContainers;
@@ -415,8 +415,6 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-    x = NULL;
-    varContainers = NULL;
     return norm;
 }
 
@@ -426,13 +424,13 @@ static int PRECOND_VANKA     =  560;
     NSString *convergenceType, *solverName;
     int i, n, relaxAfter, iterNo;
     double norm, prevNorm, bNorm, change, relaxation, maxNorm, dt, tolerance, eps;
-    double *x, *r, *x0;
+    double *x = NULL, *r, *x0 = NULL;
     BOOL skip, convergenceAbsolute, relax, relaxBefore, stat, doIt;
     FEMVariable *iterV, *timeStepVar, *veloVar;
     NSMutableString *str1;
     NSString *str2;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers, *itervContainers, *containers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL, *itervContainers = NULL, *containers = NULL;
     FEMMatrixCRS *crsMatrix;
     FEMUtilities *utilities;
     
@@ -546,8 +544,6 @@ static int PRECOND_VANKA     =  560;
         } else {
             solution.variable.nonLinChange = 0.0;
         }
-        x = NULL;
-        varContainers = NULL;
         return;
     }
     
@@ -789,11 +785,6 @@ static int PRECOND_VANKA     =  560;
             }
         }
     }
-    
-    x = NULL;
-    x0 = NULL;
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 -(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel bulkMatrix:(FEMMatrix *)bulkMatrix {
@@ -1112,7 +1103,7 @@ static int PRECOND_VANKA     =  560;
     double t0, rt0, st, rst;
     BOOL needPrevSol, stat;
     NSString *method;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     if ((solution.solutionInfo)[@"linear system timing"] != nil) {
         if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
@@ -1190,8 +1181,6 @@ static int PRECOND_VANKA     =  560;
         
         }
     }
-    
-    varContainers = NULL;
 }
 
 #pragma mark Element info
@@ -1397,8 +1386,8 @@ static int PRECOND_VANKA     =  560;
     FEMUtilities *utilities;
     NSString *method;
     FEMVariable *dtVar;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers, *containers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL, *containers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -1499,9 +1488,6 @@ static int PRECOND_VANKA     =  560;
     free_dvector(dts, 0, [solution order]-1);
     free_dvector(matrixForce, 0, matContainers->size1force-1);
     free_dvector(buffer, 0, (dofs*n)-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 -(void)FEMKernel_updateGlobalEquationsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element stiffMatrix:(double **)stiffMatrix force:(double *)force size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT bulkUpdate:(BOOL *)bulkUpdate {
@@ -1590,8 +1576,8 @@ static int PRECOND_VANKA     =  560;
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
     NSString *str;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     BOOL stat;
     
     matContainers = solution.matrix.getContainers;
@@ -1642,9 +1628,6 @@ static int PRECOND_VANKA     =  560;
         free_dvector(work.vector, 0, work.m-1);
         work.vector = NULL;
     }
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 -(void)FEMKernel_setPointLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs {
@@ -1653,8 +1636,8 @@ static int PRECOND_VANKA     =  560;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     BOOL stat;
     
     matContainers = solution.matrix.getContainers;
@@ -1704,8 +1687,6 @@ static int PRECOND_VANKA     =  560;
         free_dvector(work.vector, 0, work.m-1);
         work.vector = NULL;
     }
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark Element and point values
@@ -1832,7 +1813,6 @@ static int PRECOND_VANKA     =  560;
                     }
                 }
             }
-            
         }
     }
     
@@ -1861,8 +1841,8 @@ static int PRECOND_VANKA     =  560;
     FEMListUtilities *listUtil;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -1925,7 +1905,6 @@ static int PRECOND_VANKA     =  560;
                     }
                 }
             }
-            
         }
     }
 
@@ -1943,8 +1922,6 @@ static int PRECOND_VANKA     =  560;
         free_d3tensor(workA.tensor, 0,  workA.m, 0,  workA.n-1, 0, workA.p-1);
         workA.tensor = NULL;
     }
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark Periodics
@@ -1973,8 +1950,8 @@ static int PRECOND_VANKA     =  560;
     FEMMatrixCRS *crsMatrix;
     FEMBoundaryCondition *boundaryConditionAtId;
     NSMutableString *str1, *str2, *str3;
-    matrixArraysContainer *matContainers, *projectorContainers, *aContainers;
-    variableArraysContainer *varContainers, *containers;
+    matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL, *aContainers = NULL;
+    variableArraysContainer *varContainers = NULL, *containers = NULL;
     
     listUtil = [[FEMListUtilities alloc] init];
     util = [[FEMUtilities alloc] init];
@@ -2135,11 +2112,6 @@ static int PRECOND_VANKA     =  560;
             done[ii] = YES;
         }
     }
-    
-    matContainers = NULL;
-    projectorContainers = NULL;
-    aContainers = NULL;
-    varContainers = NULL;
 }
 
 -(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done {
@@ -2162,8 +2134,8 @@ static int PRECOND_VANKA     =  560;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     NSMutableString *str1, *str2, *str3;
-    matrixArraysContainer *matContainers, *projectorContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     listUtil = [[FEMListUtilities alloc] init];
 
     str1 = [NSMutableString stringWithString:@"periodic bc "];
@@ -2217,10 +2189,6 @@ static int PRECOND_VANKA     =  560;
         }
         done[ii] = YES;
     }
-    
-    matContainers = NULL;
-    projectorContainers = NULL;
-    varContainers = NULL;
 }
 
 
@@ -2243,7 +2211,7 @@ static int PRECOND_VANKA     =  560;
     FEMBodyForce *bodyForceAtID;
     FEMUtilities *utilities;
     FEMListUtilities *listUtilities;
-    variableArraysContainer *varContainers, *loadVarContainers;
+    variableArraysContainer *varContainers = NULL, *loadVarContainers = NULL;
     
     utilities = [[FEMUtilities alloc] init];
     listUtilities = [[FEMListUtilities alloc] init];
@@ -2464,7 +2432,7 @@ static int PRECOND_VANKA     =  560;
     double norm, tmp;
     double complex cmpx;
     BOOL complexMatrix;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     n = solution.matrix.numberOfRows;
     complexMatrix = solution.matrix.complexMatrix;
@@ -2555,7 +2523,7 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution {
     
     int i, j, n;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     n = solution.matrix.numberOfRows;
     matContainers = solution.matrix.getContainers;
@@ -2741,8 +2709,8 @@ static int PRECOND_VANKA     =  560;
     
     int nb, i, j, k, bid, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
-    Element_t *parent, *edges, *faces;
-    solutionArraysContainer *solContainers;
+    Element_t *parent, *edges = NULL, *faces = NULL;
+    solutionArraysContainer *solContainers = NULL;
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -2773,8 +2741,6 @@ static int PRECOND_VANKA     =  560;
             }
             
             if (nb > 0) { 
-                edges = NULL;
-                faces = NULL;
                 return nb;
             }
         }
@@ -2797,7 +2763,6 @@ static int PRECOND_VANKA     =  560;
     }
     for (i=1; i<solContainers->size2DefDofs; i++) {
         if (solContainers->defDofs[bid-1][i] < 0) {
-            solContainers = NULL;
             return nb;
         }
     }
@@ -2838,8 +2803,6 @@ static int PRECOND_VANKA     =  560;
         parent = element->BoundaryInfo->Left;
         if (parent == NULL) parent = element->BoundaryInfo->Right;
         if (parent == NULL) {
-            edges = NULL;
-            faces = NULL;
             return nb;
         }
         
@@ -2900,10 +2863,6 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    edges = NULL;
-    faces = NULL;
-    solContainers = NULL;
-    
     return nb;
 }
 
@@ -2911,7 +2870,7 @@ static int PRECOND_VANKA     =  560;
     
     int nb, i, j, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs;
     BOOL gb;
-    Element_t *parent, *edges, *faces;
+    Element_t *parent, *edges = NULL, *faces = NULL;
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -2942,8 +2901,6 @@ static int PRECOND_VANKA     =  560;
             }
             
             if (nb > 0) {
-                edges = NULL;
-                faces = NULL;
                 return nb;
             }
         }
@@ -3021,9 +2978,6 @@ static int PRECOND_VANKA     =  560;
         }
         
     }
-    
-    edges = NULL;
-    faces = NULL;
     
     return nb;    
 }
@@ -3257,7 +3211,7 @@ static int PRECOND_VANKA     =  560;
     BOOL l;
     int i, n;
     int *perm;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
@@ -3892,14 +3846,14 @@ static int PRECOND_VANKA     =  560;
     listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     BOOL *activePort, *activePortAll, *doneLoad, anyActive;
-    Element_t *elements;
-    Nodes_t *globalNodes;
+    Element_t *elements = NULL;
+    Nodes_t *globalNodes = NULL;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     NSMutableString *loadName, *str;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     BOOL stat, nodesFound;
     
     matContainers = solution.matrix.getContainers;
@@ -3990,7 +3944,6 @@ static int PRECOND_VANKA     =  560;
         }
     }
     
-        
     if (anyActive == YES) {
         if (doneLoad == NULL) doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
         for (i=0; i<(matContainers->sizeRHS/solution.variable.dofs); i++) {
@@ -4081,11 +4034,6 @@ static int PRECOND_VANKA     =  560;
     }
     
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
-    
-    elements = NULL;
-    globalNodes = NULL;
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 -(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset {
@@ -4110,8 +4058,8 @@ static int PRECOND_VANKA     =  560;
     listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     BOOL *activePort, *activePortAll, *activeCond, *donePeriodic, anyActive, passive;
-    Element_t *elements;
-    Nodes_t *globalNodes;
+    Element_t *elements = NULL;
+    Nodes_t *globalNodes = NULL;
     FEMListUtilities *listUtil;
     FEMBodyForce *bodyForceAtId;
     NSMutableString *condName, *passName, *str1, *str2;
@@ -4445,7 +4393,6 @@ static int PRECOND_VANKA     =  560;
             if (coordNodes.matrix != NULL) {
                 free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
                 coordNodes.matrix = NULL;
-                
             }
         }
         
@@ -4471,9 +4418,6 @@ static int PRECOND_VANKA     =  560;
             }
         }
     }
-    
-    elements = NULL;
-    globalNodes = NULL;
 }
 
 /****************************************************************************************************************
@@ -4486,8 +4430,8 @@ static int PRECOND_VANKA     =  560;
     double *diag, bnorm, sum;
     double complex diagC;
     BOOL complexMatrix, doRHS;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     FEMParallelMPI *parallelUtil;
     
     n = solution.matrix.numberOfRows;
@@ -4614,8 +4558,8 @@ static int PRECOND_VANKA     =  560;
     
     int i, j, k, n;
     double *diag, bnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     n = solution.matrix.numberOfRows;
     matContainers = solution.matrix.getContainers;
@@ -4840,7 +4784,7 @@ static int PRECOND_VANKA     =  560;
     int i, n;
     double dt;
     int *perm;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     dt = [solution dt];
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
@@ -4855,7 +4799,6 @@ static int PRECOND_VANKA     =  560;
     [self FEMKernel_addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
     
     free_ivector(perm, 0, n-1);
-    varContainers = NULL;
 }
 
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(_Complex double **)cmass complexStiff:(_Complex double **)cstiff complexForce:(_Complex double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols {
@@ -4864,7 +4807,7 @@ static int PRECOND_VANKA     =  560;
     double dt;
     double **mass, **stiff, *force;
     int *perm;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     dt = [solution dt];
     dofs = solution.variable.dofs;
@@ -4915,7 +4858,6 @@ static int PRECOND_VANKA     =  560;
     free_dvector(force, 0, (n*dofs)-1);
     
     free_ivector(perm, 0, n-1);
-    varContainers = NULL;
 }
 
 #pragma mark Update equations
@@ -4926,8 +4868,8 @@ static int PRECOND_VANKA     =  560;
     int *perm;
     BOOL rotateNT, bupd;
     double *saveValues;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
@@ -4985,7 +4927,6 @@ static int PRECOND_VANKA     =  560;
     }
     
     free_ivector(perm, 0, n-1);
-    matContainers = NULL;
 }
 
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double **)cstiff complexForce:(double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate {
@@ -4995,8 +4936,8 @@ static int PRECOND_VANKA     =  560;
     double **stiff, *force;
     BOOL rotateNT, bupd;
     double *saveValues;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
     n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
@@ -5018,12 +4959,10 @@ static int PRECOND_VANKA     =  560;
         force[2*i+1] = cimag(cforce[i]);
         
         for (j=0; j<n*dofs; j++) {
-            
             stiff[2*i][2*j]     = creal(cstiff[i][j]);
             stiff[2*i][2*j+1]   = -cimag(cstiff[i][j]);
             stiff[2*i+1][2*j]   = cimag(cstiff[i][j]);
             stiff[2*i+1][2*j+1] = creal(cstiff[i][j]);
-            
         }
     }
 
@@ -5075,7 +5014,6 @@ static int PRECOND_VANKA     =  560;
     free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
     free_dvector(force, 0, (n*dofs)-1);    
     free_ivector(perm, 0, n-1);
-    matContainers = NULL;
 }
 
 
@@ -5092,9 +5030,9 @@ static int PRECOND_VANKA     =  560;
     FEMMatrixCRS *crsMatrix;
     FEMListUtilities *listUtil; 
     FEMValueList *list;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
-    solutionArraysContainer *solContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    solutionArraysContainer *solContainers = NULL;
     
     BOOL constantValue;
     
@@ -5453,10 +5391,6 @@ static int PRECOND_VANKA     =  560;
             }
         } //end loop over boundary elements
     } //end loop over dofs
-    
-    matContainers = NULL;
-    varContainers = NULL;
-    solContainers = NULL;
 }
 
 #pragma mark Solve
@@ -5465,9 +5399,9 @@ static int PRECOND_VANKA     =  560;
     
     NSString *str;
     int i, n, iterType, pCondType=0, *ipar, wsize, ilun;
-    double *dpar, **work;
+    double *dpar, **work = NULL;
     double ilut_tol;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     BOOL abortNotConverged;
     SEL pcondSelector=0, pcondrSelector=0, mvSelector=0;
     
@@ -5779,8 +5713,6 @@ static int PRECOND_VANKA     =  560;
     }
     
     free_dmatrix(work, 0, n-1, 0, wsize-1);
-    work = NULL;
-    varContainers = NULL;
 }
 
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel {
@@ -5808,7 +5740,7 @@ static int PRECOND_VANKA     =  560;
     double err, *res;
     double sum1, sum2, sum3, sum4;
     FEMMatrixCRS *crsMatrix;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     n = ipar[2];
     res = doublevec(0, ipar[2]-1);
@@ -5842,8 +5774,6 @@ static int PRECOND_VANKA     =  560;
     err = sqrt(sum1) / ( sqrt(sum2) * sqrt(sum3) + sqrt(sum4) );
     
     free_dvector(res, 0, ipar[2]-1);
-    
-    matContainers = NULL;
     
     return err;
 }

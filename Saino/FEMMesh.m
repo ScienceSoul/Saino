@@ -30,7 +30,7 @@
     int i, j, l, n;
     double x, y, z, sum;
     FEMSolution *solution;
-    solutionArraysContainer *solContainers;
+    solutionArraysContainer *solContainers = NULL;
     NSRange substr;
     
     solution = (model.solutions)[solverID];
@@ -1042,7 +1042,7 @@
 
 -(void)deallocationMeshVariables {
     
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     for (FEMVariable *variable in self.variables) {
         varContainers = variable.getContainers;
@@ -1091,7 +1091,6 @@
         }
     }
     free(varContainers);
-    varContainers = NULL;
     self.variables = nil;
 }
 

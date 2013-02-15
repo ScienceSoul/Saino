@@ -228,8 +228,8 @@
     FEMUtilities *utils;
     FEMMatrixCRS *crsMatrix;
     FEMKernel *kernel;
-    matrixArraysContainer *matrixContainers;
-    variableArraysContainer *bufferContainers;
+    matrixArraysContainer *matrixContainers = NULL;
+    variableArraysContainer *bufferContainers = NULL;
     
     solution = [[FEMSolution alloc] init];
     solution.mesh = self.mesh;
@@ -395,7 +395,7 @@
     FEMMesh *mesh, *newMesh, *oldMesh, *modelMesh;
     FEMListUtilities *listUtils;
     FEMMeshUtils *meshUtils;
-    solutionArraysContainer *solContainers;
+    solutionArraysContainer *solContainers = NULL;
     NSRange substr1;
     
     listUtils = [[FEMListUtilities alloc] init];

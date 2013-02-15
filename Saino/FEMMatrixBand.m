@@ -38,7 +38,7 @@
 -(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
     
     FEMMatrix *matrix;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matrix = [[FEMMatrix alloc] init];
     
@@ -61,7 +61,7 @@
 -(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
     
     int j;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -74,9 +74,6 @@
             matContainers->Values[(j*solution.matrix.subband + (n)-(j))] = 0.0;
         }
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -90,7 +87,7 @@
  
 **********************************************************************************************************/
     
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -99,9 +96,6 @@
     } else {
         if (j <= i) matContainers->Values[(j*solution.matrix.subband + (i)-(j))] = value;
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -115,7 +109,7 @@
  
  **********************************************************************************************************/
     int k;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -126,9 +120,6 @@
         k = (j*solution.matrix.subband + (i)-(j));
         if (j <= i) matContainers->Values[k] = matContainers->Values[k] + value;
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
@@ -149,7 +140,7 @@
 *****************************************************************************************************************************************/
     
     int i, j, k, l, ind, row, col;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -183,9 +174,6 @@
             }
         }
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value {
@@ -205,7 +193,7 @@
  ************************************************************************************************************/
     
     int j;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -221,8 +209,6 @@
     
     matContainers->RHS[n] = value;
     matContainers->Values[n*solution.matrix.subband+(n)-(n)] = 1.0;
-    
-    matContainers = NULL;
 }
 
 -(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
@@ -274,7 +260,7 @@
 -(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
     
     int j;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = a.getContainers;
     
@@ -287,9 +273,6 @@
             matContainers->Values[(j*a.subband + (n)-(j))] = 0.0;
         }
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -303,7 +286,7 @@
  
  ************************************************************************************************/
     
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = a.getContainers;
     
@@ -312,9 +295,6 @@
     } else {
         if (j <= i) matContainers->Values[(j*a.subband + (i)-(j))] = value;
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v {

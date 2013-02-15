@@ -103,7 +103,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     int i, j, k;
     double *r;
     double bnorm, rnorm, s;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -190,7 +190,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
     
     free_dvector(r, 0, n-1);
-    matContainers = NULL;
 }
 
 -(void)HUTI_jacobiNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
@@ -198,7 +197,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     int i, k;
     double *r;
     double bnorm, rnorm;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -274,8 +273,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     }
 
     free_dvector(r, 0, n-1);
-    matContainers = NULL;
-    
 }
 
 -(void)HUTI_BICGStabLNumberOfDimension:(int)n solution:(FEMSolution *)solution afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
@@ -959,8 +956,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rho, oldrho, alpha, beta, omega;
     double *rtld, *p, *t1v, *v, *s, *t2v, *t, *r;
     double residual, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -1233,9 +1230,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(t2v, 0, ndim-1);
     free_dvector(t, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark BI-CGSTAB(2)
@@ -1258,8 +1252,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double tau, delta, myy;
     double *rtld, *u, *t1v, *v, *s, *w, *t, *r;
     double residual, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -1640,9 +1634,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     free_dvector(w, 0, ndim-1);
     free_dvector(t, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
-
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark TFQMR
@@ -1664,8 +1655,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
     double *v, *y, *ynew, *rtld, *t1v, *t2v, *w, *d, *r, *trv;
     double residual, upperb, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -2305,9 +2296,6 @@ jump:
     free_dvector(d, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
     free_dvector(trv, 0, ndim-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark CG
@@ -2329,8 +2317,8 @@ jump:
     double rho, oldrho, alpha, beta;
     double *z, *p, *q, *r;
     double residual, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -2558,9 +2546,6 @@ jump:
     free_dvector(p, 0, ndim-1);
     free_dvector(q, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark CGS
@@ -2582,8 +2567,8 @@ jump:
     double rho, oldrho, alpha, beta;
     double *rtld, *p, *q, *u, *t1v, *t2v, *r;
     double residual, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -2845,9 +2830,6 @@ jump:
     free_dvector(t1v, 0, ndim-1);
     free_dvector(t2v, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark GMRES
@@ -2872,8 +2854,8 @@ jump:
     double *w, *r, *s, *vtmp, *t1v, *v, *buffer;
     double **h, *cs, *sn, *y; 
     double residual, rhsnorm, precrhsnorm;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -3320,9 +3302,6 @@ jump:
     free_dvector(y, 0, (HUTI_GMRES_RESTART+1)-1);
     
     free_dmatrix(h, 0, (HUTI_GMRES_RESTART+1)-1, 0, (HUTI_GMRES_RESTART+1)-1);
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark SGS
@@ -3332,8 +3311,8 @@ jump:
     int rounds, outputInterval;
     double minTol, maxTol, residual, omega;
     BOOL converged, diverged;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -3348,9 +3327,6 @@ jump:
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark JACOBI
@@ -3360,8 +3336,8 @@ jump:
     int rounds, outputInterval;
     double minTol, maxTol, residual;
     BOOL converged, diverged;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -3375,9 +3351,6 @@ jump:
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark BI-CGSTAB(l)
@@ -3387,8 +3360,8 @@ jump:
     int rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
     BOOL converged, diverged;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -3405,9 +3378,6 @@ jump:
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 #pragma mark GCR
@@ -3417,8 +3387,8 @@ jump:
     int rounds, outputInterval, restartN;
     double minTol, maxTol, residual;
     BOOL converged, diverged;
-    matrixArraysContainer *matContainers;
-    variableArraysContainer *varContainers;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -3433,9 +3403,6 @@ jump:
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
-    
-    matContainers = NULL;
-    varContainers = NULL;
 }
 
 @end

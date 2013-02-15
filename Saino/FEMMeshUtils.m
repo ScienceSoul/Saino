@@ -1137,7 +1137,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     FEMUtilities *utilities;
     Element_t *elements, *mesh1elements, *mesh2elements;
     Nodes_t *nodes, *elementNodes, *mesh1nodes, *mesh2nodes;
-    matrixArraysContainer *projectorContainers;
+    matrixArraysContainer *projectorContainers = NULL;
     BOOL thisActive, targetActive, constantNormals, check, gotRotate, useQuadrantTree, found;
     
     dim = model.dimension;

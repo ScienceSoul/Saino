@@ -24,7 +24,7 @@
 -(void)FEMUtils_applyProjector:(NSMutableArray *)variables model:(FEMModel *)aModel fromMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh projector:(FEMProjector *)projector {
     
     int i, j;
-    variableArraysContainer *varContainers, *oldContainers, *newContainers;
+    variableArraysContainer *varContainers = NULL, *oldContainers = NULL, *newContainers = NULL;
     FEMVariable *oldSol, *newSol;
     FEMMatrixCRS *crsMatrix;
     double *bf1, *bf2;
@@ -70,7 +70,6 @@
                 free_dvector(bf2, 0, newContainers->size1PrevValues-1);
             }
         }
-        
     }
 }
 
@@ -112,8 +111,8 @@
     FEMListUtilities *listUtilities;
     FEMInterpolation *interpolation;
     FEMElementDescription *elementDescription;
-    variableArraysContainer *varContainers, *newVarContainers, *oldVarContainers;
-    matrixArraysContainer *matContainers, *tmatContainers;
+    variableArraysContainer *varContainers = NULL, *newVarContainers = NULL, *oldVarContainers = NULL;
+    matrixArraysContainer *matContainers = NULL, *tmatContainers = NULL;
     
     typedef struct Epntr_t {
         Element_t *element;
@@ -596,7 +595,7 @@
     Element_t *element, *elements, *edges, *faces;
     FEMPElementMaps *elementMaps;
     FEMListUtilities *listUtilities;
-    solutionArraysContainer *solContainers;
+    solutionArraysContainer *solContainers = NULL;
     
     k = 0;
     edofs = aMesh.maxEdgeDofs;
@@ -819,7 +818,6 @@
                 }
             }
         }
-        
         t++;
     }
     
@@ -877,7 +875,7 @@
 -(void)addVariableTo:(NSMutableArray *)anArray mesh:(FEMMesh *)aMesh solution:(FEMSolution *)aSolution name:(NSString *)name dofs:(int )dofs container:(variableArraysContainer *)aContainer ifOutput:(BOOL *)output ifSecondary:(BOOL *)secondary type:(int *)aType {
     
     FEMVariable *newVariable;
-    variableArraysContainer *varContainers;
+    variableArraysContainer *varContainers = NULL;
     
     for (FEMVariable *variable in anArray) {
         if ([variable.name isEqualToString:name] == YES) {

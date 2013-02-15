@@ -164,8 +164,8 @@
     int i, n, m;
     
     FEMMatrix *a1;
-    matrixArraysContainer *matContainers;
-    matrixArraysContainer *a1Containers;
+    matrixArraysContainer *matContainers = NULL;
+    matrixArraysContainer *a1Containers = NULL;
     
     a1 = [[FEMMatrix alloc] init];
     matContainers = self.matrix.getContainers;
@@ -212,9 +212,6 @@
         errorfunct("initializeILU", "Memory allocation error.");
     }
     matContainers->sizeILUValues = matContainers->ILURows[(n+1)-1]-1;
-    
-    matContainers = NULL;
-    a1Containers = NULL;
 }
 
 -(void)initializeCILU:(int)ilun {
@@ -223,8 +220,8 @@
     int n;
     
     FEMMatrix *a1;
-    matrixArraysContainer *matContainers;
-    matrixArraysContainer *a1Containers;
+    matrixArraysContainer *matContainers = NULL;
+    matrixArraysContainer *a1Containers = NULL;
     
     a1 = [[FEMMatrix alloc] init];
     matContainers = self.matrix.getContainers;
@@ -299,17 +296,14 @@
         errorfunct("initializeCILU", "Memory allocation error.");
     }
     matContainers->sizeCILUValues = matContainers->ILURows[(n/2+1)-1];
-    
-    matContainers = NULL;
-    a1Containers = NULL;
 }
 
 -(void)ilutWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
-    int *iWork;
-    double *cWork;
-    matrixArraysContainer *matContainers;
+    int *iWork = NULL;
+    double *cWork = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = self.matrix.getContainers;
     
@@ -341,18 +335,14 @@
     
     matContainers->ILUCols = iWork;
     matContainers->ILUValues = cWork;
-    
-    iWork = NULL;
-    cWork = NULL;
-    matContainers = NULL;
 }
 
 -(void)ilutComplexWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
-    int *iWork;
-    double complex *cWork;
-    matrixArraysContainer *matContainers;
+    int *iWork = NULL;
+    double complex *cWork = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = self.matrix.getContainers;
     
@@ -383,10 +373,6 @@
     
     matContainers->ILUCols = iWork;
     matContainers->CILUValues = cWork;
-    
-    iWork = NULL;
-    cWork = NULL;
-    matContainers = NULL;
 }
 
 @end

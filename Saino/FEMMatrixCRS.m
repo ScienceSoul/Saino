@@ -83,7 +83,7 @@
     
     int i, j, k;
     FEMMatrix *matrix;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matrix = [[FEMMatrix alloc] init];
     
@@ -131,7 +131,7 @@
 -(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
     
     int i;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -155,8 +155,6 @@
             }
         }
     }
-    
-    matContainers = NULL;
 }
 
 -(void)sortInGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues {
@@ -173,7 +171,7 @@
     int *buffer1;
     double *buffer2;
     BOOL sortValues;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -238,9 +236,6 @@
         
         solution.matrix.ordered = YES;
     }
-    
-    matContainers = NULL;
-    
 }
 
 -(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -256,7 +251,7 @@
     
     int ii, jj, k;
     int *buffer;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -279,8 +274,6 @@
         k = matContainers->Diag[i];
     }
     matContainers->Values[k] = value;
-
-    matContainers = NULL;
 }
 
 -(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -296,7 +289,7 @@
     
     int k, ii, jj;
     int *buffer;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -317,8 +310,6 @@
         k = matContainers->Diag[i];
     }
     matContainers->Values[k] = matContainers->Values[k]+value;
-    
-    matContainers = NULL;
 }
 
 
@@ -340,7 +331,7 @@
 *******************************************************************************************************************************************/
     
     int i, j, k, l, c, row, col;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -395,8 +386,6 @@
             }
         }
     }
-    
-    matContainers = NULL;
 }
 
 -(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value {
@@ -416,7 +405,7 @@
     int i, j, k, l, m, k1, k2;
     int *buffer;
     BOOL isMass, isDamp;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
@@ -472,8 +461,6 @@
     [self zeroRowInGlobal:solution numberOfRows:n];
     matContainers->RHS[n] = value;
     matContainers->Values[matContainers->Diag[n]] = 1.0;
-    
-    matContainers = NULL;
 }
 
 -(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
@@ -565,7 +552,7 @@
 ************************************************************************************************************/
     
     int i, j, k, l, c, row, col;
-    matrixArraysContainer *matContainers;
+    matrixArraysContainer *matContainers = NULL;
     
     matContainers = matrix.getContainers;
     
@@ -620,8 +607,6 @@
             }
         }
     }
-    
-    matContainers = NULL;
 }
 
 -(void)makeMatrixIndex:(FEMMatrix *)a atIndex:(int)i  andIndex:(int)j {
@@ -636,7 +621,7 @@
 *****************************************************************************************/
     
     int k, n;
-    matrixArraysContainer *aContainers;
+    matrixArraysContainer *aContainers = NULL;
     
     aContainers = a.getContainers;
     
@@ -661,7 +646,7 @@
 -(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
     
     int i;
-    matrixArraysContainer *aContainers;
+    matrixArraysContainer *aContainers = NULL;
     
     aContainers = a.getContainers;
     
@@ -684,8 +669,6 @@
             }
         }
     }
-    
-    aContainers = NULL;
 }
 
 -(void)sortInMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues {
@@ -702,7 +685,7 @@
     int *buffer1;
     double *buffer2;
     BOOL sortValues;
-    matrixArraysContainer *aContainers;
+    matrixArraysContainer *aContainers = NULL;
     
     aContainers = a.getContainers;
     
@@ -767,8 +750,6 @@
         
         a.ordered = YES;
     }
-    
-    aContainers = NULL;
 }
 
 -(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
@@ -784,7 +765,7 @@
     
     int ii, jj, k;
     int *buffer;
-    matrixArraysContainer *aContainers;
+    matrixArraysContainer *aContainers = NULL;
     
     aContainers = a.getContainers;
     
@@ -808,14 +789,12 @@
     }
     
     aContainers->Values[k] = value;
-    
-    aContainers = NULL;
 }
 
 -(void)applyProjector:(FEMMatrix *)pMatrix values:(double *)u permutation:(int *)uperm values:(double *)v permutation:(int *)vperm transpose:(BOOL *)trans {
     
     int i, j, k, l, n;
-    matrixArraysContainer *containers;
+    matrixArraysContainer *containers = NULL;
     BOOL ltrans, any;
     
     ltrans = NO;
