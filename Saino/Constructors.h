@@ -22,6 +22,18 @@ enum {
     MATRIX_LIST
 };
 
+enum {
+    SOLUTION_SOLVE_NEVER = -1,
+    SOLUTION_SOLVE_ALWAYS,
+    SOLUTION_SOLVE_AHEAD_ALL,
+    SOLUTION_SOLVE_AHEAD_TIME,
+    SOLUTION_SOLVE_AFTER_ALL,
+    SOLUTION_SOLVE_AFTER_TIME,
+    SOLUTION_SOLVE_AHEAD_SAVE,
+    SOLUTION_SOLVE_AFTER_SAVE
+};
+
+
 enum  {
     LIST_TYPE_CONSTANT_SCALAR = 1,
     LIST_TYPE_CONSTANT_TENSOR,
@@ -51,12 +63,22 @@ enum {
     polar
 };
 
+enum {
+    SOLUTION_MODE_DEFAULT = 0,  // Normal DPE
+    SOLUTION_MODE_AUXILIARY,    // No FEM machinery (SaveData)
+    SOLUTION_MODE_ASSEMBLY,     // Coupled solution with single block
+    SOLUTION_MODE_COUPLED,      // Coupled solution with multiple blocks
+    SOLUTION_MODE_BLOCK,        // Block solution
+    SOLUTION_MODE_GLOBAL,       // Lumped variables (no mesh)
+    SOLUTION_MODE_MATRIXFREE    // Normal field, no matrix
+};
+
 typedef struct {
     
     int numberOfNodes;
-    double *x;                   // First coordinate
-    double *y;                   // Second coordinate
-    double *z;                   // Third coordinate
+    double *x;                  // First coordinate
+    double *y;                  // Second coordinate
+    double *z;                  // Third coordinate
     
 } Nodes_t;
 
@@ -227,7 +249,13 @@ typedef struct variableArraysContainer {
     
     int *Perm;
     double *Values;
+    
+    double **ComponentValues;       // Used if the variable is a component of a another variable with dofs > 1.
+                                    // This is a 1D array of pointers.
     double **PrevValues;
+    
+    double ***ComponentPrevValues;  // Used if the variable is a component of a another variable with dofs > 1.
+                                    // This is a 2D array of pointers.
     double *PValues;
     double *NonLinValues;
     double *SteadyValues;
@@ -237,8 +265,11 @@ typedef struct variableArraysContainer {
     bool *upperLimitActive;
     int sizePerm;
     int sizeValues;
+    int sizeComponentValues;
     int size1PrevValues;
     int size2PrevValues;
+    int size1ComponentPrevValues;
+    int size2ComponentPrevValues;
     int sizePValues;
     int sizeNonLinValues;
     int sizeSteadyValues;

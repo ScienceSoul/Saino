@@ -46,7 +46,9 @@
         _containers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
         _containers->Perm = NULL;
         _containers->Values = NULL;
+        _containers->ComponentValues = NULL;
         _containers->PrevValues = NULL;
+        _containers->ComponentPrevValues = NULL;
         _containers->PValues = NULL;
         _containers->NonLinValues = NULL;
         _containers->SteadyValues = NULL;
@@ -56,8 +58,11 @@
         _containers->upperLimitActive = NULL;
         _containers->sizePerm = 0;
         _containers->sizeValues = 0;
+        _containers->sizeComponentValues = 0;
         _containers->size1PrevValues = 0;
         _containers->size2PrevValues = 0;
+        _containers->size1ComponentPrevValues = 0;;
+        _containers->size2ComponentPrevValues = 0;
         _containers->sizePValues = 0;
         _containers->sizeNonLinValues = 0;
         _containers->sizeSteadyValues = 0;
@@ -70,6 +75,7 @@
 
 -(void)deallocation {
     //TODO: Deallocation of containers members
+    free(_containers->ComponentValues);
     free(_containers);
 }
 

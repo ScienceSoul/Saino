@@ -10,6 +10,7 @@
 #import "FEMEquation.h"
 #import "FEMPElementMaps.h"
 #import "FEMProjector.h"
+#import "FEMElementUtils.h"
 
 @interface FEMUtilities ()
 -(void)FEMUtils_applyProjector:(NSMutableArray *)variables model:(FEMModel *)aModel fromMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh projector:(FEMProjector *)projector;
@@ -872,7 +873,7 @@
     Adds a new variable to the list of variables
 
 *********************************************************************************************/
--(void)addVariableTo:(NSMutableArray *)anArray mesh:(FEMMesh *)aMesh solution:(FEMSolution *)aSolution name:(NSString *)name dofs:(int )dofs container:(variableArraysContainer *)aContainer ifOutput:(BOOL *)output ifSecondary:(BOOL *)secondary type:(int *)aType {
+-(void)addVariableTo:(NSMutableArray *)anArray mesh:(FEMMesh *)aMesh solution:(FEMSolution *)aSolution name:(NSString *)name dofs:(int )dofs container:(variableArraysContainer *)aContainer component:(BOOL)component ifOutput:(BOOL *)output ifSecondary:(BOOL *)secondary type:(int *)aType {
     
     FEMVariable *newVariable;
     variableArraysContainer *varContainers = NULL;
@@ -895,8 +896,17 @@
     newVariable.norm = 0.0;
     newVariable.prevNorm = 0.0;
     
-    varContainers->Values = aContainer->Values;
-    varContainers->sizeValues = aContainer->sizeValues;
+    if (component == YES) {
+        // If component is true, then we are adding a variable which is itself
+        // a component of another variable with dof > 1. In this case, we set
+        // an array of pointers where each pointer points to the appropriate
+        // location in the variable array to which the component variable belongs.
+        varContainers->ComponentValues = aContainer->ComponentValues;
+        varContainers->sizeComponentValues = aContainer->sizeComponentValues;
+    } else {
+        varContainers->Values = aContainer->Values;
+        varContainers->sizeValues = aContainer->sizeValues;
+    }
     
     newVariable.nonLinChange = 0.0;
     newVariable.steadyChange = 0.0;
@@ -931,15 +941,14 @@
 
 -(FEMVariable *)getVariableFrom:(NSMutableArray *)anArray model:(FEMModel *)aModel name:(NSString *)name onlySearch:(BOOL *)only maskName:(NSString *)maskName info:(BOOL *)found {
     
-    int i, j, k, l, n, dofs;
+    int i, j, k, l, n, dofs, aNumber;
     FEMVariable *var = nil, *pVar = nil, *tmp = nil;
     FEMListUtilities *listUtilities;
     FEMSolution *solution;
     FEMMesh *mesh, *currentMesh;
     FEMProjector *projector;
     variableArraysContainer *varContainers = NULL, *pvarContainers = NULL, *bufferContainers = NULL;
-    NSMutableString *tmpname;
-    NSNumber *aNumber;
+    NSString *tmpname;
     BOOL onlyThis, stat, globalBubbles, output;
     
     *found = NO;
@@ -1009,7 +1018,7 @@
             }
         }
         output = pVar.output;
-        [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:pVar.name dofs:pVar.dofs container:varContainers ifOutput:&output ifSecondary:NULL type:NULL];
+        [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:pVar.name dofs:pVar.dofs container:varContainers component:NO ifOutput:&output ifSecondary:NULL type:NULL];
         
         varContainers->Perm = NULL;
         varContainers->Values = NULL;
@@ -1026,18 +1035,18 @@
         }
         
         if ([pVar.name isEqualToString:@"flow solution"] == YES) {
-            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
-            bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
+            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+            bufferContainers->ComponentValues = malloc ( (dofs/pVar.dofs) * sizeof ( double * ));
             k = 0;
             for (i=0; i<varContainers->sizeValues; i+=pVar.dofs) {
-                bufferContainers->Values[k] = varContainers->Values[i];
+                bufferContainers->ComponentValues[k] = &varContainers->Values[i];
                 k++;
             }
-            bufferContainers->sizeValues = dofs/pVar.dofs;
+            bufferContainers->sizeComponentValues = dofs/pVar.dofs;
             bufferContainers->Perm = varContainers->Perm;
-            bufferContainers->sizePerm = dofs/pVar.dofs;
+            bufferContainers->sizePerm =varContainers->sizePerm;
             output = pVar.output;
-            [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 1" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+            [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 1" dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
             
             free(bufferContainers);
             bufferContainers = NULL;
@@ -1045,30 +1054,36 @@
             tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 1" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
-                bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
+                // If the variable dof > 1, then we are dealing with a component variable. In this case,
+                // we set a 2D array of pointers where each pointer points to the appropriate
+                // location in the variable PrevValues array to which the component variable belongs.
+                bufferContainers->ComponentPrevValues = malloc ( (dofs/pVar.dofs) * sizeof ( double ** ));
+                for (i=0; i<(dofs/pVar.dofs); i++) {
+                    bufferContainers->ComponentPrevValues[i] = malloc ( varContainers->size2PrevValues * sizeof ( double * ));
+                }
                 k = 0;
                 for (i=0; i<varContainers->sizeValues; i+=pVar.dofs) {
                     for (j=0; j<varContainers->size2PrevValues; j++) {
-                        bufferContainers->PrevValues[k][j] = varContainers->PrevValues[i][j];
+                        bufferContainers->ComponentPrevValues[k][j] = &varContainers->PrevValues[i][j];
                     }
                     k++;
                 }
-                bufferContainers->size1PrevValues = dofs/pVar.dofs;
-                bufferContainers->size2PrevValues = varContainers->size2PrevValues;
+                bufferContainers->size1ComponentPrevValues = dofs/pVar.dofs;
+                bufferContainers->size2ComponentPrevValues = varContainers->size2PrevValues;
             }
             
             bufferContainers = NULL;
-            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
-            bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
+            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+            bufferContainers->ComponentValues = malloc ( (dofs/pVar.dofs) * sizeof ( double * ));
             k = 0;
             for (i=1; i<varContainers->sizeValues; i+=pVar.dofs) {
-                bufferContainers->Values[k] = varContainers->Values[i];
+                bufferContainers->ComponentValues[k] = &varContainers->Values[i];
                 k++;
             }
-            bufferContainers->sizeValues = dofs/pVar.dofs;
+            bufferContainers->sizeComponentValues = dofs/pVar.dofs;
             bufferContainers->Perm = varContainers->Perm;
-            bufferContainers->sizePerm = dofs/pVar.dofs;
-            [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 2" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+            bufferContainers->sizePerm = varContainers->sizePerm;
+            [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 2" dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
             
             free(bufferContainers);
             bufferContainers = NULL;
@@ -1076,33 +1091,36 @@
             tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 2" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
-                bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
+                bufferContainers->ComponentPrevValues = malloc ( (dofs/pVar.dofs) * sizeof ( double ** ));
+                for (i=0; i<(dofs/pVar.dofs); i++) {
+                    bufferContainers->ComponentPrevValues[i] = malloc ( varContainers->size2PrevValues * sizeof ( double * ));
+                }
                 k = 0;
                 for (i=1; i<varContainers->sizeValues; i+=pVar.dofs) {
                     for (j=0; j<varContainers->size2PrevValues; j++) {
-                        bufferContainers->PrevValues[k][j] = varContainers->PrevValues[i][j];
+                        bufferContainers->ComponentPrevValues[k][j] = &varContainers->PrevValues[i][j];
                     }
                     k++;
                 }
-                bufferContainers->size1PrevValues = dofs/pVar.dofs;
-                bufferContainers->size2PrevValues = varContainers->size2PrevValues;
+                bufferContainers->size1ComponentPrevValues = dofs/pVar.dofs;
+                bufferContainers->size2ComponentPrevValues = varContainers->size2PrevValues;
             }
             
             bufferContainers = NULL;
-            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
-            bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
+            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+            bufferContainers->ComponentValues = malloc ( (dofs/pVar.dofs) * sizeof ( double * ));
             k = 0;
             for (i=2; i<varContainers->sizeValues; i+=pVar.dofs) {
-                bufferContainers->Values[k] = varContainers->Values[i];
+                bufferContainers->ComponentValues[k] = &varContainers->Values[i];
                 k++;
             }
-            bufferContainers->sizeValues = dofs/pVar.dofs;
+            bufferContainers->sizeComponentValues = dofs/pVar.dofs;
             bufferContainers->Perm = varContainers->Perm;
-            bufferContainers->sizePerm = dofs/pVar.dofs;
+            bufferContainers->sizePerm = varContainers->sizePerm;
             if (pVar.dofs == 3) {
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:solution name:@"pressure" dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
             } else {
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 3" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"velocity 3" dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
                 
                 free(bufferContainers);
                 bufferContainers = NULL;
@@ -1110,30 +1128,33 @@
                 tmp = [self getVariableFrom:anArray model:aModel name:@"velocity 3" onlySearch:&onlyThis maskName:NULL info:&stat];
                 bufferContainers = tmp.getContainers;
                 if (varContainers->PrevValues != NULL) {
-                    bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
+                    bufferContainers->ComponentPrevValues = malloc ( (dofs/pVar.dofs) * sizeof ( double ** ));
+                    for (i=0; i<(dofs/pVar.dofs); i++) {
+                        bufferContainers->ComponentPrevValues[i] = malloc ( varContainers->size2PrevValues * sizeof ( double * ));
+                    }
                     k = 0;
                     for (i=2; i<varContainers->sizeValues; i+=pVar.dofs) {
                         for (j=0; j<varContainers->size2PrevValues; j++) {
-                            bufferContainers->PrevValues[k][j] = varContainers->PrevValues[i][j];
+                            bufferContainers->ComponentPrevValues[k][j] = &varContainers->PrevValues[i][j];
                         }
                         k++;
                     }
-                    bufferContainers->size1PrevValues = dofs/pVar.dofs;
-                    bufferContainers->size2PrevValues = varContainers->size2PrevValues;
+                    bufferContainers->size1ComponentPrevValues = dofs/pVar.dofs;
+                    bufferContainers->size2ComponentPrevValues = varContainers->size2PrevValues;
                 }
                 
                 bufferContainers = NULL;
-                bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
-                bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
+                bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+                bufferContainers->ComponentValues = malloc ( (dofs/pVar.dofs) * sizeof ( double * ));
                 k = 0;
                 for (i=3; i<varContainers->sizeValues; i+=pVar.dofs) {
-                    bufferContainers->Values[k] = varContainers->Values[i];
+                    bufferContainers->ComponentValues[k] = &varContainers->Values[i];
                     k++;
                 }
-                bufferContainers->sizeValues = dofs/pVar.dofs;
+                bufferContainers->sizeComponentValues = dofs/pVar.dofs;
                 bufferContainers->Perm = varContainers->Perm;
-                bufferContainers->sizePerm = dofs/pVar.dofs;
-                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                bufferContainers->sizePerm = varContainers->sizePerm;
+                [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:@"pressure" dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
             }
             
             free(bufferContainers);
@@ -1142,37 +1163,38 @@
             tmp = [self getVariableFrom:anArray model:aModel name:@"pressure" onlySearch:&onlyThis maskName:NULL info:&stat];
             bufferContainers = tmp.getContainers;
             if (varContainers->PrevValues != NULL) {
-                bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
+                bufferContainers->ComponentPrevValues = malloc ( (dofs/pVar.dofs) * sizeof ( double ** ));
+                for (i=0; i<(dofs/pVar.dofs); i++) {
+                    bufferContainers->ComponentPrevValues[i] = malloc ( varContainers->size2PrevValues * sizeof ( double * ));
+                }
                 k = 0;
                 for (i=pVar.dofs-1; i<varContainers->sizeValues; i+=pVar.dofs) {
                     for (j=0; j<varContainers->size2PrevValues; j++) {
-                        bufferContainers->PrevValues[k][j] = varContainers->PrevValues[i][j];
+                        bufferContainers->ComponentPrevValues[k][j] = &varContainers->PrevValues[i][j];
                     }
                     k++;
                 }
-                bufferContainers->size1PrevValues = dofs/pVar.dofs;
-                bufferContainers->size2PrevValues = varContainers->size2PrevValues;
+                bufferContainers->size1ComponentPrevValues = dofs/pVar.dofs;
+                bufferContainers->size2ComponentPrevValues = varContainers->size2PrevValues;
             }
         } else {
             output = pVar.output;
             if (pVar.dofs > 1) {
                 for (i=0; i<pVar.dofs; i++) {
                     bufferContainers = NULL;
-                    bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer) * 1 );
-                    bufferContainers->Values = doublevec(0, (dofs/pVar.dofs)-1);
+                    bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+                    bufferContainers->ComponentValues = malloc ( (dofs/pVar.dofs) * sizeof ( double * ));
                     k = 0;
                     for (j=i; j<varContainers->sizeValues; j+=pVar.dofs) {
-                        bufferContainers->Values[k] = varContainers->Values[j];
+                        bufferContainers->ComponentValues[k] = &varContainers->Values[j];
                         k++;
                     }
-                    bufferContainers->sizeValues = dofs/pVar.dofs;
+                    bufferContainers->sizeComponentValues = dofs/pVar.dofs;
                     bufferContainers->Perm = varContainers->Perm;
-                    bufferContainers->sizePerm = dofs/pVar.dofs;
-                    tmpname = [NSMutableString stringWithString:pVar.name];
-                    aNumber = [NSNumber numberWithInt:i+1];
-                    [tmpname appendString:@" "];
-                    [tmpname appendString:[aNumber stringValue]];
-                    [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:tmpname dofs:1 container:bufferContainers ifOutput:&output ifSecondary:NULL type:NULL];
+                    bufferContainers->sizePerm = varContainers->sizePerm;
+                    aNumber = i+1;
+                    tmpname = [self appendNameFromString:pVar.name component:&aNumber];
+                    [self addVariableTo:anArray mesh:pVar.primaryMesh solution:pVar.solution name:tmpname dofs:1 container:bufferContainers component:YES ifOutput:&output ifSecondary:NULL type:NULL];
                     
                     free(bufferContainers);
                     bufferContainers = NULL;
@@ -1180,16 +1202,19 @@
                     tmp = [self getVariableFrom:anArray model:aModel name:tmpname onlySearch:&onlyThis maskName:NULL info:&stat];
                     bufferContainers = tmp.getContainers;
                     if (varContainers->PrevValues != NULL) {
-                        bufferContainers->PrevValues = doublematrix(0,  (dofs/pVar.dofs)-1, 0, varContainers->size2PrevValues-1);
+                        bufferContainers->ComponentPrevValues = malloc ( (dofs/pVar.dofs) * sizeof ( double ** ));
+                        for (j=0; j<(dofs/pVar.dofs); j++) {
+                            bufferContainers->ComponentPrevValues[j] = malloc ( varContainers->size2PrevValues * sizeof ( double * ));
+                        }
                         k = 0;
                         for (j=i; j<varContainers->sizeValues; j+=pVar.dofs) {
                             for (l=0; l<varContainers->size2PrevValues; l++) {
-                                bufferContainers->PrevValues[k][l] = varContainers->PrevValues[j][l];
+                                bufferContainers->ComponentPrevValues[k][l] = &varContainers->PrevValues[j][l];
                             }
                             k++;
                         }
-                        bufferContainers->size1PrevValues = dofs/pVar.dofs;
-                        bufferContainers->size2PrevValues = varContainers->size2PrevValues;
+                        bufferContainers->size1ComponentPrevValues = dofs/pVar.dofs;
+                        bufferContainers->size2ComponentPrevValues = varContainers->size2PrevValues;
                     }
                 }
             }
@@ -1209,10 +1234,8 @@
                      [self getVariableFrom:mesh.variables model:aModel name:@"pressure" onlySearch:NULL maskName:NULL info:&stat], nil];
     } else if (pVar.dofs > 1){
         for (i=0; i<pVar.dofs; i++) {
-            tmpname = [NSMutableString stringWithString:pVar.name];
-            aNumber = [NSNumber numberWithInt:i+1];
-            [tmpname appendString:@" "];
-            [tmpname appendString:[aNumber stringValue]];
+             aNumber = i+1;
+            tmpname = [self appendNameFromString:pVar.name component:&aNumber];
             [tmpArryay addObject:[self getVariableFrom:mesh.variables model:aModel name:tmpname onlySearch:NULL maskName:NULL info:&stat]];
         }
     }
@@ -1257,10 +1280,8 @@
     } else if (var.dofs > 1){
         for (i=0; i<var.dofs; i++) {
             tmp = nil;
-            tmpname = [NSMutableString stringWithString:pVar.name];
-            aNumber = [NSNumber numberWithInt:i+1];
-            [tmpname appendString:@" "];
-            [tmpname appendString:[aNumber stringValue]];
+            aNumber = i+1;
+            tmpname = [self appendNameFromString:pVar.name component:&aNumber];
             tmp = [self getVariableFrom:anArray model:aModel name:tmpname onlySearch:&onlyThis maskName:NULL info:&stat];
             if (tmp != nil) {
                 tmp.valid = YES;
@@ -1478,6 +1499,673 @@
     }
     
     return str;
+}
+
+/******************************************************************************************
+    Given the body of a keyword find the first free keyword in a dictionary.
+    This is intended use of this is in the solution construction to declare exported 
+    variables without the risk of running over some existing ones.
+******************************************************************************************/
+-(NSString *)nextFreeKeyword:(NSString *)keyword0 dictionary:(NSMutableDictionary *)dictionary {
+    
+    int i;
+    NSMutableString *str;
+    
+    for (i=1; i<=9999; i++) {
+        @autoreleasepool {
+            str = [NSMutableString stringWithString:keyword0];
+            [str appendString:@" "];
+            [str appendString:[NSString stringWithFormat:@"%d",i]];
+            if (dictionary[str] == nil) break;
+        }
+    }
+    
+    return str;
+}
+
+/******************************************************
+ Check the feasability of solution options
+******************************************************/
+-(void)checkOptionsInSolution:(FEMSolution *)solution {
+    
+    NSString *str;
+    
+    if ((solution.solutionInfo)[@"linear system solver"] != nil) {
+        str = (solution.solutionInfo)[@"linear system solver"];
+        
+        if ([str isEqualToString:@"direct"] == YES) {
+            if ((solution.solutionInfo)[@"linear system direct method"] != nil) {
+                str = (solution.solutionInfo)[@"linear system direct method"];
+                
+                //TODO: app support for parallel run where in case of a parallel run
+                // the direct must be MUMPS
+                if ([str isEqualToString:@"mumps"] == YES) errorfunct("checkOptionsInSolution", "Currenly no serial version of the mumps solver implemented,");
+                
+                if ([str isEqualToString:@"banded"] == YES) {
+                    
+                } else if ([str isEqualToString:@"umfpack"] == YES || [str isEqualToString:@"big umfpack"] == YES) {
+                    
+                } else if ([str isEqualToString:@"mumps"] == YES) {
+                    
+                } else if ([str isEqualToString:@"superlu"] == YES) {
+                    errorfunct("checkOptionsInSolution", "SuperLU solver is not available.");
+                } else if ([str isEqualToString:@"pardiso"] == YES) {
+                    errorfunct("checkOptionsInSolution", "Pardiso solver is not available.");
+                } else if ([str isEqualToString:@"cholmod"] == YES || [str isEqualToString:@"spqr"] == YES) {
+                    errorfunct("checkOptionsInSolution", "Cholmod solver is not available.");
+                } else {
+                    errorfunct("checkOptionsInSolution", "Unknown direct solver method.");
+                }
+            } else {
+                //TODO: add support for parallel run since then it should be mumps by default.
+                str = @"umfpack";
+                NSLog(@"checkOptionsInSolution: setting the linear system direct method to %@\n", str);
+                [solution.solutionInfo setObject:str forKey:@"linear system direct method"];
+            }
+        }
+    } // If "linear system solver" is not given, it will be set by default to iterative later in the processing
+}
+
+
+/********************************************************************************************************
+    Add the generic components to each solution
+    A few solutions are for historical reasons given a special treatment
+********************************************************************************************************/
+-(void)addEquationBasicsToSolution:(FEMSolution *)solution name:(NSString *)name model:(FEMModel *)model transient:(BOOL)transient {
+    
+    int i, j, k, l, maxDim, minVal, maxVal, dofs, ndeg, maxNDOFs, maxDGDOFs, maxEDOFs, maxFDOFs, maxBDOFs,
+        matrixFormat, nrows, nsize, type;
+    int *perm;
+    double initValue, *sol;
+    NSString *eq, *str, *varName, *tmpName;
+    NSMutableString *string;
+    NSNumber *yesNumber;
+    BOOL isAssemblySolution, isCoupledSolution, isBlockSolution, variableGlobal, variableOutput, found, stat,
+         globalBubbles, bandwidthOptimize, discontinuousGalerkin;
+    NSRange range;
+    Element_t *elements = NULL, *edges = NULL, *faces = NULL;
+    FEMVariable *variable = nil, *newVariable = nil;
+    FEMListUtilities *listUtilities;
+    FEMElementUtils *elementUtils;
+    variableArraysContainer *bufferContainers = NULL, *varContainers = NULL;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    
+    // If there is a matrix level "Flux Corrected Transport" then it's required
+    // to use global matrices for time integration
+    if ([(solution.solutionInfo)[@"linear system fct"] boolValue] == YES) {
+        [listUtilities addLogicalInClassList:solution theVariable:@"use global mass matrix" withValue:YES];
+    }
+    
+    if ((solution.solutionInfo)[@"equation"] != nil) {
+        eq = (solution.solutionInfo)[@"equation"];
+        elements = solution.mesh.getElements;
+        maxDim = 0;
+        for (i=0; i<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; i++) {
+            if ([listUtilities checkElementEquation:model forElement:&elements[i] andEquation:eq]) {
+                maxDim = max(elements[i].Type.dimension, maxDim);
+            }
+        }
+        [listUtilities addIntegerInClassList:solution theVariable:@"active mesh dimension" withValue:maxDim];
+    }
+    
+    // TODO: Here Elmer calls a procedure post-fixed with "_Init" for a given solver.
+    // Do we need to do that?
+    
+    solution.solutionMode = SOLUTION_MODE_DEFAULT;
+    if ([(solution.solutionInfo)[@"auxiliary solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_AUXILIARY;
+    if ([(solution.solutionInfo)[@"coupled solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_COUPLED;
+    if ([(solution.solutionInfo)[@"block solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_BLOCK;
+    if ([(solution.solutionInfo)[@"assembly solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_ASSEMBLY;
+    
+    if (solution.solutionMode == SOLUTION_MODE_DEFAULT) {
+        if ((solution.solutionInfo)[@"equation"] != nil) {
+            eq = (solution.solutionInfo)[@"equation"];
+        } else {
+            solution.solutionMode = SOLUTION_MODE_AUXILIARY;
+        }
+    }
+    
+    isCoupledSolution = (solution.solutionMode == SOLUTION_MODE_COUPLED) ? YES : NO;
+    isBlockSolution = (solution.solutionMode == SOLUTION_MODE_BLOCK) ? YES : NO;
+    isAssemblySolution = (solution.solutionMode == SOLUTION_MODE_ASSEMBLY) ? YES : NO;
+    isAssemblySolution = (isAssemblySolution == YES || (isCoupledSolution == YES && solution.plugInPrincipalClassInstance == nil) ||
+                          (isBlockSolution == YES && solution.plugInPrincipalClassInstance == nil)) ? YES : NO;
+    
+    // Default order of equation
+    solution.order = 1;
+    solution.timeOrder = 1;
+    
+    found = NO;
+    if (transient == YES) {
+        if ((solution.solutionInfo)[@"time stepping method"] != nil) {
+            str = (solution.solutionInfo)[@"time stepping method"];
+            found = YES;
+        } else {
+            str = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"time stepping method" info:&found];
+            if (found == YES) {
+                [solution.solutionInfo setObject:str forKey:@"time stepping method"];
+            }
+        }
+        
+        if (found == YES) {
+            if ([str isEqualToString:@"bdf"] == YES) {
+                if ((solution.solutionInfo)[@"bdf order"] != nil) {
+                    solution.order = [(solution.solutionInfo)[@"bdf order"] intValue];
+                    if (solution.order < 1) solution.order = 1;
+                    if (solution.order > 5) solution.order = 5;
+                } else {
+                    minVal = 1;
+                    maxVal = 5;
+                    solution.order = [listUtilities listGetInteger:model inArray:model.simulation.valuesList forVariable:@"bdf order" info:&found minValue:&minVal maxValue:&maxVal];
+                }
+                if (found == NO) {
+                    solution.order = 2;
+                    NSLog(@"addEquationBasicsToSolution: BDF order set by default to 2.\n");
+                }
+            } else if ([str isEqualToString:@"runge-kutta"]) {
+                minVal = 2;
+                maxVal = 4;
+                solution.order = [listUtilities listGetInteger:model inArray:model.simulation.valuesList forVariable:@"runge-kutta order" info:&found minValue:&minVal maxValue:&maxVal];
+                if (found == NO) solution.order = 2;
+            }
+        } else {
+            NSLog(@"addEquationBasicsToSolution: time stepping method set by default to implicit Euler\n");
+            [solution.solutionInfo setObject:@"implicit euler" forKey:@"time stepping method"];
+        }
+    }
+    
+    dofs = model.dimension;
+    initValue = 0.0;
+    
+    // These are historical solutions that may be built-in on some MDFs
+    // Special strategies are used for them.
+    // TODO: we may migrate them to plug-ins?
+    
+    if ([name isEqualToString:@"navier-stokes"] == YES) {
+        if ((solution.solutionInfo)[@"variable"] == nil) {
+            dofs = model.dimension;
+            if (model.coordinates == cylindric_symmetric) dofs++;
+            if (dofs == 3) {
+                [solution.solutionInfo setObject:@"flow solution[velocity:3 pressure:1]" forKey:@"variable"];
+            } else {
+                [solution.solutionInfo setObject:@"flow solution[velocity:2 pressure:1]" forKey:@"variable"];
+            }
+        }
+        initValue = 1.0e-6;
+    } else if ([name isEqualToString:@"magnetic induction"] == YES) {
+        if ((solution.solutionInfo)[@"variable"] == nil) {
+            [solution.solutionInfo setObject:@"-dofs 3 magnetic field" forKey:@"variable"];
+            [solution.solutionInfo setObject:@"electric current[electric current:3]"
+                                      forKey:[self nextFreeKeyword:@"exported variable" dictionary:solution.solutionInfo]];
+        }
+    } else if ([name isEqualToString:@"stress analysis"] == YES) {
+        if ((solution.solutionInfo)[@"variable"] == nil) {
+            if (dofs == 2) {
+                [solution.solutionInfo setObject:@"-dofs 2 displacement" forKey:@"variable"];
+            } else {
+                [solution.solutionInfo setObject:@"-dofs 3 displacement" forKey:@"variable"];
+            }
+        }
+    } else if ([name isEqualToString:@"mesh update"] == YES) {
+        if ((solution.solutionInfo)[@"variable"] == nil) {
+            if (dofs == 2) {
+                [solution.solutionInfo setObject:@"-dofs 2 mesh update" forKey:@"variable"];
+            } else {
+                [solution.solutionInfo setObject:@"-dofs 3 mesh update" forKey:@"variable"];
+            }
+        }
+        
+        if (transient == YES) {
+            if (dofs == 2) {
+                [solution.solutionInfo setObject:@"-dofs 2 mesh velocity"
+                                          forKey:[self nextFreeKeyword:@"exported variable" dictionary:solution.solutionInfo]];
+            } else {
+                [solution.solutionInfo setObject:@"-dofs 3 mesh velocity"
+                                          forKey:[self nextFreeKeyword:@"exported variable" dictionary:solution.solutionInfo]];
+            }
+        }
+    } else if ([name isEqualToString:@"heat equation"] == YES) {
+        if ((solution.solutionInfo)[@"variable"] == nil) {
+            [solution.solutionInfo setObject:@"temperature" forKey:@"variable"];
+        }
+        
+        if ((solution.solutionInfo)[@"radiation solver"] == nil) {
+            yesNumber = @YES;
+            [solution.solutionInfo setObject:yesNumber forKey:@"radiation solver"];
+        }
+    }
+    
+    // TODO: This is here where we should load the solution plug-in (if present) and
+    // create an instance of the plug-in principal class
+    
+    //Initialize and get the variable
+    solution.timeOrder = 0;
+    solution.matrix = nil;
+    
+    if ((solution.solutionInfo)[@"variable"] == nil) {
+        //Variable does not exist
+        variable = [[FEMVariable alloc] init];
+        solution.variable = variable;
+    } else if (isCoupledSolution == YES && solution.plugInPrincipalClassInstance == nil) {
+        
+    } else if (isBlockSolution == YES && solution.plugInPrincipalClassInstance == nil) {
+        
+    } else {
+        varName = (solution.solutionInfo)[@"variable"];
+        
+        // It may be a normal field variable or a global (0D) variable
+        variableGlobal = [(solution.solutionInfo)[@"variable global"] boolValue];
+        
+        if ((solution.solutionInfo)[@"variable output"] != nil) {
+            variableOutput = [(solution.solutionInfo)[@"variable output"] boolValue];
+        } else variableOutput = YES;
+        
+        if ((solution.solutionInfo)[@"variable dofs"] != nil) {
+            dofs = [(solution.solutionInfo)[@"variable dofs"] intValue];
+            if (dofs < 1) dofs = 1;
+        } else {
+            j = 0;
+            dofs = 0;
+            str = [NSString stringWithString:varName];
+            while (1) {
+                str = [str substringFromIndex:j];
+                range = [str rangeOfString:@":"];
+                if (range.location == NSNotFound) break;
+                i = (int)range.location + 1;
+                while (1) {
+                    if ([str characterAtIndex:i] == ' ' || [str characterAtIndex:i] == ']') break;
+                    i++;
+                }
+                k = [[[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)] intValue];
+                // If we get 0 then we are dealing with an invalid dof number
+                if (k == 0) {
+                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n",
+                          [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
+                }
+                dofs = dofs + k;
+                j = i+1;
+            }
+        }
+        
+        if ([varName characterAtIndex:0] == '-') {
+            if ([[[varName substringFromIndex:0] substringToIndex:10] isEqualToString:@"-nooutput "] == YES) {
+                variableOutput = NO;
+                varName = [varName substringFromIndex:10];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:8] isEqualToString:@"-global "] == YES) {
+                variableGlobal = YES;
+                varName = [varName substringFromIndex:8];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:6] isEqualToString:@"-dofs "] == YES) {
+                i = 5;
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                j = i;
+                while (1) {
+                    if ([varName characterAtIndex:j] == ' ') break;
+                    j++;
+                }
+                dofs = [[[varName substringFromIndex:i] substringToIndex:j-i] intValue];
+                // If we get 0 then we are dealing with an invalid dof number
+                if (dofs == 0) {
+                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                }
+                varName = [varName substringFromIndex:j+1];
+            }
+        }
+        if (dofs == 0) dofs = 1;
+        
+        // If the variable is global then it has nothing to do with the mesh
+        // and it may be simply allocated
+        if (variableGlobal == YES) {
+            solution.solutionMode = SOLUTION_MODE_GLOBAL;
+            sol = doublevec(0, dofs-1);
+            memset( sol, 0.0, (dofs*sizeof(sol)) );
+            
+            bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+            bufferContainers->Values = sol;
+            bufferContainers->sizeValues = dofs;
+            bufferContainers->Perm = NULL;
+            [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+            solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+            if (dofs > 1) {
+                for (i=1; i<=dofs; i++) {
+                    tmpName = [self appendNameFromString:varName component:&i];
+                    bufferContainers->ComponentValues = malloc ( 1 * sizeof ( double * ));
+                    bufferContainers->ComponentValues[0] = &sol[i-1];
+                    bufferContainers->sizeComponentValues = 1;
+                    [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:tmpName dofs:1 container:bufferContainers component:YES ifOutput:NULL ifSecondary:NULL type:NULL];
+                }
+            }
+            free(bufferContainers);
+        } else {
+            // If variable is a field variable create a permutation and matrix related to it
+            if ((solution.solutionInfo)[@"equation"] != nil) {
+                eq = (solution.solutionInfo)[@"equation"];
+            } else {
+                errorfunct("addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
+            }
+            found = NO;
+            for (FEMEquation *equation in model.equations) {
+                if ([listUtilities listGetLogical:model inArray:equation.valuesList forVariable:eq info:&stat] == YES) {
+                    found = YES;
+                    break;
+                }
+            }
+            if (found == NO) {
+                NSLog(@"addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation\n", varName);
+                errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+            }
+            
+            // Compute the size of the permutation vector
+            ndeg = 0;
+            if (YES) {
+                eq = (solution.solutionInfo)[@"equation"];
+                maxNDOFs = 0;
+                maxDGDOFs = 0;
+                elements = solution.mesh.getElements;
+                faces = solution.mesh.getFaces;
+                edges = solution.mesh.getEdges;
+                for (i=0; i<solution.mesh.numberOfBulkElements; i++) {
+                    maxDGDOFs = max(maxDGDOFs, elements[i].DGDOFs);
+                    maxNDOFs = max(maxNDOFs, elements[i].NDOFs);
+                }
+                
+                maxEDOFs = 0;
+                for (i=0; i<solution.mesh.numberOfEdges; i++) {
+                    maxEDOFs = max(maxEDOFs, edges[i].BDOFs);
+                }
+                
+                maxFDOFs = 0;
+                for (i=0; i<solution.mesh.numberOfFaces; i++) {
+                    maxFDOFs = max(maxFDOFs, faces[i].BDOFs);
+                }
+                
+                maxBDOFs = 0;
+                for (i=0; i<solution.mesh.numberOfBulkElements; i++) {
+                    maxBDOFs = max(maxBDOFs, elements[i].BDOFs);
+                }
+                
+                if ((solution.solutionInfo)[@"bubbles in global system"] != nil) {
+                    globalBubbles = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
+                } else globalBubbles = YES;
+                
+                ndeg = ndeg + solution.mesh.numberOfNodes;
+                if (maxEDOFs > 0) ndeg = ndeg + maxEDOFs * solution.mesh.numberOfEdges;
+                if (maxFDOFs > 0) ndeg = ndeg + maxFDOFs * solution.mesh.numberOfFaces;
+                if (globalBubbles == YES) ndeg = ndeg + maxBDOFs * solution.mesh.numberOfBulkElements;
+                if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+                    if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
+                        ndeg = max( ndeg, maxDGDOFs * (solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements) );
+                    }
+                }
+            }
+            
+            if ((solution.solutionInfo)[@"radiation solution"] != nil) {
+                if ([(solution.solutionInfo)[@"radiation solution"] boolValue] == YES) {
+                    //TODO: Need to implement this
+                }
+            }
+            
+            if ((solution.solutionInfo)[@"optimize bandwidth"] != nil) {
+                bandwidthOptimize = [(solution.solutionInfo)[@"optimize bandwidth"] boolValue];
+            } else bandwidthOptimize = YES;
+            [self checkOptionsInSolution:solution];
+            
+            perm = intvec(0, ndeg-1);
+            memset( perm, 0, (ndeg*sizeof(perm)) );
+            
+            elementUtils = [[FEMElementUtils alloc] init];
+            matrixFormat = MATRIX_CRS;
+            if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+                discontinuousGalerkin = [(solution.solutionInfo)[@"discontinuous galerkin"] boolValue];
+            } else discontinuousGalerkin = NO;
+            solution.matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:dofs permutation:perm sizeOfPermutation:ndeg matrixFormat:matrixFormat optimizeBandwidth:bandwidthOptimize equationName:eq discontinuousGalerkinSolution:&discontinuousGalerkin globalBubbles:&globalBubbles];
+            nrows = dofs * ndeg;
+            if (solution.matrix != nil) nrows = solution.matrix.numberOfRows;
+            
+            // Basically the solution could be matrix free but still the matrix is used
+            // here temporarily since it's needed when making the permutation vector
+            if ((solution.solutionInfo)[@"no matrix"] != nil) {
+                if ([(solution.solutionInfo)[@"no matrix"] boolValue] == YES) {
+                    solution.solutionMode = SOLUTION_MODE_MATRIXFREE;
+                    [solution.matrix deallocation];
+                    solution.matrix = nil;
+                }
+            }
+            
+            if (nrows > 0) {
+                sol = doublevec(0, nrows-1);
+                for (i=0; i<nrows; i++) {
+                    sol[i] = initValue;
+                }
+                
+                bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+                bufferContainers->Values = sol;
+                bufferContainers->sizeValues = nrows;
+                bufferContainers->Perm = perm;
+                bufferContainers->sizePerm = ndeg;
+                [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:&variableOutput ifSecondary:NULL type:NULL];
+                solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+                
+                if (dofs > 1) {
+                    for (i=1; i<=dofs; i++) {
+                        tmpName = [self appendNameFromString:varName component:&i];
+                        bufferContainers->ComponentValues = malloc ( (nrows/dofs) * sizeof ( double * ));
+                        k = 0;
+                        for (j=(i-1); i<=nrows-dofs+(i-1); j+=dofs) {
+                            bufferContainers->ComponentValues[k] = &sol[j];
+                            k++;
+                        }
+                        bufferContainers->sizeComponentValues = nrows/dofs;
+                        [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:tmpName dofs:1 container:bufferContainers component:YES ifOutput:NULL ifSecondary:NULL type:NULL];
+                    }                    
+                }
+                free(bufferContainers);
+            }
+            
+            //TODO: add support for parallel run here
+            if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+                if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) solution.variable.type = VARIABLE_ON_NODES_ON_ELEMENTS;
+            }
+        }
+    }
+    
+    // Add the exported variables which are typically auxiliary variables derived from
+    // the solution without their own matrix equation 
+    l = 0;
+    while (1) {
+        l++;
+        str = [self appendNameFromString:@"exported variable" component:&l];
+        if ((solution.solutionInfo)[str] == nil) break;
+        varName = (solution.solutionInfo)[str];
+        
+        string = (NSMutableString *)[self appendNameFromString:@"exported variable" component:&l];
+        [string appendString:@" output"];
+        if ((solution.solutionInfo)[string] != nil) {
+            variableOutput = [(solution.solutionInfo)[string] boolValue];
+        } else variableOutput = YES;
+        
+        string = (NSMutableString *)[self appendNameFromString:@"exported variable" component:&l];
+        [string appendString:@" dofs"];
+        if ((solution.solutionInfo)[string] != nil) {
+            dofs = [(solution.solutionInfo)[string] intValue];
+        } else {
+            j = 0;
+            dofs = 0;
+            str = [NSString stringWithString:varName];
+            while (1) {
+                str = [str substringFromIndex:j];
+                range = [str rangeOfString:@":"];
+                if (range.location == NSNotFound) break;
+                i = (int)range.location + 1;
+                while (1) {
+                    if ([str characterAtIndex:i] == ' ' || [str characterAtIndex:i] == ']') break;
+                    i++;
+                }
+                k = [[[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)] intValue];
+                // If we get 0 then we are dealing with an invalid dof number
+                if (k == 0) {
+                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n",
+                          [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
+                }
+                dofs = dofs + k;
+                j = i+1;
+            }
+        }
+        
+        variableOutput = YES;
+        variableGlobal = NO;
+        
+        if ([varName characterAtIndex:0] == '-') {
+            if ([[[varName substringFromIndex:0] substringToIndex:10] isEqualToString:@"-nooutput "] == YES) {
+                variableOutput = NO;
+                varName = [varName substringFromIndex:10];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:8] isEqualToString:@"-global "] == YES) {
+                variableGlobal = YES;
+                varName = [varName substringFromIndex:8];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:6] isEqualToString:@"-dofs "] == YES) {
+                i = 5;
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                j = i;
+                while (1) {
+                    if ([varName characterAtIndex:j] == ' ') break;
+                    j++;
+                }
+                dofs = [[[varName substringFromIndex:i] substringToIndex:j-i] intValue];
+                // If we get 0 then we are dealing with an invalid dof number
+                if (dofs == 0) {
+                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                }
+                varName = [varName substringFromIndex:j+1];
+            }
+        }
+        if (dofs == 0) dofs = 1;
+
+        newVariable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+        
+        if (newVariable == nil) {
+            if (variableGlobal == YES) {
+                nsize = dofs;
+                perm = NULL;
+            } else {
+                varContainers = solution.variable.getContainers;
+                nsize = dofs * varContainers->sizeValues / solution.variable.dofs;
+                perm = varContainers->Perm;
+            }
+            
+            sol = doublevec(0, nsize-1);
+            memset( sol, 0.0, (nsize*sizeof(sol)) );
+            if (perm != NULL) {
+                bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+                bufferContainers->Values = sol;
+                bufferContainers->sizeValues = nsize;
+                bufferContainers->Perm = perm;
+                bufferContainers->sizePerm = varContainers->sizePerm;
+                type = solution.variable.type;
+                [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:&variableOutput ifSecondary:NULL type:&type];
+            } else {
+                bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+                bufferContainers->Values = sol;
+                bufferContainers->sizeValues = nsize;
+                bufferContainers->Perm = NULL;
+                type = solution.variable.type;
+                [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:&variableOutput ifSecondary:NULL type:&type];
+            }
+            
+            if (dofs > 1 && variableOutput == NO) {
+                for (i=1; i<=dofs; i++) {
+                    tmpName = [self appendNameFromString:varName component:&i];
+                    bufferContainers->ComponentValues = malloc ( (nsize/dofs) * sizeof ( double * ));
+                    k = 0;
+                    for (j=(i-1); i<=nsize-dofs+(i-1); j+=dofs) {
+                        bufferContainers->ComponentValues[k] = &sol[j];
+                        k++;
+                    }
+                    bufferContainers->sizeComponentValues = nsize/dofs;
+                    type = solution.variable.type;
+                    if (perm != NULL) {
+                        [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:tmpName dofs:1 container:bufferContainers component:YES ifOutput:&variableOutput ifSecondary:NULL type:&type];
+                    } else {
+                        [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:tmpName dofs:1 container:bufferContainers component:YES ifOutput:&variableOutput ifSecondary:NULL type:&type];
+                    }
+                }
+            }
+            free(bufferContainers);
+        }
+    }
+    
+    // Check for special solutions to be obtained only at
+    // a certain instances during simulation
+    solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
+    
+    if ((solution.solutionInfo)[@"solve equation"] != nil) {
+        if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"never"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_NEVER;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"always"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after all"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before all"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before time step"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_TIME;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after time step"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_TIME;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before saving"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_SAVE;
+        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after saving"] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_SAVE;
+        } else {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
+        }
+    }
+    
+    if ((solution.solutionInfo)[@"before all"] != nil) {
+        if ([(solution.solutionInfo)[@"before all"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
+        }
+    } else if ((solution.solutionInfo)[@"before simulation"] != nil) {
+        if ([(solution.solutionInfo)[@"before simulation"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
+        }
+    } else if ((solution.solutionInfo)[@"after all"] != nil) {
+        if ([(solution.solutionInfo)[@"after all"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
+        }
+    } else if ((solution.solutionInfo)[@"after simulation"] != nil) {
+        if ([(solution.solutionInfo)[@"after simulation"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
+        }
+    } else if ((solution.solutionInfo)[@"before time step"] != nil) {
+        if ([(solution.solutionInfo)[@"before time step"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_TIME;
+        }
+    } else if ((solution.solutionInfo)[@"after time step"] != nil) {
+        if ([(solution.solutionInfo)[@"after time step"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_TIME;
+        }
+    } else if ((solution.solutionInfo)[@"before saving"] != nil) {
+        if ([(solution.solutionInfo)[@"before saving"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_SAVE;
+        }
+    } else if ((solution.solutionInfo)[@"after saving"] != nil) {
+        if ([(solution.solutionInfo)[@"after saving"] boolValue] == YES) {
+            solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_SAVE;
+        }
+    }
+    
+    // TODO: Do we need to add support for LinSolve?
 }
 
 @end

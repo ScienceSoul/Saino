@@ -263,7 +263,7 @@
     bufferContainers->Perm = cperm;
     bufferContainers->sizeValues = sizeNodal;
     bufferContainers->sizePerm = solution.mesh.numberOfNodes;
-    [utils addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:@"nodal h" dofs:1 container:bufferContainers ifOutput:NULL ifSecondary:NULL type:NULL];
+    [utils addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:@"nodal h" dofs:1 container:bufferContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
     onlySearch = YES;
     solution.variable = [utils getVariableFrom:solution.mesh.variables model:self name:@"nodal h" onlySearch:&onlySearch maskName:NULL info:&found];
     
@@ -352,7 +352,9 @@
         _numberOfInitialConditions = 0;
         _numberOfSolutions = 0;
         _numberOfMaterials = 0;
+        _coordinates = cartesian;
         _totalMatrixElements = 0;
+        _maxElementNodes = 0;
         _mesh = nil;
         
         _outputPath = [NSMutableString stringWithString:@" "];

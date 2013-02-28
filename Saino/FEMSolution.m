@@ -111,7 +111,7 @@
 @synthesize doneTime = _doneTime;
 @synthesize order = _order;
 @synthesize nOfEigenValues = _nOfEigenValues;
-@synthesize solutionComputeWhen = _solutionComputeWhen;
+@synthesize solutionSolveWhen = _solutionSolveWhen;
 @synthesize solutionMode = _solutionMode;
 @synthesize numberOfActiveElements = _numberOfActiveElements;
 @synthesize multigridLevel = _multigridLevel;
@@ -122,6 +122,7 @@
 @synthesize dt = _dt;
 @synthesize multigridSolution = _multigridSolution;
 @synthesize multigridEqualPlit = _multigridEqualPlit;
+@synthesize plugInPrincipalClassInstance = _plugInPrincipalClassInstance;
 @synthesize matrix = _matrix;
 @synthesize variable = _variable;
 @synthesize mesh = _mesh;
@@ -137,6 +138,8 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _plugInPrincipalClassInstance = nil;
+        
         
         _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer));
         _containers->ntZeroingDone = NULL;

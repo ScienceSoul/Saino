@@ -23,7 +23,7 @@
     int _doneTime;
     int _order;
     int _nOfEigenValues;
-    int _solutionComputeWhen;
+    int _solutionSolveWhen;
     int _solutionMode;
     int _numberOfActiveElements;
     int _multigridLevel;
@@ -34,6 +34,7 @@
     double _dt;
     BOOL _multigridSolution;
     BOOL _multigridEqualPlit;
+    id _plugInPrincipalClassInstance;                // The instance of the principal class if a plug-in is provided
     FEMMatrix *_matrix;
     FEMVariable *_variable;
     FEMMesh *_mesh;
@@ -51,7 +52,7 @@
 @property(nonatomic, assign) int doneTime;
 @property(nonatomic, assign) int order;
 @property(nonatomic, assign) int nOfEigenValues;
-@property(nonatomic, assign) int solutionComputeWhen;
+@property(nonatomic, assign) int solutionSolveWhen;
 @property(nonatomic, assign) int solutionMode;
 @property(nonatomic, assign) int numberOfActiveElements;
 @property(nonatomic, assign) int multigridLevel;
@@ -62,6 +63,7 @@
 @property(nonatomic, assign) double dt;
 @property(nonatomic, assign, getter = isMultigridSolution) BOOL multigridSolution;
 @property(nonatomic, assign, getter = isMultigridEqualPlit) BOOL multigridEqualPlit;
+@property(nonatomic, strong) id plugInPrincipalClassInstance;
 @property(nonatomic, strong) FEMMatrix *matrix;
 @property(nonatomic, strong) FEMVariable *variable;
 @property(nonatomic, strong) FEMMesh *mesh;

@@ -985,7 +985,7 @@ static int PRECOND_VANKA     =  560;
             }
             energy = [parallelUtil parallelReductionOfValue:energy operArg:NULL];
             aNumber = @(energy);
-            [solution.solutionInfo setValue:aNumber forKey:@"energy norm"];
+            [solution.solutionInfo setObject:aNumber forKey:@"energy norm"];
             name = [NSMutableString stringWithString:@"res: "];
             [name appendString:solution.variable.name];
             [name appendString:@" energy norm"];
