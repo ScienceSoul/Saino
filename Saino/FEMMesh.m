@@ -284,6 +284,9 @@
         
         _variables = [[NSMutableArray alloc] init];
         _projectors = [[NSMutableArray alloc] init];
+        
+        _parent = nil;
+        _child = nil;
     }
     
     return self;

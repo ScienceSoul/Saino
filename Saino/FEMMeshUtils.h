@@ -26,5 +26,7 @@
 -(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh boundary:(int)this target:(int)trgt;
 -(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal;
 -(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model;
+-(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model;
+-(void)updateMesh:(FEMMesh *)mesh inSolution:(FEMSolution *)solution model:(FEMModel *)model;
 
 @end

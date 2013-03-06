@@ -7,6 +7,10 @@
 //
 
 #include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdbool.h>
 
 #include "Constructors.h"
 
@@ -28,4 +32,14 @@ void initElements(Element_t *elements, int n) {
 void initBoundaryInfo(BoundaryInfo_t *boundaryInfo) {
     
     *boundaryInfo = (BoundaryInfo_t){.Constraint=0, .Outbody=-1};
+}
+
+variableArraysContainer *allocateVariableContainer(void) {
+    
+    variableArraysContainer *varContainers = NULL;
+    varContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+    
+    *varContainers = (variableArraysContainer){.Values = NULL, .SecondaryToValues = NULL, .ComponentValues = NULL, .ComponentSecondaryToValues = NULL, .Perm = NULL};
+    
+    return varContainers;
 }

@@ -46,6 +46,7 @@
     
     Element_t *_elements;
     Element_t *_currentElement;
+    Nodes_t *_nodes;
     modelArraysContainer *_containers;
     
     /* Initialize bodies like this:
@@ -103,6 +104,9 @@
 // Elements getter
 -(Element_t *)getElements;
 -(Element_t *)getCurrentElement;
+
+// Nodes getter
+-(Nodes_t *)getNodes;
 
 -(modelArraysContainer *)getContainers;
 

@@ -250,17 +250,22 @@ typedef struct variableArraysContainer {
     int *Perm;
     double *Values;
     
-    double **ComponentValues;       // Used if the variable is a component of a another variable with dofs > 1.
-                                    // This is a 1D array of pointers.
+    double **ComponentValues;                // Used if the variable is a component of a another variable with dofs > 1.
+                                             // This is a 1D array of pointers.
     double **PrevValues;
     
-    double ***ComponentPrevValues;  // Used if the variable is a component of a another variable with dofs > 1.
-                                    // This is a 2D array of pointers.
+    double ***ComponentPrevValues;           // Used if the variable is a component of a another variable with dofs > 1.
+                                             // This is a 2D array of pointers.
+    
+    double **SecondaryToValues;              // Some variables may be defined so that their values point to a given column of
+                                             // another variable PrevValues. This is used for that particular case
+    double **ComponentSecondaryToValues;
     double *PValues;
     double *NonLinValues;
     double *SteadyValues;
     double complex *EigenValues;
     double complex **EigenVectors;
+    double complex ***ComponentEigenVectors;  // This is a 2D array of pointers.
     bool *lowerLimitActive;
     bool *upperLimitActive;
     int sizePerm;
@@ -270,12 +275,16 @@ typedef struct variableArraysContainer {
     int size2PrevValues;
     int size1ComponentPrevValues;
     int size2ComponentPrevValues;
+    int sizeSecondaryToValues;
+    int sizeComponentSecondaryToValues;
     int sizePValues;
     int sizeNonLinValues;
     int sizeSteadyValues;
     int sizeEigenValues;
     int size1EigenVectors;
     int size2EigenVectors;
+    int size1ComponentEigenVectors;
+    int size2ComponentEigenVectors;
     int sizeLowerLimitActive;
     int sizeUpperLimitActive;
     
@@ -348,3 +357,4 @@ typedef struct HashTable_t {
 void initNodes(Nodes_t *nodes);
 void initElements(Element_t *elements, int n);
 void initBoundaryInfo(BoundaryInfo_t *boundaryInfo);
+variableArraysContainer * allocateVariableContainer(void);

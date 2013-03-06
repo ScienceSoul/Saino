@@ -8,6 +8,7 @@
 
 #import "FEMMeshUtils.h"
 #import "Utils.h"
+#import "FEMElementUtils.h"
 
 static double AEPS = 10.0 * DBL_EPSILON;
 
@@ -3143,6 +3144,147 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
     free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
     [elmDescription deallocation];
+}
+
+-(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model {
+    
+    Element_t *modelElements, *meshElements;
+    Nodes_t *modelNodes, *meshNodes;
+    
+    model.variables = mesh.variables;
+    model.mesh = mesh;
+    
+    modelElements = model.getElements;
+    modelNodes = model.getNodes;
+    meshElements = mesh.getElements;
+    meshNodes = mesh.getNodes;
+    
+    modelNodes = meshNodes;
+    model.numberOfNodes = mesh.numberOfNodes;
+    modelNodes->numberOfNodes = meshNodes->numberOfNodes;
+    
+    modelElements = meshElements;
+    model.maxElementNodes = mesh.maxElementNodes;
+    model.numberOfBulkElements = mesh.numberOfBulkElements;
+    model.numberOfBoundaryElements = mesh.numberOfBoundaryElements;
+}
+
+-(void)updateMesh:(FEMMesh *)mesh inSolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, k, n, dofs, n1, n2;
+    int *permutation;
+    double *work;
+    BOOL onlySearch, found, optimizeBandwidth;
+    NSString *str;
+    FEMUtilities *utilities;
+    FEMElementUtils *elementUtils;
+    FEMMatrix *matrix;
+    variableArraysContainer *saveVarContainers = NULL, *varContainers = NULL;
+    matrixArraysContainer *matContainers = NULL, *solutionMatContainers = NULL;
+    
+    saveVarContainers = solution.variable.getContainers;
+    dofs = solution.variable.dofs;
+    
+    solution.mesh = mesh;
+    [self setCurrentMesh:mesh inModel:model];
+    
+    // Create matrix and variable structures for
+    // current equation on the mesh
+    utilities = [[FEMUtilities alloc] init];
+    onlySearch = NO;
+    solution.variable = [utilities getVariableFrom:mesh.variables model:model name:solution.variable.name onlySearch:&onlySearch maskName:NULL info:&found];
+    
+    varContainers = solution.variable.getContainers;
+    permutation = intvec(0, varContainers->sizePerm-1);
+    
+    if ((solution.solutionInfo)[@"optimize bandwidth"] != nil) {
+        optimizeBandwidth = [(solution.solutionInfo)[@"optimize bandwidth"] boolValue];
+    } else optimizeBandwidth = YES;
+    
+    elementUtils = [[FEMElementUtils alloc] init];
+    str = (solution.solutionInfo)[@"equation"];
+    matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:mesh dofs:dofs permutation:permutation sizeOfPermutation:varContainers->sizePerm matrixFormat:MATRIX_CRS optimizeBandwidth:optimizeBandwidth equationName:str discontinuousGalerkinSolution:NULL globalBubbles:NULL];
+    
+    if ((solution.solutionInfo)[@"linear system symmetric"] != nil) {
+        matrix.symmetric = [(solution.solutionInfo)[@"linear system symmetric"] boolValue];
+    }
+    
+    if ((solution.solutionInfo)[@"lumped mass matrix"] != nil) {
+        matrix.lumped = [(solution.solutionInfo)[@"lumped mass matrix"] boolValue];
+    }
+    
+    work = doublevec(0, varContainers->sizeValues-1);
+    memcpy(work, varContainers->Values, varContainers->sizeValues);
+    for (k=1; k<=dofs; k++) {
+        for (i=0; i<varContainers->sizePerm; i++) {
+            if (permutation[i] >= 0) {
+                varContainers->Values[dofs*(permutation[i]+1)-k] = work[dofs*(varContainers->Perm[i]+1)-k];
+            }
+        }
+    }
+    
+    if (varContainers->PrevValues != NULL) {
+        for (j=0; j<varContainers->size2PrevValues; j++) {
+            for (i=0; i<varContainers->size1PrevValues; i++) {
+                work[i] = varContainers->PrevValues[i][j];
+            }
+             for (k=1; k<=dofs; k++) {
+                 for (i=0; i<varContainers->sizePerm; i++) {
+                     if (permutation[i] >= 0) {
+                         varContainers->PrevValues[dofs*(permutation[i]+1)-k][j] = work[dofs*(varContainers->Perm[i]+1)-k];
+                     }
+                 }
+             }
+        }
+    }
+    free_dvector(work, 0, varContainers->sizeValues-1);
+    
+    memcpy(varContainers->Perm, permutation, varContainers->sizePerm);
+    solution.variable.solution = solution;
+    free_ivector(permutation, 0, varContainers->sizePerm-1);
+    
+    matContainers = matrix.getContainers;
+    matContainers->RHS = doublevec(0, matrix.numberOfRows-1);
+    matContainers->sizeRHS = matrix.numberOfRows;
+    
+    solutionMatContainers = solution.matrix.getContainers;
+    
+    if (saveVarContainers->EigenValues != NULL) {
+        n = saveVarContainers->sizeEigenValues;
+        
+        if (n > 0) {
+            solution.nOfEigenValues = n;
+            varContainers->EigenValues = cdoublevec(0, n-1);
+            varContainers->sizeEigenValues = n;
+            varContainers->EigenVectors = cdoublematrix(0, n-1, 0, varContainers->sizeValues-1);
+            varContainers->size1EigenVectors = n;
+            varContainers->size2EigenVectors = varContainers->sizeValues;
+            
+            for (i=0; i<n; i++) {
+                varContainers->EigenValues[i] = 0.0;
+                for (j=0; j<varContainers->sizeValues; j++) {
+                    varContainers->EigenVectors[i][j] = 0.0;
+                }
+            }
+            matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
+            matContainers->sizeMassValues = matContainers->sizeValues;
+            memset( matContainers->MassValues, 0.0, (matContainers->sizeMassValues*sizeof(matContainers->MassValues)) );
+        }
+    } else if (solutionMatContainers->Force != NULL) {
+        n1 = matrix.numberOfRows;
+        n2 = solutionMatContainers->size2Force;
+        matContainers->Force = doublematrix(0, n1-1, 0, n2-1);
+        matContainers->size1force = n1;
+        matContainers->size2Force = n2;
+        for (i=0; i<n1; i++) {
+            for (j=0; j<n2; j++) {
+                matContainers->Force[i][j] = 0.0;
+            }
+        }
+    }
+    
+    solution.matrix = matrix;
+    solution.mesh.changed = YES;
 }
 
 @end

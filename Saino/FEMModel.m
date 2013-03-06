@@ -258,7 +258,7 @@
     solution.timeOrder = 0;
     
     utils = [[FEMUtilities alloc] init];
-    bufferContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+    bufferContainers = allocateVariableContainer();
     bufferContainers->Values = h;
     bufferContainers->Perm = cperm;
     bufferContainers->sizeValues = sizeNodal;
@@ -576,8 +576,8 @@
             
             if (i>meshLevels-meshKeep+1) {
                 [newMesh.next addObject:oldMesh];
-                [newMesh.parent addObject:oldMesh];
-                [oldMesh.child addObject:newMesh];
+                newMesh.parent = oldMesh;
+                oldMesh.child = newMesh;
                 [newMesh.name setString:oldMesh.name];
                 newMesh.outputActive = YES;
                 oldMesh.outputActive = NO;
@@ -712,8 +712,8 @@
                 
                 if (i>meshLevels-meshKeep+1) {
                     [newMesh.next addObject:oldMesh];
-                    [newMesh.parent addObject:oldMesh];
-                    [oldMesh.child addObject:newMesh];
+                    newMesh.parent = oldMesh;
+                    oldMesh.child = newMesh;
                     [newMesh.name setString:oldMesh.name];
                     newMesh.outputActive = YES;
                     oldMesh.outputActive = NO;
@@ -760,6 +760,12 @@
 -(Element_t *)getCurrentElement {
     
     return _currentElement;
+}
+
+#pragma mark Nodes getter
+-(Nodes_t *)getNodes {
+    
+    return _nodes;
 }
 
 -(modelArraysContainer*)getContainers {

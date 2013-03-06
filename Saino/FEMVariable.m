@@ -49,11 +49,14 @@
         _containers->ComponentValues = NULL;
         _containers->PrevValues = NULL;
         _containers->ComponentPrevValues = NULL;
+        _containers->SecondaryToValues = NULL;
+        _containers->ComponentSecondaryToValues = NULL;
         _containers->PValues = NULL;
         _containers->NonLinValues = NULL;
         _containers->SteadyValues = NULL;
         _containers->EigenValues = NULL;
         _containers->EigenVectors = NULL;
+        _containers->ComponentEigenVectors = NULL;
         _containers->lowerLimitActive = NULL;
         _containers->upperLimitActive = NULL;
         _containers->sizePerm = 0;
@@ -61,11 +64,18 @@
         _containers->sizeComponentValues = 0;
         _containers->size1PrevValues = 0;
         _containers->size2PrevValues = 0;
-        _containers->size1ComponentPrevValues = 0;;
+        _containers->size1ComponentPrevValues = 0;
         _containers->size2ComponentPrevValues = 0;
+        _containers->sizeSecondaryToValues = 0;
+        _containers->sizeComponentSecondaryToValues = 0;
         _containers->sizePValues = 0;
         _containers->sizeNonLinValues = 0;
         _containers->sizeSteadyValues = 0;
+        _containers->sizeEigenValues = 0;
+        _containers->size1EigenVectors = 0;
+        _containers->size2EigenVectors = 0;
+        _containers->size1ComponentEigenVectors = 0;
+        _containers->size2ComponentEigenVectors = 0;
         _containers->sizeLowerLimitActive = 0;
         _containers->sizeUpperLimitActive = 0;
     }
@@ -75,7 +85,39 @@
 
 -(void)deallocation {
     //TODO: Deallocation of containers members
-    free(_containers->ComponentValues);
+    int i;
+    
+    if (_containers->ComponentValues != NULL) {
+        free(_containers->ComponentValues);
+        _containers->ComponentValues = NULL;
+    }
+
+    if (_containers->ComponentPrevValues != NULL) {
+        for (i=0; _containers->size1ComponentPrevValues; i++) {
+            free(_containers->ComponentPrevValues[i]);
+        }
+        free(_containers->ComponentPrevValues);
+        _containers->ComponentPrevValues = NULL;
+    }
+    
+    if (_containers->SecondaryToValues != NULL) {
+        free(_containers->SecondaryToValues);
+        _containers->SecondaryToValues = NULL;
+    }
+    
+    if (_containers->ComponentSecondaryToValues != NULL) {
+        free(_containers->ComponentSecondaryToValues);
+        _containers->ComponentSecondaryToValues = NULL;
+    }
+    
+    if (_containers->ComponentEigenVectors != NULL) {
+        for (i=0; _containers->size1ComponentEigenVectors; i++) {
+            free(_containers->ComponentEigenVectors[i]);
+        }
+        free(_containers->ComponentEigenVectors);
+        _containers->ComponentEigenVectors = NULL;
+    }
+    
     free(_containers);
 }
 

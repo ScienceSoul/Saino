@@ -43,11 +43,11 @@
     Factors_t *_viewFactors;
     
     NSMutableString *_name;
-    NSMutableArray *_variables;            // Mutable array of FEMVariable classes
-    NSMutableArray *_projectors;           // Mutable array of FEMProjector classes
-    NSMutableArray *_next;                 // Mutable array of FEMMesh classes
-    NSMutableArray *_parent;               // Mutable array of FEMMesh classes
-    NSMutableArray *_child;                // Mutable array of FEMMesh classes
+    NSMutableArray *_variables;         // Mutable array of FEMVariable classes
+    NSMutableArray *_projectors;        // Mutable array of FEMProjector classes
+    NSMutableArray *_next;              // Mutable array of FEMMesh classes
+    FEMMesh *_parent;
+    FEMMesh *_child;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -71,8 +71,8 @@
 @property(nonatomic, strong) NSMutableArray *variables;
 @property(nonatomic, strong) NSMutableArray *projectors;
 @property(nonatomic, strong) NSMutableArray *next;
-@property(nonatomic, strong) NSMutableArray *parent;
-@property(nonatomic, strong) NSMutableArray *child;
+@property(nonatomic, strong) FEMMesh *parent;
+@property(nonatomic, strong) FEMMesh *child;
 
 -(void)loadMeshForModel:(FEMModel *)model meshDirectory:(NSString *)dir meshName:(NSString *)name boundariesOnly:(BOOL)bd numberOfPartitions:(int *)numParts partitionID:(int *)partID definitions:(int *)defDofs;
 
