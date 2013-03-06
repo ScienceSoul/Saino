@@ -1567,7 +1567,6 @@
             str = [NSString stringWithString:str1];
         }
     } else {
-        //flow solution[velocity:3 pressure:1]
         j = 0;
         dofsTot = 0;
         while (1) {
