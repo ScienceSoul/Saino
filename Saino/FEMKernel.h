@@ -54,6 +54,9 @@
 @property(nonatomic, assign) double **boundaryTangent1;
 @property(nonatomic, assign) double **boundaryTangent2;
 
+// This class method retuns an instance (singleton) of FEMKernel
++(id)sharedKernel;
+
 -(void)deallocation;
 -(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inList:(NSArray *)list variableName:(NSString *)name buffer:(listBuffer *)result;
 -(int)isPElement:(Element_t *)element;

@@ -2565,6 +2565,17 @@ static int PRECOND_VANKA     =  560;
 @synthesize boundaryTangent1 = _boundaryTangent1;
 @synthesize boundaryTangent2 = _boundaryTangent2;
 
+#pragma mark Singleton method
++(id)sharedKernel {
+    
+    static FEMKernel *sharedKernel = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedKernel = [[self alloc] init];
+    });
+    return sharedKernel;
+}
+
 - (id)init
 {
     int i;
