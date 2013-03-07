@@ -358,43 +358,35 @@ void free_i3tensor(int ***t, long nrl, long nrh, long ncl, long nch, long ndl, l
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void errorfunct(char head[], char message[], ...)
-{   
-    int np;
-    va_list ap;
-    
-    np = 0;
-    
-    va_start(ap,message);
-    np = va_arg(ap, int);
-    va_end(ap);
-    
-    if (np > 0) {
-        printf("%s: %s %d\n", head, message, np);
-        exit(-1);
-    } else {
-        printf("%s: %s\n", head, message);
-        exit(-1); 
-    }
+void __attribute__((overloadable)) errorfunct(char head[], char message[])
+{
+    printf("%s: %s\n", head, message);
+    exit(-1);
 }
 
-void warnfunct(char head[], char message[], ...) {
-    
-    int np;
-    va_list ap;
-    
-    np = 0;
-    
-    va_start(ap,message);
-    np = va_arg(ap, int);
-    va_end(ap);
-
-    if (np > 0) {
-        printf("%s: %s %d\n", head, message, np);
-    } else {
-        printf("%s: %s\n", head, message);
-    }
+void __attribute__((overloadable)) errorfunct(char head[], char message[], int n)
+{
+    printf("%s: %s %d\n", head, message, n);
+    exit(-1);
 }
 
+void __attribute__((overloadable)) errorfunct(char head[], char message[], double n)
+{
+    printf("%s: %s %f\n", head, message, n);
+    exit(-1);
+}
 
+void __attribute__((overloadable)) warnfunct(char head[], char message[])
+{
+    printf("%s: %s\n", head, message);
+}
 
+void __attribute__((overloadable)) warnfunct(char head[], char message[], int n)
+{
+    printf("%s: %s %d\n", head, message, n);
+}
+
+void __attribute__((overloadable)) warnfunct(char head[], char message[], double n)
+{
+    printf("%s: %s %f\n", head, message, n);
+}

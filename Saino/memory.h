@@ -15,8 +15,12 @@
 
 #include "Constructors.h"
 
-void errorfunct(char head[], char message[], ...);
-void warnfunct(char head[], char message[], ...);
+void __attribute__((overloadable)) errorfunct(char head[], char message[]);
+void __attribute__((overloadable)) errorfunct(char head[], char message[], int n);
+void __attribute__((overloadable)) errorfunct(char head[], char message[], double n);
+void __attribute__((overloadable)) warnfunct(char head[], char message[]);
+void __attribute__((overloadable)) warnfunct(char head[], char message[], int n);
+void __attribute__((overloadable)) warnfunct(char head[], char message[], double n);
 bool *boolvec(long nl, long nh);
 int *intvec(long nl, long nh);
 unsigned long *ulongvec(long nl, long nh);
