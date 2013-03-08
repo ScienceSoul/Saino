@@ -7,6 +7,7 @@
 //
 
 #import "FEMBandwidthOptimize.h"
+#import "Utils.h"
 
 @interface FEMBandwidthOptimize ()
 -(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t *)current index:(int *)index permLocal:(int *)permLocal doneIndex:(int *)doneIndex localNodes:(int)localNodes;

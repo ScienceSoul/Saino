@@ -9,11 +9,6 @@
 #import "FEMMesh.h"
 #import "FEMMatrix.h"
 #import "FEMVariable.h"
-#import "FEMValueList.h"
-
-#import "Constructors.h"
-#import "memory.h"
-#import "Utils.h"
 
 @interface FEMSolution : NSObject {
     

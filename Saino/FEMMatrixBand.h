@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMSolution.h"
-#import "Constructors.h"
 
 @interface FEMMatrixBand : NSObject
 

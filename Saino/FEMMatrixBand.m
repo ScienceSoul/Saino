@@ -7,6 +7,7 @@
 //
 
 #import "FEMMatrixBand.h"
+#import "Utils.h"
 
 @interface FEMMatrixBand ()
 

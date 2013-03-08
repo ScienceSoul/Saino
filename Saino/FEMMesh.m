@@ -12,8 +12,9 @@
 #import "FEMElementDescription.h"
 #import "FEMMeshUtils.h"
 #import "FEMPElementMaps.h"
-
-#include "memory.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMProjector.h"
+#import "Utils.h"
 
 @interface FEMMesh ()
 -(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs;

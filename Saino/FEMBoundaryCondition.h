@@ -14,7 +14,6 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMMatrix.h"
-#import "Constructors.h"
 
 @interface FEMBoundaryCondition : NSObject {
     

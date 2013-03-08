@@ -13,8 +13,6 @@
 #import "SIOMeshIO.h"
 #import "Constructors.h"
 
-#import "Utils.h"
-
 @interface FEMMesh : NSObject {
   
     int _dimension;

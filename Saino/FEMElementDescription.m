@@ -8,10 +8,11 @@
 
 #import "FEMElementDescription.h"
 #import "FEMLinearAlgebra.h"
-
-#import "Numerics.h"
-#import "Utils.h"
+#import "FEMElementsDefinition.h"
+#import "FEMNumericIntegration.h"
+#import "FEMUtilities.h"
 #import "GaussIntegration.h"
+#import "Utils.h"
 
 static double AEPS = 10.0 * DBL_EPSILON;
 

@@ -13,11 +13,15 @@
 #import "FEMElementUtils.h"
 #import "FEMUtilities.h"
 #import "FEMMeshUtils.h"
+#import "FEMMatrixCRS.h"
+#import "FEMNumericIntegration.h"
+#import "Utils.h"
 
 @interface FEMModel ()
 -(void)FEMModel_setCoordinateSystem;
 -(void)FEMModel_localMatrix:(double **)stiff force:(double*)force mesh:(FEMMesh *)mesh element:(Element_t *)element numberOfNodes:(int)numberOfNodes power:(double)power noWeight:(BOOL)noWeight elemMin:(double *)elemMin elemMax:(double *)elemMax;
 -(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal;
+-(void)FEMModel_initializeOutputLevel;
 @end
 
 @implementation FEMModel
@@ -307,7 +311,7 @@
     
     memset( h, 0.0, (sizeNodal*sizeof(h)) );
     
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     // TODO: Add support for parallel run here
     // ....
     [kernel iterativeSolve:solution];
@@ -329,10 +333,42 @@
     bufferContainers->Values = NULL;
     bufferContainers->Perm = NULL;
     free(bufferContainers);
-    
-    [kernel deallocation];
 }
 
+-(void)FEMModel_initializeOutputLevel {
+    
+    int i;
+    FEMKernel *kernel;
+    FEMListUtilities *listUtilities;
+    listBuffer outputMask = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL found;
+    
+    kernel = [FEMKernel sharedKernel];
+    listUtilities = [[FEMListUtilities alloc] init];
+    
+    kernel.minOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"min output level" info:&found minValue:NULL maxValue:NULL];
+    kernel.maxOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"max output level" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) kernel.maxOutputLevel = 32;
+    
+    found = [listUtilities listGetIntegerArray:self inArray:self.simulation.valuesList forVariable:@"output level" buffer:&outputMask];
+    if (found == YES) {
+        for (i=0; i<outputMask.m; i++) {
+            if (outputMask.ivector[i] != 0) kernel.outputLevelMask[i] = @YES;
+        }
+    }
+    
+    for (i=0; i<32; i++) {
+        if ([kernel.outputLevelMask[i] boolValue] == YES && i>= kernel.minOutputLevel && i<= kernel.maxOutputLevel) kernel.outputLevelMask[i] = @YES;
+    }
+    
+    kernel.outputPrefix = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output prefix" info:&found];
+    if (found == NO) kernel.outputPrefix = NO;
+    
+    kernel.outputCaller = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output caller" info:&found];
+    if (found == NO) kernel.outputCaller = YES;
+    
+    free_ivector(outputMask.ivector, 0, outputMask.m-1);
+}
 
 #pragma mark Public methods
 
@@ -403,6 +439,8 @@
     listUtils = [[FEMListUtilities alloc] init];
     
     //TODO: Here comes the Model Description File (MDF) parser
+    
+    [self FEMModel_initializeOutputLevel];
     
     transient = ([[listUtils listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
     

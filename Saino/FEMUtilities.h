@@ -8,12 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FEMMatrixCRS.h"
-#import "FEMMatrixBand.h"
-#import "FEMListUtilities.h"
-#import "FEMInterpolation.h"
-
-#import "memory.h"
+#import "FEMMatrix.h"
+#import "FEMVariable.h"
+#import "FEMSolution.h"
 
 @interface FEMUtilities : NSObject
 

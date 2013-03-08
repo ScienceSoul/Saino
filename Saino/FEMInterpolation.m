@@ -7,6 +7,9 @@
 //
 
 #import "FEMInterpolation.h"
+#import "FEMPElementMaps.h"
+#import "FEMElementDescription.h"
+#import "Utils.h"
 
 @interface FEMInterpolation ()
 -(void)FEMInterpolation_findPointsQuadrantForPoint:(double *)point dimension:(int)dim motherQuadrant:(Quadrant_t *)mother;

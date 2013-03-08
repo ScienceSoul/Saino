@@ -8,7 +8,7 @@
 
 #import "FEMKernel.h"
 
-#import "math.h"
+#include <math.h>
 #import <complex.h>
 
 #import "FEMValueList.h"
@@ -16,11 +16,17 @@
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMSimulation.h"
-
-#import "memory.h"
-#import "Utils.h"
-#import "Numerics.h"
+#import "FEMUtilities.h"
+#import "FEMHUTIter.h"
+#import "FEMPrecondition.h"
+#import "FEMParallelMPI.h"
+#import "FEMTimeIntegration.h"
+#import "FEMMatrixCRS.h"
+#import "FEMMatrixBand.h"
+#import "FEMElementDescription.h"
+#import "FEMNumericIntegration.h"
 #import "GaussIntegration.h"
+#import "Utils.h"
 
 static int ITER_BICGSTAB     =  320;
 static int ITER_TFQMR        =  330;
@@ -2564,6 +2570,12 @@ static int PRECOND_VANKA     =  560;
 @synthesize boundaryNormals = _boundaryNormals;
 @synthesize boundaryTangent1 = _boundaryTangent1;
 @synthesize boundaryTangent2 = _boundaryTangent2;
+@synthesize outputLevelMask = _outputLevelMask;
+@synthesize outputPrefix = _outputPrefix;
+@synthesize outputCaller = _outputCaller;
+@synthesize maxOutputLevel = _maxOutputLevel;
+@synthesize minOutputLevel = _minOutputLevel;
+@synthesize outputPE = _outputPE;
 
 #pragma mark Singleton method
 +(id)sharedKernel {
@@ -2608,6 +2620,15 @@ static int PRECOND_VANKA     =  560;
             _initialized[i] = NO;
         }
         
+        _outputLevelMask = [[NSMutableArray alloc] init];
+        for (i=0; i<32; i++) {
+            _outputLevelMask[i] = @YES;
+        }
+        _outputPrefix = NO;
+        _outputCaller = YES;
+        _maxOutputLevel = 32;
+        _minOutputLevel = 0;
+        _outputPE = 0;
     }
     
     return self;

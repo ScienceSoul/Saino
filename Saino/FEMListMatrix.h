@@ -8,10 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FEMMesh.h"
-#import "FEMModel.h"
-#import "FEMSolution.h"
-#import "FEMMatrix.h"
+#import "Constructors.h"
 
 @interface FEMListMatrix : NSObject {
     

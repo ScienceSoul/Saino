@@ -7,6 +7,7 @@
 //
 
 #import "FEMMatrixCRS.h"
+#import "Utils.h"
 
 @interface FEMMatrixCRS ()
 

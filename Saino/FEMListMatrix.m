@@ -7,6 +7,7 @@
 //
 
 #import "FEMListMatrix.h"
+#import "Utils.h"
 
 @implementation FEMListMatrix
 

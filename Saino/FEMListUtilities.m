@@ -7,6 +7,12 @@
 //
 
 #import "FEMListUtilities.h"
+#import "FEMBodyForce.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMSimulation.h"
+#import "FEMEquation.h"
+#import "FEMUtilities.h"
+#import "Utils.h"
 
 @implementation FEMListUtilities
 

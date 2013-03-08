@@ -10,9 +10,6 @@
 
 #import "FEMModel.h"
 #import "FEMMesh.h"
-#import "FEMPElementMaps.h"
-#import "FEMElementDescription.h"
-#import "Constructors.h"
 
 @interface FEMInterpolation : NSObject
 

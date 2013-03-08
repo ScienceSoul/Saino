@@ -9,6 +9,11 @@
 #import "FEMMeshUtils.h"
 #import "Utils.h"
 #import "FEMElementUtils.h"
+#import "FEMListUtilities.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMPElementMaps.h"
+#import "FEMElementDescription.h"
+#import "FEMUtilities.h"
 
 static double AEPS = 10.0 * DBL_EPSILON;
 

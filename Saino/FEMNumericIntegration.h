@@ -10,7 +10,6 @@
 
 #import "FEMMesh.h"
 #import "GaussIntegration.h"
-#import "NodalBasisFunctions.h"
 
 @interface FEMNumericIntegration : NSObject {
 

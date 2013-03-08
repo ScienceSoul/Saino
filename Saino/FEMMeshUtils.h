@@ -9,12 +9,7 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMMesh.h"
-#import "FEMVariable.h"
-#import "FEMProjector.h"
-#import "FEMElementDescription.h"
-#import "FEMPElementMaps.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMListUtilities.h"
+#import "FEMSolution.h"
 
 @interface FEMMeshUtils : NSObject
 

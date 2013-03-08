@@ -6,11 +6,11 @@
 //  Copyright (c) 2012 Institute of Low Temperature Science. All rights reserved.
 //
 
-#import "FEMHUTIter.h"
-
-#import "FEMKernel.h"
-
 #import <Accelerate/Accelerate.h>
+
+#import "FEMHUTIter.h"
+#import "FEMKernel.h"
+#import "Utils.h"
 
 // Used in TFQRM solve. This is the magic ratio for upperb and tolerance used in upper bound convergence test
 static double UPPERB_TOL_RATIO  =  10.0;
@@ -989,7 +989,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
@@ -1285,7 +1285,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
@@ -1688,7 +1688,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
@@ -2350,7 +2350,7 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
@@ -2600,7 +2600,7 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
@@ -2887,7 +2887,7 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [[FEMKernel alloc] init];
+    kernel = [FEMKernel sharedKernel];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];

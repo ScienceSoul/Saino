@@ -7,8 +7,6 @@
 //
 
 #import "FEMValueList.h"
-
-#import "Constructors.h"
 #import "memory.h"
 
 @implementation FEMValueList
@@ -29,7 +27,7 @@
     if (self) {
         //TODO: Initialize here
         
-        _containers = (valueListArraysContainer*)malloc(sizeof(valueListArraysContainer) * 1 );
+        _containers = (valueListArraysContainer*)malloc(sizeof(valueListArraysContainer));
     }
     
     return self;

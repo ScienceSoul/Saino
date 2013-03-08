@@ -9,9 +9,6 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMMesh.h"
-#import "Constructors.h"
-#import "memory.h"
-#import "Utils.h"
 
 @interface FEMPElementMaps : NSObject
 

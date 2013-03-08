@@ -11,17 +11,6 @@
 #import "FEMModel.h"
 #import "FEMSolution.h"
 #import "FEMMesh.h"
-#import "FEMHUTIter.h"
-#import "FEMPrecondition.h"
-#import "FEMParallelMPI.h"
-#import "FEMTimeIntegration.h"
-#import "FEMMatrixCRS.h"
-#import "FEMMatrixBand.h"
-#import "FEMElementDescription.h"
-#import "FEMNumericIntegration.h"
-#import "FEMUtilities.h"
-
-#import "Constructors.h"
 
 @interface FEMKernel : NSObject {
     
@@ -38,6 +27,12 @@
     double **_boundaryNormals;
     double **_boundaryTangent1;
     double **_boundaryTangent2;
+    NSMutableArray *_outputLevelMask;
+    BOOL _outputPrefix;
+    BOOL _outputCaller;
+    int _maxOutputLevel;
+    int _minOutputLevel;
+    int _outputPE;
 }
 
 @property(nonatomic, assign) int coordinateSystemDimension;
@@ -53,6 +48,12 @@
 @property(nonatomic, assign) double **boundaryNormals;
 @property(nonatomic, assign) double **boundaryTangent1;
 @property(nonatomic, assign) double **boundaryTangent2;
+@property(nonatomic, strong) NSMutableArray *outputLevelMask;
+@property(nonatomic, assign, getter = isOutputPrefix) BOOL outputPrefix;
+@property(nonatomic, assign, getter = isOutputCaller) BOOL outputCaller;
+@property(nonatomic, assign) int maxOutputLevel;
+@property(nonatomic, assign) int minOutputLevel;
+@property(nonatomic, assign) int outputPE;
 
 // This class method retuns an instance (singleton) of FEMKernel
 +(id)sharedKernel;

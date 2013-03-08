@@ -12,10 +12,6 @@
 #import "FEMModel.h"
 #import "FEMSolution.h"
 #import "FEMMatrix.h"
-#import "FEMUtilities.h"
-#import "FEMListMatrix.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMBandwidthOptimize.h"
 
 @interface FEMElementUtils : NSObject
 

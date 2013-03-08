@@ -10,17 +10,8 @@
 
 #import "FEMModel.h"
 #import "FEMValueList.h"
-#import "FEMBodyForce.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMSimulation.h"
-#import "FEMEquation.h"
-#import "FEMUtilities.h"
-
-#import "Utils.h"
 
 @interface FEMListUtilities : NSObject
-
-
 
 -(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count;
 
@@ -48,6 +39,5 @@
 
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name;
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name;
-
 
 @end

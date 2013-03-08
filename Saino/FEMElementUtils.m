@@ -7,6 +7,14 @@
 //
 
 #import "FEMElementUtils.h"
+#import "FEMListUtilities.h"
+#import "FEMUtilities.h"
+#import "FEMListMatrix.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMBandwidthOptimize.h"
+#import "FEMMatrixCRS.h"
+#import "FEMMatrixBand.h"
+#import "Utils.h"
 
 @interface FEMElementUtils ()
 -(void)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh list:(ListMatrix_t *)list reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles;

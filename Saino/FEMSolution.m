@@ -7,6 +7,7 @@
 //
 
 #import "FEMSolution.h"
+#import "Utils.h"
 
 @interface FEMSolution ()
 

@@ -7,11 +7,18 @@
 //
 
 #import "FEMUtilities.h"
+#import "FEMKernel.h"
 #import "FEMEquation.h"
 #import "FEMPElementMaps.h"
 #import "FEMProjector.h"
 #import "FEMElementUtils.h"
 #import "FEMMeshUtils.h"
+#import "FEMMatrixCRS.h"
+#import "FEMMatrixBand.h"
+#import "FEMListUtilities.h"
+#import "FEMInterpolation.h"
+#import "FEMElementDescription.h"
+#import "Utils.h"
 
 @interface FEMUtilities ()
 -(void)FEMUtils_applyProjector:(NSMutableArray *)variables model:(FEMModel *)aModel fromMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh projector:(FEMProjector *)projector;
@@ -2311,8 +2318,9 @@
     double *sol;
     NSString *tmpName, *methodName;
     NSMutableString *varName, *str;
-    NSNumber *yesNumber;
+    NSNumber *aNumber;
     BOOL found, onlySearch, secondary, variableOutput, harmonicAnal, eigenAnal, complexFlag, multigridActive, mgAlgebraic;
+    FEMKernel *kernel;
     FEMVariable *var;
     FEMMesh *newMesh, *oldMesh;
     FEMMatrix *oldMatrix, *newMatrix, *saveMatrix;
@@ -2329,8 +2337,8 @@
     
     // If soft limiters are applied then also loads must be calculated
     if ([(solution.solutionInfo)[@"apply limiter"] boolValue] == YES) {
-        yesNumber = @YES;
-        [solution.solutionInfo setObject:yesNumber forKey:@"calculate loads"];
+        aNumber = @YES;
+        [solution.solutionInfo setObject:aNumber forKey:@"calculate loads"];
     }
     
     // Create the variable needed for this computation of nodal loads: r = b-Ax
@@ -2818,7 +2826,19 @@
         }
         
         // Set the default verbosity of the iterative solvers accordingly with the global verbosity
-        // TODO: implement this
+        if ((solution.solutionInfo)[@"linear system residual output"] == nil) {
+            kernel = [FEMKernel sharedKernel];
+            k = 1;
+            if ([kernel.outputLevelMask[4] boolValue] == NO) {
+                k = 0;
+            } else if ([kernel.outputLevelMask[5] boolValue] == NO) {
+                k = 10;
+            }
+            if (k != 1) {
+                aNumber = @(k);
+                [solution.solutionInfo setObject:aNumber forKey:@"linear system residual output"];
+            }
+        }
     }
 }
 

@@ -9,13 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <Accelerate/Accelerate.h>
 
-#import "FEMElementsDefinition.h"
-#import "FEMSolution.h"
-#import "FEMNumericIntegration.h"
-#import "FEMUtilities.h"
-
-#import "Constructors.h"
-#import "memory.h"
+#import "FEMMesh.h"
 
 @interface FEMElementDescription : NSObject {
     

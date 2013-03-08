@@ -7,10 +7,8 @@
 //
 
 #import "FEMNumericIntegration.h"
-
+#import "NodalBasisFunctions.h"
 #include "Utils.h"
-#include "memory.h"
-
 
 @implementation FEMNumericIntegration
 

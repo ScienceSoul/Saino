@@ -9,12 +9,7 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMSolution.h"
-
-#import "memory.h"
-#import "Constructors.h"
-#import "Utils.h"
 #import "TimeProfile.h"
-
 
 @interface FEMPrecondition : NSObject
 
