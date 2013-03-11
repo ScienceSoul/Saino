@@ -2634,8 +2634,7 @@ static int PRECOND_VANKA     =  560;
     return self;
 }
 
--(void)deallocation
-{
+-(void)deallocation {
     free_ivector(_indexStore, 0, 511);
     free_imatrix(_lineEM, 0, 0, 0, 1);
     free_imatrix(_triangleEM, 0, 2, 0, 1);
