@@ -660,4 +660,47 @@
     return matrix;
 }
 
+/*************************************************************************************************
+    Given the normal, return the tangent directions. The first tangent direction will always be on 
+    the xy-plane if also the normal is in the xy-plane.
+*************************************************************************************************/
+-(void)tangentDirectionsForNormal:(double *)normal tangent1:(double *)tangent1 tangent2:(double *)tangent2 {
+    
+    int i;
+    double n1, n2, n3, sum;
+    
+    n1 = fabs(normal[0]);
+    n2 = fabs(normal[1]);
+    n3 = fabs(normal[2]);
+    
+    if (n1 <= n3 && n2 <= n3) {
+        tangent1[0] = 0.0;
+        tangent1[1] = -normal[2];
+        tangent1[2] = normal[1];
+    } else {
+        tangent1[0] = -normal[1];
+        tangent1[1] = normal[0];
+        tangent1[2] = 0.0;
+    }
+    
+    sum = 0.0;
+    for (i=0; i<2; i++) {
+        sum = sum + pow(tangent1[i], 2.0);
+    }
+    for (i=0; i<2; i++) {
+        tangent1[i] = tangent1[i] / sqrt(sum);
+    }
+    
+    tangent2[0] = normal[1]*tangent1[2] - normal[2]*tangent1[1];
+    tangent2[1] = normal[2]*tangent1[0] - normal[0]*tangent1[2];
+    tangent2[2] = normal[0]*tangent1[1] - normal[1]*tangent1[0];
+    
+    sum = 0.0;
+    for (i=0; i<2; i++) {
+        sum = sum + pow(tangent2[i], 2.0);
+    }
+    for (i=0; i<2; i++) {
+        tangent2[i] = tangent2[i] / sqrt(sum);
+    }
+}
 @end

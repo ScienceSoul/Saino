@@ -2685,7 +2685,7 @@ static int PRECOND_VANKA     =  560;
     }
 }
 
--(void)getNodes:(FEMSolution *)solution inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int)nd {
+-(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd {
     
     int i, n, nb, sz, sz1;
     Nodes_t *globalNodes;
@@ -2694,12 +2694,22 @@ static int PRECOND_VANKA     =  560;
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
-    if (nd < n) {
-        errorfunct("getNodes", "Size of nodes structure smaller than the required max(maxElementNodes, maxElementDofs).");
+    if (nodes->x == NULL) {
+        nodes->x = doublevec(0, n-1);
+        nodes->y = doublevec(0, n-1);
+        nodes->z = doublevec(0, n-1);
+        nodes->numberOfNodes = n;
+    } else if (nd != NULL && *nd < n) {
+        free_dvector(nodes->x, 0, *nd-1);
+        free_dvector(nodes->y, 0, *nd-1);
+        free_dvector(nodes->z, 0, *nd-1);
+        nodes->x = doublevec(0, n-1);
+        nodes->y = doublevec(0, n-1);
+        nodes->z = doublevec(0, n-1);
+        nodes->numberOfNodes = n;
     }
     
     n = element->Type.NumberOfNodes;
-    
     for (i=0; i<n; i++) {
         nodes->x[i] = globalNodes->x[element->NodeIndexes[i]];
         nodes->y[i] = globalNodes->y[element->NodeIndexes[i]];
@@ -2718,7 +2728,7 @@ static int PRECOND_VANKA     =  560;
     sz1 = globalNodes->numberOfNodes;
     if (sz1 > solution.mesh.numberOfNodes) {
         memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-        nb = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+        nb = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
         for (i=n; i<nb; i++) {
             if (_indexStore[i] >= 0 && _indexStore[i] < sz1) {
                 nodes->x[i] = globalNodes->x[_indexStore[i]];
@@ -2736,12 +2746,19 @@ static int PRECOND_VANKA     =  560;
     return element->Type.ElementCode / 100;
 }
 
--(int)getElementDofs:(FEMSolution *)solution forElement:(Element_t *)element atIndexes:(int *)indexes {
+-(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes {
     
     int nb, i, j, k, bid, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
+    FEMSolution *solution;
     Element_t *parent, *edges = NULL, *faces = NULL;
     solutionArraysContainer *solContainers = NULL;
+    
+    if (uSolution != nil) {
+        solution = uSolution;
+    } else {
+        solution = model.solution;
+    }
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -2897,11 +2914,18 @@ static int PRECOND_VANKA     =  560;
     return nb;
 }
 
--(int)sgetElementDofs:(FEMSolution *)solution forElement:(Element_t *)element atIndexes:(int *)indexes {
+-(int)sgetElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes {
     
     int nb, i, j, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs;
     BOOL gb;
+    FEMSolution *solution;
     Element_t *parent, *edges = NULL, *faces = NULL;
+    
+    if (uSolution != nil) {
+        solution = uSolution;
+    } else {
+        solution = model.solution;
+    }
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -3237,7 +3261,7 @@ static int PRECOND_VANKA     =  560;
     return edgeMap;
 }
 
--(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution {
+-(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution model:(FEMModel *)model {
     
     BOOL l;
     int i, n;
@@ -3245,7 +3269,7 @@ static int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     perm = intvec(0, n-1);
@@ -3478,14 +3502,15 @@ static int PRECOND_VANKA     =  560;
     }
 }
 
--(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double)integral {
+-(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)uSolution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double *)integral {
     
     int i, j, n, jj, kk, t, size;
-    int **edgeMap;
+    int **edgeMap = NULL;
     double s, l, sum;
     double **vLoad, *g, *vl;
     listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    FEMSolution *solution;
     FEMElementDescription *elementDescription;
     FEMNumericIntegration *numericIntegration;
     ElementType_t savedType;
@@ -3493,6 +3518,12 @@ static int PRECOND_VANKA     =  560;
     Nodes_t *nodes, *pNodes;
     NSMutableString *string;
     BOOL stat;
+    
+    if (uSolution != nil) {
+        solution = uSolution;
+    } else {
+        solution = model.solution;
+    }
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
@@ -3513,8 +3544,8 @@ static int PRECOND_VANKA     =  560;
     pNodes->y = doublevec(0, n-1);
     pNodes->z = doublevec(0, n-1);
     
-    [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
-    [self getNodes:solution inElement:parent resultNodes:pNodes numberOfNodes:n];
+    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n];
+    [self getNodes:solution model:model inElement:parent resultNodes:pNodes numberOfNodes:&n];
     
     vLoad = doublematrix(0, 2, 0, np-1);
     for (i=0; i<3; i++) {
@@ -3611,7 +3642,7 @@ static int PRECOND_VANKA     =  560;
     savedType = element->Type;
     if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:solution.mesh stabilization:NULL];
     
-    integral = 0.0;
+    *integral = 0.0;
     integCompound = GaussQuadrature(element, NULL, NULL);
     for (t=0; t<integCompound->n; t++) {
         stat = [numericIntegration setMetricDeterminantForElement:element 
@@ -3640,17 +3671,15 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<3; i++) {
             sum = sum + vl[i] * g[i];
         }
-        integral = integral + s * (l+sum);
+        *integral = *integral + s * (l+sum);
     }
     element->Type = savedType;
     
     jj = parent->NodeIndexes[jj];
     kk = parent->NodeIndexes[kk];
     
-    if (kk < jj) integral = -integral;
-    
-    edgeMap = NULL;
-    
+    if (kk < jj) *integral = -*integral;
+        
     free_dvector(nodes->x, 0, n-1);
     free_dvector(nodes->y, 0, n-1);
     free_dvector(nodes->z, 0, n-1);
@@ -3717,7 +3746,7 @@ static int PRECOND_VANKA     =  560;
     nodes->y = doublevec(0, n-1);
     nodes->z = doublevec(0, n-1);
     
-    [self getNodes:solution inElement:element resultNodes:nodes numberOfNodes:n];
+    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n];
     integCompound = GaussQuadrature(element, NULL, NULL);
     
     memset( force, 0.0, (nd*sizeof(force)) );
@@ -3948,7 +3977,7 @@ static int PRECOND_VANKA     =  560;
                         indexes[i] = elements[t].NodeIndexes[i];
                     }
                 } else {
-                    n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                    n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                 }
                 
                 [self FEMKernel_setElementLoadsModel:model solution:solution element:&elements[t] values:boundaryConditionAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs];
@@ -3994,7 +4023,7 @@ static int PRECOND_VANKA     =  560;
                     indexes[i] = elements[t].NodeIndexes[i];
                 }
             } else {
-                n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
             }
             
             bodyForceAtId = (model.bodyForces)[bf_id];
@@ -4207,7 +4236,7 @@ static int PRECOND_VANKA     =  560;
                             indexes[i] = elements[t].NodeIndexes[i];
                         }
                     } else {
-                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                        n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
                     [self checkNormalTangential:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
@@ -4228,7 +4257,7 @@ static int PRECOND_VANKA     =  560;
                              indexes[i] = elements[t].NodeIndexes[i];
                          }
                      } else {
-                         n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                      }
                      [self checkNormalTangential:model inSolution:solution forElementNumber:t numberofNodes:n atIndexes:indexes atBoundary:bc variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                      bc++;
@@ -4276,7 +4305,7 @@ static int PRECOND_VANKA     =  560;
                             indexes[i] = elements[t].NodeIndexes[i];
                         }
                     } else {
-                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                        n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
                     [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                 }
@@ -4297,7 +4326,7 @@ static int PRECOND_VANKA     =  560;
                             indexes[i] = elements[t].NodeIndexes[i];
                         }
                     } else {
-                        n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                        n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
                     [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
                     bc++;
@@ -4345,7 +4374,7 @@ static int PRECOND_VANKA     =  560;
                     indexes[i] = elements[t].NodeIndexes[i];
                 }
             } else {
-                n = [self sgetElementDofs:solution forElement:&elements[t] atIndexes:indexes];
+                n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
             }
             bodyForceAtId = (model.bodyForces)[bf_id];
             [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
@@ -4819,7 +4848,7 @@ static int PRECOND_VANKA     =  560;
     
     dt = [solution dt];
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     perm = intvec(0, n-1);
@@ -4843,7 +4872,7 @@ static int PRECOND_VANKA     =  560;
     dt = [solution dt];
     dofs = solution.variable.dofs;
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -4903,7 +4932,7 @@ static int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
@@ -4971,7 +5000,7 @@ static int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, 0.0, (_sizeIndexStore*sizeof(_indexStore)) );
-    n = [self getElementDofs:solution forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
@@ -5138,7 +5167,7 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
             
             element = [self getBoundaryElement:solution atIndex:i];
-            if ([self isActiveElement:element inSolution:solution] == NO) continue;
+            if ([self isActiveElement:element inSolution:solution model:model] == NO) continue;
             
             // Get parent element
             parent = element->BoundaryInfo->Left;
@@ -5196,7 +5225,7 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
             
             element = [self getBoundaryElement:solution atIndex:i];
-            if ([self isActiveElement:element inSolution:solution] == NO) continue;
+            if ([self isActiveElement:element inSolution:solution model:model] == NO) continue;
             
             bc = [self getBoundaryCondition:model forElement:element];
             if (bc == nil) continue;
@@ -5234,9 +5263,9 @@ static int PRECOND_VANKA     =  560;
                             }
                             nb = parent->Type.NumberOfNodes;
                             n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
-                            [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
+                            [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:&_kernWork[0]];
                             
-                            n = [self getElementDofs:solution forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
+                            n = [self getElementDofsSolution:solution model:model forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
                             for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                 nb = varContainers->Perm[_g_Ind[k]];
                                 if (nb < 0) continue;
@@ -5267,9 +5296,9 @@ static int PRECOND_VANKA     =  560;
                             for (j=0; j<faces[parent->FaceIndexes[j]].Type.NumberOfEdges; j++) {
                                 nb = edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].Type.NumberOfNodes;
                                 n = parent->Type.NumberOfNodes;
-                                [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:_kernWork[0]];
+                                [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:&_kernWork[0]];
                                 
-                                n = [self getElementDofs:solution forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
+                                n = [self getElementDofsSolution:solution model:model forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
                                 for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                     nb = varContainers->Perm[_g_Ind[k]];
                                     if (nb < 0) continue;
@@ -5286,7 +5315,7 @@ static int PRECOND_VANKA     =  560;
                     }
                 } // end associated edges
             } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
-                n = [self getElementDofs:solution forElement:element atIndexes:_g_Ind];
+                n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_g_Ind];
                 for (k=0; k<n; k++) {
                     nb = varContainers->Perm[_g_Ind[k]];
                     if (nb < 0) continue;

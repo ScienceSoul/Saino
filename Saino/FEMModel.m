@@ -51,6 +51,7 @@
 @synthesize boundaryConditions = _boundaryConditions;
 @synthesize boundaries = _boundaries;
 @synthesize equations = _equations;
+@synthesize initialConditions = _initialConditions;
 @synthesize simulation = _simulation;
 @synthesize variables = _variables;
 

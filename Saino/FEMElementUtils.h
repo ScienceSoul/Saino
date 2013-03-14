@@ -16,5 +16,6 @@
 @interface FEMElementUtils : NSObject
 
 -(FEMMatrix *)createMatrixInModel:(FEMModel *)model forSolution:(FEMSolution *)solution mesh:(FEMMesh *)mesh dofs:(int)dofs permutation:(int *)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString *)equation discontinuousGalerkinSolution:(BOOL *)dgSolution globalBubbles:(BOOL *)gbBubbles;
+-(void)tangentDirectionsForNormal:(double *)normal tangent1:(double *)tangent1 tangent2:(double *)tangent2;
 
 @end

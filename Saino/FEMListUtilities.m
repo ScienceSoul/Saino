@@ -14,13 +14,16 @@
 #import "FEMUtilities.h"
 #import "Utils.h"
 
-@implementation FEMListUtilities
+@implementation FEMListUtilities {
+    
+    NSMutableString *_nameSpace;
+}
 
 - (id)init
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
+        _nameSpace = [NSMutableString stringWithString:@""];
     }
     
     return self;
@@ -110,14 +113,42 @@
     }
 }
 
+-(void)listSetNameSpace:(NSString *)str {
+    
+    if (str != nil) {
+        [_nameSpace setString:str];
+    }
+}
+
+-(BOOL)listGetNameSpace:(NSMutableString *)str {
+    
+    BOOL l;
+
+    if ([_nameSpace isEqual:@""] == YES) {
+        str = nil;
+        l = NO;
+    } else {
+        str = [NSMutableString stringWithString:_nameSpace];
+        l = YES;
+    }
+    
+    return l;
+}
+
 -(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
     NSString *s;
+    NSMutableString *strn;
     
     *found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             s = [NSString stringWithString:list.cValue];
             break;
             *found = YES;
@@ -132,14 +163,20 @@
     int i, j, k;
     double *buffer;
     double t[32];
-    FEMUtilities *util;
     BOOL found;
+    NSMutableString *strn;
+    FEMUtilities *util;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
                 
@@ -222,13 +259,19 @@
 
     int i, j, k, n1, n2;
     BOOL found;
+    NSMutableString *strn;
     listBuffer buffer;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
@@ -308,13 +351,20 @@
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f;
+    NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+
+    
     f = 0.0;
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             
             if ([list type] >= 8) {
@@ -358,12 +408,18 @@
 
     int i, j, n1, n2;
     BOOL found;
+    NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
@@ -398,12 +454,18 @@
     
     int i, n;
     BOOL found;
+    NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
                 warnfunct("listGetIntegerArray", "iValues not allocated in list:\n");
@@ -433,12 +495,18 @@
 -(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(int *)minv maxValue:(int *)maxv {
     
     int l;
+    NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             
             // TODO: implement the call of a user provided method if required
@@ -479,12 +547,18 @@
 -(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
     BOOL l;
+    NSMutableString *strn;
     
     *found = NO;
     l = NO;
     
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             l = list.isLvalue;
             break;
             *found = YES;
@@ -495,9 +569,16 @@
 }
 
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array {
+    
+     NSMutableString *strn;
+    
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
 
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES) {
+        if ([varName isEqualToString:[list name]] == YES || [strn isEqualToString:list.name] == YES) {
             return list;
         }
     }
@@ -506,9 +587,16 @@
 }
 
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array {
+    
+    NSMutableString *strn;
+    
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
 
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             return YES;
         }
     }
@@ -821,6 +909,28 @@
     return found;
 }
 
-
+/*****************************************************************************
+    Returns a real by its name if found in the array structure and in the 
+    active element
+*****************************************************************************/
+-(void)getReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName element:(Element_t *)element buffer:(listBuffer *)result info:(BOOL *)found {
+    
+    int n;
+    int *nodeIndexes = NULL;
+    int dNodes[1];
+    
+    if (element != nil) {
+        n = element->Type.NumberOfNodes;
+        nodeIndexes = element->NodeIndexes;
+    } else {
+        n = 1;
+        nodeIndexes = dNodes;
+        nodeIndexes[0] = 0;
+    }
+    
+    if (array != nil) {
+        [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes buffer:result minValue:NULL maxValue:NULL];
+    }
+}
 
 @end

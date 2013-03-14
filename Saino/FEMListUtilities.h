@@ -15,6 +15,8 @@
 
 -(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count;
 
+-(void)listSetNameSpace:(NSString *)str;
+-(BOOL)listGetNameSpace:(NSMutableString *)str;
 -(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found;
 -(BOOL)listGetReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result minValue:(double *)minv maxValue:(double *)maxv;
 -(BOOL)listGetRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result;
@@ -39,5 +41,7 @@
 
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name;
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name;
+
+-(void)getReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName element:(Element_t *)element buffer:(listBuffer *)result info:(BOOL *)found;
 
 @end

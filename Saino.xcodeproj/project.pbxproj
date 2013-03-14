@@ -47,6 +47,7 @@
 		73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */; };
 		73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB2151C483600B11665 /* FEMMatrixCRS.m */; };
 		73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB6151C73F000B11665 /* FEMMatrixBand.m */; };
+		738BC1A416F06EB800EDFA6B /* FEMInitialConditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */; };
 		7396D183157863F500626765 /* FEMLinearAlgebra.m in Sources */ = {isa = PBXBuildFile; fileRef = 7396D182157863F500626765 /* FEMLinearAlgebra.m */; };
 		739A5684157DE092003E549C /* FEMElementsDefinition.m in Sources */ = {isa = PBXBuildFile; fileRef = 739A5683157DE092003E549C /* FEMElementsDefinition.m */; };
 		73A06CC715919DC5009FC87E /* SIOModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 73A06CC615919DC5009FC87E /* SIOModelManager.m */; };
@@ -161,6 +162,8 @@
 		73882CB2151C483600B11665 /* FEMMatrixCRS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixCRS.m; sourceTree = "<group>"; };
 		73882CB5151C73F000B11665 /* FEMMatrixBand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixBand.h; sourceTree = "<group>"; };
 		73882CB6151C73F000B11665 /* FEMMatrixBand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixBand.m; sourceTree = "<group>"; };
+		738BC1A216F06EB800EDFA6B /* FEMInitialConditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInitialConditions.h; sourceTree = "<group>"; };
+		738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInitialConditions.m; sourceTree = "<group>"; };
 		7396D181157863F500626765 /* FEMLinearAlgebra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMLinearAlgebra.h; sourceTree = "<group>"; };
 		7396D182157863F500626765 /* FEMLinearAlgebra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMLinearAlgebra.m; sourceTree = "<group>"; };
 		739A5682157DE092003E549C /* FEMElementsDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementsDefinition.h; sourceTree = "<group>"; };
@@ -461,6 +464,8 @@
 				7372A5F715495CF400A1D6FB /* FEMSimulation.m */,
 				73F0090B15D90D57004B7DCE /* FEMEquation.h */,
 				73F0090C15D90D57004B7DCE /* FEMEquation.m */,
+				738BC1A216F06EB800EDFA6B /* FEMInitialConditions.h */,
+				738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */,
 				73702BEA15EC5E240056C80E /* FEMMeshUtils.h */,
 				73702BEB15EC5E240056C80E /* FEMMeshUtils.m */,
 				73206774168D7D9700BAE816 /* FEMElementUtils.h */,
@@ -631,6 +636,7 @@
 				7320677A169A6EA900BAE816 /* FEMListMatrix.m in Sources */,
 				7320677D169C00DF00BAE816 /* FEMBandwidthOptimize.m in Sources */,
 				73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */,
+				738BC1A416F06EB800EDFA6B /* FEMInitialConditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
