@@ -123,7 +123,9 @@
 @synthesize dt = _dt;
 @synthesize multigridSolution = _multigridSolution;
 @synthesize multigridEqualPlit = _multigridEqualPlit;
+@synthesize selector = _selector;
 @synthesize plugInPrincipalClassInstance = _plugInPrincipalClassInstance;
+@synthesize plugInName = _plugInName;
 @synthesize matrix = _matrix;
 @synthesize variable = _variable;
 @synthesize mesh = _mesh;
@@ -139,6 +141,7 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _selector = NULL;
         _plugInPrincipalClassInstance = nil;
         
         

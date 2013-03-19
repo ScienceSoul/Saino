@@ -560,7 +560,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     matContainers = solution.matrix.getContainers;
     
-    errorfunct("CRS_IncompleteLU", "ILU (Real). Starting factorization with order:", ilun);
+    errorfunct("CRSIncompleteLUInSolution", "ILU (Real). Starting factorization with order:", ilun);
     t = cputime();
     
     n = solution.matrix.numberOfRows;
@@ -622,9 +622,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
-    warnfunct("CRS_IncompleteLU", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRS_IncompleteLU", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRS_IncompleteLU", "ILU (Real), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
@@ -655,7 +655,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     matContainers = solution.matrix.getContainers;
     
-    errorfunct("CRS_IncompleteLU", "ILU (Complex), Starting factorization with order:", ilun);
+    errorfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Starting factorization with order:", ilun);
     t = cputime();
     
     n = solution.matrix.numberOfRows;
@@ -718,9 +718,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
-    warnfunct("CRS_IncompleteLU", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
-    warnfunct("CRS_IncompleteLU", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRS_IncompleteLU", "ILU (Complex), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
+    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
@@ -750,7 +750,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     matContainers = solution.matrix.getContainers;
     
-    warnfunct("CRS_ILUT", "Starting factorization:");
+    warnfunct("CRS_ICRSIlutInSolutionLUT", "Starting factorization:");
     t = cputime();
     
     n = solution.matrix.numberOfRows;
@@ -764,9 +764,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     [self FEMPrecondition_computeIlutInSolution:solution numberOfRows:n tolerance:tol];
     
-    warnfunct("CRS_ILUT", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRS_ILUT", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRS_ILUT", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSIlutInSolution", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSIlutInSolution", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSIlutInSolution", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
@@ -796,7 +796,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     matContainers = solution.matrix.getContainers;
     
-    warnfunct("CRS_ComplexILUT", "Starting factorization:");
+    warnfunct("CRSComplexIlutInSolution", "Starting factorization:");
     t = cputime();
     
     n = solution.matrix.numberOfRows / 2;
@@ -810,9 +810,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     [self FEMPrecondition_computeComplexIlutInSolution:solution numberOfRows:n tolerance:tol];
     
-    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
-    warnfunct("CRS_ComplexILUT", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
+    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }

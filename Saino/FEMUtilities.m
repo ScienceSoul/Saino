@@ -1770,8 +1770,7 @@
     isCoupledSolution = (solution.solutionMode == SOLUTION_MODE_COUPLED) ? YES : NO;
     isBlockSolution = (solution.solutionMode == SOLUTION_MODE_BLOCK) ? YES : NO;
     isAssemblySolution = (solution.solutionMode == SOLUTION_MODE_ASSEMBLY) ? YES : NO;
-    isAssemblySolution = (isAssemblySolution == YES || (isCoupledSolution == YES && solution.plugInPrincipalClassInstance == nil) ||
-                          (isBlockSolution == YES && solution.plugInPrincipalClassInstance == nil)) ? YES : NO;
+    isAssemblySolution = (isAssemblySolution == YES || (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL)) || (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL))) ? YES : NO;
     
     // Default order of equation
     solution.order = 1;
@@ -1877,8 +1876,16 @@
         }
     }
     
-    // TODO: This is here where we should load the solution plug-in (if present) and
-    // create an instance of the plug-in principal class
+    // We allocate memory for the string to hold the name of the plug-in only if we find that we are
+    // using a plug-in when we parse the MDF. So if we get nil, we are not using a plug-in.
+    if (solution.plugInName != nil) {
+        // TODO: This is here where we should load the solution plug-in by its name (if present) and
+        // create an instance of the plug-in principal class. We should also check here if
+        // the plug-in class conforms to the protocol for solving equations.
+
+    } else { // We are woking with a built-in solution computer
+        solution.selector = @selector(fieldSolutionComputer::::);
+    }
     
     //Initialize and get the variable
     solution.timeOrder = 0;
@@ -1888,9 +1895,9 @@
         //Variable does not exist
         variable = [[FEMVariable alloc] init];
         solution.variable = variable;
-    } else if (isCoupledSolution == YES && solution.plugInPrincipalClassInstance == nil) {
+    } else if (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL)) {
         
-    } else if (isBlockSolution == YES && solution.plugInPrincipalClassInstance == nil) {
+    } else if (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL)) {
         
     } else {
         varName = (solution.solutionInfo)[@"variable"];

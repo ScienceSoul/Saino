@@ -139,7 +139,7 @@ typedef struct {
 typedef struct {
     
     Factors_t *GebhardtFactors;
-    int Constraint;            // Initialize it to 0 somewhere!!
+    int Constraint;            // Initialize it to 0 somewhere!! (Index counted from 1 to n)
     int Outbody;               // Initialize to -1 somewhere!!
     struct Element_t *Left;    // Initialize to NULL somewhere!!
     struct Element_t *Right;   // Initialize to NULL somewhere!!
@@ -296,6 +296,7 @@ typedef struct solutionArraysContainer {
     int *activeElements;
     int **ntElement;
     int **defDofs;
+    int sizeActiveElements;
     int size1DefDofs;
     int size2DefDofs;
     

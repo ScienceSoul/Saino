@@ -87,6 +87,8 @@
 -(void)matrixVectorMultplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
 -(void)matrixVectorMultplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v;
 -(void)invalidateVariableInTopMesh:(NSArray *)topMesh primaryMesh:(FEMMesh *)primaryMesh name:(NSString *)name model:(FEMModel *)model;
+-(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel *)model mesh:(FEMMesh *)mesh solution:(FEMSolution *)solution;
+-(void)computeNodalWeightsInSolution:(FEMSolution *)solution model:(FEMModel *)model weightBoundary:(BOOL)weightBoundary perm:(int *)perm sizePerm:(int *)sizePerm variableName:(NSString *)variableName;
 
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols;
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols;
@@ -99,5 +101,7 @@
 -(void)iterativeSolve:(FEMSolution *)solution;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel;
 -(double)stopc:(FEMSolution *)solution multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar;
+
+-(void)activateSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
 
 @end

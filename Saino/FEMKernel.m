@@ -25,7 +25,13 @@
 #import "FEMMatrixBand.h"
 #import "FEMElementDescription.h"
 #import "FEMNumericIntegration.h"
+#import "FEMMeshUtils.h"
 #import "GaussIntegration.h"
+#import "FEMFlowSolution.h"
+#import "FEMMagneticInductionSolution.h"
+#import "FEMStressAnalysisSolution.h"
+#import "FEMMeshUpdateSolution.h"
+#import "FEMHeatSolution.h"
 #import "Utils.h"
 
 static int ITER_BICGSTAB     =  320;
@@ -93,6 +99,9 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel;
 -(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution;
 
+// Single solution
+-(void)FEMKernel_singleSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
+
 @end
 
 @implementation FEMKernel {
@@ -116,6 +125,8 @@ static int PRECOND_VANKA     =  560;
     int **_brickEM;
     
     BOOL _initialized[8];
+    
+    id <SainoFieldSolutionsComputing> _instance;
 }
 
 #pragma mark Private methods...
@@ -127,7 +138,7 @@ static int PRECOND_VANKA     =  560;
     FEMHUTIter *hutisolver;
     
     if (pcondrMethod == 0) {
-        pcondrMethod = @selector(CRS_pcond_dummy::::);
+        pcondrMethod = @selector(CRSPCondDummyInSolution::::);
     }
     
     hutisolver = [[FEMHUTIter alloc] init];
@@ -2555,6 +2566,144 @@ static int PRECOND_VANKA     =  560;
     matContainers->DiagScaling = NULL;
 }
 
+/*************************************************************************************************************************
+    This executes the original line of solutions (legacy solutions) where each solution includes looping over elements
+    and the convergence control. From generality point of view, this misses some opportunities to have control of the
+    nonlinear system.
+**************************************************************************************************************************/
+-(void)FEMKernel_singleSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient {
+    
+    int i, maxDim;
+    BOOL meActive;
+    NSString *equationName;
+    NSNumber *aNumber;
+    FEMUtilities *utilities;
+    solutionArraysContainer *solContainers = NULL;
+    Element_t *elements = NULL;
+    NSMethodSignature *solutionSelectorSignature;
+    NSInvocation *solutionSelectorInvocation;
+    
+    if (solution.mesh.changed == YES || solution.numberOfActiveElements <= 0) {
+        solution.numberOfActiveElements = 0;
+        if ((solution.solutionInfo)[@"equation"] != nil) {
+            equationName = (solution.solutionInfo)[@"equation"];
+            solContainers = solution.getContainers;
+            if (solContainers->activeElements != NULL) free_ivector(solContainers->activeElements, 0, solContainers->sizeActiveElements-1);
+            solContainers->activeElements = intvec(0, (solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements)-1);
+            solContainers->sizeActiveElements = solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements;
+            
+            utilities = [[FEMUtilities alloc] init];
+            elements = solution.mesh.getElements;
+            maxDim = 0;
+            for (i=0; i<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; i++) {
+                if ([utilities checkEquationForElement:&elements[i] model:model equation:equationName] == YES) {
+                    solContainers->activeElements[solution.numberOfActiveElements] = i;
+                    maxDim = max(elements[i].Type.dimension, maxDim);
+                    solution.numberOfActiveElements++;
+                }
+            }
+            aNumber = @(maxDim);
+            [solution.solutionInfo setObject:aNumber forKey:@"active mesh dimension"];
+            
+            if ([(solution.solutionInfo)[@"calculate weights"] boolValue] == YES) {
+                [self computeNodalWeightsInSolution:solution model:model weightBoundary:NO perm:NULL sizePerm:NULL variableName:nil];
+            }
+            if ([(solution.solutionInfo)[@"calculate boundary weights"] boolValue] == YES) {
+                [self computeNodalWeightsInSolution:solution model:model weightBoundary:YES perm:NULL sizePerm:NULL variableName:nil];
+            }
+        }
+    }
+    
+    meActive = (solution.matrix != nil) ? YES : NO;
+    if (meActive == YES) meActive = (meActive == YES && (solution.matrix.numberOfRows > 0)) ? YES : NO;
+    // TODO: add support for parallel run
+    
+    if (solution.matrix != nil) {
+        // TODO: add support for parallel run
+    }
+    
+    if (solution.selector != NULL) {
+        if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            // Acquire signature invocations and set selector for invocations
+            solutionSelectorSignature = [FEMFlowSolution instanceMethodSignatureForSelector:solution.selector];
+            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
+            [solutionSelectorInvocation setSelector:solution.selector];
+            
+            FEMFlowSolution *flowSolution;
+            [solutionSelectorInvocation setTarget:flowSolution];
+            [solutionSelectorInvocation setArgument:&solution atIndex:2];
+            [solutionSelectorInvocation setArgument:&model atIndex:3];
+            [solutionSelectorInvocation setArgument:&dt atIndex:4];
+            [solutionSelectorInvocation setArgument:&transient atIndex:5];
+            [solutionSelectorInvocation invoke];
+            
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
+            solutionSelectorSignature = [FEMMagneticInductionSolution instanceMethodSignatureForSelector:solution.selector];
+            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
+            [solutionSelectorInvocation setSelector:solution.selector];
+            
+            FEMMagneticInductionSolution *magneticInductionSolution;
+            [solutionSelectorInvocation setTarget:magneticInductionSolution];
+            [solutionSelectorInvocation setArgument:&solution atIndex:2];
+            [solutionSelectorInvocation setArgument:&model atIndex:3];
+            [solutionSelectorInvocation setArgument:&dt atIndex:4];
+            [solutionSelectorInvocation setArgument:&transient atIndex:5];
+            [solutionSelectorInvocation invoke];
+
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
+            solutionSelectorSignature = [FEMStressAnalysisSolution instanceMethodSignatureForSelector:solution.selector];
+            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
+            [solutionSelectorInvocation setSelector:solution.selector];
+            
+            FEMStressAnalysisSolution *stressAnalysisSolution;
+            [solutionSelectorInvocation setTarget:stressAnalysisSolution];
+            [solutionSelectorInvocation setArgument:&solution atIndex:2];
+            [solutionSelectorInvocation setArgument:&model atIndex:3];
+            [solutionSelectorInvocation setArgument:&dt atIndex:4];
+            [solutionSelectorInvocation setArgument:&transient atIndex:5];
+            [solutionSelectorInvocation invoke];
+            
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
+            solutionSelectorSignature = [FEMMeshUpdateSolution instanceMethodSignatureForSelector:solution.selector];
+            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
+            [solutionSelectorInvocation setSelector:solution.selector];
+            
+            FEMMeshUpdateSolution *meshUpdateSolution;
+            [solutionSelectorInvocation setTarget:meshUpdateSolution];
+            [solutionSelectorInvocation setArgument:&solution atIndex:2];
+            [solutionSelectorInvocation setArgument:&model atIndex:3];
+            [solutionSelectorInvocation setArgument:&dt atIndex:4];
+            [solutionSelectorInvocation setArgument:&transient atIndex:5];
+            [solutionSelectorInvocation invoke];
+
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
+            solutionSelectorSignature = [FEMHeatSolution instanceMethodSignatureForSelector:solution.selector];
+            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
+            [solutionSelectorInvocation setSelector:solution.selector];
+            
+            FEMHeatSolution *heatSolution;
+            [solutionSelectorInvocation setTarget:heatSolution];
+            [solutionSelectorInvocation setArgument:&solution atIndex:2];
+            [solutionSelectorInvocation setArgument:&model atIndex:3];
+            [solutionSelectorInvocation setArgument:&dt atIndex:4];
+            [solutionSelectorInvocation setArgument:&transient atIndex:5];
+            [solutionSelectorInvocation invoke];
+
+        } else {
+            NSLog(@"FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
+            errorfunct("FEMKernel_singleSolution", "Program terminating now...");
+        }
+
+    } else if (solution.plugInPrincipalClassInstance != nil) {
+        _instance = solution.plugInPrincipalClassInstance;
+        [_instance fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        
+    } else {
+        NSLog(@"FEMKernel_singleSolution: can't proceed further because there is no selector or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
+        errorfunct("FEMKernel_singleSolution", "Program terminating now...");
+    }
+}
+
 #pragma mark Public methods...
 
 @synthesize coordinateSystemDimension = _coordinateSystemDimension;
@@ -4837,6 +4986,205 @@ static int PRECOND_VANKA     =  560;
     }
 }
 
+-(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel *)model mesh:(FEMMesh *)mesh solution:(FEMSolution *)solution {
+    
+    int i, n, cnt, ind, sz;
+    int *arr;
+    BOOL findEdges, L1, L2;
+    FEMMeshUtils *meshUtils;
+    Element_t *faces = NULL, *tElements = NULL, *meshElements = NULL, *modelElements = NULL;
+    
+    meshUtils = [[FEMMeshUtils alloc] init];
+    
+    findEdges = NO;
+    [meshUtils findEdgesForMesh:mesh findEdges:NO];
+    switch (mesh.dimension) {
+        case 2:
+            faces = mesh.getEdges;
+            n = mesh.numberOfEdges;
+            break;
+        case 3:
+            faces = mesh.getFaces;
+            n = mesh.numberOfFaces;
+    }
+    
+    arr = intvec(0, n-1);
+    cnt = 0;
+    for (i=0; i<n; i++) {
+        if (faces[i].BoundaryInfo->Right == NULL || faces[i].BoundaryInfo->Left == NULL) continue;
+        
+        L1 = [self FEMKernel_checkPassiveElement:faces[i].BoundaryInfo->Right model:model solution:solution];
+        L2 = [self FEMKernel_checkPassiveElement:faces[i].BoundaryInfo->Left model:model solution:solution];
+        
+        if (L1 ^ L2) {
+            arr[cnt] = i;
+            cnt++;
+        }
+    }
+    
+    sz = mesh.numberOfBulkElements + mesh.numberOfBoundaryElements - mesh.numberOfPassiveBCs;
+    if ((sz+cnt) > mesh.numberOfElements) {
+        tElements = mesh.getElements;
+        meshElements = mesh.getElements;
+        meshElements = (Element_t*) malloc( sizeof(Element_t) * (sz+cnt) );
+        modelElements = model.getElements;
+        if (modelElements == tElements) modelElements = meshElements;
+        
+        for (i=0; i<sz; i++) {
+            meshElements[i] = tElements[i];
+        }
+        
+        // Fix boundary element parent pointers to use new array...
+        for (i=0; i<mesh.numberOfBoundaryElements-mesh.numberOfPassiveBCs; i++) {
+            ind = i + mesh.numberOfBulkElements;
+            if (meshElements[ind].BoundaryInfo->Left != NULL) meshElements[ind].BoundaryInfo->Left = &meshElements[meshElements[ind].BoundaryInfo->Left->ElementIndex-1];
+            if (meshElements[ind].BoundaryInfo->Right != NULL) meshElements[ind].BoundaryInfo->Right = &meshElements[meshElements[ind].BoundaryInfo->Right->ElementIndex-1];
+        }
+        
+        //... likewise for faces (edges)
+        for (i=0; i<n; i++) {
+            if (faces[i].BoundaryInfo->Left != NULL) faces[i].BoundaryInfo->Left = &meshElements[faces[i].BoundaryInfo->Left->ElementIndex-1];
+            if (faces[i].BoundaryInfo->Right != NULL) faces[i].BoundaryInfo->Right = &meshElements[faces[i].BoundaryInfo->Right->ElementIndex-1];
+        }
+        
+        free(tElements);
+    }
+    
+    for (i=0; i<cnt; i++) {
+        meshElements[sz] = faces[arr[i]];
+        meshElements[sz].copy = true;
+        meshElements[sz].ElementIndex = sz+1;
+        meshElements[sz].BoundaryInfo->Constraint = bcID;
+        sz++;
+    }
+    mesh.numberOfBoundaryElements = mesh.numberOfBoundaryElements - mesh.numberOfPassiveBCs + cnt;
+    mesh.numberOfPassiveBCs = cnt;
+    if (modelElements == meshElements) model.numberOfBoundaryElements = mesh.numberOfBoundaryElements;
+    free_ivector(arr, 0, n-1);
+}
+
+-(void)computeNodalWeightsInSolution:(FEMSolution *)solution model:(FEMModel *)model weightBoundary:(BOOL)weightBoundary perm:(int *)perm sizePerm:(int *)sizePerm variableName:(NSString *)variableName{
+    
+    int i, e, m, n, t, elemStart, elemEnd, sizeIntPerm;
+    int *intPerm = NULL, *localIndexes;
+    double detJ;
+    double *sol = NULL;
+    BOOL found;
+    Nodes_t *elementNodes, *nodes = NULL;
+    NSMutableString *intVarName;
+    FEMVariable *weightsVar = nil;
+    FEMUtilities *utilities;
+    FEMNumericIntegration *integration;
+    Element_t *elements = NULL;
+    GaussIntegrationPoints *IP;
+    variableArraysContainer *variableContainers = NULL, *weightsVarContainers = NULL, *bufferContainers = NULL;
+    
+    if (variableName != nil) {
+        intVarName = (NSMutableString *)variableName;
+    } else if (weightBoundary == YES) {
+        intVarName = [NSMutableString stringWithString:solution.variable.name];
+        [intVarName appendString:@" boundary weights"];
+    } else {
+        intVarName = [NSMutableString stringWithString:solution.variable.name];
+        [intVarName appendString:@" weights"];
+    }
+    utilities = [[FEMUtilities alloc] init];
+    weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
+    
+    if (weightBoundary == YES) {
+        elemStart = solution.mesh.numberOfBulkElements;
+        elemEnd = solution.mesh.numberOfBulkElements + solution.mesh.numberOfBoundaryElements;
+    } else {
+        elemStart = 0;
+        elemEnd = solution.mesh.numberOfBulkElements;
+    }
+    
+    if (weightsVar == nil) {
+        if (perm != NULL) {
+            intPerm = perm;
+            sizeIntPerm = *sizePerm;
+        } else {
+            variableContainers = solution.variable.getContainers;
+            intPerm = variableContainers->Perm;
+            sizeIntPerm = variableContainers->sizePerm;
+        }
+        if (intPerm != NULL) {
+            n = max_array(intPerm, sizeIntPerm);
+            sol = doublevec(0, n-1);
+            memset( sol, 0.0, (n*sizeof(sol)) );
+            bufferContainers = allocateVariableContainer();
+            bufferContainers->Values = sol;
+            bufferContainers->sizeValues = n;
+            bufferContainers->Perm = intPerm;
+            bufferContainers->sizePerm = sizeIntPerm;
+            [utilities addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:intVarName dofs:1 container:bufferContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+            sol = NULL;
+            free(bufferContainers);
+        } else {
+            warnfunct("computeNodalWeightsInSolution", "Permutation vector not present!");
+            return;
+        }
+        weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
+    }
+    
+    weightsVarContainers = weightsVar.getContainers;
+    if (weightsVarContainers->Values == NULL) {
+        warnfunct("computeNodalWeightsInSolution", "Solution vector nor present!");
+        return;
+    }
+    
+    NSLog(@"computeNodalWeightsInSolution: computing weights for solution to variable %@\n", intVarName);
+    m = solution.mesh.maxElementNodes;
+    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(elementNodes);
+    elementNodes->x = doublevec(0, m-1);
+    elementNodes->y = doublevec(0, m-1);
+    elementNodes->z = doublevec(0, m-1);
+    localIndexes = intvec(0, m-1);
+    memset( weightsVarContainers->Values, 0.0, (weightsVarContainers->sizeValues*sizeof(weightsVarContainers->Values)) );
+    
+    integration = [[FEMNumericIntegration alloc] init];
+    if ([integration allocation:solution.mesh] == NO) errorfunct("computeNodalWeightsInSolution", "Allocation error in computeNodalWeightsInSolution!");
+    
+    elements = solution.mesh.getElements;
+    nodes = solution.mesh.getNodes;
+    for (e=elemStart; e<elemEnd; e++) {
+        n = elements[e].Type.NumberOfNodes;
+        for (i=0; i<n; i++) {
+            localIndexes[i] = weightsVarContainers->Perm[elements[e].NodeIndexes[i]];
+        }
+        if (any(localIndexes, '=', 0, n)) continue;
+        
+        n = elements[e].Type.NumberOfNodes;
+        for (i=0; i<n; i++) {
+            elementNodes->x[i] = nodes->x[elements[e].NodeIndexes[i]];
+            elementNodes->y[i] = nodes->y[elements[e].NodeIndexes[i]];
+            elementNodes->z[i] = nodes->z[elements[e].NodeIndexes[i]];
+        }
+        
+        IP = GaussQuadrature(&elements[e], NULL, NULL);
+        for (t=0; t<IP->n; t++) {
+            // Basis function values & derivatives at the integration point
+            [integration setBasisForElement:&elements[e] elementNodes:elementNodes  inMesh:solution.mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t] withBubbles:NO basisDegree:NULL];
+            [integration setMetricDeterminantForElement:&elements[e] elementNodes:elementNodes inMesh:solution.mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t]];
+            
+            detJ = integration.metricDeterminant;
+            
+            for (i=0; i<n; i++) {
+                weightsVarContainers->Values[localIndexes[i]] = weightsVarContainers->Values[localIndexes[i]] + IP->s[t] * detJ * integration.basis[i];
+            }
+        }
+    }
+    
+    free_dvector( elementNodes->x, 0, m-1);
+    free_dvector( elementNodes->y, 0, m-1);
+    free_dvector( elementNodes->z, 0, m-1);
+    free(elementNodes);
+    free_ivector(localIndexes, 0, m-1);
+    
+    NSLog(@"computeNodalWeightsInSolution: all done");
+}
+
 #pragma mark First order time
 
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols { // rows and cols for stiff matrix
@@ -5719,28 +6067,28 @@ static int PRECOND_VANKA     =  560;
     
     // Get the selector for the matrix-vector multiplication method we want to use
     if (solution.matrix.isComplexMatrix == YES) {
-        mvSelector = @selector(CRS_ComplexMatrixVectorProd::::);
+        mvSelector = @selector(CRSComplexMatrixVectorProdInSolution::::);
     } else {
-        mvSelector= @selector(CRS_MatrixVectorProd::::);
+        mvSelector= @selector(CRSMatrixVectorProdInSolution::::);
     }
     
     // Get the selector for the preconditioning method we want to use
     if (pCondType == PRECOND_NONE) {
         
-        pcondSelector = @selector(CRS_pcond_dummy::::);
+        pcondSelector = @selector(CRSPCondDummyInSolution::::);
     }
     else if (pCondType == PRECOND_DIAGONAL) {
         if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRS_ComplexDiagPrecondition::::);
+            pcondSelector = @selector(CRSComplexDiagPreconditionInSolution::::);
         } else {
-            pcondSelector = @selector(CRS_DiagPrecondition::::);
+            pcondSelector = @selector(CRSDiagPreconditionInSolution::::);
         }
     }
     else if (pCondType == PRECOND_ILUN == pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
         if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRS_ComplexLUPrecondition::::);
+            pcondSelector = @selector(CRSComplexLuPreconditionInSolution::::);
         } else {
-            pcondSelector = @selector(CRS_LUPrecondition::::);
+            pcondSelector = @selector(CRSLuPreconditionInSolution::::);
         }
     }
     
@@ -5836,6 +6184,146 @@ static int PRECOND_VANKA     =  560;
     free_dvector(res, 0, ipar[2]-1);
     
     return err;
+}
+
+/********************************************************************************************************
+    Runs a solution as defined in the MDF. There are several ways on how to skeep the execution.
+    There are also three different ways how the metrices may be assembled and solved: standard (single),
+    coupled amd block.
+*********************************************************************************************************/
+-(void)activateSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient {
+    
+    int j, timei, timestep, passiveBCId;
+    double st, dtScale = 1.0;
+    double tCond;
+    BOOL found, timing, timeDerivativeActive, isPassiveBC;
+    NSString *str;
+    listBuffer execIntervals = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    FEMVariable *timeVar = nil, *iterV = nil;
+    FEMListUtilities *listUtilities;
+    FEMMeshUtils *meshUtils;
+    FEMUtilities *utilities;
+    variableArraysContainer *timeVarContainers = NULL, *iterVContainers = NULL;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    meshUtils = [[FEMMeshUtils alloc] init];
+    utilities = [[FEMUtilities alloc] init];
+    
+    [meshUtils setCurrentMesh:solution.mesh inModel:model];
+    model.solution = solution;
+    
+    // The solution be be skipped by giving the start time, or stop time, or
+    // the active execution intervals
+    if ((solution.solutionInfo)[@"start time"] != nil) {
+        st = [(solution.solutionInfo)[@"start time"] doubleValue];
+        timeVar = [utilities getVariableFrom:model.variables model:model name:@"time" onlySearch:NULL maskName:NULL info:&found];
+        timeVarContainers = timeVar.getContainers;
+        if (timeVarContainers->Values[0] < st) return;
+    }
+    
+    if ((solution.solutionInfo)[@"stop time"] != nil) {
+        st = [(solution.solutionInfo)[@"stop time"] doubleValue];
+        timeVar = [utilities getVariableFrom:model.variables model:model name:@"time" onlySearch:NULL maskName:NULL info:&found];
+        timeVarContainers = timeVar.getContainers;
+        if (timeVarContainers->Values[0] > st) return;
+    }
+    
+    found = [listUtilities listGetIntegerArray:model inArray:solution.valuesList forVariable:@"exec intervals" buffer:&execIntervals];
+    if (found == NO) {
+        found = [listUtilities listGetIntegerArray:model inArray:solution.valuesList forVariable:@"exec interval" buffer:&execIntervals];
+    }
+    if (found == YES) {
+        timeVar = [utilities getVariableFrom:model.variables model:model name:@"time step interval" onlySearch:NULL maskName:NULL info:&found];
+        timeVarContainers = timeVar.getContainers;
+        timei = round(timeVarContainers->Values[0]);
+        
+        timeVar = [utilities getVariableFrom:model.variables model:model name:@"time step" onlySearch:NULL maskName:NULL info:&found];
+        timeVarContainers = timeVar.getContainers;
+        timestep = round(timeVarContainers->Values[0]);
+        
+        if ((timestep-1 % execIntervals.ivector[timei]) != 0) return;
+        
+        free_ivector(execIntervals.ivector, 0, execIntervals.m-1);
+    }
+    
+    // If solver timing is requested start the profiling
+    timing = NO;
+    if ((solution.solutionInfo)[@"solution timing"] != nil) {
+        timing = [(solution.solutionInfo)[@"solution timing"] boolValue];
+    }
+    if (timing == YES) {
+        //TODO: implement this...
+    }
+    
+    solution.mesh.outputActive = YES;
+    timeDerivativeActive = transient;
+    
+    // This is to avoid resetting of certain info that could be interesting when
+    // saving data, i.e., using an auxiliary solution
+    if ((solution.solutionInfo)[@"auxiliary solution"] != nil) {
+        if ([(solution.solutionInfo)[@"auxiliary solution"] boolValue] == NO) {
+            if ((solution.solutionInfo)[@"time step scale"] != nil) {
+                dtScale = [(solution.solutionInfo)[@"time step scale"] doubleValue];
+            }
+            solution.dt = dtScale * dt;
+            
+            if (transient == YES) {
+                if ((solution.solutionInfo)[@"time derivative active"] != nil) {
+                    timeDerivativeActive = [(solution.solutionInfo)[@"time derivative active"] boolValue];
+                } else {
+                    timeDerivativeActive = YES;
+                    if ((solution.solutionInfo)[@"time derivative condition"] != nil) {
+                        tCond = [(solution.solutionInfo)[@"time derivative condition"] doubleValue];
+                        timeDerivativeActive = (timeDerivativeActive == YES && tCond > 0) ? YES : NO;
+                    }
+                }
+            }
+            
+            iterV = [utilities getVariableFrom:solution.mesh.variables model:model name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&found];
+            iterVContainers = iterV.getContainers;
+            iterVContainers->Values[0] = 1;
+            
+            if ((solution.solutionInfo)[@"namespace"] != nil) {
+                str = (solution.solutionInfo)[@"namespace"];
+                [listUtilities listSetNameSpace:str];
+            }
+        }
+    }
+    
+    // Check for passive-active boundaries
+    passiveBCId = 0;
+    isPassiveBC = NO;
+    j = 1;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        isPassiveBC = [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"passive target" info:&found];
+        if (passiveBCId == YES) {
+            passiveBCId = j;
+            break;
+        }
+        j++;
+    }
+    if (isPassiveBC == YES) {
+        [self getPassiveBoundaryAtIndex:passiveBCId model:model mesh:model.mesh solution:solution];
+        NSLog(@"Passive element BC no. %d assigned to BC-ID no. %d\n", j, passiveBCId);
+    }
+    
+    // Get the correct type of solution: standard (single), coupled ot block
+    // This is where everything really happens!
+    if (solution.solutionMode == SOLUTION_MODE_COUPLED || solution.solutionMode == SOLUTION_MODE_ASSEMBLY ) {
+        // TODO:...
+    } else if (solution.solutionMode == SOLUTION_MODE_BLOCK) {
+        // TODO:...
+    } else {
+        [self FEMKernel_singleSolution:solution model:model timeStep:dtScale*dt transientSimulation:timeDerivativeActive];
+    }
+    
+    [listUtilities listSetNameSpace:@""];
+    solution.dt = dt;
+    
+    // After solution register the timing if requested
+    if (timing == YES) {
+        // TODO: implement this...
+    }
 }
 
 

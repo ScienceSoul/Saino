@@ -24,6 +24,7 @@
 -(void)FEMJob_setInitialConditionsModel:(FEMModel *)model;
 -(void)FEMJob_initCondModel:(FEMModel *)model;
 -(void)FEMJob_restartModel:(FEMModel *)model;
+-(void)FEMJob_runModel:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning;
 @end
 
 @implementation FEMJob {
@@ -54,7 +55,7 @@
 #pragma mark Private methods
 
 /***********************************
-    Add flags for active sokutions
+    Add flags for active solutions
 ***********************************/
 -(void)FEMJob_addSolutionsModel:(FEMModel *)model {
     
@@ -107,14 +108,14 @@
             }
         }
         
-        if (solution.plugInPrincipalClassInstance == nil || initSolution == YES) {
+        if (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL || initSolution == YES) {
             //TODO: Make sure that this is alsways correct. Here if the solution has no mesh
             // we assigned it to the first mesh listed in model.meshes
             if (solution.mesh == nil) solution.mesh = model.meshes[0];
+            model.solution = solution;
+            [utilities addEquationBasicsToSolution:solution name:eq model:model transient:_transient];
+            [utilities addEquationToSolution:solution model:model transient:_transient];
         }
-        model.solution = solution;
-        [utilities addEquationBasicsToSolution:solution name:eq model:model transient:_transient];
-        [utilities addEquationToSolution:solution model:model transient:_transient];
     }
 }
 
@@ -587,6 +588,13 @@
     free_dvector(t2, 0, 2);
     free_dvector(vec, 0, 2);
     free_dvector(tmp, 0, 2);
+}
+
+-(void)FEMJob_runModel:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning{
+    
+    for (FEMSolution *solution in model.solutions) {
+        
+    }
 }
 
 #pragma mark Public methods

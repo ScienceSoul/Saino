@@ -16,7 +16,8 @@
 @interface FEMMesh : NSObject {
   
     int _dimension;
-    int _numberOfNodes; 
+    int _numberOfNodes;
+    int _numberOfElements;
     int _numberOfBulkElements; 
     int _numberOfEdges; 
     int _numberOfFaces;
@@ -27,6 +28,7 @@
     int _maxEdgeDofs;
     int _maxFaceDofs; 
     int _maxBdofs;
+    int _numberOfPassiveBCs;
     BOOL _savesDone;
     BOOL _outputActive;
     BOOL _adaptiveMesh;
@@ -50,6 +52,7 @@
 
 @property(nonatomic, assign) int dimension;
 @property(nonatomic, assign) int numberOfNodes;
+@property(nonatomic, assign) int numberOfElements;
 @property(nonatomic, assign) int numberOfBulkElements;
 @property(nonatomic, assign) int numberOfEdges;
 @property(nonatomic, assign) int numberOfFaces;
@@ -60,6 +63,7 @@
 @property(nonatomic, assign) int maxEdgeDofs;
 @property(nonatomic, assign) int maxFaceDofs;
 @property(nonatomic, assign) int maxBdofs;
+@property(nonatomic, assign) int numberOfPassiveBCs;
 @property(nonatomic, assign, getter = isSavesDone) BOOL savesDone;
 @property(nonatomic, assign, getter = isOutputActive) BOOL outputActive;
 @property(nonatomic, assign, getter = isAdaptiveMesh) BOOL adaptiveMesh;

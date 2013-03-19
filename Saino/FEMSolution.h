@@ -29,7 +29,9 @@
     double _dt;
     BOOL _multigridSolution;
     BOOL _multigridEqualPlit;
-    id _plugInPrincipalClassInstance;                // The instance of the principal class if a plug-in is provided
+    SEL _selector;                                    // If a built-in class provides the solution, we need a selector to its method,
+    id _plugInPrincipalClassInstance;                // otherwise the instance of the principal class if a plug-in is provided
+    NSString *_plugInName;                           // Name of the plug-in if present
     FEMMatrix *_matrix;
     FEMVariable *_variable;
     FEMMesh *_mesh;
@@ -58,7 +60,9 @@
 @property(nonatomic, assign) double dt;
 @property(nonatomic, assign, getter = isMultigridSolution) BOOL multigridSolution;
 @property(nonatomic, assign, getter = isMultigridEqualPlit) BOOL multigridEqualPlit;
+@property(nonatomic, assign) SEL selector;
 @property(nonatomic, strong) id plugInPrincipalClassInstance;
+@property(nonatomic, strong) NSString *plugInName;
 @property(nonatomic, strong) FEMMatrix *matrix;
 @property(nonatomic, strong) FEMVariable *variable;
 @property(nonatomic, strong) FEMMesh *mesh;

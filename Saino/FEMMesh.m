@@ -230,6 +230,7 @@
 
 @synthesize dimension = _dimension;
 @synthesize numberOfNodes = _numberOfNodes;
+@synthesize numberOfElements = _numberOfElements;
 @synthesize numberOfBulkElements = _numberOfBulkElements;
 @synthesize numberOfEdges = _numberOfEdges;
 @synthesize numberOfFaces = _numberOfFaces;
@@ -240,6 +241,7 @@
 @synthesize maxEdgeDofs = _maxEdgeDofs;
 @synthesize maxFaceDofs = _maxFaceDofs;
 @synthesize maxBdofs = _maxBdofs;
+@synthesize numberOfPassiveBCs = _numberOfPassiveBCs;
 @synthesize savesDone = _savesDone;
 @synthesize outputActive = _outputActive;
 @synthesize adaptiveMesh = _adaptiveMesh;
@@ -275,6 +277,7 @@
         _maxBdofs = 0;
         _maxElementDofs = 0;
         _maxElementNodes = 0;
+        _numberOfPassiveBCs = 0;
                 
         _elements = NULL;
         _edges = NULL;
@@ -387,6 +390,7 @@
     _elements = (Element_t*) malloc( sizeof(Element_t) * self.numberOfBulkElements+self.numberOfBoundaryElements );
     if (_elements == NULL) errorfunct("loadMeshForModel", "Failure to allocate elements structure.");
     initElements(_elements, self.numberOfBulkElements+self.numberOfBoundaryElements);
+    self.numberOfElements = self.numberOfBulkElements+self.numberOfBoundaryElements;
     
     // Mesh nodes
     cCoord = doublevec(0, (3*self.numberOfNodes)-1);
