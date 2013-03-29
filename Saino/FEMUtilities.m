@@ -26,7 +26,9 @@
 -(void)FEMUtils_interpolateMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh oldVariables:(NSMutableArray *)oldVar newVariables:(NSMutableArray *)newVar model:(FEMModel *)aModel quadrantTree:(BOOL *)useQuandrant withProjector:(BOOL)withProj projector:(FEMProjector *)projector mask:(NSString *)maskName;
 @end
 
-@implementation FEMUtilities
+@implementation FEMUtilities {
+    char _backSlash;
+}
 
 #pragma Private methods
 
@@ -518,8 +520,8 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _backSlash = (char)92;
     }
-    
     return self;
 }
 
@@ -2847,6 +2849,56 @@
             }
         }
     }
+}
+
+-(BOOL)isFileNameQualified:(NSString *)file {
+    
+    NSRange range;
+    
+    range = [file rangeOfString:@":"];
+    return (range.location != NSNotFound || [file characterAtIndex:0] == '/' || [file characterAtIndex:0] == _backSlash);
+}
+
+-(NSMutableString *)nextFreeFileName:(NSString *)fileName0 suffix:(NSString *)suffix0 lastExisting:(BOOL *)lastExisting {
+    
+    int no;
+    NSRange range;
+    NSString *prefix, *suffix;
+    NSMutableString *str, *fileName, *prevFileName;
+    NSFileManager *fileManager;
+    
+    range = [fileName0 rangeOfString:@"." options:NSBackwardsSearch];
+    if (range.location != NSNotFound) {
+        prefix = [fileName0 substringToIndex:range.location];
+        suffix = [fileName0 substringFromIndex:range.location];
+    } else {
+        prefix = [NSString stringWithString:prefix];
+        if (suffix0 != nil) {
+            str = [NSMutableString stringWithString:@"."];
+            [str appendString:suffix0];
+            suffix = [NSString stringWithString:str];
+        } else {
+            suffix = @".dat";
+        }
+    }
+    
+    prevFileName = [NSMutableString stringWithString:@""];
+    fileName = [NSMutableString stringWithString:@""];
+    fileManager = [NSFileManager defaultManager];
+    
+    for (no=1; no<=9999; no++) {
+        if (no > 0) [prevFileName setString:fileName];
+        [fileName setString:prefix];
+        [fileName appendString:[NSString stringWithFormat:@"%d",no]];
+        [fileName appendString:suffix];
+        if ([fileManager fileExistsAtPath:fileName] == NO) break;
+    }
+    
+    if (lastExisting != NULL) {
+        if (*lastExisting == YES) [fileName setString:prevFileName];
+    }
+    
+    return fileName;
 }
 
 @end

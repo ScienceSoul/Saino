@@ -57,6 +57,7 @@
         _containers->EigenValues = NULL;
         _containers->EigenVectors = NULL;
         _containers->ComponentEigenVectors = NULL;
+        _containers->CValues = NULL;
         _containers->lowerLimitActive = NULL;
         _containers->upperLimitActive = NULL;
         _containers->sizePerm = 0;
@@ -76,6 +77,7 @@
         _containers->size2EigenVectors = 0;
         _containers->size1ComponentEigenVectors = 0;
         _containers->size2ComponentEigenVectors = 0;
+        _containers->sizeCValues = 0;
         _containers->sizeLowerLimitActive = 0;
         _containers->sizeUpperLimitActive = 0;
     }

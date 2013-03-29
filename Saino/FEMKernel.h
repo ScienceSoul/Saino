@@ -103,5 +103,6 @@
 -(double)stopc:(FEMSolution *)solution multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar;
 
 -(void)activateSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
+-(void)solveEquationsModel:(FEMModel *)model timeStep:(double *)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL *)steadyStateReached realTimeStep:(int *)realTimeStep;
 
 @end

@@ -99,6 +99,12 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel;
 -(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution;
 
+// Solution time step initialization
+-(void)FEMKernel_initializeTimeStepInSolution:(FEMSolution *)solution model:(FEMModel *)model;
+
+// Method for coupled solution used by solveEquationsModel:timeStep:transientSimulation:coupledMinIteration:coupleMaxIteration:steadyStateReached:realTimeStep:
+-(void)FEMKernel_solveCoupledModel:(FEMModel *)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL *)doneThis afterConverged:(BOOL *)afterConverged steadyIt:(double *)steadyIt;
+
 // Single solution
 -(void)FEMKernel_singleSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
 
@@ -2564,6 +2570,327 @@ static int PRECOND_VANKA     =  560;
     free_dvector(matContainers->DiagScaling, 0, matContainers->sizeDiagScaling-1);
     matContainers->sizeDiagScaling = 0;
     matContainers->DiagScaling = NULL;
+}
+
+// Initialize solution of next time step
+-(void)FEMKernel_initializeTimeStepInSolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, order;
+    BOOL found;
+    NSString *method;
+    FEMListUtilities *listUtilities;
+    variableArraysContainer *varContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
+    
+    solution.doneTime++;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    varContainers = solution.variable.getContainers;
+    
+    if (solution.matrix == nil || varContainers->Values == NULL) return;
+    if (solution.timeOrder <= 0) return;
+    
+    found = NO;
+    if ((solution.solutionInfo)[@"time stepping method"] != nil) {
+        method = (solution.solutionInfo)[@"time stepping method"];
+        found = YES;
+    }
+    if ([method isEqualToString:@"none"] == YES) return;
+    
+    if (found == NO) {
+        found = NO;
+        if ((solution.solutionInfo)[@"newmark beta"] != nil) {
+            solution.beta = [(solution.solutionInfo)[@"newmark beta"] doubleValue];
+            found = YES;
+        } else {
+            solution.beta = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"newmark beta" info:&found minValue:NULL maxValue:NULL];
+        }
+        
+        if (found == NO) {
+            NSLog(@"FEMKernel_initializeTimeStepInSolution: time stepping default to IMPLICIT EULER.");
+            solution.beta = 1.0;
+            method = @"implicit euler";
+        }
+    } else {
+        solution.beta = 1.0;
+        if ([method isEqualToString:@"implicit euler"] == YES) {
+            solution.beta = 1.0;
+        } else if ([method isEqualToString:@"explicit euler"] == YES) {
+            solution.beta = 0.0;
+        } else if ([method isEqualToString:@"runge-kutta"] == YES) {
+            solution.beta = 0.0;
+        } else if ([method isEqualToString:@"crank-nicolson"] == YES) {
+            solution.beta = 0.5;
+        } else if ([method isEqualToString:@"fs"] == YES) {
+            solution.beta = 0.5;
+        } else if ([method isEqualToString:@"newmark"] == YES) {
+            if ((solution.solutionInfo)[@"newmark beta"] != nil) {
+                solution.beta = [(solution.solutionInfo)[@"newmark beta"] doubleValue];
+            } else {
+                solution.beta = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"newmark beta" info:&found minValue:NULL maxValue:NULL];
+            }
+            
+            if (solution.beta < 0 || solution.beta > 1) {
+                NSLog(@"FEMKernel_initializeTimeStepInSolution: invalid value of beta: %f\n", solution.beta);
+            }
+        } else if ([method isEqualToString:@"bdf"] == YES) {
+            if (solution.order < 1 || solution.order > 5) {
+                NSLog(@"FEMKernel_initializeTimeStepInSolution: invalid BDF order: %d\n", solution.order);
+            }
+        } else {
+            NSLog(@"FEMKernel_initializeTimeStepInSolution: Unknown time stepping method: %@\n", method);
+            errorfunct("FEMKernel_initializeTimeStepInSolution", "Program terminating now...");
+        }
+    }
+    
+    if ([method isEqualToString:@"bdf"] == NO || solution.timeOrder > 1) {
+        if (solution.doneTime == 1 && solution.beta != 0.0) {
+            solution.beta = 1.0;
+        }
+        
+        switch (solution.timeOrder) {
+            case 1:
+                order = min(solution.doneTime, solution.order);
+                for (i=order-1; i>=1; i--) {
+                    for (j=0; j<varContainers->size1PrevValues; j++) {
+                        varContainers->PrevValues[j][i] = varContainers->PrevValues[j][i-1];
+                    }
+                }
+                for (i=0; i<varContainers->size1PrevValues; i++) {
+                    varContainers->PrevValues[i][0] = varContainers->Values[i];
+                }
+                matContainers = solution.matrix.getContainers;
+                for (i=0; i<matContainers->size1force; i++) {
+                    matContainers->Force[i][1] = matContainers->Force[i][0];
+                }
+                break;
+            case 2:
+                found = NO;
+                if ((solution.solutionInfo)[@"bossak alpha"] != nil) {
+                    solution.alpha = [(solution.solutionInfo)[@"bossak alpha"] doubleValue];
+                    found = YES;
+                } else {
+                    solution.alpha = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"bossak alpha" info:&found minValue:NULL maxValue:NULL];
+                }
+                if (found == NO) solution.alpha = -0.05;
+                
+                for (i=0; i<varContainers->size1PrevValues; i++) {
+                    varContainers->PrevValues[i][2] = varContainers->Values[i];
+                    varContainers->PrevValues[i][3] = varContainers->PrevValues[i][0];
+                    varContainers->PrevValues[i][4] = varContainers->PrevValues[i][1];
+                }
+                break;
+        }
+    } else {
+        order = min(solution.doneTime, solution.order);
+        for (i=order-1; i>=1; i--) {
+            for (j=0; j<varContainers->size1PrevValues; j++) {
+                varContainers->PrevValues[j][i] = varContainers->PrevValues[j][i-1];
+            }
+        }
+        for (i=0; i<varContainers->size1PrevValues; i++) {
+            varContainers->PrevValues[i][0] = varContainers->Values[i];
+        }
+    }
+}
+
+-(void)FEMKernel_solveCoupledModel:(FEMModel *)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL *)doneThis afterConverged:(BOOL *)afterConverged steadyIt:(double *)steadyIt {
+    
+    int  i, j, k, n;
+    double relaxation;
+    BOOL found, allAfterConverged, allDoneThis, calculateDerivative = NO, needSol, testConvergence;
+    NSString *when;
+    FEMMesh *mesh;
+    FEMListUtilities *listUtilities;
+    variableArraysContainer *varContainers = NULL;
+    
+    for (i=1; i<=coupleMaxIter; i++) {
+        if (transient == YES && scanning == YES) {
+            if (coupleMaxIter > 1) {
+                NSLog(@"SolveEquations: --------------------------------------------------------------------\n");
+                NSLog(@"SolveEquations: Coupled system iteration: %d\n", i);
+                NSLog(@"SolveEquations: --------------------------------------------------------------------\n");
+            }
+            *steadyIt = (double)i;
+        }
+        
+        for (j=0; j<model.numberOfSolutions; j++) {
+            doneThis[j] = NO;
+        }
+        
+        // Initialize the mesh output flag to NO here, reactivated later
+        // for meshes connected to active solutions.
+        for (FEMMesh *mesh in model.meshes) {
+            mesh.outputActive = NO;
+        }
+        
+        // Go through number of solutions (heat, laminar or turbulent flow, etc...)
+        k = 0;
+        for (FEMSolution *solution in model.solutions) {
+            if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) {
+                if (solution.solutionMode != SOLUTION_MODE_COUPLED || solution.solutionMode != SOLUTION_MODE_ASSEMBLY
+                    || solution.solutionMode != SOLUTION_MODE_BLOCK) {
+                    NSLog(@"SolveEquations: No routine related to solution!\n");
+                    doneThis[k] = YES;
+                    continue;
+                }
+            }
+            
+            if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+                when = (solution.solutionInfo[@"invoke solution computer"]);
+                if ([when isEqualToString:@"always"] == NO) {
+                    doneThis[k] = YES;
+                    continue;
+                }
+            } else {
+                if (solution.solutionSolveWhen != SOLUTION_SOLVE_ALWAYS) {
+                    doneThis[k] = YES;
+                    continue;
+                }
+            }
+            
+            allAfterConverged = YES;
+            for (j=0; j<model.numberOfSolutions; j++) {
+                if (afterConverged[j] == NO) {
+                    allAfterConverged = NO;
+                    break;
+                }
+            }
+            allDoneThis = YES;
+            for (j=0; j<model.numberOfSolutions; j++) {
+                if (doneThis[j] == NO) {
+                    allDoneThis = NO;
+                    break;
+                }
+            }
+            if (afterConverged[k] == YES && (allAfterConverged == NO || allDoneThis == NO)) continue;
+            
+            n = 0;
+            if (solution.variable != nil) {
+                varContainers = solution.variable.getContainers;
+                if (varContainers->Values != NULL) n = varContainers->sizeValues;
+                solution.variable.prevNorm = solution.variable.norm;
+            }
+            
+            // There are some operations that require that the previous steady state values
+            // are present. Check for these operations.
+            if ((solution.solutionInfo)[@"calculate derivative"] != nil) {
+                calculateDerivative = [(solution.solutionInfo)[@"calculate derivative"] boolValue];
+            }
+            needSol = calculateDerivative;
+            if (needSol == NO) {
+                if ((solution.solutionInfo)[@"steady state convergence measure"] != nil) {
+                    needSol = ([(solution.solutionInfo)[@"steady state convergence measure"] isEqualToString:@"norm"] == NO) ? YES : NO;
+                    needSol = (needSol == YES) ? YES : NO;
+                }
+            }
+            if (needSol == NO) {
+                if ((solution.solutionInfo)[@"steady state relaxation factor"] != nil) {
+                    relaxation = [(solution.solutionInfo)[@"steady state relaxation factor"] doubleValue];
+                    needSol = (relaxation != 1.0) ? YES : NO;
+                }
+            }
+            
+            if (needSol == YES && n > 0) {
+                if (varContainers->SteadyValues != NULL) found = YES;
+                if (found == YES && varContainers->sizeSteadyValues != n) {
+                    free_dvector(varContainers->SteadyValues, 0, varContainers->sizeSteadyValues-1);
+                    varContainers->SteadyValues = NULL;
+                    found = NO;
+                }
+                if (found == NO) {
+                    varContainers->SteadyValues = doublevec(0, n-1);
+                    varContainers->sizeSteadyValues = n;
+                }
+                for (j=0; j<n; j++) {
+                    varContainers->SteadyValues[j] = varContainers->Values[j];
+                }
+            }
+            
+            [self activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+            
+            if (solution.variable != nil) {
+                if (varContainers->Values != NULL) n = varContainers->sizeValues;
+            }
+            
+            // Check for coupled system convergence
+            if (scanning == YES) {
+                testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
+                if (testConvergence == YES || calculateDerivative == YES) {
+                    // TODO: add support for parallel run
+                    [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    
+                    // The ComputeChange method sets a flag to zero if not yet converged (otherwise -1/1)
+                    if (testConvergence == YES) {
+                        if (solution.variable.steadyConverged == 0) {
+                            doneThis[k] = NO;
+                        } else {
+                            doneThis[k] = YES;
+                        }
+                    }
+                }
+            } else if (transient == YES) {
+                testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
+                if (testConvergence == YES) {
+                    // TODO: add support for parallel run
+                    [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    if (solution.variable.steadyConverged == 0) {
+                        doneThis[k] = NO;
+                    } else {
+                        doneThis[k] = YES;
+                    }
+                }
+            } else { // Steady state
+                // TODO: add support for parallel run
+                [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                if (solution.variable.steadyConverged == 0) {
+                    doneThis[k] = NO;
+                } else {
+                    doneThis[k] = YES;
+                }
+            }
+            
+            // TODO: add support for parallel run
+            
+            allDoneThis = YES;
+            for (j=0; j<model.numberOfSolutions; j++) {
+                if (doneThis[j] == NO) {
+                    allDoneThis = NO;
+                    break;
+                }
+            }
+            if (allDoneThis == YES) break;
+            k++;
+        }
+        mesh = (FEMMesh *)model.mesh;
+        mesh.changed = NO;
+        
+        allDoneThis = YES;
+        for (j=0; j<model.numberOfSolutions; j++) {
+            if (doneThis[j] == NO) {
+                allDoneThis = NO;
+                break;
+            }
+        }
+        if (allDoneThis == YES) break;
+    }
+    
+    allDoneThis = YES;
+    for (j=0; j<model.numberOfSolutions; j++) {
+        if (doneThis[j] == NO) {
+            allDoneThis = NO;
+            break;
+        }
+    }
+    if (transient == YES && allDoneThis == NO) {
+        listUtilities = [[FEMListUtilities alloc] init];
+        if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"coupled system abort not converged" info:&found] == YES) {
+            NSLog(@"SolveEquations: \n");
+            NSLog(@"SolveEquations: Coupled system iteration: %d\n", i);
+            NSLog(@"SolveEquations: \n");
+            errorfunct("SolveEquations", "Program terminating now...");
+        }
+    }
 }
 
 /*************************************************************************************************************************
@@ -6324,6 +6651,222 @@ static int PRECOND_VANKA     =  560;
     if (timing == YES) {
         // TODO: implement this...
     }
+}
+
+// Solve the equations one-by-one
+-(void)solveEquationsModel:(FEMModel *)model timeStep:(double *)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL *)steadyStateReached realTimeStep:(int *)realTimeStep {
+    
+    int i, j, n, rgOrder=0;
+    double *steadyIt, prevDt=0.0;
+    BOOL found, all, scanning, *doneThis, *afterConverged, rungeKutta;
+    NSString *when;
+    RungeKutta_t *rgCoeff = NULL;
+    FEMVariable *iterV = nil;
+    FEMSolution *solution;
+    FEMListUtilities *listUtilities;
+    FEMUtilities *utilities;
+    variableArraysContainer *variableContainers = NULL, *varContainers = NULL;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    utilities = [[FEMUtilities alloc] init];
+    
+    scanning = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"scanning"] == YES) ? YES : NO;
+    
+    if (transient) {
+        for (FEMSolution *solution in model.solutions) {
+            if (solution.selector != NULL || solution.plugInPrincipalClassInstance != nil) [self FEMKernel_initializeTimeStepInSolution:solution model:model];
+        }
+    }
+    
+    if (transient == YES || scanning == YES) {
+        solution = model.solutions[0];
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:model name:@"coupled iter" onlySearch:NULL maskName:NULL info:&found];
+        varContainers = iterV.getContainers;
+        steadyIt = &varContainers->Values[0];
+    }
+    
+    for (FEMSolution *solution in model.solutions) {
+        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+            when = (solution.solutionInfo)[@"invoke solution computer"];
+            if ([when isEqualToString:@"before time step"] == YES) {
+                [self activateSolution:solution model:model timeStep:*dt transientSimulation:transient];
+                // TODO: add support for parallel run
+            }
+        } else {
+            if (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_TIME) {
+                [self activateSolution:solution model:model timeStep:*dt transientSimulation:transient];
+                // TODO: add support for parallel run
+            }
+        }
+    }
+    
+    doneThis = (BOOL*)malloc(sizeof(BOOL) * model.numberOfSolutions );
+    afterConverged = (BOOL*)malloc(sizeof(BOOL) * model.numberOfSolutions );
+    
+    i = 0;
+    for (FEMSolution *solutiom in model.solutions) {
+        afterConverged[i] = [(solution.solutionInfo)[@"coupled system after others converged"] boolValue];
+        i++;
+    }
+    
+    if (prevDt == 0) prevDt = *dt;
+    
+    if (*realTimeStep > 2) {
+        i = 0;
+        for (FEMSolution *solution in model.solutions) {
+            if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+            
+            rungeKutta = NO;
+            if (transient == YES && solution.timeOrder == 1) {
+                rungeKutta = ([(solution.solutionInfo)[@"time stepping method"] isEqualToString:@"runge-kutta"] == YES) ? YES : NO;
+            }
+            
+            if (rungeKutta == NO) continue;
+            if (rgCoeff == NULL) rgCoeff =  allocateRungeKutta( model.numberOfSolutions);
+            
+            variableContainers = solution.variable.getContainers;
+            n = variableContainers->sizeValues;
+            rgCoeff[i].k1 = doublevec(0, n-1);
+            rgCoeff[i].k2 = doublevec(0, n-1);
+            rgCoeff[i].k3 = doublevec(0, n-1);
+            rgCoeff[i].k4 = doublevec(0, n-1);
+            
+            for (j=0; j<variableContainers->size1PrevValues; j++) {
+                rgCoeff[i].k1[j] = variableContainers->PrevValues[j][0] -variableContainers->PrevValues[j][1];
+            }
+            for (j=0; j<n; j++) {
+                rgCoeff[i].k1[j] = *dt * rgCoeff[i].k1[j] / prevDt;
+            }
+            rgOrder = solution.order;
+            switch (rgOrder) {
+                case 2:
+                    for (j=0; j<variableContainers->sizeValues; j++) {
+                        variableContainers->Values[j] = variableContainers->PrevValues[j][0] + rgCoeff[i].k1[j];
+                    }
+                    break;
+                case 4:
+                    for (j=0; j<variableContainers->sizeValues; j++) {
+                        variableContainers->Values[j] = variableContainers->PrevValues[j][0] + rgCoeff[i].k1[j]/2.0;
+                    }
+                    break;
+            }
+            i++;
+        }
+        if (rgOrder == 4) *dt = *dt / 2.0;
+    }
+    
+    [self FEMKernel_solveCoupledModel:model timeStep:*dt coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter transientSimulation:transient scanning:scanning doneThis:doneThis afterConverged:afterConverged steadyIt:steadyIt];
+    
+    if (rgCoeff != NULL) {
+        i = 0;
+        for (FEMSolution *solution in model.solutions) {
+            if (rgCoeff[i].k1 == NULL) continue;
+            variableContainers = solution.variable.getContainers;
+            rgOrder = solution.order;
+            switch (rgOrder) {
+                case 2:
+                    for (j=0; j<n; j++) {
+                        rgCoeff[i].k2[j] = variableContainers->Values[j] - variableContainers->PrevValues[j][0];
+                    }
+                    for (j=0; j<variableContainers->sizeValues; j++) {
+                        variableContainers->Values[j] = variableContainers->PrevValues[j][0] + (rgCoeff[i].k1[j] + rgCoeff[i].k2[j])/2.0;
+                    }
+                    solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:variableContainers->Values];
+                    break;
+                case 4:
+                    for (j=0; j<n; j++) {
+                        rgCoeff[i].k2[j] = 2.0 * (variableContainers->Values[j] - variableContainers->PrevValues[j][0]);
+                    }
+                    for (j=0; j<variableContainers->sizeValues; j++) {
+                        variableContainers->Values[j] = variableContainers->PrevValues[j][0] + rgCoeff[i].k2[j]/2.0;
+                    }
+                    break;
+            }
+            i++;
+        }
+        
+        if (rgOrder > 2) {
+            [self FEMKernel_solveCoupledModel:model timeStep:*dt coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter transientSimulation:transient scanning:scanning doneThis:doneThis afterConverged:afterConverged steadyIt:steadyIt];
+            
+            i = 0;
+            for (FEMSolution *solution in model.solutions) {
+                if (rgCoeff[i].k1 == NULL) continue;
+                variableContainers = solution.variable.getContainers;
+                
+                for (j=0; j<n; j++) {
+                    rgCoeff[i].k3[j] = 2.0 * (variableContainers->Values[j] - variableContainers->PrevValues[j][0]);
+                }
+                for (j=0; j<variableContainers->sizeValues; j++) {
+                    variableContainers->Values[j] = variableContainers->PrevValues[j][0] + rgCoeff[i].k3[j];
+                }
+                i++;
+            }
+            *dt = 2.0 * (*dt);
+            [self FEMKernel_solveCoupledModel:model timeStep:*dt coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter transientSimulation:transient scanning:scanning doneThis:doneThis afterConverged:afterConverged steadyIt:steadyIt];
+            
+            i = 0;
+            for (FEMSolution *solution in model.solutions) {
+                if (rgCoeff[i].k1 == NULL) continue;
+                variableContainers = solution.variable.getContainers;
+                
+                for (j=0; j<n; j++) {
+                    rgCoeff[i].k4[j] = variableContainers->Values[j] - variableContainers->PrevValues[j][0];
+                }
+                for (j=0; j<variableContainers->sizeValues; j++) {
+                    variableContainers->Values[j] = variableContainers->PrevValues[j][0]
+                       + (rgCoeff[i].k1[j] + 2.0*rgCoeff[i].k2[j] + 2.0*rgCoeff[i].k3[j] + rgCoeff[i].k4[j]) / 6.0;
+                }
+                solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:variableContainers->Values];
+                i++;
+            }
+        }
+        
+        i = 0;
+        for (FEMSolution *solution in model.solutions) {
+            if (rgCoeff[i].k1 != NULL) {
+                free_dvector(rgCoeff[i].k1, 0, n-1);
+                free_dvector(rgCoeff[i].k2, 0, n-1);
+                free_dvector(rgCoeff[i].k3, 0, n-1);
+                free_dvector(rgCoeff[i].k4, 0, n-1);
+            }
+            i++;
+        }
+        free(rgCoeff);
+    }
+    
+    prevDt = *dt;
+    
+    for (FEMSolution *solution in model.solutions) {
+        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        
+        if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+            when = (solution.solutionInfo)[@"invoke solution computer"];
+            if ([when isEqualToString:@"after time step"] == YES) {
+                [self activateSolution:solution model:model timeStep:*dt transientSimulation:transient];
+                // TODO: add support for parallel run
+            }
+        } else {
+            if (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_TIME) {
+                [self activateSolution:solution model:model timeStep:*dt transientSimulation:transient];
+                // TODO: add support for parallel run
+            }
+        }
+    }
+    
+    if (transient == NO) {
+        all = YES;
+        for (i=0; i<model.numberOfSolutions; i++) {
+            if (doneThis[i] == NO) {
+                all = NO;
+                break;
+            }
+        }
+        *steadyStateReached = (all == YES) ? YES : NO;
+    }
+    
+    free(doneThis);
+    free(afterConverged);
 }
 
 

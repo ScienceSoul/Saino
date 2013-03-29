@@ -43,3 +43,13 @@ variableArraysContainer *allocateVariableContainer(void) {
     
     return varContainers;
 }
+
+RungeKutta_t *allocateRungeKutta(int n) {
+    
+    RungeKutta_t *rungeKutta = NULL;
+    
+    rungeKutta = (RungeKutta_t*)malloc(sizeof(RungeKutta_t) * n );
+    *rungeKutta = (RungeKutta_t){.k1 = NULL, .k2 = NULL, .k3 = NULL, .k4 = NULL};
+    
+    return rungeKutta;
+}

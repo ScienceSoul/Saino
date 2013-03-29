@@ -38,4 +38,7 @@
 -(void)addEquationBasicsToSolution:(FEMSolution *)solution name:(NSString *)name model:(FEMModel *)model transient:(BOOL)transient;
 -(void)addEquationToSolution:(FEMSolution *)solution model:(FEMModel *)model transient:(BOOL)transient;
 
+-(BOOL)isFileNameQualified:(NSString *)file;
+-(NSMutableString *)nextFreeFileName:(NSString *)fileName0 suffix:(NSString *)suffix0 lastExisting:(BOOL *)lastExisting;
+
 @end

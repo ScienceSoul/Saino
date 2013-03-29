@@ -266,6 +266,7 @@ typedef struct variableArraysContainer {
     double complex *EigenValues;
     double complex **EigenVectors;
     double complex ***ComponentEigenVectors;  // This is a 2D array of pointers.
+    double complex **CValues;                 // This is a 1D array of pointers
     bool *lowerLimitActive;
     bool *upperLimitActive;
     int sizePerm;
@@ -285,6 +286,7 @@ typedef struct variableArraysContainer {
     int size2EigenVectors;
     int size1ComponentEigenVectors;
     int size2ComponentEigenVectors;
+    int sizeCValues;
     int sizeLowerLimitActive;
     int sizeUpperLimitActive;
     
@@ -351,11 +353,20 @@ typedef struct HashTable_t {
 
 } HashTable_t;
 
+typedef struct RungeKutta_t {
 
+    double *k1;
+    double *k2;
+    double *k3;
+    double *k4;
+    
+} RungeKutta_t;
 
 #endif
 
 void initNodes(Nodes_t *nodes);
 void initElements(Element_t *elements, int n);
 void initBoundaryInfo(BoundaryInfo_t *boundaryInfo);
-variableArraysContainer * allocateVariableContainer(void);
+variableArraysContainer *allocateVariableContainer(void);
+RungeKutta_t *allocateRungeKutta(int n);
+
