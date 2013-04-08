@@ -16,6 +16,7 @@
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
 #import "FEMInitialConditions.h"
+#import "FEMPost.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 
@@ -943,11 +944,12 @@ jump:
 -(void)FEMJob_saveToPostModel:(FEMModel *)model currentStep:(int)currentStep {
     
     int j, k, timeSteps, savedEigenValues;
-    BOOL found, lastExisting, eigenAnal=NO;
+    BOOL found, lastExisting, eigenAnal=NO, append;
     NSString *outputFile, *postFile, *saveWhich;
     FEMListUtilities *listUtilities;
     FEMUtilities *utilities;
     FEMMeshUtils *meshUtilities;
+    FEMPost *post;
     variableArraysContainer *varContainers = NULL;
     
     listUtilities = [[FEMListUtilities alloc] init];
@@ -964,6 +966,7 @@ jump:
     
     utilities = [[FEMUtilities alloc] init];
     meshUtilities = [[FEMMeshUtils alloc] init];
+    post = [[FEMPost alloc] init];
     
     // Loop over all meshes
     for (FEMMesh *mesh in model.meshes) {
@@ -971,7 +974,7 @@ jump:
         
         // Check whether this mesh is active for saving
         if (mesh.outputActive == YES) {
-            if ((int)[mesh.name length] == 0 || [utilities isFileNameQualified:outputFile]) {
+            if ([mesh.name length] == 0 || [utilities isFileNameQualified:outputFile]) {
                 [_outputName setString:outputFile];
             } else {
                 [_outputName setString:mesh.name];
@@ -979,7 +982,7 @@ jump:
                 [_outputName appendString:outputFile];
             }
             
-            if ((int)[mesh.name length] == 0 || [utilities isFileNameQualified:postFile]) {
+            if ([mesh.name length] == 0 || [utilities isFileNameQualified:postFile]) {
                 [_postName setString:postFile];
             } else {
                 [_postName setString:mesh.name];
@@ -1065,7 +1068,8 @@ jump:
                                         mesh.savesDone = currentStep;
                                     }
                                 }
-                                // TODO: call write to post file here
+                                append = YES;
+                                [post writeElmerPostFile:_postName resultFile:_outputName model:model timeCount:solution.nOfEigenValues append:&append];
                             }
                         }
                         break;
@@ -1073,9 +1077,10 @@ jump:
                 }
             }
             
-            // If this mesh has not geen saved, then do so
+            // If this mesh has not been saved, then do so.
             if (eigenAnal == NO || currentStep == 0) {
-                // TODO: call write to post file here
+                append = YES;
+                [post writeElmerPostFile:_postName resultFile:_outputName model:model timeCount:timeSteps append:&append];
             }
             
             for (FEMVariable *variable in mesh.variables) {
@@ -1089,7 +1094,9 @@ jump:
     }
 }
 
-// Saves current time step to external files
+/***********************************************************************************
+    Saves current time step to external files
+***********************************************************************************/
 -(void)FEMJob_saveCurrent:(FEMModel *)model currentStep:(int)currentStep {
     
     int j, k;
@@ -1112,7 +1119,7 @@ jump:
         
         for (FEMMesh *mesh in model.meshes) {
             if (mesh.outputActive == YES) {
-                if ((int)[mesh.name length] > 0) {
+                if ([mesh.name length] > 0) {
                     [_outputName setString:mesh.name];
                     [_outputName appendString:@"/"];
                     [_outputName appendString:outputFile];

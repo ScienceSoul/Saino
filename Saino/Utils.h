@@ -13,6 +13,7 @@
 #include <math.h>
 #include <complex.h>
 #include <limits.h>
+#include <time.h>
 
 #include "memory.h"
 
@@ -53,3 +54,5 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, double comple
 
 void __attribute((overloadable)) reverse(int *arr, size_t narr);
 void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shift);
+
+char *dateAndTime(void);

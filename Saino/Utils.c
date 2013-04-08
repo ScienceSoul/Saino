@@ -12,6 +12,8 @@
 #define M 7
 #define NSTACK 50
 
+char timeFormat[20];
+
 int __attribute__((overloadable)) max(int x, int y) {
     
     return (x > y) ? x : y;
@@ -842,6 +844,16 @@ void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shi
     reverse(arr, shift);
     reverse(arr + shift, narr - shift);
     reverse(arr, narr);
+}
+
+/*******************************************************************************************
+ Retunrs current data and time
+*******************************************************************************************/
+char *dateAndTime(void){
+    time_t currtime;
+    time(&currtime);
+    strftime(timeFormat,sizeof(timeFormat),"%Y/%m/%d %H:%M:%S",localtime(&currtime));
+    return (char *)timeFormat;
 }
 
 

@@ -150,8 +150,8 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             s = [NSString stringWithString:list.cValue];
-            break;
             *found = YES;
+            break;
         }
     }
     
@@ -560,8 +560,8 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             l = list.isLvalue;
-            break;
             *found = YES;
+            break;
         }
     }
     
