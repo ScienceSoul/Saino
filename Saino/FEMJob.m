@@ -16,11 +16,17 @@
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
 #import "FEMInitialConditions.h"
+#import "FEMBoundaryCondition.h"
 #import "FEMPost.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 
 @interface FEMJob ()
+-(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle;
+-(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle;
+-(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle *)fileHandle;
+-(void)FEMJob_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle;
+
 -(void)FEMJob_addSolutionsModel:(FEMModel *)model;
 -(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel *)model;
 -(void)FEMJob_setInitialConditionsModel:(FEMModel *)model;
@@ -28,6 +34,7 @@
 -(void)FEMJob_restartModel:(FEMModel *)model;
 -(void)FEMJob_runSimulation:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning;
 -(void)FEMJob_saveToPostModel:(FEMModel *)model currentStep:(int)currentStep;
+-(int)FEMJob_saveResult:(NSString *)fileName model:(FEMModel *)model mesh:(FEMMesh *)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL *)freeSurface;
 -(void)FEMJob_saveCurrent:(FEMModel *)model currentStep:(int)currentStep;
 @end
 
@@ -64,6 +71,38 @@
 @synthesize model = _model;
 
 #pragma mark Private methods
+
+-(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle {
+    
+    NSData *buffer;
+    buffer = (NSMutableData *)[string dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle {
+    
+    NSData *buffer;
+    NSString *strBuffer;
+    strBuffer = [NSString stringWithFormat:@"%d", number];
+    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle *)fileHandle {
+    
+    NSData *buffer;
+    NSString *strBuffer;
+    strBuffer = [NSString stringWithFormat:@"%17.8e", number];
+    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)FEMJob_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle {
+    
+    NSData *buffer;
+    buffer = [NSData dataWithBytes:bytes length:length];
+    [fileHandle writeData:buffer];
+}
 
 /***********************************
     Add flags for active solutions
@@ -1077,7 +1116,7 @@ jump:
                 }
             }
             
-            // If this mesh has not been saved, then do so.
+            // If this mesh has not been saved, then do so
             if (eigenAnal == NO || currentStep == 0) {
                 append = YES;
                 [post writeElmerPostFile:_postName resultFile:_outputName model:model timeCount:timeSteps append:&append];
@@ -1093,6 +1132,203 @@ jump:
         }
     }
 }
+
+/***********************************************************************************
+    Save fields in a file that may be used for restarting a simulation.
+    The data is saved in ascii format (no binary format support yet).
+***********************************************************************************/
+-(int)FEMJob_saveResult:(NSString *)fileName model:(FEMModel *)model mesh:(FEMMesh *)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL *)freeSurface {
+    
+    int i, k, dofs, n, saveCount;
+    BOOL found, freeSurfaceFlag, moveBoundary, sameAsPrev, all;
+    NSMutableString *fName;
+    FEMListUtilities *listUtilities;
+    FEMUtilities *utilities;
+    NSFileManager *fileManager;
+    NSFileHandle *outputFileHandle;
+    variableArraysContainer *varContainers = NULL, *prev = NULL;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    utilities = [[FEMUtilities alloc] init];
+    
+    // If first time here, count the number of variables
+    if ([utilities isFileNameQualified:fileName] == NO) {
+        if ([model.outputPath length] > 0) {
+            fName = [NSMutableString stringWithString:model.outputPath];
+            [fName appendString:@"/"];
+            [fName appendString:fileName];
+        }
+    }
+    
+    if (freeSurface != NULL) {
+        freeSurfaceFlag = *freeSurface;
+    } else {
+        freeSurfaceFlag = NO;
+        moveBoundary = NO;
+        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+            freeSurfaceFlag = (freeSurfaceFlag == YES || [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"free surface" info:&found] == YES) ? YES : NO;
+            if (freeSurfaceFlag == YES) {
+                moveBoundary = [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"internal move boundary" info:&found];
+                if (found == NO) moveBoundary = YES;
+                freeSurfaceFlag = (freeSurfaceFlag == YES && moveBoundary == YES) ? YES : NO;
+            }
+            if (freeSurfaceFlag == YES) break;
+        }
+    }
+    
+    fileManager = [NSFileManager defaultManager];
+    
+    char space = ' ';
+    char newLine = '\n';
+    NSData *spaceBuff = [NSMutableData dataWithBytes:&space length:sizeof(space)];
+    NSData *newLineBuff = [NSMutableData dataWithBytes:&newLine length:sizeof(newLine)];
+
+    if (mesh.savesDone == 0) {
+        if ([fileManager fileExistsAtPath:fName] == NO) {
+            if ([fileManager createFileAtPath:fName contents:nil attributes:nil] == YES) {
+                outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
+            } else {
+                errorfunct("FEMJob_saveResult", "Can't create result file.");
+            }
+        } else {
+            outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
+        }
+        // The first time, we start by writing the header
+        [self FEMJob_writeString:@"ACSII 1" toFileHandle:outputFileHandle]; [outputFileHandle writeData:newLineBuff];
+        [self FEMJob_writeString:@"!File started at: " toFileHandle:outputFileHandle];
+        [self FEMJob_writeBytes:dateAndTime() length:sizeof(dateAndTime())*20 toFileHandle:outputFileHandle];
+        [outputFileHandle writeData:newLineBuff];
+        
+        [self FEMJob_writeString:@"Degrees of freedom:" toFileHandle:outputFileHandle];
+        [outputFileHandle writeData:newLineBuff];
+        dofs = 0;
+        for (FEMVariable *variable in mesh.variables) {
+            if (variable.output == YES) {
+                varContainers = variable.getContainers;
+                if (variable.dofs > 1 && varContainers->sizeValues > 1) {
+                    if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                        [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
+                        
+                    }
+                }
+            }
+            [outputFileHandle writeData:newLineBuff];
+        }
+        
+        for (FEMVariable *variable in mesh.variables) {
+            if (variable.output == YES) {
+                varContainers = variable.getContainers;
+                if (variable.dofs == 1 && varContainers->sizeValues > 1) {
+                    if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                        [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
+                        if (variable.dofs == 1) dofs++;
+                    }
+                }
+            }
+            [outputFileHandle writeData:newLineBuff];
+        }
+        [self FEMJob_writeString:@"Total Dofs: " toFileHandle:outputFileHandle];
+        [self FEMJob_writeInteger:dofs toFileHandle:outputFileHandle];
+        [outputFileHandle writeData:newLineBuff];
+        [self FEMJob_writeString:@"Number of Nodes: " toFileHandle:outputFileHandle];
+        [self FEMJob_writeInteger:mesh.numberOfNodes toFileHandle:outputFileHandle];
+        [outputFileHandle writeData:newLineBuff];
+    } else {
+        outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
+        [outputFileHandle seekToEndOfFile];
+    }
+    
+    [self FEMJob_writeString:@"Time: " toFileHandle:outputFileHandle];
+    [self FEMJob_writeInteger:mesh.savesDone+1 toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+    [self FEMJob_writeInteger:time toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+    [self FEMJob_writeDouble:simulationTime toFileHandle:outputFileHandle];
+    [outputFileHandle writeData:newLineBuff];
+    
+    // Write data to disk
+    prev = allocateVariableContainer();
+    for (FEMVariable *variable in mesh.variables) {
+        varContainers = variable.getContainers;
+        if (variable.output == YES && variable.dofs == 1 && varContainers->sizeValues > 1) {
+            if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                if (saveAll == YES || variable.valuesChanged == YES) {
+                    [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle];
+                    [outputFileHandle writeData:newLineBuff];
+                    // Permutations...
+                    if (varContainers->Perm == NULL) {
+                        [self FEMJob_writeString:@"Perm: NULL" toFileHandle:outputFileHandle];
+                        [outputFileHandle writeData:newLineBuff];
+                    } else {
+                        sameAsPrev = NO;
+                        if (varContainers->Perm == prev->Perm) {
+                            sameAsPrev = YES;
+                        } else if (prev->Perm != NULL) {
+                            if (varContainers->sizePerm == prev->sizePerm) {
+                                all = YES;
+                                for (i=0; i<varContainers->sizePerm; i++) {
+                                    if (varContainers->Perm[i] != prev->Perm[i]) {
+                                        all = NO;
+                                        break;
+                                    }
+                                }
+                                if (all == YES) sameAsPrev = YES;
+                            }
+                        }
+                        if (sameAsPrev == YES) {
+                            [self FEMJob_writeString:@"Perm: use previous" toFileHandle:outputFileHandle];
+                            [outputFileHandle writeData:newLineBuff];
+                        } else {
+                            prev->Perm = varContainers->Perm;
+                            n = 0;
+                            for (i=0; i<varContainers->sizePerm; i++) {
+                                if (varContainers->Perm[i] >= 0) n++;
+                            }
+                            [self FEMJob_writeString:@"Perm: " toFileHandle:outputFileHandle];
+                            [self FEMJob_writeInteger:varContainers->sizePerm toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                            [self FEMJob_writeInteger:n toFileHandle:outputFileHandle];
+                            [outputFileHandle writeData:newLineBuff];
+                            for (i=0; i<varContainers->sizePerm; i++) {
+                                if (varContainers->Perm[i] >= 0) {
+                                    [self FEMJob_writeInteger:i+1 toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                                    [self FEMJob_writeInteger:varContainers->Perm[i]+1 toFileHandle:outputFileHandle];
+                                    [outputFileHandle writeData:newLineBuff];
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (varContainers->Perm != NULL) {
+                        n = varContainers->sizePerm;
+                    } else {
+                        n = mesh.numberOfNodes;
+                    }
+                    
+                    // and the values...
+                    for (i=0; i<n; i++) {
+                        k = 0;
+                        if (varContainers->Perm != NULL) k = varContainers->Perm[i];
+                        if (k >= 0) {
+                            [self FEMJob_writeDouble:varContainers->Values[k] toFileHandle:outputFileHandle];
+                        }
+                        [outputFileHandle writeData:newLineBuff];
+                    }
+                    variable.valuesChanged = NO;
+                }
+            }
+        }
+    }
+    
+    [outputFileHandle closeFile];
+    mesh.savesDone++;
+    saveCount = mesh.savesDone;
+    free(prev);
+    
+    return saveCount;
+}
+
 
 /***********************************************************************************
     Saves current time step to external files
