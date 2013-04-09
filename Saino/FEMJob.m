@@ -44,6 +44,7 @@
     BOOL _initDirichlet;
     BOOL _lastSaved;
     int _totalTimeSteps;
+    int _savedSteps;
     int *_timeSteps;
     double _s;
     double *_sTime;
@@ -1383,7 +1384,7 @@ jump:
                                                 varContainers->Values[k] = creal(varContainers->EigenVectors[j][k]);
                                             }
                                         }
-                                        // TODO: call save results here
+                                        _savedSteps = [self FEMJob_saveResult:_outputName model:model mesh:mesh time:j+1 simulationTime:_sTime[0] binary:binaryOutput saveAll:saveAll freeSurface:NULL];
                                     }
                                 } else {
                                     j = min(currentStep, varContainers->size1EigenVectors);
@@ -1397,7 +1398,7 @@ jump:
                                             varContainers->Values[k] = creal(varContainers->EigenVectors[j][k]);
                                         }
                                     }
-                                    // TODO: call save results here
+                                    _savedSteps = [self FEMJob_saveResult:_outputName model:model mesh:mesh time:currentStep simulationTime:_sTime[0] binary:binaryOutput saveAll:saveAll freeSurface:NULL];
                                 }
                                 memset( varContainers->Values, 0.0, (varContainers->sizeValues*sizeof(varContainers->Values)) );
                             }
@@ -1406,7 +1407,7 @@ jump:
                 }
                 
                 if (eigenAnal == NO) {
-                    // TODO: call save results here
+                    _savedSteps = [self FEMJob_saveResult:_outputName model:model mesh:mesh time:round(_sTime[0]) simulationTime:_sTime[0] binary:binaryOutput saveAll:saveAll freeSurface:NULL];
                 }
             }
         }
