@@ -69,6 +69,7 @@
 		73EE3A9F16F809E50054B7AE /* FEMHeatSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 73EE3A9E16F809E50054B7AE /* FEMHeatSolution.m */; };
 		73F0090D15D90D57004B7DCE /* FEMEquation.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F0090C15D90D57004B7DCE /* FEMEquation.m */; };
 		73F2105514E3D41000D52906 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 73F2105414E3D41000D52906 /* memory.c */; };
+		73F2D7EC173A1DDA0070D7C0 /* FEMConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F2D7EB173A1DDA0070D7C0 /* FEMConstants.m */; };
 		73F70A6815130C5E00A5B3B5 /* FEMValueList.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6715130C5E00A5B3B5 /* FEMValueList.m */; };
 		73F70A6B1513247500A5B3B5 /* FEMBodyForce.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6A1513247500A5B3B5 /* FEMBodyForce.m */; };
 		73F70A6E1513467C00A5B3B5 /* FEMUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */; };
@@ -213,6 +214,8 @@
 		73F0090B15D90D57004B7DCE /* FEMEquation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMEquation.h; sourceTree = "<group>"; };
 		73F0090C15D90D57004B7DCE /* FEMEquation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMEquation.m; sourceTree = "<group>"; };
 		73F2105414E3D41000D52906 /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memory.c; sourceTree = "<group>"; };
+		73F2D7EA173A1DDA0070D7C0 /* FEMConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMConstants.h; sourceTree = "<group>"; };
+		73F2D7EB173A1DDA0070D7C0 /* FEMConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMConstants.m; sourceTree = "<group>"; };
 		73F70A6615130C5E00A5B3B5 /* FEMValueList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMValueList.h; sourceTree = "<group>"; };
 		73F70A6715130C5E00A5B3B5 /* FEMValueList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMValueList.m; sourceTree = "<group>"; };
 		73F70A691513247500A5B3B5 /* FEMBodyForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBodyForce.h; sourceTree = "<group>"; };
@@ -504,6 +507,8 @@
 				73F0090C15D90D57004B7DCE /* FEMEquation.m */,
 				738BC1A216F06EB800EDFA6B /* FEMInitialConditions.h */,
 				738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */,
+				73F2D7EA173A1DDA0070D7C0 /* FEMConstants.h */,
+				73F2D7EB173A1DDA0070D7C0 /* FEMConstants.m */,
 				73702BEA15EC5E240056C80E /* FEMMeshUtils.h */,
 				73702BEB15EC5E240056C80E /* FEMMeshUtils.m */,
 				73206774168D7D9700BAE816 /* FEMElementUtils.h */,
@@ -683,6 +688,7 @@
 				73EE3A9C16F809A60054B7AE /* FEMMeshUpdateSolution.m in Sources */,
 				73EE3A9F16F809E50054B7AE /* FEMHeatSolution.m in Sources */,
 				73B1B273170570550056322B /* FEMPost.m in Sources */,
+				73F2D7EC173A1DDA0070D7C0 /* FEMConstants.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

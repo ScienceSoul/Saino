@@ -12,8 +12,12 @@
 @interface FEMJob : NSObject {
     
     FEMModel *_model;
+    NSString *_modelName;
 }
 
 @property(nonatomic, strong) FEMModel *model;
+@property(nonatomic, strong) NSString *modelName;
+
+-(void)runWithInitialize:(int)initialize;
 
 @end

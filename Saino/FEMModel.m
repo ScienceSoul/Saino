@@ -15,6 +15,10 @@
 #import "FEMMeshUtils.h"
 #import "FEMMatrixCRS.h"
 #import "FEMNumericIntegration.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMInitialConditions.h"
+#import "FEMEquation.h"
+#import "FEMBodyForce.h"
 #import "Utils.h"
 
 @interface FEMModel ()
@@ -52,8 +56,10 @@
 @synthesize boundaries = _boundaries;
 @synthesize equations = _equations;
 @synthesize initialConditions = _initialConditions;
-@synthesize simulation = _simulation;
 @synthesize variables = _variables;
+@synthesize simulation = _simulation;
+@synthesize constants = _constants;
+@synthesize mdf = _mdf;
 
 #pragma mark Private methods
 
@@ -419,6 +425,64 @@
 }
 
 -(void)deallocation {
+    
+    for (FEMMesh *mesh in self.meshes) {
+        [mesh deallocation];
+    }
+    
+    for (FEMValueList *valueList in self.constants.valuesList) {
+        [valueList deallocation];
+    }
+    for (FEMValueList *valueList in self.simulation.valuesList) {
+        [valueList deallocation];
+    }
+    
+    for (FEMBoundaryCondition *boundaryCondition in self.boundaryConditions) {
+        [boundaryCondition.pMatrix deallocation];
+        for (FEMValueList *valueList in boundaryCondition.valuesList) {
+            [valueList deallocation];
+        }
+    }
+    
+    for (FEMSolution *solution in self.solutions) {
+        for (FEMValueList *valueList in solution.valuesList) {
+            [valueList deallocation];
+        }
+        [solution.matrix deallocation];
+        [solution.variable deallocation];
+        [solution deallocation];
+    }
+    
+    for (FEMInitialConditions *initialCondition in self.initialConditions) {
+        for (FEMValueList *valueList in initialCondition.valuesList) {
+            [valueList deallocation];
+        }
+    }
+    
+    for (FEMEquation *equation in self.equations) {
+        for (FEMValueList *valueList in equation.valuesList) {
+            [valueList deallocation];
+        }
+    }
+    
+    for (FEMBodyForce *bodyForce in self.bodyForces) {
+        for (FEMValueList *valueList in bodyForce.valuesList) {
+            [valueList deallocation];
+        }
+    }
+    
+    if (_containers->freeSurfaceNodes != NULL) {
+        free_ivector(_containers->freeSurfaceNodes, 0, _containers->sizeFreeSurfaceNodes-1);
+        _containers->freeSurfaceNodes = NULL;
+    }
+    if (_containers->rowNonZeros != NULL) {
+        free_ivector(_containers->rowNonZeros, 0, _containers->sizeRowNonZeros-1);
+        _containers->rowNonZeros = NULL;
+    }
+    if (_containers->boundaryCurvatures != NULL) {
+        free_dvector(_containers->boundaryCurvatures, 0, _containers->sizeBoundaryCurvatures-1);
+        _containers->boundaryCurvatures = NULL;
+    }
     free(_containers);
 }
 

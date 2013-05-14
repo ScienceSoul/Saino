@@ -40,13 +40,24 @@
 
 @implementation FEMJob {
     
+    BOOL _scanning;
     BOOL _transient;
     BOOL _initDirichlet;
     BOOL _lastSaved;
+    BOOL _firstLoad;
+    BOOL _firstTime;
+    BOOL _silent;
+    BOOL _version;
+    BOOL _gotModelName;
+    int _timeIntervals;
     int _totalTimeSteps;
     int _savedSteps;
+    int _coupledMaxIter;
+    int _coupledMinIter;
     int *_timeSteps;
+    int *_outputIntervals;
     double _s;
+    double _dt;
     double *_sTime;
     double *_sStep;
     double *_sInterval;
@@ -55,6 +66,8 @@
     double *_steadyIt;
     double *_nonLinIt;
     double **_timeStepSizes;
+    int _sizeTimeSteps;
+    int _sizeOutputIntervals;
     int _sizeSTime;
     int _sizeSStep;
     int _sizeSInterval;
@@ -63,6 +76,8 @@
     int _sizeNonLinIt;
     int _size1SPrevSizes;
     int _size2SPrevSizes;
+    int _size1TimeStepSizes;
+    int _size2TimeStepSizes;
     
     NSMutableString *_outputName;
     NSMutableString *_postName;
@@ -70,6 +85,7 @@
 }
 
 @synthesize model = _model;
+@synthesize modelName = _modelName;
 
 #pragma mark Private methods
 
@@ -1390,12 +1406,12 @@ jump:
                                     j = min(currentStep, varContainers->size1EigenVectors);
                                     if (solution.matrix.complexMatrix == YES) {
                                         for (k=0; k<varContainers->sizeValues/2; k++) {
-                                            varContainers->Values[2*k] = creal(varContainers->EigenVectors[j][k]);
-                                            varContainers->Values[2*k+1] = cimag(varContainers->EigenVectors[j][k]);
+                                            varContainers->Values[2*k] = creal(varContainers->EigenVectors[j-1][k]);
+                                            varContainers->Values[2*k+1] = cimag(varContainers->EigenVectors[j-1][k]);
                                         }
                                     } else {
                                         for (k=0; k<varContainers->sizeValues; k++) {
-                                            varContainers->Values[k] = creal(varContainers->EigenVectors[j][k]);
+                                            varContainers->Values[k] = creal(varContainers->EigenVectors[j-1][k]);
                                         }
                                     }
                                     _savedSteps = [self FEMJob_saveResult:_outputName model:model mesh:mesh time:currentStep simulationTime:_sTime[0] binary:binaryOutput saveAll:saveAll freeSurface:NULL];
@@ -1429,6 +1445,23 @@ jump:
         _transient = NO;
         _outputName = [NSMutableString stringWithString:@""];
         _postName = [NSMutableString stringWithString:@""];
+        
+        _firstLoad = YES;
+        _firstTime = YES;
+        _silent = NO;
+        _version = NO;
+        _gotModelName = NO;
+        
+        _timeSteps = NULL;
+        _outputIntervals = NULL;
+        _sTime = NULL;
+        _sStep = NULL;
+        _sInterval = NULL;
+        _sSize = NULL;
+        _sPrevSizes = NULL;
+        _steadyIt = NULL;
+        _nonLinIt = NULL;
+        _timeStepSizes = NULL;
     }
     
     return self;
@@ -1436,6 +1469,357 @@ jump:
 
 -(void)deallocation {
     
+    if (_timeStepSizes != NULL) {
+        free_ivector(_timeSteps, 0, _sizeTimeSteps-1);
+        _timeSteps = NULL;
+    }
+    if (_outputIntervals != NULL) {
+        free_ivector(_outputIntervals, 0, _sizeOutputIntervals-1);
+        _outputIntervals = NULL;
+    }
+    if (_sTime != NULL) {
+        free_dvector(_sTime, 0, 0);
+        _sTime = NULL;
+    }
+    if (_sStep != NULL) {
+        free_dvector(_sStep, 0, 0);
+        _sStep = NULL;
+    }
+    if (_sInterval != NULL) {
+        free_dvector(_sInterval, 0, 0);
+        _sInterval = NULL;
+    }
+    if (_sSize != NULL) {
+        free_dvector(_sSize, 0, 0);
+        _sSize = NULL;
+    }
+    if (_steadyIt != NULL) {
+        free_dvector(_steadyIt, 0, 0);
+        _steadyIt = NULL;
+    }
+    if (_nonLinIt != NULL) {
+        free_dvector(_nonLinIt, 0, 0);
+        _nonLinIt = NULL;
+    }
+    if (_sPrevSizes != NULL) {
+        free_dmatrix(_sPrevSizes, 0, 0, 0, 4);
+        _sPrevSizes = NULL;
+    }
+    if (_timeStepSizes == NULL) {
+        free_dmatrix(_timeStepSizes, 0, _size1TimeStepSizes-1, 0, _size2TimeStepSizes-1);
+        _timeStepSizes = NULL;
+    }
+}
+
+-(void)runWithInitialize:(int)initialize {
+    
+    int i, j, interval, minVal, timeStep;
+    NSString *eq, *when;
+    BOOL found, execThis;
+    FEMListUtilities *listUtilities;
+    listBuffer listBuffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    
+    // TODO: Add support for parallel run
+    
+    NSArray *args = [[NSProcessInfo processInfo] arguments];
+    if (_firstTime == YES) {
+        if ([args count] > 0) {
+            for (NSString *argument in args) {
+                _silent = (_silent == YES || ([argument isEqualToString:@"-s"] == YES || [argument isEqualToString:@"--silent"] == YES)) ? YES : NO;
+                _version = (_version == YES || ([argument isEqualToString:@"-v"] == YES || [argument isEqualToString:@"--version"] == YES)) ? YES : NO;
+            }
+        }
+        
+        if (_silent == NO) {
+            NSLog(@"JOB: \n");
+            NSLog(@"JOB: =====================================================================\n");
+            NSLog(@"JOB: Saino finite element software, Welcome!\n");
+            NSLog(@"JOB: Saino is an object oriented, GPU based implementation of ElmerSolver.\n");
+            NSLog(@"JOB: This program is free software under (L)GPL.\n");
+            NSLog(@"JOB: Copyright 15 April 2011 - ScienceSoul Hakime Seddik.\n");
+            NSLog(@"JOB: Copyright 1st April 1995 - CSC IT Center for Science Ltd.\n");
+            // TODO: Add support for parallel info output
+            NSLog(@"JOB: =====================================================================\n");
+        }
+        
+        if (_version == YES) return;
+        _firstTime = NO;
+    }
+   
+    if ([args count] > 0) { //TODO: Add support for parallel run
+        self.modelName = [NSString stringWithString:args[0]];
+        if ([self.modelName characterAtIndex:0] != '-') {
+            _gotModelName = YES;
+        }
+    }
+    
+    if (_gotModelName == NO) {
+        NSFileHandle *startFile = [NSFileHandle fileHandleForReadingAtPath:@"SAINO_STARTINFO"];
+        if (startFile == nil) {
+            errorfunct("runWithInitialize", "SAINO_STARTINFO file not found.");
+        }
+        NSData *buffer = [startFile readDataToEndOfFile];
+        self.modelName = [[NSString alloc] initWithData:buffer encoding:NSUTF8StringEncoding];
+        [startFile closeFile];
+    }
+    
+    if (initialize == 1) {
+        [self.model deallocation];
+        _firstLoad = YES;
+    }
+    
+    while (1) {
+        if (initialize == 2) goto jump;
+        
+        if (_firstLoad == YES) {
+            if (_silent == NO) {
+                NSLog(@"JOB: \n");
+                NSLog(@"JOB: \n");
+                NSLog(@"JOB: ---------------------------------------------------------------------\n");
+                NSLog(@"JOB: Reading model: %@\n", self.modelName);
+            }
+            
+            self.model = [[FEMModel alloc] init];
+            self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
+            if (self.model.mdf == nil) {
+                NSLog(@"runWithInitialize: Unable to find model description file [' %@\n ']", self.modelName);
+                errorfunct("runWithInitialize","Program terminating now...");
+            }
+            [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
+            
+            // Add support for 2D mesh extrusion to a 3D mesh
+            
+            if (_silent == NO) {
+                NSLog(@"JOB: ---------------------------------------------------------------------\n");
+            }
+        } else {
+            if (initialize == 3) {
+                if (self.model.mdf != nil) {
+                    [self.model.mdf closeHandle];
+                    self.model.mdf = nil;
+                }
+                self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
+            }
+            
+            // Add support for reloading MDF
+            
+            for (FEMMesh *mesh in self.model.meshes) {
+                mesh.savesDone = 0;
+            }
+        }
+        
+    jump:
+        [listUtilities addLogicalInClassList:self.model.simulation theVariable:@"initialization phase" withValue:YES];
+        
+        // Check for transient case
+        eq = [listUtilities listGetString:self.model inArray:self.model.simulation.valuesList forVariable:@"simulation type" info:&found];
+        _scanning = ([eq isEqualToString:@"scanning"] == YES) ? YES : NO;
+        _transient = ([eq isEqualToString:@"transient"] == YES) ? YES : NO;
+        
+        // Figure out what (flow, heat, stress...) shoud be computed and get memory for the dofs
+        [self FEMJob_addSolutionsModel:self.model];
+        
+         // Time integration and/or steady state steps
+        if (_transient == YES || _scanning == YES) {
+            found = [listUtilities listGetIntegerArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step intervals" buffer:&listBuffer];
+            if (found == NO) errorfunct("runWithInitialize", "Keyword > time step intervals < must be defined for transient and scanning simulations.");
+            
+            _timeSteps = intvec(0, listBuffer.m-1);
+            _sizeTimeSteps = listBuffer.m;
+            memcpy(_timeSteps, listBuffer.ivector, listBuffer.m*sizeof(listBuffer.ivector));
+            free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
+            
+            found = [listUtilities listGetConstRealArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step size" buffer:&listBuffer];
+            if (found == NO) {
+                if (_scanning == YES || [listUtilities listCheckPresentVariable:@"time step size" inArray:self.model.simulation.valuesList] == YES) {
+                    _timeStepSizes = doublematrix(0, _sizeTimeSteps-1, 0, 0);
+                    _size1TimeStepSizes = _sizeTimeSteps;
+                    _size2TimeStepSizes = 1;
+                    for (i=0; i<_size1TimeStepSizes; i++) {
+                        for (j=0; j<_size2TimeStepSizes; j++) {
+                            _timeStepSizes[i][j] = 1.0;
+                        }
+                    }
+                }
+            } else {
+                _timeStepSizes = doublematrix(0, listBuffer.m-1, 0, listBuffer.n-1);
+                _size1TimeStepSizes = listBuffer.m;
+                _size2TimeStepSizes = listBuffer.n;
+                for (i=0; i<listBuffer.m; i++) {
+                    for (j=0; j<listBuffer.n; j++) {
+                        _timeStepSizes[i][j] = listBuffer.matrix[i][j];
+                    }
+                }
+                free_dmatrix(listBuffer.matrix, 0, listBuffer.m-1, 0, listBuffer.n-1);
+            }
+            
+            _timeIntervals = _sizeTimeSteps;
+            
+            minVal = 1;
+            _coupledMaxIter = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state max iterations" info:&found minValue:&minVal maxValue:NULL];
+            if (found == NO) _coupledMaxIter = 1;
+        } else { // Steady state
+            _timeSteps = intvec(0, 0);
+            _sizeTimeSteps = 1;
+            
+            minVal = 1;
+            _timeSteps[0] = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state max iterations" info:&found minValue:&minVal maxValue:NULL];
+            if (found == NO) _timeSteps[0] = 1;
+            
+            _timeStepSizes = doublematrix(0, 0, 0, 0);
+            _size1TimeStepSizes = 1;
+            _size2TimeStepSizes = 1;
+            _timeStepSizes[0][0] = 1.0;
+            
+            _coupledMaxIter = 1;
+            _timeIntervals = 1;
+        }
+        
+        if (_firstLoad == YES) {
+            _sTime = doublevec(0, 0);
+            _sizeSTime = 1;
+            
+            _sStep = doublevec(0, 0);
+            _sizeSStep = 1;
+            
+            _sInterval = doublevec(0, 0);
+            _sizeSInterval = 1;
+            
+            _sSize = doublevec(0, 0);
+            _sizeSSize = 1;
+            
+            _steadyIt = doublevec(0, 0);
+            _sizeSStep = 1;
+            
+            _nonLinIt = doublevec(0, 0);
+            _sizeNonLinIt = 1;
+            
+            _sPrevSizes = doublematrix(0, 0, 0, 4);
+            _size1SPrevSizes = 1;
+            _size2SPrevSizes = 5;
+        }
+        
+        _dt = 0.0;
+        
+        memset( _sTime, 0.0, (1*sizeof(_sTime)) );
+        memset( _sStep, 0.0, (1*sizeof(_sStep)) );
+        memset( _sSize, _dt, (1*sizeof(_sSize)) );
+        memset( _sInterval, 0.0, (1*sizeof(_sInterval)) );
+        memset( _steadyIt, 0.0, (1*sizeof(_steadyIt)) );
+        memset( _nonLinIt, 0.0, (1*sizeof(_nonLinIt)) );
+        for (i=0; i<1; i++) {
+            for (j=0; j<5; j++) {
+                _sPrevSizes[i][j] = 0.0;
+            }
+        }
+        
+        _coupledMinIter = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state min iterations" info:&found minValue:NULL maxValue:NULL];
+        
+        // Add coordinates and simulation time to list of variables so that coordinate dependent
+        // parameter computing methods can ask for them
+        if (_firstLoad == YES) [self FEMJob_addMeshCoordinatesAndTimeModel:self.model];
+        
+        // Get output file options
+        found = [listUtilities listGetIntegerArray:self.model inArray:self.model.simulation.valuesList forVariable:@"output intervals" buffer:&listBuffer];
+        if (found == NO) {
+            _outputIntervals = intvec(0, _sizeTimeSteps-1);
+            _sizeOutputIntervals = _sizeTimeSteps;
+             memset( _outputIntervals, 1, (_sizeOutputIntervals*sizeof(_outputIntervals)) );
+        } else {
+            _outputIntervals = intvec(0, listBuffer.m-1);
+            _sizeOutputIntervals = listBuffer.m;
+            memcpy(_outputIntervals, listBuffer.ivector, listBuffer.m*sizeof(listBuffer.ivector));
+            free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
+        }
+        
+        // Initial conditions
+        if (_firstLoad == YES) [self FEMJob_setInitialConditionsModel:self.model];
+        
+        // Compute the total number of steps that will be saved to the file.
+        // Particularly look if the last step will be saved or if it has to be saved separately.
+        _totalTimeSteps = 0;
+        _lastSaved = YES;
+        for (interval=0; interval<_timeIntervals; interval++) {
+            for (timeStep=1; timeStep<=_timeSteps[interval]; timeStep++) {
+                if (_outputIntervals[interval] == 0) continue;
+                _lastSaved = NO;
+                if ((timeStep-1) % _outputIntervals[interval] == 0) {
+                    _lastSaved = YES;
+                    _totalTimeSteps++;
+                }
+            }
+        }
+        
+        for (FEMSolution *solution in self.model.solutions) {
+            if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+                when = (solution.solutionInfo)[@"invoke solution computer"];
+                if ([when isEqualToString:@"after simulation"] == YES || [when isEqualToString:@"after all"] == YES) {
+                    _lastSaved = NO;
+                }
+            } else {
+                if (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_ALL) {
+                    _lastSaved = NO;
+                }
+            }
+        }
+        
+        if (_lastSaved == NO) _totalTimeSteps++;
+        if (_totalTimeSteps == 0) _totalTimeSteps = 1;
+        
+        [listUtilities addLogicalInClassList:self.model.simulation theVariable:@"initialization phase" withValue:NO];
+        
+        _firstLoad = NO;
+        if (initialize == 1) break;
+        
+        // Here we actually start the simulation....
+        // First go through time intervals
+        [self FEMJob_runSimulation:self.model timeIntervals:_timeIntervals coupledMinIteration:_coupledMinIter coupleMaxIteration:_coupledMaxIter outputIntervals:_outputIntervals transient:_transient scanning:_scanning];
+        
+        // Always save the last step to output
+        if (_lastSaved == NO) {
+            for (FEMSolution *solution in self.model.solutions) {
+                if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
+                if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+                    when = (solution.solutionInfo)[@"invoke solution computer"];
+                    execThis = ([when isEqualToString:@"before saving"] == YES) ? YES : NO;
+                    if (execThis == YES) {
+                        FEMKernel *kernel = [FEMKernel sharedKernel];
+                        [kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                    }
+                }
+            }
+            
+            [self FEMJob_saveToPostModel:self.model currentStep:0];
+            [self FEMJob_saveCurrent:self.model currentStep:timeStep];
+            
+            for (FEMSolution *solution in self.model.solutions) {
+                if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                 execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
+                if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+                    when = (solution.solutionInfo)[@"invoke solution computer"];
+                    execThis = ([when isEqualToString:@"after saving"] == YES) ? YES : NO;
+                }
+                if (execThis == YES) {
+                    FEMKernel *kernel = [FEMKernel sharedKernel];
+                    [kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                }
+            }
+        }
+        
+        if (initialize >= 2) break;
+    }
+    
+    // -----------------------------------------------------------------------
+    // THIS IS THE END LITTLE APPRENTICE, SAY GOOD BYE TO THE DARK SAMOURAI...
+    // -----------------------------------------------------------------------
+    if (initialize != 1) NSLog(@"JOB: *** ALL DONE ***\n");
+    if (initialize <= 0) [self.model deallocation];
+    
+    // TODO: add support for parallel runs
+    NSLog(@"JOB: The end.\n");
 }
 
 @end

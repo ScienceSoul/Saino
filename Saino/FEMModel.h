@@ -11,6 +11,8 @@
 #import "Constructors.h"
 #import "FEMVariable.h"
 #import "FEMSimulation.h"
+#import "FEMConstants.h"
+#import "FileReader.h"
 
 @interface FEMModel : NSObject {
     
@@ -43,7 +45,9 @@
     NSArray *_equations;                            // Array of FEMEquation objects
     NSArray *_initialConditions;                    // Array of FEMInitialConditions objects
     NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
-    FEMSimulation *_simulation;                   
+    FEMSimulation *_simulation;
+    FEMConstants *_constants;
+    FileReader *_mdf;
     
     Element_t *_elements;
     Element_t *_currentElement;
@@ -95,8 +99,10 @@
 @property(nonatomic, strong) NSArray *boundaries;
 @property(nonatomic, strong) NSArray *equations;
 @property(nonatomic, strong) NSArray *initialConditions;
-@property(nonatomic, strong) FEMSimulation *simulation;
 @property(nonatomic, strong) NSMutableArray *variables;
+@property(nonatomic, strong) FEMSimulation *simulation;
+@property(nonatomic, strong) FEMConstants *constants;
+@property(nonatomic, strong) FileReader *mdf;
 
 -(void)deallocation;
 

@@ -301,7 +301,10 @@ typedef struct solutionArraysContainer {
     int sizeActiveElements;
     int size1DefDofs;
     int size2DefDofs;
-    
+    int size1NtZeroingDone;
+    int size2NtZeroingDone;
+    int size1NtElement;
+    int size2NtElement;
 } solutionArraysContainer;
 
 typedef struct valueListArraysContainer {

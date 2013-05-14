@@ -137,7 +137,7 @@
 
 -(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
-    NSString *s;
+    NSString *s = nil;
     NSMutableString *strn;
     
     *found = NO;
@@ -350,7 +350,7 @@
 
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
-    double f;
+    double f = 0.0;
     NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
@@ -361,8 +361,6 @@
         [strn appendString:varName];
     } else strn = [NSMutableString stringWithString:@""];
 
-    
-    f = 0.0;
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
@@ -494,7 +492,7 @@
 
 -(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(int *)minv maxValue:(int *)maxv {
     
-    int l;
+    int l = 0;
     NSMutableString *strn;
     valueListArraysContainer *containers = NULL;
     
@@ -546,11 +544,10 @@
 
 -(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
-    BOOL l;
+    BOOL l = NO;
     NSMutableString *strn;
     
     *found = NO;
-    l = NO;
     
     if ([self listGetNameSpace:strn] == YES) {
         [strn appendString:@" "];
