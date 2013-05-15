@@ -18,6 +18,7 @@
 #import "FEMListUtilities.h"
 #import "FEMInterpolation.h"
 #import "FEMElementDescription.h"
+#import "SainoFieldSolutionsComputing.h"
 #import "Utils.h"
 
 @interface FEMUtilities ()
@@ -515,11 +516,16 @@
 
 #pragma mark Public methods
 
+@synthesize ext = _ext;
+@synthesize appSupportSubpath = _appSupportSubpath;
+
 - (id)init
 {
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _ext = @"bundle";
+        _appSupportSubpath = @"Application Support/Saino/PlugIns";
         _backSlash = (char)92;
     }
     return self;
@@ -1880,11 +1886,18 @@
     
     // We allocate memory for the string to hold the name of the plug-in only if we find that we are
     // using a plug-in when we parse the MDF. So if we get nil, we are not using a plug-in.
-    if (solution.plugInName != nil) {
-        // TODO: This is here where we should load the solution plug-in by its name (if present) and
-        // create an instance of the plug-in principal class. We should also check here if
-        // the plug-in class conforms to the protocol for solving equations.
-
+    if (solution.plugInName != nil) { // We are woking with a solution computer provided by a plug-in
+        // Load the plug-in bundle
+        NSBundle *solutionBundle = [self loadBundle:solution.plugInName];
+        if (solutionBundle == nil) {
+            NSLog(@"Error loading plug-in bundle.\n");
+            errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+        }
+        // Instantiate the plug-in principal class
+        if ([solution instantiatePrincipalClassFromPlugIn:solutionBundle] == NO) {
+            NSLog(@"Error instanciating plug-in principal class.\n");
+            errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+        }
     } else { // We are woking with a built-in solution computer
         solution.selector = @selector(fieldSolutionComputer::::);
     }
@@ -2899,6 +2912,52 @@
     }
     
     return fileName;
+}
+
+-(NSBundle *)loadBundle:(NSString *)bundleName {
+    
+    BOOL found = NO;
+    NSBundle *currentBundle;
+    NSArray *librarySearchPaths;
+    NSMutableArray *bundleSearchPaths = [NSMutableArray array];
+    
+    librarySearchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSAllDomainsMask - NSSystemDomainMask, YES);
+    for (NSString *currPath in librarySearchPaths) {
+        [bundleSearchPaths addObject:[currPath stringByAppendingPathComponent:self.appSupportSubpath]];
+    }
+    
+    NSString *builtInPlugInsPath = [[NSBundle mainBundle] builtInPlugInsPath];
+    if (builtInPlugInsPath != nil) [bundleSearchPaths addObject:builtInPlugInsPath];
+    
+    NSString *searchedSolutionBundle = [bundleName stringByAppendingPathExtension:self.ext];
+    
+    for (NSString *currPath in bundleSearchPaths) {
+        NSDirectoryEnumerator *bundleEnum;
+        bundleEnum = [[NSFileManager defaultManager] enumeratorAtPath:currPath];
+        if (bundleEnum) {
+            for (NSString *currBundlePath in bundleEnum) {
+                if ([currBundlePath isEqualToString:searchedSolutionBundle] == YES) {
+                    currentBundle = [NSBundle bundleWithPath:currBundlePath];
+                    found = YES;
+                    break;
+                }
+            }
+        }
+        if (found == YES) break;
+    }
+    
+    return currentBundle;
+}
+
+-(BOOL)plugInClassIsValid:(Class)plugInClass {
+    
+    if ([plugInClass conformsToProtocol:@protocol(SainoFieldSolutionsComputing)] == YES) {
+        if ([plugInClass instancesRespondToSelector:@selector(fieldSolutionComputer)] == YES) {
+            return YES;
+        }
+    }
+    
+    return NO;
 }
 
 @end

@@ -7,6 +7,7 @@
 //
 
 #import "FEMSolution.h"
+#import "FEMUtilities.h"
 #import "Utils.h"
 
 @interface FEMSolution ()
@@ -395,6 +396,24 @@
     
     matContainers->ILUCols = iWork;
     matContainers->CILUValues = cWork;
+}
+
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle *)bundle {
+    
+    Class currPrincipalClass;
+    FEMUtilities *utilities;
+    
+    utilities = [[FEMUtilities alloc] init];
+    
+    currPrincipalClass = [bundle principalClass];
+    if (currPrincipalClass) {
+        if ([utilities plugInClassIsValid:currPrincipalClass] == YES) {
+            self.plugInPrincipalClassInstance = [[currPrincipalClass alloc] init];
+            if (self.plugInPrincipalClassInstance) return YES;
+        }
+    }
+    
+    return NO;
 }
 
 @end

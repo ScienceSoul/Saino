@@ -82,6 +82,7 @@
 -(void)ilutWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n;
 -(void)ilutComplexWorkspaceCheckAtIndex:(int)i numberOfRows:(int)n;
 
-
+// Instantiate the plug-in principal class
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle *)bundle;
 
 @end

@@ -12,7 +12,13 @@
 #import "FEMVariable.h"
 #import "FEMSolution.h"
 
-@interface FEMUtilities : NSObject
+@interface FEMUtilities : NSObject {
+    NSString *_ext;
+    NSString *_appSupportSubpath;
+}
+
+@property(nonatomic, strong) NSString *ext;
+@property(nonatomic, strong) NSString *appSupportSubpath;
 
 -(FEMMatrix *)allocateMatrix;
 -(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix *)a;
@@ -40,5 +46,11 @@
 
 -(BOOL)isFileNameQualified:(NSString *)file;
 -(NSMutableString *)nextFreeFileName:(NSString *)fileName0 suffix:(NSString *)suffix0 lastExisting:(BOOL *)lastExisting;
+
+// Load bundle for plug-ins support
+-(NSBundle *)loadBundle:(NSString *)bundleName;
+
+// Plug-in validation
+-(BOOL)plugInClassIsValid:(Class)plugInClass;
 
 @end
