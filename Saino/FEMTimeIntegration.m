@@ -182,7 +182,7 @@
     }
     
     a = doublevec(0, 3);
-    memset( a, 0.0, (4*sizeof(a)) );
+    memset( a, 0.0, 4*sizeof(double) );
     
     a[0] = 1.0 / dts[0];
     a[1] = -1.0 / dts[0];

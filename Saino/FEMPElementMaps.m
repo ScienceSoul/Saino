@@ -625,7 +625,7 @@
 **********************************************************************/
 -(void)getBoundaryMapForElement:(Element_t *)element localNumber:(int)i resultMap:(int *)map {
     
-    memset( map, 0, (4*sizeof(map)) );
+    memset( map, 0, 4*sizeof(int) );
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {
@@ -669,7 +669,7 @@
     
     int j;
     
-    memset( map, 0, (4*sizeof(map)) );
+    memset( map, 0, 4*sizeof(int) );
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {

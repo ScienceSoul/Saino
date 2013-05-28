@@ -146,9 +146,7 @@
         _plugInPrincipalClassInstance = nil;
         
         _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer));
-        _containers->ntZeroingDone = NULL;
         _containers->activeElements = NULL;
-        _containers->ntElement = NULL;
         _containers->defDofs = NULL;
         _containers->size1DefDofs = 0;
         _containers->size2DefDofs = 0;
@@ -158,17 +156,9 @@
 }
 
 -(void)deallocation {
-    if (_containers->ntZeroingDone != NULL) {
-        free_bmatrix(_containers->ntZeroingDone, 0, _containers->size1NtZeroingDone-1, 0, _containers->size2NtZeroingDone-1);
-        _containers->ntZeroingDone = NULL;
-    }
     if (_containers->activeElements != NULL) {
         free_ivector(_containers->activeElements, 0, _containers->sizeActiveElements-1);
         _containers->activeElements = NULL;
-    }
-    if (_containers->ntElement != NULL) {
-        free_imatrix(_containers->ntElement, 0, _containers->size1NtElement-1, 0, _containers->size2NtElement-1);
-        _containers->ntElement = NULL;
     }
     if (_containers->defDofs != NULL) {
         free_imatrix(_containers->defDofs, 0, _containers->size1DefDofs-1, 0, _containers->size2DefDofs-1);

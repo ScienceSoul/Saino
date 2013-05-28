@@ -42,6 +42,4 @@
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name;
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name;
 
--(void)getReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName element:(Element_t *)element buffer:(listBuffer *)result info:(BOOL *)found;
-
 @end

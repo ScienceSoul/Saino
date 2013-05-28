@@ -699,9 +699,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // (i+1)P_{i+1}(x) = (2i+1)*x*P_i(x) - i*P{i-1}(x), P_{0} = 1; P_{1} = x;
     // IMPORTANT: Computed coefficients inaccurate for n > ~15
     //--------------------------------------------------------------------------
-    memset( p, 0.0, ((n+1)*sizeof(p)) );
-    memset( p0, 0.0, (n*sizeof(p0)) );
-    memset( p1, 0.0, ((n+1)*sizeof(p1)) );
+    memset( p, 0.0, (n+1)*sizeof(double) );
+    memset( p0, 0.0, n*sizeof(double) );
+    memset( p1, 0.0, (n+1)*sizeof(double) );
     p0[1] = 1;
     p1[1] = 1;
     p1[2] = 0;
@@ -1011,11 +1011,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         if (element.ElementCode == 202) {
             a = doublematrix(0, 13, 0, 13);
-            for (i=0; i<14; i++) {
-                for (j=0; j<14; j++) {
-                    a[i][j] = 0.0;
-                }
-            }
+            memset( *a, 0.0, (14*14)*sizeof(double) );
             [self FEMElementDescription_compute1DPBasis:a sizeOfBasis:14];
             
             for (i=2; i<14; i++) {
@@ -1098,7 +1094,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     basisTerms = intvec(0, _maxDeg3-1);
     
     // Add the connectivity element types...
-    memset( basisTerms, 0.0, (_maxDeg3*sizeof(basisTerms)) );
+    memset( basisTerms, 0, _maxDeg3*sizeof(int) );
     element.GaussPoints = 0;
     element.GaussPoints2 = 0;
     element.StabilizationMK = 0;
@@ -1160,11 +1156,11 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         if (element.NodeV == NULL) {
             element.NodeV = doublevec(0, element.NumberOfNodes-1);
-            memset( element.NodeV, 0.0, (element.NumberOfNodes*sizeof(element.NodeV)) );
+            memset( element.NodeV, 0.0, element.NumberOfNodes*sizeof(double) );
         }
         if (element.NodeW == NULL) {
             element.NodeW = doublevec(0, element.NumberOfNodes-1);
-            memset( element.NodeW, 0.0, (element.NumberOfNodes*sizeof(element.NodeW)) );
+            memset( element.NodeW, 0.0, element.NumberOfNodes*sizeof(double) );
         }
         
         [self addDescriptionOfElement:element withBasisTerms:basisTerms];
@@ -1453,10 +1449,10 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
 *******************************************************************************************************/
  
-    int i, j, k, p, q, t, dim;
+    int i, j, p, q, t, dim;
     double *eigr, s, *ddp, *ddq, ***dNodalBasisdx;
     double u, v, w, **l, **g, *l_transpose, *g_transpose, *work, sum1, sum2;
-    GaussIntegrationPoints *integCompound;
+    GaussIntegrationPoints *IP;
     FEMNumericIntegration *numericIntegration;
     BOOL stat;
     
@@ -1495,13 +1491,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         return;
     }
     
-    for (i=0; i<n; i++) {
-        for (j=0; j<n; j++) {
-            for (k=0; k<3; k++) {
-                dNodalBasisdx[i][j][k] = 0.0;
-            }
-        }
-    }
+    memset(**dNodalBasisdx, 0.0, (n*n*3)*sizeof(double) );
     for (p=0; p<n; p++) {
         u = element->Type.NodeU[p];
         v = element->Type.NodeV[p];
@@ -1522,18 +1512,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     dim = [mesh dimension];
-    integCompound = GaussQuadrature(element, NULL, NULL);
+    IP = GaussQuadrature(element, NULL, NULL);
     
-    for (i=0; i<n-1; i++) {
-        for (j=0; j<n-1; j++) {
-            l[i][j] = 0.0;
-            g[i][j] = 0.0;
-        }
-    }
-    for (t =0; t<integCompound->n; t++) {
-        u = integCompound->u[t];
-        v = integCompound->v[t];
-        w = integCompound->w[t];
+    memset( *l, 0.0, ((n-1)*(n-1))*sizeof(double) );
+    memset( *g, 0.0, ((n-1)*(n-1))*sizeof(double) );
+    for (t =0; t<IP->n; t++) {
+        u = IP->u[t];
+        v = IP->v[t];
+        w = IP->w[t];
         
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes inMesh:mesh 
@@ -1541,12 +1527,12 @@ static double AEPS = 10.0 * DBL_EPSILON;
                                             secondEvaluationPoint:v 
                                              thirdEvaluationPoint:w];
         
-        s = [numericIntegration metricDeterminant] * integCompound->s[t];
+        s = [numericIntegration metricDeterminant] * IP->s[t];
         
         for (p=1; p<n; p++) {
             for (q=1; q<n; q++) {
-               memset( ddp, 0.0, (3*sizeof(ddp)) );
-               memset( ddq, 0.0, (3*sizeof(ddq)) );
+               memset( ddp, 0.0, 3*sizeof(double) );
+               memset( ddq, 0.0, 3*sizeof(double) );
                for (i=0; i<dim; i++) {
                    g[p-1][q-1] = g[p-1][q-1] + s * numericIntegration.basisFirstDerivative[p][i] * numericIntegration.basisFirstDerivative[q][i];
                    sum1 = 0.0;
@@ -1644,12 +1630,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_dvector(g_transpose, 0, ((n-1)*(n-1))-1);
     free_dvector(work, 0, (16*n)-1);
     
-    free_dvector(integCompound->u, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(integCompound->v, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(integCompound->w, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(integCompound->s, 0, MAX_INTEGRATION_POINTS-1);
-    free(integCompound);
-    
+    GaussQuadratureDeallocation(IP);
+
     [numericIntegration deallocation:mesh];
 
 }
@@ -2279,7 +2261,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             
             detA = dxdu*dxdu + dydu*dydu;
             if (detA <= 0.0) {
-                memset( normals, 0.0, (3*sizeof(normals)) );
+                memset( normals, 0.0, 3*sizeof(double) );
                 return;
             }
             detA = 1.0 / sqrt(detA);

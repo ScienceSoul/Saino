@@ -305,38 +305,35 @@
                                     variableContainers->Values[k] = [listUtilities listGetConstReal:model inArray:initialCondition.valuesList forVariable:variable.name info:&found minValue:NULL maxValue:NULL];
                                 }
                             } else if (variable.dofs <= 1) {
-                                [listUtilities getReal:model inArray:initialCondition.valuesList forVariable:variable.name element:&elements[t] buffer:&work info:&found];
+                                found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
                                         if (variableContainers->Perm !=NULL) k1 = variableContainers->Perm[k1];
                                         if (k1 >= 0) variableContainers->Values[k1] = work.vector[k];
                                     }
-                                    free_dvector(work.vector, 0, work.m-1);
                                 }
                                 
                                 if (_transient == YES && solution.timeOrder == 2) {
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" velocity"];
-                                    [listUtilities getReal:model inArray:initialCondition.valuesList forVariable:varName element:&elements[t] buffer:&work info:&found];
+                                    found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
                                             if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
                                             if (k1 >= 0) variableContainers->PrevValues[k1][0] = work.vector[k];
                                         }
-                                        free_dvector(work.vector, 0, work.m-1);
                                     }
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" acceleration"];
-                                    [listUtilities getReal:model inArray:initialCondition.valuesList forVariable:varName element:&elements[t] buffer:&work info:&found];
+                                    found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
                                             if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
                                             if (k1 >= 0) variableContainers->PrevValues[k1][1] = work.vector[k];
                                         }
-                                         free_dvector(work.vector, 0, work.m-1);
                                     }
                                 }
                                 
@@ -368,7 +365,6 @@
                                             if (k1 >= 0) variableContainers->Values[variable.dofs*k1+l] = work.tensor[l][0][k];
                                         }
                                     }
-                                    free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
                                 }
                             }
                             [listUtilities listSetNameSpace:@""];
@@ -379,6 +375,8 @@
             free_ivector(indexes, 0, mesh.maxElementDofs-1);
         }
     }
+    if (work.vector != NULL) free_dvector(work.vector, 0, work.m-1);
+    if (work.tensor != NULL) free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
 }
 
 /*************************************************************
@@ -501,7 +499,7 @@
                     }
                     
                     if (variable.dofs <= 1) {
-                        [listUtilities getReal:model inArray:bc forVariable:variable.name element:&elements[t] buffer:&work info:&found];
+                        found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work];
                         if (found == YES) {
                             ntBoundary = NO;
                             if ([kernel getElementFamily:&elements[t]] != 1) {
@@ -559,13 +557,13 @@
                                         
                                         switch (vectDof) {
                                             case 1:
-                                                memcpy(vec, nrm, 3);
+                                                memcpy(vec, nrm, 3*sizeof(double));
                                                 break;
                                             case 2:
-                                                memcpy(vec, t1, 3);
+                                                memcpy(vec, t1, 3*sizeof(double));
                                                 break;
                                             case 3:
-                                                memcpy(vec, t2, 3);
+                                                memcpy(vec, t2, 3*sizeof(double));
                                                 break;
                                         }
                                         free_dvector(nodes->x, 0, nodes->numberOfNodes-1);
@@ -601,32 +599,29 @@
                                     }
                                 }
                             }
-                            free_dvector(work.vector, 0, work.m-1);
                         }
                         
                         if (_transient == YES && solution.timeOrder == 2) {
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" velocity"];
-                            [listUtilities getReal:model inArray:bc forVariable:varName element:&elements[t] buffer:&work info:&found];
+                            found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
                                     if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
                                     if (k >= 0) variableContainers->PrevValues[k][0] = work.vector[j];
                                 }
-                                free_dvector(work.vector, 0, work.m-1);
                             }
                             
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" acceleration"];
-                            [listUtilities getReal:model inArray:bc forVariable:varName element:&elements[t] buffer:&work info:&found];
+                            found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
                                     if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
                                     if (k >= 0) variableContainers->PrevValues[k][1] = work.vector[j];
                                 }
-                                free_dvector(work.vector, 0, work.m-1);
                             }
                         }
                     } else {
@@ -639,7 +634,6 @@
                                     if (k >= 0) variableContainers->Values[variable.dofs*k+l] = work.tensor[l][0][j];
                                 }
                             }
-                            free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
                         }
                     }
                     
@@ -648,6 +642,9 @@
             }
         }
     }
+    
+    if (work.vector != NULL) free_dvector(work.vector, 0, work.m-1);
+    if (work.tensor != NULL) free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
     
     [elementDescription deallocation];
     free_dvector(nrm, 0, 2);
@@ -1142,7 +1139,7 @@ jump:
             for (FEMVariable *variable in mesh.variables) {
                 varContainers = variable.getContainers;
                 if (varContainers->EigenValues != NULL) {
-                    memset( varContainers->Values, 0.0, (varContainers->sizeValues*sizeof(varContainers->Values)) );
+                    memset( varContainers->Values, 0.0, varContainers->sizeValues*sizeof(double) );
                     varContainers->CValues = NULL;
                 }
             }
@@ -1416,7 +1413,7 @@ jump:
                                     }
                                     _savedSteps = [self FEMJob_saveResult:_outputName model:model mesh:mesh time:currentStep simulationTime:_sTime[0] binary:binaryOutput saveAll:saveAll freeSurface:NULL];
                                 }
-                                memset( varContainers->Values, 0.0, (varContainers->sizeValues*sizeof(varContainers->Values)) );
+                                memset( varContainers->Values, 0.0, varContainers->sizeValues*sizeof(double) );
                             }
                         }
                     }
@@ -1628,7 +1625,7 @@ jump:
             
             _timeSteps = intvec(0, listBuffer.m-1);
             _sizeTimeSteps = listBuffer.m;
-            memcpy(_timeSteps, listBuffer.ivector, listBuffer.m*sizeof(listBuffer.ivector));
+            memcpy(_timeSteps, listBuffer.ivector, listBuffer.m*sizeof(int));
             free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
             
             found = [listUtilities listGetConstRealArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step size" buffer:&listBuffer];
@@ -1703,17 +1700,13 @@ jump:
         
         _dt = 0.0;
         
-        memset( _sTime, 0.0, (1*sizeof(_sTime)) );
-        memset( _sStep, 0.0, (1*sizeof(_sStep)) );
-        memset( _sSize, _dt, (1*sizeof(_sSize)) );
-        memset( _sInterval, 0.0, (1*sizeof(_sInterval)) );
-        memset( _steadyIt, 0.0, (1*sizeof(_steadyIt)) );
-        memset( _nonLinIt, 0.0, (1*sizeof(_nonLinIt)) );
-        for (i=0; i<1; i++) {
-            for (j=0; j<5; j++) {
-                _sPrevSizes[i][j] = 0.0;
-            }
-        }
+        memset( _sTime, 0.0, 1*sizeof(double) );
+        memset( _sStep, 0.0, 1*sizeof(double) );
+        memset( _sSize, _dt, 1*sizeof(double) );
+        memset( _sInterval, 0.0, 1*sizeof(double) );
+        memset( _steadyIt, 0.0, 1*sizeof(double) );
+        memset( _nonLinIt, 0.0, 1*sizeof(double) );
+        memset( *_sPrevSizes, 0.0, (1*5)*sizeof(double) );
         
         _coupledMinIter = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state min iterations" info:&found minValue:NULL maxValue:NULL];
         
@@ -1726,11 +1719,13 @@ jump:
         if (found == NO) {
             _outputIntervals = intvec(0, _sizeTimeSteps-1);
             _sizeOutputIntervals = _sizeTimeSteps;
-             memset( _outputIntervals, 1, (_sizeOutputIntervals*sizeof(_outputIntervals)) );
+            for (i=0; i<_sizeOutputIntervals; i++) {
+                _outputIntervals[i] = 1;
+            }
         } else {
             _outputIntervals = intvec(0, listBuffer.m-1);
             _sizeOutputIntervals = listBuffer.m;
-            memcpy(_outputIntervals, listBuffer.ivector, listBuffer.m*sizeof(listBuffer.ivector));
+            memcpy(_outputIntervals, listBuffer.ivector, listBuffer.m*sizeof(int));
             free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
         }
         

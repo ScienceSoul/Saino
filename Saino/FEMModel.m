@@ -56,6 +56,7 @@
 @synthesize boundaries = _boundaries;
 @synthesize equations = _equations;
 @synthesize initialConditions = _initialConditions;
+@synthesize materials = _materials;
 @synthesize variables = _variables;
 @synthesize simulation = _simulation;
 @synthesize constants = _constants;
@@ -162,6 +163,7 @@
     
     int i, j, t;
     double detJ, loadAtIP, weight;
+    BOOL stat;
     GaussIntegrationPoints *IP;
     Nodes_t nodes, *meshNodes;
     FEMNumericIntegration *integration;
@@ -186,8 +188,8 @@
     
     for (t=0; t<IP->n; t++) {
         // Basis function values & derivatives at the integration point
-        [integration setBasisForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t] withBubbles:NO basisDegree:NULL];
-        [integration setMetricDeterminantForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t]];
+        stat = [integration setBasisForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t] withBubbles:NO basisDegree:NULL];
+        stat = [integration setMetricDeterminantForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t]];
         
         detJ = integration.metricDeterminant;
         
@@ -215,18 +217,14 @@
     free_dvector(nodes.y, 0, numberOfNodes-1);
     free_dvector(nodes.z, 0, numberOfNodes-1);
     
-    free_dvector(IP->u, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(IP->v, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(IP->w, 0, MAX_INTEGRATION_POINTS-1);
-    free_dvector(IP->s, 0, MAX_INTEGRATION_POINTS-1);
-    free(IP);
+    GaussQuadratureDeallocation(IP);
     
     [integration deallocation:mesh];
 }
 
 -(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal {
     
-    int i, j, n, t, active;
+    int i, n, t, active;
     int *cperm;
     double power, elemMin, elemMax;
     double **stiff, *force;
@@ -283,12 +281,8 @@
     //Allocate some storage
     force = doublevec(0, solution.mesh.maxElementNodes-1);  // Just big enough for elemental arrays
     stiff = doublematrix(0, solution.mesh.maxElementNodes-1, 0, solution.mesh.maxElementNodes-1);
-    for (i=0; i<solution.mesh.maxElementNodes; i++) {
-        for (j=0; j<solution.mesh.maxElementNodes; j++) {
-            stiff[i][j] = 0.0;
-        }
-        force[i] = 0.0;
-    }
+    memset( force, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+    memset( *stiff, 0.0, (solution.mesh.maxElementNodes*solution.mesh.maxElementNodes)*sizeof(double) );
     
     elemMin = HUGE_VALL;
     elemMin = -HUGE_VALL;
@@ -297,8 +291,8 @@
     power = 1.0 / expo;
     active = solution.mesh.numberOfBulkElements;
     
-    memset( matrixContainers->RHS, 0.0, (matrixContainers->sizeRHS*sizeof(matrixContainers->RHS)) );
-    memset( matrixContainers->Values, 0.0, (matrixContainers->sizeValues*sizeof(matrixContainers->Values)) );
+    memset( matrixContainers->RHS, 0.0, matrixContainers->sizeRHS*sizeof(double) );
+    memset( matrixContainers->Values, 0.0, matrixContainers->sizeValues*sizeof(double) );
     
     crsMatrix = [[FEMMatrixCRS alloc] init];
     
@@ -316,7 +310,7 @@
         }
     }
     
-    memset( h, 0.0, (sizeNodal*sizeof(h)) );
+    memset( h, 0.0, sizeNodal*sizeof(double) );
     
     kernel = [FEMKernel sharedKernel];
     // TODO: Add support for parallel run here

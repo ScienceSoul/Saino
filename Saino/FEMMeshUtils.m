@@ -207,7 +207,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
         
         if (element->EdgeIndexes == NULL) element->EdgeIndexes = intvec(0, n-1);
-        memset( element->EdgeIndexes, 0, (n*sizeof(element->EdgeIndexes)) );
+        memset( element->EdgeIndexes, -1, n*sizeof(int) );
     }
     
     hashTable = (HashTable_t*)malloc(sizeof(HashTable_t) * (mesh.numberOfNodes) );
@@ -444,7 +444,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     for (i=0; i<mesh.numberOfBulkElements; i++) {
         element = &elements[i];
         if (element->EdgeIndexes == NULL) element->EdgeIndexes = intvec(0, 11);
-        memset( element->EdgeIndexes, 0, (12*sizeof(element->EdgeIndexes)) );
+        memset( element->EdgeIndexes, -1, 12*sizeof(int) );
     }
     
     hashTable = (HashTable_t*)malloc(sizeof(HashTable_t) * (mesh.numberOfNodes) );
@@ -530,7 +530,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                     for (ii=0; ii<element->Type.NumberOfFaces; ii++) {
                         if (faces[element->FaceIndexes[ii]].EdgeIndexes == NULL) {
                             faces[element->FaceIndexes[ii]].EdgeIndexes = intvec(0, faces[element->FaceIndexes[ii]].Type.NumberOfEdges-1);
-                            memset( faces[element->FaceIndexes[ii]].EdgeIndexes, 0, (faces[element->FaceIndexes[ii]].Type.NumberOfEdges*sizeof(faces[element->FaceIndexes[ii]].EdgeIndexes)) );
+                            memset( faces[element->FaceIndexes[ii]].EdgeIndexes, -1, faces[element->FaceIndexes[ii]].Type.NumberOfEdges*sizeof(int) );
                         }
                         for (jj=0; jj<faces[element->FaceIndexes[ii]].Type.NumberOfEdges; jj++) {
                             if (faceEdgeMap[ii][jj] == k) {
@@ -590,7 +590,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                     for (ii=0; ii<element->Type.NumberOfFaces; ii++) {
                         if (faces[element->FaceIndexes[ii]].EdgeIndexes == NULL) {
                             faces[element->FaceIndexes[ii]].EdgeIndexes = intvec(0, faces[element->FaceIndexes[ii]].Type.NumberOfEdges-1);
-                            memset(faces[element->FaceIndexes[ii]].EdgeIndexes, 0, (faces[element->FaceIndexes[ii]].Type.NumberOfEdges*sizeof(faces[element->FaceIndexes[ii]].EdgeIndexes)) );
+                            memset(faces[element->FaceIndexes[ii]].EdgeIndexes, -1, faces[element->FaceIndexes[ii]].Type.NumberOfEdges*sizeof(int) );
                         }
                         for (jj=0; jj<faces[element->FaceIndexes[ii]].Type.NumberOfEdges; jj++) {
                             if (faceEdgeMap[ii][jj] == k) {
@@ -720,7 +720,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     for (i=0; i<mesh.numberOfBulkElements; i++) {
         element = &elements[i];
         if (element->FaceIndexes == NULL) element->FaceIndexes = intvec(0, 5);
-        memset( element->FaceIndexes, 0, (6*sizeof(element->FaceIndexes)) );
+        memset( element->FaceIndexes, -1, 6*sizeof(int) );
     }
     
     hashTable = (HashTable_t*)malloc(sizeof(HashTable_t) * (mesh.numberOfNodes) );
@@ -1199,8 +1199,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Fill in the mesh element structures with the boundary elements
     n1 = 0;
     n2 = 0;
-    memset( perm1, 0, (mesh.numberOfNodes*sizeof(perm1)) );
-    memset( perm2, 0, (mesh.numberOfNodes*sizeof(perm2)) );
+    memset( perm1, 0, mesh.numberOfNodes*sizeof(int) );
+    memset( perm2, 0, mesh.numberOfNodes*sizeof(int) );
     bmesh1.maxElementNodes = 0;
     bmesh2.maxElementNodes = 0;
     dot1min = HUGE_VAL;
@@ -1366,11 +1366,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // Initialize the mapping matrices
     memset( x, 0.0, sizeof(x) );
-    for (i=0; i<4; i++) {
-        for (j=0; j<4; j++) {
-            identity[i][j] = 0.0;
-        }
-    }
+    memset( identity, 0.0, sizeof(identity) );
     for (i=0; i<4; i++) {
         identity[i][i] = 1.0;
     }
@@ -1880,7 +1876,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     nodals = doublevec(0, mesh.maxElementNodes-1);
-    memset( nodals, 0.0, (mesh.maxElementNodes*sizeof(nodals)) );
+    memset( nodals, 0.0, mesh.maxElementNodes*sizeof(double) );
     
     // Add face centers for bricks
     for (i=0; i<mesh.numberOfFaces; i++) {
@@ -1936,7 +1932,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
-    memset( nodals, 0.0, (mesh.maxElementNodes*sizeof(nodals)) );
+    memset( nodals, 0.0, mesh.maxElementNodes*sizeof(double) );
     
     // Add centerpoint for quads & bricks
     for (i=0; i<mesh.numberOfBulkElements; i++) {
@@ -3219,7 +3215,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     
     work = doublevec(0, varContainers->sizeValues-1);
-    memcpy(work, varContainers->Values, varContainers->sizeValues);
+    memcpy(work, varContainers->Values, varContainers->sizeValues*sizeof(double));
     for (k=1; k<=dofs; k++) {
         for (i=0; i<varContainers->sizePerm; i++) {
             if (permutation[i] >= 0) {
@@ -3244,7 +3240,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
     free_dvector(work, 0, varContainers->sizeValues-1);
     
-    memcpy(varContainers->Perm, permutation, varContainers->sizePerm);
+    memcpy(varContainers->Perm, permutation, varContainers->sizePerm*sizeof(int));
     solution.variable.solution = solution;
     free_ivector(permutation, 0, varContainers->sizePerm-1);
     
@@ -3273,7 +3269,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             }
             matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
             matContainers->sizeMassValues = matContainers->sizeValues;
-            memset( matContainers->MassValues, 0.0, (matContainers->sizeMassValues*sizeof(matContainers->MassValues)) );
+            memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
         }
     } else if (solutionMatContainers->Force != NULL) {
         n1 = matrix.numberOfRows;
@@ -3281,11 +3277,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         matContainers->Force = doublematrix(0, n1-1, 0, n2-1);
         matContainers->size1force = n1;
         matContainers->size2Force = n2;
-        for (i=0; i<n1; i++) {
-            for (j=0; j<n2; j++) {
-                matContainers->Force[i][j] = 0.0;
-            }
-        }
+        memset( *matContainers->Force, 0.0, (n1*n2)*sizeof(double) );
     }
     
     solution.matrix = matrix;

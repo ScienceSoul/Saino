@@ -341,16 +341,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     zero = 0.0;
     one = 1.0;
     
-    for (i=0; i<n; i++) {
-        for (j=0; j<3+2*(polyDegree+1); j++) {
-            work[i][j] = 0.0;
-        }
-    }
-    for (i=0; i<polyDegree+1; i++) {
-        for (j=0; j<3+2*(polyDegree+1); j++) {
-            rwork[i][j] = 0.0;
-        }
-    }
+    memset( *work, 0.0, (n*(3+2*(polyDegree+1)))*sizeof(double) );
+    memset( *rwork, 0.0, ((polyDegree+1)*(3+2*(polyDegree+1)))*sizeof(double) );
     
     rr = 0;
     r = rr + 1;
@@ -365,7 +357,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     y = yl+1;
     
 
-    memset( buffer, 0.0, (n*sizeof(buffer)) );
+    memset( buffer, 0.0, n*sizeof(double) );
     
     [matvecInvocation setArgument:&solution atIndex:2];
     [matvecInvocation setArgument:&xvec atIndex:3];
@@ -589,27 +581,27 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
         // Convex combination
         
-        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
-        memset( buffer2, 0.0, ((polyDegree+1)*sizeof(buffer2)) );
+        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer2, 0.0, (polyDegree+1)*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
              buffer[i] = rwork[i][y0];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
         kappa0 = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
         kappal = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
-        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
@@ -630,7 +622,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             }
         }
         
-        memset( buffer, 0.0, ((polyDegree+1)*sizeof(buffer)) );
+        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
@@ -650,7 +642,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             [pcondlInvocation setArgument:&ipar atIndex:5];
             [pcondlInvocation invoke];
             
-            memset( buffer, 0.0, (n*sizeof(buffer)) );
+            memset( buffer, 0.0, n*sizeof(double) );
             [matvecInvocation setArgument:&solution atIndex:2];
             [matvecInvocation setArgument:&t atIndex:3];
             [matvecInvocation setArgument:&buffer atIndex:4];
@@ -754,12 +746,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (m > 1) {
         v = doublematrix(0, n-1, 0, (m-1)-1);
         s = doublematrix(0, n-1, 0, (m-1)-1);
-        for (i=0; i<n; i++) {
-            for (j=0; j<m-1; j++) {
-                v[i][j] = 0.0;
-                s[i][j] = 0.0;
-            }
-        }
+        memset( *v, 0.0, (n*(m-1))*sizeof(double) );
+        memset( *s, 0.0, (n*(m-1))*sizeof(double) );
     }
     
     // Acquire signature invocations and set selector for invocations
@@ -779,7 +767,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setTarget:preconditioning];
 
     
-    memcpy(xvec, rhsvec, n*sizeof(rhsvec));
+    memcpy(xvec, rhsvec, n*sizeof(double));
 
     [matvecInvocation setArgument:&solution atIndex:2];
     [matvecInvocation setArgument:&xvec atIndex:3];
@@ -1048,8 +1036,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
         rtld[i] = r[i];
     }
     
-    memset( p, 0.0, (ndim*sizeof(p)) );
-    memset( v, 0.0, (ndim*sizeof(v)) );
+    memset( p, 0.0, ndim*sizeof(double) );
+    memset( v, 0.0, ndim*sizeof(double) );
     
     oldrho = 1;
     omega = 1;
@@ -1359,7 +1347,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     for (i=0; i<ndim; i++) {
         rtld[i] = r[i];
     }
-    memset( u, 0.0, (ndim*sizeof(u)) );
+    memset( u, 0.0, ndim*sizeof(double) );
     oldrho = 1;
     omega2 = 1;
     alpha = 0;
@@ -1789,7 +1777,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         t2v[i] = v[i];
     }
     
-    memset( d, 0.0, (ndim*sizeof(d)) );
+    memset( d, 0.0, ndim*sizeof(double) );
     tau = cblas_dnrm2(HUTI_NDIM, r, 1);
     oldgamma = 0;
     gamma = 0;
@@ -2974,14 +2962,10 @@ jump:
         }
     }
     
-    for (i=0; i<(HUTI_GMRES_RESTART+1); i++) {
-        for (j=0; j<(HUTI_GMRES_RESTART+1); j++) {
-            h[i][j] = 0.0;
-        }
-    }
-    memset( cs, 0.0, ((HUTI_GMRES_RESTART+1)*sizeof(cs)) );
-    memset( sn, 0.0, ((HUTI_GMRES_RESTART+1)*sizeof(sn)) );
-    memset( vtmp, 0.0, (ndim*sizeof(vtmp)) );
+    memset( *h, 0.0, ((HUTI_GMRES_RESTART+1)*(HUTI_GMRES_RESTART+1))*sizeof(double) );
+    memset( cs, 0.0, (HUTI_GMRES_RESTART+1)*sizeof(double) );
+    memset( sn, 0.0, (HUTI_GMRES_RESTART+1)*sizeof(double) );
+    memset( vtmp, 0.0, ndim*sizeof(double) );
     work[0][vtmp_ind-1] = 1.0;
     
     // This is where the loop starts

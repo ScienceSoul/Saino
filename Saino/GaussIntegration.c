@@ -375,9 +375,7 @@ void GaussQuadraturePoints1D(int n) {
     // (i+p)P_{i+1}(x) = (2i+1)*x*P_i{x} - i*P_{i-1}(x), P_{0} = 1; P_{1} = x;
     // Caveat: Computed coefficients inaccurate for n > ~15
     
-    for (i=0;i<=n;i++) {
-        P[i] = 0.0;
-    }
+    memset( P, 0.0, (n+1)*sizeof(double) );
     P0[0] = 1.0;
     P1[0] = 1.0;
     P1[1] = 0.0;
@@ -418,13 +416,9 @@ void GaussQuadraturePoints1D(int n) {
     // Solve the roots of the polynomial by forming a matrux whose
     // characteristic is the n:th Legendre polynomial and solving 
     // for the eigenvalues
-    for(i=0;i<n/2;i++) {
-        for(i=0;j<n/2;j++) {
-            A[i][j] = 0.0;
-        }
-    }
+    memset( *A, 0.0, (n/2*n/2)*sizeof(double) );
     for(i=0;i<np-1;i++) {
-        A[i][i+1] = 1;
+        A[i][i+1] = 1.0;
     }
     for(i=0;i<np;i++) {
         A[np-1][i] = -P[(np-1)+2-(i+1)] / P[0];
@@ -443,7 +437,6 @@ void GaussQuadraturePoints1D(int n) {
         for (j=0; j<n/2; j++) {
             AT[j+(n/2)*i] = A[j][i];
         }
-        
     }
     
     dgeev_(&ch1, &ch2, &np, AT, &arg1, Points, P0, Work, &arg2, Work, &arg3, Work, &arg4, &info);
@@ -452,9 +445,9 @@ void GaussQuadraturePoints1D(int n) {
     for(i=0;i<np+1;i++) {
         Q[i] = P[i];
     }
-    for (i=0;i<=n;i++) {
-        P[i] = 0.0;
-    }
+    
+    memset( P, 0.0, (n+1)*sizeof(double) );
+
     for(i=0;i<np+1;i++) {
         P[2*(i+1)-2] = Q[i];
     }
@@ -467,9 +460,7 @@ void GaussQuadraturePoints1D(int n) {
         Points[2*(i+1)-1] = -sqrt(Q[i]);
     }
     if ((n % 2) == 1) {
-        for(i=0;i<n;i++) {
-            Points[i] = 0.0;
-        }
+        memset( Points, 0.0, n*sizeof(double) );
     }
     
     DerivPoly(n,Q,P);
@@ -535,23 +526,47 @@ void GaussQuadratureInit(GaussIntegrationPoints *pt) {
     
     int n;
     
-    if (GInit == false) {
+    if (GInit == false || (pt->u == NULL && pt->v == NULL && pt->w == NULL && pt->s == NULL)) {
         GInit = true;
         for(n=1;n<=MAXN;n++) {
             GaussQuadraturePoints1D(n);
         }
+    
+        // The caller which gets the pointer to the structure of Gauss integration points
+        // is responsible for releasing this memory by calling GaussQuadratureDeallocation()
+        pt->u = doublevec(0, MAX_INTEGRATION_POINTS-1);
+        pt->v = doublevec(0, MAX_INTEGRATION_POINTS-1);
+        pt->w = doublevec(0, MAX_INTEGRATION_POINTS-1);
+        pt->s = doublevec(0, MAX_INTEGRATION_POINTS-1);
+        
+        if (pt->u == NULL || pt->v == NULL || pt->w == NULL || pt->s == NULL) {
+            errorfunct("GaussQuadratureInit", "Memory allocation error.");
+        }
+    }
+}
+
+void GaussQuadratureDeallocation(GaussIntegrationPoints *pt) {
+    if (pt->u != NULL) {
+        free_dvector(pt->u, 0, MAX_INTEGRATION_POINTS-1);
+        pt->u = NULL;
     }
     
-    // The caller which gets the pointer to the structure of Gauss integration points
-    // is responsible for releasing this memory
-    pt->u = doublevec(0, MAX_INTEGRATION_POINTS-1);
-    pt->v = doublevec(0, MAX_INTEGRATION_POINTS-1);
-    pt->w = doublevec(0, MAX_INTEGRATION_POINTS-1);
-    pt->s = doublevec(0, MAX_INTEGRATION_POINTS-1);
-    
-    if (pt->u == NULL || pt->v == NULL || pt->w == NULL || pt->s == NULL) {
-        errorfunct("GaussQuadratureInit", "Memory allocation error.");
+    if (pt->v != NULL) {
+        free_dvector(pt->v, 0, MAX_INTEGRATION_POINTS-1);
+        pt->v = NULL;
     }
+    
+    if (pt->w != NULL) {
+        free_dvector(pt->w, 0, MAX_INTEGRATION_POINTS-1);
+        pt->w = NULL;
+    }
+    
+    if (pt->s != NULL) {
+        free_dvector(pt->s, 0, MAX_INTEGRATION_POINTS-1);
+        pt->s = NULL;
+    }
+    free(pt);
+    GInit = false;
 }
 
 void GaussQuadrature0D(int n, GaussIntegrationPoints *pt) {
@@ -586,10 +601,10 @@ void GaussQuadrature1D(int n, GaussIntegrationPoints *pt) {
     
     pt->n = n;
     for(i=0;i<n;i++) {
-        pt->u[i] = AllPoints[i][n];
+        pt->u[i] = AllPoints[i][n-1];
         pt->v[i] = 0.0;
         pt->w[i] = 0.0;
-        pt->s[i] = AllWeights[i][n];
+        pt->s[i] = AllWeights[i][n-1];
     }
 }
 
@@ -801,10 +816,10 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
     for(i=0;i<n;i++) {
         for(j=0;j<n;j++) {
             for(k=0;k<n;k++) {
-                pt->u[t] = AllPoints[k][n];
-                pt->v[t] = AllPoints[j][n];
-                pt->w[t] = AllPoints[i][n];
-                pt->s[t] = AllWeights[i][n] * AllWeights[j][n] * AllWeights[k][n];
+                pt->u[t] = AllPoints[k][n-1];
+                pt->v[t] = AllPoints[j][n-1];
+                pt->w[t] = AllPoints[i][n-1];
+                pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1] * AllWeights[k][n-1];
                 t++;
             }
         }
@@ -836,10 +851,10 @@ void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt) {
     for(i=0;i<n;i++) {
         for(j=0;j<n;j++) {
             for(k=0;k<n;k++) {
-                pt->u[t] = AllPoints[k][n];
-                pt->v[t] = AllPoints[j][n];
-                pt->w[t] = AllPoints[i][n];
-                pt->s[t] = AllWeights[i][n] * AllWeights[j][n] * AllWeights[k][n];
+                pt->u[t] = AllPoints[k][n-1];
+                pt->v[t] = AllPoints[j][n-1];
+                pt->w[t] = AllPoints[i][n-1];
+                pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1] * AllWeights[k][n-1];
                 t++;
             }
         }
@@ -869,9 +884,9 @@ void GaussQuadratureQuad(int np, GaussIntegrationPoints *pt) {
     t = 0;
     for(i=0;i<n;i++) {
         for(j=0;j<n;j++) {
-            pt->u[t] = AllPoints[j][n];
-            pt->v[t] = AllPoints[i][n];
-            pt->s[t] = AllWeights[i][n] * AllWeights[j][n];
+            pt->u[t] = AllPoints[j][n-1];
+            pt->v[t] = AllPoints[i][n-1];
+            pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1];
             t++;
         }
     }
@@ -895,10 +910,10 @@ void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
     for(i=0;i<n;i++) {
         for(j=0;j<n;j++) {
             for(k=0;k<n;k++) {
-                pt->u[t] = AllPoints[k][n];
-                pt->v[t] = AllPoints[j][n];
-                pt->w[t] = AllPoints[i][n];
-                pt->s[t] = AllWeights[i][n] * AllWeights[j][n] * AllWeights[k][n];
+                pt->u[t] = AllPoints[k][n-1];
+                pt->v[t] = AllPoints[j][n-1];
+                pt->w[t] = AllPoints[i][n-1];
+                pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1] * AllWeights[k][n-1];
                 t++;
             }
         }

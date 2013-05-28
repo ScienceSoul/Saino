@@ -121,8 +121,8 @@
     matContainers->Rows[rows] = matContainers->Rows[rows-1] + degreesFreedom*rowNonZeros[j];
     
     // Because those arrays contains indexes ranging from 0 to n, we initialize them at -1
-    memset( matContainers->Cols, -1, (matContainers->sizeCols*sizeof(matContainers->Cols)) );
-    memset( matContainers->Diag, -1, (matContainers->sizeDiag*sizeof(matContainers->Diag)) );
+    memset( matContainers->Cols, -1, matContainers->sizeCols*sizeof(int) );
+    memset( matContainers->Diag, -1, matContainers->sizeDiag*sizeof(int) );
     
     matrix.ordered = NO;
     
@@ -185,8 +185,8 @@
         if (sortValues == YES) {
             buffer1 = intvec(0, matContainers->sizeValues-1);
             buffer2 = doublevec(0, matContainers->sizeValues-1);
-            memset( buffer1, 0, (matContainers->sizeValues*sizeof(buffer1)) );
-            memset( buffer2, 0.0, (matContainers->sizeValues*sizeof(buffer2)) );
+            memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
+            memset( buffer2, 0.0, matContainers->sizeValues*sizeof(double) );
             for (i=0; i<n; i++) {
                 k = 0;
                 for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
@@ -207,7 +207,7 @@
             
         } else {
             buffer1 = intvec(0, matContainers->sizeValues-1);
-            memset( buffer1, 0, (matContainers->sizeValues*sizeof(buffer1)) );
+            memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
             for (i=0; i<n; i++) {
                 k = 0;
                 for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
@@ -259,7 +259,7 @@
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         jj = matContainers->Rows[i+1]-matContainers->Rows[i];
         buffer = intvec( 0, jj );
-        memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
+        memset( buffer, 0, (jj+1)*sizeof(int) );
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = matContainers->Cols[ii];
         }
@@ -297,7 +297,7 @@
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         jj = matContainers->Rows[i+1]-matContainers->Rows[i];
         buffer = intvec( 0, jj );
-        memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
+        memset( buffer, 0, (jj+1)*sizeof(int) );
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = matContainers->Cols[ii];
         }
@@ -699,8 +699,8 @@
         if (sortValues == YES) {
             buffer1 = intvec(0, aContainers->sizeValues-1);
             buffer2 = doublevec(0, aContainers->sizeValues-1);
-            memset( buffer1, 0, (aContainers->sizeValues*sizeof(buffer1)) );
-            memset( buffer2, 0.0, (aContainers->sizeValues*sizeof(buffer2)) );
+            memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
+            memset( buffer2, 0.0, aContainers->sizeValues*sizeof(double) );
             for (i=0; i<n; i++) {
                 k = 0;
                 for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
@@ -721,7 +721,7 @@
             
         } else {
             buffer1 = intvec(0, aContainers->sizeValues-1);
-            memset( buffer1, 0, (aContainers->sizeValues*sizeof(buffer1)) );
+            memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
             for (i=0; i<n; i++) {
                 k = 0;
                 for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
@@ -773,7 +773,7 @@
     if (aContainers->Diag != NULL || i != j || a.isOrdered == NO) {
         jj = aContainers->Rows[i+1]-aContainers->Rows[i];
         buffer = intvec( 0, jj );
-        memset( buffer, 0.0, ((jj+1)*sizeof(buffer)) );
+        memset( buffer, 0, (jj+1)*sizeof(int) );
         for (ii=aContainers->Rows[i]; ii<=aContainers->Rows[i+1]-1; ii++) {
             buffer[ii] = aContainers->Cols[ii];
         }

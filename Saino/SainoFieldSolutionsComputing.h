@@ -12,5 +12,5 @@
 #import "FEMSolution.h"
 
 @protocol SainoFieldSolutionsComputing <NSObject>
--(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)dt transientSimulation:(BOOL)transient;
+-(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient;
 @end

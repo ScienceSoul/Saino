@@ -44,6 +44,7 @@
     NSArray *_boundaries;                           // Array of FEMBoundary objects
     NSArray *_equations;                            // Array of FEMEquation objects
     NSArray *_initialConditions;                    // Array of FEMInitialConditions objects
+    NSArray *_materials;                            // Array of FEMMaterial objects
     NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
     FEMSimulation *_simulation;
     FEMConstants *_constants;
@@ -99,6 +100,7 @@
 @property(nonatomic, strong) NSArray *boundaries;
 @property(nonatomic, strong) NSArray *equations;
 @property(nonatomic, strong) NSArray *initialConditions;
+@property(nonatomic, strong) NSArray *materials;
 @property(nonatomic, strong) NSMutableArray *variables;
 @property(nonatomic, strong) FEMSimulation *simulation;
 @property(nonatomic, strong) FEMConstants *constants;

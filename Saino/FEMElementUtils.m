@@ -14,6 +14,9 @@
 #import "FEMBandwidthOptimize.h"
 #import "FEMMatrixCRS.h"
 #import "FEMMatrixBand.h"
+#import "FEMNumericIntegration.h"
+#import "FEMCoordinateSystems.h"
+#import "GaussIntegration.h"
 #import "Utils.h"
 
 @interface FEMElementUtils ()
@@ -392,7 +395,7 @@
     }
     mesh.maxBdofs = bdofs;
     
-    memset( perm, -1, (permSize*sizeof(perm)) );
+    memset( perm, -1, permSize*sizeof(int) );
     
     if (equation != nil) {
         k = [utils initialPermutationInMesh:mesh model:model solution:solution equation:equation permutation:perm DGSolution:&dg globalBubbles:&gb];
@@ -410,7 +413,7 @@
     }
     
     invInitialReorder = intvec(0, k-1);
-    memset( invInitialReorder, -1, (k*sizeof(invInitialReorder)) );
+    memset( invInitialReorder, -1, k*sizeof(int) );
     for (i=0; i<permSize; i++) {
         if (perm[i] >= 0 ) invInitialReorder[perm[i]] = i;
     }
@@ -423,7 +426,7 @@
     //Compute matrix structure and do bandwidth optimization if requested
     modelContainers->rowNonZeros = intvec(0, k-1);
     modelContainers->sizeRowNonZeros = k;
-    memset(modelContainers->rowNonZeros , 0, (k*sizeof(modelContainers->rowNonZeros)) );
+    memset(modelContainers->rowNonZeros , 0, k*sizeof(int) );
     listMatrix = NULL;
     
     optimizeBW = [[FEMBandwidthOptimize alloc] init];
@@ -491,7 +494,7 @@
             [str1 appendString:str2];
             [str1 appendString:@" body"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {
-                memset( invInitialReorder, -1, (k*sizeof(invInitialReorder)) );
+                memset( invInitialReorder, -1, k*sizeof(int) );
                 elements = solution.mesh.getElements;
                 for (j=0; j<solution.mesh.numberOfBulkElements; j++) {
                     all = YES;
@@ -528,7 +531,7 @@
             [str1 appendString:str2];
             [str1 appendString:@" bc"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {
-                memset( invInitialReorder, -1, (k*sizeof(invInitialReorder)) );
+                memset( invInitialReorder, -1, k*sizeof(int) );
                 elements = solution.mesh.getElements;
                 for (j=solution.mesh.numberOfBulkElements; j<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; j++) {
                     all = YES;
@@ -567,8 +570,8 @@
         matContainers->Values = doublevec(0, cols-1);
         matContainers->sizeCols = cols;
         matContainers->sizeValues = cols;
-        memset( matContainers->Cols, -1, (cols*sizeof(matContainers->Cols)) );
-        memset( matContainers->Values, 0.0, (cols*sizeof(matContainers->Values)) );
+        memset( matContainers->Cols, -1, cols*sizeof(int) );
+        memset( matContainers->Values, 0.0, cols*sizeof(double) );
         
         for (i=0; i<n; i++) {
             str1 = [NSMutableString stringWithString:@"constraint dof "];
@@ -703,4 +706,74 @@
         tangent2[i] = tangent2[i] / sqrt(sum);
     }
 }
+
+-(double)elementArea:(Element_t *)element numberOfNodes:(int)n mesh:(FEMMesh *)mesh nodel:(FEMModel *)model {
+    
+    int i, t;
+    double a, detJ, sqrtMetric, sum, nx[n], ny[n], nz[n], u, v, w, x, y, z;
+    BOOL stat;
+    Nodes_t *meshNodes, nodes;
+    FEMNumericIntegration *integration;
+    FEMCoordinateSystems *coordinateSystem;
+    GaussIntegrationPoints *IP;
+    
+    nodes.x = nx;
+    nodes.y = ny;
+    nodes.z = nz;
+
+    meshNodes = mesh.getNodes;
+    for (i=0; i<element->Type.NumberOfNodes; i++) {
+        nodes.x[i] = meshNodes->x[element->NodeIndexes[i]];
+        nodes.y[i] = meshNodes->y[element->NodeIndexes[i]];
+        nodes.z[i] = meshNodes->z[element->NodeIndexes[i]];
+    }
+    
+    integration = [[FEMNumericIntegration alloc] init];
+    if ([integration allocation:mesh] == NO) errorfunct("FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
+    IP = GaussQuadrature(element, NULL, NULL);
+    
+    // Start integrating
+    coordinateSystem = [[FEMCoordinateSystems alloc] init];
+    a = 0.0;
+    for (t=0; t<IP->n; t++) {
+        // Integration stuff
+        u = IP->u[t];
+        v = IP->v[t];
+        w = IP->w[t];
+        
+        // Basis function values & derivatives at the integration point
+        stat = [integration setBasisForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setMetricDeterminantForElement:element elementNodes:&nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+        detJ = integration.metricDeterminant;
+        
+        // Coordinate system dependent info
+        if (model.coordinates != cartesian) {
+            sum = 0.0;
+            for (i=0; i<n; i++) {
+                sum = sum + (nodes.x[i]*integration.basis[i]);
+            }
+            x = sum;
+            
+            sum = 0.0;
+            for (i=0; i<n; i++) {
+                sum = sum + (nodes.y[i]*integration.basis[i]);
+            }
+            y = sum;
+            
+            sum = 0.0;
+            for (i=0; i<n; i++) {
+                sum = sum + (nodes.z[i]*integration.basis[i]);
+            }
+            z = sum;
+            
+            sqrtMetric = [coordinateSystem coordinateSquareRootMetricModel:model coordX:x coordY:y coordZ:z];
+            a = a + sqrtMetric * detJ * IP->s[t];
+        } else {
+            a = a + detJ * IP->s[t];
+        }
+    }
+    
+    return a;
+}
+
 @end

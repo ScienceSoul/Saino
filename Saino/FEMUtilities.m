@@ -408,8 +408,8 @@
         
         cols = intvec(0, rows[n]-1);
         values = doublevec(0, rows[n]-1);
-        memset( cols, 0, (rows[n]*sizeof(cols)) );
-        memset( values, 0.0, (rows[n]*sizeof(values)) );
+        memset( cols, 0, rows[n]*sizeof(int) );
+        memset( values, 0.0, rows[n]*sizeof(double) );
 
         projector = [[FEMProjector alloc] init];
         projector.matrix.numberOfRows = n;
@@ -423,7 +423,7 @@
         
         rInd = intvec(0, oldMesh.numberOfNodes-1);
         basis = doublevec(0, oldMesh.maxElementNodes-1);
-        memset( rInd, 0, (oldMesh.numberOfNodes*sizeof(rInd)) );
+        memset( rInd, 0, oldMesh.numberOfNodes*sizeof(int) );
         
         found = YES;
         for (i=0; i<n; i++) {
@@ -444,9 +444,7 @@
             v = localV[i];
             w = localW[i];
             
-            for (j=0; j<k; j++) {
-                basis[j] = 0.0;
-            }
+            memset( basis, 0.0, k*sizeof(double) );
             for (j=0; j<k; j++) {
                 l = rows[i] + j;
                 cols[l] = element->NodeIndexes[j];
@@ -480,7 +478,7 @@
             tmatContainers->Cols = cols;
             tmatContainers->Values = values;
             
-            memset( rInd, 0, (oldMesh.numberOfNodes*sizeof(rInd)) );
+            memset( rInd, 0, oldMesh.numberOfNodes*sizeof(int) );
             for (i=0; i<projector.matrix.numberOfRows; i++) {
                 for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
                     k = matContainers->Cols[j];
@@ -718,12 +716,12 @@
     if (any == YES) {
         if (aMesh.numberOfEdges > 0) {
             edgeDofs = intvec(0, aMesh.numberOfEdges-1);
-            memset( edgeDofs, 0, (aMesh.numberOfEdges*sizeof(edgeDofs)) );
+            memset( edgeDofs, 0, aMesh.numberOfEdges*sizeof(int) );
         }
         
         if (aMesh.numberOfFaces > 0) {
             faceDofs = intvec(0, aMesh.numberOfFaces-1);
-            memset( faceDofs, 0, (aMesh.numberOfFaces*sizeof(faceDofs)) );
+            memset( faceDofs, 0, aMesh.numberOfFaces*sizeof(int) );
         }
         
         n = aMesh.numberOfBulkElements + aMesh.numberOfBoundaryElements;
@@ -1007,7 +1005,7 @@
         }
         varContainers->Values = doublevec(0, (ndofs*nsize)-1);
         varContainers->sizeValues = (ndofs*nsize);
-        memset( varContainers->Values, 0.0, ((ndofs*nsize)*sizeof(varContainers->Values)) );
+        memset( varContainers->Values, 0.0, (ndofs*nsize)*sizeof(double) );
     }
     
     if (initValue != NULL) {
@@ -1110,13 +1108,13 @@
         varContainers = var.getContainers;
         varContainers->Values = doublevec(0, dofs-1);
         varContainers->sizeValues = dofs;
-        memset( varContainers->Values, 0.0, (dofs*sizeof(varContainers->Values)) );
+        memset( varContainers->Values, 0.0, dofs*sizeof(double) );
         varContainers->Perm = NULL;
         pvarContainers = pVar.getContainers;
         if (pvarContainers->Perm != NULL) {
             varContainers->Perm = intvec(0, (dofs/pVar.dofs)-1);
             varContainers->sizePerm = dofs/pVar.dofs;
-            memset( varContainers->Perm, -1, ((dofs/pVar.dofs)*sizeof(varContainers->Perm)) );
+            memset( varContainers->Perm, -1, (dofs/pVar.dofs)*sizeof(int) );
             
             n = [self initialPermutationInMesh:mesh model:aModel solution:solution equation:(solution.solutionInfo)[@"equation"] permutation:varContainers->Perm DGSolution:NULL globalBubbles:&globalBubbles];
             
@@ -1987,7 +1985,7 @@
         if (variableGlobal == YES) {
             solution.solutionMode = SOLUTION_MODE_GLOBAL;
             sol = doublevec(0, dofs-1);
-            memset( sol, 0.0, (dofs*sizeof(sol)) );
+            memset( sol, 0.0, dofs*sizeof(double) );
             
             bufferContainers = allocateVariableContainer();
             bufferContainers->Values = sol;
@@ -2080,7 +2078,7 @@
             [self checkOptionsInSolution:solution];
             
             perm = intvec(0, ndeg-1);
-            memset( perm, 0, (ndeg*sizeof(perm)) );
+            memset( perm, -1, ndeg*sizeof(int) );
             
             elementUtils = [[FEMElementUtils alloc] init];
             matrixFormat = MATRIX_CRS;
@@ -2228,7 +2226,7 @@
             }
             
             sol = doublevec(0, nsize-1);
-            memset( sol, 0.0, (nsize*sizeof(sol)) );
+            memset( sol, 0.0, nsize*sizeof(double) );
             if (perm != NULL) {
                 bufferContainers = allocateVariableContainer();
                 bufferContainers->Values = sol;
@@ -2371,7 +2369,7 @@
         if (var == nil) {
             sol = doublevec(0, variableContainers->sizeValues-1);
             dofs = solution.variable.dofs;
-            memset( sol, 0.0, (variableContainers->sizeValues*sizeof(sol)) );
+            memset( sol, 0.0, variableContainers->sizeValues*sizeof(double) );
             nrows = variableContainers->sizeValues;
             variableOutput = solution.variable.output;
             
@@ -2413,12 +2411,12 @@
         if (matContainers->RHS == NULL) {
             matContainers->RHS = doublevec(0, solution.matrix.numberOfRows-1);
             matContainers->sizeRHS = solution.matrix.numberOfRows;
-            memset( matContainers->RHS, 0.0, (solution.matrix.numberOfRows*sizeof(matContainers->RHS)) );
+            memset( matContainers->RHS, 0.0, solution.matrix.numberOfRows*sizeof(double) );
             
             if (harmonicAnal == YES) {
                 matContainers->RHS_im = doublevec(0, solution.matrix.numberOfRows-1);
                 matContainers->sizeRHS_im = solution.matrix.numberOfRows;
-                memset( matContainers->RHS_im, 0.0, (solution.matrix.numberOfRows*sizeof(matContainers->RHS_im)) );
+                memset( matContainers->RHS_im, 0.0, solution.matrix.numberOfRows*sizeof(double) );
             }
         }
     }
@@ -2438,11 +2436,7 @@
             matContainers->Force = doublematrix(0, solution.matrix.numberOfRows-1, 0, (solution.timeOrder+1)-1);
             matContainers->size1force = solution.matrix.numberOfRows;
             matContainers->size2Force = solution.timeOrder + 1;
-            for (i=0; i<solution.matrix.numberOfRows; i++) {
-                for (j=0; j<(solution.timeOrder+1); j++) {
-                    matContainers->Force[i][j] = 0.0;
-                }
-            }
+            memset( *matContainers->Force, 0.0, (solution.matrix.numberOfRows*(solution.timeOrder+1))*sizeof(double) );
         }
         
         if (variableContainers->PrevValues == NULL) {
@@ -2460,11 +2454,7 @@
                 variableContainers->size2PrevValues = solution.timeOrder;
 
             }
-            for (i=0; i<variableContainers->size1PrevValues; i++) {
-                for (j=0; j<variableContainers->size2PrevValues; j++) {
-                    variableContainers->PrevValues[i][j] = 0.0;
-                }
-            }
+            memset( *variableContainers->PrevValues, 0.0, (variableContainers->size1PrevValues*variableContainers->size2PrevValues)*sizeof(double) );
             
             if (solution.variable.dofs > 1) {
                 if ([solution.variable.name isEqualToString:@"flow solution"]) {
@@ -2622,12 +2612,8 @@
                         variableContainers->size1EigenVectors = n;
                         variableContainers->size2EigenVectors = variableContainers->sizeValues;
                         
-                        for (i=0; i<n; i++) {
-                            variableContainers->EigenValues[i] = 0.0;
-                            for (j=0; j<variableContainers->sizeValues; j++) {
-                                variableContainers->EigenVectors[i][j] = 0.0;
-                            }
-                        }
+                        memset( variableContainers->EigenValues, 0.0, n*sizeof(double complex) );
+                        memset( *variableContainers->EigenVectors, 0.0, (n*variableContainers->sizeValues)*sizeof(double complex) );
                         
                         for (k=1; k<=solution.variable.dofs; k++) {
                             str = (NSMutableString *)[self appendNameFromString:solution.variable.name component:&k];
@@ -2659,7 +2645,7 @@
                     matContainers = solution.matrix.getContainers;
                     matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
                     matContainers->sizeMassValues = matContainers->sizeValues;
-                    memset( matContainers->MassValues, 0.0, (matContainers->sizeMassValues*sizeof(matContainers->MassValues)) );
+                    memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
                 }
             }
         } else if (harmonicAnal == YES) {
@@ -2689,12 +2675,8 @@
                 variableContainers->size1EigenVectors = n;
                 variableContainers->size2EigenVectors = variableContainers->sizeValues;
                 
-                for (i=0; i<n; i++) {
-                    variableContainers->EigenValues[i] = 0.0;
-                    for (j=0; j<variableContainers->sizeValues; j++) {
-                        variableContainers->EigenVectors[i][j] = 0.0;
-                    }
-                }
+                memset( variableContainers->EigenValues, 0.0, n*sizeof(double complex) );
+                memset( *variableContainers->EigenVectors, 0.0, (n*variableContainers->sizeValues)*sizeof(double complex) );
                 
                 for (k=1; k<=solution.variable.dofs; k++) {
                     str = (NSMutableString *)[self appendNameFromString:solution.variable.name component:&k];
@@ -2722,7 +2704,7 @@
             matContainers = solution.matrix.getContainers;
             matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
             matContainers->sizeMassValues = matContainers->sizeValues;
-            memset( matContainers->MassValues, 0.0, (matContainers->sizeMassValues*sizeof(matContainers->MassValues)) );
+            memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
         }
     }
     

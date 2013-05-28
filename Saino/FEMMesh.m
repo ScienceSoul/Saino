@@ -395,8 +395,8 @@
     // Mesh nodes
     cCoord = doublevec(0, (3*self.numberOfNodes)-1);
     nodeTags = intvec(0, self.numberOfNodes-1);
-    memset( cCoord, 0, ((3*self.numberOfNodes)*sizeof(cCoord)) );
-    memset( nodeTags, 0, (self.numberOfNodes*sizeof(nodeTags)) );
+    memset( cCoord, 0.0, (3*self.numberOfNodes)*sizeof(double) );
+    memset( nodeTags, 0, self.numberOfNodes*sizeof(int) );
     
     [meshIO getMeshNodes:nodeTags coord:cCoord];
     
@@ -465,7 +465,7 @@
     maxIndex = max_array(nodeTags, self.numberOfNodes);
     
     localPerm = intvec(0, (maxIndex-minIndex+1)-1);
-    memset( localPerm, 0, ((maxIndex-minIndex+1)*sizeof(localPerm)) );
+    memset( localPerm, 0, (maxIndex-minIndex+1)*sizeof(int) );
     for (i=0; i<self.numberOfNodes; i++) {
         localPerm[nodeTags[i]-minIndex] = i;
     }
@@ -475,7 +475,9 @@
 
     found = [listUtil listGetConstRealArray:model inArray:model.simulation.valuesList forVariable:@"coordinate scaling" buffer:&wrk];
     if (found == YES) {
-        memset( coordScale, 1.0, (3*sizeof(coordScale)) );
+        for (i=0; i<3; i++) {
+            coordScale[i] = 1.0;
+        }
         for (i=0; i<meshDim; i++) {
             j = min(i, wrk.n);
             coordScale[i] = wrk.matrix[0][j];
@@ -506,7 +508,7 @@
     faceDofs = intvec(0, self.numberOfBulkElements-1);
     if (faceDofs == NULL) errorfunct("loadMeshForModel", "Failure to allocate face dofs.");
     
-    memset( elementTags, 0, ((self.numberOfBulkElements+1)*sizeof(elementTags)) );
+    memset( elementTags, 0, (self.numberOfBulkElements+1)*sizeof(int) );
     dgIndex = 0;
     needEdges = NO;
     
@@ -515,7 +517,7 @@
     inDofs = intvec(0, 6);
     nodes = intvec(0, MAX_ELEMENT_NODES-1);
     for (i=0; i<self.numberOfBulkElements; i++) {
-        memset( inDofs, 0, (7*sizeof(inDofs)) );
+        memset( inDofs, 0, 7*sizeof(int) );
         [meshIO getMeshElementConnection:&elementTags[i] body:&body type:&type pdofs:inDofs nodes:nodes];
         if (meshIO.info != 0) break;
         
@@ -656,7 +658,7 @@
     maxEIndex = max_array(elementTags, self.numberOfBulkElements);
     
     localEPerm = intvec(0, (maxEIndex-minEIndex+1)-1);
-    memset( localEPerm, 0, ((maxEIndex-minEIndex+1)*sizeof(localEPerm)) );
+    memset( localEPerm, 0, (maxEIndex-minEIndex+1)*sizeof(int) );
     for (i=0; i<self.numberOfBulkElements; i++) {
         localEPerm[elementTags[i]-minEIndex] = i;
     }
@@ -665,7 +667,7 @@
     
     //Mesh boundary elements
     coord = doublevec(0, self.maxElementNodes-1);
-    memset( coord, 0.0, (self.maxElementNodes*sizeof(coord)) );
+    memset( coord, 0.0, self.maxElementNodes*sizeof(double) );
     for (i=self.numberOfBulkElements; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
         
         [meshIO getMeshBoundaryElement:&tag boundary:&bndry leftElement:&left rightElement:&right type:&type nodes:nodes coord:coord];
@@ -934,7 +936,7 @@
     if (n>self.numberOfNodes) {
         cCoord = _globalNodes->x;
         _globalNodes->x = doublevec(0, n-1);
-        memset( _globalNodes->x, 0.0, (n*sizeof(_globalNodes->x)) );
+        memset( _globalNodes->x, 0.0, n*sizeof(double) );
         for (i=0; i<self.numberOfNodes; i++) {
             _globalNodes->x[i] = cCoord[i];
         }
@@ -942,7 +944,7 @@
         
         cCoord = _globalNodes->y;
         _globalNodes->y = doublevec(0, n-1);
-        memset( _globalNodes->y, 0.0, (n*sizeof(_globalNodes->y)) );
+        memset( _globalNodes->y, 0.0, n*sizeof(double) );
         for (i=0; i<self.numberOfNodes; i++) {
             _globalNodes->y[i] = cCoord[i];
         }
@@ -950,7 +952,7 @@
         
         cCoord = _globalNodes->z;
         _globalNodes->z = doublevec(0, n-1);
-        memset( _globalNodes->z, 0.0, (n*sizeof(_globalNodes->z)) );
+        memset( _globalNodes->z, 0.0, n*sizeof(double) );
         for (i=0; i<self.numberOfNodes; i++) {
             _globalNodes->z[i]= cCoord[i];
         }

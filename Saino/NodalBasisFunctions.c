@@ -586,7 +586,7 @@ void NodalFirstDerivatives3D(double **y, Element_t *element, double u, double v,
 
 void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, double v,double w)
 {
-    int i, q, dim;
+    int q, dim;
     double *NodalBasis;
     
     dim = element->Type.dimension;
@@ -607,10 +607,7 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
         case 3:
             if( element->Type.ElementCode/100 == 6) {
                 
-                for(i=0;i<n;i++) {
-                    NodalBasis[i] = 0.0;
-                }
-                
+                memset( NodalBasis, 0.0, n*sizeof(double) );
                 for(q=0;q<n;q++) {
                     NodalBasis[q] = 1.0;
                     Basis[q] = InterpolateInElement3D(element, NodalBasis, u, v, w);
@@ -627,7 +624,7 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
 
 void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double u, double v, double w) {
     
-    int i, q, dim;
+    int q, dim;
     double *NodalBasis;
     
     dim = element->Type.dimension;
@@ -645,9 +642,7 @@ void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double
         case 3:
             if(element->Type.ElementCode / 100 == 6) {
                 
-                for(i=0;i<n;i++) {
-                    NodalBasis[i] = 0.0;
-                }
+                memset( NodalBasis, 0.0, n*sizeof(double) );
                 for(q=0;q<n;q++) {
                     NodalBasis[q] = 1.0;
                     dLBasisdx[q][0] = FirstDerivativeInU3D(element, NodalBasis, u, v, w);
@@ -729,18 +724,13 @@ void SecondDerivatives2D(double **ddx, Element_t* element, double *nodes, double
  double y -> value of the quantity s = @^2x(u,v)/@v^2
 ****************************************************************************/
     
-    int i, j, n;
+    int i, n;
     int *p, *q;
     
     double s;
     double *coeff;
     
-    for (i=0; i<2; i++) {
-        for (j=0; j<2; j++) {
-            ddx[i][j] = 0.0;
-        }
-    }
-    
+    memset( *ddx, 0.0, (2*2)*sizeof(double) );
     for (n=0; n<element->Type.NumberOfNodes; n++) {
             
         if (nodes[n] != 0.0) {
@@ -796,18 +786,13 @@ void SecondDerivatives3D(double **ddx, Element_t* element, double *nodes, double
  double y -> value of the quantity s = @^2x(u,v)/@v^2
 ****************************************************************************/
     
-    int i, j, n;
+    int i, n;
     int *p, *q, *r;
     
     double s;
     double *coeff;
     
-    for (i=0; i<3; i++) {
-        for (j=0; j<3; j++) {
-            ddx[i][j] = 0.0;
-        }
-    }
-    
+    memset( *ddx, 0.0, (3*3)*sizeof(double) );
     for (n=0; n<element->Type.NumberOfNodes; n++) {
                 
         if (nodes[n] != 0.0) {

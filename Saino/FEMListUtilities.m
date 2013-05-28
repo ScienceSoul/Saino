@@ -177,7 +177,20 @@
     
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+            // The buffer is allocated here, it's up to the caller to release this memory
+            // only once it doesn't need it anymore
+            if (result->vector == NULL || result->m != n) {
+                if (result->vector != NULL) free_dvector(result->vector, 0, result->m-1);
+                result->vector = doublevec(0, n-1);
+                result->m = n;
+            }
+            
             containers = list.getContainers;
+            if (containers->fValues == NULL) {
+                NSLog(@"listGetIntegerArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("listGetIntegerArray", "Program terminating now...");
+            }
+            
             if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
                 
                 // TODO: implement the call of a user provided method if required
@@ -187,10 +200,7 @@
                     printf("%s\n", [varName UTF8String]);
                     errorfunct("listGetReal", "Program terminating now...");
                 }
-                // The buffer is allocated here, it's up to the caller to release this memory
-                result->vector = doublevec(0, n-1);
-                result->m = n;
-                memset( result->vector, 0.0, (n*sizeof(result->vector)) );
+                memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     result->vector[i] = containers->fValues[0][0][0];
                 }
@@ -198,15 +208,10 @@
                 
                 util = [[FEMUtilities alloc] init];
                 buffer = doublevec(0, containers->sizeTValues-1);
-                
                 for (i=0; i<n; i++) {
                     buffer[i] = containers->fValues[0][0][i];
                 }
-                
-                // The buffer is allocated here but it's up to the caller to release this memory
-                result->vector = doublevec(0, n-1);
-                result->m = n;
-                memset( result->vector, 0.0, (n*sizeof(result->vector)) );
+                memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
                     [self listParseStrToValues:model string:list.dependName index:k name:list.name values:t count:&j];
@@ -273,24 +278,25 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
+            if (containers->fValues == NULL) {
+                NSLog(@"listGetIntegerArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("listGetIntegerArray", "Program terminating now...");
+            }
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
             
-            if (list.type == LIST_TYPE_CONSTANT_TENSOR) {
-                
-                // The buffer is allocated here but it's up to the caller to release this memory
+            // The buffer is allocated here but it's up to the caller to release this memory
+            // only once it doesn't need it anymore
+            if (result->tensor == NULL || result->m != n1 || result->n != n2 || result->p != n) {
+                if (result->tensor != NULL) free_d3tensor(result->tensor, 0, result->m-1, 0, result->n-1, 0, result->p-1);
                 result->tensor = d3tensor(0, n1-1, 0, n2-1, 0, n-1);
                 result->m = n1;
                 result->n = n2;
                 result->p = n;
-                for (i=0; i<n1; i++) {
-                    for (j=0; j<n2; j++) {
-                        for (k=0; k<n; k++) {
-                            result->tensor[i][j][k] = 0.0;
-                        }
-                    }
-                }
-                
+            }
+        
+            if (list.type == LIST_TYPE_CONSTANT_TENSOR) {
+                memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
                 for (i=0; i<n1; i++) {
                     for (j=0; j<n2; j++) {
                         for (k=0; k<n; k++) {
@@ -306,29 +312,7 @@
                 // TODO: implement this case
                 
             } else {
-                     
-                // The buffer is allocated here but it's up to the caller to release this memory
-                result->tensor = d3tensor(0, n1-1, 0, n2-1, 0, n-1);
-                result->m = n1;
-                result->n = n2;
-                result->p = n;
-                for (i=0; i<n1; i++) {
-                    for (j=0; j<n2; j++) {
-                        for (k=0; k<n; k++) {
-                            result->tensor[i][j][k] = 0.0;
-                        }
-                    }
-                }
-                
-                for (i=0; i<n1; i++) {
-                    for (j=0; j<n2; j++) {
-                        
-                        for (k=0; k<n; k++) {
-                            result->tensor[i][j][k] = 0.0;
-                        }
-                    }
-                }
-                
+                memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
                 found = [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 for (i=0; i<n1; i++) {
                     for (k=0; k<n; k++) {
@@ -364,6 +348,10 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
+            if (containers->fValues == NULL) {
+                NSLog(@"listGetIntegerArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("listGetIntegerArray", "Program terminating now...");
+            }
             
             if ([list type] >= 8) {
                 
@@ -419,19 +407,22 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
+            if (containers->fValues == NULL) {
+                NSLog(@"listGetIntegerArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("listGetIntegerArray", "Program terminating now...");
+            }
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
             
-            // The buffer is allocated here but it's up to the caller to release this memory
-            result->matrix = doublematrix(0, n1-1, 0, n2-1);
-            result->m = n1;
-            result->n = n2;
-            for (i=0; i<n1; i++) {
-                for (j=0; j<n2; j++) {
-                    result->matrix[i][j] = 0.0;
-                }
+            // The buffer is allocated here, it's up to the caller to release this memory
+            // only once it doesn't need it anymore
+            if (result->matrix == NULL || result->m != n1 || result->n != n2) {
+                if (result->matrix != NULL) free_dmatrix(result->matrix, 0, result->m-1, 0, result->n-1);
+                result->matrix = doublematrix(0, n1-1, 0, n2-1);
+                result->m = n1;
+                result->n = n2;
             }
-            
+            memset( *result->matrix, 0.0, (n1*n2)*sizeof(double) );            
             for (i=0; i<n1; i++) {
                 for (j=0; j<n2; j++) {
                     result->matrix[i][j] = containers->fValues[i][j][0];
@@ -466,16 +457,19 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
-                warnfunct("listGetIntegerArray", "iValues not allocated in list:\n");
-                printf("%s\n", [varName UTF8String]);
+                NSLog(@"listGetIntegerArray: iValues not allocated in list: %@\n", varName);
                 errorfunct("listGetIntegerArray", "Program terminating now...");
             }
-            
-           // The buffer is allocated here but it's up to the caller to release this memory
             n = containers->sizeIValues;
-            result->ivector = intvec(0, n-1);
-            result->m = n;
-            memset( result->ivector, 0, (n*sizeof(result->ivector)) );
+            
+            // The buffer is allocated here, it's up to the caller to release this memory
+            // only once it doesn't need it anymore
+            if (result->ivector == NULL || result->m != n) {
+                if (result->ivector != NULL) free_ivector(result->ivector, 0, result->m-1);
+                result->ivector = intvec(0, n-1);
+                result->m = n;
+            }
+            memset( result->ivector, 0, n*sizeof(int) );
             for (i=0; i<n; i++) {
                 result->ivector[i] = containers->iValues[i];
             }
@@ -506,7 +500,11 @@
     for (FEMValueList *list in array) {
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
-            
+            if (containers->iValues == NULL) {
+                NSLog(@"listGetIntegerArray: iValues not allocated in list: %@\n", varName);
+                errorfunct("listGetIntegerArray", "Program terminating now...");
+            }
+
             // TODO: implement the call of a user provided method if required
             
             if (containers->iValues == NULL) {
@@ -904,30 +902,6 @@
     }
     
     return found;
-}
-
-/*****************************************************************************
-    Returns a real by its name if found in the array structure and in the 
-    active element
-*****************************************************************************/
--(void)getReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName element:(Element_t *)element buffer:(listBuffer *)result info:(BOOL *)found {
-    
-    int n;
-    int *nodeIndexes = NULL;
-    int dNodes[1];
-    
-    if (element != nil) {
-        n = element->Type.NumberOfNodes;
-        nodeIndexes = element->NodeIndexes;
-    } else {
-        n = 1;
-        nodeIndexes = dNodes;
-        nodeIndexes[0] = 0;
-    }
-    
-    if (array != nil) {
-        [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes buffer:result minValue:NULL maxValue:NULL];
-    }
 }
 
 @end

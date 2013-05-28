@@ -27,7 +27,7 @@
     while (p != NULL) {
         k = p->Index;
         if (k < localNodes) {
-            if (doneIndex[k] == 0) {
+            if (doneIndex[k] < 0) {
                 permLocal[*index] = k;
                 doneIndex[k] = *index;
                 *index = *index++;
@@ -168,9 +168,7 @@
     
     doneAlready = (BOOL*)malloc(sizeof(BOOL) * localNodes);
     maxLevel = 0;
-    for (i=0; i<localNodes; i++) {
-        doneAlready[i] = NO;
-    }
+    memset( doneAlready, NO, localNodes*sizeof(BOOL) );
     
     [self FEMBandwidthOptimize_levelSize:listMatrix maxLevel:&maxLevel localNodes:localNodes doneAlready:doneAlready nin:startNode levelin:0];
     
@@ -207,8 +205,8 @@
     
     permLocal = intvec(0, sizeOfPerm-1);
     doneIndex = intvec(0, localNodes-1);
-    memset( permLocal, 0, (sizeOfPerm*sizeof(permLocal)) );
-    memset( doneIndex, 0, (localNodes*sizeof(doneIndex)) );
+    memset( permLocal, -1, sizeOfPerm*sizeof(int) );
+    memset( doneIndex, -1, localNodes*sizeof(int) );
     
     // This loop really does the thing
     index = 0;
@@ -217,9 +215,9 @@
     index++;
     
     for (i=0; i<localNodes; i++) {
-        if (permLocal[i] == 0) {
+        if (permLocal[i] < 0) {
             for (j=0; j<localNodes; j++) {
-                if (doneIndex[j] == 0) {
+                if (doneIndex[j] < 0) {
                     permLocal[index] = j;
                     doneIndex[j] = index;
                     index++;
@@ -230,13 +228,13 @@
     }
     
     // Store it the other way around for FEM and reverse order for profile optimization
-    memset( doneIndex, 0, (localNodes*sizeof(doneIndex)) );
+    memset( doneIndex, -1, localNodes*sizeof(int) );
     for (i=0; i<localNodes; i++) {
         doneIndex[permLocal[i]] = localNodes-i-1;
     }
     
-    memcpy(permLocal, perm, sizeOfPerm*sizeof(perm));
-    memset( perm, 0, (sizeOfPerm*sizeof(perm)) );
+    memcpy(permLocal, perm, sizeOfPerm*sizeof(int));
+    memset( perm, -1, sizeOfPerm*sizeof(int) );
     for (i=0; i<sizeOfPerm; i++) {
         k = permLocal[i];
         if (k >= 0) perm[i] = doneIndex[k];
@@ -250,7 +248,7 @@
     if (halfBandwidthBefore < halfBandwidth && useOptimized == NO) {
         NSLog(@"optimizeBandwidthInListMatrix: optimization rejected, using original ordering.");
         halfBandwidth = halfBandwidthBefore;
-        memcpy(perm, permLocal, sizeOfPerm*sizeof(permLocal));
+        memcpy(perm, permLocal, sizeOfPerm*sizeof(int));
     }
     NSLog(@"optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
 

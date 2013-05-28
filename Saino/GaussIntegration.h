@@ -22,6 +22,7 @@ double EvalPoly(int n, double *P, double x);
 void RefineRoots(int n, double *P, double *Q, double *Points);
 void GaussQuadraturePoints1D(int n);
 void GaussQuadratureInit(GaussIntegrationPoints *pt);
+void GaussQuadratureDeallocation(GaussIntegrationPoints *pt);
 void GaussQuadrature0D(int n, GaussIntegrationPoints *pt);
 void GaussQuadrature1D(int n, GaussIntegrationPoints *pt);
 void GaussQuadratureTriangle(int n, GaussIntegrationPoints *pt);

@@ -6,6 +6,10 @@
 //  Copyright 2011 Institute of Low Temperature Science. All rights reserved.
 //
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "Constructors.h"
 #include "memory.h"
 

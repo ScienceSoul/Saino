@@ -64,6 +64,16 @@ enum {
 };
 
 enum {
+    imcrompressible = 0,
+    user_defined1,
+    user_defined2,
+    perfect_gas1,
+    perfect_gas2,
+    perfect_gas3,
+    thermal
+};
+
+enum {
     SOLUTION_MODE_DEFAULT = 0,  // Normal DPE
     SOLUTION_MODE_AUXILIARY,    // No FEM machinery (SaveData)
     SOLUTION_MODE_ASSEMBLY,     // Coupled solution with single block
@@ -294,17 +304,11 @@ typedef struct variableArraysContainer {
 
 typedef struct solutionArraysContainer {
     
-    bool **ntZeroingDone;
     int *activeElements;
-    int **ntElement;
     int **defDofs;
     int sizeActiveElements;
     int size1DefDofs;
     int size2DefDofs;
-    int size1NtZeroingDone;
-    int size2NtZeroingDone;
-    int size1NtElement;
-    int size2NtElement;
 } solutionArraysContainer;
 
 typedef struct valueListArraysContainer {

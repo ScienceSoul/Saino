@@ -338,7 +338,7 @@ static char *_parallel_extensions[] = {
         *tag = [tagstr intValue];
     }
     
-    memset( pdofs, 0.0, (6*sizeof(pdofs)) );
+    memset( pdofs, 0, 6*sizeof(int) );
     gotnodal = 0;
     for (i=0; i<[typestr length]; i++) {
         character[0] = [typestr characterAtIndex:i];

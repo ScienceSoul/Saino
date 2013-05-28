@@ -10,7 +10,18 @@
 
 @implementation FEMMeshUpdateSolution
 
--(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)dt transientSimulation:(BOOL)transient {
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        //TODO: Initialize here
+        
+    }
+    
+    return self;
+}
+
+-(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
 }
 

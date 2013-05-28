@@ -28,7 +28,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
 -(void)FEMPrecondition_computeIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
-    int *C;                         //Booleans
+    bool *C;
     const double WORKN = 128;
     double norma, cptime, ttime, t;
     double *S;
@@ -57,19 +57,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // The factorization row by row
     matContainers->ILURows[0] = 0;
-    C = intvec(0, n);
-    S = doublevec(0, n);
-    for (i=0; i<n; i++) {
-        S[i] = 0.0;
-        C[i] = 0;
-    }
+    C = boolvec(0, n-1);
+    S = doublevec(0, n-1);
+    memset( C, false, n*sizeof(bool) );
+    memset( S, 0.0, n*sizeof(double) );
     
     for (i=0; i<n; i++) {
         
         // Convert the current row to full from for speed,
         // only flagging the nonzero entries
         for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
-            C[matContainers->Cols[k]] = 1;
+            C[matContainers->Cols[k]] = true;
             S[matContainers->Cols[k]] = matContainers->Values[k];
         }
         
@@ -80,13 +78,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Here is the factorization part for the current row;
         for (k=rowMin; k<=i-1; k++) {
-            if (C[k] == 1) {
+            if (C[k] == true) {
                 if (fabs(matContainers->ILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->ILUValues[matContainers->ILUDiag[k]];
                 
                 for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
                     j = matContainers->ILUCols[l];
-                    if (C[j] == 0) {
-                        C[j] = 1;
+                    if (C[j] == false) {
+                        C[j] = true;
                         rowMax = max(rowMax, j);
                     }
                     S[j] = S[j] - S[k] * matContainers->ILUValues[l];
@@ -104,7 +102,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         j =matContainers->ILURows[i]-1;
         for (k=rowMin; k<=rowMax; k++) {
-            if (C[k] == 1) {
+            if (C[k] == true) {
                 if (fabs(S[k]) >= tol*norma || k == i) {
                     j = j + 1;
                     matContainers->ILUCols[j] = k;
@@ -112,7 +110,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                     if (k == i) matContainers->ILUDiag[i] = j;;
                 }
                 S[k] = 0.0;
-                C[k] = 0;
+                C[k] = false;
             }
         }
         matContainers->ILURows[i+1] = j+1;
@@ -140,12 +138,14 @@ static double AEPS = 10.0 * DBL_EPSILON;
             matContainers->ILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->ILUValues[matContainers->ILUDiag[i]];
         }
     }
+    free_bvector(C, 0, n-1);
+    free_dvector(S, 0, n-1);
 }
 
 -(void)FEMPrecondition_computeComplexIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
-    int *C;                         //Boolean
+    bool *C;
     const double WORKN = 128;
     double norma;
     double complex *S;
@@ -171,19 +171,17 @@ static double AEPS = 10.0 * DBL_EPSILON;
     
     // The factorization row by row
     matContainers->ILURows[0] = 0;
-    C = intvec(0, n);
-    S = cdoublevec(0, n);
-    for (i=0; i<n; i++) {
-        S[i] = 0.0 + 0.0 * I;
-        C[i] = 0;
-    }
+    C = boolvec(0, n-1);
+    S = cdoublevec(0, n-1);
+    memset( C, false, n*sizeof(bool) );
+    memset( S, 0.0, n*sizeof(double complex) );
     
     for (i=0; i<n; i++) {
         
         // Convert the current row to full from for speed,
         // only flagging the nonzero entries
         for (k=matContainers->Rows[2*i-1]; k<=matContainers->Rows[2*i]-1; k+=2) {
-            C[(matContainers->Cols[k]+1) / 2] = 1;
+            C[(matContainers->Cols[k]+1) / 2] = true;
             S[(matContainers->Cols[k]+1) / 2] = matContainers->Values[k] + (-matContainers->Values[k+1] * I);
         }
         
@@ -194,13 +192,13 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         // Here is the factorization part for the current row;
         for (k=rowMin; k<=i-1; k++) {
-            if (C[k] == 1) {
+            if (C[k] == true) {
                 if (fabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
                 
                 for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
                     j = matContainers->ILUCols[l];
-                    if (C[j] == 0) {
-                        C[j] = 1;
+                    if (C[j] == false) {
+                        C[j] = true;
                         rowMax = max(rowMax, j);
                     }
                     S[j] = S[j] - S[k] * matContainers->CILUValues[l];
@@ -218,7 +216,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
         
         j = matContainers->ILURows[i]-1;
         for (k=rowMin; k<=rowMax; k++) {
-            if (C[k] == 1) {
+            if (C[k] == true) {
                 if (fabs(S[k]) >= tol*norma || k == i) {
                     j = j + 1;
                     matContainers->ILUCols[j] = k;
@@ -226,7 +224,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                     if (k == i) matContainers->ILUDiag[i] = j;
                 }
                 S[k] = 0.0 + 0.0 * I;
-                C[k] = 0;
+                C[k] = false;
             }
         }
         matContainers->ILURows[i+1] = j+1;
@@ -250,6 +248,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
             matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->CILUValues[matContainers->ILUDiag[i]];
         }
     }
+    free_bvector(C, 0, n-1);
+    free_cdvector(S, 0, n-1);
 }
 
 -(void)FEMPrecondition_LUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double *)b {
@@ -573,8 +573,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Allocate space for storing one full row
     C = boolvec(0, n-1);
     S = doublevec(0, n-1);
-    memset( C, 0, (n*sizeof(C)) );
-    memset( S, 0.0, (n*sizeof(S)) );
+    memset( C, false, n*sizeof(bool) );
+    memset( S, 0.0, n*sizeof(double) );
     
     // The factorization row by row
     for (i=0; i<n; i++) {
@@ -668,9 +668,8 @@ static double AEPS = 10.0 * DBL_EPSILON;
     // Allocate space for storing one full row
     C = boolvec(0, n/2-1);
     S = cdoublevec(0, n/2-1);
-    memset( C, 0, (n*sizeof(C)) );
-    memset( S, 0.0, (n*sizeof(S)) );
-
+    memset( C, false, n*sizeof(bool) );
+    memset( S, 0.0, n*sizeof(double complex) );
     
     // The factorization row by row
     for (i=0; i<n/2; i++) {
@@ -916,9 +915,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             v[i] = s;
         }
     } else {
-        for (i=0; i<n; i++) {
-            v[i] = 0.0;
-        }
+        memset( v, 0.0, n*sizeof(double) );
         for (i=0; i<n; i++) {
             s = u[i];
             for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {

@@ -42,63 +42,33 @@
 
 -(BOOL)allocation:(FEMMesh *)mesh {
     
-    int i, j, k;
-    
     _basis = doublevec(0, mesh.maxElementNodes-1);
     if (_basis == NULL) return NO;
-    for (i=0; i<mesh.maxElementNodes; i++) {
-        _basis[i] = 0.0;
-    }
+    memset( _basis, 0.0, mesh.maxElementNodes*sizeof(double) );
     
     _basisFirstDerivative = doublematrix(0, mesh.maxElementNodes-1, 0, 2);
     if (_basisFirstDerivative == NULL) return NO;
-    for (i=0; i<mesh.maxElementNodes; i++) {
-        for (j=0; j<3; j++) {
-            _basisFirstDerivative[i][j] = 0.0;
-        }
-    }
+    memset( *_basisFirstDerivative, 0.0, (mesh.maxElementNodes*3)*sizeof(double) );
     
     _basisSecondDerivative = d3tensor(0, mesh.maxElementNodes-1, 0, 2, 0, 2);
     if (_basisSecondDerivative == NULL) return NO;
-    for (i=0; i<mesh.maxElementNodes; i++) {
-        for (j=0; j<3; j++) {
-            for (k=0; k<3; k++) {
-                _basisSecondDerivative[i][j][k] = 0.0;
-            }
-        }
-    }
+    memset(**_basisSecondDerivative, 0.0, (mesh.maxElementNodes*3*3)*sizeof(double) );
     
     _elementMetric = doublematrix(0, 2, 0, 2);
     if (_elementMetric == NULL) return NO;
-    for (i=0; i<3; i++) {
-        for (j=0; j<3; j++) {
-            _elementMetric[i][j] = 0.0;
-        }
-    }
+    memset( *_elementMetric, 0.0, (3*3)*sizeof(double) );
     
     _covariantMetrixTensor = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
     if (_covariantMetrixTensor == NULL) return NO;
-    for (i=0; i<mesh.dimension; i++) {
-        for (j=0; j<mesh.dimension; j++) {
-            _covariantMetrixTensor[i][j] = 0.0;
-        }
-    }
+    memset( *_covariantMetrixTensor, 0.0, (mesh.dimension*mesh.dimension)*sizeof(double) );
     
     _ltoGMap = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
     if (_ltoGMap == NULL) return NO;
-    for (i=0; i<mesh.dimension; i++) {
-        for (j=0; j<mesh.dimension; j++) {
-            _ltoGMap[i][j] = 0.0;
-        }
-    }
-    
+    memset( *_ltoGMap, 0.0, (mesh.dimension*mesh.dimension)*sizeof(double) );
+
     _dx = doublematrix(0, 2, 0, mesh.dimension-1);
     if (_dx == NULL) return NO;
-    for (i=0; i<3; i++) {
-        for (j=0; j<mesh.dimension; j++) {
-            _dx[i][j] = 0.0;
-        }
-    }
+    memset( *_dx, 0.0, (3*mesh.dimension)*sizeof(double) );
     
     return YES;
 }
@@ -135,7 +105,7 @@
  
 ***************************************************************************************************************/
     
-    int i, n, dim, cdim;
+    int n, dim, cdim;
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
@@ -146,10 +116,7 @@
         return YES;
     }
     
-    for (i=0; i<n; i++) {
-        self.basis[i] = 0.0;
-    }
-    
+    memset( self.basis, 0.0, n*sizeof(double) );
     NodalBasisFunctions(n, self.basis, element, u, v, w);
     
     return YES;
@@ -188,23 +155,11 @@
     }
     
     dLBasisdx = doublematrix(0, n-1, 0, 2);
-    
-    for (i=0; i<n; i++) {
-        for (j=0; j<dim; j++) {
-            dLBasisdx[i][j] = 0.0;
-        }
-    }
-    
+    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );    
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     
     q = n;
-    
-    for (i=0; i<n; i++) {
-        for (j=0; j<2; j++) {
-            self.basisFirstDerivative[i][j] = 0.0;
-        }
-    }
-    
+    memset( *_basisFirstDerivative, 0.0, (n*2)*sizeof(double) );
     [self setLtoGMapForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     for (i=0; i<q; i++) {
@@ -242,7 +197,7 @@
 ********************************************************************************************/
 
     
-    int i, j, k, n, q, dim, cdim;
+    int i, j, n, q, dim, cdim;
     double *NodalBasis, **dLBasisdx;
     double **Values;
     
@@ -254,26 +209,10 @@
     dLBasisdx = doublematrix(0, n-1, 0, 2);
     Values = doublematrix(0, 2, 0, 2);
     
-    for (i=0; i<n; i++) {
-        NodalBasis[i] = 0.0;
-    }
-    
-    for (i=0; i<n; i++) {
-        for (j=0; j<dim; j++) {
-            dLBasisdx[i][j] = 0.0;
-        }
-    }
-
-    for (i=0; i<n; i++) {
-        for (j=0; j<2; j++) {
-            for (k=0; k<2; k++) {
-                self.basisSecondDerivative[i][j][k] = 0.0;
-            }
-        }
-    }
-    
+    memset( NodalBasis, 0.0, n*sizeof(double) );
+    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );
+    memset(**_basisSecondDerivative, 0.0, (n*2*2)*sizeof(double) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
-    
     [self setMetricForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     for (q=0; q<n; q++) {
@@ -466,7 +405,7 @@
  
 **********************************************************************************************/
     
-    int i, j, n, dim, cdim;
+    int n, dim, cdim;
     double detG, **dLBasisdx;
     
     n = element->Type.NumberOfNodes;
@@ -474,15 +413,8 @@
     cdim = [mesh dimension];
     
     dLBasisdx = doublematrix(0, n-1, 0, 2);
-    
-    for (i=0; i<n; i++) {
-        for (j=0; j<dim; j++) {
-            dLBasisdx[i][j] = 0.0;
-        }
-    }
-    
+    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );    
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
-    
     [self setCovariantMetrixTensorForElement:element nDOFs:n nodes:nodes mesh:mesh dLBasisdx:dLBasisdx];
     
     detG = 0.0;
@@ -588,12 +520,8 @@
 
     // Partial derivatives of the basis functions are given, just
     // sum for the first partial derivatives.
-    for (i=0; i<2; i++) {
-        df[i] = 0.0;
-        for (j=0; j<2; j++) {
-            dxx[i][j] = 0.0;
-        }
-    }
+    memset( df, 0.0, 3*sizeof(double) );
+    memset( *dxx, 0.0, (3*3)*sizeof(double) );
     
     switch (cdim) {
         case 1:
@@ -803,12 +731,7 @@
     }
     
     // And finally transform to global coordinates
-    for (i=0; i<cdim; i++) {
-        for (j=0; j<cdim; j++) {
-            values[i][j] = 0.0;
-        }
-    }
-    
+    memset( *values, 0.0, (cdim*cdim)*sizeof(double) );
     for (i=0; i<cdim; i++) {
         for (j=0; j<cdim; j++) {
             s = 0.0;
