@@ -12,4 +12,6 @@
 
 @interface FEMHeatSolution : NSObject <SainoFieldSolutionsComputing>
 
+-(void)deallocation;
+
 @end

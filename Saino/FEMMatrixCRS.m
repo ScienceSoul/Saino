@@ -535,6 +535,102 @@
     }
 }
 
+/*********************************************************************************************
+    Makes an algebraic lower order scheme assuming steady state advection-diffusion equation.
+    This can be applied together with flux corrected transport (FCT) scheme.
+ 
+    Dimitri Kuzmin (2008): "Explicit and implicit FEM-FCT algorithms with flux linearization"
+    The current implementation is really kust a starting point
+ 
+    This method takes as argument a solution from which the matrix is used  
+    or an individual matrix
+*********************************************************************************************/
+-(void)fctlLowOrderInSolution:(FEMSolution *)solution orMatrix:(FEMMatrix *)matrix {
+    
+    int i, j, k, k2, n;
+    double aij, aji, aii, dij;
+    BOOL found;
+    matrixArraysContainer *matContainers = NULL;
+    
+    if (solution == nil && matrix == nil) {
+        NSLog(@"fctlLowOrderInGlobal: no matrix available. At least of the method argumens should be non-nil\n");
+        return;
+    }
+    
+    NSLog(@"fctlLowOrderInGlobal: making low order FCT correction to matrix\n");
+    
+    if (solution != nil) {
+        matContainers = solution.matrix.getContainers;
+        n = solution.matrix.numberOfRows;
+    } else {
+        matContainers = matrix.getContainers;
+        n = matrix.numberOfRows;
+    }
+    
+    if (matContainers->FCT_D == NULL) {
+        matContainers->FCT_D = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeFct = matContainers->sizeValues;
+    }
+    memset( matContainers->FCT_D, 0.0, matContainers->sizeFct*sizeof(double) );
+    
+    if (matContainers->BulkValues == NULL) {
+        matContainers->BulkValues = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeBulkValues = matContainers->sizeValues;
+    }
+    memcpy(matContainers->BulkValues, matContainers->Values, matContainers->sizeValues*sizeof(double));
+    
+    for (i=0; i<n; i++) {
+        for (k=matContainers->RHS[i]; k<=matContainers->RHS[i+1]-1; k++) {
+            j = matContainers->Cols[k];
+            
+            // Go through the lower symmetric part (i,j) and find the corresponding entry (j,i)
+            if (i >= j) continue;
+            
+            // First find entry (j,i)
+            for (k2=matContainers->RHS[j]; k2<=matContainers->RHS[j+1]-1; k2++) {
+                if (matContainers->Cols[k2] == i) {
+                    found = YES;
+                    break;
+                }
+            }
+            
+            if (found == NO) {
+                NSLog(@"fctlLowOrderInGlobal: entry not found, matrix might not be symmetric\n");
+                continue;
+            }
+            
+            // Equation (30) in Kuzmin's paper
+            // Modified so that it also work similarly to A and -A
+            aij = matContainers->Values[k];
+            aji = matContainers->Values[k2];
+            aii = matContainers->Values[matContainers->Diag[i]];
+            if (aii < 0.0) {
+                dij = max(-aij, -aji, 0.0);
+            } else {
+                dij = min(-aij, -aji, 0.0);
+            }
+            
+            if (NO) {
+                NSLog(@"ij: %d %d %d %d\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
+                NSLog(@"Diag: %d %d\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
+                NSLog(@"A: %f %f %f %f\n", aij, aji, aii, dij);
+            }
+            
+            // Equation (32) in Kuzmin's paper
+            if (fabs(dij) > 0.0) {
+                matContainers->FCT_D[k] = matContainers->FCT_D[k] + dij;
+                matContainers->FCT_D[k2] = matContainers->FCT_D[k2] + dij;
+                matContainers->FCT_D[matContainers->Diag[i]] = matContainers->FCT_D[matContainers->Diag[i]] - dij;
+                matContainers->FCT_D[matContainers->Diag[j]] = matContainers->FCT_D[matContainers->Diag[j]] -  dij;
+            }
+        }
+    }
+    
+    for (i=0; i<matContainers->sizeValues; i++) {
+        matContainers->Values[i] = matContainers->Values[i] + matContainers->FCT_D[i];
+    }
+}
+
 -(void)glueLocalMatrixInMatrix:(FEMMatrix *)matrix localMatrix:(double **)localMatrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes {
 /*************************************************************************************************************
  
@@ -542,7 +638,7 @@
  
     Arguments:
  
-    FEMMatrix *matrix       -> Solution class holding the global matrix
+    FEMMatrix *matrix       -> The matrix class
     double **localMatrix    -> (n x dofs) x (n x dofs) matrix holding the values to be
                                added to the CRS format matrix
     int n                   -> number of nodes in element
@@ -867,7 +963,7 @@
  
     Arguments:
  
-    FEMMatrix *matrix  -> input matrix.
+    FEMMatrix *matrix  -> the input matrix class.
  
     double *u          -> Vector to multiply
  
@@ -901,7 +997,7 @@
  
     Arguments:
  
-    FEMMatrix *matrix  -> input matrix.
+    FEMMatrix *matrix  -> the input matrix class.
  
     double *u          -> Vector to multiply
  

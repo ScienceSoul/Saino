@@ -14,8 +14,6 @@
 #import "GaussIntegration.h"
 #import "Utils.h"
 
-static double AEPS = 10.0 * DBL_EPSILON;
-
 @interface FEMElementDescription ()
 
 -(void)FEMElementDescription_initElementsDefinition;
@@ -1631,9 +1629,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_dvector(work, 0, (16*n)-1);
     
     GaussQuadratureDeallocation(IP);
-
     [numericIntegration deallocation:mesh];
-
 }
 
 -(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab {
@@ -2231,13 +2227,11 @@ static double AEPS = 10.0 * DBL_EPSILON;
 }
 
 /***************************************************************************************
- 
     Gives the normal vector of a boundary element.
     For non-curved elements, the normal vector does not depend on the local coordinate
     while otherwise it does. There are different uses of the function where some do 
     not have the luxury of knowing the local coordinates and hence the center point is
     used as default.
-    
 ***************************************************************************************/
 -(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals {
     

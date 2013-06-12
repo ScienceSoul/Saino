@@ -165,7 +165,7 @@
     double t[32];
     BOOL found;
     NSMutableString *strn;
-    FEMUtilities *util;
+    FEMUtilities *utilities;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
@@ -195,18 +195,16 @@
                 
                 // TODO: implement the call of a user provided method if required
                  
-                if (containers->fValues == NULL) {
-                    warnfunct("listGetReal", "fValues not allocated in list:\n");
-                    printf("%s\n", [varName UTF8String]);
-                    errorfunct("listGetReal", "Program terminating now...");
-                }
                 memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     result->vector[i] = containers->fValues[0][0][0];
                 }
             } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
-                
-                util = [[FEMUtilities alloc] init];
+                if (containers->tValues == NULL) {
+                    NSLog(@"listGetIntegerArray: tValues not allocated in list: %@\n", varName);
+                    errorfunct("listGetIntegerArray", "Program terminating now...");
+                }
+                utilities = [[FEMUtilities alloc] init];
                 buffer = doublevec(0, containers->sizeTValues-1);
                 for (i=0; i<n; i++) {
                     buffer[i] = containers->fValues[0][0][i];
@@ -219,16 +217,9 @@
                     if (any(t, '=', HUGE_VAL, j) == false) {
                         
                         // TODO: implement the call of a user provided method if required
-                        
-                        if (containers->fValues == NULL) {
-                            warnfunct("listGetReal", "fValues not allocated in list:\n");
-                            printf("%s\n", [varName UTF8String]);
-                            errorfunct("listGetReal", "Program terminating now...");
-                        }
-                        result->vector[i] = [util interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
+                        result->vector[i] = [utilities interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
                     }
                 }
-                
                 free_dvector(buffer, 0, containers->sizeTValues-1);
             } else if ([list type] == LIST_TYPE_CONSTANT_SCALAR_STR) {
                  // TODO: implement this case
@@ -504,20 +495,11 @@
                 NSLog(@"listGetIntegerArray: iValues not allocated in list: %@\n", varName);
                 errorfunct("listGetIntegerArray", "Program terminating now...");
             }
-
             // TODO: implement the call of a user provided method if required
             
-            if (containers->iValues == NULL) {
-                warnfunct("listGetReal", "iValues not allocated in list:\n");
-                printf("%s\n", [varName UTF8String]);
-                errorfunct("listGetReal", "Program terminating now...");
-            }
-            
             l = containers->iValues[0];
-            
             *found = YES;
             break;
-            
         }
     }
     
@@ -579,6 +561,73 @@
     }
     
     return nil;
+}
+
+-(BOOL)listGetDerivativeValue:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result {
+    
+    int i, k;
+    double *buffer, t;
+    BOOL found, stat;
+    NSMutableString *strn;
+    FEMVariable *variable;
+    FEMUtilities *utilities;
+    valueListArraysContainer *containers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    found = NO;
+    
+    if ([self listGetNameSpace:strn] == YES) {
+        [strn appendString:@" "];
+        [strn appendString:varName];
+    } else strn = [NSMutableString stringWithString:@""];
+
+    for (FEMValueList *list in array) {
+        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+            // The buffer is allocated here, it's up to the caller to release this memory
+            // only once it doesn't need it anymore
+            if (result->vector == NULL || result->m != n) {
+                if (result->vector != NULL) free_dvector(result->vector, 0, result->m-1);
+                result->vector = doublevec(0, n-1);
+                result->m = n;
+            }
+            
+            containers = list.getContainers;
+            if (containers->fValues == NULL) {
+                NSLog(@"listGetDerivativeValue: fValues not allocated in list: %@\n", varName);
+                errorfunct("listGetDerivativeValue", "Program terminating now...");
+            }
+            
+            if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
+                 if (containers->tValues == NULL) {
+                     NSLog(@"listGetDerivativeValue: tValues not allocated in list: %@\n", varName);
+                     errorfunct("listGetDerivativeValue", "Program terminating now...");
+                 }
+                 utilities = [[FEMUtilities alloc] init];
+                 variable = [utilities getVariableFrom:model.variables model:model name:list.dependName onlySearch:NULL maskName:nil info:&stat];
+                 varContainers = variable.getContainers;
+                 memset( result->vector, 0.0, n*sizeof(double) );
+                 buffer = doublevec(0, containers->sizeTValues-1);
+                 for (i=0; i<n; i++) {
+                     buffer[i] = containers->fValues[0][0][i];
+                 }
+                 for (i=0; i<n; i++) {
+                     k = nodeIndexes[i];
+                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
+                     if (k >= 0) {
+                         t = varContainers->Values[k];
+                         result->vector[i] = [utilities derivateCurveTvalues:containers->tValues fValues:buffer value:t sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
+                     }
+                 }
+                 free_dvector(buffer, 0, containers->sizeTValues-1);
+             } else {
+                 NSLog(@"listGetDerivativeValue: no automated derivation possible for %@\n", varName);
+             }
+            
+            found = YES;
+            break;
+        }
+    }
+    return found;
 }
 
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array {

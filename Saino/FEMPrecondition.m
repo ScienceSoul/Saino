@@ -10,14 +10,15 @@
 #import "FEMPrecondition.h"
 #import "Utils.h"
 
-static double AEPS = 10.0 * DBL_EPSILON;
-
 @interface FEMPrecondition ()
 
--(void)FEMPrecondition_computeIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol;
--(void)FEMPrecondition_computeComplexIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol;
--(void)FEMPrecondition_LUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double *)b;
--(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double complex *)b;
+-(int)FEMPrecondition_initializeILU1:(matrixArraysContainer *)containers :(int)n;
+-(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix *)matrix atIndex:(int)i numberOfRows:(int)n;
+-(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix *)matrix atIndex:(int)i numberOfRows:(int)n;
+-(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix *)matrix numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix *)matrix numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix *)matrix rightHandSide:(double *)b;
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix *)matrix rightHandSide:(double complex *)b;
 
 @end
 
@@ -25,7 +26,169 @@ static double AEPS = 10.0 * DBL_EPSILON;
 
 #pragma mark Private methods
 
--(void)FEMPrecondition_computeIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
+-(int)FEMPrecondition_initializeILU1:(matrixArraysContainer *)containers :(int)n {
+    
+    int i, j, k, l, nonZeros, rowMin, rowMax;
+    int *C;
+    
+    containers->ILURows = intvec(0, (n+1)-1);
+    containers->ILUDiag = intvec(0, n-1);
+    
+    if (containers->ILURows == NULL || containers->ILUDiag == NULL) {
+        errorfunct("FEMPrecondition_initializeILU1", "Memory allocation error.");
+    }
+    
+    // Count fills row by row
+    C = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        C[i] = 0;
+    }
+    nonZeros = containers->Rows[(n+1)-1]-1;
+    
+    for (i=0; i<n; i++) {
+        for (k=containers->Rows[i]; k<=containers->Rows[i+1]-1; k++) {
+            C[containers->Cols[k]] = 1;
+        }
+        
+        for (k=containers->Cols[containers->Rows[i]]; k<=i-1; k++) {
+            if (C[k] != 0) {
+                for (l=containers->Diag[k]+1; l<=containers->Rows[k+1]; l++) {
+                    j = containers->Cols[l];
+                    if (C[j] == 0) nonZeros = nonZeros + 1;
+                }
+            }
+        }
+        
+        for (k=containers->Rows[i]; k<=containers->Rows[i+1]-1; k++) {
+            C[containers->Cols[k]] = 0;
+        }
+    }
+    
+    containers->ILUCols = intvec(0, nonZeros-1);
+    if (containers->ILUCols == NULL) {
+        errorfunct("FEMPrecondition_initializeILU1", "Memory allocation error.");
+    }
+    
+    // Update row nonzero structures
+    for (i=0; i<n; i++) {
+        C[i] = 0;
+    }
+    containers->ILURows[0] = 0;
+    for (i=0; i<n; i++) {
+        for (k=containers->Rows[i]; k<=containers->Rows[i+1]-1; k++) {
+            C[containers->Cols[k]] = 1;
+        }
+        
+        rowMin = containers->Cols[ containers->Rows[i] ];
+        rowMax = containers->Cols[ containers->Rows[i+1]-1 ];
+        
+        for (k=rowMin ; k<=i-1; k++) {
+            if (C[k] == 1) {
+                for (l=containers->Diag[k]+1; l<=containers->Rows[k+1]-1; l++) {
+                    j = containers->Cols[l];
+                    if (C[j] == 0) {
+                        C[j] = 2;
+                        rowMax = max(rowMax, j);
+                    }
+                }
+            }
+        }
+        
+        j = containers->ILURows[i] - 1;
+        for (k=rowMin; k<=rowMax; k++) {
+            if (C[k] > 0) {
+                j = j + 1;
+                C[k] = 0;
+                containers->ILUCols[j] = k;
+                if (k == i) containers->ILUDiag[i] = j;
+            }
+        }
+        
+        containers->ILURows[i+1] = j + 1;
+    }
+    free_ivector(C, 0, n-1);
+    
+    return nonZeros;
+}
+
+-(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix *)matrix atIndex:(int)i numberOfRows:(int)n {
+    
+    int j, k;
+    int *iWork = NULL;
+    double *cWork = NULL;
+    matrixArraysContainer *matContainers = NULL;
+    
+    matContainers = matrix.getContainers;
+    
+    k = matContainers->ILURows[i+1] + min(0.75*matContainers->ILURows[i+1], ((n-1)-i)*(1.0*n));
+    
+    iWork = intvec(0, k-1);
+    if (iWork == NULL) {
+        errorfunct("FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
+    }
+    for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
+        iWork[j] = matContainers->ILUCols[j];
+    }
+    free_ivector(matContainers->ILUCols, 0, matContainers->sizeILUCols-1);
+    matContainers->ILUCols = NULL;
+    
+    
+    cWork = doublevec(0, k-1);
+    if (cWork == NULL) {
+        errorfunct("FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
+    }
+    for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
+        cWork[j] = matContainers->ILUValues[j];
+    }
+    free_dvector(matContainers->ILUValues, 0, matContainers->sizeILUValues-1);
+    matContainers->ILUValues = NULL;
+    
+    matContainers->sizeILUCols = k;
+    matContainers->sizeILUValues = k;
+    
+    matContainers->ILUCols = iWork;
+    matContainers->ILUValues = cWork;
+}
+
+-(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix *)matrix atIndex:(int)i numberOfRows:(int)n {
+    
+    int j, k;
+    int *iWork = NULL;
+    double complex *cWork = NULL;
+    matrixArraysContainer *matContainers = NULL;
+    
+    matContainers = matrix.getContainers;
+    
+    k = matContainers->ILURows[i+1] + min(0.75*matContainers->ILURows[i+1], ((n-1)-i)*(1.0*n));
+    
+    iWork = intvec(0, k-1);
+    if (iWork == NULL) {
+        errorfunct("FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
+    }
+    for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
+        iWork[j] = matContainers->ILUCols[j];
+    }
+    free_ivector(matContainers->ILUCols, 0, matContainers->sizeILUCols-1);
+    matContainers->ILUCols = NULL;
+    
+    cWork = cdoublevec(0, k-1);
+    if (cWork == NULL) {
+        errorfunct("FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
+    }
+    for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
+        cWork[j] = matContainers->CILUValues[j];
+    }
+    free_cdvector(matContainers->CILUValues, 0, matContainers->sizeCILUValues-1);
+    matContainers->CILUValues = NULL;
+    
+    matContainers->sizeILUCols = k;
+    matContainers->sizeCILUValues = k;
+    
+    matContainers->ILUCols = iWork;
+    matContainers->CILUValues = cWork;
+}
+
+-(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix *)matrix numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     bool *C;
@@ -34,7 +197,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     double *S;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     ttime = cputime();
     cptime = 0.0;
@@ -42,7 +205,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers->ILURows = intvec(0, (n+1)-1);
     matContainers->ILUDiag = intvec(0, n-1);
     if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
-        errorfunct("computeILUT", "Memory allocation error.");
+        errorfunct("FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILURows = n+1;
     matContainers->sizeILUDiag = n;
@@ -50,7 +213,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers->ILUCols = intvec(0, (WORKN*n)-1);
     matContainers->ILUValues = doublevec(0, (WORKN*n)-1);
     if (matContainers->ILUCols == NULL || matContainers->ILUValues == NO) {
-        errorfunct("computeILUT", "Memory allocation error.");
+        errorfunct("FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILUCols = WORKN*n;
     matContainers->sizeILUValues = WORKN*n;
@@ -122,7 +285,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
                 
                 t = cputime();
-                [solution ilutWorkspaceCheckAtIndex:i numberOfRows:n];
+                [self FEMPrecondition_ilutWorkspaceCheckMatrix:matrix atIndex:i numberOfRows:n];
                 cptime = cptime + (cputime() - t);
                 
             }
@@ -142,7 +305,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_dvector(S, 0, n-1);
 }
 
--(void)FEMPrecondition_computeComplexIlutInSolution:(FEMSolution *)solution numberOfRows:(int)n tolerance:(int)tol {
+-(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix *)matrix numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     bool *C;
@@ -151,12 +314,12 @@ static double AEPS = 10.0 * DBL_EPSILON;
     double complex *S;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     matContainers->ILURows = intvec(0, (n+1)-1);
     matContainers->ILUDiag = intvec(0, n-1);
     if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
-        errorfunct("computeILUT", "Memory allocation error.");
+        errorfunct("FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILURows = n+1;
     matContainers->sizeILUDiag = n;
@@ -164,7 +327,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
     matContainers->ILUCols = intvec(0, (WORKN*n)-1);
     matContainers->CILUValues = cdoublevec(0, (WORKN*n)-1);
     if (matContainers->ILUCols == NULL || matContainers->CILUValues == NULL) {
-        errorfunct("computeILUT", "Memory allocation error.");
+        errorfunct("FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILUCols = WORKN*n;
     matContainers->sizeCILUValues = WORKN*n;
@@ -234,7 +397,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
             
             // Check if still enough workspace
             if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
-                [solution ilutComplexWorkspaceCheckAtIndex:i numberOfRows:n];
+                [self FEMPrecondition_ilutComplexWorkspaceCheckMatrix:matrix atIndex:i numberOfRows:n];
             }
         }
     }
@@ -252,28 +415,28 @@ static double AEPS = 10.0 * DBL_EPSILON;
     free_cdvector(S, 0, n-1);
 }
 
--(void)FEMPrecondition_LUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double *)b {
 /*******************************************************************************************
  
     Description:
     Solve a system  (Ax=b) after factorization A=LUD has been done. This method is
     meant as a part of a preconditioner for an iterative solver. Real version
  
-    Arguments:
+        Arguments:
  
-    int n                    -> Size of the system.
+        int n                    -> Size of the system.
  
-    FEMSolution *solution    -> Class holding input matrix.
+        FEMMatrix *matrix        -> Input matrix.
  
-    double *b                -> On entry the RHS vector, on exit the solution vector.
+        double *b                -> On entry the RHS vector, on exit the solution vector.
  
 *******************************************************************************************/
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix *)matrix rightHandSide:(double *)b {
     
     int i, j;
     double s;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     // If no ILU provided do diagonal solve
     if (matContainers->ILUValues == NULL) {
@@ -303,7 +466,6 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n solution:(FEMSolution *)solution rightHandSide:(double complex *)b {
 /*******************************************************************************************
  
     Description:
@@ -312,19 +474,20 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
     Arguments:
  
-    int n                  -> Size of the system.
+        int n                  -> Size of the system.
  
-    FEMSolution *solution  -> Class holding input matrix.
+        FEMMatrix *matrix      -> Input matrix.
  
-    double complex *b      -> On entry the RHS vector, on exit the solution vector.
+        double complex *b      -> On entry the RHS vector, on exit the solution vector.
  
 *******************************************************************************************/
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix *)matrix rightHandSide:(double complex *)b {
     
     int i, j;
     double complex s, x;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     // If no ILU provided do diagonal solve
     if (matContainers->CILUValues == NULL) {
@@ -369,31 +532,34 @@ static double AEPS = 10.0 * DBL_EPSILON;
 }
 
 
--(void)CRSDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
 /*******************************************************************************************
-                                                                             
-    Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from   
+ 
+    Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from
     the FEMSolution class.
  
     Arguments:
-       
-        double u  ->  Resulting approximate solution after preconditioning
-
-        double v  -> Given right-hand-side
-
-        int ipar  -> Input stucture holding info from the HUTIter iterative solver
+ 
+        FEMMatrix *matrix      -> Input matrix.
+ 
+        double u               ->  Resulting approximate solution after preconditioning
+ 
+        double v               -> Given right-hand-side
+ 
+        int ipar               -> Input stucture holding info from the HUTIter iterative solver
  
 *******************************************************************************************/
+-(void)CRSDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
+
     int i, j, n;
     int *range1;
     double *range2;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    n = solution.matrix.numberOfRows;  
+    n = matrix.numberOfRows;  
     
-    if (solution.matrix.isOrdered == NO) {
+    if (matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
             range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
             range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
@@ -417,7 +583,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 }
             }
         }
-        solution.matrix.ordered = YES;
+        matrix.ordered = YES;
     }
     
     for (i=0; i<n; i++) {
@@ -429,21 +595,24 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)CRSComplexDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
+
 /*******************************************************************************************
  
-    Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from   
+    Description: Diagonal preconditioning of a CRS format matrix. Matrix is accessed from
     the FEMSolution class.
  
     Arguments:
  
-        double u  ->  Resulting approximate solution after preconditioning
+        FEMMatrix *matrix      -> Input matrix.
  
-        double v  -> Given right-hand-side
+        double u               ->  Resulting approximate solution after preconditioning
  
-        int ipar  -> Input stucture holding info from the HUTIter iterative solver
-
+        double v               -> Given right-hand-side
+ 
+        int ipar               -> Input stucture holding info from the HUTIter iterative solver
+ 
 *******************************************************************************************/
+-(void)CRSComplexDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
     
     int i, j, n;
     double complex A;
@@ -451,11 +620,11 @@ static double AEPS = 10.0 * DBL_EPSILON;
     double *range2;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    n = solution.matrix.numberOfRows; 
+    n = matrix.numberOfRows; 
     
-    if (solution.matrix.isOrdered == NO) {
+    if (matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
             range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
             range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
@@ -479,7 +648,7 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 }
             }
         }
-        solution.matrix.ordered = YES;
+        matrix.ordered = YES;
     }
     
     for (i=0; n/2; i++) {
@@ -488,36 +657,46 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)CRSBlockDiagonalInSolution:(FEMSolution *)solution blockDiagMatrix:(FEMMatrix *) B numberOfBlocks:(int)blocks {
 /*******************************************************************************************
-    Description: 
-        Pics the block diagonal entries form matrix solution.matrix to build matrix B.
+    Description:
+    Pics the block diagonal entries form matrix solution.matrix to build matrix B.
  
-        FEMMatrix *B  ->  The block diagonal matrix
-        int blocks    ->  Number of blocks used in the decomposition
-
+        FEMMatrix *matrix      -> Input matrix.
+        FEMMatrix *B           ->  The block diagonal matrix
+        int blocks             ->  Number of blocks used in the decomposition
+ 
 *******************************************************************************************/
+
+-(void)CRSBlockDiagonalMatrix:(FEMMatrix *)matrix blockDiagMatrix:(FEMMatrix *)B numberOfBlocks:(int)blocks {
     
     int n;
     int i, k, l, kb;
     matrixArraysContainer *matContainers = NULL, *bContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    if (blocks <= 1) return;
+    
+    matContainers = matrix.getContainers;
     bContainers = B.getContainers;
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
     B.numberOfRows = n;
     
     kb = 0;
     for (i=0; i<n; i++) {
         for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
             l = matContainers->Cols[k];
-            if ((i % blocks) == (l % blocks)) kb = kb + 1;
+            if ((i % blocks) == (l % blocks)) kb++;
         }
     }
     
-    // From here we need that B.Rows, B.Cols, B.Values and B.Diag have allocation in memory.
-    // This should be taken care by the caller of this method.
+    bContainers->Rows = intvec(0, (n+1)-1);
+    bContainers->sizeRows = n+1;
+    bContainers->Cols = intvec(0, kb-1);
+    bContainers->sizeCols = kb;
+    bContainers->Values = doublevec(0, kb-1);
+    bContainers->sizeValues = kb;
+    bContainers->Diag = intvec(0, n-1);
+    bContainers->sizeDiag = n;
     
     kb = 0;
     for (i=0; i<n; i++) {
@@ -528,46 +707,185 @@ static double AEPS = 10.0 * DBL_EPSILON;
                 bContainers->Values[kb] = matContainers->Values[k];
                 bContainers->Cols[kb] = matContainers->Cols[k];
                 if (bContainers->Cols[kb] == i) bContainers->Diag[i] = kb;
-                kb = kb + 1;
+                kb++;
             }
         }
     }
-    bContainers->Rows[(n-1)+1] = kb;
+    bContainers->Rows[(n+1)-1] = kb;
 }
 
--(BOOL)CRSIncompleteLUInSolution:(FEMSolution *)solution fillsOrder:(int)ilun {
+-(void)initializeILUMatrix:(FEMMatrix *)matrix numberOfRows:(int)ilun {
+    
+    int i, n, m;
+    
+    FEMMatrix *a1;
+    matrixArraysContainer *matContainers = NULL;
+    matrixArraysContainer *a1Containers = NULL;
+    
+    a1 = [[FEMMatrix alloc] init];
+    matContainers = matrix.getContainers;
+    a1Containers = a1.getContainers;
+    
+    n = matrix.numberOfRows;
+    
+    if (ilun == 0) {
+        matContainers->ILURows = matContainers->Rows;
+        matContainers->ILUCols = matContainers->Cols;
+        matContainers->ILUDiag = matContainers->Diag;
+        
+        matContainers->sizeILURows = matContainers->sizeRows;
+        matContainers->sizeILUCols = matContainers->sizeCols;
+        matContainers->sizeILUDiag = matContainers->sizeDiag;
+    } else {
+        
+        matContainers->sizeILUCols = [self FEMPrecondition_initializeILU1:matContainers :n];
+        matContainers->sizeILURows = n+1;
+        matContainers->sizeILUDiag = n;
+        
+        if (ilun > 1) {
+            
+            for (i=0; i<ilun-1; i++) {
+                
+                a1Containers->Cols = matContainers->ILUCols;
+                a1Containers->Rows = matContainers->ILURows;
+                a1Containers->Diag = matContainers->ILUDiag;
+                
+                m = [self FEMPrecondition_initializeILU1:a1Containers :n];
+                
+                matContainers->ILUCols = a1Containers->ILUCols;
+                matContainers->ILURows = a1Containers->ILURows;
+                matContainers->ILUDiag = a1Containers->ILUDiag;
+                
+                a1Containers->Cols = NULL;
+                a1Containers->Rows = NULL;
+                a1Containers->Diag = NULL;
+            }
+        }
+    }
+    matContainers->ILUValues = doublevec(0, matContainers->ILURows[(n+1)-1]-1);
+    if (matContainers->ILUValues == NULL) {
+        errorfunct("initializeILUMatrix", "Memory allocation error.");
+    }
+    matContainers->sizeILUValues = matContainers->ILURows[(n+1)-1]-1;
+}
+
+-(void)initializeCILUMatrix:(FEMMatrix *)matrix :(int)ilun {
+    
+    int i, j, k;
+    int n;
+    
+    FEMMatrix *a1;
+    matrixArraysContainer *matContainers = NULL;
+    matrixArraysContainer *a1Containers = NULL;
+    
+    a1 = [[FEMMatrix alloc] init];
+    matContainers = matrix.getContainers;
+    a1Containers = a1.getContainers;
+    
+    n = matrix.numberOfRows;
+    
+    a1.numberOfRows = n/2;
+    a1Containers->Rows = intvec(0, (n/2+1)-1);
+    a1Containers->Diag = intvec(0, (n/2)-1);
+    a1Containers->Cols = intvec(0, (matContainers->sizeCols / 4)-1);
+    
+    a1Containers->Rows[0] = 0 ;
+    k = 0;
+    
+    for (i=0; i<n; i+=2) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j+=2) {
+            k = k + 1;
+            a1Containers->Cols[k] = (matContainers->Cols[j]+1) / 2;
+            if (matContainers->Cols[j] == i) a1Containers->Diag[(i+1)/2] = k;
+        }
+        a1Containers->Rows[(i+1)/2+1] = k + 1;
+    }
+    
+    if (ilun == 0) {
+        matContainers->ILURows = matContainers->Rows;
+        matContainers->ILUCols = matContainers->Cols;
+        matContainers->ILUDiag = matContainers->Diag;
+        
+        matContainers->sizeILURows = matContainers->sizeRows;
+        matContainers->sizeILUCols = matContainers->sizeCols;
+        matContainers->sizeILUDiag = matContainers->sizeDiag;
+    } else {
+        
+        matContainers->sizeILUCols = [self FEMPrecondition_initializeILU1:a1Containers :n/2];
+        matContainers->ILUCols = a1Containers->ILUCols;
+        matContainers->ILURows = a1Containers->ILURows;
+        matContainers->ILUDiag = a1Containers->ILUDiag;
+        
+        matContainers->sizeILURows = (n/2+1);
+        matContainers->sizeILUDiag = n/2;
+        
+        free_ivector(a1Containers->Rows, 0, (n/2+1)-1);
+        free_ivector(a1Containers->Diag, 0, (n/2)-1);
+        free_ivector(a1Containers->Cols, 0, (matContainers->sizeCols / 4)-1);
+        a1Containers->Rows = NULL;
+        a1Containers->Diag = NULL;
+        a1Containers->Cols = NULL;
+        
+        if (ilun > 1) {
+            
+            for (i=0; i<ilun-1; i++) {
+                
+                a1Containers->Cols = matContainers->ILUCols;
+                a1Containers->Rows = matContainers->ILURows;
+                a1Containers->Diag = matContainers->ILUDiag;
+                
+                k = [self FEMPrecondition_initializeILU1:a1Containers :n/2];
+                
+                matContainers->ILUCols = a1Containers->ILUCols;
+                matContainers->ILURows = a1Containers->ILURows;
+                matContainers->ILUDiag = a1Containers->ILUDiag;
+                
+                a1Containers->Cols = NULL;
+                a1Containers->Rows = NULL;
+                a1Containers->Diag = NULL;
+            }
+        }
+    }
+    matContainers->CILUValues = cdoublevec(0, matContainers->ILURows[(n/2+1)-1]);
+    if (matContainers->CILUValues == NULL) {
+        errorfunct("initializeCILUMatrix", "Memory allocation error.");
+    }
+    matContainers->sizeCILUValues = matContainers->ILURows[(n/2+1)-1];
+}
+
+
 /*******************************************************************************************
  
-    Description: 
-        Builds an incomplete ILU(n) factorization for an iterative solver precondioner.
-        Real matrix version.
+    Description:
+    Builds an incomplete ILU(n) factorization for an iterative solver precondioner.
+    Real matrix version.
  
     Arguments:
  
-    FEMSolution *solution  -> Class holding input matrix, will also hold
-                              the factorization on exit.
+        FEMMatrix *matrix      -> Input matrix
  
-    int ilun               -> Order of fills allowed 0-9
+        int ilun               -> Order of fills allowed 0-9
  
-    Return Value           -> A BOOL whether or not the factorization succeeded.
+        Return Value           -> A BOOL whether or not the factorization succeeded.
  
- *******************************************************************************************/
+*******************************************************************************************/
+-(BOOL)CRSIncompleteLUMatrix:(FEMMatrix *)matrix fillsOrder:(int)ilun {
     
     int i, j, k, l, n;
     double t, *S;
     bool *C;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    errorfunct("CRSIncompleteLUInSolution", "ILU (Real). Starting factorization with order:", ilun);
+    errorfunct("CRSIncompleteLUMatrix", "ILU (Real). Starting factorization with order:", ilun);
     t = cputime();
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
     
     if (matContainers->ILUValues == NULL) {
         
-        [solution initializeILU:ilun];
+        [self initializeILUMatrix:matrix numberOfRows:ilun];
     }
     
     // Allocate space for storing one full row
@@ -622,30 +940,29 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
-    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSIncompleteLUInSolution", "ILU (Real), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
 
--(BOOL)CRSComplexIncompleteLUInSolution:(FEMSolution *)solution fillsOrder: (int)ilun {
 /*******************************************************************************************
  
-    Description: 
-        Builds an incomplete ILU(n) factorization for an iterative solver precondioner.
-        Complex matrix version.
+    Description:
+    Builds an incomplete ILU(n) factorization for an iterative solver precondioner.
+    Complex matrix version.
  
     Arguments:
  
-        FEMSolution *solution  -> Class holding input matrix, will also hold
-                                  the factorization on exit.
+        FEMMatrix *matrix      -> Input matrix
  
         int ilun               -> Order of fills allowed 0-9
  
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
+-(BOOL)CRSComplexIncompleteLUMatrix:(FEMMatrix *)matrix fillsOrder: (int)ilun {
     
     int i, j, k, l, n;
     double t;
@@ -653,16 +970,16 @@ static double AEPS = 10.0 * DBL_EPSILON;
     bool *C;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    errorfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Starting factorization with order:", ilun);
+    errorfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Starting factorization with order:", ilun);
     t = cputime();
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
     
     if (matContainers->CILUValues == NULL) {
         
-        [solution initializeCILU:ilun];
+        [self initializeCILUMatrix:matrix :ilun];
     }
     
     // Allocate space for storing one full row
@@ -717,24 +1034,22 @@ static double AEPS = 10.0 * DBL_EPSILON;
         }
     }
     
-    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
-    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSComplexIncompleteLUInSolution", "ILU (Complex), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
+    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
 
--(BOOL)CRSIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol {
 /*******************************************************************************************
  
-    Description: 
-        Builds an incomplete (ILUT) factorization for an iterative solver preconditioner.
-        Real matrix version
+    Description:
+    Builds an incomplete (ILUT) factorization for an iterative solver preconditioner.
+    Real matrix version
  
     Arguments:
  
-        FEMSolution *solution  -> Class holding input matrix, will also hold
-                                  the factorization on exit.
+        FEMMatrix *matrix      -> Input matrix
  
         int tol                -> Drop tolerance: if ILUT(i,j) <= NORM(A(i.;))*tol
                                   the value is dropped.
@@ -742,17 +1057,18 @@ static double AEPS = 10.0 * DBL_EPSILON;
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
+-(BOOL)CRSIlutMatrix:(FEMMatrix *)matrix dropTolerance:(int)tol {
     
-    int n; 
+    int n;
     double t;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    warnfunct("CRS_ICRSIlutInSolutionLUT", "Starting factorization:");
+    warnfunct("CRSIlutMatrix", "Starting factorization:");
     t = cputime();
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
     
     if (matContainers->ILUValues != NULL) {
         free_ivector(matContainers->ILURows, 0, matContainers->sizeILURows-1);
@@ -761,26 +1077,24 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_dvector(matContainers->ILUValues, 0, matContainers->sizeILUValues-1);
     }
     
-    [self FEMPrecondition_computeIlutInSolution:solution numberOfRows:n tolerance:tol];
+    [self FEMPrecondition_computeIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    warnfunct("CRSIlutInSolution", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSIlutInSolution", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSIlutInSolution", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSIlutMatrix", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSIlutMatrix", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    warnfunct("CRSIlutMatrix", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
 
--(BOOL)CRSComplexIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol {
 /*******************************************************************************************
  
-    Description: 
-        Builds an incomplete (ILUT) factorization for an iterative solver preconditioner.
-        Complex matrix version
+    Description:
+    Builds an incomplete (ILUT) factorization for an iterative solver preconditioner.
+    Complex matrix version
  
     Arguments:
  
-        FEMSolution *solution  -> Class holding input matrix, will also hold
-        the factorization on exit.
+        FEMMatrix *matrix      -> Input matrix
  
         int tol                -> Drop tolerance: if ILUT(i,j) <= NORM(A(i.;))*tol
                                   the value is dropped.
@@ -788,17 +1102,18 @@ static double AEPS = 10.0 * DBL_EPSILON;
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
+-(BOOL)CRSComplexIlutMatrix:(FEMMatrix *)matrix dropTolerance:(int)tol {
     
-    int n; 
+    int n;
     double t;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    warnfunct("CRSComplexIlutInSolution", "Starting factorization:");
+    warnfunct("CRSComplexIlutMatrix", "Starting factorization:");
     t = cputime();
     
-    n = solution.matrix.numberOfRows / 2;
+    n = matrix.numberOfRows / 2;
     
     if (matContainers->CILUValues != NULL) {
         free_ivector(matContainers->ILURows, 0, matContainers->sizeILURows-1);
@@ -807,56 +1122,50 @@ static double AEPS = 10.0 * DBL_EPSILON;
         free_cdvector(matContainers->CILUValues, 0, matContainers->sizeCILUValues-1);
     }
     
-    [self FEMPrecondition_computeComplexIlutInSolution:solution numberOfRows:n tolerance:tol];
+    [self FEMPrecondition_computeComplexIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
-    warnfunct("CRSComplexIlutInSolution", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
+    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
+    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
+    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
     
     return YES;
 }
 
--(BOOL)CRSLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
 /*******************************************************************************************
  
-    Description: 
-        Incomplete factorization preconditioner solver for a CRS format matrix.
-        Matrix is accessed from the solution class. Real matrix version.
- 
- Arguments:
-
-    FEMSolution *solution  -> Class holding input matrix.
- 
-    double *u              -> Solution vector
-
-    double *v              -> Right-hand-side vector
-
-    int ipar               -> Structure holding info from the HUTIter iterative solver.
-
-*******************************************************************************************/
-
-    int i;
-    
-    for (i=0; i<ipar[2]; i++) {
-        u[i] = v[i];
-    }
-    
-    [self FEMPrecondition_LUSolveSystemSize:ipar[2] solution:solution rightHandSide:u];
-    
-    return YES;
-    
-}
-
--(BOOL)CRSComplexLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
-/*****************************************************************************************************************
- 
-    Description: 
-        Incomplete factorization preconditioner solver for a CRS format matrix.
-        Matrix is accessed from the solution class. Real matrix version.
+    Description:
+    Incomplete factorization preconditioner solver for a CRS format matrix.
+    Matrix is accessed from the solution class. Real matrix version.
  
     Arguments:
  
-        FEMSolution *solution  -> Class holding input matrix.
+        FEMMatrix *matrix      -> Input matrix
+ 
+        double *u              -> Solution vector
+ 
+        double *v              -> Right-hand-side vector
+ 
+        int ipar               -> Structure holding info from the HUTIter iterative solver.
+ 
+*******************************************************************************************/
+-(BOOL)CRSLuPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
+    
+    memcpy(u, v, ipar[2]*sizeof(double));
+    
+    [self FEMPrecondition_LUSolveSystemSize:ipar[2] matrix:matrix rightHandSide:u];
+    
+    return YES;
+}
+
+/*****************************************************************************************************************
+ 
+    Description:
+    Incomplete factorization preconditioner solver for a CRS format matrix.
+    Matrix is accessed from the solution class. Real matrix version.
+ 
+    Arguments:
+ 
+        FEMMatrix *matrix      -> Input matrix
  
         double complex *u      -> Solution vector
  
@@ -864,46 +1173,42 @@ static double AEPS = 10.0 * DBL_EPSILON;
  
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
- ****************************************************************************************************************/
+****************************************************************************************************************/
+-(BOOL)CRSComplexLuPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
     
-    int i;
+    memcpy(u, v, ipar[2]*sizeof(double));
     
-    for (i=0; i<ipar[2]; i++) {
-        u[i] = v[i];
-    }
-    
-    [self FEMPrecondition_ComplexLUSolveSystemSize:ipar[2] solution:solution rightHandSide:u];
+    [self FEMPrecondition_ComplexLUSolveSystemSize:ipar[2] matrix:matrix rightHandSide:u];
 
     return YES;
-    
 }
 
--(void)CRSMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v info:(int *)ipar {
 /*******************************************************************************************
  
-    Description: 
-        Matrix vector product (v = Au) for a matrix given in CRS format. The matrix 
-        is accessed from the solution class. Real version.
+    Description:
+    Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
+    is accessed from the solution class. Real version.
  
     Arguments:
  
-        FEMSolution *solution  -> Class holding input matrix.
+        FEMMatrix *matrix      -> Input matrix
  
         double *u              -> Vector to multiply
-
+ 
         double *v              -> Result vector
  
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 *******************************************************************************************/
+-(void)CRSMatrixVectorProduct:(FEMMatrix *)matrix vector:(double *)u result:(double *)v info:(int *)ipar {
     
     int i, j, n;
     double s;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
     
     if (ipar[5] == 0) {
         
@@ -925,30 +1230,30 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)CRSComplexMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v info:(int *)ipar {
 /*******************************************************************************************
  
-    Description: 
-        Matrix vector product (v = Au) for a matrix given in CRS format. The matrix 
-        is accessed from the solution class. Complex version.
+    Description:
+    Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
+    is accessed from the solution class. Complex version.
  
     Arguments:
  
-    FEMSolution *solution  -> Class holding input matrix.
+        FEMMatrix *matrix      -> Input matrix
  
-    double complex *u      -> Vector to multiply
+        double complex *u      -> Vector to multiply
  
-    double complex *v      -> Result vector
+        double complex *v      -> Result vector
  
-    int ipar               -> Structure holding info from the HUTIter iterative solver.
+        int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 *******************************************************************************************/
+-(void)CRSComplexMatrixVectorProduct:(FEMMatrix *)matrix vector:(double complex *)u result:(double complex *)v info:(int *)ipar {
     
     int i, j, n;
     double complex s, rsum;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     n = ipar[2];
     
@@ -976,13 +1281,9 @@ static double AEPS = 10.0 * DBL_EPSILON;
     }
 }
 
--(void)CRSPCondDummyInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
+-(void)CRSPCondDummyMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
     
-    int i;
-    
-    for (i=0; i<ipar[2]; i++) {
-        u[i] = v[i];
-    }
+    memcpy(u, v, ipar[2]*sizeof(double));
 }
 
 @end

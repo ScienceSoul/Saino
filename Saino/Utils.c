@@ -37,6 +37,12 @@ double __attribute__((overloadable)) max(double x, double y) {
     return (x > y) ? x : y;
 }
 
+double __attribute__((overloadable)) max(double x, double y, double z) {
+    
+    double m = (x > y) ? x : y;
+    return (z > m) ? z : m;
+}
+
 int __attribute__((overloadable)) min(int x, int y) {
     
     return (x < y) ? x : y;
@@ -58,6 +64,12 @@ int __attribute__((overloadable)) min(int w, int x, int y, int z) {
 double __attribute__((overloadable)) min(double x, double y) {
     
     return (x < y) ? x : y;
+}
+
+double __attribute__((overloadable)) min(double x, double y, double z) {
+    
+    double m = (x < y) ? x : y;
+    return (z < m) ? z : m;
 }
 
 int __attribute__((overloadable)) max_array(int *a, int num_elements)

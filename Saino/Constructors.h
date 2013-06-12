@@ -6,6 +6,7 @@
 //  Copyright 2011 ScienceSoul. All rights reserved.
 //
 
+#import <float.h>
 #include <complex.h>
 #include <stdbool.h>
 
@@ -14,6 +15,8 @@
 
 #define MAX_NAME_LEN 128
 #define MAX_ELEMENT_NODES 256
+
+#define AEPS 10.0 * DBL_EPSILON
 
 enum {
     MATRIX_CRS = 1,
@@ -64,7 +67,7 @@ enum {
 };
 
 enum {
-    imcrompressible = 0,
+    incrompressible = 0,
     user_defined1,
     user_defined2,
     perfect_gas1,
@@ -253,6 +256,10 @@ typedef struct matrixArraysContainer {
     int sizeCRHS, sizeCForce, sizeCValues, sizeCILUValues,
         sizeCMassValues, sizeCDampValues;
     
+    // For flux corrected transport
+    double *FCT_D;
+    int sizeFct;
+    
 } matrixArraysContainer;
 
 typedef struct variableArraysContainer {
@@ -368,6 +375,14 @@ typedef struct RungeKutta_t {
     double *k4;
     
 } RungeKutta_t;
+
+typedef struct Dimensions_t {
+    
+    int mat1;
+    int mat2;
+    int vec;
+    
+} Dimensions_t;
 
 #endif
 

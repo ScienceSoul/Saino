@@ -32,6 +32,7 @@
 		7328669615C2744B000E1128 /* FEMVariable.m in Sources */ = {isa = PBXBuildFile; fileRef = 7328669515C2744B000E1128 /* FEMVariable.m */; };
 		7332A9C6153E8E6500D81D30 /* FEMListUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 7332A9C5153E8E6500D81D30 /* FEMListUtilities.m */; };
 		73355E761510745100F959D8 /* FEMTimeIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73355E751510745100F959D8 /* FEMTimeIntegration.m */; };
+		733F0EE81765A87700D24664 /* FEMIterativeMethods.m in Sources */ = {isa = PBXBuildFile; fileRef = 733F0EE71765A87700D24664 /* FEMIterativeMethods.m */; };
 		73456A711521A137003054EB /* FEMBoundaryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 73456A701521A137003054EB /* FEMBoundaryCondition.m */; };
 		73456ECD14ECDBDC00ECD602 /* FEMHUTIter.m in Sources */ = {isa = PBXBuildFile; fileRef = 73456ECC14ECDBDC00ECD602 /* FEMHUTIter.m */; };
 		734BC2C2152D326900AEE0E4 /* FEMElementDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 734BC2C1152D326900AEE0E4 /* FEMElementDescription.m */; };
@@ -45,6 +46,7 @@
 		737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 737B0D7414E2274B00ED409D /* TimeProfile.c */; };
 		737CCFCB1683F5EA00A94486 /* FEMBoundary.m in Sources */ = {isa = PBXBuildFile; fileRef = 737CCFCA1683F5E800A94486 /* FEMBoundary.m */; };
 		73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */; };
+		73844CF1175C38370002DA9D /* FEMRadiation.m in Sources */ = {isa = PBXBuildFile; fileRef = 73844CF0175C38370002DA9D /* FEMRadiation.m */; };
 		73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB2151C483600B11665 /* FEMMatrixCRS.m */; };
 		73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB6151C73F000B11665 /* FEMMatrixBand.m */; };
 		738BC1A416F06EB800EDFA6B /* FEMInitialConditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */; };
@@ -59,6 +61,8 @@
 		73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD31594560F009A83C6 /* DirectoryReader.m */; };
 		73B1B273170570550056322B /* FEMPost.m in Sources */ = {isa = PBXBuildFile; fileRef = 73B1B272170570550056322B /* FEMPost.m */; };
 		73BBD72715DB8AC700B5735D /* FEMPElementMaps.m in Sources */ = {isa = PBXBuildFile; fileRef = 73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */; };
+		73D0F11D175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */; };
+		73D0F120175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */; };
 		73D1FAEE1745DA8700D4E5C9 /* FEMMaterial.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D1FAED1745DA8700D4E5C9 /* FEMMaterial.m */; };
 		73DB203215D3A951006C5F1C /* FEMJob.m in Sources */ = {isa = PBXBuildFile; fileRef = 73DB203115D3A951006C5F1C /* FEMJob.m */; };
 		73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */ = {isa = PBXBuildFile; fileRef = 73DE8B1B16B2627000DA2D7D /* Constructors.c */; };
@@ -137,6 +141,8 @@
 		7332A9C5153E8E6500D81D30 /* FEMListUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMListUtilities.m; sourceTree = "<group>"; };
 		73355E741510745100F959D8 /* FEMTimeIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMTimeIntegration.h; sourceTree = "<group>"; };
 		73355E751510745100F959D8 /* FEMTimeIntegration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMTimeIntegration.m; sourceTree = "<group>"; };
+		733F0EE61765A87700D24664 /* FEMIterativeMethods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMIterativeMethods.h; sourceTree = "<group>"; };
+		733F0EE71765A87700D24664 /* FEMIterativeMethods.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMIterativeMethods.m; sourceTree = "<group>"; };
 		73456A6F1521A137003054EB /* FEMBoundaryCondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBoundaryCondition.h; sourceTree = "<group>"; };
 		73456A701521A137003054EB /* FEMBoundaryCondition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMBoundaryCondition.m; sourceTree = "<group>"; };
 		73456ECB14ECDBDC00ECD602 /* FEMHUTIter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMHUTIter.h; sourceTree = "<group>"; };
@@ -167,6 +173,8 @@
 		737CCFCA1683F5E800A94486 /* FEMBoundary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMBoundary.m; sourceTree = "<group>"; };
 		73803A7913AB5EA50036350E /* FEMNumericIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNumericIntegration.h; sourceTree = "<group>"; };
 		73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNumericIntegration.m; sourceTree = "<group>"; };
+		73844CEF175C38370002DA9D /* FEMRadiation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMRadiation.h; sourceTree = "<group>"; };
+		73844CF0175C38370002DA9D /* FEMRadiation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMRadiation.m; sourceTree = "<group>"; };
 		73882CB1151C483600B11665 /* FEMMatrixCRS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixCRS.h; sourceTree = "<group>"; };
 		73882CB2151C483600B11665 /* FEMMatrixCRS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixCRS.m; sourceTree = "<group>"; };
 		73882CB5151C73F000B11665 /* FEMMatrixBand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixBand.h; sourceTree = "<group>"; };
@@ -196,6 +204,10 @@
 		73B1B272170570550056322B /* FEMPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPost.m; sourceTree = "<group>"; };
 		73BBD72515DB8AC700B5735D /* FEMPElementMaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPElementMaps.h; sourceTree = "<group>"; };
 		73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPElementMaps.m; sourceTree = "<group>"; };
+		73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveAnisotropic.h; sourceTree = "<group>"; };
+		73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDiffuseConvectiveAnisotropic.m; sourceTree = "<group>"; };
+		73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveGeneralAnisotropic.h; sourceTree = "<group>"; };
+		73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDiffuseConvectiveGeneralAnisotropic.m; sourceTree = "<group>"; };
 		73D1FAEC1745DA8700D4E5C9 /* FEMMaterial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMaterial.h; sourceTree = "<group>"; };
 		73D1FAED1745DA8700D4E5C9 /* FEMMaterial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMaterial.m; sourceTree = "<group>"; };
 		73DB203015D3A951006C5F1C /* FEMJob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMJob.h; sourceTree = "<group>"; };
@@ -466,9 +478,21 @@
 			name = Readers;
 			sourceTree = "<group>";
 		};
+		73D0F11A175DBAC000CE3326 /* Solutions local matrices & boundary conditions */ = {
+			isa = PBXGroup;
+			children = (
+				73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */,
+				73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */,
+				73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */,
+				73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */,
+			);
+			name = "Solutions local matrices & boundary conditions";
+			sourceTree = "<group>";
+		};
 		73DFEE5B16F327F30081A3A4 /* Solutions */ = {
 			isa = PBXGroup;
 			children = (
+				73D0F11A175DBAC000CE3326 /* Solutions local matrices & boundary conditions */,
 				73DFEE5C16F33B790081A3A4 /* SainoFieldSolutionsComputing.h */,
 				73DFEE5D16F33D280081A3A4 /* FEMFlowSolution.h */,
 				73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */,
@@ -529,6 +553,10 @@
 				73F45234174F0C1000A94149 /* FEMCoordinateSystems.m */,
 				73B1B271170570550056322B /* FEMPost.h */,
 				73B1B272170570550056322B /* FEMPost.m */,
+				73844CEF175C38370002DA9D /* FEMRadiation.h */,
+				73844CF0175C38370002DA9D /* FEMRadiation.m */,
+				733F0EE61765A87700D24664 /* FEMIterativeMethods.h */,
+				733F0EE71765A87700D24664 /* FEMIterativeMethods.m */,
 			);
 			name = "Class utilities";
 			sourceTree = "<group>";
@@ -701,6 +729,10 @@
 				73F2D7EC173A1DDA0070D7C0 /* FEMConstants.m in Sources */,
 				73D1FAEE1745DA8700D4E5C9 /* FEMMaterial.m in Sources */,
 				73F45235174F0C1000A94149 /* FEMCoordinateSystems.m in Sources */,
+				73844CF1175C38370002DA9D /* FEMRadiation.m in Sources */,
+				73D0F11D175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m in Sources */,
+				73D0F120175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */,
+				733F0EE81765A87700D24664 /* FEMIterativeMethods.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

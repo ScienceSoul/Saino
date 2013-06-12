@@ -529,15 +529,6 @@
     return self;
 }
 
--(FEMMatrix *)allocateMatrix {
-    
-    FEMMatrix *matrix;
-    
-    matrix = [[FEMMatrix alloc] init];
-    
-    return matrix;
-}
-
 -(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix *)a {
     
     FEMMatrixCRS *crsMatrix;
@@ -1424,8 +1415,7 @@
     if (i > n-1) i = n-1;
     if (i < 1) i = 1;
     
-    cubic = NO;
-    if (cubicCoeff != NULL) cubic = YES;
+    cubic = (cubicCoeff != NULL) ? YES : NO;
     cubic = (cubic == YES && t >= tValues[0] && t <=tValues[n-1]) ? YES : NO;
     
     if (cubic == YES) {
@@ -1439,6 +1429,40 @@
     } else {
         f = (t - tValues[i-1]) / (tValues[i] - tValues[i-1]);
         f = (1.0 - f)*fValues[i-1] + f*fValues[i];
+    }
+    return f;
+}
+
+/*********************************************************************************************************
+    Derivative a curve given by linear table or splines.
+*********************************************************************************************************/
+-(double)derivateCurveTvalues:(double *)tValues fValues:(double *)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double *)cubicCoeff {
+    
+    int i;
+    double f;
+    BOOL cubic;
+    double tval[2], fval[2], coeffval[2];
+    
+    for (i=0; i<n; i++) {
+        if (tValues[i] >= t) break;
+    }
+    
+    if (i > n-1) i = n-1;
+    if (i < 1) i = 1;
+    
+    cubic = (cubicCoeff != NULL) ? YES : NO;
+    cubic = (cubic == YES && t >= tValues[0] && t <= tValues[n-1]) ? YES : NO;
+    
+    if (cubic == YES) {
+        tval[0] = tValues[i-1];
+        tval[1] = tValues[i];
+        fval[0] = fValues[i-1];
+        fval[1] = fValues[i];
+        coeffval[0] = cubicCoeff[i-1];
+        coeffval[1] = cubicCoeff[i];
+        f = [self cublicSplineX:tval Y:fval R:coeffval T:t];
+    } else {
+        f = (fValues[i] - fValues[i-1]) / (tValues[i] - tValues[i-1]);
     }
     return f;
 }
@@ -1705,9 +1729,8 @@
                 }
             } else {
                 //TODO: add support for parallel run since then it should be mumps by default.
-                str = @"umfpack";
                 NSLog(@"checkOptionsInSolution: setting the linear system direct method to %@\n", str);
-                [solution.solutionInfo setObject:str forKey:@"linear system direct method"];
+                [solution.solutionInfo setObject:@"umfpack" forKey:@"linear system direct method"];
             }
         }
     } // If "linear system solver" is not given, it will be set by default to iterative later in the processing
@@ -1726,7 +1749,6 @@
     double initValue, *sol;
     NSString *eq, *str, *varName, *tmpName;
     NSMutableString *string;
-    NSNumber *yesNumber;
     BOOL isAssemblySolution, isCoupledSolution, isBlockSolution, variableGlobal, variableOutput, found, stat,
          globalBubbles, bandwidthOptimize, discontinuousGalerkin;
     NSRange range;
@@ -1877,8 +1899,7 @@
         }
         
         if ((solution.solutionInfo)[@"radiation solver"] == nil) {
-            yesNumber = @YES;
-            [solution.solutionInfo setObject:yesNumber forKey:@"radiation solver"];
+            [solution.solutionInfo setObject:@YES forKey:@"radiation solver"];
         }
     }
     
@@ -2338,7 +2359,6 @@
     double *sol;
     NSString *tmpName, *methodName;
     NSMutableString *varName, *str;
-    NSNumber *aNumber;
     BOOL found, onlySearch, secondary, variableOutput, harmonicAnal, eigenAnal, complexFlag, multigridActive, mgAlgebraic;
     FEMKernel *kernel;
     FEMVariable *var;
@@ -2357,8 +2377,7 @@
     
     // If soft limiters are applied then also loads must be calculated
     if ([(solution.solutionInfo)[@"apply limiter"] boolValue] == YES) {
-        aNumber = @YES;
-        [solution.solutionInfo setObject:aNumber forKey:@"calculate loads"];
+        [solution.solutionInfo setObject:@YES forKey:@"calculate loads"];
     }
     
     // Create the variable needed for this computation of nodal loads: r = b-Ax
@@ -2839,8 +2858,7 @@
                 k = 10;
             }
             if (k != 1) {
-                aNumber = @(k);
-                [solution.solutionInfo setObject:aNumber forKey:@"linear system residual output"];
+                [solution.solutionInfo setObject:@(k) forKey:@"linear system residual output"];
             }
         }
     }

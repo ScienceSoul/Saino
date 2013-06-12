@@ -28,6 +28,8 @@
 
 -(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found;
 
+-(BOOL)listGetDerivativeValue:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result;
+
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array;
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array;
 

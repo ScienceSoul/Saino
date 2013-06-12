@@ -21,11 +21,13 @@ int __attribute__((overloadable)) max(int x, int y);
 int __attribute__((overloadable)) max(int x, int y, int z);
 int __attribute__((overloadable)) max(int w, int x, int y, int z);
 double __attribute__((overloadable)) max(double x, double y);
+double __attribute__((overloadable)) max(double x, double y, double z);
 
 int __attribute__((overloadable)) min(int x, int y);
 int __attribute__((overloadable)) min(int x, int y, int z);
 int __attribute__((overloadable)) min(int w, int x, int y, int z);
 double __attribute__((overloadable)) min(double x, double y);
+double __attribute__((overloadable)) min(double x, double y, double z);
 
 int __attribute__((overloadable)) max_array(int *a, int num_elements);
 double __attribute__((overloadable)) max_array(double *a, int num_elements);

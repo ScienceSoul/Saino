@@ -23,6 +23,7 @@
 @synthesize comm = _comm;
 @synthesize umfPackNumeric = _umfPackNumeric;
 @synthesize rhsScaling = _rhsScaling;
+@synthesize cholesky = _cholesky;
 @synthesize ordered = _ordered;
 @synthesize lumped = _lumped;
 @synthesize symmetric = _symmetric;
@@ -87,6 +88,8 @@
         
         _containers->GRows = NULL;
         _containers->GOrder = NULL;
+        
+        _containers->FCT_D = NULL;
     }
     
     return self;

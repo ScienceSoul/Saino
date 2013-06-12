@@ -218,7 +218,6 @@
     free_dvector(nodes.z, 0, numberOfNodes-1);
     
     GaussQuadratureDeallocation(IP);
-    
     [integration deallocation:mesh];
 }
 
@@ -315,7 +314,7 @@
     kernel = [FEMKernel sharedKernel];
     // TODO: Add support for parallel run here
     // ....
-    [kernel iterativeSolve:solution];
+    [kernel iterativeSolveMatrix:matrix result:h rhs:matrixContainers->RHS dimensions:NULL solution:solution];
     
     NSLog(@"FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, min_array(h,sizeNodal));
     NSLog(@"FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, max_array(h,sizeNodal));

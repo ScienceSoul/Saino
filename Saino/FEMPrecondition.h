@@ -8,35 +8,37 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FEMSolution.h"
+#import "FEMMatrix.h"
 #import "TimeProfile.h"
 
 @interface FEMPrecondition : NSObject
 
 // Diagonal preconditioning
--(void)CRSDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
--(void)CRSComplexDiagPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
+-(void)CRSDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(void)CRSComplexDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
 
--(void)CRSBlockDiagonalInSolution:(FEMSolution *)solution blockDiagMatrix:(FEMMatrix *) B numberOfBlocks:(int)blocks;
+-(void)CRSBlockDiagonalMatrix:(FEMMatrix *)matrix blockDiagMatrix:(FEMMatrix *)B numberOfBlocks:(int)blocks;
 
 // ILU(n) preconditioning
--(BOOL)CRSIncompleteLUInSolution:(FEMSolution *)solution fillsOrder:(int)ilun;
--(BOOL)CRSComplexIncompleteLUInSolution:(FEMSolution *)solution fillsOrder: (int)ilun;
+-(void)initializeILUMatrix:(FEMMatrix *)matrix numberOfRows:(int)ilun;
+-(void)initializeCILUMatrix:(FEMMatrix *)matrix :(int)ilun;
+-(BOOL)CRSIncompleteLUMatrix:(FEMMatrix *)matrix fillsOrder:(int)ilun;
+-(BOOL)CRSComplexIncompleteLUMatrix:(FEMMatrix *)matrix fillsOrder: (int)ilun;
 
 // ILU(T) preconditioning
--(BOOL)CRSIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol;
--(BOOL)CRSComplexIlutInSolution:(FEMSolution *)solution dropTolerance:(int)tol;
+-(BOOL)CRSIlutMatrix:(FEMMatrix *)matrix dropTolerance:(int)tol;
+-(BOOL)CRSComplexIlutMatrix:(FEMMatrix *)matrix dropTolerance:(int)tol;
 
 // LU Solve
--(BOOL)CRSLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
--(BOOL)CRSComplexLuPreconditionInSolution:(FEMSolution *)solution afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
+-(BOOL)CRSLuPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(BOOL)CRSComplexLuPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
 
 // Matrix-vector product
--(void)CRSMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v info:(int *)ipar;
--(void)CRSComplexMatrixVectorProdInSolution:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v info:(int *)ipar;
+-(void)CRSMatrixVectorProduct:(FEMMatrix *)matrix vector:(double *)u result:(double *)v info:(int *)ipar;
+-(void)CRSComplexMatrixVectorProduct:(FEMMatrix *)matrix vector:(double complex *)u result:(double complex *)v info:(int *)ipar;
 
 // Dummy method when preconditioning is not needed
--(void)CRSPCondDummyInSolution:(FEMSolution *)solution afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(void)CRSPCondDummyMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
 
 @end
 

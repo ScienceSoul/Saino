@@ -15,8 +15,6 @@
 #import "FEMElementDescription.h"
 #import "FEMUtilities.h"
 
-static double AEPS = 10.0 * DBL_EPSILON;
-
 @interface FEMMeshUtils ()
 -(void)FEMMeshUtils_assignConstraints:(FEMMesh *)mesh;
 -(void)FEMMeshUtils_fixFaceEdges:(FEMMesh *)mesh;

@@ -18,6 +18,7 @@
 #import "FEMSimulation.h"
 #import "FEMUtilities.h"
 #import "FEMHUTIter.h"
+#import "FEMIterativeMethods.h"
 #import "FEMPrecondition.h"
 #import "FEMParallelMPI.h"
 #import "FEMTimeIntegration.h"
@@ -27,44 +28,44 @@
 #import "FEMElementUtils.h"
 #import "FEMNumericIntegration.h"
 #import "FEMMeshUtils.h"
-#import "GaussIntegration.h"
+#import "FEMLinearAlgebra.h"
 #import "FEMFlowSolution.h"
 #import "FEMMagneticInductionSolution.h"
 #import "FEMStressAnalysisSolution.h"
 #import "FEMMeshUpdateSolution.h"
+#import "FEMMaterial.h"
 #import "FEMHeatSolution.h"
+#import "GaussIntegration.h"
 #import "Utils.h"
 
-static int ITER_BICGSTAB     =  320;
-static int ITER_TFQMR        =  330;
-static int ITER_CG           =  340;
-static int ITER_CGS          =  350;
-static int ITER_GMRES        =  360;
-static int ITER_BICGSTAB2    =  370;
-static int ITER_SGS          =  380;
-static int ITER_JACOBI       =  390;
-static int ITER_BICGSTABL    =  400;
-static int ITER_GCR          =  410;
+static const int ITER_BICGSTAB     =  320;
+static const int ITER_TFQMR        =  330;
+static const int ITER_CG           =  340;
+static const int ITER_CGS          =  350;
+static const int ITER_GMRES        =  360;
+static const int ITER_BICGSTAB2    =  370;
+static const int ITER_SGS          =  380;
+static const int ITER_JACOBI       =  390;
+static const int ITER_RICHARDSON   =  391;
+static const int ITER_BICGSTABL    =  400;
+static const int ITER_GCR          =  410;
 
-static int PRECOND_NONE      =  500;
-static int PRECOND_DIAGONAL  =  510;
-static int PRECOND_ILUN      =  520;
-static int PRECOND_ILUT      =  530;
-static int PRECOND_MG        =  540;
-static int PRECOND_BILUN     =  550;
-static int PRECOND_VANKA     =  560;
+static const int PRECOND_NONE      =  500;
+static const int PRECOND_DIAGONAL  =  510;
+static const int PRECOND_ILUN      =  520;
+static const int PRECOND_ILUT      =  530;
+static const int PRECOND_MG        =  540;
+static const int PRECOND_BILUN     =  550;
+static const int PRECOND_VANKA     =  560;
 
 @interface FEMKernel ()
 
 // Solving linear systems and compute norms
--(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+-(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 -(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution vector:(double *)vec nodeNumber:(int)nodeNumber;
--(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution;
 -(void)FEMKernel_backRotateNTSystem:(double *)solution permutation:(int *)perm ndofs:(int)ndofs;
 -(double)FEMKernel_computeNormInSolution:(FEMSolution *)solution size:(int)n values:(double *)values;
--(void)FEMKernel_computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0;
--(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel bulkMatrix:(FEMMatrix *)bulkMatrix;
--(void)FEMKernel_solveSystem:(FEMSolution *)solution model:(FEMModel *)aModel;
+-(void)FEMKernel_solveLinearSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution model:(FEMModel *)model bulkMatrix:(FEMMatrix *)bulkMatrix;
 
 // Check passive element
 -(BOOL)FEMKernel_checkPassiveElement:(Element_t *)element model:(FEMModel *)model solution:(FEMSolution *)solution;
@@ -81,11 +82,8 @@ static int PRECOND_VANKA     =  560;
 // Update global force
 -(void)FEMKernel_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT;
 
-// Manipulate matrix coefficients for time dependent simulations
--(void)FEMKernel_addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols;
-
-// Update global equations
--(void)FEMKernel_updateGlobalEquationsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element stiffMatrix:(double **)stiffMatrix force:(double *)force size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT bulkUpdate:(BOOL *)bulkUpdate;
+// Update force vector
+-(void)FEMKernel_finishAssemblyModel:(FEMModel *)model solution:(FEMSolution *)solution forceVector:(double *)forceVector sizeForceVector:(int)n;
 
 // Loads
 -(void)FEMKernel_setElementLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes doneLoad:(BOOL *)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs;
@@ -103,8 +101,8 @@ static int PRECOND_VANKA     =  560;
 -(void)FEMKernel_determineSoftLimiterInSolution:(FEMSolution *)solution model:(FEMModel *)model;
 
 // Rows equilibration
--(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel;
--(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution;
+-(void)FEMKernel_rowEquilibrationMatrix:(FEMMatrix *)matrix vector:(double *)f parallel:(BOOL)parallel;
+-(void)FEMKernel_reverseRowEquilibrationMatrix:(FEMMatrix *)matrix vector:(double *)f;
 
 // Method for coupled solution used by solveEquationsModel:timeStep:transientSimulation:coupledMinIteration:coupleMaxIteration:steadyStateReached:realTimeStep:
 -(void)FEMKernel_solveCoupledModel:(FEMModel *)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL *)doneThis afterConverged:(BOOL *)afterConverged steadyIt:(double *)steadyIt;
@@ -116,10 +114,8 @@ static int PRECOND_VANKA     =  560;
 
 @implementation FEMKernel {
     
-    int *_indexStore;
     double **_kernStiff, *_kernWork;           // kernStiff(maxElementDofs)(maxElementDofs), kernWork(maxElementDofs)
     int *_g_Ind, *_l_Ind;                      // g_Ind(maxElementDofs), l_Ind(maxElementDofs)
-    int _sizeIndexStore;
     int _size1kernStiff;
     int _size2kernStiff;
     int _sizekernWork;
@@ -136,6 +132,10 @@ static int PRECOND_VANKA     =  560;
     
     BOOL _initialized[8];
     
+    int _k1, _n1;
+    double *_saveValues;
+    double **_damp, **_stiff, **_mass, **_x;
+
     id <SainoFieldSolutionsComputing> _instance;
 }
 
@@ -143,56 +143,62 @@ static int PRECOND_VANKA     =  560;
 
 #pragma mark Solve linear systems and norms
 
--(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
-    
-    FEMHUTIter *hutisolver;
-    
+-(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+        
     if (pcondrMethod == 0) {
-        pcondrMethod = @selector(CRSPCondDummyInSolution::::);
+        pcondrMethod = @selector(CRSPCondDummyMatrix::::);
     }
-    
-    hutisolver = [[FEMHUTIter alloc] init];
     
     if (iterType == ITER_BICGSTAB) { // Solve with BI-CGSTAB
         
-        [hutisolver dbicgstabSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dbicgstabSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_BICGSTAB2) { // Solve with BI-CGSTAB2
         
-        [hutisolver dbicgstab2SolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dbicgstab2SolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_TFQMR) { // Solve with TFQMR
         
-        [hutisolver dtfqmrSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dtfqmrSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_CG) { // Solve with CG
         
-        [hutisolver dcgSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_CGS) { // Solve with CGS
         
-        [hutisolver dcgSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_GCR) { // Solve with GMRES
         
-        [hutisolver dgmresSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+        [iterSolver dgmresSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         
     }
     else if (iterType == ITER_SGS) { // Solve with SGS
     
-        [hutisolver dsgsSolveInsolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+        [iterSolver dsgsSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_JACOBI) { // Solve with Jacobi
         
-        [hutisolver djacobiSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+        [iterSolver djacobiSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_BICGSTABL) { // Solve with BI-CGSTAB(l)
         
-        [hutisolver dbicgstablSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+        [iterSolver dbicgstablSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
     else if (iterType == ITER_GCR) { // Solve with GCR
         
-        [hutisolver dgcrSolveInSolution:solution ndim:ipar[2] wrkdim:ipar[3] ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+        [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
     }
 }
 
@@ -231,55 +237,6 @@ static int PRECOND_VANKA     =  560;
         vec[2] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
 
         free_dmatrix(rm, 0, 2, 0, 2);
-    }
-}
-
--(void)FEMKernel_backRotateNTSystem:(FEMSolution *)solution {
-    
-    int i, j, k, l, dim, ndofs;
-    double bu, bv, bw, **rm;
-    variableArraysContainer *varContainers = NULL;
-    
-    dim = solution.coordinateSystemDimension;
-    ndofs = solution.variable.dofs;
-    
-    if (self.normalTangentialNumberOfNodes <= 0 || solution.variable.dofs < dim) return;
-    
-    varContainers = solution.variable.getContainers;
-    
-    for (i=0; i<self.sizeBoundaryReorder; i++) {
-        k = self.boundaryReorder[i];
-        if (k < 0) continue;
-        j = varContainers->Perm[i];
-        if (j < 0) continue;
-        
-        if (dim < 3) {
-            
-            bu = varContainers->Values[(ndofs*(j-1)+1)];
-            bv = varContainers->Values[(ndofs*(j-1)+2)];
-            
-            varContainers->Values[(ndofs*(j-1)+1)] = self.boundaryNormals[k][0]*bu - self.boundaryNormals[k][1]*bv;
-            varContainers->Values[(ndofs*(j-1)+2)] = self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
-        } else {
-            
-            rm = doublematrix(0, 2, 0, 2);
-            
-            bu = varContainers->Values[(ndofs*(j-1)+1)];
-            bv = varContainers->Values[(ndofs*(j-1)+2)];
-            bw = varContainers->Values[(ndofs*(j-1)+3)];
-            
-            for (l=0; l<2; l++) {
-                rm[0][l] = self.boundaryNormals[k][l];
-                rm[1][l] = self.boundaryTangent1[k][l];
-                rm[2][l] = self.boundaryTangent2[k][l];
-            }
-
-            varContainers->Values[(ndofs*(j-1)+1)] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
-            varContainers->Values[(ndofs*(j-1)+2)] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
-            varContainers->Values[(ndofs*(j-1)+3)] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
-            
-            free_dmatrix(rm, 0, 2, 0, 2);
-        }
     }
 }
 
@@ -345,15 +302,15 @@ static int PRECOND_VANKA     =  560;
         x = varContainers->Values;
     }
     
-    if ((solution.solutionInfo)[@"non linear system norm degree"] != nil) {
-        normDim = [(solution.solutionInfo)[@"non linear system norm degree"] intValue];
+    if ((solution.solutionInfo)[@"nonlinear system norm degree"] != nil) {
+        normDim = [(solution.solutionInfo)[@"nonlinear system norm degree"] intValue];
     } else {
         normDim = 2;
     }
     
     dofs = solution.variable.dofs;
-    if ((solution.solutionInfo)[@"non linear system norm dofs"] != nil) {
-        normDofs = [(solution.solutionInfo)[@"non linear system norm dofs"] intValue];
+    if ((solution.solutionInfo)[@"nonlinear system norm dofs"] != nil) {
+        normDofs = [(solution.solutionInfo)[@"nonlinear system norm dofs"] intValue];
     } else {
         normDofs = dofs;
     }
@@ -445,382 +402,15 @@ static int PRECOND_VANKA     =  560;
     return norm;
 }
 
-
--(void)FEMKernel_computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 {
-    
-    NSString *convergenceType, *solverName;
-    int i, n, relaxAfter, iterNo;
-    double norm, prevNorm, bNorm, change, relaxation, maxNorm, dt, tolerance, eps;
-    double *x = NULL, *r, *x0 = NULL;
-    BOOL skip, convergenceAbsolute, relax, relaxBefore, stat, doIt;
-    FEMVariable *iterV, *timeStepVar, *veloVar;
-    NSMutableString *str1;
-    NSString *str2;
-    matrixArraysContainer *matContainers = NULL;
-    variableArraysContainer *varContainers = NULL, *itervContainers = NULL, *containers = NULL;
-    FEMMatrixCRS *crsMatrix;
-    FEMUtilities *utilities;
-    
-    varContainers = solution.variable.getContainers;
-    
-    utilities = [[FEMUtilities alloc] init];
-    
-    relax = NO;
-    
-    if (steadyState == YES) {
-        skip = [(solution.solutionInfo)[@"skip compute steady state change"] boolValue];
-        if (skip == YES) return;
-        
-        if ((solution.solutionInfo)[@"steady state convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"steady state convergence measure"]];
-        } else {
-            convergenceType = @"norm";
-        }
-        
-        if ((solution.solutionInfo)[@"steady state convergence absolute"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"steady state convergence absolute"] boolValue];
-        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
-        }
-        
-        if ((solution.solutionInfo)[@"steady state relaxation factor"] != nil) {
-            relaxation = [(solution.solutionInfo)[@"steady state relaxation factor"] doubleValue];
-            relax = (relaxation != 1.0) ? YES: NO;
-        }
-        
-        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"coupled iter" onlySearch:NULL maskName:NULL info:&stat];
-        itervContainers = iterV.getContainers;
-        iterNo = (int)itervContainers->Values[0];
-        itervContainers = NULL;
-        
-        if (relax == YES) {
-            if ((solution.solutionInfo)[@"steady state relaxation after"] != nil) {
-                relaxAfter = [(solution.solutionInfo)[@"steady state relaxation after"] intValue];
-                if (relaxAfter >= iterNo ) relax = NO;
-            }    
-        }
-        
-        if (relax == YES) {
-            if ((solution.solutionInfo)[@"steady state relaxation before"] != nil) {
-                relaxBefore = [(solution.solutionInfo)[@"steady state relaxation before"] boolValue];
-            } else {
-                relaxBefore = YES;
-            }
-        }
-    } else {
-    
-        if ((solution.solutionInfo)[@"skip compute non linear change"] != nil) {
-            skip  = [(solution.solutionInfo)[@"skip compute non linear change"] boolValue];
-        } else {
-            skip = NO;
-        }
-        if (skip == YES) return;
-        
-        if ((solution.solutionInfo)[@"non linear system convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"non linear system convergence measure"]];
-        } else {
-            convergenceType = @"norm";
-        }
-        
-        if ((solution.solutionInfo)[@"non linear system convergence absolute"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"non linear system convergence absolute"] boolValue];
-        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
-            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
-        } else {
-            convergenceAbsolute = NO;
-        }
-        
-        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
-        itervContainers = iterV.getContainers;
-        iterNo = (int)itervContainers->Values[0];
-        solution.variable.nonLinIter = (int)itervContainers->Values[0];
-        itervContainers->Values[0] = itervContainers->Values[0]+1;
-        itervContainers = NULL;
-        
-        if ((solution.solutionInfo)[@"non linear system relaxation factor"] != nil) {
-            relaxation = [(solution.solutionInfo)[@"non linear system relaxation factor"] doubleValue];
-            relax = (relaxation != 1.0) ? YES: NO;
-        }
-        if (relax == YES) {
-            if ((solution.solutionInfo)[@"non linear system relaxation after"] != nil) {
-                relaxAfter = [(solution.solutionInfo)[@"non linear system relaxation after"] boolValue];
-                if (relaxAfter >= solution.variable.nonLinIter) relax = NO;
-            }
-        }
-        
-        if (relax == YES) {
-            if ((solution.solutionInfo)[@"non linear system relaxation before"] != nil) {
-                relaxBefore = [(solution.solutionInfo)[@"non linear system relaxation before"] boolValue];
-            } else {
-                relaxBefore = YES;
-            }
-        }
-        
-    }
-    
-    if (values != NULL) {
-        x = values;
-    } else {
-        x = varContainers->Values;
-    }
-    
-    if (values == NULL) {
-        solution.variable.norm = 0.0;
-        if (steadyState == YES) {
-            solution.variable.steadyChange = 0.0;
-        } else {
-            solution.variable.nonLinChange = 0.0;
-        }
-        return;
-    }
-    
-    if (nsize != NULL && values != NULL) {
-        n = *nsize;
-    } else if (varContainers->Values != NULL){
-        n = varContainers->sizeValues;
-    } 
-    
-    stat = NO;
-    if (values0 != NULL) {
-        x0 = values0;
-        stat = YES;
-    } else if (steadyState == YES) {
-        if (varContainers->SteadyValues != NULL) {
-            x0 = varContainers->SteadyValues;
-            stat = YES;
-        }
-    } else {
-        if (varContainers->NonLinValues != NULL) {
-            x0 = varContainers->NonLinValues;
-            stat = YES;
-        }
-    }
-    
-    // TODO: Possibly check here if length mismatch between x0 and x
-    //.....
-    
-    if (relax == YES && relaxBefore == YES) {
-        for (i=0; i<n; i++) {
-            x[i] = (1-relaxation) * x0[i] + relaxation*x[i];
-        }
-    }
-    
-    if (steadyState == YES) {
-        prevNorm = solution.variable.prevNorm;
-    } else {
-        prevNorm = solution.variable.norm;
-    }
-    
-    // Compute norm here
-    norm = [self FEMKernel_computeNormInSolution:solution size:n values:x];
-    solution.variable.norm = norm;
-    
-    // The norm should be bounded in order to reach convergence
-    if ((solution.solutionInfo)[@"non linear system max norm"] != nil) {
-        maxNorm = [(solution.solutionInfo)[@"non linear system max norm"] doubleValue];
-    } else {
-        maxNorm = HUGE_VAL;
-    }
-    
-    if (isnan(norm) != 0 && norm > maxNorm) {
-        warnfunct("FEMKernel_computeChange", "Computed norm:");
-        printf("%lf\n", norm);
-        errorfunct("FEMKernel_computeChange", "Norm of solution has crossed given bounds.");
-    }
-    
-     matContainers = solution.matrix.getContainers;
-    
-    if ([convergenceType isEqualToString:@"residual"] == YES) {
-        // ------------------------------------------------------------------------------
-        // x is solution of A(x0)x = b(x0), thus residual should be real r = b(x)-A(x)x
-        // Instead we use r = b(x0)-A(x0)x0 which unfortunately is one step behind
-        // ------------------------------------------------------------------------------
-        r = doublevec(0, n-1);
-        
-        crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x0 resultVector:r];
-        for (i=0; i<n; i++) {
-            r[i] = r[i] - matContainers->RHS[i];
-        }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
-        if (convergenceAbsolute == NO) {
-            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
-            if (bNorm > 0.0) {
-                change = change / bNorm;
-            }
-        }
-        free_dvector(r, 0, n-1);
-    }
-    else if ([convergenceType isEqualToString:@"linear system residual"] == YES) {
-        // ------------------------------------------------------------------------------
-        // Here the true linear system redisual r = b(x)-A(x)x is computed.
-        // This option is useful for some special solvers
-        // ------------------------------------------------------------------------------
-        r = doublevec(0, n-1);
-        
-        crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x resultVector:r];
-        for (i=0; i<n; i++) {
-            r[i] = r[i] - matContainers->RHS[i];
-        }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
-        if (convergenceAbsolute == NO) {
-            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
-            if (bNorm > 0.0) {
-                change = change / bNorm;
-            }
-        }
-        free_dvector(r, 0, n-1);
-    }
-    else if ([convergenceType isEqualToString:@"solution"] == YES) {
-        r = doublevec(0, n-1);
-        
-        for (i=0; i<n; i++) {
-            r[i] = x[i] - x0[i];
-        }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
-        if (convergenceAbsolute == NO && (norm + prevNorm) > 0.0) {
-            change = change * 2.0 / (norm+prevNorm);
-        }
-        free_dvector(r, 0, n-1);
-    }
-    else if ([convergenceType isEqualToString:@"norm"] == YES) {
-        change = fabs(norm-prevNorm);
-        if (convergenceAbsolute == NO && (norm+prevNorm) > 0.0) {
-            change = change * 2.0 / (norm+prevNorm);
-        }
-    }
-    else {
-        warnfunct("FEMKernel_computeChange", "Unknown convergence measure:");
-        printf("%s\n", [convergenceType UTF8String]);
-    }
-    
-    // Check for convergence: 0/1
-    if (steadyState == YES) {
-        solution.variable.steadyChange = change;
-        if ((solution.solutionInfo)[@"steady state convergence tolerance"] != nil) {
-            tolerance = [(solution.solutionInfo)[@"steady state convergence tolerance"] doubleValue];
-            if (change <= tolerance) {
-                solution.variable.steadyConverged = 1;
-            } else {
-                solution.variable.steadyConverged = 0;
-            }
-        }
-    } else {
-        solution.variable.nonLinChange = change;
-        if ((solution.solutionInfo)[@"non linear system convergence tolerance"] != nil) {
-            tolerance = [(solution.solutionInfo)[@"non linear system convergence tolerance"] doubleValue];
-            if (change <= tolerance) {
-                solution.variable.nonLinConverged = 1;
-            } else {
-                solution.variable.nonLinConverged = 0;
-            }
-        }
-    }
-    
-    if (relax == YES && relaxBefore == NO) {
-        for (i=0; i<n; i++) {
-            x[i] = (1-relaxation)*x0[i] + relaxation*x[i];
-        }
-        solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:x ];
-    }
-    
-    if ((solution.solutionInfo)[@"equation"] != nil) {
-        solverName = [NSString stringWithString:(solution.solutionInfo)[@"equation"]];
-    } else {
-        solverName = solution.variable.name;
-    }
-    
-    if (steadyState == YES) {
-        NSLog(@"FEMKernel_computeChange:SS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
-    } else {
-         NSLog(@"FEMKernel_computeChange:NS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
-    }
-    
-    // Only 1st order velocity computation is implemented so far...
-    if ([solution timeOrder] == 1) {
-        doIt = YES;
-        
-        if (steadyState == YES) {
-            if ((solution.solutionInfo)[@"calculate velocity"] != nil) {
-                doIt = [(solution.solutionInfo)[@"calculate velocity"] boolValue];
-            } else {
-                doIt = NO;
-            }
-        } else {
-            if ((solution.solutionInfo)[@"non linear calculate velocity"] != nil) {
-                doIt = [(solution.solutionInfo)[@"non linear calculate velocity"] boolValue];
-            } else {
-                doIt = NO;
-            }
-        }
-        
-        if (doIt == YES) {
-            timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"time step size" onlySearch:NULL maskName:NULL info:&stat];
-            containers = timeStepVar.getContainers;
-            dt = containers->Values[0];
-            str2 = @" velocity";
-            str1 = [NSMutableString stringWithString:solution.variable.name];
-            [str1 appendString:str2];
-            veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
-            containers = veloVar.getContainers;
-            for (i=0; i<n; i++) {
-                containers->Values[i] = (x[i] - varContainers->PrevValues[i][0]) / dt;
-            }
-            containers = NULL;
-        }
-        
-    }
-    
-    // Calculate derivative a.k.a sensitivity
-    if (steadyState == YES) {
-    
-        stat = NO;
-        
-        if ((solution.solutionInfo)[@"calculate derivative"] != nil) {
-            if ([(solution.solutionInfo)[@"calculate derivative"]  boolValue] == YES) {
-                
-                if (iterNo > 1) {
-                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"derivative eps" onlySearch:NULL maskName:NULL info:&stat];
-                    if (timeStepVar != nil) {
-                        containers = timeStepVar.getContainers;
-                        eps = containers->Values[0];
-                        stat = YES;
-                        containers = NULL;
-                    } else {
-                        eps = [(solution.solutionInfo)[@"derivative eps"] doubleValue];
-                    }
-                    if (stat == NO) {
-                        warnfunct("FEMKernel_computeChange", "Derivative eps not given, using one.");
-                    }
-                    
-                    str2 = @" derivative";
-                    str1 = [NSMutableString stringWithString:solution.variable.name];
-                    [str1 appendString:str2];
-                    veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
-                    if (veloVar != nil) {
-                        NSLog(@"FEMKernel_computeChange: Computing variable: %@\n", str1);
-                        containers = veloVar.getContainers;
-                        for (i=0; i<n; i++) {
-                            containers->Values[i] = (x[i] - x0[i]) / eps;
-                        }
-                        containers = NULL;
-                    } else {
-                        warnfunct("FEMKernel_computeChange", "Derivative variable not present.");
-                    }
-                }
-            }
-        }
-    }
-}
-
--(void)FEMKernel_solveLinearSystem:(FEMSolution *)solution model:(FEMModel *)aModel bulkMatrix:(FEMMatrix *)bulkMatrix {
+/*********************************************************************************
+    Solves a linear system and also calls the necessary preconditioning methods
+*********************************************************************************/
+-(void)FEMKernel_solveLinearSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution model:(FEMModel *)model bulkMatrix:(FEMMatrix *)bulkMatrix {
     
     int i, j, k, l, ii, m, n, dof;
     double bnorm, sum, energy, *tempVector, *saveValues;
     NSString *method;
     NSMutableString *name;
-    NSNumber *aNumber;
     FEMVariable *nodalLoads;
     FEMMatrix *matrixAid, *projector;
     matrixArraysContainer *matContainers = NULL, *matAidContainers = NULL,
@@ -833,9 +423,9 @@ static int PRECOND_VANKA     =  560;
          rhsScaling, found;
     
     parallelUtil = [[FEMParallelMPI alloc] init];
-    matContainers = solution.matrix.getContainers;
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
+    matContainers = matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
     if ((solution.solutionInfo)[@"back rotate n-t solution"] != nil) {
@@ -844,23 +434,24 @@ static int PRECOND_VANKA     =  560;
         backRotation = YES;
     }
     
-    if (solution.matrix.isLumped == YES && solution.timeOrder == 1)  {
+    if (matrix.isLumped == YES && solution.timeOrder == 1)  {
         if ((solution.solutionInfo)[@"time stepping method"] != nil) {
             method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
             if ([method isEqualToString:@"runge-kutta"] == YES || [method isEqualToString:@"explicit euler"] == YES) {
                 for (i=0; i<n; i++) {
                     if (fabs(matContainers->Values[matContainers->Diag[i]]) > 0.0)
-                        varContainers->Values[i] = matContainers->RHS[i] / matContainers->Values[matContainers->Diag[i]];
+                        x[i] = b[i] / matContainers->Values[matContainers->Diag[i]];
                 }
-                [self FEMKernel_backRotateNTSystem:solution];
-                [self FEMKernel_computeNormInSolution:solution size:n values:varContainers->Values];
+                if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs];
+                *norm = [self FEMKernel_computeNormInSolution:solution size:n values:varContainers->Values];
                 return;
             }
         }
     }
     
     // These definitions are needed if changing the iterative solver on the fly
-    if ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"]) solution.multigridSolution = YES;
+    solution.multigridSolution = ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"]) ? YES : NO;
+    
     solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"mg levels"] intValue]);
     solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"multigrid levels"] intValue]);
     solution.multigridLevel = solution.multiGridTotal;
@@ -884,17 +475,15 @@ static int PRECOND_VANKA     =  560;
         skipZeroRhs = [(solution.solutionInfo)[@"skip zero rhs test"] boolValue];
     }
     
-    if ( harmonicAnalysis == NO || eigenAnalysis == NO || applyLimiter == NO || skipZeroRhs == NO) {
+    if ( !(harmonicAnalysis || eigenAnalysis || applyLimiter || skipZeroRhs)) {
         sum = 0.0;
         for (i=0; i<n; i++) {
-            sum = sum + pow(matContainers->RHS[i], 2.0);
+            sum = sum + pow(b[i], 2.0);
         }
         bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
         if (bnorm <= DBL_MIN) {
-            warnfunct("SolveSystem", "Solution trivially zero");
-            for (i=0; i<n; i++) {
-                varContainers->Values[i] = 0.0;
-            }
+            NSLog(@"FEMKernel_solveLinearSystemMatrix: Solution trivially zero\n");
+            memset( x, 0.0, varContainers->sizeValues*sizeof(double) );
             return;
         }
     }
@@ -919,14 +508,14 @@ static int PRECOND_VANKA     =  560;
     // In case of a limiter one still may need to check the limiter for contact
     sum = 0.0;
     for (i=0; i<n; i++) {
-        sum = sum + pow(matContainers->RHS[i], 2.0);
+        sum = sum + pow(b[i], 2.0);
     }
     bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
     if (bnorm <= DBL_MIN && skipZeroRhs == NO) {
-        warnfunct("SolveSystem", "Solution trivially zero");
-        memset( varContainers->Values, 0.0, varContainers->sizeValues*sizeof(double) );
+        NSLog(@"FEMKernel_solveLinearSystemMatrix: Solution trivially zero\n");
+        memset( x, 0.0, varContainers->sizeValues*sizeof(double) );
         if (applyLimiter == YES) {
-            [self FEMKernel_determineSoftLimiterInSolution:solution model:aModel];
+            [self FEMKernel_determineSoftLimiterInSolution:solution model:model];
         }
         return;
     }
@@ -940,10 +529,10 @@ static int PRECOND_VANKA     =  560;
         if (applyRowEquilibration == YES) {
             // TODO: Test wheter we are in a parallel run, for now it's never the case
             parallel = NO;
-            [self FEMKernel_rowEquilibrationInSolution:solution parallel:parallel];
+            [self FEMKernel_rowEquilibrationMatrix:matrix vector:b parallel:parallel];
         } else {
             rhsScaling = (bnorm != 0.0) ? YES : NO;
-            [self scaleLinearSystem:solution scaleSolutionMatrixRHS:YES scaleSolutionVariable:YES diagScaling:NULL applyScaling:NULL rhsScaling:&rhsScaling];
+            [self scaleLinearSystem:solution matrix:matrix rhs:b result:x diagScaling:NULL applyScaling:NULL rhsScaling:&rhsScaling];
         }
     }
     
@@ -955,7 +544,7 @@ static int PRECOND_VANKA     =  560;
 
     if ([method isEqualToString:@"iterative"] == YES) {
         
-        [self iterativeSolve:solution];
+        [self iterativeSolveMatrix:matrix result:x rhs:b dimensions:NULL solution:solution];
     } 
     else if ([method isEqualToString:@"multigrid"] == YES) {
         // TODO: Need to be implemented
@@ -978,16 +567,14 @@ static int PRECOND_VANKA     =  560;
     
     if (scaleSystem == YES) {
         if (applyRowEquilibration == YES) {
-            [self FEMKernel_reverseRowEquilibrationInSolution:solution];
+            [self FEMKernel_reverseRowEquilibrationMatrix:matrix vector:b];
         } else {
-            [self backScaleLinearSystem:solution scaleSolutionMatrixRHS:YES scaleSolutionVariable:YES diagScaling:NULL sizeOFDiagScaling:NULL];
+            [self backScaleLinearSystem:solution matrix:matrix rhs:b result:x diagScaling:NULL sizeOFDiagScaling:NULL];
         }
     }
     
     utilities = [[FEMUtilities alloc] init];
-    name = [NSMutableString stringWithString:solution.variable.name];
-    [name appendString:@" loads"];
-    nodalLoads = [utilities getVariableFrom:solution.mesh.variables model:aModel name:name onlySearch:NULL maskName:NULL info:&found];
+    nodalLoads = [utilities getVariableFrom:solution.mesh.variables model:model name:[solution.variable.name stringByAppendingString:@" loads"] onlySearch:NULL maskName:NULL info:&found];
     
     matrixAid = solution.matrix;
     // If bulkMatrix is given then it's not nil
@@ -1008,18 +595,17 @@ static int PRECOND_VANKA     =  560;
             energy = 0.0;
             for (i=0; i<matrixAid.numberOfRows; i++) {
                 //TODO: Add suppor for pararrel run
-                energy = energy + varContainers->Values[i]*tempVector[i];
+                energy = energy + x[i]*tempVector[i];
             }
             energy = [parallelUtil parallelReductionOfValue:energy operArg:NULL];
-            aNumber = @(energy);
-            [solution.solutionInfo setObject:aNumber forKey:@"energy norm"];
+            [solution.solutionInfo setObject:@(energy) forKey:@"energy norm"];
             name = [NSMutableString stringWithString:@"res: "];
             [name appendString:solution.variable.name];
             [name appendString:@" energy norm"];
             listUtilities = [[FEMListUtilities alloc] init];
-            [listUtilities addConstRealInClassList:aModel.simulation theVariable:name withValue:energy string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:energy string:nil];
             
-            NSLog(@"FEMKernel_solveLinearSystem: energy norm: %f\n", energy);
+            NSLog(@"FEMKernel_solveLinearSystemMatrix: energy norm: %f\n", energy);
         }
         
         matAidContainers->Values = saveValues;
@@ -1028,7 +614,7 @@ static int PRECOND_VANKA     =  560;
             tempVector[i] = tempVector[i] - matAidContainers->BulkRHS[i];
         }
         
-        for (FEMBoundaryCondition *boundaryCondition in aModel.boundaryConditions) {
+        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
             projector = boundaryCondition.pMatrix;
             if (projector != nil) {
                 projectorContainers = projector.getContainers;
@@ -1068,27 +654,24 @@ static int PRECOND_VANKA     =  560;
         
     }
     
-    if (backRotation == YES) [self FEMKernel_backRotateNTSystem:solution];
+    if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs];
     
     // Compute the change of the solution with different methods
-    [self FEMKernel_computeChange:solution model:aModel isSteadyState:NO nsize:&n values:varContainers->Values values0:NULL];
-    // The following is what Elmer does because it takes a norm as arument in the linear solver routine. We don't need
-    // to do that because we work on the soluton class directly. But we would have to do the same if a method takes
-    // separately as arguments a matrix, the matrix RHS, the variable values and the variable norm.
-    // norm = solution.variable.norm;
+    [self computeChange:solution model:model isSteadyState:NO nsize:&n values:x values0:NULL];
+    *norm = solution.variable.norm;
     
     // Create soft limiters to be later applied by the dirichlet conditions in the next round.
     // Within apply a hard limiter after the set is determined.
     if (applyLimiter == YES) {
-        [self FEMKernel_determineSoftLimiterInSolution:solution model:aModel];
+        [self FEMKernel_determineSoftLimiterInSolution:solution model:model];
     }
     
     solution.variable.primaryMesh = solution.mesh;
-    [self invalidateVariableInTopMesh:aModel.meshes primaryMesh:solution.mesh name:solution.variable.name model:aModel];
+    [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:solution.variable.name model:model];
     
     if (nodalLoads != nil) {
         nodalLoads.primaryMesh = solution.mesh;
-        [self invalidateVariableInTopMesh:aModel.meshes primaryMesh:solution.mesh name:nodalLoads.name model:aModel];
+        [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:nodalLoads.name model:model];
     }
     
     // In order to ba able to change the preconditioners or solutions, the old
@@ -1119,93 +702,6 @@ static int PRECOND_VANKA     =  560;
                     if (matrixAid.ematrix != nil) matrixAid.ematrix = nil;
                 }
             }
-        }
-    }
-}
-
--(void)FEMKernel_solveSystem:(FEMSolution *)solution model:(FEMModel *)aModel {
-    
-    int n, i;
-    double relaxation, beta, gamma;
-    double t0, rt0, st, rst;
-    BOOL needPrevSol, stat;
-    NSString *method;
-    variableArraysContainer *varContainers = NULL;
-    
-    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
-        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
-            t0 = cputime();
-            rt0 = realtime();
-        }
-    }
-    
-    n = solution.matrix.numberOfRows;
-    
-    varContainers = solution.variable.getContainers;
-
-    // The allocation of previous values has to be here in order to work properly
-    // with the Dirichlet elimination
-    needPrevSol = NO;
-    if ((solution.solutionInfo)[@"non linear system relaxation factor"] != nil) {
-        relaxation = [(solution.solutionInfo)[@"non linear system relaxation factor"] doubleValue];
-        needPrevSol = (relaxation != 0.0) ? YES: NO;
-    }
-    
-    if (needPrevSol == NO) {
-        if ((solution.solutionInfo)[@"non linear system convergence measure"] != nil) {
-            method = [NSString stringWithString:(solution.solutionInfo)[@"non linear system convergence measure"]];
-            needPrevSol = ([method isEqualToString:@"residual"] == YES || [method isEqualToString:@"solution"] == YES) ? YES: NO;
-        }
-    }
-    
-    if (needPrevSol == YES) {
-        stat = NO;
-        if (varContainers->NonLinValues != NULL) {
-            stat = YES;
-            if (varContainers->sizeNonLinValues != n) {
-                free_dvector(varContainers->NonLinValues, 0, varContainers->sizeNonLinValues-1);
-                varContainers->NonLinValues = NULL;
-                stat = NO;
-            }
-        }
-        if (stat == NO) {
-            varContainers->NonLinValues = doublevec(0, n-1);
-            if (varContainers->NonLinValues == NULL) errorfunct("FEMKernel_solveSystem", "Memory allocation error.");
-            varContainers->sizeNonLinValues = n;
-        }
-        for (i=0; i<n; i++) {
-            varContainers->NonLinValues[i] = varContainers->Values[i];
-        }
-    }
-    
-    
-    // TODO: Add support for constrained matrix solution
-    
-    [self FEMKernel_solveLinearSystem:solution model:aModel bulkMatrix:NULL];
-    
-    if ([solution timeOrder] == 2) {
-        if (varContainers->PrevValues != NULL) {
-            
-            gamma = 0.5 - [solution alpha];
-            beta = ( pow((1.0 - [solution alpha]), 2.0) ) / 4.0;
-            for (i = 0; i<n; i++) {
-                varContainers->PrevValues[i][1] = (1.0/(beta*pow([solution dt], 2.0))) * (varContainers->Values[i]-varContainers->PrevValues[i][2]) -
-                                            (1.0/(beta*[solution dt]))*varContainers->PrevValues[i][3] + (1.0-1.0/(2.0*beta))*varContainers->PrevValues[i][4];
-                varContainers->PrevValues[i][0] = varContainers->PrevValues[i][3] + [solution dt]*((1.0-gamma)*varContainers->PrevValues[i][4]+
-                                            gamma*varContainers->PrevValues[i][1]);
-            }
-        }
-    }
-    
-    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
-        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
-            st = cputime() - t0;
-            rst = realtime() - rt0;
-            
-            NSLog(@"Solution time for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
-            
-            // TODO: Add support for cumulative timing
-        
         }
     }
 }
@@ -1756,197 +1252,44 @@ static int PRECOND_VANKA     =  560;
     free_ivector(indexes, 0, n-1);
 }
 
--(void)FEMKernel_addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols {
-/********************************************************************************************************************
-    For time dependent simulations add the time derivative coefficient terms to the matrix
-    containing other coefficients.
-********************************************************************************************************************/
+#pragma mark Update force
+
+/***********************************************************************************************
+    Update force vector after all other assembly steps but before setting Dirichlet conditions.
+    Required only for time dependent simulations.
+***********************************************************************************************/
+-(void)FEMKernel_finishAssemblyModel:(FEMModel *)model solution:(FEMSolution *)solution forceVector:(double *)forceVector sizeForceVector:(int)n {
     
-    int i, j, k, l, m, order;
-    double s, t;
-    double **prevSol, *matrixForce, *lForce, *buffer;
-    double *dts;
-    BOOL constantDt, found;
-    FEMTimeIntegration *timeIntegration;
-    FEMUtilities *utilities;
-    NSString *method;
-    FEMVariable *dtVar;
+    int i, order;
+    NSString *method, *simulation;
+    BOOL found;
     matrixArraysContainer *matContainers = NULL;
-    variableArraysContainer *varContainers = NULL, *containers = NULL;
     
-    matContainers = solution.matrix.getContainers;
-    varContainers = solution.variable.getContainers;
-    
-    prevSol = doublematrix(0, (dofs*n)-1, 0, [solution order]-1);
-    lForce = doublevec(0, (dofs*n)-1);
-    dts = doublevec(0, [solution order]-1);
-    matrixForce = doublevec(0, matContainers->size1force-1);
-    
-    buffer = doublevec(0, (dofs*n)-1);
-    
-    timeIntegration = [[FEMTimeIntegration alloc] init];
-    utilities = [[FEMUtilities alloc] init];
-    
-    if (solution.matrix.isLumped == YES) {
-        s = 0.0;
-        t = 0.0;
-        for (i=0; i<n*dofs; i++) {
-            for (j=0; j<n*dofs; j++) {
-                s = s + massMatrix[i][j];
-                if (i != j) massMatrix[i][j] = 0.0;
-            }
-        t = t + massMatrix[i][i];
-        }
-
-        for (i=0; i<n; i++) {
-            for (j=0; j<dofs; j++) {
-                k = dofs * i + j;
-                if (t != 0.0) massMatrix[k][k] = massMatrix[k][k] * s / t;
-            }
-        }
-    }
-    
-    order = min([solution doneTime], [solution order]);
-    
-    for (i=0; i<n; i++) {
-        for (j=0; j<dofs; j++) {
-            k = dofs * i + j;
-            l = dofs * nodeIndexes[i] + j;
-            for (m=0; n<order; m++) {
-                prevSol[k][m] = varContainers->PrevValues[l][m];
-            }
-        }
-    }
-    
-    for (i=0; i<n*dofs; i++) {
-        lForce[i] = force[i];
-    }
-    
-    for (i=0; i<matContainers->size1force; i++) {
-        matrixForce[i] = matContainers->Force[i][0];
-    }
-    
-    [self FEMKernel_updateGlobalForceModel:model solution:solution element:element forceVector:matrixForce localForce:lForce size:n dofs:dofs nodeIndexes:nodeIndexes rotateNT:NULL];
-    
-    if ((solution.solutionInfo)[@"time stepping method"] != nil) {
-        method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
-    } else {
-        method = @"bdf";
+    if (solution.matrix.format == MATRIX_LIST) {
+        // TODO: implement this case for list matrix
     }
 
-    if ([method isEqualToString:@"fs"] == YES) {
-        
-        for (i=0; i<dofs*n; i++) {
-            buffer[i] = prevSol[i][0];
-        }
-        [timeIntegration fractionalStepInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer rows:rows];
-    } 
-    else if ([method isEqualToString:@"bfs"]) {
-        dts[0] = dt;
-        constantDt = NO;
-        if (order > 1) {
-            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
-            containers = dtVar.getContainers;
-            for (i=1; i<order; i++) {
-                dts[i] = containers->PrevValues[0][i-1];
-                if ( fabs(dts[i]-dts[0]) > 1.0e-6 * dts[0] ) constantDt = NO;
-            }
-            containers = NULL;
-        }
-        if (constantDt == YES) {
-        
-            [timeIntegration bdfLocalInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
+    if ([(solution.solutionInfo)[@"linear system fct"] boolValue] == YES) {
+        if (solution.variable.dofs == 1) {
+            FEMMatrixCRS *matrixCRS = [[FEMMatrixCRS alloc] init];
+            [matrixCRS fctlLowOrderInSolution:solution orMatrix:nil];
         } else {
-            [timeIntegration vbdfLocalInSolution:solution numberOfNodes:n*dofs dts:dts massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
+            errorfunct("FEMKernel_finishAssemblyModel", "FCT scheme implemented only for one dof");
         }
     }
-    else {
+    
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
+    if ([simulation isEqualToString:@"transient"]) {
+        method = (solution.solutionInfo)[@"time stepping method"];
+        order = min(solution.doneTime, solution.order);
         
-        for (i=0; i<dofs*n; i++) {
-            buffer[i] = prevSol[i][0];
-        }
-        [timeIntegration newMarkBetaInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer beta:solution.beta rows:rows];
-    }
-    
-    free_dmatrix(prevSol, 0, (dofs*n)-1, 0, [solution order]-1);
-    free_dvector(lForce, 0, (dofs*n)-1);
-    free_dvector(dts, 0, [solution order]-1);
-    free_dvector(matrixForce, 0, matContainers->size1force-1);
-    free_dvector(buffer, 0, (dofs*n)-1);
-}
-
--(void)FEMKernel_updateGlobalEquationsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element stiffMatrix:(double **)stiffMatrix force:(double *)force size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT bulkUpdate:(BOOL *)bulkUpdate {
-/********************************************************************************************************************
-    Add element local matrices and vectors to global matrices and vectors
-    
-    Arguments:
- 
-        FEMSolution *solution     -> Class solution which contains the global matrix and global RHS vector
-        double **stiffMatrix      -> Local matrix to be added tp the global matrix
-        double  *force            -> Element local force vector
-        int n                     -> Number of nodes
-        int dofs                  -> Number of dofs
-        int *nodeIndexes          -> Element node to global node numbering mapping
- 
-********************************************************************************************************************/
-    
-    int i, j, k, dim;
-    int *indexes;
-    BOOL rotate;
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
-    matrixArraysContainer *matContainers = NULL;
-
-    // Check if this element has been defined as passive
-    if ([self FEMKernel_checkPassiveElement:element model:model solution:solution] == YES) return;
-    
-    matContainers = solution.matrix.getContainers;
-    
-    indexes = intvec(0, n-1);
-    
-    rotate = YES;
-    if (rotateNT != NULL) {
-        rotate = *rotateNT;
-    }
-    
-    if (rotate == YES && self.normalTangentialNumberOfNodes > 0) {
-        dim = [model dimension];
-        memset( indexes, -1, n*sizeof(int) );
-        for (i=0; i<element->Type.NumberOfNodes; i++) {
-            indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
-        }
-        [self FEMKernel_rotateMatrix:stiffMatrix solution:solution vector:force size:n dimension:dim dofs:dofs nodeIndexes:indexes];
-    }
-    
-    if (solution.matrix.format == MATRIX_CRS) {
+        if (order <= 0 || solution.timeOrder != 1 || [method isEqualToString:@"bdf"] == YES) return;
         
-        crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix glueLocalMatrixInGlobal:solution matrix:stiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
-        
-    }
-    else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
-        
-        bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix glueLocalMatrixInGlobal:solution matrix:stiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
-    }
-    
-    
-    if (bulkUpdate == NULL || *bulkUpdate == NO) {
-        for (i=0; i<n; i++) {
-            if (nodeIndexes[i] >= 0) {
-                for (j=0; j<dofs; j++) {
-                    k = dofs * nodeIndexes[i] + j;
-                    matContainers->RHS[k] = matContainers->RHS[k] + force[dofs*i+j];
-                }
-            }
-        }
-    } else if (*bulkUpdate == YES ) {
-        for (i=0; i<n; i++) {
-            if (nodeIndexes[i] >= 0) {
-                for (j=0; j<dofs; j++) {
-                    k = dofs * nodeIndexes[i] + j;
-                    matContainers->BulkRHS[k] = matContainers->BulkRHS[k] + force[dofs*i+j];
-                }
+        if (solution.beta != 0.0) {
+            matContainers = solution.matrix.getContainers;
+            for (i=0; i<n; i++) {
+                forceVector[i] = forceVector[i] + (solution.beta - 1.0) * matContainers->Force[i][0] + (1.0 - solution.beta) * matContainers->Force[i][1];
             }
         }
     }
@@ -2796,7 +2139,7 @@ static int PRECOND_VANKA     =  560;
     Equilibrate the rows of the coefficient matrix in solution to minimize the condition 
     number. The associated rhs vector is also scaled
 *****************************************************************************************/
--(void)FEMKernel_rowEquilibrationInSolution:(FEMSolution *)solution parallel:(BOOL)parallel {
+-(void)FEMKernel_rowEquilibrationMatrix:(FEMMatrix *)matrix vector:(double *)f parallel:(BOOL)parallel {
     
     int i, j, n;
     double norm, tmp;
@@ -2804,10 +2147,10 @@ static int PRECOND_VANKA     =  560;
     BOOL complexMatrix;
     matrixArraysContainer *matContainers = NULL;
     
-    n = solution.matrix.numberOfRows;
-    complexMatrix = solution.matrix.complexMatrix;
+    n = matrix.numberOfRows;
+    complexMatrix = matrix.complexMatrix;
     
-    matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     if (matContainers->DiagScaling == NULL) {
         matContainers->DiagScaling = doublevec(0, n-1);
@@ -2880,33 +2223,33 @@ static int PRECOND_VANKA     =  560;
         for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
             matContainers->Values[j] = matContainers->Values[j] * matContainers->DiagScaling[i];
         }
-        matContainers->RHS[i] = matContainers->DiagScaling[i] * matContainers->RHS[i];
+        f[i] = matContainers->DiagScaling[i] * f[i];
     }
     
-    NSLog(@"FEMKernel_rowEquilibrationInSolution: unscaled matrix norm: %f\n", norm);
+    NSLog(@"FEMKernel_rowEquilibrationMatrix: unscaled matrix norm: %f\n", norm);
 }
 
 /****************************************************************************************
     Scale the linear system back to original when the linear system scaling has been
     done by row equilibration.
 *****************************************************************************************/
--(void)FEMKernel_reverseRowEquilibrationInSolution:(FEMSolution *)solution {
+-(void)FEMKernel_reverseRowEquilibrationMatrix:(FEMMatrix *)matrix vector:(double *)f {
     
     int i, j, n;
     matrixArraysContainer *matContainers = NULL;
     
-    n = solution.matrix.numberOfRows;
-    matContainers = solution.matrix.getContainers;
+    n = matrix.numberOfRows;
+    matContainers = matrix.getContainers;
     
     if (matContainers->DiagScaling == NULL) {
-        errorfunct("FEMKernel_reverseRowEquilibrationInSolution", "Diag is a null pointer!");
+        errorfunct("FEMKernel_reverseRowEquilibrationMatrix", "Diag is a null pointer!");
     }
     if (matContainers->sizeDiagScaling != n) {
-        errorfunct("FEMKernel_reverseRowEquilibrationInSolution", "Diag of wrong size!");
+        errorfunct("FEMKernel_reverseRowEquilibrationMatrix", "Diag of wrong size!");
     }
     
     for (i=0; i<n; i++) {
-        matContainers->RHS[i] = matContainers->RHS[i] / matContainers->DiagScaling[i];
+        f[i] = f[i] / matContainers->DiagScaling[i];
     }
     for (i=0; i<n; i++) {
         for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
@@ -3043,7 +2386,7 @@ static int PRECOND_VANKA     =  560;
                 testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
                 if (testConvergence == YES || calculateDerivative == YES) {
                     // TODO: add support for parallel run
-                    [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
                     
                     // The ComputeChange method sets a flag to zero if not yet converged (otherwise -1/1)
                     if (testConvergence == YES) {
@@ -3058,7 +2401,7 @@ static int PRECOND_VANKA     =  560;
                 testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
                 if (testConvergence == YES) {
                     // TODO: add support for parallel run
-                    [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
                     if (solution.variable.steadyConverged == 0) {
                         doneThis[k] = NO;
                     } else {
@@ -3067,7 +2410,7 @@ static int PRECOND_VANKA     =  560;
                 }
             } else { // Steady state
                 // TODO: add support for parallel run
-                [self FEMKernel_computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
                 if (solution.variable.steadyConverged == 0) {
                     doneThis[k] = NO;
                 } else {
@@ -3128,7 +2471,6 @@ static int PRECOND_VANKA     =  560;
     int i, maxDim;
     BOOL meActive;
     NSString *equationName;
-    NSNumber *aNumber;
     FEMUtilities *utilities;
     solutionArraysContainer *solContainers = NULL;
     Element_t *elements = NULL;
@@ -3154,8 +2496,7 @@ static int PRECOND_VANKA     =  560;
                     solution.numberOfActiveElements++;
                 }
             }
-            aNumber = @(maxDim);
-            [solution.solutionInfo setObject:aNumber forKey:@"active mesh dimension"];
+            [solution.solutionInfo setObject:@(maxDim) forKey:@"active mesh dimension"];
             
             if ([(solution.solutionInfo)[@"calculate weights"] boolValue] == YES) {
                 [self computeNodalWeightsInSolution:solution model:model weightBoundary:NO perm:NULL sizePerm:NULL variableName:nil];
@@ -3271,6 +2612,8 @@ static int PRECOND_VANKA     =  560;
 @synthesize size2boundaryTangent1 = _size2boundaryTangent1;
 @synthesize size1boundaryTangent2 = _size1boundaryTangent2;
 @synthesize size2boundaryTangent2 = _size2boundaryTangent2;
+@synthesize sizeIndexStore = _sizeIndexStore;
+@synthesize indexStore = _indexStore;
 @synthesize ntZeroingDone = _ntZeroingDone;
 @synthesize boundaryReorder = _boundaryReorder;
 @synthesize ntElement = _ntElement;
@@ -3346,6 +2689,14 @@ static int PRECOND_VANKA     =  560;
         _outputPE = 0;
         
         _normalTangentialName = [NSMutableString stringWithString:@""];
+        
+        _n1 = 0;
+        _k1 = 0;
+        _saveValues = NULL;
+        _damp = NULL;
+        _stiff = NULL;
+        _mass = NULL;
+        _x = NULL;
     }
     
     return self;
@@ -3372,6 +2723,19 @@ static int PRECOND_VANKA     =  560;
     
     free_dvector(_kernWork, 0, _sizekernWork-1);
     _kernWork = NULL;
+    
+    if (_stiff != NULL) {
+        free_dmatrix(_stiff, 0, 0, 0, _n1-1);
+    }
+    if (_mass != NULL) {
+        free_dmatrix(_mass, 0, 0, 0, _n1-1);
+    }
+    if (_damp != NULL) {
+        free_dmatrix(_damp, 0, 0, 0, _n1-1);
+    }
+    if (_x != NULL) {
+        free_dmatrix(_x, 0, _n1-1, 0, _k1-1);
+    }
 }
 
 
@@ -3645,13 +3009,13 @@ static int PRECOND_VANKA     =  560;
     
     sz1 = globalNodes->numberOfNodes;
     if (sz1 > solution.mesh.numberOfNodes) {
-        memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-        nb = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+        memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+        nb = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
         for (i=n; i<nb; i++) {
-            if (_indexStore[i] >= 0 && _indexStore[i] < sz1) {
-                nodes->x[i] = globalNodes->x[_indexStore[i]];
-                nodes->y[i] = globalNodes->y[_indexStore[i]];
-                nodes->z[i] = globalNodes->z[_indexStore[i]];
+            if (self.indexStore[i] >= 0 && self.indexStore[i] < sz1) {
+                nodes->x[i] = globalNodes->x[self.indexStore[i]];
+                nodes->y[i] = globalNodes->y[self.indexStore[i]];
+                nodes->z[i] = globalNodes->z[self.indexStore[i]];
             }
         }
     }
@@ -4042,12 +3406,12 @@ static int PRECOND_VANKA     =  560;
     }
     if (variable == nil) return;
     
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
     varSolution = (FEMSolution *)variable.solution;
     if (varSolution != nil) {
-        n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:_indexStore];
+        n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore];
     } else {
-        n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+        n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     }
     n = min(n, sizeField);
     
@@ -4066,7 +3430,7 @@ static int PRECOND_VANKA     =  560;
     
     if (varContainers->Perm != NULL) {
         for (i=0; i<n; i++) {
-            j = _indexStore[i];
+            j = self.indexStore[i];
             if (j >= 0 && j < varContainers->sizePerm) {
                 j = varContainers->Perm[j];
                 if (j >= 0) field[i] = values[j];
@@ -4074,12 +3438,76 @@ static int PRECOND_VANKA     =  560;
         }
     } else {
         for (i=0; i<n; i++) {
-            j = _indexStore[i];
-            if (j >= 0 && j < varContainers->sizeValues) field[i] = values[_indexStore[i]];
+            j = self.indexStore[i];
+            if (j >= 0 && j < varContainers->sizeValues) field[i] = values[self.indexStore[i]];
         }
     }
     
     if (needsDeallocation == YES) free_dvector(values, 0, varContainers->size1PrevValues-1);
+}
+
+-(void)getVectorLocalField:(double **)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep {
+    
+    int i, j, k, n;
+    double *values;
+    BOOL found, needsDeallocation=NO;
+    FEMVariable *variable = nil;
+    FEMSolution *varSolution;
+    FEMUtilities *utilities;
+    variableArraysContainer *varContainers = NULL;
+    
+    utilities = [[FEMUtilities alloc] init];
+    memset( *field, 0.0, (size1Field*size2Field)*sizeof(double) );
+    
+    variable = solution.variable;
+    if (name != nil) {
+        variable = [utilities getVariableFrom:solution.mesh.variables model:model name:name onlySearch:NULL maskName:NULL info:&found];
+    }
+    if (variable == nil) return;
+    
+    if (variable != nil) {
+        memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+        varSolution = (FEMSolution *)variable.solution;
+        if (varSolution != nil) {
+            n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore];
+        } else {
+            n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+        }
+        n = min(n, (size1Field*size2Field));
+        
+        varContainers = variable.getContainers;
+        if (tStep != NULL) {
+            if (*tStep < 0) {
+                if (varContainers->PrevValues != NULL && -*tStep < varContainers->size2PrevValues) {
+                    values = doublevec(0, varContainers->size1PrevValues-1);
+                    for (i=0; i<varContainers->size1PrevValues; i++) {
+                        values[i] = varContainers->PrevValues[i][-*tStep];
+                    }
+                    needsDeallocation = YES;
+                }
+            }
+        } else values = varContainers->Values;
+        
+        for (i=0; i<variable.dofs; i++) {
+            if (varContainers->Perm != NULL) {
+                for (j=0; j<n; j++) {
+                    k = self.indexStore[j];
+                    if (k >= 0 && k < varContainers->sizePerm) {
+                        k = varContainers->Perm[k];
+                        if (k >= 0) field[i][j] = values[variable.dofs*k+i];
+                    }
+                }
+            } else {
+                for (j=0; j<n; j++) {
+                    if (variable.dofs*self.indexStore[j]+i < varContainers->sizeValues) {
+                        field[i][j] = values[variable.dofs*self.indexStore[j]+i];
+                    }
+                }
+            }
+        }
+    }
+    
+    if (needsDeallocation == YES) free_dvector(values, 0, varContainers->size1PrevValues-1);    
 }
 
 -(int **)getEdgeMap:(int)elementFamily {
@@ -4379,32 +3807,64 @@ static int PRECOND_VANKA     =  560;
     return eq_id;
 }
 
--(BOOL)isActiveElement:(Element_t *)element inSolution:(FEMSolution *)solution model:(FEMModel *)model {
+/*******************************************************************************************
+    Returns a material property from either of the parents of the current boundary element
+*******************************************************************************************/
+-(BOOL)getParentMaterialProperty:(NSString *)name forElement:(Element_t *)element parentElement:(Element_t *)parentElement model:(FEMModel *)model buffer:(listBuffer *)result {
     
-    BOOL l;
+    int leftright, mat_id, n;
+    BOOL gotIt, found;
+    Element_t *parent = NULL;
+    FEMListUtilities *listUtilities;
+    FEMMaterial *materialAtID;
+    
+    listUtilities = [[FEMListUtilities alloc] init];
+    n = [self getNumberOfNodesForElement:element];
+    
+    gotIt = NO;
+    for (leftright=1; leftright<=2; leftright++) {
+        if (leftright == 1) {
+            parent = element->BoundaryInfo->Left;
+        } else {
+            parent = element->BoundaryInfo->Right;
+        }
+        if (parent != NULL) {
+            mat_id = [self getMaterialIDForElement:element model:model];
+            materialAtID = (model.materials)[mat_id-1];
+            if ([listUtilities listCheckPresentVariable:name inArray:materialAtID.valuesList] == YES) {
+                found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:name numberOfNodes:n indexes:element->NodeIndexes buffer:result minValue:NULL maxValue:NULL];
+                parentElement = parent;
+                gotIt = YES;
+                break;
+            }
+        }
+    }
+    
+    if (gotIt == NO) {
+        NSLog(@"getMaterialProperty: property %@ not found in either parents!\n", name);
+    }
+    return gotIt;
+}
+
+-(BOOL)isActiveBoundaryElement:(Element_t *)element inSolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    BOOL active;
     int i, n;
-    int *perm;
     variableArraysContainer *varContainers = NULL;
     
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    if ([self isPElement:element] == YES) n = [self getNumberOfNodesForElement:element];
     varContainers = solution.variable.getContainers;
     
-    perm = intvec(0, n-1);
+    active = YES;
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[_indexStore[i]];
+        if (varContainers->Perm[self.indexStore[i]] < 0) {
+            active = NO;
+            break;
+        }
     }
-    
-    if (all(perm, '>', 0, n) == true) {
-        l = YES;
-    } else {
-        l = NO;
-    }
-
-    free_ivector(perm, 0, n-1);
-    varContainers = NULL;
-    
-    return l;
+    return active;
 }
 
 /********************************************************************************************************************
@@ -4814,7 +4274,6 @@ static int PRECOND_VANKA     =  560;
     free(nodes);
     
     GaussQuadratureDeallocation(IP);
-    
     [numericIntegration deallocation:solution.mesh];
 }
 
@@ -5489,18 +4948,17 @@ static int PRECOND_VANKA     =  560;
     Scale system Ax = b as:
     (DAD) = Db, where D = 1/sqrt(Diag(A)) and y = D^-1 x
 *****************************************************************************************************************/
--(void)scaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling applyScaling:(BOOL *)applyScaling rhsScaling:(BOOL *)rhsScaling {
+-(void)scaleLinearSystem:(FEMSolution *)solution matrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x diagScaling:(double *)diagScaling applyScaling:(BOOL *)applyScaling rhsScaling:(BOOL *)rhsScaling {
     
     int i, j, n;
     double *diag, bnorm, sum;
     double complex diagC;
     BOOL complexMatrix, doRHS;
     matrixArraysContainer *matContainers = NULL;
-    variableArraysContainer *varContainers = NULL;
     FEMParallelMPI *parallelUtil;
     
-    n = solution.matrix.numberOfRows;
-    matContainers = solution.matrix.getContainers;
+    n = matrix.numberOfRows;
+    matContainers = matrix.getContainers;
     
     if (diagScaling != NULL) {
         diag = diagScaling;
@@ -5581,34 +5039,33 @@ static int PRECOND_VANKA     =  560;
     }
     
     // Scale r.h.s and initial guess
-    if (scaleSolutionMatrixRHS == YES) {
+    if (b != NULL) {
         for (i=0; i<n; i++) {
-            matContainers->RHS[i] = matContainers->RHS[i] * diag[i];
+            b[i] = b[i] * diag[i];
         }
         doRHS = YES;
         if (rhsScaling != NULL) doRHS = *rhsScaling;
         if (doRHS == YES) {
             parallelUtil = [[FEMParallelMPI alloc] init];
             sum = 0.0;
-            for (i=0; i<matContainers->sizeRHS; i++) {
-                sum = sum + pow(matContainers->RHS[i], 2.0);
+            for (i=0; i<n; i++) {
+                sum = sum + pow(b[i], 2.0);
             }
             bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
         } else {
             bnorm = 1.0;
         }
-        solution.matrix.rhsScaling = bnorm;
+        matrix.rhsScaling = bnorm;
         
         for (i=0; i<n; i++) {
             diag[i] = diag[i] * bnorm;
         }
         for (i=0; i<n; i++) {
-            matContainers->RHS[i] = matContainers->RHS[i] / bnorm;
+            b[i] = b[i] / bnorm;
         }
-        if (scaleSolutionVariable == YES) {
-            varContainers = solution.variable.getContainers;
+        if (x != NULL) {
             for (i=0; i<n; i++) {
-                varContainers->Values[i] = varContainers->Values[i] / diag[i];
+                x[i] = x[i] / diag[i];
             }
         }
     }
@@ -5619,15 +5076,15 @@ static int PRECOND_VANKA     =  560;
     diagscaling is optional and if given, its size sizeOFDiagScaling should also
     be given.
 ************************************************************************************/
--(void)backScaleLinearSystem:(FEMSolution *)solution scaleSolutionMatrixRHS:(BOOL)scaleSolutionMatrixRHS scaleSolutionVariable:(BOOL)scaleSolutionVariable diagScaling:(double *)diagScaling sizeOFDiagScaling:(int *)sizeOfDiagScaling {
+-(void)backScaleLinearSystem:(FEMSolution *)solution matrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x diagScaling:(double *)diagScaling sizeOFDiagScaling:(int *)sizeOfDiagScaling {
     
     int i, j, k, n;
     double *diag, bnorm;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    n = solution.matrix.numberOfRows;
-    matContainers = solution.matrix.getContainers;
+    n = matrix.numberOfRows;
+    matContainers = matrix.getContainers;
     
     if (diagScaling != NULL) {
         diag = diagScaling;
@@ -5644,21 +5101,20 @@ static int PRECOND_VANKA     =  560;
         if (matContainers->sizeDiagScaling != n) errorfunct("backScaleLinearSystem", "Diag of wrong size");
     }
     
-    if (scaleSolutionMatrixRHS == YES) {
+    if (b != NULL) {
         
         // Solve x: INV(D)x = y, scale b back to original
-        if (scaleSolutionVariable == YES) {
-            varContainers = solution.variable.getContainers;
+        if (x != NULL) {
             for (i=0; i<n; i++) {
-                varContainers->Values[i] = varContainers->Values[i] * diag[i];
+                x[i] = x[i] * diag[i];
             }
         }
-        bnorm = solution.matrix.rhsScaling;
+        bnorm = matrix.rhsScaling;
         for (i=0; i<n; i++) {
             diag[i] = diag[i] / bnorm;
         }
         for (i=0; i<n; i++) {
-            matContainers->RHS[i] = matContainers->RHS[i] / diag[i] * bnorm;
+            b[i] = b[i] / diag[i] * bnorm;
         }
     }
     
@@ -6032,6 +5488,7 @@ static int PRECOND_VANKA     =  560;
         }
     }
     GaussQuadratureDeallocation(IP);
+    [integration deallocation:solution.mesh];
     
     free_dvector( elementNodes->x, 0, m-1);
     free_dvector( elementNodes->y, 0, m-1);
@@ -6042,7 +5499,390 @@ static int PRECOND_VANKA     =  560;
     NSLog(@"computeNodalWeightsInSolution: all done");
 }
 
+-(void)condensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n force1:(double *)force1 {
+    
+    int i, j, ldofs[n], bdofs[n];
+    double fb[n], b[n][n], c[n][n], **kbb, kbl[n][n], klb[n][n], x[n], y[n];
+    FEMLinearAlgebra *linearAlgebra;
+    
+    for (i=0; i<n; i++) {
+        ldofs[i] = i;
+        bdofs[i] = ldofs[i] + n;
+    }
+    
+    kbb = doublematrix(0, n-1, 0, n-1);
+    for (i=0; i<n; i++) {
+        for (j=0; j<n; j++) {
+            kbb[i][j] = stiff[bdofs[i]][bdofs[j]];
+            kbl[i][j] = stiff[bdofs[i]][ldofs[j]];
+            klb[i][j] = stiff[ldofs[i]][bdofs[j]];
+        }
+        fb[i] = force[bdofs[i]];
+    }
+    
+    linearAlgebra = [[FEMLinearAlgebra alloc] init];
+    [linearAlgebra invertMatrix:kbb ofSize:n];
+    
+    memset( y, 0.0, sizeof(double) );
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, *kbb, n, fb, 1, 0.0, y, 1);
+    memcpy(x, y, sizeof(double));
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, (double *)klb, n, x, 1, 0.0, y, 1);
+    for (i=0; i<n; i++) {
+        force[i] = force[i] - y[i];
+    }
+    
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, *kbb, n, (double *)kbl, n, 0.0,  (double *)c, n);
+    memcpy(*b, *c, (n*n)*sizeof(double));
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, (double *)klb, n, (double *)b, n, 0.0,  (double *)c, n);
+    for (i=0; i<n; i++) {
+        for (j=0; j<n; j++) {
+            stiff[i][j] = stiff[i][j] - c[i][j];
+        }
+    }
+    
+    if (force1 != NULL) {
+        for (i=0; i<n; i++) {
+            fb[i] = force1[bdofs[i]];
+        }
+        memset( y, 0.0, sizeof(double) );
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, *kbb, n, fb, 1, 0.0, y, 1);
+        memcpy(x, y, sizeof(double));
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, (double *)klb, n, x, 1, 0.0, y, 1);
+        for (i=0; i<n; i++) {
+            force1[i] = force1[i] - y[i];
+        }
+    }
+    free_dmatrix(kbb, 0, n-1, 0, n-1);
+}
+
+/*************************************************************************************************************************
+    For time dependent simulations add the time derivative coefficient terms to the matrix containing other coefficients.
+*************************************************************************************************************************/
+-(void)addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols {
+    
+    int i, j, k, l, m, order;
+    double s, t;
+    double **prevSol, *matrixForce, *lForce, *buffer;
+    double *dts;
+    BOOL constantDt, found;
+    FEMTimeIntegration *timeIntegration;
+    FEMUtilities *utilities;
+    NSString *method;
+    FEMVariable *dtVar;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL, *containers = NULL;
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    prevSol = doublematrix(0, (dofs*n)-1, 0, [solution order]-1);
+    lForce = doublevec(0, (dofs*n)-1);
+    dts = doublevec(0, [solution order]-1);
+    matrixForce = doublevec(0, matContainers->size1force-1);
+    
+    buffer = doublevec(0, (dofs*n)-1);
+    
+    timeIntegration = [[FEMTimeIntegration alloc] init];
+    utilities = [[FEMUtilities alloc] init];
+    
+    if (solution.matrix.isLumped == YES) {
+        s = 0.0;
+        t = 0.0;
+        for (i=0; i<n*dofs; i++) {
+            for (j=0; j<n*dofs; j++) {
+                s = s + massMatrix[i][j];
+                if (i != j) massMatrix[i][j] = 0.0;
+            }
+            t = t + massMatrix[i][i];
+        }
+        
+        for (i=0; i<n; i++) {
+            for (j=0; j<dofs; j++) {
+                k = dofs * i + j;
+                if (t != 0.0) massMatrix[k][k] = massMatrix[k][k] * s / t;
+            }
+        }
+    }
+    
+    order = min([solution doneTime], [solution order]);
+    
+    for (i=0; i<n; i++) {
+        for (j=0; j<dofs; j++) {
+            k = dofs * i + j;
+            l = dofs * nodeIndexes[i] + j;
+            for (m=0; n<order; m++) {
+                prevSol[k][m] = varContainers->PrevValues[l][m];
+            }
+        }
+    }
+    
+    for (i=0; i<n*dofs; i++) {
+        lForce[i] = force[i];
+    }
+    
+    for (i=0; i<matContainers->size1force; i++) {
+        matrixForce[i] = matContainers->Force[i][0];
+    }
+    
+    [self FEMKernel_updateGlobalForceModel:model solution:solution element:element forceVector:matrixForce localForce:lForce size:n dofs:dofs nodeIndexes:nodeIndexes rotateNT:NULL];
+    
+    if ((solution.solutionInfo)[@"time stepping method"] != nil) {
+        method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
+    } else {
+        method = @"bdf";
+    }
+    
+    if ([method isEqualToString:@"fs"] == YES) {
+        
+        for (i=0; i<dofs*n; i++) {
+            buffer[i] = prevSol[i][0];
+        }
+        [timeIntegration fractionalStepInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer rows:rows];
+    }
+    else if ([method isEqualToString:@"bfs"]) {
+        dts[0] = dt;
+        constantDt = NO;
+        if (order > 1) {
+            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
+            containers = dtVar.getContainers;
+            for (i=1; i<order; i++) {
+                dts[i] = containers->PrevValues[0][i-1];
+                if ( fabs(dts[i]-dts[0]) > 1.0e-6 * dts[0] ) constantDt = NO;
+            }
+            containers = NULL;
+        }
+        if (constantDt == YES) {
+            
+            [timeIntegration bdfLocalInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
+        } else {
+            [timeIntegration vbdfLocalInSolution:solution numberOfNodes:n*dofs dts:dts massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
+        }
+    }
+    else {
+        
+        for (i=0; i<dofs*n; i++) {
+            buffer[i] = prevSol[i][0];
+        }
+        [timeIntegration newMarkBetaInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer beta:solution.beta rows:rows cols:cols];
+    }
+    
+    free_dmatrix(prevSol, 0, (dofs*n)-1, 0, [solution order]-1);
+    free_dvector(lForce, 0, (dofs*n)-1);
+    free_dvector(dts, 0, [solution order]-1);
+    free_dvector(matrixForce, 0, matContainers->size1force-1);
+    free_dvector(buffer, 0, (dofs*n)-1);
+}
+
 #pragma mark First order time
+
+/********************************************************************************************************************
+    Update the mass matrix only
+ 
+    Arguments:
+ 
+    FEMSolution *solution       -> Class solution which contains the global matrix
+    double **localStiffMatrix   -> Local matrix to be added tp the global matrix
+    int n                       -> Number of nodes in element
+    int dofs                    -> Number of dofs per node
+    int *nodeIndexes            -> Element node to global node numbering mapping
+********************************************************************************************************************/
+-(void)updateMassMatrixModel:(FEMModel *)model inSolution:(FEMSolution *)solution localMassMatrix:(double **)localMassMatrix element:(Element_t *)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes {
+    
+    int i, j;
+    double s, t, *saveValues;
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    matrixArraysContainer *matContainers = NULL;
+    
+    // Check first if this element has been defined passive
+    if ([self FEMKernel_checkPassiveElement:element model:model solution:solution] == YES) return;
+    
+    // Update global matrix and rhs vector
+    
+    if (solution.matrix.lumped == YES) {
+        s = 0.0;
+        t = 0.0;
+        for (i=0; i<(n*dofs); i++) {
+            for (j=0; j<(n*dofs); j++) {
+                s = s + localMassMatrix[i][j];
+                if (i != j) localMassMatrix[i][j] = 0.0;
+            }
+            t = t + localMassMatrix[i][i];
+        }
+        
+        for (i=0; i<(n*dofs); i++) {
+            localMassMatrix[i][i] = localMassMatrix[i][i] * s / t;
+        }
+    }
+    
+    matContainers = solution.matrix.getContainers;
+    saveValues = matContainers->Values;
+    matContainers->Values = matContainers->MassValues;
+    
+    switch (solution.matrix.format) {
+        case MATRIX_CRS:
+            crsMatrix = [[FEMMatrixCRS alloc] init];
+            [crsMatrix glueLocalMatrixInGlobal:solution matrix:localMassMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            break;
+            
+        case MATRIX_LIST:
+            // TODO: implement for the List matrix case
+            break;
+            
+        case MATRIX_BAND:
+        case MATRIX_SBAND:
+            bandMatrix = [[FEMMatrixBand alloc] init];
+            [bandMatrix glueLocalMatrixInGlobal:solution matrix:localMassMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            break;
+    }
+    
+    matContainers->Values = saveValues;
+}
+
+-(void)defaultUpdateMass:(double **)mass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, n,*indexes;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    
+    // TODO: Add support for parallel run
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    if (matContainers->MassValues == NULL) {
+        matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeMassValues = matContainers->sizeValues;
+        memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
+    }
+    
+    indexes = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        indexes[i] = varContainers->Perm[self.indexStore[i]];
+    }
+    [self updateMassMatrixModel:model inSolution:solution localMassMatrix:mass element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
+    free_ivector(indexes, 0, n-1);
+}
+
+-(void)defaultUpdateComplexMass:(double complex **)cmass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, dofs, n, *indexes;
+    double **mass;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    dofs = solution.variable.dofs;
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    // TODO: Add support for parallel run
+    
+    if (matContainers->MassValues == NULL) {
+        matContainers->MassValues = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeMassValues = matContainers->sizeValues;
+        memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
+    }
+    
+    mass = doublematrix(0, (dofs*n)-1, 0, (dofs*n)-1);
+    for (i=0; i<n*dofs/2; i++) {
+        for (j=0; j<n*dofs/2; j++) {
+            mass[2*i][2*j]      = creal(cmass[i][j]);
+            mass[2*i][2*j+1]    = -cimag(cmass[i][j]);
+            mass[2*i+1][2*j]    = cimag(cmass[i][j]);
+            mass[2*i+1][2*j+1]  = creal(cmass[i][j]);
+        }
+    }
+    
+    indexes = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        indexes[i] = varContainers->Perm[self.indexStore[i]];
+    }
+    [self updateMassMatrixModel:model inSolution:solution localMassMatrix:mass element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
+    free_ivector(indexes, 0, n-1);
+    free_dmatrix(mass, 0, (dofs*n)-1, 0, (dofs*n)-1);
+}
+
+-(void)defaultUpdateDamp:(double **)damp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, n, *indexes;
+    double *saveValues;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    
+    // TODO: Add support for parallel run
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    if (matContainers->DampValues == NULL) {
+        matContainers->DampValues = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeDampValues = matContainers->sizeValues;
+        memset( matContainers->DampValues, 0.0, matContainers->sizeDampValues*sizeof(double) );
+    }
+    
+    saveValues = matContainers->MassValues;
+    matContainers->MassValues = matContainers->DampValues;
+    indexes = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        indexes[i] = varContainers->Perm[self.indexStore[i]];
+    }
+    [self updateMassMatrixModel:model inSolution:solution localMassMatrix:damp element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
+    matContainers->MassValues = saveValues;
+    free_ivector(indexes, 0, n-1);
+}
+
+-(void)defaultUpdateComplexDamp:(double complex **)cdamp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, dofs, n, *indexes;
+    double **damp, *saveValues;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    dofs = solution.variable.dofs;
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    
+    // TODO: Add support for parallel run
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    if (matContainers->DampValues == NULL) {
+        matContainers->DampValues = doublevec(0, matContainers->sizeValues-1);
+        matContainers->sizeDampValues = matContainers->sizeValues;
+        memset( matContainers->DampValues, 0.0, matContainers->sizeDampValues*sizeof(double) );
+    }
+    
+    damp = doublematrix(0, (dofs*n)-1, 0, (dofs*n)-1);
+    for (i=0; i<n*dofs/2; i++) {
+        for (j=0; j<n*dofs/2; j++) {
+            damp[2*i][2*j]      = creal(cdamp[i][j]);
+            damp[2*i][2*j+1]    = -cimag(cdamp[i][j]);
+            damp[2*i+1][2*j]    = cimag(cdamp[i][j]);
+            damp[2*i+1][2*j+1]  = creal(cdamp[i][j]);
+        }
+    }
+    
+    saveValues = matContainers->MassValues;
+    matContainers->MassValues = matContainers->DampValues;
+    indexes = intvec(0, n-1);
+    for (i=0; i<n; i++) {
+        indexes[i] = varContainers->Perm[self.indexStore[i]];
+    }
+    [self updateMassMatrixModel:model inSolution:solution localMassMatrix:damp element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
+    matContainers->MassValues = saveValues;
+    free_ivector(indexes, 0, n-1);
+    free_dmatrix(damp, 0, (dofs*n)-1, 0, (dofs*n)-1);
+}
 
 -(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols { // rows and cols for stiff matrix
     
@@ -6051,17 +5891,22 @@ static int PRECOND_VANKA     =  560;
     int *perm;
     variableArraysContainer *varContainers = NULL;
     
+    if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
+        [self defaultUpdateMass:mass element:element solution:solution model:model];
+        return;
+    }
+    
     dt = [solution dt];
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     varContainers = solution.variable.getContainers;
     
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[_indexStore[i]];
+        perm[i] = varContainers->Perm[self.indexStore[i]];
     }
     
-    [self FEMKernel_addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
+    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
     
     free_ivector(perm, 0, n-1);
 }
@@ -6074,10 +5919,15 @@ static int PRECOND_VANKA     =  560;
     int *perm;
     variableArraysContainer *varContainers = NULL;
     
+    if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
+        [self defaultUpdateComplexMass:cmass element:element solution:solution model:model];
+        return;
+    }
+    
     dt = [solution dt];
     dofs = solution.variable.dofs;
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -6085,12 +5935,9 @@ static int PRECOND_VANKA     =  560;
     force = doublevec(0, (n*dofs)-1);
     
     for (i=0; i<n*dofs/2; i++) {
-        
         force[2*i] = creal(cforce[i]);
         force[2*i+1] = cimag(cforce[i]);
-        
         for (j=0; j<n*dofs; j++) {
-            
             mass[2*i][2*j]      = creal(cmass[i][j]);
             mass[2*i][2*j+1]    = -cimag(cmass[i][j]);
             mass[2*i+1][2*j]    = cimag(cmass[i][j]);
@@ -6099,16 +5946,15 @@ static int PRECOND_VANKA     =  560;
             stiff[2*i][2*j+1]   = -cimag(cstiff[i][j]);
             stiff[2*i+1][2*j]   = cimag(cstiff[i][j]);
             stiff[2*i+1][2*j+1] = creal(cstiff[i][j]);
-            
         }
     }
     
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[_indexStore[i]];
+        perm[i] = varContainers->Perm[self.indexStore[i]];
     }
 
-    [self FEMKernel_addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
+    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
     
     for (i=0; i<n*dofs/2; i++) {
         cforce[i] = force[2*i] + force[2*i+1]*I;
@@ -6125,7 +5971,243 @@ static int PRECOND_VANKA     =  560;
     free_ivector(perm, 0, n-1);
 }
 
+-(void)defaultFirstOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution {
+    
+    int i, j, k, n, order;
+    double force[1], dts[16];
+    BOOL constantDt, found, hasMass;
+    NSString *method;
+    FEMVariable *dtVar;
+    variableArraysContainer *varContainers = NULL, *dtVarContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
+
+    varContainers = solution.variable.getContainers;
+    matContainers = solution.matrix.getContainers;
+    if (_saveValues != varContainers->Values) {
+        if (_stiff != NULL) {
+            free_dmatrix(_stiff, 0, 0, 0, _n1-1);
+            free_dmatrix(_mass, 0, 0, 0, _n1-1);
+            free_dmatrix(_x, 0, _n1-1, 0, _k1-1);
+        }
+        _n1 = 0;
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            _n1 = max(_n1, (int)(matContainers->RHS[i+1]-matContainers->RHS[i]));
+        }
+        _k1 = varContainers->size2PrevValues;
+        _stiff = doublematrix(0, 0, 0, _n1-1);
+        _mass = doublematrix(0, 0, 0, _n1-1);
+        _x = doublematrix(0, _n1-1, 0, _k1-1);
+        
+        _saveValues = varContainers->Values;
+    }
+
+    memset( *_stiff, 0.0, (1*_n1)*sizeof(double) );
+    memset( *_mass, 0.0, (1*_n1)*sizeof(double) );
+    memset( *_x, 0.0, (_n1*_k1)*sizeof(double) );
+    
+    order = min(solution.doneTime, solution.order);
+    hasMass = (matContainers->MassValues != NULL) ? YES : NO;
+    
+    method = (solution.solutionInfo)[@"time stepping method"];
+    if ([method isEqualToString:@"bdf"] == YES) {
+        dts[0] = solution.dt;
+        constantDt = YES;
+        if (order > 1) {
+            FEMUtilities *utilities = [[FEMUtilities alloc] init];
+            dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
+            dtVarContainers = dtVar.getContainers;
+            for (i=1; i<order; i++) {
+                dts[i] = dtVarContainers->PrevValues[0][i-1];
+                if (fabs(dts[i]-dts[0]) > 1.0e-6 * dts[0]) constantDt = NO;
+            }
+        }
+    }
+    
+    FEMTimeIntegration *timeIntegration = [[FEMTimeIntegration alloc] init];
+    double *prevSol = doublevec(0, _n1-1);
+    int rows = 1;
+    for (i=0; i<solution.matrix.numberOfRows; i++) {
+        n = 0;
+        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+            _stiff[0][n] = matContainers->Values[j];
+            if (hasMass == YES) _mass[0][n] = matContainers->MassValues[j];
+            for (k=0; k<varContainers->size2PrevValues; k++) {
+                _x[n][k] = varContainers->PrevValues[matContainers->Cols[j]][k];
+            }
+            n++;
+        }
+        force[0] = matContainers->RHS[i];
+        matContainers->Force[i][0] = force[0];
+        
+        if ([method isEqualToString:@"fs"] == YES) {
+            for (j=0; j<_n1; j++) {
+                prevSol[j] = _x[j][0];
+            }
+            [timeIntegration fractionalStepInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:prevSol rows:&rows];
+        } else if ([method isEqualToString:@"bdf"] == YES) {
+            if (constantDt == YES) {
+                [timeIntegration bdfLocalInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:_x order:order rows:&rows cols:&_n1];
+            } else {
+                [timeIntegration vbdfLocalInSolution:solution numberOfNodes:n dts:dts massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:_x order:order rows:&rows cols:&_n1];
+            }
+        } else {
+            for (j=0; j<_n1; j++) {
+                prevSol[j] = _x[j][0];
+            }
+            [timeIntegration newMarkBetaInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:prevSol beta:solution.beta rows:&rows cols:&_n1];
+        }
+        n = 0;
+        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+            matContainers->Values[j] = _stiff[0][n];
+            n++;
+        }
+        matContainers->RHS[i] = force[0];
+    }
+    free_dvector(prevSol, 0, _n1-1);
+}
+
+-(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution {
+    
+    int i, j, k, n;
+    double force[1];
+    BOOL hasDamping, hasMass;
+    variableArraysContainer *varContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
+    
+    varContainers = solution.variable.getContainers;
+    matContainers = solution.matrix.getContainers;
+    if (_saveValues != varContainers->Values) {
+        if (_stiff != NULL) {
+            free_dmatrix(_stiff, 0, 0, 0, _n1-1);
+            free_dmatrix(_mass, 0, 0, 0, _n1-1);
+            free_dmatrix(_damp, 0, 0, 0, _n1-1);
+            free_dmatrix(_x, 0, _n1-1, 0, _k1-1);
+        }
+        _n1 = 0;
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            _n1 = max(_n1, (int)(matContainers->RHS[i+1]-matContainers->RHS[i]));
+        }
+        _k1 = varContainers->size2PrevValues;
+        _stiff = doublematrix(0, 0, 0, _n1-1);
+        _mass = doublematrix(0, 0, 0, _n1-1);
+        _damp = doublematrix(0, 0, 0, _n1-1);
+        _x = doublematrix(0, _n1-1, 0, _k1-1);
+        
+        _saveValues = varContainers->Values;
+    }
+    
+    memset( *_stiff, 0.0, (1*_n1)*sizeof(double) );
+    memset( *_mass, 0.0, (1*_n1)*sizeof(double) );
+    memset( *_damp, 0.0, (1*_n1)*sizeof(double) );
+    memset( *_x, 0.0, (_n1*_k1)*sizeof(double) );
+    
+    hasDamping = (matContainers->DampValues != NULL) ? YES : NO;
+    hasMass = (matContainers->MassValues != NULL) ? YES : NO;
+    
+    FEMTimeIntegration *timeIntegration = [[FEMTimeIntegration alloc] init];
+    int rows = 1;
+    for (i=0; i<solution.matrix.numberOfRows; i++) {
+        n = 0;
+        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+            if (hasMass == YES) _mass[0][n] = matContainers->MassValues[j];
+            if (hasDamping == YES) _damp[0][n] = matContainers->DampValues[j];
+            _stiff[0][n] = matContainers->Values[j];
+            for (k=0; k<varContainers->size2PrevValues; k++) {
+                _x[n][k] = varContainers->PrevValues[matContainers->Cols[j]][k];
+            }
+            n++;
+        }
+        force[0] = matContainers->RHS[i];
+        matContainers->Force[i][0] = force[0];
+        
+        double x1[n];
+        double x2[n];
+        double x3[n];
+        for (j=0; j<n; j++) {
+            x1[j] = _x[j][2];
+            x2[j] = _x[j][3];
+            x3[j] = _x[j][4];
+        }
+        [timeIntegration bossakSecondOrder:solution numberOfNodes:n dt:solution.dt massMatrix:_mass dampMatrix:_damp stiffMatrix:_stiff force:force prevSolution1:x1 prevSolution2:x2 prevSolution3:x3 alpha:solution.alpha rows:&rows cols:&_n1];
+        
+        n = 0;
+        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+            matContainers->Values[j] = _stiff[0][n];
+            n++;
+        }
+        matContainers->RHS[i] = force[0];
+    }
+}
+
 #pragma mark Update equations
+
+/********************************************************************************************************************
+    Add element local matrices and vectors to global matrices and vectors
+ 
+    Arguments:
+ 
+        FEMSolution *solution       -> Class solution which contains the global matrix and global RHS vector
+        double **localStiffMatrix   -> Local matrix to be added tp the global matrix
+        double *forceVector         -> The global RHS vector
+        double  *loalForce          -> Element local force vector
+        int n                       -> Number of nodes
+        int dofs                    -> Number of dofs
+        int *nodeIndexes            -> Element node to global node numbering mapping
+********************************************************************************************************************/
+-(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT {
+    
+    int i, j, k, dim;
+    int *indexes;
+    BOOL rotate;
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    
+    // Check if this element has been defined as passive
+    if ([self FEMKernel_checkPassiveElement:element model:model solution:solution] == YES) return;
+        
+    indexes = intvec(0, n-1);
+    
+    rotate = YES;
+    if (rotateNT != NULL) {
+        rotate = *rotateNT;
+    }
+    
+    if (rotate == YES && self.normalTangentialNumberOfNodes > 0) {
+        dim = [model dimension];
+        memset( indexes, -1, n*sizeof(int) );
+        for (i=0; i<element->Type.NumberOfNodes; i++) {
+            indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
+        }
+        [self FEMKernel_rotateMatrix:localStiffMatrix solution:solution vector:localForce size:n dimension:dim dofs:dofs nodeIndexes:indexes];
+    }
+    
+    switch (solution.matrix.format) {
+        case MATRIX_CRS:
+            crsMatrix = [[FEMMatrixCRS alloc] init];
+            [crsMatrix glueLocalMatrixInGlobal:solution matrix:localStiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            break;
+            
+        case MATRIX_LIST:
+            // TODO: implement for the List matrix case
+            break;
+            
+        case MATRIX_BAND:
+        case MATRIX_SBAND:
+            bandMatrix = [[FEMMatrixBand alloc] init];
+            [bandMatrix glueLocalMatrixInGlobal:solution matrix:localStiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            break;
+    }
+    
+    for (i=0; i<n; i++) {
+        if (nodeIndexes[i] >= 0) {
+            for (j=0; j<dofs; j++) {
+                k = dofs * nodeIndexes[i] + j;
+                forceVector[k] = forceVector[k] + localForce[dofs*i+j];
+            }
+        }
+    }
+    free_ivector(indexes, 0, n-1);
+}
 
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate {
     
@@ -6136,22 +6218,28 @@ static int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    // TODO: add support for parallel runs
+    
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[_indexStore[i]];
+        perm[i] = varContainers->Perm[self.indexStore[i]];
     }
-    varContainers = NULL;
     
-    [self FEMKernel_updateGlobalEquationsModel:model solution:solution element:element stiffMatrix:stiff force:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL bulkUpdate:NULL];
+    matContainers = solution.matrix.getContainers;
+    
+    [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL];
     
     bupd = NO;
     if (bulkUpdate != NULL) {
         bupd = *bulkUpdate;
-        if (bupd == NO) return;
+        if (bupd == NO) {
+            free_ivector(perm, 0, n-1);
+            return;
+        }
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
@@ -6159,9 +6247,7 @@ static int PRECOND_VANKA     =  560;
         bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
     }
     
-    matContainers = solution.matrix.getContainers;
-    
-    if (bupd ==YES) {
+    if (bupd == YES) {
         
         if (matContainers->BulkRHS == NULL) {
             matContainers->BulkRHS = doublevec(0, matContainers->sizeRHS-1);
@@ -6175,20 +6261,11 @@ static int PRECOND_VANKA     =  560;
             memset(matContainers->BulkValues, 0.0, matContainers->sizeBulkValues*sizeof(double) );
         }
         
-        saveValues = doublevec(0, matContainers->sizeValues-1);
-        for (i=0; i<matContainers->sizeValues; i++) {
-            saveValues[i] = matContainers->Values[i];
-        }
-        for (i=0; i<matContainers->sizeValues; i++) {
-            matContainers->Values[i] = matContainers->BulkValues[i];
-        }
+        saveValues = matContainers->Values;
+        matContainers->Values = matContainers->BulkValues;
         rotateNT = NO;
-        [self FEMKernel_updateGlobalEquationsModel:model solution:solution element:element stiffMatrix:stiff force:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT bulkUpdate:&bupd];
-        for (i=0; i<matContainers->sizeValues; i++) {
-            matContainers->Values[i] = saveValues[i];
-        }
-        free_dvector(saveValues, 0, matContainers->sizeValues-1);
-        
+        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT];
+        matContainers->Values = saveValues;
     }
     
     free_ivector(perm, 0, n-1);
@@ -6204,15 +6281,16 @@ static int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[_indexStore[i]];
+        perm[i] = varContainers->Perm[self.indexStore[i]];
     }
-    varContainers = NULL;
+    
+    // TODO: add support for parallel runs
     
     dofs = solution.variable.dofs;
     stiff = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -6231,12 +6309,19 @@ static int PRECOND_VANKA     =  560;
         }
     }
 
-    [self FEMKernel_updateGlobalEquationsModel:model solution:solution element:element stiffMatrix:stiff force:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL bulkUpdate:NULL];
+     matContainers = solution.matrix.getContainers;
     
+    [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL];
+
     bupd = NO;
     if (bulkUpdate != NULL) {
         bupd = *bulkUpdate;
-        if (bupd == NO) return;
+        if (bupd == NO) {
+            free_ivector(perm, 0, n-1);
+            free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
+            free_dvector(force, 0, (n*dofs)-1);
+            return;
+        }
     } else {
         if (element->BoundaryInfo != NULL) return;
     }
@@ -6244,9 +6329,7 @@ static int PRECOND_VANKA     =  560;
         bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
     }
     
-    matContainers = solution.matrix.getContainers;
-    
-    if (bupd ==YES) {
+    if (bupd == YES) {
         
         if (matContainers->BulkRHS == NULL) {
             matContainers->BulkRHS = doublevec(0, matContainers->sizeRHS-1);
@@ -6260,25 +6343,47 @@ static int PRECOND_VANKA     =  560;
             memset(matContainers->BulkValues, 0.0, matContainers->sizeBulkValues*sizeof(double) );
         }
         
-        saveValues = doublevec(0, matContainers->sizeValues-1);
-        for (i=0; i<matContainers->sizeValues; i++) {
-            saveValues[i] = matContainers->Values[i];
-        }
-        for (i=0; i<matContainers->sizeValues; i++) {
-            matContainers->Values[i] = matContainers->BulkValues[i];
-        }
+        saveValues = matContainers->Values;
+        matContainers->Values = matContainers->BulkValues;
         rotateNT = NO;
-        [self FEMKernel_updateGlobalEquationsModel:model solution:solution element:element stiffMatrix:stiff force:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT bulkUpdate:&bupd];
-        for (i=0; i<matContainers->sizeValues; i++) {
-            matContainers->Values[i] = saveValues[i];
-        }
-        free_dvector(saveValues, 0, matContainers->sizeValues-1);
-        
+        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT];
+        matContainers->Values = saveValues;
     }
     
-    free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
-    free_dvector(force, 0, (n*dofs)-1);    
     free_ivector(perm, 0, n-1);
+    free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
+    free_dvector(force, 0, (n*dofs)-1);
+}
+
+#pragma mark Finish assembly
+
+-(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int order;
+    NSString *string;
+    BOOL found;
+    matrixArraysContainer *matContainers = NULL;
+    
+    if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
+        FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+        string = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
+        if ([string isEqualToString:@"transient"] == YES) {
+            if ((solution.solutionInfo)[@"time derivative order"] != nil) {
+                order = [(solution.solutionInfo)[@"time derivative order"] intValue];
+            } else order = 1;
+            switch (order) {
+                case 1:
+                    [self defaultFirstOrderTimeGlobalModel:model inSolution:solution];
+                    break;
+                    
+                case 2:
+                    [self defaultSecondOrderTimeGlobalModel:model inSolution:solution];
+                    break;
+            }
+        }
+    }
+    matContainers = solution.matrix.getContainers;
+    [self FEMKernel_finishAssemblyModel:model solution:solution forceVector:matContainers->RHS sizeForceVector:matContainers->sizeRHS];
 }
 
 
@@ -6372,7 +6477,7 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
             
             element = [self getBoundaryElement:solution atIndex:i];
-            if ([self isActiveElement:element inSolution:solution model:model] == NO) continue;
+            if ([self isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
             
             // Get parent element
             parent = element->BoundaryInfo->Left;
@@ -6430,7 +6535,7 @@ static int PRECOND_VANKA     =  560;
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
             
             element = [self getBoundaryElement:solution atIndex:i];
-            if ([self isActiveElement:element inSolution:solution model:model] == NO) continue;
+            if ([self isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
             
             bc = [self getBoundaryCondition:model forElement:element];
             if (bc == nil) continue;
@@ -6660,17 +6765,388 @@ static int PRECOND_VANKA     =  560;
 
 #pragma mark Solve
 
--(void)iterativeSolve:(FEMSolution *)solution {
+-(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 {
+    
+    NSString *convergenceType, *solverName;
+    int i, n, relaxAfter, iterNo;
+    double norm, prevNorm, bNorm, change, relaxation, maxNorm, dt, tolerance, eps;
+    double *x = NULL, *r, *x0 = NULL;
+    BOOL skip, convergenceAbsolute, relax, relaxBefore, stat, doIt;
+    FEMVariable *iterV, *timeStepVar, *veloVar;
+    NSMutableString *str1;
+    NSString *str2;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL, *itervContainers = NULL, *containers = NULL;
+    FEMMatrixCRS *crsMatrix;
+    FEMUtilities *utilities;
+    
+    varContainers = solution.variable.getContainers;
+    
+    utilities = [[FEMUtilities alloc] init];
+    
+    relax = NO;
+    
+    if (steadyState == YES) {
+        skip = [(solution.solutionInfo)[@"skip compute steady state change"] boolValue];
+        if (skip == YES) return;
+        
+        if ((solution.solutionInfo)[@"steady state convergence measure"] != nil) {
+            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"steady state convergence measure"]];
+        } else {
+            convergenceType = @"norm";
+        }
+        
+        if ((solution.solutionInfo)[@"steady state convergence absolute"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"steady state convergence absolute"] boolValue];
+        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
+        }
+        
+        if ((solution.solutionInfo)[@"steady state relaxation factor"] != nil) {
+            relaxation = [(solution.solutionInfo)[@"steady state relaxation factor"] doubleValue];
+            relax = (relaxation != 1.0) ? YES: NO;
+        }
+        
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"coupled iter" onlySearch:NULL maskName:NULL info:&stat];
+        itervContainers = iterV.getContainers;
+        iterNo = (int)itervContainers->Values[0];
+        itervContainers = NULL;
+        
+        if (relax == YES) {
+            if ((solution.solutionInfo)[@"steady state relaxation after"] != nil) {
+                relaxAfter = [(solution.solutionInfo)[@"steady state relaxation after"] intValue];
+                if (relaxAfter >= iterNo ) relax = NO;
+            }
+        }
+        
+        if (relax == YES) {
+            if ((solution.solutionInfo)[@"steady state relaxation before"] != nil) {
+                relaxBefore = [(solution.solutionInfo)[@"steady state relaxation before"] boolValue];
+            } else {
+                relaxBefore = YES;
+            }
+        }
+    } else {
+        
+        if ((solution.solutionInfo)[@"skip compute non linear change"] != nil) {
+            skip  = [(solution.solutionInfo)[@"skip compute non linear change"] boolValue];
+        } else {
+            skip = NO;
+        }
+        if (skip == YES) return;
+        
+        if ((solution.solutionInfo)[@"nonlinear system convergence measure"] != nil) {
+            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"nonlinear system convergence measure"]];
+        } else {
+            convergenceType = @"norm";
+        }
+        
+        if ((solution.solutionInfo)[@"nonlinear system convergence absolute"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"nonlinear system convergence absolute"] boolValue];
+        } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
+            convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
+        } else {
+            convergenceAbsolute = NO;
+        }
+        
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
+        itervContainers = iterV.getContainers;
+        iterNo = (int)itervContainers->Values[0];
+        solution.variable.nonLinIter = (int)itervContainers->Values[0];
+        itervContainers->Values[0] = itervContainers->Values[0]+1;
+        itervContainers = NULL;
+        
+        if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
+            relaxation = [(solution.solutionInfo)[@"nonlinear system relaxation factor"] doubleValue];
+            relax = (relaxation != 1.0) ? YES: NO;
+        }
+        if (relax == YES) {
+            if ((solution.solutionInfo)[@"nonlinear system relaxation after"] != nil) {
+                relaxAfter = [(solution.solutionInfo)[@"nonlinear system relaxation after"] boolValue];
+                if (relaxAfter >= solution.variable.nonLinIter) relax = NO;
+            }
+        }
+        
+        if (relax == YES) {
+            if ((solution.solutionInfo)[@"nonlinear system relaxation before"] != nil) {
+                relaxBefore = [(solution.solutionInfo)[@"nonlinear system relaxation before"] boolValue];
+            } else {
+                relaxBefore = YES;
+            }
+        }
+        
+    }
+    
+    if (values != NULL) {
+        x = values;
+    } else {
+        x = varContainers->Values;
+    }
+    
+    if (values == NULL) {
+        solution.variable.norm = 0.0;
+        if (steadyState == YES) {
+            solution.variable.steadyChange = 0.0;
+        } else {
+            solution.variable.nonLinChange = 0.0;
+        }
+        return;
+    }
+    
+    if (nsize != NULL && values != NULL) {
+        n = *nsize;
+    } else if (varContainers->Values != NULL) {
+        n = varContainers->sizeValues;
+    }
+    
+    stat = NO;
+    if (values0 != NULL) {
+        x0 = values0;
+        stat = YES;
+    } else if (steadyState == YES) {
+        if (varContainers->SteadyValues != NULL) {
+            x0 = varContainers->SteadyValues;
+            stat = YES;
+        }
+    } else {
+        if (varContainers->NonLinValues != NULL) {
+            x0 = varContainers->NonLinValues;
+            stat = YES;
+        }
+    }
+    
+    // TODO: Possibly check here if length mismatch between x0 and x
+    //.....
+    
+    if (relax == YES && relaxBefore == YES) {
+        for (i=0; i<n; i++) {
+            x[i] = (1-relaxation) * x0[i] + relaxation*x[i];
+        }
+    }
+    
+    if (steadyState == YES) {
+        prevNorm = solution.variable.prevNorm;
+    } else {
+        prevNorm = solution.variable.norm;
+    }
+    
+    // Compute norm here
+    norm = [self FEMKernel_computeNormInSolution:solution size:n values:x];
+    solution.variable.norm = norm;
+    
+    // The norm should be bounded in order to reach convergence
+    if ((solution.solutionInfo)[@"nonlinear system max norm"] != nil) {
+        maxNorm = [(solution.solutionInfo)[@"nonlinear system max norm"] doubleValue];
+    } else {
+        maxNorm = HUGE_VAL;
+    }
+    
+    if (isnan(norm) != 0 && norm > maxNorm) {
+        warnfunct("computeChange", "Computed norm:");
+        printf("%lf\n", norm);
+        errorfunct("computeChange", "Norm of solution has crossed given bounds.");
+    }
+    
+    matContainers = solution.matrix.getContainers;
+    
+    if ([convergenceType isEqualToString:@"residual"] == YES) {
+        // ------------------------------------------------------------------------------
+        // x is solution of A(x0)x = b(x0), thus residual should be real r = b(x)-A(x)x
+        // Instead we use r = b(x0)-A(x0)x0 which unfortunately is one step behind
+        // ------------------------------------------------------------------------------
+        r = doublevec(0, n-1);
+        
+        crsMatrix = [[FEMMatrixCRS alloc] init];
+        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x0 resultVector:r];
+        for (i=0; i<n; i++) {
+            r[i] = r[i] - matContainers->RHS[i];
+        }
+        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        if (convergenceAbsolute == NO) {
+            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
+            if (bNorm > 0.0) {
+                change = change / bNorm;
+            }
+        }
+        free_dvector(r, 0, n-1);
+    }
+    else if ([convergenceType isEqualToString:@"linear system residual"] == YES) {
+        // ------------------------------------------------------------------------------
+        // Here the true linear system redisual r = b(x)-A(x)x is computed.
+        // This option is useful for some special solvers
+        // ------------------------------------------------------------------------------
+        r = doublevec(0, n-1);
+        
+        crsMatrix = [[FEMMatrixCRS alloc] init];
+        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x resultVector:r];
+        for (i=0; i<n; i++) {
+            r[i] = r[i] - matContainers->RHS[i];
+        }
+        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        if (convergenceAbsolute == NO) {
+            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
+            if (bNorm > 0.0) {
+                change = change / bNorm;
+            }
+        }
+        free_dvector(r, 0, n-1);
+    }
+    else if ([convergenceType isEqualToString:@"solution"] == YES) {
+        r = doublevec(0, n-1);
+        
+        for (i=0; i<n; i++) {
+            r[i] = x[i] - x0[i];
+        }
+        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        if (convergenceAbsolute == NO && (norm + prevNorm) > 0.0) {
+            change = change * 2.0 / (norm+prevNorm);
+        }
+        free_dvector(r, 0, n-1);
+    }
+    else if ([convergenceType isEqualToString:@"norm"] == YES) {
+        change = fabs(norm-prevNorm);
+        if (convergenceAbsolute == NO && (norm+prevNorm) > 0.0) {
+            change = change * 2.0 / (norm+prevNorm);
+        }
+    }
+    else {
+        warnfunct("computeChange", "Unknown convergence measure:");
+        printf("%s\n", [convergenceType UTF8String]);
+    }
+    
+    // Check for convergence: 0/1
+    if (steadyState == YES) {
+        solution.variable.steadyChange = change;
+        if ((solution.solutionInfo)[@"steady state convergence tolerance"] != nil) {
+            tolerance = [(solution.solutionInfo)[@"steady state convergence tolerance"] doubleValue];
+            if (change <= tolerance) {
+                solution.variable.steadyConverged = 1;
+            } else {
+                solution.variable.steadyConverged = 0;
+            }
+        }
+    } else {
+        solution.variable.nonLinChange = change;
+        if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
+            tolerance = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
+            if (change <= tolerance) {
+                solution.variable.nonLinConverged = 1;
+            } else {
+                solution.variable.nonLinConverged = 0;
+            }
+        }
+    }
+    
+    if (relax == YES && relaxBefore == NO) {
+        for (i=0; i<n; i++) {
+            x[i] = (1-relaxation)*x0[i] + relaxation*x[i];
+        }
+        solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:x ];
+    }
+    
+    if ((solution.solutionInfo)[@"equation"] != nil) {
+        solverName = [NSString stringWithString:(solution.solutionInfo)[@"equation"]];
+    } else {
+        solverName = solution.variable.name;
+    }
+    
+    if (steadyState == YES) {
+        NSLog(@"computeChange: SS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+    } else {
+        NSLog(@"computeChange: NS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+    }
+    
+    // Only 1st order velocity computation is implemented so far...
+    if ([solution timeOrder] == 1) {
+        doIt = YES;
+        
+        if (steadyState == YES) {
+            if ((solution.solutionInfo)[@"calculate velocity"] != nil) {
+                doIt = [(solution.solutionInfo)[@"calculate velocity"] boolValue];
+            } else {
+                doIt = NO;
+            }
+        } else {
+            if ((solution.solutionInfo)[@"nonlinear calculate velocity"] != nil) {
+                doIt = [(solution.solutionInfo)[@"nonlinear calculate velocity"] boolValue];
+            } else {
+                doIt = NO;
+            }
+        }
+        
+        if (doIt == YES) {
+            timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"time step size" onlySearch:NULL maskName:NULL info:&stat];
+            containers = timeStepVar.getContainers;
+            dt = containers->Values[0];
+            str2 = @" velocity";
+            str1 = [NSMutableString stringWithString:solution.variable.name];
+            [str1 appendString:str2];
+            veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
+            containers = veloVar.getContainers;
+            for (i=0; i<n; i++) {
+                containers->Values[i] = (x[i] - varContainers->PrevValues[i][0]) / dt;
+            }
+            containers = NULL;
+        }
+        
+    }
+    
+    // Calculate derivative a.k.a sensitivity
+    if (steadyState == YES) {
+        
+        stat = NO;
+        
+        if ((solution.solutionInfo)[@"calculate derivative"] != nil) {
+            if ([(solution.solutionInfo)[@"calculate derivative"]  boolValue] == YES) {
+                
+                if (iterNo > 1) {
+                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"derivative eps" onlySearch:NULL maskName:NULL info:&stat];
+                    if (timeStepVar != nil) {
+                        containers = timeStepVar.getContainers;
+                        eps = containers->Values[0];
+                        stat = YES;
+                        containers = NULL;
+                    } else {
+                        eps = [(solution.solutionInfo)[@"derivative eps"] doubleValue];
+                    }
+                    if (stat == NO) {
+                        warnfunct("computeChange", "Derivative eps not given, using one.");
+                    }
+                    
+                    str2 = @" derivative";
+                    str1 = [NSMutableString stringWithString:solution.variable.name];
+                    [str1 appendString:str2];
+                    veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
+                    if (veloVar != nil) {
+                        NSLog(@"computeChange: Computing variable: %@\n", str1);
+                        containers = veloVar.getContainers;
+                        for (i=0; i<n; i++) {
+                            containers->Values[i] = (x[i] - x0[i]) / eps;
+                        }
+                        containers = NULL;
+                    } else {
+                        warnfunct("computeChange", "Derivative variable not present.");
+                    }
+                }
+            }
+        }
+    }
+}
+
+-(void)iterativeSolveMatrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b dimensions:(int *)ndim solution:(FEMSolution *)solution {
     
     NSString *str;
     int i, n, iterType, pCondType=0, *ipar, wsize, ilun;
     double *dpar, **work = NULL;
     double ilut_tol;
-    variableArraysContainer *varContainers = NULL;
-    BOOL abortNotConverged;
+    BOOL abortNotConverged, condition, internal, precondRecompute, refactorize;
     SEL pcondSelector=0, pcondrSelector=0, mvSelector=0;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
     
-    n = solution.matrix.numberOfRows;
+    n = matrix.numberOfRows;
+    if (ndim != NULL) n = *ndim;
+    
     ipar = intvec(0, 49);
     dpar = doublevec(0, 49);
     
@@ -6679,7 +7155,13 @@ static int PRECOND_VANKA     =  560;
     memset( ipar, 0, 50*sizeof(int) );
     memset( dpar, 0.0, 50*sizeof(double) );
     
-    str = [NSString stringWithString:(solution.solutionInfo)[@"linear system iteration method"]];
+    if ((solution.solutionInfo)[@"linear system iteration method"] != nil) {
+        NSLog(@"iterativeSolveMatrix: using iterative method: %@\n", str);
+        str = (solution.solutionInfo)[@"linear system iteration method"];
+    } else {
+        NSLog(@"iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab\n");
+        str = @"bi-cgstab";
+    }
     
     if ([str isEqualToString:@"bi-cgstab2"] == YES)
     {
@@ -6721,41 +7203,29 @@ static int PRECOND_VANKA     =  560;
     {
         iterType = ITER_GCR;
     }
-    else
-    {
+    else {
         iterType = ITER_BICGSTAB;
     }
     
     ipar[3] = 0;
-    wsize = ipar[3];
+    internal = NO;
     
-    if (iterType == ITER_BICGSTAB)
-    {
+    if (iterType == ITER_BICGSTAB) {
         ipar[3] = 8;
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_BICGSTAB2)
-    {
+    else if (iterType == ITER_BICGSTAB2) {
         ipar[3] = 8;
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_TFQMR)
-    {
+    else if (iterType == ITER_TFQMR) {
         ipar[3] = 10;
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_CG)
-    {
+    else if (iterType == ITER_CG) {
         ipar[3] = 4;
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_CGS)
-    {
+    else if (iterType == ITER_CGS) {
         ipar[3] = 7;
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_GMRES)
-    {
+    else if (iterType == ITER_GMRES) {
         if ((solution.solutionInfo)[@"linear system gmres restart"] != nil) {
             
             ipar[14] = [(solution.solutionInfo)[@"linear system gmres restart"] intValue];
@@ -6763,52 +7233,46 @@ static int PRECOND_VANKA     =  560;
             ipar[14] = 10;
         }
         ipar[3] = 7 + ipar[14];
-        wsize = ipar[3];
     }
-    else if (iterType == ITER_SGS)
-    {
+    else if (iterType == ITER_SGS) {
         ipar[3] = 1;
-        wsize =ipar[3];
         if ((solution.solutionInfo)[@"sgs over relaxation factor"] != nil) {
             dpar[2] = [(solution.solutionInfo)[@"sgs over relaxation factor"] doubleValue];
-            if (dpar[2] < 0.0 || dpar[2] > 2.0) {
-                errorfunct("FEMKernel_iterSolver", "Value for SGS over relaxation factor out of bounds (min:0; max:2).");
-            }
+            if (dpar[2] < 0.0) dpar[2] = 0.0;
+            if (dpar[2] > 2.0) dpar[2] = 2.0;
         } else {
             dpar[2] = 1.8;
         }
+        internal = YES;
     }
-    else if (iterType == ITER_JACOBI)
-    {
+    else if (iterType == ITER_JACOBI || iterType == ITER_RICHARDSON) {
         ipar[3] = 1;
-        wsize = ipar[3];
+        internal = YES;
     }
-    else if (iterType == ITER_GCR)
-    {
+    else if (iterType == ITER_GCR) {
         ipar[3] = 1;
-        wsize = ipar[3];
         if ((solution.solutionInfo)[@"linear system gcr restart"] != nil) {
             ipar[16] = [(solution.solutionInfo)[@"linear system gcr restart"] intValue];
         } else {
             if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
                 ipar[16] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
-                if (ipar[16] < 1) errorfunct("FEMKernel_iterSolver", "Parameter for GCR should be equal or greater than 1.");
-            } else {
-                ipar[16] = 1;
+                if (ipar[16] < 1) ipar[16] = 1;
             }
         }
+        internal = YES;
     }
-    else if (iterType == ITER_BICGSTABL)
-    {
+    else if (iterType == ITER_BICGSTABL) {
         ipar[3] = 1;
-        wsize = ipar[3];
         if ((solution.solutionInfo)[@"bi-cgstab(l) polynomial degree"] != nil) {
             ipar[15] = [(solution.solutionInfo)[@"bi-cgstab(l) polynomial degree"] intValue];
-            if (ipar[15] < 2) errorfunct("FEMKernel_iterSolver", "Polynomial degree for Bi-CGSTAB(l) should be equal or greater than 2");
+            if (ipar[15] < 2) ipar[15] = 2;
         } else {
             ipar[15] = 2;
         }
+        internal = YES;
     }
+    
+    wsize = ipar[3];
     
     ipar[11] = 1;
     ipar[2] = n;
@@ -6819,6 +7283,8 @@ static int PRECOND_VANKA     =  560;
         ipar[4] = 1;
     }
     
+    // TODO: Add support for parallel run
+    
     if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
         ipar[9] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
     } else {
@@ -6827,12 +7293,12 @@ static int PRECOND_VANKA     =  560;
     
     work = doublematrix(0, n-1, 0, wsize-1);
     if (work == NULL) {
-        errorfunct("FEMKernel_iterSolver", "Memory allocation error");
+        errorfunct("iterativeSolveMatrix", "Memory allocation error");
     }
     
-    if (all(varContainers->Values, '=', 0.0, varContainers->sizeValues) == true) {
+    if (all(x, '=', 0.0, varContainers->sizeValues) == true) {
         for (i=0; i<varContainers->sizeValues; i++) {
-            varContainers->Values[i] = 1.0e-8;
+            x[i] = 1.0e-8;
         }
     }
     ipar[13] = 1;
@@ -6848,71 +7314,136 @@ static int PRECOND_VANKA     =  560;
     }
     
     if ((solution.solutionInfo)[@"linear system preconditioning"] != nil) {
-        str = [NSString stringWithString:(solution.solutionInfo)[@"linear system preconditioning"]];
+        str = (solution.solutionInfo)[@"linear system preconditioning"];
     } else {
         str = @"none";
     }
     
-    if ([str isEqualToString:@"none"] == YES)
-    {
+    if ((solution.solutionInfo)[@"linear system symmetric ilu"] != nil) {
+        matrix.cholesky = [(solution.solutionInfo)[@"linear system symmetric ilu"] boolValue];
+    }
+    
+    if ([str isEqualToString:@"none"] == YES) {
         pCondType = PRECOND_NONE;
     }
-    else if ([str isEqualToString:@"diagonal"] == YES)
-    {
+    else if ([str isEqualToString:@"diagonal"] == YES) {
         pCondType = PRECOND_DIAGONAL;
     }
-    else if ([str isEqualToString:@"ilut"] == YES)
-    {
+    else if ([str isEqualToString:@"ilut"] == YES) {
         if ((solution.solutionInfo)[@"linear system ilut tolerance"] != nil) {
             ilut_tol = [(solution.solutionInfo)[@"linear system ilut tolerance"] doubleValue];
         } else {
-            errorfunct("FEMKernel_iterSolver", "Linear system ILUT tolerance not found.");
+            errorfunct("iterativeSolveMatrix", "Linear system ILUT tolerance not found.");
         }
         pCondType = PRECOND_ILUT;
     }
-    else if ([str isEqualToString:@"ilu"] == YES)
-    {
+    else if ([str isEqualToString:@"ilu"] == YES) {
         if ((solution.solutionInfo)[@"linear system ilu order"] != nil) {
             ilun = [(solution.solutionInfo)[@"linear system ilu order"] intValue];
         } else {
-            ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:3]] intValue] -  0;
+            ilun = [str characterAtIndex:3] - '0';
             if (ilun < 0 || ilun > 9 ) ilun = 0;
             pCondType = PRECOND_ILUN;
-            
         }
     }
-    else if ([str isEqualToString:@"bilu"] == YES)
-    {
-        ilun = [[NSString stringWithFormat:@"%c", [str characterAtIndex:4]] intValue] -  0;
+    else if ([str isEqualToString:@"bilu"] == YES) {
+        ilun = [str characterAtIndex:4] - '0';
         if (ilun < 0 || ilun > 9 ) ilun = 0;
         if (solution.variable.dofs == 1) {
-            warnfunct("FEMKernel_iterSolver", "BILU for one dofs is equal to ILU!");
+            warnfunct("iterativeSolveMatrix", "BILU for one dofs is equal to ILU!");
             pCondType = PRECOND_ILUN;
         } else {
             pCondType = PRECOND_BILUN;
         }
     }
-    else if ([str isEqualToString:@"multigrid"] == YES)
-    {
+    else if ([str isEqualToString:@"multigrid"] == YES) {
         pCondType = PRECOND_MG;
     }
-    else if ([str isEqualToString:@"vanka"] == YES)
-    {
+    else if ([str isEqualToString:@"vanka"] == YES) {
         pCondType = PRECOND_VANKA;
     }
     else {
         pCondType = PRECOND_NONE;
-        warnfunct("FEMKernel_iterSolver", "Unknown preconditioner type, feature disabled.");
+        warnfunct("iterativeSolveMatrix", "Unknown preconditioner type, feature disabled.");
     }
     
+    precondRecompute = NO;
     if ((solution.solutionInfo)[@"no precondition recompute"] != nil) {
-        if ([(solution.solutionInfo)[@"no precondition recompute"] boolValue] == NO) {
-            // TODO: Implement the code if we choose not to compute the preconditioner
-            // for each method call.
+        precondRecompute = [(solution.solutionInfo)[@"no precondition recompute"] boolValue];
+    }
+    if (!precondRecompute) {
+        n = 0;
+        if ((solution.solutionInfo)[@"linear system precondition recompute"] != nil) {
+            n = [(solution.solutionInfo)[@"linear system precondition recompute"] intValue];
+        }
+        if (n <= 0) n = 1;
+        
+        if ((solution.solutionInfo)[@"linear system refactorize"] != nil) {
+            refactorize = [(solution.solutionInfo)[@"linear system refactorize"] boolValue];
+        } else refactorize = YES;
+        
+        matContainers = matrix.getContainers;
+        if (matContainers->ILUValues == NULL || (refactorize == YES && matrix.solveCount % n == 0)) {
+            if (matrix.format == MATRIX_CRS) {
+                if (matrix.complexMatrix == YES) {
+                    if (pCondType == PRECOND_ILUN) {
+                        FEMPrecondition *preconditioning = [[FEMPrecondition alloc] init];
+                        condition = [preconditioning CRSComplexIncompleteLUMatrix:matrix fillsOrder:ilun];
+                    } else if (pCondType == PRECOND_ILUT) {
+                        FEMPrecondition *preconditioning = [[FEMPrecondition alloc] init];
+                        condition = [preconditioning CRSComplexIlutMatrix:matrix dropTolerance:ilun];
+                    }
+                } else {
+                    FEMPrecondition *preconditioning = [[FEMPrecondition alloc] init];
+                    int blocks;
+                    switch (pCondType) {
+                        case PRECOND_ILUN:
+                            condition = [preconditioning CRSIncompleteLUMatrix:matrix fillsOrder:ilun];
+                            break;
+                        case PRECOND_ILUT:
+                            condition = [preconditioning CRSIlutMatrix:matrix dropTolerance:ilut_tol];
+                            break;
+                        case PRECOND_BILUN:
+                            blocks = solution.variable.dofs;
+                            if (blocks <= 1) {
+                                condition = [preconditioning CRSIncompleteLUMatrix:matrix fillsOrder:ilun];
+                            } else {
+                                if (matContainers->ILUValues == NULL) {
+                                    FEMMatrix *adiag = [[FEMMatrix alloc] init];
+                                    [preconditioning CRSBlockDiagonalMatrix:matrix blockDiagMatrix:adiag numberOfBlocks:blocks];
+                                    condition = [preconditioning CRSIncompleteLUMatrix:adiag fillsOrder:ilun];
+                                    matrixArraysContainer *aDiagContainers = adiag.getContainers;
+                                    matContainers->ILURows = aDiagContainers->ILURows;
+                                    matContainers->ILUCols = aDiagContainers->ILUCols;
+                                    matContainers->ILUValues = aDiagContainers->ILUValues;
+                                    matContainers->ILUDiag = aDiagContainers->ILUDiag;
+                                    if (ilun > 0) {
+                                        free_ivector(aDiagContainers->Rows, 0, aDiagContainers->sizeRows-1);
+                                        free_ivector(aDiagContainers->Cols, 0, aDiagContainers->sizeCols-1);
+                                        free_ivector(aDiagContainers->Diag, 0, aDiagContainers->sizeDiag-1);
+                                        free_dvector(aDiagContainers->Values, 0, aDiagContainers->sizeValues-1);
+                                    }
+                                } else {
+                                    condition = [preconditioning CRSIncompleteLUMatrix:matrix fillsOrder:ilun];
+                                }
+                            }
+                            break;
+                    case PRECOND_VANKA:
+                            // No ops
+                            break;
+                    }
+                }
+            } else {
+                if (pCondType == PRECOND_ILUN) {
+                    NSLog(@"iterativeSolveMatrix: no ILU preconditioner for band matrix format.\n");
+                    NSLog(@"iterativeSolveMatrix: using Diagonal preconditioner instead...\n");
+                    pCondType = PRECOND_DIAGONAL;
+                }
+            }
         }
     }
     
-    solution.matrix.solveCount = solution.matrix.solveCount + 1;
+    matrix.solveCount++;
     
     if ((solution.solutionInfo)[@"linear system abort not converged"] != nil) {
         abortNotConverged = [(solution.solutionInfo)[@"linear system abort not converged"] boolValue];
@@ -6921,84 +7452,208 @@ static int PRECOND_VANKA     =  560;
     }
     
     // Get the selector for the matrix-vector multiplication method we want to use
-    if (solution.matrix.isComplexMatrix == YES) {
-        mvSelector = @selector(CRSComplexMatrixVectorProdInSolution::::);
+    if (matrix.isComplexMatrix == YES) {
+        mvSelector = @selector(CRSComplexMatrixVectorProduct::::);
     } else {
-        mvSelector= @selector(CRSMatrixVectorProdInSolution::::);
+        mvSelector= @selector(CRSMatrixVectorProduct::::);
     }
     
     // Get the selector for the preconditioning method we want to use
     if (pCondType == PRECOND_NONE) {
         
-        pcondSelector = @selector(CRSPCondDummyInSolution::::);
+        pcondSelector = @selector(CRSPCondDummyMatrix::::);
     }
     else if (pCondType == PRECOND_DIAGONAL) {
-        if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRSComplexDiagPreconditionInSolution::::);
+        if (matrix.isComplexMatrix == YES) {
+            pcondSelector = @selector(CRSComplexDiagPreconditionMatrix::::);
         } else {
-            pcondSelector = @selector(CRSDiagPreconditionInSolution::::);
+            pcondSelector = @selector(CRSDiagPreconditionMatrix::::);
         }
     }
     else if (pCondType == PRECOND_ILUN == pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
-        if (solution.matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRSComplexLuPreconditionInSolution::::);
+        if (matrix.isComplexMatrix == YES) {
+            pcondSelector = @selector(CRSComplexLuPreconditionMatrix::::);
         } else {
-            pcondSelector = @selector(CRSLuPreconditionInSolution::::);
+            pcondSelector = @selector(CRSLuPreconditionMatrix::::);
         }
     }
     
-    if (solution.matrix.isComplexMatrix == NO) {
+    if (matrix.isComplexMatrix == NO) {
         
-        if (iterType == ITER_SGS || iterType == ITER_JACOBI || iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
+        if (internal == YES) {
             if (ipar[4] == 0) ipar[4] = HUGE_VAL;
         }
     } else {
         
         ipar[2] = ipar[2] / 2;
-        if (iterType == ITER_GCR || iterType == ITER_BICGSTABL) {
+        if (internal == YES) {
             if (ipar[4] == 0) ipar[4] = HUGE_VAL;
         }
     }
     
     // Everything is happening in this method...
-    [self FEMKernel_iterCallType:iterType solution:solution ipar:ipar dpar:dpar work:work pcondlMethod:pcondSelector pcondrMethod:pcondrSelector matvecMethod:mvSelector mstopMethod:@selector(stopc::::)];
+    [self FEMKernel_iterCallType:iterType solution:solution matrix:matrix result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondSelector pcondrMethod:pcondrSelector matvecMethod:mvSelector mstopMethod:@selector(stopc::::)];
     
-    if (solution.matrix.isComplexMatrix == YES) ipar[2] = ipar[2] * 2;
+    if (matrix.isComplexMatrix == YES) ipar[2] = ipar[2] * 2;
     
-    if (ipar[29] != 1) {
+    if (ipar[29] != 1 /*TODO: add support for parallel run*/) {
         if (ipar[29] == 3) {
-            errorfunct("FEMKernel_iterSolver", "System diverged over tolerance.");
+            errorfunct("iterativeSolveMatrix", "System diverged over tolerance.");
         } else if (abortNotConverged == YES) {
-            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
+            errorfunct("iterativeSolveMatrix", "Failed convergence tolerances.");
         } else {
-            errorfunct("FEMKernel_iterSolver", "Failed convergence tolerances.");
+            errorfunct("iterativeSolveMatrix", "Failed convergence tolerances.");
         }
     }
     
     free_dmatrix(work, 0, n-1, 0, wsize-1);
 }
 
--(double)findSolution:(FEMSolution *)solution model:(FEMModel *)aModel {
+/******************************************************************************
+    Solve a system. Various additional utilities are included and naturally a
+    call to the linear system solver
+ 
+    TODO: Add support for parallel run
+******************************************************************************/
+-(void)solveSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution  model:(FEMModel *)model {
+    
+    int n, i;
+    double relaxation, beta, gamma;
+    double t0, rt0, st, rst;
+    BOOL constrainedSolve, needPrevSol, found;
+    NSString *method;
+    variableArraysContainer *varContainers = NULL;
+    
+    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
+        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
+            t0 = cputime();
+            rt0 = realtime();
+        }
+    }
+    
+    n = matrix.numberOfRows;
+    
+    varContainers = solution.variable.getContainers;
+    
+    // The allocation of previous values has to be here in order to work properly
+    // with the Dirichlet elimination
+    needPrevSol = NO;
+    if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
+        relaxation = [(solution.solutionInfo)[@"nonlinear system relaxation factor"] doubleValue];
+        needPrevSol = (relaxation != 1.0) ? YES: NO;
+    }
+    
+    if (needPrevSol == NO) {
+        if ((solution.solutionInfo)[@"nonlinear system convergence measure"] != nil) {
+            method = [NSString stringWithString:(solution.solutionInfo)[@"nonlinear system convergence measure"]];
+            needPrevSol = ([method isEqualToString:@"residual"] == YES || [method isEqualToString:@"solution"] == YES) ? YES: NO;
+        }
+    }
+    
+    if (needPrevSol == YES) {
+        found = NO;
+        if (varContainers->NonLinValues != NULL) {
+            found = YES;
+            if (varContainers->sizeNonLinValues != n) {
+                free_dvector(varContainers->NonLinValues, 0, varContainers->sizeNonLinValues-1);
+                varContainers->NonLinValues = NULL;
+                found = NO;
+            }
+        }
+        if (found == NO) {
+            varContainers->NonLinValues = doublevec(0, n-1);
+            if (varContainers->NonLinValues == NULL) errorfunct("solveSystemMatrix", "Memory allocation error.");
+            varContainers->sizeNonLinValues = n;
+        }
+        for (i=0; i<n; i++) {
+            varContainers->NonLinValues[i] = x[i];
+        }
+    }
+    
+    
+    // TODO: Add support for parallel run
+    
+    constrainedSolve = NO;
+    if (matrix.constraint != nil) {
+        if (matrix.constraint.numberOfRows >= 1) constrainedSolve = YES;
+    }
+    
+    if (constrainedSolve == YES) {
+         // TODO: Add support for constrained matrix solution
+    } else {
+        [self FEMKernel_solveLinearSystemMatrix:matrix rhs:b result:x norm:norm dofs:dofs solution:solution model:model bulkMatrix:nil];
+    }
+    
+    if ([solution timeOrder] == 2) {
+        if (varContainers->PrevValues != NULL) {
+            
+            gamma = 0.5 - solution.alpha;
+            beta = ( pow((1.0 - solution.alpha), 2.0) ) / 4.0;
+            for (i = 0; i<n; i++) {
+                varContainers->PrevValues[i][1] = (1.0/(beta*pow(solution.dt, 2.0))) * (x[i]-varContainers->PrevValues[i][2]) -
+                (1.0/(beta*solution.dt))*varContainers->PrevValues[i][3] + (1.0-1.0/(2.0*beta))*varContainers->PrevValues[i][4];
+                
+                varContainers->PrevValues[i][0] = varContainers->PrevValues[i][3] + solution.dt*((1.0-gamma)*varContainers->PrevValues[i][4] +
+                        gamma*varContainers->PrevValues[i][1]);
+            }
+        }
+    }
+    
+    if ((solution.solutionInfo)[@"linear system timing"] != nil) {
+        if ([(solution.solutionInfo)[@"linear system timing"] boolValue] == YES) {
+            st = cputime() - t0;
+            rst = realtime() - rt0;
+            
+            NSLog(@"solveSystemMatrix: solution time for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
+            
+            // TODO: Add support for cumulative timing
+            
+        }
+    }
+}
+
+-(double)findSolution:(FEMSolution *)solution model:(FEMModel *)model backRorateNT:(BOOL *)backRorateNT {
     
     double norm;
+    BOOL backBot;
+    variableArraysContainer *varContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
     if ((solution.solutionInfo)[@"linear system solver disabled"] != nil) {
         if ([(solution.solutionInfo)[@"linear system solver disabled"] boolValue] == YES) return 0.0;
     }
     
-    //TODO: add support for dump system matrix and back rotated N-T solution
+    //TODO: add support for dumping the system matrix
     
-    [self FEMKernel_solveSystem:solution model:aModel];
-    norm = solution.variable.norm;
+    if (backRorateNT != NULL) {
+        if ((solution.solutionInfo)[@"back rotate n-t solution"] != nil) {
+            backBot = [(solution.solutionInfo)[@"back rotate n-t solution"] boolValue];
+        } else backBot = YES;
+        if (backBot ^ *backRorateNT) {
+            [solution.solutionInfo setValue:@(*backRorateNT) forKey:@"back rotate n-t solution"];
+        }
+    }
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    [self solveSystemMatrix:solution.matrix rhs:matContainers->RHS result:varContainers->Values norm:&norm dofs:solution.variable.dofs solution:solution model:model];
+    
+    if (backRorateNT != NULL) {
+        if (backBot ^ *backRorateNT) {
+            [solution.solutionInfo setValue:@(backBot) forKey:@"back rotate n-t solution"];
+        }
+    }
+    solution.variable.norm = norm;
     
     return norm;
 }
 
--(double)stopc:(FEMSolution *)solution multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar {
 /*********************************************************************************
     We don't use the backward error estimate e = ||Ax-b||/||A|| ||X|| + ||b||
     as stoping criterion
 *********************************************************************************/
+-(double)stopc:(FEMMatrix *)matrix multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar {
+
     int i, n;
     double err, *res;
     double sum1, sum2, sum3, sum4;
@@ -7009,9 +7664,9 @@ static int PRECOND_VANKA     =  560;
     res = doublevec(0, ipar[2]-1);
     
     crsMatrix = [[FEMMatrixCRS alloc] init];
-    [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x resultVector:res];
+    [crsMatrix matrixVectorMultiplyInMatrix:matrix multiplyVector:x resultVector:res];
     
-     matContainers = solution.matrix.getContainers;
+    matContainers = matrix.getContainers;
     
     for (i=0; i<ipar[2]; i++) {
         res[i] = res[i] - b[i];

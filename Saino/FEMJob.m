@@ -129,7 +129,6 @@
     int i, j;
     BOOL initSolution, found;
     NSString *eq;
-    NSNumber *aNumber;
     FEMListUtilities *listUtilities;
     FEMUtilities *utilities;
     listBuffer activeSolvers = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -170,8 +169,7 @@
             if ([(solution.solutionInfo)[@"initialize"] boolValue] == YES) {
                 [solution.matrix deallocation];
                 solution.matrix = nil;
-                aNumber = @YES;
-                [solution.solutionInfo setObject:aNumber forKey:@"initialize"];
+                [solution.solutionInfo setObject:@YES forKey:@"initialize"];
             }
         }
         

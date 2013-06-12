@@ -12,7 +12,7 @@
 
 @implementation FEMNumericIntegration
 
-@synthesize integCompound = _integCompound;
+@synthesize IP = _IP;
 @synthesize metricDeterminant = _metricDeterminant;
 @synthesize basis = _basis;
 @synthesize basisFirstDerivative = _basisFirstDerivative;

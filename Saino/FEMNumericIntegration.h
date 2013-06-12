@@ -13,7 +13,7 @@
 
 @interface FEMNumericIntegration : NSObject {
 
-    GaussIntegrationPoints *_integCompound;
+    GaussIntegrationPoints *_IP;
     double _metricDeterminant;
     double *_basis;
     double **_basisFirstDerivative;
@@ -24,7 +24,7 @@
     double **_dx;                             // Partial derivatives of global coordinates with respect to local coordinates
 }
 
-@property(nonatomic, assign) GaussIntegrationPoints *integCompound;
+@property(nonatomic, assign) GaussIntegrationPoints *IP;
 @property(nonatomic, assign) double metricDeterminant;
 @property(nonatomic, assign) double *basis;
 @property(nonatomic, assign) double **basisFirstDerivative;

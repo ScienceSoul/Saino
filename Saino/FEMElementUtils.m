@@ -710,7 +710,7 @@
 -(double)elementArea:(Element_t *)element numberOfNodes:(int)n mesh:(FEMMesh *)mesh nodel:(FEMModel *)model {
     
     int i, t;
-    double a, detJ, sqrtMetric, sum, nx[n], ny[n], nz[n], u, v, w, x, y, z;
+    double a, detJ, sqrtMetric, nx[n], ny[n], nz[n], u, v, w, x, y, z;
     BOOL stat;
     Nodes_t *meshNodes, nodes;
     FEMNumericIntegration *integration;
@@ -729,7 +729,7 @@
     }
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("elementArea", "Allocation error in FEMNumericIntegration!");
     IP = GaussQuadrature(element, NULL, NULL);
     
     // Start integrating
@@ -748,24 +748,14 @@
         
         // Coordinate system dependent info
         if (model.coordinates != cartesian) {
-            sum = 0.0;
+            x = 0.0;
+            y = 0.0;
+            z = 0.0;
             for (i=0; i<n; i++) {
-                sum = sum + (nodes.x[i]*integration.basis[i]);
+                x = x + (nodes.x[i]*integration.basis[i]);
+                y = y + (nodes.y[i]*integration.basis[i]);
+                z = z + (nodes.z[i]*integration.basis[i]);
             }
-            x = sum;
-            
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + (nodes.y[i]*integration.basis[i]);
-            }
-            y = sum;
-            
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + (nodes.z[i]*integration.basis[i]);
-            }
-            z = sum;
-            
             sqrtMetric = [coordinateSystem coordinateSquareRootMetricModel:model coordX:x coordY:y coordZ:z];
             a = a + sqrtMetric * detJ * IP->s[t];
         } else {
@@ -773,6 +763,8 @@
         }
     }
     
+    GaussQuadratureDeallocation(IP);
+    [integration deallocation:mesh];
     return a;
 }
 

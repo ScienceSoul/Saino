@@ -167,7 +167,7 @@
 ***********************************************************************************************************************************************/
     
     int i, j, k, nb1, nb2;
-    double s, *a;
+    double s, a[4];
     
     if (rows != NULL) {
         nb1 = *rows;
@@ -181,8 +181,7 @@
         nb2 = solution.mesh.maxElementNodes;
     }
     
-    a = doublevec(0, 3);
-    memset( a, 0.0, 4*sizeof(double) );
+    memset( a, 0.0, sizeof(double) );
     
     a[0] = 1.0 / dts[0];
     a[1] = -1.0 / dts[0];
@@ -218,24 +217,70 @@
     free_dvector(a, 0, 3);
 }
 
--(void)newMarkBetaInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution beta:(double)beta rows:(int *)rows {
+-(void)newMarkBetaInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution beta:(double)beta rows:(int *)rows cols:(int *)cols{
     
-    int i, j, nb;
+    int i, j, nb1, nb2;
     double s;
-    
+  
     if (rows != NULL) {
-        nb = *rows;
+        nb1 = *rows;
     } else {
-        nb = solution.mesh.maxElementNodes;
+        nb1 = solution.mesh.maxElementNodes;
     }
     
-    for (i=0; i<nb; i++) {
+    if (cols != NULL) {
+        nb2 = *cols;
+    } else {
+        nb2 = solution.mesh.maxElementNodes;
+    }
+
+    for (i=0; i<nb1; i++) {
         s = 0.0;
         for (j=0; j<n; j++) {
             s = s + (1.0/dt) * massMatrix[i][j] * prevSolution[j] - (1.0-beta) * stiffMatrix[i][j] * prevSolution[j];
         }
-        for (j=0; j<nb; j++) {
+        for (j=0; j<nb2; j++) {
             stiffMatrix[i][j] = beta * stiffMatrix[i][j] + (1.0/dt)*massMatrix[i][j];
+        }
+        force[i] = force[i] + s;
+    }
+}
+
+-(void)bossakSecondOrder:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix dampMatrix:(double **)dampMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution1:(double *)x prevSolution2:(double *)v prevSolution3:(double *)a alpha:(double)alpha rows:(int *)rows cols:(int *)cols {
+    
+    int i, j, nb1, nb2;
+    double beta, gamma, s;
+    
+    if (rows != NULL) {
+        nb1 = *rows;
+    } else {
+        nb1 = solution.mesh.maxElementNodes;
+    }
+    
+    if (cols != NULL) {
+        nb2 = *cols;
+    } else {
+        nb2 = solution.mesh.maxElementNodes;
+    }
+    
+    nb1 = min(n, nb1);
+    nb2 = min(n, nb2);
+    
+    gamma = 0.5 - alpha;
+    beta = pow((1.0 - alpha), 2.0) / 4.0;
+    for (i=0; i<nb1; i++) {
+        s = 0.0;
+        for (j=0; j<nb2; j++) {
+            s = s + ( (1.0 - alpha) / (beta * pow(dt, 2.0)) ) * massMatrix[i][j] * x[j];
+            s = s + ( (1.0 - alpha) / (beta*dt) ) * massMatrix[i][j] * v[j];
+            s = s - ( (1.0 - alpha) * (1.0 - 1.0 / (2.0*beta)) + alpha ) * massMatrix[i][j] * a[j];
+            
+            s = s + ( gamma / (beta*dt) ) * dampMatrix[i][j] * x[j];
+            s = s + ( gamma/beta - 1.0) * dampMatrix[i][j] * v[j];
+            s = s - ( (1.0 - gamma) + gamma * (1.0 - 1.0 / (2.0*beta)) ) * dt * dampMatrix[i][j] * a[j];
+            
+            stiffMatrix[i][j] = stiffMatrix[i][j] + ( (1.0 - alpha) / (beta * pow(dt, 2.0)) ) * massMatrix[i][j]
+            + (gamma / (beta*dt)) * dampMatrix[i][j];
         }
         force[i] = force[i] + s;
     }
