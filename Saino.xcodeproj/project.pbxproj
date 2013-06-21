@@ -21,6 +21,7 @@
 		7315514C13583FFD004CCD09 /* SainoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315514B13583FFD004CCD09 /* SainoTests.m */; };
 		7315515913586108004CCD09 /* FEMKernel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMKernel.m */; };
 		7315515D1358615D004CCD09 /* FEMMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515C1358615D004CCD09 /* FEMMesh.m */; };
+		73167EFE177058D8003A1A20 /* FEMDifferentials.m in Sources */ = {isa = PBXBuildFile; fileRef = 73167EFD177058D8003A1A20 /* FEMDifferentials.m */; };
 		7316B30316144DC900A8C23C /* FEMInterpolation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7316B30216144DC800A8C23C /* FEMInterpolation.m */; };
 		73206776168D7D9700BAE816 /* FEMElementUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 73206775168D7D9700BAE816 /* FEMElementUtils.m */; };
 		7320677A169A6EA900BAE816 /* FEMListMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = 73206779169A6EA800BAE816 /* FEMListMatrix.m */; };
@@ -50,6 +51,7 @@
 		73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB2151C483600B11665 /* FEMMatrixCRS.m */; };
 		73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */ = {isa = PBXBuildFile; fileRef = 73882CB6151C73F000B11665 /* FEMMatrixBand.m */; };
 		738BC1A416F06EB800EDFA6B /* FEMInitialConditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */; };
+		738CA3D017699396007F9ADB /* FEMMaterialModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 738CA3CF17699396007F9ADB /* FEMMaterialModels.m */; };
 		7396D183157863F500626765 /* FEMLinearAlgebra.m in Sources */ = {isa = PBXBuildFile; fileRef = 7396D182157863F500626765 /* FEMLinearAlgebra.m */; };
 		739A5684157DE092003E549C /* FEMElementsDefinition.m in Sources */ = {isa = PBXBuildFile; fileRef = 739A5683157DE092003E549C /* FEMElementsDefinition.m */; };
 		73A06CC715919DC5009FC87E /* SIOModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 73A06CC615919DC5009FC87E /* SIOModelManager.m */; };
@@ -119,6 +121,8 @@
 		7315515813586108004CCD09 /* FEMKernel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMKernel.m; sourceTree = "<group>"; };
 		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; };
 		7315515C1358615D004CCD09 /* FEMMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		73167EFC177058D8003A1A20 /* FEMDifferentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDifferentials.h; sourceTree = "<group>"; };
+		73167EFD177058D8003A1A20 /* FEMDifferentials.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDifferentials.m; sourceTree = "<group>"; };
 		7316B30116144DC800A8C23C /* FEMInterpolation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInterpolation.h; sourceTree = "<group>"; };
 		7316B30216144DC800A8C23C /* FEMInterpolation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInterpolation.m; sourceTree = "<group>"; };
 		73206774168D7D9700BAE816 /* FEMElementUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementUtils.h; sourceTree = "<group>"; };
@@ -181,6 +185,8 @@
 		73882CB6151C73F000B11665 /* FEMMatrixBand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixBand.m; sourceTree = "<group>"; };
 		738BC1A216F06EB800EDFA6B /* FEMInitialConditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInitialConditions.h; sourceTree = "<group>"; };
 		738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInitialConditions.m; sourceTree = "<group>"; };
+		738CA3CE17699396007F9ADB /* FEMMaterialModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMaterialModels.h; sourceTree = "<group>"; };
+		738CA3CF17699396007F9ADB /* FEMMaterialModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMaterialModels.m; sourceTree = "<group>"; };
 		7396D181157863F500626765 /* FEMLinearAlgebra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMLinearAlgebra.h; sourceTree = "<group>"; };
 		7396D182157863F500626765 /* FEMLinearAlgebra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMLinearAlgebra.m; sourceTree = "<group>"; };
 		739A5682157DE092003E549C /* FEMElementsDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementsDefinition.h; sourceTree = "<group>"; };
@@ -557,6 +563,10 @@
 				73844CF0175C38370002DA9D /* FEMRadiation.m */,
 				733F0EE61765A87700D24664 /* FEMIterativeMethods.h */,
 				733F0EE71765A87700D24664 /* FEMIterativeMethods.m */,
+				738CA3CE17699396007F9ADB /* FEMMaterialModels.h */,
+				738CA3CF17699396007F9ADB /* FEMMaterialModels.m */,
+				73167EFC177058D8003A1A20 /* FEMDifferentials.h */,
+				73167EFD177058D8003A1A20 /* FEMDifferentials.m */,
 			);
 			name = "Class utilities";
 			sourceTree = "<group>";
@@ -733,6 +743,8 @@
 				73D0F11D175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m in Sources */,
 				73D0F120175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */,
 				733F0EE81765A87700D24664 /* FEMIterativeMethods.m in Sources */,
+				738CA3D017699396007F9ADB /* FEMMaterialModels.m in Sources */,
+				73167EFE177058D8003A1A20 /* FEMDifferentials.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

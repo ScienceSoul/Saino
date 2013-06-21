@@ -67,7 +67,7 @@ enum {
 };
 
 enum {
-    incrompressible = 0,
+    incompressible = 0,
     user_defined1,
     user_defined2,
     perfect_gas1,

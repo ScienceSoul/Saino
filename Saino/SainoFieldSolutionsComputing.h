@@ -13,4 +13,5 @@
 
 @protocol SainoFieldSolutionsComputing <NSObject>
 -(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient;
+-(void)deallocation:(FEMSolution *)solution;
 @end

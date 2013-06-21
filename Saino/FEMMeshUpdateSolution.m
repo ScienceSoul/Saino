@@ -21,6 +21,10 @@
     return self;
 }
 
+-(void)deallocation:(FEMSolution *)solution {
+    
+}
+
 -(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
 }

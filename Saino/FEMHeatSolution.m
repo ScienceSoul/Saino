@@ -751,7 +751,6 @@ enum {
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
         _allocationDone = NO;
         _constantBulk = NO;
         _newtonLinearization = NO;
@@ -759,15 +758,76 @@ enum {
         _powerScaling = 1.0;
         _prevPowerScaling = 1.0;
         
+        _indexes = NULL;
+        _saveIndexes = NULL;
+        _tempPerm = NULL;
+        _u = NULL;
+        _v = NULL;
+        _w = NULL;
+        _mu = NULL;
+        _pressure = NULL;
+        _dPressureDt = NULL;
+        _pressureCoeff = NULL;
+        _density = NULL;
+        _work = NULL;
+        _latentHeat = NULL;
+        _phaseVelocity = NULL;
+        _electricConductivity = NULL;
+        _permeability = NULL;
+        _viscosity = NULL;
+        _c0 = NULL;
+        _heatTransferCoeff = NULL;
+        _heatExpansionCoeff = NULL;
+        _referenceTemperature = NULL;
+        _mass = NULL;
+        _localTemperature = NULL;
+        _heatCapacity = NULL;
+        _enthalpy = NULL;
+        _nodalEmissivity = NULL;
+        _gasConstant = NULL;
+        _aText = NULL;
+        _heatConductivity = NULL;
+        _stiff = NULL;
+        _load = NULL;
+        _force = NULL;
+        _timeForce = NULL;
+        _perfusionRate = NULL;
+        _perfusionDensity = NULL;
+        _perfusionHeatCapacity = NULL;
+        _perfusionRefTemperature = NULL;
+        _heaterArea = NULL;
+        _heaterDensity = NULL;
+        _heaterSource = NULL;
+        _heaterScaling = NULL;
+        _heaterTarget = NULL;
+        _xx = NULL;
+        _yy = NULL;
+        _forceHeater = NULL;
+        _prevSolution = NULL;
+        _temperature = NULL;
         _tSolution = NULL;
         _tSolution1 = NULL;
+        _smarterHeaters = NULL;
+        _integralHeaters = NULL;
+        _elementNodes->x = NULL;
+        _elementNodes->y = NULL;
+        _elementNodes->z = NULL;
+
+        _tSolution = NULL;
+        _tSolution1 = NULL;
+        
+        _phaseModel = nil;
+        _radiationFlag = nil;
     }
     
     return self;
 }
 
--(void)deallocation {
+-(void)deallocation:(FEMSolution *)solution {
 
+    int n = solution.mesh.maxElementDofs;
+    variableArraysContainer *tempContainers = solution.variable.getContainers;
+    
     if (stiff != NULL) {
         free_dmatrix(stiff, 0, 0, 0, n1-1);
     }
@@ -777,6 +837,62 @@ enum {
     if (x != NULL) {
         free_dmatrix(x, 0, n1-1, 0, k1-1);
     }
+    
+    if (_indexes != NULL) free_ivector(_indexes, 0, n-1);
+    if (_saveIndexes != NULL) free_ivector(_saveIndexes, 0, n-1);
+    if (_u != NULL) free_dvector(_u, 0, n-1);
+    if (_v != NULL) free_dvector(_v, 0, n-1);
+    if (_w != NULL) free_dvector(_w, 0, n-1);
+    if (_mu != NULL) free_dmatrix(_mu, 0, 2, 0, n-1);
+    if (_pressure != NULL) free_dvector(_pressure, 0, n-1);
+    if (_dPressureDt != NULL) free_dvector(_dPressureDt, 0, n-1);
+    if (_pressureCoeff != NULL) free_dvector(_pressureCoeff, 0, n-1);
+    if (_density != NULL) free_dvector(_density, 0, n-1);
+    if (_work != NULL) free_dvector(_work, 0, n-1);
+    if (_latentHeat != NULL) free_dvector(_latentHeat, 0, n-1);
+    if (_phaseVelocity != NULL) free_dmatrix(_phaseVelocity, 0, 2, 0, n-1);
+    if (_electricConductivity != NULL) free_dvector(_electricConductivity, 0, n-1);
+    if (_permeability != NULL) free_dvector(_permeability, 0, n-1);
+    if (_viscosity != NULL) free_dvector(_viscosity, 0, n-1);
+    if (_c0 != NULL) free_dvector(_c0, 0, n-1);
+    if (_heatTransferCoeff != NULL) free_dvector(_heatTransferCoeff, 0, n-1);
+    if (_heatExpansionCoeff != NULL) free_dvector(_heatExpansionCoeff, 0, n-1);
+    if (_referenceTemperature != NULL) free_dvector(_referenceTemperature, 0, n-1);
+    if (_mass != NULL) free_dmatrix(_mass, 0, (2*n)-1, 0, (2*n)-1);
+    if (_localTemperature != NULL) free_dvector(_localTemperature, 0, n-1);
+    if (_heatCapacity != NULL) free_dvector(_heatCapacity, 0, n-1);
+    if (_enthalpy != NULL) free_dvector(_enthalpy, 0, n-1);
+    if (_nodalEmissivity != NULL) free_dvector(_nodalEmissivity, 0, n-1);
+    if (_gasConstant != NULL) free_dvector(_gasConstant, 0, n-1);
+    if (_aText != NULL) free_dvector(_aText, 0, n-1);
+    if (_heatConductivity != NULL) free_d3tensor(_heatConductivity, 0, 2, 0, 2, 0, n-1);
+    if (_stiff != NULL) free_dmatrix(_stiff, 0, (2*n)-1, 0, (2*n)-1);
+    if (_load != NULL) free_dvector(_load, 0, n-1);
+    if (_force != NULL) free_dvector(_force, 0, (2*n)-1);
+    if (_timeForce != NULL) free_dvector(_timeForce, 0, (2*n)-1);
+    if (_perfusionRate != NULL) free_dvector(_perfusionRate, 0, n-1);
+    if (_perfusionDensity != NULL) free_dvector(_perfusionDensity, 0, n-1);
+    if (_perfusionHeatCapacity != NULL) free_dvector(_perfusionHeatCapacity, 0, n-1);
+    if (_perfusionRefTemperature != NULL) free_dvector(_perfusionRefTemperature, 0, n-1);
+    if (_elementNodes->x != NULL) free_dvector(_elementNodes->x, 0, n-1);
+    if (_elementNodes->y != NULL) free_dvector(_elementNodes->y, 0, n-1);
+    if (_elementNodes->z != NULL) free_dvector(_elementNodes->z, 0, n-1);
+    if (_elementNodes != NULL) free(_elementNodes);
+    
+    if (_heaterArea != NULL) free_dvector(_heaterArea, 0, n-1);
+    if (_heaterDensity != NULL) free_dvector(_heaterDensity, 0, n-1);
+    if (_heaterSource != NULL) free_dvector(_heaterSource, 0, n-1);
+    if (_heaterScaling != NULL) free_dvector(_heaterScaling, 0, n-1);
+    if (_heaterTarget != NULL) free_dvector(_heaterTarget, 0, n-1);
+    if (_smarterHeaters != NULL) free_bvector(_smarterHeaters, 0, n-1);
+    if (_integralHeaters != NULL) free_bvector(_integralHeaters, 0, n-1);
+    
+    if (_xx != NULL) free_dvector(_xx, 0, tempContainers->sizeValues-1);
+    if (_yy != NULL) free_dvector(_yy, 0, tempContainers->sizeValues-1);
+    if (_forceHeater != NULL) free_dvector(_forceHeater, 0, tempContainers->sizeValues-1);
+    
+    if (_tSolution != NULL) free_dvector(_tSolution, 0, _localNodes-1);
+    if (_tSolution1 != NULL) free_dvector(_tSolution1, 0, _localNodes-1);
 }
 
 -(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
@@ -790,27 +906,22 @@ enum {
          integralHeaterControl, heaterControlLocal, phaseChange=NO, saveBulk, smartHeaterControl, smartHeaterAverage, smartTolReached, stabilize = YES, transientHeaterControl, useBubbles;
     NSString *convectionField, *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
-    Element_t *elements=NULL, *element = NULL, *parent = NULL;
-    Nodes_t *meshNodes=NULL;
-    FEMKernel *kernel;
+    Element_t *elements = NULL, *element = NULL, *parent = NULL;
+    Nodes_t *meshNodes = NULL;
     FEMMesh *mesh;
     FEMVariable *flowSol, *densitySol;
-    FEMListUtilities *listUtilities;
-    FEMUtilities *utilities;
-    FEMElementUtils *elementUtils;
     FEMBodyForce *bodyForceAtID = nil;
     FEMBoundaryCondition *boundaryConditionAtID = nil;
     FEMMaterial *materialAtID = nil;
     FEMEquation *equationAtID = nil;
-    matrixArraysContainer *matContainers=NULL;
-    variableArraysContainer *tempContainers=NULL, *flowSolContainers=NULL;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *tempContainers = NULL, *flowSolContainers = NULL;
     listBuffer realWork = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    kernel = [FEMKernel sharedKernel];
-    
-    listUtilities = [[FEMListUtilities alloc] init];
-    utilities = [[FEMUtilities alloc] init];
+    FEMKernel *kernel = [FEMKernel sharedKernel];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
     
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
@@ -822,13 +933,15 @@ enum {
         if (isRadiation == YES) break;
     }
     
+    // The view and Gebhardt factors may change. If this is necessary, this is done without this method.
+    // This method is called in the start as it may affect the matrix topplogy
     if (isRadiation == YES) {
         //TODO: implement the radiation factors computation
     }
     
-    // Get variables needed for solution
-    
     if (solution.matrix == nil) return;
+    
+    // Get variables needed for solution
     
     matContainers = solution.matrix.getContainers;
     forceVector = matContainers->RHS;
@@ -1045,6 +1158,7 @@ enum {
         nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
     }
     
+    // Newton linearization option is only needed when there is radiation
     if (isRadiation == YES) {
         if ((solution.solutionInfo)[@"nonlinear system newton after tolerance"] != nil) {
             newtonTol = [(solution.solutionInfo)[@"nonlinear system newton after tolerance"] doubleValue];
@@ -1079,9 +1193,7 @@ enum {
     if (smartHeaterControl == YES) {
         
         // Mark the smart heaters
-        for (i=0; i<model.numberOfBodyForces; i++) {
-            _smarterHeaters[i] = false;
-        }
+        memset( _smarterHeaters, false, model.numberOfBodyForces*sizeof(bool) );
         bf_id = 0;
         i = 0;
         for (FEMBodyForce *bodyForce in model.bodyForces) {
@@ -1109,7 +1221,7 @@ enum {
                 for (i=0; i<3; i++) {
                     controlPoint[i] = realWork.matrix[i][0];
                 }
-                minDist = HUGE_VAL;
+                minDist = DBL_MAX;
                 for (l=0; l<model.numberOfNodes; l++) {
                     if (_tempPerm[l] < 0) continue;
                     
@@ -1126,6 +1238,10 @@ enum {
             }
             NSLog(@"FEMHeatSolution: found control point at distance: %f\n", sqrt(minDist));
             NSLog(@"FEMHeatSolution: control point index: %d\n", smartHeaterNode);
+            if (realWork.matrix != NULL) {
+                free_dmatrix(realWork.matrix, 0, realWork.m-1, 0, realWork.n-1);
+                realWork.matrix = NULL;
+            }
         }
         
         if (gotMeltPoint == NO || smartHeaterNode < 0) {
@@ -1172,7 +1288,7 @@ enum {
                 smartHeaterAverage = [(solution.solutionInfo)[@"smart heater average"] boolValue];
             }
             if (smartHeaterAverage == NO) {
-                jx = -HUGE_VALL;
+                jx = -DBL_MAX;
                 for (k=mesh.numberOfBulkElements; k<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; k++) {
                     if (elements[k].BoundaryInfo->Constraint == smartHeaterBC+1) {
                         for (l=0; l<elements[k].Type.NumberOfNodes; l++) {
@@ -1215,9 +1331,7 @@ enum {
     
     if (integralHeaterControl == YES) {
         NSLog(@"FEMHeatSolution: using integral heater control");
-        for (i=0; i<model.numberOfBodyForces; i++) {
-            _integralHeaters[i] = false;
-        }
+        memset( _integralHeaters, false, model.numberOfBodyForces*sizeof(bool) );
         i = 0;
         for (FEMBodyForce *bodyForce in model.bodyForces) {
             if ([listUtilities listCheckPresentVariable:@"integral heat source" inArray:bodyForce.valuesList] == YES) {
@@ -1239,7 +1353,9 @@ enum {
     firstTime = YES;
     _prevSolution = doublevec(0, _localNodes-1);
     
-    elementUtils = [[FEMElementUtils alloc] init];
+    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
+    FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
+    FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
     
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
@@ -1247,9 +1363,7 @@ enum {
         firstTime = NO;
         
         // Save current solution
-        for (i=0; i<_localNodes; i++) {
-            _prevSolution[i] = _temperature[i];
-        }
+        memcpy(_prevSolution, _temperature, _localNodes*sizeof(double));
         if (transient == YES) {
             if (_tSolution == NULL) {
                 _tSolution = doublevec(0, _localNodes-1);
@@ -1300,7 +1414,7 @@ enum {
                     if (bodyForceAtID == nil) continue;
                     if (!_smarterHeaters[bf_id-1] || !_integralHeaters[bf_id-1]) continue;
                     
-                    n = [kernel getNumberOfNodesForElement:element];
+                    n = element->Type.NumberOfNodes;
                     
                     mat_id = [kernel getMaterialIDForElement:element model:model];
                     materialAtID = (model.materials)[mat_id-1];
@@ -1330,7 +1444,7 @@ enum {
                 i = 0;
                 for (FEMBodyForce *bodyForce in model.bodyForces) {
                     if (_integralHeaters[i] || _smarterHeaters[i]) {
-                        _heaterDensity[i] = _heaterDensity[i] / _heaterDensity[i];
+                        _heaterDensity[i] = _heaterDensity[i] / _heaterArea[i];
                     }
                     if (_integralHeaters[i]) {
                         _heaterTarget[i] = [listUtilities listGetConstReal:model inArray:bodyForce.valuesList forVariable:@"integral heat source" info:&found minValue:NULL maxValue:NULL];
@@ -1358,10 +1472,11 @@ enum {
                     mat_id = [kernel getMaterialIDForElement:element model:model];
                     materialAtID = (model.materials)[mat_id-1];
                     
-                    compressibilityFlag = [listUtilities listGetString:model inArray:equationAtID.valuesList forVariable:@"compressibility model" info:&found];
-                    if (found == NO) compressibilityModel = incrompressible;
+                    compressibilityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"compressibility model" info:&found];
+                    if (found == NO) compressibilityModel = incompressible;
+                    
                     if ([compressibilityFlag isEqualToString:@"incompressible"] == YES) {
-                        compressibilityModel = incrompressible;
+                        compressibilityModel = incompressible;
                     } else if ([compressibilityFlag isEqualToString:@"user defined"] == YES) {
                         compressibilityModel = user_defined1;
                     } else if ([compressibilityFlag isEqualToString:@"perfect gas"] == YES || [compressibilityFlag isEqualToString:@"perfect gas equation 1"] == YES) {
@@ -1369,7 +1484,7 @@ enum {
                     } else if ([compressibilityFlag isEqualToString:@"thermal"] == YES) {
                         compressibilityModel = thermal;
                     } else {
-                        compressibilityModel = incrompressible;
+                        compressibilityModel = incompressible;
                     }
                     
                     _phaseModel = [listUtilities listGetString:model inArray:equationAtID.valuesList forVariable:@"phase change model" info:&found];
@@ -1380,7 +1495,7 @@ enum {
                     }
                 }
                 
-                n = [kernel getNumberOfNodesForElement:element];
+                n = element->Type.NumberOfNodes;
                 [kernel getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL];
                 [kernel getScalarLocalField:_localTemperature sizeField:solution.mesh.maxElementDofs name:nil element:element solution:solution model:model timeStep:NULL];
                 
@@ -1415,7 +1530,7 @@ enum {
                 if (compressibilityModel == perfect_gas1) {
                     // Read specific heat ratio
                     specificHeatRatio = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"specific heat ratio" info:&found minValue:NULL maxValue:NULL];
-                    if (found == NO) specificHeatRatio = 5.0 / 3.0;
+                    if (found == NO) specificHeatRatio = 5.0/3.0;
                     
                     // For an ideal gas, \gamma, c_p and R are really a constant.
                     // GasConstant is an array only since HeatCapacity formally is
@@ -1445,7 +1560,9 @@ enum {
                     }
                     
                     found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
-                    if (found == NO) {
+                    if (found == YES) {
+                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
+                    } else {
                         for (i=0; i<n; i++) {
                             _pressureCoeff[i] = _localTemperature[i] *
                                _heatExpansionCoeff[i] / (1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]));
@@ -1474,7 +1591,7 @@ enum {
                 
                 // Take pressure deviation p_d as the dependent variable p = p_0 + p_d.
                 // For perfect gas, read p_0
-                if (compressibilityModel != incrompressible) {
+                if (compressibilityModel != incompressible) {
                     referencePressure = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"reference pressure" info:&found minValue:NULL maxValue:NULL];
                     if (found == NO) referencePressure = 0.0;
                 }
@@ -1494,6 +1611,7 @@ enum {
                 [kernel getVectorLocalField:_mu size1Field:3 size2Field:solution.mesh.maxElementDofs name:@"mesh velocity" element:element solution:solution model:model timeStep:NULL];
                 
                 if ([convectionFlag isEqualToString:@"constant"] == YES) {
+                    
                     found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer];
                     if (found == YES) {
                         memcpy(_u, buffer.vector, n*sizeof(double));
@@ -1588,7 +1706,7 @@ enum {
                 }
                 
                 // Get heat source
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"hear source" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer];
                 if (found == YES) {
                     for (i=0; i<n; i++) {
                         _load[i] = _density[i] * buffer.vector[i];
@@ -1638,10 +1756,91 @@ enum {
                 }
             
                 // Get element local matrices and RHS vectors
+                
+                // We initialize these arrays before calling the assembly methods. Elmer does it inside the routines
+                // but we do it here so that we don't need to pass the sizes of the arrays
+                memset( *_stiff, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
+                memset( *_mass, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
+                memset( _force, 0.0, (2*solution.mesh.maxElementDofs)*sizeof(double) );
                 if (model.coordinates == cartesian) {
-                    // TODO: implement this
+                    double heatCapacity[n];
+                    double mux[n], muy[n], muz[n];
+                    for (i=0; i<n; i++) {
+                        heatCapacity[i] = C1 * _heatCapacity[i];
+                        mux[i] = _mu[0][i];
+                        muy[i] = _mu[1][i];
+                        muz[i] = _mu[2][i];
+                    }
+                   [diffuseConvectiveAnisotropic diffuseConvectiveComposeMassMatrix:_mass
+                                                                        stiffMatrix:_stiff
+                                                                        forceVector:_force
+                                                                         loadVector:_load
+                                                                 timeDerivativeTerm:_heatCapacity
+                                                                     zeroDegreeTerm:_c0
+                                                                     convectionTerm:heatCapacity
+                                                                      diffusionTerm:_heatConductivity
+                                                                        phaseChange:_phaseSpatial
+                                                                   nodalTemperature:_localTemperature
+                                                                           enthalpy:_enthalpy
+                                                                          velocityX:_u
+                                                                           velocitY:_v
+                                                                          velocityZ:_w
+                                                                          meshVeloX:mux
+                                                                          meshVeloY:muy
+                                                                          meshVeloZ:muz
+                                                                     nodalViscosity:_viscosity
+                                                                       nodaldensity:_density
+                                                                      nodalPressure:_pressure
+                                                                    nodalPressureDt:_dPressureDt
+                                                                 nodalPressureCoeff:_pressureCoeff
+                                                                       compressible:(compressibilityModel != incompressible) ? YES : NO
+                                                                          stabilize:stabilize
+                                                                         useBubbles:useBubbles
+                                                                            element:element
+                                                                      numberOfNodes:n
+                                                                              nodes:_elementNodes
+                                                                           solution:solution
+                                                                               mesh:solution.mesh
+                                                                              model:model];
                 } else {
-                    // TODO: implement this
+                    double heatCapacity[n];
+                    double mux[n], muy[n], muz[n];
+                    for (i=0; i<n; i++) {
+                        heatCapacity[i] = C1 * _heatCapacity[i];
+                        mux[i] = _mu[0][i];
+                        muy[i] = _mu[1][i];
+                        muz[i] = _mu[2][i];
+                    }
+                    [diffuseConvectiveGeneralAnisotropic diffuseConvectiveGeneralComposeMassMatrix:_mass
+                                                                                       stiffMatrix:_stiff
+                                                                                       forceVector:_force
+                                                                                        loadVector:_load
+                                                                                timeDerivativeTerm:_heatCapacity
+                                                                                    zeroDegreeTerm:_c0
+                                                                                    convectionTerm:heatCapacity
+                                                                                     diffusionTerm:_heatConductivity
+                                                                                       phaseChange:_phaseSpatial
+                                                                                  nodalTemperature:_localTemperature
+                                                                                          enthalpy:_enthalpy
+                                                                                         velocityX:_u
+                                                                                          velocitY:_v
+                                                                                         velocityZ:_w
+                                                                                         meshVeloX:mux
+                                                                                         meshVeloY:muy
+                                                                                         meshVeloZ:muz
+                                                                                    nodalViscosity:_viscosity
+                                                                                      nodaldensity:_density
+                                                                                     nodalPressure:_pressure
+                                                                                   nodalPressureDt:_dPressureDt
+                                                                                nodalPressureCoeff:_pressureCoeff
+                                                                                      compressible:(compressibilityModel != incompressible) ? YES : NO
+                                                                                         stabilize:stabilize
+                                                                                           element:element
+                                                                                     numberOfNodes:n
+                                                                                             nodes:_elementNodes
+                                                                                          solution:solution
+                                                                                              mesh:solution.mesh
+                                                                                             model:model];
                 }
                 
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
@@ -1675,7 +1874,7 @@ enum {
                     if (bubbles == YES) {
                         [kernel condensateStiff:_stiff force:_force numberOfNodes:n force1:_timeForce];
                     }
-                    [kernel defaultUpdateEquations:model inSolution:solution forElement:element complexStiff:_stiff complexForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:&saveBulk];
+                    [kernel defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:&saveBulk];
                 }
             } // Bulk elements
             
@@ -1685,14 +1884,14 @@ enum {
                  element = [kernel getBoundaryElement:solution atIndex:t];
                 if ([kernel isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
                 
-                n = [kernel getNumberOfNodesForElement:element];
+                n = element->Type.NumberOfNodes;
                 if ([kernel getElementFamily:element] == 1) continue;
                 
                 bc = [kernel getBoundaryCondition:model forElement:&elements[t]];
                 if (bc == nil) continue;
                 
                 // This check whether there are any Dirichlet conditions on the smart heater boundary.
-                // If there are, the r.h.s must be zero as there can possibly not be an effect on temperature
+                // If there are, the r.h.s must be zero as there can possibly not be any effect on temperature
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
                     if ([listUtilities listCheckPresentVariable:solution.variable.name inArray:bc] == YES) {
                         memset( kernel.indexStore, -1, kernel.sizeIndexStore*sizeof(int) );
@@ -1760,16 +1959,20 @@ enum {
                     xave = 0.0;
                     yave = 0.0;
                     j = 0;
+                    double sum1 = 0.0;
                     
                     for (k=mesh.numberOfBulkElements; k<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; k++) {
                         if (elements[k].BoundaryInfo->Constraint == smartHeaterBC+1) {
                             l = elements[k].Type.NumberOfNodes;
                             j = j + l;
                             sum = 0.0;
+                            sum1 = 0.0;
                             for (i=0; i<elements[k].Type.NumberOfNodes; i++) {
-                                xave = xave + _xx[_tempPerm[elements[k].NodeIndexes[i]]];
-                                yave = yave + _yy[_tempPerm[elements[k].NodeIndexes[i]]];
+                                sum = sum + _xx[_tempPerm[elements[k].NodeIndexes[i]]];
+                                sum1 = sum1 + _yy[_tempPerm[elements[k].NodeIndexes[i]]];
                             }
+                            xave = xave + sum;
+                            yave = yave + sum1;
                         }
                     }
                     xave = xave / j;
@@ -1793,8 +1996,7 @@ enum {
                 }
                 
                 if (_dt > powerTimeScale) {
-                    if (relax != 0.0)
-                          [listUtilities addConstRealInClassList:model.simulation theVariable:@"nonlinear system relaxation" withValue:relax string:nil];
+                    if (relax != 0.0) [solution.solutionInfo setValue:@(relax) forKey:@"nonlinear system relaxation factor"];
                 }
             } else {
                 norm = [kernel findSolution:solution model:model backRorateNT:NULL];
@@ -1876,7 +2078,7 @@ enum {
             _powerScaling = _powerScaling * (1.0 + powerSensitivity * powerRelax * (meltPoint/yave - 1.0));
             if ([(solution.solutionInfo)[@"smart heater transient speedup"] boolValue] == YES) {
                 for (i=0; i<tempContainers->sizeValues; i++) {
-                    _temperature[i] = _temperature[i] * (1.0 + powerRelax *(meltPoint/yave - 1.0));
+                    _temperature[i] = _temperature[i] * ( 1.0 + powerRelax *(meltPoint/yave - 1.0) );
                 }
             }
             memcpy(_yy, _temperature, tempContainers->sizeValues*sizeof(double));
