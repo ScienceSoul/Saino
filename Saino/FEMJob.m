@@ -1543,7 +1543,7 @@ jump:
         _firstTime = NO;
     }
    
-    if ([args count] > 0) { //TODO: Add support for parallel run
+    if ([args count] > 0) { // TODO: Add support for parallel run
         self.modelName = [NSString stringWithString:args[0]];
         if ([self.modelName characterAtIndex:0] != '-') {
             _gotModelName = YES;
@@ -1584,7 +1584,7 @@ jump:
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
-            // Add support for 2D mesh extrusion to a 3D mesh
+            // TODO: Add support for 2D mesh extrusion to a 3D mesh
             
             if (_silent == NO) {
                 NSLog(@"JOB: ---------------------------------------------------------------------\n");
@@ -1598,7 +1598,7 @@ jump:
                 self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             }
             
-            // Add support for reloading MDF
+            // TODO: Add support for reloading MDF
             
             for (FEMMesh *mesh in self.model.meshes) {
                 mesh.savesDone = 0;

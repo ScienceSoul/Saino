@@ -54,23 +54,6 @@
     Element_t *_currentElement;
     Nodes_t *_nodes;
     modelArraysContainer *_containers;
-    
-    /* Initialize bodies like this:
-     NSArray* names = [NSArray arrayWithObjects:
-     [NSDictionary dictionaryWithObjectsAndKeys:
-     @"Joe",@"firstname",
-     @"Bloggs",@"surname",
-     nil],
-     [NSDictionary dictionaryWithObjectsAndKeys:
-     @"Simon",@"firstname",
-     @"Templar",@"surname",
-     nil],
-     [NSDictionary dictionaryWithObjectsAndKeys:
-     @"Amelia",@"firstname",
-     @"Pond",@"surname",
-     nil],
-     nil];
-     */
 }
 
 @property(nonatomic, assign) int dimension;

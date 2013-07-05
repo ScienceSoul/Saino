@@ -18,6 +18,7 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        _valuesList = [[NSMutableArray alloc] init];
         
     }
     

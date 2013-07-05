@@ -53,6 +53,8 @@
         _selector = NULL;
         _plugInPrincipalClassInstance = nil;
         
+        _solutionInfo = [[NSMutableDictionary alloc] init];
+        
         _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer));
         _containers->activeElements = NULL;
         _containers->defDofs = NULL;

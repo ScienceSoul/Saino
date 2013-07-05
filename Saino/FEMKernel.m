@@ -4409,11 +4409,12 @@ static const int PRECOND_VANKA     =  560;
     str = [NSMutableString stringWithString:loadName];
     [str appendString:@" dofs"];
     
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        boundaryConditionAtId = (model.boundaryConditions)[bc];
-        if ([listUtil listCheckPresentVariable:@"target boundaries" inArray:boundaryConditionAtId.valuesList] == NO) continue;
+    bc = 0;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        if ([listUtil listCheckPresentVariable:@"target boundaries" inArray:boundaryCondition.valuesList] == NO) continue;
         activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
         activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryConditionAtId.valuesList];
+        bc++;
     }
     
     anyActive = NO;
@@ -4534,7 +4535,7 @@ static const int PRECOND_VANKA     =  560;
                         }
                     }
                     // Add the found nodes to the list values
-                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes numberOfNodes:noNodes];
+                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes size:noNodes];
                     free_ivector(inNodes, 0, noNodes-1);
                     nodesFound = YES;
                 }
@@ -4907,7 +4908,7 @@ static const int PRECOND_VANKA     =  560;
                     
                     // In the first time add teh found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes numberOfNodes:numberOfNodesFound];
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:numberOfNodesFound];
                         free_ivector(inNodes, 0, noNodes-1);
                         nodesFound = YES;
                     }

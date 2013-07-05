@@ -721,23 +721,26 @@
             _elements[i].BodyID = 0;
         
             defaultTargetBC = 0;
-            for (j=0; j<model.numberOfBoundaryConditions; j++) {
-                if ([listUtil listGetLogical:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"default target" info:&found] == YES)
-                    defaultTargetBC = j+1;
+            j = 1;
+            for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+                if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"default target" info:&found] == YES)
+                    defaultTargetBC = j;
                 
-                gotIt = [listUtil listGetIntegerArray:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"target boundaries" buffer:&bdList];
+                gotIt = [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target boundaries" buffer:&bdList];
                 if (gotIt == YES) {
                     for (k=0; k<bdList.m; k++) {
                         if (bdList.ivector[k] == bndry) {
-                            _elements[i].BoundaryInfo->Constraint = j+1;
+                            _elements[i].BoundaryInfo->Constraint = j;
                             addr1 = 1;
                             addr2 = model.numberOfBodies;
-                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:[(model.boundaryConditions)[j] valuesList] forVariable:@"body id" info:&found minValue:&addr1 maxValue:&addr2];
+                            _elements[i].BodyID = [listUtil listGetInteger:model inArray:boundaryCondition.valuesList forVariable:@"body id" info:&found minValue:&addr1 maxValue:&addr2];
+                            break;
                         }
                     }
                 }
+                j++;
             }
-            
+                       
             j = _elements[i].BoundaryInfo->Constraint;
             if ((j<=0 || j>model.numberOfBoundaryConditions) && defaultTargetBC > 0); {
                 _elements[i].BoundaryInfo->Constraint = defaultTargetBC;

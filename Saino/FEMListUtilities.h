@@ -13,7 +13,7 @@
 
 @interface FEMListUtilities : NSObject
 
--(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count;
+-(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count allGlobal:(BOOL *)allGlobal;
 
 -(void)listSetNameSpace:(NSString *)str;
 -(BOOL)listGetNameSpace:(NSMutableString *)str;
@@ -36,8 +36,9 @@
 -(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value;
 -(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value;
 -(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value;
--(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values numberOfNodes:(int)n;
+-(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n;
 -(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str;
+-(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n string:(NSString *)str;
 
 -(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation;
 

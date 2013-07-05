@@ -1150,8 +1150,8 @@ enum {
         useBubbles = YES;
     }
     
-    if ((solution.solutionInfo)[@"nonlinear system max iterations"] != nil) {
-        nonLinearIter = [(solution.solutionInfo)[@"nonlinear system max iterations"] intValue];
+    if ((solution.solutionInfo)[@"nonlinear system maximum iterations"] != nil) {
+        nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
     } else nonLinearIter = 1;
     
     if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
@@ -2089,7 +2089,6 @@ enum {
             cumulativeTime = cumulativeTime + _dt;
             _dt = timeStep - cumulativeTime;
         }
-        
         
         if (buffer.vector != NULL) {
             free_dvector(buffer.vector, 0, buffer.m-1);

@@ -2290,22 +2290,22 @@
     // a certain instances during simulation
     solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
     
-    if ((solution.solutionInfo)[@"solve equation"] != nil) {
-        if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"never"] == YES) {
+    if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
+        if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"never"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_NEVER;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"always"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"always"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after all"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after all"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before all"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before all"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before time step"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before time step"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_TIME;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after time step"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after time step"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_TIME;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"before saving"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before saving"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_SAVE;
-        } else if ([(solution.solutionInfo)[@"solve equation"] isEqualToString:@"after saving"] == YES) {
+        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after saving"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_SAVE;
         } else {
             solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
