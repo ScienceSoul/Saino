@@ -7,7 +7,6 @@
 //
 
 #import "FEMJob.h"
-#import "FEMKernel.h"
 #import "FEMSolution.h"
 #import "FEMListUtilities.h"
 #import "FEMEquation.h"
@@ -84,6 +83,7 @@
     NSString *_when;
 }
 
+@synthesize kernel = _kernel;
 @synthesize model = _model;
 @synthesize modelName = _modelName;
 
@@ -255,7 +255,6 @@
     NSString *str = nil;
     NSMutableString *varName;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    FEMKernel *kernel;
     FEMSolution *solution;
     FEMInitialConditions *initialCondition;
     FEMListUtilities *listUtilities;
@@ -263,7 +262,6 @@
     Element_t *elements = NULL, *edges = NULL;
     variableArraysContainer *variableContainers = NULL;
     
-    kernel = [FEMKernel sharedKernel];
     listUtilities = [[FEMListUtilities alloc] init];
     meshUtilities = [[FEMMeshUtils alloc] init];
     
@@ -280,13 +278,13 @@
                         if (j < 1) j = 1;
                         if (j > model.numberOfInitialConditions) j = model.numberOfInitialConditions;
                         
-                        n = [kernel getNumberOfNodesForElement:&elements[t]];
+                        n = [self.kernel getNumberOfNodesForElement:&elements[t]];
                         for (FEMVariable *variable in mesh.variables) {
                             variableContainers = variable.getContainers;
                             if (variable.solution != nil) {
-                                dofs = [kernel getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.kernel getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                             } else {
-                                dofs = [kernel getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.kernel getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes];
                             }
                             
                             solution = (FEMSolution *)variable.solution;
@@ -303,7 +301,7 @@
                                     variableContainers->Values[k] = [listUtilities listGetConstReal:model inArray:initialCondition.valuesList forVariable:variable.name info:&found minValue:NULL maxValue:NULL];
                                 }
                             } else if (variable.dofs <= 1) {
-                                found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work];
+                                found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
@@ -315,7 +313,7 @@
                                 if (_transient == YES && solution.timeOrder == 2) {
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" velocity"];
-                                    found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
+                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -325,7 +323,7 @@
                                     }
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" acceleration"];
-                                    found = [kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
+                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -345,7 +343,7 @@
                                             for (k=0; k<elements[t].Type.NumberOfEdges; k++) {
                                                 l = variableContainers->Perm[elements[t].EdgeIndexes[k]+mesh.numberOfNodes];
                                                 if (l >= 0) {
-                                                    [kernel localBoundaryIntegral:model inSolution:solution atBoundary:initialCondition.valuesList forElement:&edges[elements[t].EdgeIndexes[k]] withNumberOfNodes:edges[elements[t].EdgeIndexes[k]].Type.NumberOfNodes andParent:&elements[t] withNumberOfNodes:n boundaryName:varName functionIntegral:&integral];
+                                                    [self.kernel localBoundaryIntegral:model inSolution:solution atBoundary:initialCondition.valuesList forElement:&edges[elements[t].EdgeIndexes[k]] withNumberOfNodes:edges[elements[t].EdgeIndexes[k]].Type.NumberOfNodes andParent:&elements[t] withNumberOfNodes:n boundaryName:varName functionIntegral:&integral];
                                                     variableContainers->Values[l] = integral;
                                                 }
                                             }
@@ -442,7 +440,6 @@
     NSMutableString *varName;
     FEMVariable *vectVariable = nil;
     FEMSolution *solution = nil;
-    FEMKernel *kernel;
     FEMListUtilities *listUtilities;
     FEMMeshUtils *meshUtilities;
     FEMElementDescription *elementDescription;
@@ -453,8 +450,6 @@
     
     dim = model.dimension;
     
-    kernel = [FEMKernel sharedKernel];
-
     listUtilities = [[FEMListUtilities alloc] init];
     if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"restart before initial conditions" info:&found] == YES) {
         [self FEMJob_restartModel:model];
@@ -484,7 +479,7 @@
             elements = mesh.getElements;
             for (t=mesh.numberOfBulkElements; t<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; t++) {
                 n = elements[t].Type.NumberOfNodes;
-                bc = [kernel getBoundaryCondition:model forElement:&elements[t]];
+                bc = [self.kernel getBoundaryCondition:model forElement:&elements[t]];
                 
                 for (FEMVariable *variable in mesh.variables) {
                     variableContainers = variable.getContainers;
@@ -497,10 +492,10 @@
                     }
                     
                     if (variable.dofs <= 1) {
-                        found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work];
+                        found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work];
                         if (found == YES) {
                             ntBoundary = NO;
-                            if ([kernel getElementFamily:&elements[t]] != 1) {
+                            if ([self.kernel getElementFamily:&elements[t]] != 1) {
                                 k = (int)(variable.name.length);
                                 vectDof = [variable.name characterAtIndex:k-1] - '0';
                                 if (vectDof >= 1 && vectDof <= 3) {
@@ -537,7 +532,7 @@
                                     if (ntBoundary == YES) {
                                         nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
                                         initNodes(nodes);
-                                        [kernel getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL];
+                                        [self.kernel getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL];
                                         parU = 0.0;
                                         parV = 0.0;
                                         check = YES;
@@ -602,7 +597,7 @@
                         if (_transient == YES && solution.timeOrder == 2) {
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" velocity"];
-                            found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
+                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
@@ -613,7 +608,7 @@
                             
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" acceleration"];
-                            found = [kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
+                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
@@ -660,17 +655,15 @@
            exitCond, arg;
     double **xx, *xxnrm, *yynrm, ***prevxx;
     BOOL found, adaptiveTime, steadyStateReached=NO, execThis;
-    FEMKernel *kernel;
     FEMListUtilities *listUtilities;
     variableArraysContainer *varContainers = NULL;
     
-    kernel = [FEMKernel sharedKernel];
     listUtilities = [[FEMListUtilities alloc] init];
     
     for (FEMSolution *solution in model.solutions) {
         if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
         if (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_ALL) {
-            [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+            [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
     }
     
@@ -756,7 +749,7 @@
                 adaptiveLimit = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive time error" info:&found minValue:NULL maxValue:NULL];
                 
                 if (found == NO) {
-                    errorfunct("FEMJob_runSimulation", "Adaptive time limit must be be given for adaptive stepping scheme.");
+                    errorfunct("FEMJob:FEMJob_runSimulation", "Adaptive time limit must be be given for adaptive stepping scheme.");
                 }
                 
                 adaptiveMaxTimeStep = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive max time step" info:&found minValue:NULL maxValue:NULL];
@@ -813,7 +806,7 @@
                     
                     _sTime[0] = _s + cumTime + ddt;
                     _sSize[0] = ddt;
-                    [kernel solveEquationsModel:model timeStep:&ddt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.kernel solveEquationsModel:model timeStep:&ddt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     
                     maxErr = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive error measure" info:&found minValue:NULL maxValue:NULL];
                     
@@ -840,9 +833,9 @@
                     _sStep[0] = ddt / 2;
                     _sTime[0] = _s + cumTime + ddt/2;
                     arg = ddt / 2;
-                    [kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     _sTime[0] = _s + cumTime + ddt;
-                    [kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     
                     maxErr = fabs(maxErr - [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive error measure" info:&found minValue:NULL maxValue:NULL]);
                     
@@ -894,7 +887,7 @@
                         ddt = ddt / 2.0;
                         stepControl = -1;
                     }
-                    NSLog(@"Adaptive(cum, ddt, err): %f, %f, %f\n", cumTime, ddt, maxErr);
+                    NSLog(@"FEMJob:FEMJob_runSimulation: adaptive(cum, ddt, err): %f, %f, %f\n", cumTime, ddt, maxErr);
                 }
                 
                 _sSize[0] = dt;
@@ -905,7 +898,7 @@
                 free_dvector(xxnrm, 0, model.numberOfSolutions-1);
                 free_d3tensor(prevxx, 0, model.numberOfSolutions-1, 0, kk-1, 0, jj-1);
             } else {
-                [kernel solveEquationsModel:model timeStep:&dt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                [self.kernel solveEquationsModel:model timeStep:&dt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                 realTimeStep++;
             }
             
@@ -922,7 +915,7 @@
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                              _when = (solution.solutionInfo)[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
-                            if (execThis) [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                            if (execThis) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                         }
                     }
                     
@@ -936,7 +929,7 @@
                             _when = (solution.solutionInfo)[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"after saving"] == YES) ? YES : NO;
                         }
-                        if (execThis == YES) [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                        if (execThis == YES) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                     }
                 }
             }
@@ -965,12 +958,12 @@ jump:
         if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
             _when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([_when isEqualToString:@"after simulation"] || [_when isEqualToString:@"after all"]) {
-                [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
             }
         } else {
             if (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_ALL) {
-                [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
             }
         }
@@ -984,7 +977,7 @@ jump:
                 _when = (solution.solutionInfo)[@"invoke solution computer"];
                 execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
             }
-            if (execThis == YES) [kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+            if (execThis == YES) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
     }
 }
@@ -1200,7 +1193,7 @@ jump:
             if ([fileManager createFileAtPath:fName contents:nil attributes:nil] == YES) {
                 outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
             } else {
-                errorfunct("FEMJob_saveResult", "Can't create result file.");
+                errorfunct("FEMJob:FEMJob_saveResult", "Can't create result file.");
             }
         } else {
             outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
@@ -1437,6 +1430,10 @@ jump:
     self = [super init];
     if (self) {
         //TODO: Initialize here
+        
+        // Instanciate a kernel for this job
+        _kernel = [FEMKernel sharedKernel];
+        
         _transient = NO;
         _outputName = [NSMutableString stringWithString:@""];
         _postName = [NSMutableString stringWithString:@""];
@@ -1463,6 +1460,9 @@ jump:
 }
 
 -(void)deallocation {
+    
+    [_kernel deallocation];
+    [_model deallocation];
     
     if (_timeStepSizes != NULL) {
         free_ivector(_timeSteps, 0, _sizeTimeSteps-1);
@@ -1520,7 +1520,7 @@ jump:
     
     NSArray *args = [[NSProcessInfo processInfo] arguments];
     if (_firstTime == YES) {
-        if ([args count] > 0) {
+        if ([args count]-3 > 0) {
             for (NSString *argument in args) {
                 _silent = (_silent == YES || ([argument isEqualToString:@"-s"] == YES || [argument isEqualToString:@"--silent"] == YES)) ? YES : NO;
                 _version = (_version == YES || ([argument isEqualToString:@"-v"] == YES || [argument isEqualToString:@"--version"] == YES)) ? YES : NO;
@@ -1543,8 +1543,8 @@ jump:
         _firstTime = NO;
     }
    
-    if ([args count] > 0) { // TODO: Add support for parallel run
-        self.modelName = [NSString stringWithString:args[0]];
+    if ([args count]-3 > 0) { // TODO: Add support for parallel run
+        self.modelName = [NSString stringWithString:args[1]];
         if ([self.modelName characterAtIndex:0] != '-') {
             _gotModelName = YES;
         }
@@ -1553,7 +1553,7 @@ jump:
     if (_gotModelName == NO) {
         NSFileHandle *startFile = [NSFileHandle fileHandleForReadingAtPath:@"SAINO_STARTINFO"];
         if (startFile == nil) {
-            errorfunct("runWithInitialize", "SAINO_STARTINFO file not found.");
+            errorfunct("FEMJob:runWithInitialize", "SAINO_STARTINFO file not found.");
         }
         NSData *buffer = [startFile readDataToEndOfFile];
         self.modelName = [[NSString alloc] initWithData:buffer encoding:NSUTF8StringEncoding];
@@ -1579,8 +1579,8 @@ jump:
             self.model = [[FEMModel alloc] init];
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
-                NSLog(@"runWithInitialize: Unable to find model description file [' %@\n ']", self.modelName);
-                errorfunct("runWithInitialize","Program terminating now...");
+                NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@\n ']", self.modelName);
+                errorfunct("FEMJob:runWithInitialize","Program terminating now...");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
@@ -1619,7 +1619,7 @@ jump:
          // Time integration and/or steady state steps
         if (_transient == YES || _scanning == YES) {
             found = [listUtilities listGetIntegerArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step intervals" buffer:&listBuffer];
-            if (found == NO) errorfunct("runWithInitialize", "Keyword > time step intervals < must be defined for transient and scanning simulations.");
+            if (found == NO) errorfunct("FEMJob:runWithInitialize", "Keyword > time step intervals < must be defined for transient and scanning simulations.");
             
             _timeSteps = intvec(0, listBuffer.m-1);
             _sizeTimeSteps = listBuffer.m;
@@ -1779,8 +1779,7 @@ jump:
                     when = (solution.solutionInfo)[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"before saving"] == YES) ? YES : NO;
                     if (execThis == YES) {
-                        FEMKernel *kernel = [FEMKernel sharedKernel];
-                        [kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                        [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
                     }
                 }
             }
@@ -1796,8 +1795,7 @@ jump:
                     execThis = ([when isEqualToString:@"after saving"] == YES) ? YES : NO;
                 }
                 if (execThis == YES) {
-                    FEMKernel *kernel = [FEMKernel sharedKernel];
-                    [kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                    [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
                 }
             }
         }

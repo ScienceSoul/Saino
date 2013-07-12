@@ -159,9 +159,8 @@
         self.dimension = 3;
         self.coordinates = polar;
     } else {
-        warnfunct("FEMModel_setCoordinateSystem", "Unknown global coordinate system:");
-        printf("%s\n", [csys UTF8String]);
-        errorfunct("FEMModel_setCoordinateSystem", "Program terminating now...");
+        NSLog(@"FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %@\n", csys);
+        errorfunct("FEMModel:FEMModel_setCoordinateSystem", "Program terminating now...");
     }
 }
 
@@ -175,7 +174,7 @@
     FEMNumericIntegration *integration;
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMModel:FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
     
     nodes.x = doublevec(0, numberOfNodes-1);
     nodes.y = doublevec(0, numberOfNodes-1);
@@ -322,9 +321,9 @@
     // ....
     [kernel iterativeSolveMatrix:matrix result:h rhs:matrixContainers->RHS dimensions:NULL solution:solution];
     
-    NSLog(@"FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, min_array(h,sizeNodal));
-    NSLog(@"FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, max_array(h,sizeNodal));
-    NSLog(@"FEMModel_getNodalElementSize: element size ratio: %f %f\n", elemMax/elemMin, max_array(h,sizeNodal) / min_array(h,sizeNodal));
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, min_array(h,sizeNodal));
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, max_array(h,sizeNodal));
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: element size ratio: %f %f\n", elemMax/elemMin, max_array(h,sizeNodal) / min_array(h,sizeNodal));
     
     self.solution = nil;
     solution.mesh.variables = nil;
@@ -373,7 +372,10 @@
     kernel.outputCaller = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output caller" info:&found];
     if (found == NO) kernel.outputCaller = YES;
     
-    free_ivector(outputMask.ivector, 0, outputMask.m-1);
+    if (outputMask.ivector != NULL) {
+        free_ivector(outputMask.ivector, 0, outputMask.m-1);
+        outputMask.ivector = NULL;
+    }
 }
 
 /*************************************************************************************
@@ -394,7 +396,7 @@
     [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"output intervals" withValue:1];
-    [listUtilities addStringInClassList:self.simulation theVariable:@"output file" withValue:@"TempDist.dat"];
+    [listUtilities addStringInClassList:self.simulation theVariable:@"output file" withValue:@"TempDist.result"];
     [listUtilities addStringInClassList:self.simulation theVariable:@"post file" withValue:@"TempDist.ep"];
     
     double **gravity = doublematrix(0, 3, 0, 0);

@@ -302,7 +302,7 @@ enum {
     
     // Integration stuff
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution_integrationOverSurfaceElement", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution:FEMHeatSolution_integrationOverSurfaceElement", "Allocation error in FEMNumericIntegration!");
     IP = GaussQuadrature(element, NULL, NULL);
 
     coordinateSystem = [[FEMCoordinateSystems alloc] init];
@@ -1069,7 +1069,7 @@ enum {
             _load == NULL || _force == NULL || _timeForce == NULL || _perfusionRate == NULL || _perfusionDensity == NULL ||
             _perfusionHeatCapacity == NULL || _perfusionRefTemperature == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL ||
             _elementNodes->z == NULL) {
-            errorfunct("FEMHeatSolution", "Memory allocation error");
+            errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
         }
         
         if (smartHeaterControl == YES || integralHeaterControl == YES) {
@@ -1092,7 +1092,7 @@ enum {
             _integralHeaters = boolvec(0, n-1);
             if (_heaterArea == NULL || _heaterDensity == NULL || _heaterSource == NULL || _heaterScaling == NULL || _heaterTarget == NULL ||
                 _smarterHeaters == NULL || _integralHeaters == NULL) {
-                 errorfunct("FEMHeatSolution", "Memory allocation error");
+                 errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
             }
             memset( _smarterHeaters, false, n*sizeof(bool) );
             memset( _integralHeaters, false, n*sizeof(bool) );
@@ -1109,7 +1109,7 @@ enum {
             _yy = doublevec(0, tempContainers->sizeValues-1);
             _forceHeater = doublevec(0, tempContainers->sizeValues-1);
             if (_xx == NULL || _yy == NULL || _forceHeater == NULL) {
-                errorfunct("FEMHeatSolution", "Memory allocation error");
+                errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
             }
             memset( _xx, 0.0, tempContainers->sizeValues*sizeof(double) );
             memset( _yy, 0.0, tempContainers->sizeValues*sizeof(double) );
@@ -1236,8 +1236,8 @@ enum {
                     }
                 }
             }
-            NSLog(@"FEMHeatSolution: found control point at distance: %f\n", sqrt(minDist));
-            NSLog(@"FEMHeatSolution: control point index: %d\n", smartHeaterNode);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: found control point at distance: %f\n", sqrt(minDist));
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: control point index: %d\n", smartHeaterNode);
             if (realWork.matrix != NULL) {
                 free_dmatrix(realWork.matrix, 0, realWork.m-1, 0, realWork.n-1);
                 realWork.matrix = NULL;
@@ -1270,7 +1270,7 @@ enum {
                 }
             }
             if (smartHeaterBC < 0) {
-                errorfunct("FEMHeatSolution", "Smart heater boundary / Phase change is undefined");
+                errorfunct("FEMHeatSolution:fieldSolutionComputer", "Smart heater boundary / Phase change is undefined");
             }
             
             boundaryConditionAtID = (model.boundaryConditions)[smartHeaterBC];
@@ -1280,7 +1280,7 @@ enum {
                     meltPoint = [listUtilities listGetConstReal:model inArray:material.valuesList forVariable:@"melting point" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) break;
                 }
-                if (found == NO) errorfunct("FEMHeatSolution", "Smart heater temperature / melting point is undefined.");
+                if (found == NO) errorfunct("FEMHeatSolution:fieldSolutionComputer", "Smart heater temperature / melting point is undefined.");
             }
             
             // Find the node related to temperature control
@@ -1317,10 +1317,10 @@ enum {
     
         if (transient == YES && _dt < powerTimeScale) {
             transientHeaterControl = YES;
-            NSLog(@"FEMHeatSolution: using transient heater control.\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: using transient heater control.\n");
         } else {
             transientHeaterControl = NO;
-            NSLog(@"FEMHeatSolution: using steady-state heater control.\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: using steady-state heater control.\n");
         }
     
         if (solution.doneTime != _doneTime) {
@@ -1330,7 +1330,7 @@ enum {
     }
     
     if (integralHeaterControl == YES) {
-        NSLog(@"FEMHeatSolution: using integral heater control");
+        NSLog(@"FEMHeatSolution:fieldSolutionComputer: using integral heater control");
         memset( _integralHeaters, false, model.numberOfBodyForces*sizeof(bool) );
         i = 0;
         for (FEMBodyForce *bodyForce in model.bodyForces) {
@@ -1383,13 +1383,13 @@ enum {
             at = cputime();
             at0 = realtime();
             
-            NSLog(@"FEMHeatSolution\n");
-            NSLog(@"FEMHeatSolution\n");
-            NSLog(@"FEMHeatSolution: --------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution: TEMPERATURE ITERATION %d\n", iter);
-            NSLog(@"FEMHeatSolution: --------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution\n");
-            NSLog(@"FEMHeatSolution: Starting Assembly...\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: --------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: TEMPERATURE ITERATION %d\n", iter);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: --------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Starting Assembly...\n");
             
             if (_constantBulk == YES && matContainers->BulkValues != NULL) {
                 memcpy(matContainers->Values, matContainers->BulkValues, matContainers->sizeBulkValues*sizeof(double));
@@ -1667,7 +1667,7 @@ enum {
                         }
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
-                    NSLog(@"FEMHeatSolution: convection model specified but no accociated flow field present?\n");
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: convection model specified but no accociated flow field present?\n");
                 } else {
                     all = YES;
                     for (i=0; i<3; i++) {
@@ -1920,7 +1920,7 @@ enum {
             if (transient == YES && _constantBulk == YES) [self FEMHeatSolution_addGlobalTimeSolution:solution];
             
             [kernel defaultFinishAssemblySolution:solution model:model];
-            NSLog(@"FEMHeatSolution: Assembly done.\n");
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done.\n");
             
             [kernel dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL];
             
@@ -2004,21 +2004,21 @@ enum {
             
             if (smartHeaterControl == YES || integralHeaterControl == YES) {
                 [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:_powerScaling string:nil];
-                NSLog(@"FEMHeatSolution: Heater control information\n");
+                NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater control information\n");
                 i = 0;
                 for (FEMBodyForce *bodyForce in model.bodyForces) {
                     if (!(_smarterHeaters[i] || _integralHeaters[i])) continue;
                     if (_smarterHeaters[i]) _heaterScaling[i] = _powerScaling;
-                    NSLog(@"FEMHeatSolution: heater for body %d\n", i+1);
-                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution: heater type: smart heater\n");
-                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution: hater type: integral heater\n");
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater for body %d\n", i+1);
+                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater type: smart heater\n");
+                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: hater type: integral heater\n");
                     
-                    NSLog(@"FEMHeatSolution: heater volutme (m^3): %f\n", _heaterArea[i]);
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater volutme (m^3): %f\n", _heaterArea[i]);
                     s = _heaterSource[i] * _heaterScaling[i];
-                    NSLog(@"FEMHeatSolution: heater power (W): %f\n", s);
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater power (W): %f\n", s);
                     
-                    NSLog(@"FEMHeatSolution: heater scaling: %f\n", _heaterScaling[i]);
-                    NSLog(@"FEMHeatSolution: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater scaling: %f\n", _heaterScaling[i]);
+                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
                     
                     if (_smarterHeaters[i]) [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power density" withValue:s/(_heaterDensity[i]*_heaterArea[i]) string:nil];
                     i++;
@@ -2028,8 +2028,8 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
-            NSLog(@"FEMHeatSolution: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
             
             // If modeling phase change (and if requested by the user), check if any
             // node has jumped over the phase interval, and if so, reduce time step
@@ -2042,11 +2042,11 @@ enum {
                     if (transient == YES) {
                         _dt = _dt / 2;
                         solution.dt = _dt;
-                        NSLog(@"FEMHeatSolution: latent heat release check: reducing time step to: %f\n", _dt);
+                        NSLog(@"FEMHeatSolution:fieldSolutionComputer: latent heat release check: reducing time step to: %f\n", _dt);
                     } else {
                         relax = relax / 2;
                         [solution.solutionInfo setValue:@(relax) forKey:@"nonlinear system relaxation factor"];
-                        NSLog(@"FEMHeatSolution: latent heat release check: reducing relaxation to: %f\n", relax);
+                        NSLog(@"FEMHeatSolution:fieldSolutionComputer: latent heat release check: reducing relaxation to: %f\n", relax);
                     }
                     continue;
                 }
@@ -2054,8 +2054,8 @@ enum {
             }
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution: result norm: %f\n", norm);
-            NSLog(@"FEMHeatSolution: relative change: %f\n", relativeChange);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: result norm: %f\n", norm);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: relative change: %f\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol && (smartHeaterControl == NO || smartTolReached == YES)) break;

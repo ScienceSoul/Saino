@@ -106,7 +106,7 @@
         
         *residual = rnorm / bnorm;
         if ( (k % outputInterval) == 0) {
-            NSLog(@"%d %lf %lf\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:HUTI_sgsNumberOfDimension: %d %lf %lf\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -189,7 +189,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"%d %lf %lf\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:HUTI_jacobiNumberOfDimension: %d %lf %lf\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -227,7 +227,7 @@
     FEMPrecondition *preconditioning;
     
     if (polyDegree < 2) {
-        errorfunct("HUTI_realBICGStabl", "Polynomial degree < 2.");
+        errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Polynomial degree < 2.");
     }
     
     t = doublevec(0, n-1);
@@ -357,7 +357,7 @@
             }
             rho1 = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (rho0 == zero) {
-                errorfunct("HUTI_realBICGStabl", "Breakdown error.");
+                errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             beta = alpha * (rho1/rho0);
@@ -391,7 +391,7 @@
             }
             sigma = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (sigma == zero) {
-                errorfunct("HUTI_realBICGStabl", "Breakdown error.");
+                errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             alpha = rho1/sigma;
@@ -614,7 +614,7 @@
         
         errorind = rnrm / bnrm;
         if (round % outputInterval == 0) {
-            NSLog(@"%d %lf %lf\n", round, rnrm, errorind);
+            NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %lf %lf\n", round, rnrm, errorind);
         }
         
         *converged = (errorind < minTolerance) ? YES: NO;
@@ -624,7 +624,7 @@
     } // end of rounds
     
     if (outputInterval != HUGE_VAL) {
-        NSLog(@"%d %lf %lf\n", round, rnrm, errorind);
+        NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %lf %lf\n", round, rnrm, errorind);
     }
     
     // We have solved z = P*x, with P the preconditioner, so finally
@@ -788,7 +788,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"%d %lf\n", k, *residual);
+            NSLog(@"FEMIterativeMethods:HUTI_gcrNumberOfDimension: %d %lf\n", k, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES: NO;

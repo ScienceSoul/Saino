@@ -150,7 +150,7 @@
             entity = &faces[element->FaceIndexes[number]];
             break;
         default:
-            NSLog(@"FEMMeshUtils_getEntityForElement: Unsupported dimension.");
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_getEntityForElement: unsupported dimension.");
             return entity;
             break;
     }
@@ -483,8 +483,8 @@
                     faceEdgeMap = brickFaceEdgeMap;
                     break;
                 default:
-                    printf("Element type %d not implemented.\n", element->Type.ElementCode);
-                    errorfunct("findEdges3DInMesh", "Program terminating now.");
+                    NSLog(@"FEMMeshUtils:findEdges3DInMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                    errorfunct("FEMMeshUtils:findEdges3DInMesh", "Program terminating now.");
                     break;
             }
         }
@@ -819,8 +819,8 @@
                     break;
                     
                 default:
-                    printf("Element type %d not implemented.\n", element->Type.ElementCode);
-                    errorfunct("findFaces3DForMesh", "Program terminating now.");
+                    NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                    errorfunct("FEMMeshUtils:findFaces3DForMesh", "Program terminating now.");
                     break;
             }
             
@@ -917,8 +917,8 @@
                         faces[face].Type = *elmType;
                         
                     default:
-                        printf("Element type %d not implemented.\n", element->Type.ElementCode);
-                        errorfunct("findFaces3DForMesh", "Program terminating now.");
+                        NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                        errorfunct("FEMMeshUtils:findFaces3DForMesh", "Program terminating now.");
                         break;
                 }
                 
@@ -1046,7 +1046,7 @@
             numbEdges = element->Type.NumberOfFaces;
             break;
         default:
-            NSLog(@"assignLocalNumberToEdgeElement: Unsupported dimension.");
+            NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: unsupported dimension.");
             return;
             break;
     }
@@ -1055,7 +1055,7 @@
     for (edgeNumber=0; edgeNumber<numbEdges; edgeNumber++) {
         // If edges have been created, stop search. Actually, this should not happen
         if (element->EdgeIndexes == NULL) {
-             NSLog(@"assignLocalNumberToEdgeElement: edges have not been creates. Returning now!");
+             NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: edges have not been creates. Returning now!");
             return;
         }
         
@@ -1064,7 +1064,7 @@
         // Edge element not found. This should not be possible, unless there is
         // an error in the mesh read in process
         if (entity == NULL) {
-            NSLog(@"assignLocalNumberToEdgeElement: edge element not found.");
+            NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: edge element not found.");
             return;
         }
         
@@ -1122,7 +1122,7 @@
     }
     
     // If we are here, local number not found
-    NSLog(@"assignLocalNumberToEdgeElement: Unable to find local edge.");
+    NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: unable to find local edge.");
 }
 
 -(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh boundary:(int)this target:(int)trgt {
@@ -1168,7 +1168,7 @@
     }
     
     if (n1 <= 0 || n2 <= 0) return nil;
-    NSLog(@"FEMMesh_periodicProjector: starting to build...");
+    NSLog(@"FEMMeshUtils:FEMMesh_periodicProjector: Starting to build...");
     
     // Initialize mesh structures for boundaries, this is
     // for getting the mesh projector
@@ -1284,7 +1284,7 @@
     }
     
     if (numbBothActive > 0) {
-        NSLog(@"periodicProjectorInModel: Nodes belonging to both master and target: %d\n", numbBothActive);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: nodes belonging to both master and target: %d\n", numbBothActive);
     }
     
     constantNormals = ( (1.0 - dot1min < 1.0e-6) && (1.0 - dot2min < 1.0e-6) ) ? YES : NO;
@@ -1295,7 +1295,7 @@
             sum = sum + normals1[i] * normals2[i];
         }
         alpha = acos(sum) * 180 / pi;
-        NSLog(@"periodicProjectorInModel: Suggested angle between two normals in degrees: %e\n", alpha);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: suggested angle between two normals in degrees: %e\n", alpha);
     }
     
     bmesh1.numberOfBulkElements = n1;
@@ -1315,7 +1315,7 @@
     bmesh1.numberOfNodes = count;
     
     if (bmesh1.numberOfNodes == 0 || bmesh2.numberOfNodes == 0) {
-        NSLog(@"periodicProjectorInModel: No active nodes on periodic boundary!");
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: no active nodes on periodic boundary!");
         
         for (i=0; i<bmesh1.numberOfBulkElements; i++) {
             free_ivector(mesh1elements[i].NodeIndexes, 0, mesh1elements[i].sizeNodeIndexes-1);
@@ -1332,7 +1332,7 @@
         bmesh1 = nil;
         bmesh2 = nil;
     } else {
-        NSLog(@"periodicProjectorInModel: Number of periodic nodes: %d %d\n", bmesh1.numberOfNodes, bmesh2.numberOfNodes);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: number of periodic nodes: %d %d\n", bmesh1.numberOfNodes, bmesh2.numberOfNodes);
     }
     
     mesh1nodes = bmesh1.getNodes;
@@ -1390,26 +1390,26 @@
         if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc rotate automatic" info:&found] == YES) {
             
             if (constantNormals == NO) {
-                errorfunct("periodicProjectorInModel", "Normals are not constant, can not test for rotation!");
+                errorfunct("FEMMeshUtils:periodicProjectorInModel", "Normals are not constant, can not test for rotation!");
             } else if (alpha > DBL_EPSILON) {
                 // Rotation should be performed
                 for (i=0; i<3; i++) {
                     if (fabs(normals1[i] - normals2[i]) < DBL_EPSILON) {
                         gotRotate = YES;
-                        NSLog(@"periodicProjectorInModel: Rotation around axis %d in degrees %f.\n", i, alpha);
+                        NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotation around axis %d in degrees %f.\n", i, alpha);
                         angles[i] = alpha;
                         break;
                     }
                 }
                 if (gotRotate == NO) {
-                    errorfunct("periodicProjectorInModel", "could not define rotation axis, improve algorithm.");
+                    errorfunct("FEMMeshUtils:periodicProjectorInModel", "could not define rotation axis, improve algorithm.");
                 }
             }
         }
     }
     
     if (gotRotate == YES) {
-        NSLog(@"periodicProjectorInModel: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
         
 
         
@@ -1482,25 +1482,25 @@
                 break;
             }
             
-            NSLog(@"periodicProjectorInModel: master normal: %f %f %f\n", normals1[0], normals1[1], normals1[2]);
-            NSLog(@"periodicProjectorInModel: initial target normal: %f %f %f\n", normals2[0], normals2[1], normals2[2]);
-            NSLog(@"periodicProjectorInModel: rotated target normal: %f %f %f\n", normals2r[0], normals2r[1], normals2r[2]);
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: master normal: %f %f %f\n", normals1[0], normals1[1], normals1[2]);
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: initial target normal: %f %f %f\n", normals2[0], normals2[1], normals2[2]);
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotated target normal: %f %f %f\n", normals2r[0], normals2r[1], normals2r[2]);
             sum = 0.0;
             for (i=0; i<3; i++) {
                 sum = sum + normals1[i] * normals2[i];
             }
             alpha = acos(sum) * 180.0 / pi;
-            NSLog(@"periodicProjectorInModel: angle between master and initial target: %e\n", alpha);
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and initial target: %e\n", alpha);
             
             sum = 0.0;
             for (i=0; i<3; i++) {
                 sum = sum + normals1[i] * normals2r[i];
             }
             alpha = acos(sum) * 180.0 / pi;
-            NSLog(@"periodicProjectorInModel: angle between master and rotated target: %e\n", alpha);
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and rotated target: %e\n", alpha);
             
             if (fabs(alpha) > 1.0e-2 && fabs(alpha - 180.0) > 1.0e-2) {
-                NSLog(@"periodicProjectorInModel: rotation may be incorrect!");
+                NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotation may be incorrect!");
             }
         }
     }
@@ -1556,21 +1556,21 @@
         }
     }
     
-    NSLog(@"periodicProjectorInModel: minimum values for this periodic BC: %f %f %f\n", x1Min[0], x1Min[1], x1Min[2]);
-    NSLog(@"periodicProjectorInModel: minimum values for target periodic BC: %f %f %f\n", x2Min[0], x2Min[1], x2Min[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for this periodic BC: %f %f %f\n", x1Min[0], x1Min[1], x1Min[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for target periodic BC: %f %f %f\n", x2Min[0], x2Min[1], x2Min[2]);
     if (gotRotate == YES) {
-        NSLog(@"periodicProjectorInModel: minimum values for rotated target: %f %f %f\n", x2rMin[0], x2rMin[1], x2rMin[2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for rotated target: %f %f %f\n", x2rMin[0], x2rMin[1], x2rMin[2]);
     }
-    NSLog(@"periodicProjectorInModel: maximum values for this periodic BC: %f %f %f\n", x1Max[0], x1Max[1], x1Max[2]);
-    NSLog(@"periodicProjectorInModel: maximum values for target periodic BC: %f %f %f\n", x2Max[0], x2Max[1], x2Max[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for this periodic BC: %f %f %f\n", x1Max[0], x1Max[1], x1Max[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for target periodic BC: %f %f %f\n", x2Max[0], x2Max[1], x2Max[2]);
     if (gotRotate == YES) {
-        NSLog(@"periodicProjectorInModel: maximum values for rotated target: %f %f %f\n", x2rMax[0], x2rMax[1], x2rMax[2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for rotated target: %f %f %f\n", x2rMax[0], x2rMax[1], x2rMax[2]);
     }
     
-    NSLog(@"periodicProjectorInModel: bounding box for this periodic BC: %f %f %f\n", x1Max[0]-x1Min[0], x1Max[1]-x1Min[1], x1Max[2]-x1Min[2]);
-    NSLog(@"periodicProjectorInModel: bounding box for target periodic BC: %f %f %f\n", x2Max[0]-x2Min[0], x2Max[1]-x2Min[1], x2Max[2]-x2Min[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for this periodic BC: %f %f %f\n", x1Max[0]-x1Min[0], x1Max[1]-x1Min[1], x1Max[2]-x1Min[2]);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for target periodic BC: %f %f %f\n", x2Max[0]-x2Min[0], x2Max[1]-x2Min[1], x2Max[2]-x2Min[2]);
     if (gotRotate == YES) {
-        NSLog(@"periodicProjectorInModel: bounding box for rotated target: %f %f %f\n", x2rMax[0]-x2rMin[0], x2rMax[1]-x2rMin[1], x2rMax[2]-x2rMin[2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for rotated target: %f %f %f\n", x2rMax[0]-x2rMin[0], x2rMax[1]-x2rMin[1], x2rMax[2]-x2rMin[2]);
     }
     
     if (gotRotate == NO) {
@@ -1629,7 +1629,7 @@
             }
         }
         
-        NSLog(@"periodicProjectorInModel: scaling with: %f %f %f\n", scl[0], scl[1], scl[2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: scaling with: %f %f %f\n", scl[0], scl[1], scl[2]);
         for (i=0; i<3; i++) {
             sclMatrix[i][i] = scl[i];
         }
@@ -1648,7 +1648,7 @@
         for (i=0; i<3; i++) {
             trsMatrix[3][i] = x1Min[i] - sclMatrix[i][i] * x2rMin[i];
         }
-        NSLog(@"periodicProjectorInModel: translation: %f %f %f\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: translation: %f %f %f\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
     } else {
         for (i=0; i<pArray.m; i++) {
             trsMatrix[3][i] = pArray.matrix[i][0];
@@ -1790,12 +1790,12 @@
     
     [self findEdgesForMesh:mesh findEdges:NULL];
     
-    NSLog(@"splitMeshEqual: ********** Old mesh **********\n");
-    NSLog(@"Nodes: %d\n", mesh.numberOfNodes);
-    NSLog(@"splitMeshEqual: bulk elements: %d\n", mesh.numberOfBulkElements);
-    NSLog(@"splitMeshEqual: boundary elements: %d\n", mesh.numberOfBoundaryElements);
-    NSLog(@"splitMeshEqual: edges: %d\n", mesh.numberOfEdges);
-    NSLog(@"splitMeshEqual: faces: %d\n", mesh.numberOfFaces);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: ********** Old mesh **********\n");
+    NSLog(@"FEMMeshUtils:splitMeshEqual: nodes: %d\n", mesh.numberOfNodes);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: bulk elements: %d\n", mesh.numberOfBulkElements);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: boundary elements: %d\n", mesh.numberOfBoundaryElements);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: edges: %d\n", mesh.numberOfEdges);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: faces: %d\n", mesh.numberOfFaces);
     
     // Update nodal coordinates
     nodeCnt = mesh.numberOfNodes + mesh.numberOfEdges;
@@ -2565,8 +2565,8 @@
                 break;
                 
             default:
-                printf("Element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
-                errorfunct("splitMeshEqual", "Program terminating now...");
+                NSLog(@"FEMMeshUtils:splitMeshEqual: element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
+                errorfunct("FEMMeshUtils:splitMeshEqual", "Program terminating now...");
         }
     }
     
@@ -2764,7 +2764,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -2795,7 +2795,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -2826,7 +2826,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -2857,7 +2857,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -2957,7 +2957,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -2989,7 +2989,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -3021,7 +3021,7 @@
                     }
                     if (n3 > 2)  break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -3053,7 +3053,7 @@
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -3075,10 +3075,10 @@
         newElements[i].FaceIndexes = NULL;
     }
     
-    NSLog(@"splitMeshEqual: ********** New mesh **********\n");
-    NSLog(@"Nodes: %d\n", newMesh.numberOfNodes);
-    NSLog(@"splitMeshEqual: bulk elements: %d\n", newMesh.numberOfBulkElements);
-    NSLog(@"splitMeshEqual: boundary elements: %d\n", newMesh.numberOfBoundaryElements);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: ********** New mesh **********\n");
+    NSLog(@"FEMMeshUtils:splitMeshEqual: nodes: %d\n", newMesh.numberOfNodes);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: bulk elements: %d\n", newMesh.numberOfBulkElements);
+    NSLog(@"FEMMeshUtils:splitMeshEqual: boundary elements: %d\n", newMesh.numberOfBoundaryElements);
     
     // TODO: add support for parallel run
     

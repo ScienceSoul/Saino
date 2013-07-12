@@ -482,7 +482,7 @@ static const int PRECOND_VANKA     =  560;
         }
         bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
         if (bnorm <= DBL_MIN) {
-            NSLog(@"FEMKernel_solveLinearSystemMatrix: Solution trivially zero\n");
+            NSLog(@"FEMKernel:FEMKernel_solveLinearSystemMatrix: solution trivially zero.\n");
             memset( x, 0.0, varContainers->sizeValues*sizeof(double) );
             return;
         }
@@ -512,7 +512,7 @@ static const int PRECOND_VANKA     =  560;
     }
     bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
     if (bnorm <= DBL_MIN && skipZeroRhs == NO) {
-        NSLog(@"FEMKernel_solveLinearSystemMatrix: Solution trivially zero\n");
+        NSLog(@"FEMKernel:FEMKernel_solveLinearSystemMatrix: solution trivially zero.\n");
         memset( x, 0.0, varContainers->sizeValues*sizeof(double) );
         if (applyLimiter == YES) {
             [self FEMKernel_determineSoftLimiterInSolution:solution model:model];
@@ -605,7 +605,7 @@ static const int PRECOND_VANKA     =  560;
             listUtilities = [[FEMListUtilities alloc] init];
             [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:energy string:nil];
             
-            NSLog(@"FEMKernel_solveLinearSystemMatrix: energy norm: %f\n", energy);
+            NSLog(@"FEMKernel:FEMKernel_solveLinearSystemMatrix: energy norm: %f\n", energy);
         }
         
         matAidContainers->Values = saveValues;
@@ -920,7 +920,7 @@ static const int PRECOND_VANKA     =  560;
         // Compute sum of element-wise normals for nodes on boundaries
         elementDescription = [[FEMElementDescription alloc] init];
         integration = [[FEMNumericIntegration alloc] init];
-        if ([integration allocation:mesh] == NO) errorfunct("FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
+        if ([integration allocation:mesh] == NO) errorfunct("FEMKernel:FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
         elements = mesh.getElements;
         nodes = mesh.getNodes;
         nrm = doublevec(0, 2);
@@ -1274,7 +1274,7 @@ static const int PRECOND_VANKA     =  560;
             FEMMatrixCRS *matrixCRS = [[FEMMatrixCRS alloc] init];
             [matrixCRS fctlLowOrderInSolution:solution orMatrix:nil];
         } else {
-            errorfunct("FEMKernel_finishAssemblyModel", "FCT scheme implemented only for one dof");
+            errorfunct("FEMKernel:FEMKernel_finishAssemblyModel", "FCT scheme implemented only for one dof");
         }
     }
     
@@ -1934,7 +1934,7 @@ static const int PRECOND_VANKA     =  560;
     onlySearch = YES;
     loadVar = [utilities getVariableFrom:model.variables model:model name:name onlySearch:&onlySearch maskName:NULL info:&found];
     if (loadVar == nil) {
-        NSLog(@"FEMKernel_determineSoftLimiterInSolution: no loads associated wit variable %@\n", solution.variable.name);
+        NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: no loads associated wit variable %@\n", solution.variable.name);
         return;
     }
     
@@ -2107,21 +2107,21 @@ static const int PRECOND_VANKA     =  560;
         
         // Output some information before exiting
         if (upper == 0) {
-            NSLog(@"FEMKernel_determineSoftLimiterInSolution: determined lower soft limit set");
+            NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: determined lower soft limit set");
         } else {
-            NSLog(@"FEMKernel_determineSoftLimiterInSolution: determined upper soft limit set");
+            NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: determined upper soft limit set");
         }
         count = 0;
         for (i=0; i<totSize; i++) {
             if (limitActive[i] == YES) count++;
         }
-        NSLog(@"FEMKernel_determineSoftLimiterInSolution:Number of dofs in set is %d\n", count);
+        NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: number of dofs in set is %d\n", count);
         
         if (added > 0) {
-            NSLog(@"FEMKernel_determineSoftLimiterInSolution: added %d dofs to the set\n", added);
+            NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: added %d dofs to the set\n", added);
         }
         if (removed > 0) {
-            NSLog(@"FEMKernel_determineSoftLimiterInSolution: removed %d dofs to the set\n", removed);
+            NSLog(@"FEMKernel:FEMKernel_determineSoftLimiterInSolution: removed %d dofs to the set\n", removed);
         }
     }
     
@@ -2226,7 +2226,7 @@ static const int PRECOND_VANKA     =  560;
         f[i] = matContainers->DiagScaling[i] * f[i];
     }
     
-    NSLog(@"FEMKernel_rowEquilibrationMatrix: unscaled matrix norm: %f\n", norm);
+    NSLog(@"FEMKernel:FEMKernel_rowEquilibrationMatrix: unscaled matrix norm: %f\n", norm);
 }
 
 /****************************************************************************************
@@ -2242,10 +2242,10 @@ static const int PRECOND_VANKA     =  560;
     matContainers = matrix.getContainers;
     
     if (matContainers->DiagScaling == NULL) {
-        errorfunct("FEMKernel_reverseRowEquilibrationMatrix", "Diag is a null pointer!");
+        errorfunct("FEMKernel:FEMKernel_reverseRowEquilibrationMatrix", "Diag is a null pointer!");
     }
     if (matContainers->sizeDiagScaling != n) {
-        errorfunct("FEMKernel_reverseRowEquilibrationMatrix", "Diag of wrong size!");
+        errorfunct("FEMKernel:FEMKernel_reverseRowEquilibrationMatrix", "Diag of wrong size!");
     }
     
     for (i=0; i<n; i++) {
@@ -2275,9 +2275,9 @@ static const int PRECOND_VANKA     =  560;
     for (i=1; i<=coupleMaxIter; i++) {
         if (transient == YES && scanning == YES) {
             if (coupleMaxIter > 1) {
-                NSLog(@"SolveEquations: --------------------------------------------------------------------\n");
-                NSLog(@"SolveEquations: Coupled system iteration: %d\n", i);
-                NSLog(@"SolveEquations: --------------------------------------------------------------------\n");
+                NSLog(@"FEMKernel:SolveEquations: --------------------------------------------------------------------\n");
+                NSLog(@"FEMKernel:SolveEquations: coupled system iteration: %d\n", i);
+                NSLog(@"FEMKernel:SolveEquations: --------------------------------------------------------------------\n");
             }
             *steadyIt = (double)i;
         }
@@ -2298,7 +2298,7 @@ static const int PRECOND_VANKA     =  560;
             if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) {
                 if (solution.solutionMode != SOLUTION_MODE_COUPLED || solution.solutionMode != SOLUTION_MODE_ASSEMBLY
                     || solution.solutionMode != SOLUTION_MODE_BLOCK) {
-                    NSLog(@"SolveEquations: No routine related to solution!\n");
+                    NSLog(@"FEMKernel:SolveEquations: no routine related to solution!\n");
                     doneThis[k] = YES;
                     continue;
                 }
@@ -2453,10 +2453,10 @@ static const int PRECOND_VANKA     =  560;
     if (transient == YES && allDoneThis == NO) {
         listUtilities = [[FEMListUtilities alloc] init];
         if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"coupled system abort not converged" info:&found] == YES) {
-            NSLog(@"SolveEquations: \n");
-            NSLog(@"SolveEquations: Coupled system iteration: %d\n", i);
-            NSLog(@"SolveEquations: \n");
-            errorfunct("SolveEquations", "Program terminating now...");
+            NSLog(@"FEMKernel:SolveEquations: \n");
+            NSLog(@"FEMKernel:SolveEquations: coupled system iteration: %d\n", i);
+            NSLog(@"FEMKernel:SolveEquations: \n");
+            errorfunct("FEMKernel:SolveEquations", "Program terminating now...");
         }
     }
 }
@@ -2583,8 +2583,8 @@ static const int PRECOND_VANKA     =  560;
             [solutionSelectorInvocation invoke];
 
         } else {
-            NSLog(@"FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
-            errorfunct("FEMKernel_singleSolution", "Program terminating now...");
+            NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
+            errorfunct("FEMKernel:FEMKernel_singleSolution", "Program terminating now...");
         }
 
     } else if (solution.plugInPrincipalClassInstance != nil) {
@@ -2592,8 +2592,8 @@ static const int PRECOND_VANKA     =  560;
         [_instance fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         
     } else {
-        NSLog(@"FEMKernel_singleSolution: can't proceed further because there is no selector or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
-        errorfunct("FEMKernel_singleSolution", "Program terminating now...");
+        NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no selector or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
+        errorfunct("FEMKernel:FEMKernel_singleSolution", "Program terminating now...");
     }
 }
 
@@ -2774,7 +2774,7 @@ static const int PRECOND_VANKA     =  560;
         }
         
         if (found == NO) {
-            NSLog(@"FEMKernel_initializeTimeStepInSolution: time stepping default to IMPLICIT EULER.");
+            NSLog(@"FEMKernel:FEMKernel_initializeTimeStepInSolution: time stepping default to IMPLICIT EULER.");
             solution.beta = 1.0;
             method = @"implicit euler";
         }
@@ -2798,15 +2798,15 @@ static const int PRECOND_VANKA     =  560;
             }
             
             if (solution.beta < 0 || solution.beta > 1) {
-                NSLog(@"FEMKernel_initializeTimeStepInSolution: invalid value of beta: %f\n", solution.beta);
+                NSLog(@"FEMKernel:FEMKernel_initializeTimeStepInSolution: invalid value of beta: %f\n", solution.beta);
             }
         } else if ([method isEqualToString:@"bdf"] == YES) {
             if (solution.order < 1 || solution.order > 5) {
-                NSLog(@"FEMKernel_initializeTimeStepInSolution: invalid BDF order: %d\n", solution.order);
+                NSLog(@"FEMKernel:FEMKernel_initializeTimeStepInSolution: invalid BDF order: %d\n", solution.order);
             }
         } else {
-            NSLog(@"FEMKernel_initializeTimeStepInSolution: Unknown time stepping method: %@\n", method);
-            errorfunct("FEMKernel_initializeTimeStepInSolution", "Program terminating now...");
+            NSLog(@"FEMKernel:FEMKernel_initializeTimeStepInSolution: unknown time stepping method: %@\n", method);
+            errorfunct("FEMKernel:FEMKernel_initializeTimeStepInSolution", "Program terminating now...");
         }
     }
     
@@ -3330,8 +3330,8 @@ static const int PRECOND_VANKA     =  560;
         currentElement = model.getCurrentElement;
         currentElement = element;
     } else {
-        NSLog(@"getActiveElement: invalid element number requested: %d\n", t);
-        errorfunct("getActiveElement", "Program terminating now");
+        NSLog(@"FEMKernel:getActiveElement: invalid element number requested: %d\n", t);
+        errorfunct("FEMKernel:getActiveElement", "Program terminating now");
     }
     return element;
 }
@@ -3380,7 +3380,7 @@ static const int PRECOND_VANKA     =  560;
     
     if (index < 0 || index > solution.mesh.numberOfBoundaryElements-1) {   
         
-        errorfunct("getBoundaryElement", "Invalid element number requested at index:");
+        errorfunct("FEMKernel:getBoundaryElement", "Invalid element number requested at index:");
         printf("%d\n", index);
     }
     
@@ -3716,7 +3716,7 @@ static const int PRECOND_VANKA     =  560;
             // Add index for each bubble dof in edge
             for (i=0; i<element->BDOFs; i++) {
                 if (mesh.numberOfNodes < n) {
-                    errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
@@ -3735,7 +3735,7 @@ static const int PRECOND_VANKA     =  560;
                 for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]].BDOFs; j++) {
                     
                     if (mesh.numberOfNodes < n) {
-                        errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                        errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                         return;
                     }
                     
@@ -3747,7 +3747,7 @@ static const int PRECOND_VANKA     =  560;
             // Add indexes of gaces bubbles
             for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].BDOFs; i++) {
                 if (mesh.numberOfNodes < n) {
-                    errorfunct("getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
@@ -3760,7 +3760,7 @@ static const int PRECOND_VANKA     =  560;
             edges = NULL;
             break;
         default:
-            errorfunct("getBoundaryIndexes", "Unsupported dimension.");
+            errorfunct("FEMKernel:getBoundaryIndexes", "Unsupported dimension.");
             break;
     }
 }
@@ -3841,7 +3841,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (gotIt == NO) {
-        NSLog(@"getMaterialProperty: property %@ not found in either parents!\n", name);
+        NSLog(@"FEMKernel:getMaterialProperty: property %@ not found in either parents.\n", name);
     }
     return gotIt;
 }
@@ -4024,7 +4024,7 @@ static const int PRECOND_VANKA     =  560;
     elementDescription = [[FEMElementDescription alloc] init];
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMKernel:localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
     
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(nodes);
@@ -4209,7 +4209,7 @@ static const int PRECOND_VANKA     =  560;
     BOOL stat;
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("localBoundaryBDOFs", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMKernel:localBoundaryBDOFs", "Allocation error in FEMNumericIntegration!");
     
     
     listUtil = [[FEMListUtilities alloc] init];
@@ -4288,18 +4288,18 @@ static const int PRECOND_VANKA     =  560;
     if (n <= 0) return;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
-        warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrf. Error code:");
+        warnfunct("FEMKernel:solveWithLapackMatrix", "Error in lapack routine dgetrf. Error code:");
         printf("%d\n", info);
-        errorfunct("solveWithLapackMatrix", "Program terminating now...");
+        errorfunct("FEMKernel:solveWithLapackMatrix", "Program terminating now...");
     }
     
     trans = "N";
     nhrs = 1;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
-        warnfunct("solveWithLapackMatrix", "Error in lapack routine dgetrs. Error code:");
+        warnfunct("FEMKernel:solveWithLapackMatrix", "Error in lapack routine dgetrs. Error code:");
         printf("%d\n", info);
-        errorfunct("solveWithLapackMatrix", "Program terminating now...");
+        errorfunct("FEMKernel:solveWithLapackMatrix", "Program terminating now...");
     }
     
     free_ivector(ipiv, 0, n-1);
@@ -5094,12 +5094,12 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (diag == NULL) {
-        errorfunct("backScaleLinearSystem", "Diag is a null pointer");
+        errorfunct("FEMKernel:backScaleLinearSystem", "Diag is a null pointer");
     }
     if (diagScaling != NULL) {
-        if (*sizeOfDiagScaling != n) errorfunct("backScaleLinearSystem", "Diag of wrong size");
+        if (*sizeOfDiagScaling != n) errorfunct("FEMKernel:backScaleLinearSystem", "Diag of wrong size");
     } else {
-        if (matContainers->sizeDiagScaling != n) errorfunct("backScaleLinearSystem", "Diag of wrong size");
+        if (matContainers->sizeDiagScaling != n) errorfunct("FEMKernel:backScaleLinearSystem", "Diag of wrong size");
     }
     
     if (b != NULL) {
@@ -5446,7 +5446,7 @@ static const int PRECOND_VANKA     =  560;
         return;
     }
     
-    NSLog(@"computeNodalWeightsInSolution: computing weights for solution to variable %@\n", intVarName);
+    NSLog(@"FEMKernel:computeNodalWeightsInSolution: computing weights for solution to variable %@\n", intVarName);
     m = solution.mesh.maxElementNodes;
     elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(elementNodes);
@@ -5457,7 +5457,7 @@ static const int PRECOND_VANKA     =  560;
     memset( weightsVarContainers->Values, 0.0, weightsVarContainers->sizeValues*sizeof(double) );
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:solution.mesh] == NO) errorfunct("computeNodalWeightsInSolution", "Allocation error in computeNodalWeightsInSolution!");
+    if ([integration allocation:solution.mesh] == NO) errorfunct("FEMKernel:computeNodalWeightsInSolution", "Allocation error in computeNodalWeightsInSolution!");
     
     elements = solution.mesh.getElements;
     nodes = solution.mesh.getNodes;
@@ -5497,7 +5497,7 @@ static const int PRECOND_VANKA     =  560;
     free(elementNodes);
     free_ivector(localIndexes, 0, m-1);
     
-    NSLog(@"computeNodalWeightsInSolution: all done");
+    NSLog(@"FEMKernel:computeNodalWeightsInSolution: all done");
 }
 
 -(void)condensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n force1:(double *)force1 {
@@ -6430,7 +6430,7 @@ static const int PRECOND_VANKA     =  560;
         _kernStiff = doublematrix(0, n-1, 0, n-1);
         _kernWork = doublevec(0, n-1);
         if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
-            errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
+            errorfunct("FEMKernel:dirichletBoundaryConditions", "Memory allocation error.");
         _size1kernStiff = n;
         _size2kernStiff = n;
         _sizekernWork = n;
@@ -6447,7 +6447,7 @@ static const int PRECOND_VANKA     =  560;
         _kernStiff = doublematrix(0, n-1, 0, n-1);
         _kernWork = doublevec(0, n-1);
         if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
-            errorfunct("dirichletBoundaryConditions", "Memory allocation error.");
+            errorfunct("FEMKernel:dirichletBoundaryConditions", "Memory allocation error.");
 
         _size1kernStiff = n;
         _size2kernStiff = n;
@@ -6943,9 +6943,9 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (isnan(norm) != 0 && norm > maxNorm) {
-        warnfunct("computeChange", "Computed norm:");
+        warnfunct("FEMKernel:computeChange", "Computed norm:");
         printf("%lf\n", norm);
-        errorfunct("computeChange", "Norm of solution has crossed given bounds.");
+        errorfunct("FEMKernel:computeChange", "Norm of solution has crossed given bounds.");
     }
     
     matContainers = solution.matrix.getContainers;
@@ -7052,9 +7052,9 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (steadyState == YES) {
-        NSLog(@"computeChange: SS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMKernel:computeChange: SS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
     } else {
-        NSLog(@"computeChange: NS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMKernel:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
     }
     
     // Only 1st order velocity computation is implemented so far...
@@ -7119,7 +7119,7 @@ static const int PRECOND_VANKA     =  560;
                     [str1 appendString:str2];
                     veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
                     if (veloVar != nil) {
-                        NSLog(@"computeChange: Computing variable: %@\n", str1);
+                        NSLog(@"FEMKernel:computeChange: computing variable: %@\n", str1);
                         containers = veloVar.getContainers;
                         for (i=0; i<n; i++) {
                             containers->Values[i] = (x[i] - x0[i]) / eps;
@@ -7157,10 +7157,10 @@ static const int PRECOND_VANKA     =  560;
     memset( dpar, 0.0, 50*sizeof(double) );
     
     if ((solution.solutionInfo)[@"linear system iteration method"] != nil) {
-        NSLog(@"iterativeSolveMatrix: using iterative method: %@\n", str);
+        NSLog(@"FEMKernel:iterativeSolveMatrix: using iterative method: %@\n", str);
         str = (solution.solutionInfo)[@"linear system iteration method"];
     } else {
-        NSLog(@"iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab\n");
+        NSLog(@"FEMKernel:iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab\n");
         str = @"bi-cgstab";
     }
     
@@ -7294,7 +7294,7 @@ static const int PRECOND_VANKA     =  560;
     
     work = doublematrix(0, n-1, 0, wsize-1);
     if (work == NULL) {
-        errorfunct("iterativeSolveMatrix", "Memory allocation error");
+        errorfunct("FEMKernel:iterativeSolveMatrix", "Memory allocation error");
     }
     
     if (all(x, '=', 0.0, varContainers->sizeValues) == true) {
@@ -7334,7 +7334,7 @@ static const int PRECOND_VANKA     =  560;
         if ((solution.solutionInfo)[@"linear system ilut tolerance"] != nil) {
             ilut_tol = [(solution.solutionInfo)[@"linear system ilut tolerance"] doubleValue];
         } else {
-            errorfunct("iterativeSolveMatrix", "Linear system ILUT tolerance not found.");
+            errorfunct("FEMKernel:iterativeSolveMatrix", "Linear system ILUT tolerance not found.");
         }
         pCondType = PRECOND_ILUT;
     }
@@ -7436,8 +7436,8 @@ static const int PRECOND_VANKA     =  560;
                 }
             } else {
                 if (pCondType == PRECOND_ILUN) {
-                    NSLog(@"iterativeSolveMatrix: no ILU preconditioner for band matrix format.\n");
-                    NSLog(@"iterativeSolveMatrix: using Diagonal preconditioner instead...\n");
+                    NSLog(@"FEMKernel:iterativeSolveMatrix: no ILU preconditioner for band matrix format.\n");
+                    NSLog(@"FEMKernel:iterativeSolveMatrix: using Diagonal preconditioner instead...\n");
                     pCondType = PRECOND_DIAGONAL;
                 }
             }
@@ -7499,11 +7499,11 @@ static const int PRECOND_VANKA     =  560;
     
     if (ipar[29] != 1 /*TODO: add support for parallel run*/) {
         if (ipar[29] == 3) {
-            errorfunct("iterativeSolveMatrix", "System diverged over tolerance.");
+            errorfunct("FEMKernel:iterativeSolveMatrix", "System diverged over tolerance.");
         } else if (abortNotConverged == YES) {
-            errorfunct("iterativeSolveMatrix", "Failed convergence tolerances.");
+            errorfunct("FEMKernel:iterativeSolveMatrix", "Failed convergence tolerances.");
         } else {
-            errorfunct("iterativeSolveMatrix", "Failed convergence tolerances.");
+            errorfunct("FEMKernel:iterativeSolveMatrix", "Failed convergence tolerances.");
         }
     }
     
@@ -7563,7 +7563,7 @@ static const int PRECOND_VANKA     =  560;
         }
         if (found == NO) {
             varContainers->NonLinValues = doublevec(0, n-1);
-            if (varContainers->NonLinValues == NULL) errorfunct("solveSystemMatrix", "Memory allocation error.");
+            if (varContainers->NonLinValues == NULL) errorfunct("FEMKernel:solveSystemMatrix", "Memory allocation error.");
             varContainers->sizeNonLinValues = n;
         }
         for (i=0; i<n; i++) {
@@ -7605,7 +7605,7 @@ static const int PRECOND_VANKA     =  560;
             st = cputime() - t0;
             rst = realtime() - rt0;
             
-            NSLog(@"solveSystemMatrix: solution time for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
+            NSLog(@"FEMKernel:solveSystemMatrix: solution time for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
             
             // TODO: Add support for cumulative timing
             
@@ -7815,7 +7815,7 @@ static const int PRECOND_VANKA     =  560;
     }
     if (isPassiveBC == YES) {
         [self getPassiveBoundaryAtIndex:passiveBCId model:model mesh:(FEMMesh *)model.mesh solution:solution];
-        NSLog(@"Passive element BC no. %d assigned to BC-ID no. %d\n", j, passiveBCId);
+        NSLog(@"FEMKernel:activateSolution: passive element bc no. %d assigned to bc-id no. %d.\n", j, passiveBCId);
     }
     
     // Get the correct type of solution: standard (single), coupled ot block

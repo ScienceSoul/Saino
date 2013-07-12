@@ -102,7 +102,7 @@
     }
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
     // Integration stuff
     if (bubbles == YES) {
         IP = GaussQuadrature(element, NULL, &element->Type.GaussPoints2);
@@ -635,7 +635,7 @@
     
     // Integration stuff
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("diffuseConvectiveBoundaryMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveBoundaryMatrix", "Allocation error in FEMNumericIntegration!");
     IP = GaussQuadrature(element, NULL, NULL);
 
     for (t=0; t<IP->n; t++) {

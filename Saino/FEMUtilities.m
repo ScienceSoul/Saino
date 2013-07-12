@@ -304,7 +304,7 @@
         if (found == NO) {
             element = NULL;
             if (foundNodes == NULL) {
-                NSLog(@"FEMUtils_interpolateQMesh: point %d was not found in any of the elements!\n", i);
+                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: point %d was not found in any of the elements!\n", i);
                 totFails++;
             }
             continue;
@@ -381,13 +381,13 @@
     
     if (foundNodes == NULL) {
         if (qTreeFails > 0) {
-            NSLog(@"FEMUtils_interpolateQMesh: number of points not found in quadtree: %d", qTreeFails);
+            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found in quadtree: %d", qTreeFails);
             if (totFails == 0) {
-                NSLog(@"FEMUtils_interpolateQMesh: all nodes still found by N^2 dummy search\n");
+                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: all nodes still found by N^2 dummy search\n");
             }
         }
         if (totFails > 0) {
-            NSLog(@"FEMUtils_interpolateQMesh: number of points not found: %d\n", totFails);
+            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found: %d\n", totFails);
         }
     }
     
@@ -584,7 +584,7 @@
     bodyID = element->BodyID;
     if (bodyID > 0 && bodyID <= aModel.numberOfBodies) {
         k = [(aModel.bodies)[bodyID][@"equation"] intValue];
-        if (k < 1 || k > aModel.numberOfEquations) errorfunct("checkEquationForElement", "Equation number not in range");
+        if (k < 1 || k > aModel.numberOfEquations) errorfunct("FEMUtilities:checkEquationForElement", "Equation number not in range");
         equation = (aModel.equations)[k];
         if (k > 0) flag = [listUtilities listGetLogical:aModel inArray:equation.valuesList forVariable:str info:&found];
     }
@@ -941,7 +941,7 @@
     newVariable.steadyConverged = -1;
     
     if (secondary != NULL) {
-        NSLog(@"Secondary: %@", name);
+        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", name);
         newVariable.secondary = *secondary;
     }
     if (aType != NULL) {
@@ -1474,7 +1474,7 @@
     detA = a[0][0] * a[1][1] - a[0][1] * a[1][0];
     
     if (detA == 0.0) {
-        errorfunct("solveLinearSystem2x2", "Singular matrix, bad!!!");
+        errorfunct("FEMUtilities:solveLinearSystem2x2", "Singular matrix, bad!!!");
         return;
     }
     
@@ -1614,11 +1614,11 @@
                 ind.location = -1;
             }
             ind1 = [str rangeOfString:@":"];
-            if (ind1.location == NSNotFound) errorfunct("appendNameFromString", "Missing separator ':' in variable definition using '[ ]' syntax.");
+            if (ind1.location == NSNotFound) errorfunct("FEMUtilities:appendNameFromString", "Missing separator ':' in variable definition using '[ ]' syntax.");
             if (j == 0) {
-                if (ind1.location < ind.location) errorfunct("appendNameFromString", "Syntax error in variable definition.");
+                if (ind1.location < ind.location) errorfunct("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
             } else {
-                if (ind1.location == 0) errorfunct("appendNameFromString", "Syntax error in variable definition.");
+                if (ind1.location == 0) errorfunct("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
             }
             i = (int)ind1.location + 1;
             while (1) {
@@ -1710,7 +1710,7 @@
                 
                 //TODO: app support for parallel run where in case of a parallel run
                 // the direct must be MUMPS
-                if ([str isEqualToString:@"mumps"] == YES) errorfunct("checkOptionsInSolution", "Currenly no serial version of the mumps solver implemented,");
+                if ([str isEqualToString:@"mumps"] == YES) errorfunct("FEMUtilities:checkOptionsInSolution", "Currenly no serial version of the mumps solver implemented,");
                 
                 if ([str isEqualToString:@"banded"] == YES) {
                     
@@ -1719,17 +1719,17 @@
                 } else if ([str isEqualToString:@"mumps"] == YES) {
                     
                 } else if ([str isEqualToString:@"superlu"] == YES) {
-                    errorfunct("checkOptionsInSolution", "SuperLU solver is not available.");
+                    errorfunct("FEMUtilities:checkOptionsInSolution", "SuperLU solver is not available.");
                 } else if ([str isEqualToString:@"pardiso"] == YES) {
-                    errorfunct("checkOptionsInSolution", "Pardiso solver is not available.");
+                    errorfunct("FEMUtilities:checkOptionsInSolution", "Pardiso solver is not available.");
                 } else if ([str isEqualToString:@"cholmod"] == YES || [str isEqualToString:@"spqr"] == YES) {
-                    errorfunct("checkOptionsInSolution", "Cholmod solver is not available.");
+                    errorfunct("FEMUtilities:checkOptionsInSolution", "Cholmod solver is not available.");
                 } else {
-                    errorfunct("checkOptionsInSolution", "Unknown direct solver method.");
+                    errorfunct("FEMUtilities:checkOptionsInSolution", "Unknown direct solver method.");
                 }
             } else {
                 //TODO: add support for parallel run since then it should be mumps by default.
-                NSLog(@"checkOptionsInSolution: setting the linear system direct method to %@\n", str);
+                NSLog(@"FEMUtilities:checkOptionsInSolution: setting the linear system direct method to %@\n", str);
                 [solution.solutionInfo setObject:@"umfpack" forKey:@"linear system direct method"];
             }
         }
@@ -1829,7 +1829,7 @@
                 }
                 if (found == NO) {
                     solution.order = 2;
-                    NSLog(@"addEquationBasicsToSolution: BDF order set by default to 2.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: bdf order set by default to 2.\n");
                 }
             } else if ([str isEqualToString:@"runge-kutta"]) {
                 minVal = 2;
@@ -1838,7 +1838,7 @@
                 if (found == NO) solution.order = 2;
             }
         } else {
-            NSLog(@"addEquationBasicsToSolution: time stepping method set by default to implicit Euler\n");
+            NSLog(@"FEMUtilities:addEquationBasicsToSolution: time stepping method set by default to implicit Euler\n");
             [solution.solutionInfo setObject:@"implicit euler" forKey:@"time stepping method"];
         }
     }
@@ -1909,13 +1909,13 @@
         // Load the plug-in bundle
         NSBundle *solutionBundle = [self loadBundle:solution.plugInName];
         if (solutionBundle == nil) {
-            NSLog(@"Error loading plug-in bundle.\n");
-            errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+            NSLog(@"FEMUtilities:addEquationBasicsToSolution: error loading plug-in bundle.\n");
+            errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
         }
         // Instantiate the plug-in principal class
         if ([solution instantiatePrincipalClassFromPlugIn:solutionBundle] == NO) {
-            NSLog(@"Error instanciating plug-in principal class.\n");
-            errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+            NSLog(@"FEMUtilities:addEquationBasicsToSolution: error instanciating plug-in principal class.\n");
+            errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
         }
     } else { // We are woking with a built-in solution computer
         solution.selector = @selector(fieldSolutionComputer::::);
@@ -1962,8 +1962,8 @@
                 k = [[[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)] intValue];
                 // If we get 0 then we are dealing with an invalid dof number
                 if (k == 0) {
-                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n",
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n",
                           [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
                 }
                 dofs = dofs + k;
@@ -1993,8 +1993,8 @@
                 dofs = [[[varName substringFromIndex:i] substringToIndex:j-i] intValue];
                 // If we get 0 then we are dealing with an invalid dof number
                 if (dofs == 0) {
-                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
                 varName = [varName substringFromIndex:j+1];
             }
@@ -2029,7 +2029,7 @@
             if ((solution.solutionInfo)[@"equation"] != nil) {
                 eq = (solution.solutionInfo)[@"equation"];
             } else {
-                errorfunct("addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
+                errorfunct("FEMUtilities:addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
             }
             found = NO;
             for (FEMEquation *equation in model.equations) {
@@ -2039,8 +2039,8 @@
                 }
             }
             if (found == NO) {
-                NSLog(@"addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation\n", varName);
-                errorfunct("addEquationBasicsToSolution", "Program terminating now...");
+                NSLog(@"FEMUtilities:addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation\n", varName);
+                errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
             }
             
             // Compute the size of the permutation vector
@@ -2192,8 +2192,8 @@
                 k = [[[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)] intValue];
                 // If we get 0 then we are dealing with an invalid dof number
                 if (k == 0) {
-                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n",
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n",
                           [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
                 }
                 dofs = dofs + k;
@@ -2226,8 +2226,8 @@
                 dofs = [[[varName substringFromIndex:i] substringToIndex:j-i] intValue];
                 // If we get 0 then we are dealing with an invalid dof number
                 if (dofs == 0) {
-                    NSLog(@"addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
                 varName = [varName substringFromIndex:j+1];
             }
@@ -2539,7 +2539,7 @@
         
         if ([(solution.solutionInfo)[@"calculate velocity"] boolValue] == YES || [(solution.solutionInfo)[@"nonlinear calculate velocity"] boolValue] == YES) {
             if (solution.timeOrder < 1) {
-                NSLog(@"addEquationToSolution: velocity computation implemented only for time-dependent equations\n");
+                NSLog(@"FEMUtilities:addEquationToSolution: velocity computation implemented only for time-dependent equations\n");
             } else if (solution.timeOrder == 1) {
                 str = [NSMutableString stringWithString:solution.variable.name];
                 [str appendString:@" velocity"];
@@ -2569,7 +2569,7 @@
         
         if ([(solution.solutionInfo)[@"calculate acceleration"] boolValue] == YES) {
             if (solution.timeOrder == 1) {
-                NSLog(@"addEquationToSolution: acceleration computation implemented only for 2nd order time equations\n");
+                NSLog(@"FEMUtilities:addEquationToSolution: acceleration computation implemented only for 2nd order time equations\n");
             } else if (solution.timeOrder >= 2) {
                 str = [NSMutableString stringWithString:solution.variable.name];
                 [str appendString:@" acceleration"];
@@ -2677,10 +2677,10 @@
                 found = [listUtilities listGetConstRealArray:model inArray:solution.valuesList forVariable:@"frequency" buffer:&freqv];
                 if (found == YES) {
                     if (freqv.m < n) {
-                        errorfunct("addEquationToSolution", "The solution option 'frequency' must be at least the same size as the Harmonic system values.");
+                        errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'frequency' must be at least the same size as the Harmonic system values.");
                     }
                 } else {
-                    errorfunct("addEquationToSolution", "The solution option 'fequency' must be given for harmonic analysis.");
+                    errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'fequency' must be given for harmonic analysis.");
                 }
             } else {
                 n = 1;
@@ -2769,7 +2769,7 @@
                     if (mgAlgebraic == YES) {
                         mgLevels = 10;
                     } else {
-                        errorfunct("addEquationToSolution", "'mg levels' must be defined for geometric multigrid.");
+                        errorfunct("FEMUtilities:addEquationToSolution", "'mg levels' must be defined for geometric multigrid.");
                     }
                 }
             }

@@ -156,7 +156,7 @@
             }
             break;
         default:
-            errorfunct("bdfLocal", "Invalid order BDF.");
+            errorfunct("FEMTimeIntegration:bdfLocalInSolution", "Invalid order BDF.");
             break;
     }
 }

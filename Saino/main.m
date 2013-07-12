@@ -8,14 +8,22 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "FEMJob.h"
+
 int main(int argc, char *argv[])
 {
     
-    @autoreleasepool {
-        
-        return NSApplicationMain(argc, (const char **)argv);
+//    @autoreleasepool {
+//        
+//        return NSApplicationMain(argc, (const char **)argv);
+//    
+//    }
     
-    }
-
+    int initialize = 0;
+    
+    NSLog(@"Test Saino starting...\n");
+    FEMJob *job = [[FEMJob alloc] init];
+    [job runWithInitialize:initialize];
+    
     return 0;
 }

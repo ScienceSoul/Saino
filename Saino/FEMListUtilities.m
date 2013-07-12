@@ -66,8 +66,8 @@
         if ([[[string substringFromIndex:l0] substringToIndex:l1-l0] isEqualToString:@"coordinate"] == NO) {
             variable = [utilities getVariableFrom:model.variables model:model name:[[string substringFromIndex:l0] substringToIndex:l1-l0] onlySearch:NULL maskName:NULL info:&found];
             if (variable == nil) {
-                NSLog(@"listParseStrToValues: can't find indpendent variable: %@ for dependent variable %@\n", str, name);
-                errorfunct("listParseStrToValues", "Abort...");
+                NSLog(@"FEMListUtilities:listParseStrToValues: can't find indpendent variable: %@ for dependent variable %@\n", str, name);
+                errorfunct("FEMListUtilities:listParseStrToValues", "Abort...");
             }
             varContainers = variable.getContainers;
             if (varContainers->sizeValues > 1) *allGlobal = NO;
@@ -212,8 +212,8 @@
             
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"listGetReal: fValues not allocated in list: %@\n", varName);
-                errorfunct("listGetReal", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetReal: fValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
             }
             
             if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
@@ -226,8 +226,8 @@
                 }
             } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 if (containers->tValues == NULL) {
-                    NSLog(@"listGetReal: tValues not allocated in list: %@\n", varName);
-                    errorfunct("listGetReal", "Program terminating now...");
+                    NSLog(@"FEMListUtilities:listGetReal: tValues not allocated in list: %@\n", varName);
+                    errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
                 }
                 utilities = [[FEMUtilities alloc] init];
                 buffer = doublevec(0, containers->sizeTValues-1);
@@ -264,17 +264,17 @@
     
     if (minv != NULL) {
         if (min_array(result->vector, n) < *minv) {
-            warnfunct("listGetReal", "Value smaller than given value:");
+            warnfunct("FEMListUtilities:listGetReal", "Value smaller than given value:");
             printf("Value: %f / Given value: %f / Property: %s\n", min_array(result->vector, n), *minv, [varName UTF8String]);
-            errorfunct("listGetReal", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
         }
     }
     
     if (maxv != NULL) {
         if (max_array(result->vector, n) > *maxv) {
-            warnfunct("listGetReal", "Value greater than given value:");
+            warnfunct("FEMListUtilities:listGetReal", "Value greater than given value:");
             printf("Value: %f / Given value: %f / Property: %s\n", max_array(result->vector, n), *minv, [varName UTF8String]);
-            errorfunct("listGetReal", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
         }
     }
     
@@ -300,8 +300,8 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"listGetRealArray: fValues not allocated in list: %@\n", varName);
-                errorfunct("listGetRealArray", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetRealArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetRealArray", "Program terminating now...");
             }
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
@@ -370,8 +370,8 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"listGetConstReal: fValues not allocated in list: %@\n", varName);
-                errorfunct("listGetConstReal", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetConstReal: fValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
             }
             
             if ([list type] >= 8) {
@@ -394,17 +394,17 @@
     
     if (minv != NULL) {
         if (f < *minv) {
-            warnfunct("listGetConstReal", "Value smaller than given value:");
+            warnfunct("FEMListUtilities:listGetConstReal", "Value smaller than given value:");
             printf("Value: %f / Given value: %f / Property: %s\n", f, *minv, [varName UTF8String]);
-            errorfunct("listGetConstReal", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
         }
     }
     
     if (maxv != NULL) {
         if (f > *maxv) {
-            warnfunct("listGetConstReal", "Value greater than given value:");
+            warnfunct("FEMListUtilities:listGetConstReal", "Value greater than given value:");
             printf("Value: %f / Given value: %f / Property: %s\n", f, *minv, [varName UTF8String]);
-            errorfunct("listGetConstReal", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
         }
     }
     
@@ -429,8 +429,8 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"listGetConstRealArray: fValues not allocated in list: %@\n", varName);
-                errorfunct("listGetConstRealArray", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetConstRealArray: fValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetConstRealArray", "Program terminating now...");
             }
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
@@ -478,8 +478,8 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
-                NSLog(@"listGetIntegerArray: iValues not allocated in list: %@\n", varName);
-                errorfunct("listGetIntegerArray", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetIntegerArray: iValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetIntegerArray", "Program terminating now...");
             }
             n = containers->sizeIValues;
             
@@ -522,8 +522,8 @@
         if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
-                NSLog(@"listGetInteger: iValues not allocated in list: %@\n", varName);
-                errorfunct("listGetInteger", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetInteger: iValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
             }
             // TODO: implement the call of a user provided method if required
             
@@ -535,17 +535,17 @@
     
     if (minv != NULL) {
         if (l < *minv) {
-            warnfunct("listGetInteger", "Value smaller than given value:");
+            warnfunct("FEMListUtilities:listGetInteger", "Value smaller than given value:");
             printf("Value: %d / Given value: %d / Property: %s\n", l, *minv, [varName UTF8String]);
-            errorfunct("listGetInteger", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
         }
     }
     
     if (maxv != NULL) {
         if (l > *maxv) {
-            warnfunct("listGetInteger", "Value greater than given value:");
+            warnfunct("FEMListUtilities:listGetInteger", "Value greater than given value:");
             printf("Value: %d / Given value: %d / Property: %s\n", l, *minv, [varName UTF8String]);
-            errorfunct("listGetInteger", "Program terminating now...");
+            errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
         }
     }
 
@@ -623,14 +623,14 @@
             
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"listGetDerivativeValue: fValues not allocated in list: %@\n", varName);
-                errorfunct("listGetDerivativeValue", "Program terminating now...");
+                NSLog(@"FEMListUtilities:listGetDerivativeValue: fValues not allocated in list: %@\n", varName);
+                errorfunct("FEMListUtilities:listGetDerivativeValue", "Program terminating now...");
             }
             
             if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                  if (containers->tValues == NULL) {
-                     NSLog(@"listGetDerivativeValue: tValues not allocated in list: %@\n", varName);
-                     errorfunct("listGetDerivativeValue", "Program terminating now...");
+                     NSLog(@"FEMListUtilities:listGetDerivativeValue: tValues not allocated in list: %@\n", varName);
+                     errorfunct("FEMListUtilities:listGetDerivativeValue", "Program terminating now...");
                  }
                  utilities = [[FEMUtilities alloc] init];
                  variable = [utilities getVariableFrom:model.variables model:model name:list.dependName onlySearch:NULL maskName:nil info:&stat];
@@ -650,7 +650,7 @@
                  }
                  free_dvector(buffer, 0, containers->sizeTValues-1);
              } else {
-                 NSLog(@"listGetDerivativeValue: no automated derivation possible for %@\n", varName);
+                 NSLog(@"FEMListUtilities:listGetDerivativeValue: no automated derivation possible for %@\n", varName);
              }
             
             found = YES;

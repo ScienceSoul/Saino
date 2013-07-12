@@ -52,7 +52,7 @@
         _pyramidFaceMap = intmatrix(0, 4, 0, 3);
         _pyramidFaceEdgeMap = intmatrix(0, 4, 0, 3);
         
-        NSLog(@"FEMPElementMaps: Initalizing mappings for elements...\n");
+        NSLog(@"FEMPElementMaps:FEMPElementMaps: initalizing mappings for elements...\n");
         
         // Quad edge mappings
         _quadEdgeMap[0][0] = 0; _quadEdgeMap[0][1] = 1;
@@ -297,8 +297,8 @@
     localEdge = _brickFaceEdgeMap[face][node];
     
     if (localEdge < 0) {
-        printf("Unknown combination node for (face,node): %d %d.\n", face, node);
-        errorfunct("getBrickFaceEdgeMap", "Terminating now!!!");
+        NSLog(@"FEMPElementMaps:getBrickFaceEdgeMap: unknown combination node for (face,node): %d %d.\n", face, node);
+        errorfunct("FEMPElementMaps:getBrickFaceEdgeMap", "Terminating now!!!");
     }    
     return localEdge;
 }
@@ -325,7 +325,7 @@
             }
             break;
         default:
-            errorfunct("getTetraEdgeMap", "Unknown tetra type.");
+            errorfunct("FEMPElementMaps:getTetraEdgeMap", "Unknown tetra type.");
             break;
     }
 }
@@ -351,7 +351,7 @@
             }
             break;
         default:
-            errorfunct("getTetraFaceMap", "Unknown tetra type.");
+            errorfunct("FEMPElementMaps:getTetraFaceMap", "Unknown tetra type.");
             break;
     }
 }
@@ -410,7 +410,7 @@
     int n;
     
     if ([self isPElement:element] == NO) {
-        NSLog(@"getRefPElementNodesForElement: Element given not a p element!\n");
+        NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: element given not a p element!\n");
         return;
     }
     
@@ -452,7 +452,7 @@
             w[0] = -1.0; w[1] = -1.0; w[2] = -1.0; w[3] = -1.0; w[4] = 1.0; w[5] = 1.0; w[6] = 1.0; w[7] = 1.0;
             break;
         default:
-            NSLog(@"getRefPElementNodesForElement: Unknown element type.\n");
+            NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: unknown element type.\n");
             break;
     }
 }
@@ -471,7 +471,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"getFaceMapForElement: Element is not a p element.");
+        NSLog(@"FEMPElementMaps:getFaceMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -486,7 +486,7 @@
                     map = _tetraFaceMap2;
                     break;
                 default:
-                    errorfunct("getFaceMapForElement", "Unknown tetra type for p element.");
+                    errorfunct("FEMPElementMaps:getFaceMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -500,7 +500,7 @@
             map = _brickFaceMap;
             break;
         default:
-            errorfunct("getFaceMapForElement", "Unsupported element type.");
+            errorfunct("FEMPElementMaps:getFaceMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -519,7 +519,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"getEdgeMapForElement: Element is not a p element.");
+        NSLog(@"FEMPElementMaps:getEdgeMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -540,7 +540,7 @@
                     map = _tetraEdgeMap2;
                     break;
                 default:
-                     errorfunct("getEdgeMapForElement", "Unknown tetra type for p element.");
+                     errorfunct("FEMPElementMaps:getEdgeMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -554,7 +554,7 @@
             map =_brickEdgeMap;
             break;
         default:
-            errorfunct("getEdgeMapForElement", "Unsupported element type.");
+            errorfunct("FEMPElementMaps:getEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -573,7 +573,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"getFaceEdgeMapForElement: Element is not a p element.");
+        NSLog(@"FEMPElementMaps:getFaceEdgeMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -588,7 +588,7 @@
                     map = _tetraFaceEdgeMap2;
                     break;
                 default:
-                    errorfunct("getFaceEdgeMapForElement", "Unknown tetra type for p element.");
+                    errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -602,7 +602,7 @@
             map =_brickFaceEdgeMap;
             break;
         default:
-            errorfunct("getFaceEdgeMapForElement", "Unsupported element type.");
+            errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -629,7 +629,7 @@
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"getBoundaryMapForElement: element not p element.");
+        NSLog(@"FEMPElementMaps:getBoundaryMapForElement: element not p element.");
         return;
     }
     
@@ -653,7 +653,7 @@
             [self getBrickFaceMap:map index:i];
             break;
         default:
-            errorfunct("getBoundaryMapForElement", "Unsupported element type.");
+            errorfunct("FEMPElementMaps:getBoundaryMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -673,7 +673,7 @@
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"getFaceEdgeMapForElement: element not p element.");
+        NSLog(@"FEMPElementMaps:getFaceEdgeMapForElement: element not p element.");
         return;
     }
     
@@ -691,7 +691,7 @@
                     }
                     break;
                 default:
-                    errorfunct("getFaceEdgeMapForElement", "Unknown tetra type.");
+                    errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type.");
                     break;
             }
             break;
@@ -711,7 +711,7 @@
             }
             break;
         default:
-            errorfunct("getFaceEdgeMapForElement", "Unsupported element type.");
+            errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -770,7 +770,7 @@
             if (p >= 4) faceDofs = (p-2)*(p-3)/2;
             break;
         default:
-            NSLog(@"getFaceDofsForElement: Unsupported p element type.");
+            NSLog(@"FEMPElementMaps:getFaceDofsForElement: unsupported p element type.");
             faceDofs = p;
             break;
     }
@@ -809,7 +809,7 @@
     Element_t *edges;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"getEdgePForElement: element not p element");
+        NSLog(@"FEMPElementMaps:getEdgePForElement: element not p element");
         return edgep = 0;
     }
     
@@ -870,7 +870,7 @@
     int bubbleDofs;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"getBubbleDofsForElement: element not p element");
+        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element");
         return bubbleDofs = 0;
     }
     
@@ -911,7 +911,7 @@
     int edgep, facep, bubblep, nb, maxp;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"getNumberOfGaussPointsForElement: element not p element.");
+        NSLog(@"FEMPElementMaps:getNumberOfGaussPointsForElement: element not p element.");
         return 0;
     }
     

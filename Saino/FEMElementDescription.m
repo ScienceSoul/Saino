@@ -1470,7 +1470,7 @@
     work = doublevec(0, (16*n)-1);
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:mesh] == NO) errorfunct("computeStabilizationParameter", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:mesh] == NO) errorfunct("FEMElementDescription:computeStabilizationParameter", "Allocation error in FEMNumericIntegration!");
     
     if (element->Type.BasisFunctionDegree <= 1) {
         switch (element->Type.ElementCode) {
@@ -1590,9 +1590,9 @@
     lwork = 12*n;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
-        warnfunct("computeStabilizationParameter", "Error in lapack routine dsygv. Error code:");
+        warnfunct("FEMElementDescription:computeStabilizationParameter", "Error in lapack routine dsygv. Error code:");
         printf("%d\n", info);
-        errorfunct("computeStabilizationParameter", "Program terminating now...");
+        errorfunct("FEMElementDescription:computeStabilizationParameter", "Program terminating now...");
     }
     mk = eigr[n-2];
         
@@ -1648,9 +1648,9 @@
     }
     
     if (element == NULL) {
-        errorfunct("getElementType", "Element type code not found:");
+        errorfunct("FEMElementDescription:getElementType", "Element type code not found:");
         printf("%d\n", code);
-        errorfunct("getElementType", "Ignoring element.");
+        errorfunct("FEMElementDescription:getElementType", "Ignoring element.");
         return NULL;
     }
     
@@ -2198,7 +2198,7 @@
             z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
             break;
         default:
-            errorfunct("checkNormalDirectionInBDElement", "Invalid element code for parent element.");
+            errorfunct("FEMElementDescription:checkNormalDirectionInBDElement", "Invalid element code for parent element.");
             break;
     }
     
@@ -2295,7 +2295,7 @@
             normals[2] = (dxdu * dydv - dxdv * dydu) * detA;
             
         default:
-            errorfunct("nomalVectorForBDElement", "Invalid dimension for determining normal!");
+            errorfunct("FEMElementDescription:nomalVectorForBDElement", "Invalid dimension for determining normal!");
             break;
     }
     
@@ -2455,7 +2455,7 @@
     if (converged == NO) {
         if (err > sqrt(acc)) {
             if (i >= maxIter) {
-                NSLog(@"globalToLocalFromElement: did not converge\n");
+                NSLog(@"FEMElementDescription:globalToLocalFromElement: did not converge\n");
                 NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
                 NSLog(@"err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
                 NSLog(@"delta, %f %f %f\n", delta[0], delta[1], delta[2]);
@@ -2477,7 +2477,7 @@
                 }
                 printf("\n");
             } else {
-                NSLog(@"globalToLocalFromElement: node may be out of element.");
+                NSLog(@"FEMElementDescription:globalToLocalFromElement: node may be out of element.");
                 NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
             }
         }

@@ -19,7 +19,6 @@
     if (self) {
         //TODO: Initialize here
         _valuesList = [[NSMutableArray alloc] init];
-        
     }
     
     return self;

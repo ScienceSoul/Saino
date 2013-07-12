@@ -285,7 +285,7 @@
             break;
             
         default:
-            errorfunct("Method setElementMetric", "Dimension not supported!!");
+            errorfunct("FEMNumericIntegration:setMetricForElement", "Dimension not supported!!");
             break;
     }
     
@@ -423,7 +423,7 @@
         case 1:  // Line elements
             detG = self.covariantMetrixTensor[1][1];
             if (detG <= 0.0) {
-                errorfunct("ElementMetric", "Degenerate 1D element");
+                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 1D element");
             }
             break;
             
@@ -431,9 +431,9 @@
             detG = ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {
-                    warnfunct("ElementMetric", "2D element in 1D coordinate systrem?");
+                    warnfunct("FEMNumericIntegration:detJForElement", "2D element in 1D coordinate systrem?");
                 }
-                errorfunct("ElementMetric", "Degenerate 2D element");
+                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 2D element");
             }
             break;
             
@@ -441,14 +441,14 @@
             detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] ) + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] ) + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {
-                    warnfunct("ElementMetric", "2D/3D element in 1D/2D coordinate systrem?");
+                    warnfunct("FEMNumericIntegration:detJForElement", "2D/3D element in 1D/2D coordinate systrem?");
                 }
-                errorfunct("ElementMetric", "Degenerate 3D element");
+                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 3D element");
             }
             break;
             
         default:
-            errorfunct("detJ", "Dimension not supported!!");
+            errorfunct("FEMNumericIntegration:detJForElement", "Dimension not supported!!");
             break;
     }
     free_dmatrix(dLBasisdx, 0, n-1, 0, 2);
@@ -573,7 +573,7 @@
             break;
 
         default:
-            errorfunct("globalSecondDerivatives", "Coordinate dimension not supported!!");
+            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Coordinate dimension not supported!!");
             break;
     }
     
@@ -641,7 +641,7 @@
             break;
             
         default:
-            errorfunct("globalSecondDerivatives", "Element dimension not supported");
+            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
             break;
     }
     
@@ -702,7 +702,7 @@
             break;
             
         default:
-            errorfunct("globalSecondDerivatives", "Element dimension not supported");
+            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
             break;
     }
     

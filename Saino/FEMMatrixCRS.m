@@ -553,11 +553,11 @@
     matrixArraysContainer *matContainers = NULL;
     
     if (solution == nil && matrix == nil) {
-        NSLog(@"fctlLowOrderInGlobal: no matrix available. At least of the method argumens should be non-nil\n");
+        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least of the method argumens should be non-nil\n");
         return;
     }
     
-    NSLog(@"fctlLowOrderInGlobal: making low order FCT correction to matrix\n");
+    NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: making low order FCT correction to matrix\n");
     
     if (solution != nil) {
         matContainers = solution.matrix.getContainers;
@@ -595,7 +595,7 @@
             }
             
             if (found == NO) {
-                NSLog(@"fctlLowOrderInGlobal: entry not found, matrix might not be symmetric\n");
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: entry not found, matrix might not be symmetric\n");
                 continue;
             }
             
@@ -611,9 +611,9 @@
             }
             
             if (NO) {
-                NSLog(@"ij: %d %d %d %d\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
-                NSLog(@"Diag: %d %d\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
-                NSLog(@"A: %f %f %f %f\n", aij, aji, aii, dij);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f\n", aij, aji, aii, dij);
             }
             
             // Equation (32) in Kuzmin's paper
@@ -733,8 +733,8 @@
     }
     
     if (aContainers->Cols[n] < 0) {
-        printf("makeMatrixIndex: trying to access non-existent column: %d, %d\n", n, aContainers->Cols[n]);
-        errorfunct("makeMatrixIndex", "Programm terminating now...\n");
+        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d\n", n, aContainers->Cols[n]);
+        errorfunct("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
     
     aContainers->Cols[n] = j;

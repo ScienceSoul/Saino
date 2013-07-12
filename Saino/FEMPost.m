@@ -100,7 +100,7 @@
     
     mesh = (FEMMesh *)model.mesh;
     if (mesh.savesDone == 0) {
-        NSLog(@"writeElmerPostFile: Saving results in ElmerPost format to file %@\n", postFile);
+        NSLog(@"FEMPost:writeElmerPostFile: saving results in ElmerPost format to file %@\n", postFile);
     }
     
     fileManager = [NSFileManager defaultManager];
@@ -114,7 +114,7 @@
                 if ([fileManager createFileAtPath:outputPath contents:nil attributes:nil] == YES) {
                     postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
                 } else {
-                    errorfunct("writeElmerPostFile", "Can't create post file.");
+                    errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
                 }
             } else {
                 if (*append == YES && mesh.savesDone != 0) {
@@ -129,7 +129,7 @@
                 if ([fileManager createFileAtPath:postFile contents:nil attributes:nil] == YES) {
                     postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
                 } else {
-                    errorfunct("writeElmerPostFile", "Can't create post file.");
+                    errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
                 }
             } else {
                  if (*append == YES && mesh.savesDone != 0) {
@@ -145,7 +145,7 @@
             if ([fileManager createFileAtPath:postFile contents:nil attributes:nil] == YES) {
                 postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
             } else {
-                errorfunct("writeElmerPostFile", "Can't create post file.");
+                errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
             }
         } else {
             if (*append == YES && mesh.savesDone != 0) {
@@ -164,20 +164,20 @@
                 [outputPath appendString:@"/"];
                 [outputPath appendString:resultFile];
                 if ([fileManager fileExistsAtPath:outputPath] == NO) {
-                    errorfunct("writeElmerPostFile", "Result file does not exist.");
+                    errorfunct("FEMPost:writeElmerPostFile", "Result file does not exist.");
                 } else {
                     reader = [[FileReader alloc] initWithFilePath:outputPath];
                 }
             } else {
                 if ([fileManager fileExistsAtPath:resultFile] == NO) {
-                    errorfunct("writeElmerPostFile", "Result file does not exist.");
+                    errorfunct("FEMPost:writeElmerPostFile", "Result file does not exist.");
                 } else {
                     reader = [[FileReader alloc] initWithFilePath:resultFile];
                 }
             }
         } else {
             if ([fileManager fileExistsAtPath:resultFile] == NO) {
-                errorfunct("writeElmerPostFile", "Result file does not exist.");
+                errorfunct("FEMPost:writeElmerPostFile", "Result file does not exist.");
             } else {
                 reader = [[FileReader alloc] initWithFilePath:resultFile];
             }
@@ -210,7 +210,7 @@
         }
     }
     if (maskExists == YES) {
-        NSLog(@"writeElmerPostFile: Using %@ as mask variable\n", str);
+        NSLog(@"FEMPost:writeElmerPostFile: using %@ as mask variable\n", str);
         numberOfNodes = max_array(maskVarContainers->Perm, maskVarContainers->sizePerm);
         maskOrder = intvec(0, numberOfNodes);
         for (i=0; maskVarContainers->sizePerm; i++) {
@@ -290,11 +290,11 @@
                             ind.location = -1;
                         }
                         ind1 = [str rangeOfString:@":"];
-                        if (ind1.location == NSNotFound) errorfunct("writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
+                        if (ind1.location == NSNotFound) errorfunct("FEMPost:writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
                         if (j == 0) {
-                            if (ind1.location < ind.location) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                            if (ind1.location < ind.location) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                         } else {
-                            if (ind1.location == 0) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                            if (ind1.location == 0) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                         }
                         i = (int)ind1.location + 1;
                         while (1) {
@@ -401,11 +401,11 @@
                                 ind.location = -1;
                             }
                             ind1 = [str rangeOfString:@":"];
-                            if (ind1.location == NSNotFound) errorfunct("writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
+                            if (ind1.location == NSNotFound) errorfunct("FEMPost:writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
                             if (j == 0) {
-                                if (ind1.location < ind.location) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                                if (ind1.location < ind.location) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                             } else {
-                                if (ind1.location == 0) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                                if (ind1.location == 0) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                             }
                             i = (int)ind1.location + 1;
                             while (1) {
@@ -871,11 +871,11 @@
                                     ind.location = -1;
                                 }
                                 ind1 = [str rangeOfString:@":"];
-                                if (ind1.location == NSNotFound) errorfunct("writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
+                                if (ind1.location == NSNotFound) errorfunct("FEMPost:writeElmerPostFile", "Missing separator ':' in variable definition using '[ ]' syntax.");
                                 if (j == 0) {
-                                    if (ind1.location < ind.location) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                                    if (ind1.location < ind.location) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                                 } else {
-                                    if (ind1.location == 0) errorfunct("writeElmerPostFile", "Syntax error in variable definition.");
+                                    if (ind1.location == 0) errorfunct("FEMPost:writeElmerPostFile", "Syntax error in variable definition.");
                                 }
                                 l = (int)ind1.location + 1;
                                 while (1) {

@@ -185,7 +185,7 @@
     
     // Get element info
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("jouleHeatElement", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMDifferentials:jouleHeatElement", "Allocation error in FEMNumericIntegration!");
     stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
@@ -216,7 +216,7 @@
     
     found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"electrical conductivity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
     if (found == YES) {
-        NSLog(@"jouleHeatElement: use electrical conductivity instead of electric\n");
+        NSLog(@"FEMDifferentials:jouleHeatElement: use electrical conductivity instead of electric\n");
     } else {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"electric conductivity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
     }

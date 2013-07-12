@@ -35,7 +35,7 @@
     containers->ILUDiag = intvec(0, n-1);
     
     if (containers->ILURows == NULL || containers->ILUDiag == NULL) {
-        errorfunct("FEMPrecondition_initializeILU1", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_initializeILU1", "Memory allocation error.");
     }
     
     // Count fills row by row
@@ -66,7 +66,7 @@
     
     containers->ILUCols = intvec(0, nonZeros-1);
     if (containers->ILUCols == NULL) {
-        errorfunct("FEMPrecondition_initializeILU1", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_initializeILU1", "Memory allocation error.");
     }
     
     // Update row nonzero structures
@@ -124,7 +124,7 @@
     
     iWork = intvec(0, k-1);
     if (iWork == NULL) {
-        errorfunct("FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
     }
     for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
         iWork[j] = matContainers->ILUCols[j];
@@ -135,7 +135,7 @@
     
     cWork = doublevec(0, k-1);
     if (cWork == NULL) {
-        errorfunct("FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_ilutWorkspaceCheckMatrix", "Memory allocation error.");
     }
     for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
         cWork[j] = matContainers->ILUValues[j];
@@ -163,7 +163,7 @@
     
     iWork = intvec(0, k-1);
     if (iWork == NULL) {
-        errorfunct("FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
     }
     for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
         iWork[j] = matContainers->ILUCols[j];
@@ -173,7 +173,7 @@
     
     cWork = cdoublevec(0, k-1);
     if (cWork == NULL) {
-        errorfunct("FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_ilutComplexWorkspaceCheckMatrix", "Memory allocation error.");
     }
     for (j=0; j<=matContainers->ILURows[i+1]-1; j++) {
         cWork[j] = matContainers->CILUValues[j];
@@ -205,7 +205,7 @@
     matContainers->ILURows = intvec(0, (n+1)-1);
     matContainers->ILUDiag = intvec(0, n-1);
     if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
-        errorfunct("FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILURows = n+1;
     matContainers->sizeILUDiag = n;
@@ -213,7 +213,7 @@
     matContainers->ILUCols = intvec(0, (WORKN*n)-1);
     matContainers->ILUValues = doublevec(0, (WORKN*n)-1);
     if (matContainers->ILUCols == NULL || matContainers->ILUValues == NO) {
-        errorfunct("FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_computeIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILUCols = WORKN*n;
     matContainers->sizeILUValues = WORKN*n;
@@ -319,7 +319,7 @@
     matContainers->ILURows = intvec(0, (n+1)-1);
     matContainers->ILUDiag = intvec(0, n-1);
     if (matContainers->ILURows == NULL || matContainers->ILUDiag == NULL) {
-        errorfunct("FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILURows = n+1;
     matContainers->sizeILUDiag = n;
@@ -327,7 +327,7 @@
     matContainers->ILUCols = intvec(0, (WORKN*n)-1);
     matContainers->CILUValues = cdoublevec(0, (WORKN*n)-1);
     if (matContainers->ILUCols == NULL || matContainers->CILUValues == NULL) {
-        errorfunct("FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:FEMPrecondition_computeComplexIlutMatrix", "Memory allocation error.");
     }
     matContainers->sizeILUCols = WORKN*n;
     matContainers->sizeCILUValues = WORKN*n;
@@ -764,7 +764,7 @@
     }
     matContainers->ILUValues = doublevec(0, matContainers->ILURows[(n+1)-1]-1);
     if (matContainers->ILUValues == NULL) {
-        errorfunct("initializeILUMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:initializeILUMatrix", "Memory allocation error.");
     }
     matContainers->sizeILUValues = matContainers->ILURows[(n+1)-1]-1;
 }
@@ -848,7 +848,7 @@
     }
     matContainers->CILUValues = cdoublevec(0, matContainers->ILURows[(n/2+1)-1]);
     if (matContainers->CILUValues == NULL) {
-        errorfunct("initializeCILUMatrix", "Memory allocation error.");
+        errorfunct("FEMPrecondition:initializeCILUMatrix", "Memory allocation error.");
     }
     matContainers->sizeCILUValues = matContainers->ILURows[(n/2+1)-1];
 }
@@ -878,7 +878,7 @@
     
     matContainers = matrix.getContainers;
     
-    errorfunct("CRSIncompleteLUMatrix", "ILU (Real). Starting factorization with order:", ilun);
+    errorfunct("FEMPrecondition:CRSIncompleteLUMatrix", "ILU (Real). Starting factorization with order:", ilun);
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -972,7 +972,7 @@
     
     matContainers = matrix.getContainers;
     
-    errorfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Starting factorization with order:", ilun);
+    errorfunct("FEMPrecondition:CRSComplexIncompleteLUMatrix", "ILU (Complex), Starting factorization with order:", ilun);
     t = cputime();
     
     n = matrix.numberOfRows;

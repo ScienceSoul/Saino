@@ -134,7 +134,7 @@ static char *_parallel_extensions[] = {
     if (self.parallel) {
         cacheNode *retval = [self SIOMeshAgent_searchNode:address];
         if (retval == NULL) {
-            NSLog(@"SIOMeshAgent_copyCoords: Partition error: something is going totally wrong. Address: %d\n", address);
+            NSLog(@"SIOMeshAgent:SIOMeshAgent_copyCoords: partition error: something is going totally wrong. Address: %d\n", address);
             found = 0;
         } else {
             target[0] = retval->x;
@@ -236,7 +236,7 @@ static char *_parallel_extensions[] = {
     j = 0;
     while ((line = [reader readLine])) {
         lineCount++;
-        NSLog(@"%3.d: %@", lineCount, line);
+        NSLog(@"SIOMeshAgent:openMesh: %3.d: %@", lineCount, line);
         // Parse the line
         NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
         NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
@@ -423,7 +423,7 @@ static char *_parallel_extensions[] = {
     }
     for (i=0; i<elNodes; i++) {
         if (![self SIOMeshAgent_copyCoords:coord+i*3 address:nodes[i]]) {
-            NSLog(@"readNextElementCoordinates: Error! Program terminating.");
+            NSLog(@"SIOMeshAgent:readNextElementCoordinates: error! Program terminating now...");
             exit(14);
         }
     }
@@ -552,7 +552,7 @@ static char *_parallel_extensions[] = {
     
     cacheNode *retval = [self SIOMeshAgent_searchNode:*tag];
     if (retval == NULL) {
-        NSLog(@"readSharedNode: Partition error: something is going totally wrong. Address: %d\n", *tag);
+        NSLog(@"SIOMeshAgent:readSharedNode: partition error: something is going totally wrong. Address: %d\n", *tag);
         exit(23);
     } else {
         *constraint = retval->constraint;

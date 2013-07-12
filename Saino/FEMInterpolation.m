@@ -297,7 +297,7 @@
             break;
             
         default:
-            NSLog(@"isPointInElement: element code %d not implemented.", element->Type.ElementCode);
+            NSLog(@"FEMInterpolation:isPointInElement: element code %d not implemented.", element->Type.ElementCode);
             break;
     }
     
@@ -633,10 +633,10 @@
         quadrant->elements[i] = i;
     }
     
-    NSLog(@"buildQuadrantTreeForMesh: Start...\n");
+    NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Start...\n");
     motherQuadrant = quadrant;
     [self createChildQuadrantFromMother:motherQuadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElements generation:&generation];
-    NSLog(@"buildQuadrantTreeForMesh: Ready.\n");
+    NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Ready.\n");
 }
 
 @end
