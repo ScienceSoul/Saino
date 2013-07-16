@@ -431,7 +431,7 @@
             detG = ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {
-                    warnfunct("FEMNumericIntegration:detJForElement", "2D element in 1D coordinate systrem?");
+                    NSLog(@"FEMNumericIntegration:detJForElement: 2D element in 1D coordinate systrem?\n");
                 }
                 errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 2D element");
             }
@@ -441,7 +441,7 @@
             detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] ) + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] ) + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
             if (detG <= 0.0) {
                 if (cdim < dim) {
-                    warnfunct("FEMNumericIntegration:detJForElement", "2D/3D element in 1D/2D coordinate systrem?");
+                    NSLog(@"FEMNumericIntegration:detJForElement: 2D/3D element in 1D/2D coordinate systrem?\n");
                 }
                 errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 3D element");
             }

@@ -265,8 +265,7 @@
         }
         k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
         if (k < 0) {
-            warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
-            printf("%d %d %f\n", i, j, value);
+            NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f\n", i, j, value);
             return;
         }
         k = k + matContainers->Rows[i];
@@ -302,8 +301,7 @@
             buffer[ii] = matContainers->Cols[ii];
         }
         k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
-        if (k < 0 && value != 0) warnfunct("addToMatrixElement", "Trying to add value to non existent element:");
-        printf("%d %d %f\n", i, j, value);
+        if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f\n", i, j, value);
         if (k < 0) return;
         k = k + matContainers->Rows[i];
         free_ivector(buffer, 0, jj);
@@ -875,8 +873,7 @@
         }
         k = [self FEMMatrixCRS_Search:aContainers->Rows[i+1]-aContainers->Rows[i] :buffer :j];
         if (k < 0) {
-            warnfunct("CRS:setMatrixElement", "Trying to set value to non existent element:");
-            printf("%d %d %f\n", i, j, value);
+            NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f\n", i, j, value);
             return;
         }
         k = k + aContainers->Rows[i];

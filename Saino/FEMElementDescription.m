@@ -1590,9 +1590,8 @@
     lwork = 12*n;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
-        warnfunct("FEMElementDescription:computeStabilizationParameter", "Error in lapack routine dsygv. Error code:");
-        printf("%d\n", info);
-        errorfunct("FEMElementDescription:computeStabilizationParameter", "Program terminating now...");
+        NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d\n", info);
+        errorfunct("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
     }
     mk = eigr[n-2];
         
@@ -1648,9 +1647,8 @@
     }
     
     if (element == NULL) {
-        errorfunct("FEMElementDescription:getElementType", "Element type code not found:");
-        printf("%d\n", code);
-        errorfunct("FEMElementDescription:getElementType", "Ignoring element.");
+        NSLog(@"FEMElementDescription:getElementType: element type code not found: %d\n", code);
+        NSLog(@"FEMElementDescription:getElementType: ignoring element.\n");
         return NULL;
     }
     
@@ -2465,17 +2463,17 @@
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
                     NSLog(@"%f ", nodes->x[i]);
                 }
-                printf("\n");
+                NSLog(@"\n");
                 NSLog(@"y: %f\n", y);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
                     NSLog(@"%f ", nodes->y[i]);
                 }
-                printf("\n");
+                NSLog(@"\n");
                 NSLog(@"y: %f\n", z);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
                     NSLog(@"%f ", nodes->z[i]);
                 }
-                printf("\n");
+                NSLog(@"\n");
             } else {
                 NSLog(@"FEMElementDescription:globalToLocalFromElement: node may be out of element.");
                 NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);

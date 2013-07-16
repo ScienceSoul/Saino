@@ -940,9 +940,9 @@
         }
     }
     
-    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), Filling (%):", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSIncompleteLUMatrix", "ILU (Real), Factorization ready at (s):", cputime() - t);
+    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: ILU (Real), NOF nonzeros: %d\n", matContainers->ILURows[(n+1)-1]);
+    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: ILU (Real), Filling (%%): %f\n", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: ILU (Real), Factorization ready at (s): %f\n", cputime() - t);
     
     return YES;
 }
@@ -972,7 +972,7 @@
     
     matContainers = matrix.getContainers;
     
-    errorfunct("FEMPrecondition:CRSComplexIncompleteLUMatrix", "ILU (Complex), Starting factorization with order:", ilun);
+    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: ILU (Complex), Starting factorization with order: %d\n", ilun);
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -1034,9 +1034,10 @@
         }
     }
     
-    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), NOF nonzeros", matContainers->ILURows[(n/2+1)-1]);
-    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Filling (%):", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSComplexIncompleteLUMatrix", "ILU (Complex), Factorization ready at (s):", cputime() - t);
+    
+    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: ILU (Complex), NOF nonzeros: %d\n", matContainers->ILURows[(n/2+1)-1]);
+    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: ILU (Complex), Filling (%%): %f\n", floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
+    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: ILU (Complex), Factorization ready at (s): %f\n", cputime() - t);
     
     return YES;
 }
@@ -1065,7 +1066,7 @@
     
     matContainers = matrix.getContainers;
     
-    warnfunct("CRSIlutMatrix", "Starting factorization:");
+    NSLog(@"FEMPrecondition:CRSIlutMatrix: Starting factorization: \n");
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -1079,9 +1080,9 @@
     
     [self FEMPrecondition_computeIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    warnfunct("CRSIlutMatrix", "ILU(T) (Real), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSIlutMatrix", "ILU(T) (Real), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    warnfunct("CRSIlutMatrix", "ILU(T) (Real), Factorization ready at (s):", cputime() - t);
+    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), NOF nonzeros: %d\n", matContainers->ILURows[(n+1)-1]);
+    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Filling (%%): %f\n", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Factorization ready at (s): %f\n", cputime() - t);
     
     return YES;
 }
@@ -1110,7 +1111,7 @@
     
     matContainers = matrix.getContainers;
     
-    warnfunct("CRSComplexIlutMatrix", "Starting factorization:");
+    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: Starting factorization: \n");
     t = cputime();
     
     n = matrix.numberOfRows / 2;
@@ -1124,9 +1125,9 @@
     
     [self FEMPrecondition_computeComplexIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), NOF nonzeros", matContainers->ILURows[(n+1)-1]);
-    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), Filling (%)", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
-    warnfunct("CRSComplexIlutMatrix", "ILU(T) (Complex), Factorization ready at (s):", cputime() - t);
+    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), NOF nonzeros: %d\n", matContainers->ILURows[(n+1)-1]);
+    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Filling (%%): %f\n", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
+    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Factorization ready at (s): %f\n", cputime() - t);
     
     return YES;
 }

@@ -197,7 +197,7 @@
         a[3] = -(dts[0]/dts[2]) * (dts[0]+dts[1]) / (dts[1]+dts[2]) / (dts[0]+dts[1]+dts[2]);
     }
     if (order > 3) {
-        warnfunct("vbdfLocal", "Variable time step BDF implemented only up to order 3.");
+        NSLog(@"FEMTimeIntegration:vbdfLocalInSolution: variable time step BDF implemented only up to order 3.\n");
     }
     
     for (i=0; i<nb1; i++) {

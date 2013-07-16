@@ -245,7 +245,7 @@
             if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
             break;
         default:
-            warnfunct("bubbleDofsForElement", "Unsupported p element type.");
+            NSLog(@"FEMPElementMaps:bubbleDofsForElement: unsupported p element type.\n");
             bubbleDofs = p;
             break;
     }

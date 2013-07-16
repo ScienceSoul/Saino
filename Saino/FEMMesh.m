@@ -140,7 +140,7 @@
     
     // Check if we can proceed any further
     if (tetra->Type.ElementCode != 504 || tetra->Pdefs == NULL) {
-        warnfunct("FEMMesh_convertToACTetra", "Element to convert not a tetrahedron!");
+        NSLog(@"FEMMesh:FEMMesh_convertToACTetra: element to convert not a tetrahedron!\n");
         return;
     }
     
@@ -403,7 +403,7 @@
     found = [listUtil listGetIntegerArray:model inArray:model.simulation.valuesList forVariable:@"coordinate mapping" buffer:&coordMap];
     if (found == YES) {
         if (coordMap.m != 3) {
-            warnfunct("FEMMesh:loadMeshForModel", "Inconsistent coordinate mapping:");
+            NSLog(@"FEMMesh:loadMeshForModel: inconsistent coordinate mapping: \n");
             errorfunct("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
         }
         if (min_array(coordMap.ivector, 3) < 1 || max_array(coordMap.ivector, 3) > 3) {

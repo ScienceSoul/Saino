@@ -1380,7 +1380,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<n; j++) {
             
             if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
-                warnfunct("FEMKernel_setPointLoads", "Invalid node number");
+                NSLog(@"FEMKernel:FEMKernel_setPointLoadsModel: invalid node number.\n");
                 continue;
             }
             
@@ -1583,7 +1583,7 @@ static const int PRECOND_VANKA     =  560;
             @autoreleasepool {
                 if (conditional == YES && condition.vector[j] < 0.0) continue;
                 if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
-                    warnfunct("FEMKernel_setPointValues", "Invalid node number");
+                    NSLog(@"FEMKernel:FEMKernel_setPointValues: invalid node number.\n");
                     continue;
                 }
                 
@@ -3378,10 +3378,8 @@ static const int PRECOND_VANKA     =  560;
     
     elements = solution.mesh.getElements;
     
-    if (index < 0 || index > solution.mesh.numberOfBoundaryElements-1) {   
-        
-        errorfunct("FEMKernel:getBoundaryElement", "Invalid element number requested at index:");
-        printf("%d\n", index);
+    if (index < 0 || index > solution.mesh.numberOfBoundaryElements-1) {
+        NSLog(@"FEMKernel:getBoundaryElement: invalid element number requested at index: %d\n", index);
     }
     
     return &elements[solution.mesh.numberOfBulkElements+index];
@@ -4288,8 +4286,7 @@ static const int PRECOND_VANKA     =  560;
     if (n <= 0) return;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
-        warnfunct("FEMKernel:solveWithLapackMatrix", "Error in lapack routine dgetrf. Error code:");
-        printf("%d\n", info);
+        NSLog(@"FEMKernel:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d\n", info);
         errorfunct("FEMKernel:solveWithLapackMatrix", "Program terminating now...");
     }
     
@@ -4297,8 +4294,7 @@ static const int PRECOND_VANKA     =  560;
     nhrs = 1;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
-        warnfunct("FEMKernel:solveWithLapackMatrix", "Error in lapack routine dgetrs. Error code:");
-        printf("%d\n", info);
+        NSLog(@"FEMKernel:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d\n", info);
         errorfunct("FEMKernel:solveWithLapackMatrix", "Program terminating now...");
     }
     
@@ -5186,7 +5182,7 @@ static const int PRECOND_VANKA     =  560;
             break;
             
         case MATRIX_LIST:
-            warnfunct("matrixVectorMultplyInSolution", "List matrix type not suppored in this method.");
+            NSLog(@"FEMKernel:matrixVectorMultplyInSolution: list matrix type not suppored in this method.\n");
             break;
     }
 }
@@ -5209,7 +5205,7 @@ static const int PRECOND_VANKA     =  560;
             break;
             
         case MATRIX_LIST:
-            warnfunct("matrixVectorMultplyInSolution", "List matrix type not suppored in this method.");
+            NSLog(@"FEMKernel:matrixVectorMultplyInSolution: list matrix type not suppored in this method.\n");
             break;
     }
 }
@@ -5434,7 +5430,7 @@ static const int PRECOND_VANKA     =  560;
             sol = NULL;
             free(bufferContainers);
         } else {
-            warnfunct("computeNodalWeightsInSolution", "Permutation vector not present!");
+            NSLog(@"FEMKernel:computeNodalWeightsInSolution: permutation vector not present!\n");
             return;
         }
         weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
@@ -5442,7 +5438,7 @@ static const int PRECOND_VANKA     =  560;
     
     weightsVarContainers = weightsVar.getContainers;
     if (weightsVarContainers->Values == NULL) {
-        warnfunct("computeNodalWeightsInSolution", "Solution vector nor present!");
+        NSLog(@"FEMKernel:computeNodalWeightsInSolution: solution vector not present!\n");
         return;
     }
     
@@ -6943,8 +6939,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (isnan(norm) != 0 && norm > maxNorm) {
-        warnfunct("FEMKernel:computeChange", "Computed norm:");
-        printf("%lf\n", norm);
+        NSLog(@"FEMKernel:computeChange: computed norm: %lf\n", norm);
         errorfunct("FEMKernel:computeChange", "Norm of solution has crossed given bounds.");
     }
     
@@ -7011,8 +7006,7 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     else {
-        warnfunct("computeChange", "Unknown convergence measure:");
-        printf("%s\n", [convergenceType UTF8String]);
+        NSLog(@"FEMKernel:computeChange: unknown convergence measure: %@\n", convergenceType);
     }
     
     // Check for convergence: 0/1
@@ -7111,7 +7105,7 @@ static const int PRECOND_VANKA     =  560;
                         eps = [(solution.solutionInfo)[@"derivative eps"] doubleValue];
                     }
                     if (stat == NO) {
-                        warnfunct("computeChange", "Derivative eps not given, using one.");
+                        NSLog(@"FEMKernel:computeChange: derivative eps not given, using one.\n");
                     }
                     
                     str2 = @" derivative";
@@ -7126,7 +7120,7 @@ static const int PRECOND_VANKA     =  560;
                         }
                         containers = NULL;
                     } else {
-                        warnfunct("computeChange", "Derivative variable not present.");
+                        NSLog(@"FEMKernel:computeChange: derivative variable not present.\n");
                     }
                 }
             }
@@ -7351,7 +7345,7 @@ static const int PRECOND_VANKA     =  560;
         ilun = [str characterAtIndex:4] - '0';
         if (ilun < 0 || ilun > 9 ) ilun = 0;
         if (solution.variable.dofs == 1) {
-            warnfunct("iterativeSolveMatrix", "BILU for one dofs is equal to ILU!");
+            NSLog(@"FEMKernel:iterativeSolveMatrix: BILU for one dofs is equal to ILU.\n");
             pCondType = PRECOND_ILUN;
         } else {
             pCondType = PRECOND_BILUN;
@@ -7365,7 +7359,7 @@ static const int PRECOND_VANKA     =  560;
     }
     else {
         pCondType = PRECOND_NONE;
-        warnfunct("iterativeSolveMatrix", "Unknown preconditioner type, feature disabled.");
+        NSLog(@"FEMKernel:iterativeSolveMatrix: unknown preconditioner type, feature disabled.\n");
     }
     
     precondRecompute = NO;
