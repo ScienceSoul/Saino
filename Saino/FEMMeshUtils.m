@@ -269,7 +269,8 @@
                 edges[edge].NodeIndexes = intvec(0, (degree+1)-1);
                 edges[edge].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
                 initBoundaryInfo(edges[edge].BoundaryInfo);
-                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:NO];
+                BOOL noStab = NO;
+                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
                 edges[edge].Type = *elmType;
                 
                 edges[edge].NodeIndexes[0] = element->NodeIndexes[k];
@@ -550,7 +551,8 @@
                 degree = element->Type.BasisFunctionDegree;
                 
                 // Edge is always a line segment with deg+1 nodes
-                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:NO];
+                BOOL noStab = NO;
+                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
                 edges[edge].Type = *elmType;
                 
                 edges[edge].NDOFs = 0;
@@ -866,8 +868,9 @@
                                 n1 = 10;
                                 break;
                         }
-                        n1 = 3; // TODO: The switch stastement above is then useless?
-                        elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:NO];
+                        n1 = 3; // TODO: The switch statement above is then useless?
+                        BOOL noStab = NO;
+                        elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
                         faces[face].Type = *elmType;
                         break;
                         
@@ -876,11 +879,13 @@
                         // ============================
                         if (k == 0) {
                             n1 = 4 ;
-                            elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:NO];
+                            BOOL noStab = NO;
+                            elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;
                         } else {
                             n1 = 3;
-                            elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:NO];
+                            BOOL noStab = NO;
+                            elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;;
                         }
                         break;
@@ -890,11 +895,13 @@
                         // ===========================
                         if (k <= 1) {
                             n1 = 3;
-                            elmType = [elmDescription getElementType:303 inMesh:mesh stabilization:NO];
+                            BOOL noStab = NO;
+                            elmType = [elmDescription getElementType:303 inMesh:mesh stabilization:&noStab];
                             face[faces].Type = *elmType;
                         } else {
                             n1 = 4;
-                            elmType = [elmDescription getElementType:404 inMesh:mesh stabilization:NO];
+                            BOOL noStab = NO;
+                            elmType = [elmDescription getElementType:404 inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;
                         }
                         break;
@@ -913,8 +920,10 @@
                                 n1 = 9;
                                 break;
                         }
-                        elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:NO];
+                        noStab = NO;
+                        elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
                         faces[face].Type = *elmType;
+                        break;
                         
                     default:
                         NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
@@ -3133,7 +3142,7 @@
             nodes->z[j] = meshNodes->z[elements[i].NodeIndexes[j]];
         }
         if (mesh.stabilize == YES) {
-            [elmDescription computeStabilizationParameterInElement:&elements[i] nodes:nodes mesh:mesh numberOfNodes:n mk:elements[i].StabilizationMK hk:&elements[i].hK];
+            [elmDescription computeStabilizationParameterInElement:&elements[i] nodes:nodes mesh:mesh numberOfNodes:n mk:&elements[i].StabilizationMK hk:&elements[i].hK];
         } else {
             [elmDescription elementDiameter:&elements[i] nodes:nodes];
         }

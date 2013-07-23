@@ -94,10 +94,10 @@ static char *_parallel_extensions[] = {
         
         line = nil;
         reader = (self.meshFileStreams)[NODES];
-        [reader readLine];
-        NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
-        NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
         for (int i=0; i<self.nodeCount; i++) {
+            line = [reader readLine];
+            NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
+            NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
             if (self.parallel) { // assumes that everything is sorted by splitter 
                 _clist[i].tag = [filteredArray[0] intValue];
                 _clist[i].constraint = [filteredArray[1] intValue];
@@ -105,8 +105,7 @@ static char *_parallel_extensions[] = {
                 _clist[i].y = [filteredArray[3] doubleValue];
                 _clist[i].z = [filteredArray[4] doubleValue];                
             } else {
-                int tag;
-                tag = [filteredArray[0] intValue];
+                int tag = [filteredArray[0] intValue];
                 _clist[tag-1].tag = tag;
                 _clist[tag-1].constraint = [filteredArray[1] intValue];
                 _clist[tag-1].x = [filteredArray[2] doubleValue];
@@ -457,7 +456,7 @@ static char *_parallel_extensions[] = {
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
     tagstr = filteredArray[0];
-    self.boundaryElementCount = [filteredArray[1] intValue];
+    *boundary = [filteredArray[1] intValue];
     *leftElement = [filteredArray[2] intValue];
     *rightElement = [filteredArray[3] intValue];
     part = 0;

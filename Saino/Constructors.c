@@ -16,7 +16,7 @@
 
 void initNodes(Nodes_t *nodes) {
     
-    *nodes = (Nodes_t){.x=NULL, .y=NULL, .z=NULL};
+    *nodes = (Nodes_t){.numberOfNodes=0, .x=NULL, .y=NULL, .z=NULL};
 }
 
 void initElements(Element_t *elements, int n) {

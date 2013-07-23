@@ -16,11 +16,11 @@
 }
 
 -(void)deallocation;
--(void)addDescriptionOfElement:(ElementType_t)element withBasisTerms:(int *)terms;
+-(void)addDescriptionOfElement:(ElementType_t *)element withBasisTerms:(int *)terms;
 -(void)initElementDescriptions;
 -(int **)getEdgeMap:(int)elementFamily;
 -(double)elementDiameter:(Element_t *)element nodes:(Nodes_t *)nodes;
--(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double)mk hk:(double *)hk;
+-(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double *)mk hk:(double *)hk;
 -(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab;
 -(double)firstDerivative1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
 -(double)firstDerivativeU2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;

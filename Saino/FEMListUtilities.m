@@ -258,23 +258,23 @@
             }
             
             found = YES;
+            
+            if (minv != NULL) {
+                if (min_array(result->vector, n) < *minv) {
+                    NSLog(@"FEMListUtilities:listGetReal: value smaller than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", min_array(result->vector, n), *minv, varName);
+                    errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
+                }
+            }
+            
+            if (maxv != NULL) {
+                if (max_array(result->vector, n) > *maxv) {
+                    NSLog(@"FEMListUtilities:listGetReal: value greater than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", max_array(result->vector, n), *maxv, varName);
+                    errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
+                }
+            }
             break;
-        }
-    }
-    
-    if (minv != NULL) {
-        if (min_array(result->vector, n) < *minv) {
-            NSLog(@"FEMListUtilities:listGetReal: value smaller than given value: \n");
-            NSLog(@"Value: %f / Given value: %f / Property: %@\n", min_array(result->vector, n), *minv, varName);
-            errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
-        }
-    }
-    
-    if (maxv != NULL) {
-        if (max_array(result->vector, n) > *maxv) {
-            NSLog(@"FEMListUtilities:listGetReal: value greater than given value: \n");
-            NSLog(@"Value: %f / Given value: %f / Property: %@\n", max_array(result->vector, n), *maxv, varName);
-            errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
         }
     }
     
@@ -388,23 +388,23 @@
                 f = containers->fValues[0][0][0];
             }
             *found = YES;
+            
+            if (minv != NULL) {
+                if (f < *minv) {
+                    NSLog(@"FEMListUtilities:listGetConstReal: value smaller than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *minv, varName);
+                    errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
+                }
+            }
+            
+            if (maxv != NULL) {
+                if (f > *maxv) {
+                    NSLog(@"FEMListUtilities:listGetConstReal: value greater than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *maxv, varName);
+                    errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
+                }
+            }
             break;
-        }
-    }
-    
-    if (minv != NULL) {
-        if (f < *minv) {
-            NSLog(@"FEMListUtilities:listGetConstReal: value smaller than given value: \n");
-            NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *minv, varName);
-            errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
-        }
-    }
-    
-    if (maxv != NULL) {
-        if (f > *maxv) {
-            NSLog(@"FEMListUtilities:listGetConstReal: value greater than given value: \n");
-            NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *maxv, varName);
-            errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
         }
     }
     
@@ -529,26 +529,26 @@
             
             l = containers->iValues[0];
             *found = YES;
+            
+            if (minv != NULL) {
+                if (l < *minv) {
+                    NSLog(@"FEMListUtilities:listGetInteger: value smaller than given value: \n");
+                    NSLog(@"Value: %d / Given value: %d / Property: %@\n", l, *minv, varName);
+                    errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
+                }
+            }
+            
+            if (maxv != NULL) {
+                if (l > *maxv) {
+                    NSLog(@"FEMListUtilities:listGetInteger: value greater than given value: \n");
+                    NSLog(@"Value: %d / Given value: %d / Property: %@\n", l, *maxv, varName);
+                    errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
+                }
+            }
             break;
         }
     }
     
-    if (minv != NULL) {
-        if (l < *minv) {
-            NSLog(@"FEMListUtilities:listGetInteger: value smaller than given value: \n");
-            NSLog(@"Value: %d / Given value: %d / Property: %@\n", l, *minv, varName);
-            errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
-        }
-    }
-    
-    if (maxv != NULL) {
-        if (l > *maxv) {
-            NSLog(@"FEMListUtilities:listGetInteger: value greater than given value: \n");
-            NSLog(@"Value: %d / Given value: %d / Property: %@\n", l, *maxv, varName);
-            errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
-        }
-    }
-
     return l;
 }
 

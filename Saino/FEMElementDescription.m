@@ -829,6 +829,7 @@
 
 -(void)deallocation {
     
+    int i;
     ElementType_t *ptr;
     
     free_imatrix(_point, 0, 0, 0, 0);
@@ -843,13 +844,29 @@
     ptr = NULL;
     while (_elementTypeList != NULL) {
         ptr = _elementTypeList->NextElementType;
-        // TODO: deallocation in element type list
+        if (_elementTypeList->ElementCode >= 200) {
+            for (i=0; i<_elementTypeList->NumberOfNodes; i++) {
+                free_ivector(_elementTypeList->BasisFunctions[i].p, 0, _elementTypeList->NumberOfNodes-1);
+                free_ivector(_elementTypeList->BasisFunctions[i].q, 0, _elementTypeList->NumberOfNodes-1);
+                free_ivector(_elementTypeList->BasisFunctions[i].r, 0, _elementTypeList->NumberOfNodes-1);
+                free_dvector(_elementTypeList->BasisFunctions[i].coeff, 0, _elementTypeList->NumberOfNodes-1);
+            }
+            if (_elementTypeList->ElementCode == 202) {
+                for (i=2; i<14; i++) {
+                    free_ivector(_elementTypeList->BasisFunctions[i].p, 0, i);
+                    free_ivector(_elementTypeList->BasisFunctions[i].q, 0, i);
+                    free_ivector(_elementTypeList->BasisFunctions[i].r, 0, i);
+                    free_dvector(_elementTypeList->BasisFunctions[i].coeff, 0, i);
+                }
+            }
+            free(_elementTypeList->BasisFunctions);
+        }
         free(_elementTypeList);
         _elementTypeList = ptr;
     }
 }
 
--(void)addDescriptionOfElement:(ElementType_t)element withBasisTerms:(int *)terms {
+-(void)addDescriptionOfElement:(ElementType_t *)element withBasisTerms:(int *)terms {
 /***********************************************************************************************
     Add an element description to global list of element types
  
@@ -868,23 +885,23 @@
     
     algebra = [[FEMLinearAlgebra alloc] init];
     
-    n = element.NumberOfNodes;
-    element.NumberOfEdges = 0;
-    element.NumberOfFaces = 0;
-    element.BasisFunctionDegree = 0;
-    element.BasisFunctions = NULL;
+    n = element->NumberOfNodes;
+    element->NumberOfEdges = 0;
+    element->NumberOfFaces = 0;
+    element->BasisFunctionDegree = 0;
+    element->BasisFunctions = NULL;
     
-    if (element.ElementCode >= 200) {
+    if (element->ElementCode >= 200) {
         
         a = doublematrix(0, n-1, 0, n-1);
         
         //------------------------------
         // 1D line element
         //------------------------------
-        if (element.dimension == 1) {
+        if (element->dimension == 1) {
             
             for (i=0; i<n; i++) {
-                u = element.NodeU[i];
+                u = element->NodeU[i];
                 for (j=0; j<n; j++) {
                     k = terms[j] -1;
                     upow = k;
@@ -893,18 +910,18 @@
                     } else {
                         a[i][j] = pow(u, upow);
                     }
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, upow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, upow);
                 }
             }
         }
         //------------------------------
         // 2D surface element
         //------------------------------
-        else if (element.dimension == 2) {
+        else if (element->dimension == 2) {
             
             for (i=0; i<n; i++) {
-                u = element.NodeU[i];
-                v = element.NodeV[i];
+                u = element->NodeU[i];
+                v = element->NodeV[i];
                 for (j=0; j<n; j++) {
                     k = terms[j] - 1;
                     vpow = k / _maxDeg;
@@ -920,8 +937,8 @@
                         a[i][j] = a[i][j] * pow(v, vpow);
                     }
                     
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, upow);
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, vpow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, upow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, vpow);
                 }
             }
         }
@@ -931,9 +948,9 @@
         else {
             
             for (i=0; i<n; i++) {
-                u = element.NodeU[i];
-                v = element.NodeV[i];
-                w = element.NodeW[i];
+                u = element->NodeU[i];
+                v = element->NodeV[i];
+                w = element->NodeW[i];
                 for (j=0; j<n; j++) {
                     k = terms[j] - 1;
                     upow = k % _maxDeg;
@@ -954,9 +971,9 @@
                         a[i][j] = a[i][j] * pow(w, wpow);
                     }
                     
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, upow);
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, vpow);
-                    element.BasisFunctionDegree = max(element.BasisFunctionDegree, wpow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, upow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, vpow);
+                    element->BasisFunctionDegree = max(element->BasisFunctionDegree, wpow);
                 }
             }
         }
@@ -964,27 +981,27 @@
         // Compute the coefficients of the basis function terms
         [algebra invertMatrix:a ofSize:n];
         
-        if (element.ElementCode == 202) {
-            element.BasisFunctions = (BasisFunctions_t*) malloc( sizeof(BasisFunctions_t) * 14 );
+        if (element->ElementCode == 202) {
+            element->BasisFunctions = (BasisFunctions_t*) malloc( sizeof(BasisFunctions_t) * 14 );
         } else {
-            element.BasisFunctions = (BasisFunctions_t*) malloc( sizeof(BasisFunctions_t) * n );
+            element->BasisFunctions = (BasisFunctions_t*) malloc( sizeof(BasisFunctions_t) * n );
         }
-        
+                
         upow = 0;
         vpow = 0;
         wpow = 0;
         
         for (i=0; i<n; i++) {
-            element.BasisFunctions[i].n = n;
-            element.BasisFunctions[i].p = intvec(0, n-1);
-            element.BasisFunctions[i].q = intvec(0, n-1);
-            element.BasisFunctions[i].r = intvec(0, n-1);
-            element.BasisFunctions[i].coeff = doublevec(0, n-1);
+            element->BasisFunctions[i].n = n;
+            element->BasisFunctions[i].p = intvec(0, n-1);
+            element->BasisFunctions[i].q = intvec(0, n-1);
+            element->BasisFunctions[i].r = intvec(0, n-1);
+            element->BasisFunctions[i].coeff = doublevec(0, n-1);
             
             for (j=0; j<n; j++) {
                 k = terms[j] - 1;
                 
-                switch (element.dimension) {
+                switch (element->dimension) {
                     case 1:
                         upow = k;
                         break;
@@ -998,63 +1015,63 @@
                         wpow = k / _maxDeg2;
                 }
                 
-                element.BasisFunctions[i].p[j] = upow;
-                element.BasisFunctions[i].q[j] = vpow;
-                element.BasisFunctions[i].r[j] = wpow;
-                element.BasisFunctions[i].coeff[j] = a[i][j];
+                element->BasisFunctions[i].p[j] = upow;
+                element->BasisFunctions[i].q[j] = vpow;
+                element->BasisFunctions[i].r[j] = wpow;
+                element->BasisFunctions[i].coeff[j] = a[i][j];
             }
         }
         
         free_dmatrix(a, 0, n-1, 0, n-1);
         
-        if (element.ElementCode == 202) {
+        if (element->ElementCode == 202) {
             a = doublematrix(0, 13, 0, 13);
             memset( *a, 0.0, (14*14)*sizeof(double) );
             [self FEMElementDescription_compute1DPBasis:a sizeOfBasis:14];
             
             for (i=2; i<14; i++) {
-                element.BasisFunctions[i].p = intvec(0, i);
-                element.BasisFunctions[i].q = intvec(0, i);
-                element.BasisFunctions[i].r = intvec(0, i);
-                element.BasisFunctions[i].coeff = doublevec(0, i);
+                element->BasisFunctions[i].p = intvec(0, i);
+                element->BasisFunctions[i].q = intvec(0, i);
+                element->BasisFunctions[i].r = intvec(0, i);
+                element->BasisFunctions[i].coeff = doublevec(0, i);
                 
                 k = 0;
                 for (j=0; j<=i; j++) {
                     if (a[i][j] != 0.0) {
-                        element.BasisFunctions[i].p[k] = j;
-                        element.BasisFunctions[i].q[k] = 0;
-                        element.BasisFunctions[i].r[k] = 0;
-                        element.BasisFunctions[i].coeff[k] = a[i][j];
+                        element->BasisFunctions[i].p[k] = j;
+                        element->BasisFunctions[i].q[k] = 0;
+                        element->BasisFunctions[i].r[k] = 0;
+                        element->BasisFunctions[i].coeff[k] = a[i][j];
                         k++;
                     }
                 }
-                element.BasisFunctions[i].n = k;
+                element->BasisFunctions[i].n = k;
             }
             free_dmatrix(a, 0, 13, 0, 13);
         }
         
-        switch (element.ElementCode / 100) {
+        switch (element->ElementCode / 100) {
             case 3:
-                element.NumberOfEdges = 3;
+                element->NumberOfEdges = 3;
                 break;
             case 4:
-                element.NumberOfEdges = 4;
+                element->NumberOfEdges = 4;
                 break;
             case 5:
-                element.NumberOfFaces = 4;
-                element.NumberOfEdges = 6;
+                element->NumberOfFaces = 4;
+                element->NumberOfEdges = 6;
                 break;
             case 6:
-                element.NumberOfFaces = 5;
-                element.NumberOfEdges = 8;
+                element->NumberOfFaces = 5;
+                element->NumberOfEdges = 8;
                 break;
             case 7:
-                element.NumberOfFaces = 5;
-                element.NumberOfEdges = 9;
+                element->NumberOfFaces = 5;
+                element->NumberOfEdges = 9;
                 break;
             case 8:
-                element.NumberOfFaces = 6;
-                element.NumberOfEdges = 12;
+                element->NumberOfFaces = 6;
+                element->NumberOfEdges = 12;
                 break;
         }
         
@@ -1062,17 +1079,14 @@
     
     // Finally add the element description to the global list of types
     if (_isTypeListInitialized == NO) {
-        _elementTypeList = (ElementType_t *)malloc(sizeof(ElementType_t));
-        _elementTypeList = &element;
+        _elementTypeList = element;
         _isTypeListInitialized = YES;
         _elementTypeList->NextElementType = NULL;
     } else {
-        temp = (ElementType_t *)malloc(sizeof(ElementType_t));
-        temp = &element;
+        temp = element;
         temp->NextElementType = _elementTypeList;
         _elementTypeList = temp;
     }
-    
 }
 
 -(void)initElementDescriptions {
@@ -1086,22 +1100,23 @@
     
     int i, k;
     int *basisTerms;
-    ElementType_t element;
+    ElementType_t *element;
     FEMElementsDefinition *defs;
     
     basisTerms = intvec(0, _maxDeg3-1);
     
     // Add the connectivity element types...
     memset( basisTerms, 0, _maxDeg3*sizeof(int) );
-    element.GaussPoints = 0;
-    element.GaussPoints2 = 0;
-    element.StabilizationMK = 0;
-    element.NodeU = NULL;
-    element.NodeV = NULL;
-    element.NodeW = NULL;
     for (k=3; k<=64; k++) {
-        element.NumberOfNodes = k;
-        element.ElementCode = 100 + k;
+        element = (ElementType_t *)malloc(sizeof(ElementType_t));
+        element->GaussPoints = 0;
+        element->GaussPoints2 = 0;
+        element->StabilizationMK = 0;
+        element->NodeU = NULL;
+        element->NodeV = NULL;
+        element->NodeW = NULL;
+        element->NumberOfNodes = k;
+        element->ElementCode = 100 + k;
         [self addDescriptionOfElement:element withBasisTerms:basisTerms];
     }
     
@@ -1109,66 +1124,68 @@
         
     for (i=0; i<_numberOfElementDefs; i++) {
         
-        element.NodeU = NULL;
-        element.NodeV = NULL;
-        element.NodeW = NULL;
+        element = (ElementType_t *)malloc(sizeof(ElementType_t));
+        
+        element->NodeU = NULL;
+        element->NodeV = NULL;
+        element->NodeW = NULL;
         
         defs = _listOfDefinitions[i];
         
-        element.dimension = [defs.dimension intValue];
-        element.ElementCode = [defs.code intValue];
-        element.NumberOfNodes = [defs.nodes intValue];
-        if (element.dimension == 1) {
-            element.NodeU = doublevec(0, element.NumberOfNodes-1);
-            for (k=0; k<element.NumberOfNodes; k++) {
-                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
+        element->dimension = [defs.dimension intValue];
+        element->ElementCode = [defs.code intValue];
+        element->NumberOfNodes = [defs.nodes intValue];
+        if (element->dimension == 1) {
+            element->NodeU = doublevec(0, element->NumberOfNodes-1);
+            for (k=0; k<element->NumberOfNodes; k++) {
+                element->NodeU[k] = [(defs.nodeU)[k] doubleValue];
                 basisTerms[k] = [(defs.basis)[k] intValue];
             }
-        } else if (element.dimension == 2) {
-            element.NodeU = doublevec(0, element.NumberOfNodes-1);
-            element.NodeV = doublevec(0, element.NumberOfNodes-1);
-            for (k=0; k<element.NumberOfNodes; k++) {
-                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
-                element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
+        } else if (element->dimension == 2) {
+            element->NodeU = doublevec(0, element->NumberOfNodes-1);
+            element->NodeV = doublevec(0, element->NumberOfNodes-1);
+            for (k=0; k<element->NumberOfNodes; k++) {
+                element->NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                element->NodeV[k] = [(defs.nodeV)[k] doubleValue];
                 basisTerms[k] = [(defs.basis)[k] intValue];
             }
-        } else if (element.dimension == 3) {
-            element.NodeU = doublevec(0, element.NumberOfNodes-1);
-            element.NodeV = doublevec(0, element.NumberOfNodes-1);
-            element.NodeW = doublevec(0, element.NumberOfNodes-1);
-            for (k=0; k<element.NumberOfNodes; k++) {
-                element.NodeU[k] = [(defs.nodeU)[k] doubleValue];
-                element.NodeV[k] = [(defs.nodeV)[k] doubleValue];
-                element.NodeW[k] = [(defs.nodeW)[k] doubleValue];
+        } else if (element->dimension == 3) {
+            element->NodeU = doublevec(0, element->NumberOfNodes-1);
+            element->NodeV = doublevec(0, element->NumberOfNodes-1);
+            element->NodeW = doublevec(0, element->NumberOfNodes-1);
+            for (k=0; k<element->NumberOfNodes; k++) {
+                element->NodeU[k] = [(defs.nodeU)[k] doubleValue];
+                element->NodeV[k] = [(defs.nodeV)[k] doubleValue];
+                element->NodeW[k] = [(defs.nodeW)[k] doubleValue];
                 basisTerms[k] = [(defs.basis)[k] intValue];
             }
         }
-        element.GaussPoints = [(defs.gaussPoints)[0] intValue];
-        element.GaussPoints2 = [(defs.gaussPoints)[1] intValue];
-        element.StabilizationMK = [defs.stabilization doubleValue];
+        element->GaussPoints = [(defs.gaussPoints)[0] intValue];
+        element->GaussPoints2 = [(defs.gaussPoints)[1] intValue];
+        element->StabilizationMK = [defs.stabilization doubleValue];
         
-        if (element.GaussPoints2 <= 0) element.GaussPoints2 = element.GaussPoints;
+        if (element->GaussPoints2 <= 0) element->GaussPoints2 = element->GaussPoints;
         
         // Reassign 0 to stabilization. Don't know why yet!!!
-        element.StabilizationMK = 0.0;
+        element->StabilizationMK = 0.0;
         
-        if (element.NodeV == NULL) {
-            element.NodeV = doublevec(0, element.NumberOfNodes-1);
-            memset( element.NodeV, 0.0, element.NumberOfNodes*sizeof(double) );
+        if (element->NodeV == NULL) {
+            element->NodeV = doublevec(0, element->NumberOfNodes-1);
+            memset( element->NodeV, 0.0, element->NumberOfNodes*sizeof(double) );
         }
-        if (element.NodeW == NULL) {
-            element.NodeW = doublevec(0, element.NumberOfNodes-1);
-            memset( element.NodeW, 0.0, element.NumberOfNodes*sizeof(double) );
+        if (element->NodeW == NULL) {
+            element->NodeW = doublevec(0, element->NumberOfNodes-1);
+            memset( element->NodeW, 0.0, element->NumberOfNodes*sizeof(double) );
         }
         
         [self addDescriptionOfElement:element withBasisTerms:basisTerms];
         
-        free_dvector(element.NodeU, 0, element.NumberOfNodes-1);
-        free_dvector(element.NodeV, 0, element.NumberOfNodes-1);
-        free_dvector(element.NodeW, 0, element.NumberOfNodes-1);
+        free_dvector(element->NodeU, 0, element->NumberOfNodes-1);
+        free_dvector(element->NodeV, 0, element->NumberOfNodes-1);
+        free_dvector(element->NodeW, 0, element->NumberOfNodes-1);
         
     }
-    
+
     free_ivector(basisTerms, 0, _maxDeg3-1);
 }
 
@@ -1437,7 +1454,7 @@
     return sqrt(hk);
 }
 
--(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double)mk hk:(double *)hk {
+-(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double *)mk hk:(double *)hk {
 /*******************************************************************************************************
     Compute convection diffusion equation stabilization parameter for each and every element of the 
     model by solving the largest eigenvalue of
@@ -1480,10 +1497,10 @@
             case 504:
             case 605:
             case 706:
-                mk = 1.0 / 3.0;
+                *mk = 1.0 / 3.0;
                 break;
             case 808:
-                mk = 1.0 / 6.0;
+                *mk = 1.0 / 6.0;
         }
         if (hk != NULL) *hk = [self elementDiameter:element nodes:nodes];
         return;
@@ -1564,7 +1581,7 @@
         }
     }
     if (stat == YES) {
-        mk = 1.0 / 3.0;
+        *mk = 1.0 / 3.0;
         if (hk != NULL) {
             *hk = [self elementDiameter:element nodes:nodes];
         }
@@ -1593,10 +1610,10 @@
         NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d\n", info);
         errorfunct("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
     }
-    mk = eigr[n-2];
+    *mk = eigr[n-2];
         
-    if (mk < 10.0 * AEPS) {
-        mk = 1.0 / 3.0;
+    if (*mk < 10.0 * AEPS) {
+        *mk = 1.0 / 3.0;
         if (hk != NULL) {
             *hk = [self elementDiameter:element nodes:nodes];
         }
@@ -1604,17 +1621,17 @@
     }
     
     if (hk != NULL) {
-        *hk = sqrt( 2.0 / (mk * element->Type.StabilizationMK) );
-        mk = min( 1.0/3.0, element->Type.StabilizationMK );
+        *hk = sqrt( 2.0 / (*mk * element->Type.StabilizationMK) );
+        *mk = min( 1.0/3.0, element->Type.StabilizationMK );
     } else {
         switch (element->Type.ElementCode / 100) {
             case 2:
             case 4:
             case 8:
-                mk = 4.0 * mk;
+                *mk = 4.0 * (*mk);
                 break;
         }
-        mk = min( 1.0/3.0, 2.0/mk );
+        *mk = min( 1.0/3.0, 2.0/(*mk) );
     }
 
     free_dvector(eigr, 0, n-1);
@@ -1635,8 +1652,8 @@
     
     int i;
     
-    Element_t *elm;
-    ElementType_t *element;
+    Element_t *elm = NULL;
+    ElementType_t *element = NULL;
     Nodes_t *nodes;
     
     element = _elementTypeList;
@@ -1645,18 +1662,17 @@
         if (code == element->ElementCode) break;
         element = element->NextElementType;
     }
-    
+        
     if (element == NULL) {
         NSLog(@"FEMElementDescription:getElementType: element type code not found: %d\n", code);
         NSLog(@"FEMElementDescription:getElementType: ignoring element.\n");
         return NULL;
     }
-    
+        
     if (computeStab != NULL) {
         if (*computeStab == NO) return element;
     }
     
-    elm = NULL;
     if (element->StabilizationMK == 0.0) {
         elm = (Element_t*) malloc( sizeof(Element_t));
         initElements(elm, 1);
@@ -1677,7 +1693,7 @@
             nodes->y[i] = element->NodeV[i];
             nodes->z[i] = element->NodeW[i];
         }
-        [self computeStabilizationParameterInElement:elm nodes:nodes mesh:mesh numberOfNodes:element->NumberOfNodes mk:element->StabilizationMK hk:NULL];
+        [self computeStabilizationParameterInElement:elm nodes:nodes mesh:mesh numberOfNodes:element->NumberOfNodes mk:&element->StabilizationMK hk:NULL];
         free(elm);
         
         free_dvector(nodes->x, 0, element->NumberOfNodes-1);
@@ -1686,7 +1702,6 @@
         free(nodes);
     }
     
-    if (elm != NULL) *element = elm->Type;
     return element;
 }
 

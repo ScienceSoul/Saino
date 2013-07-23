@@ -364,11 +364,11 @@ void __attribute__((overloadable)) errorfunct(char head[], char message[])
     printf("################################################################\n");
     printf("######################### SAINO Program ########################\n");
     printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##    Plase read the following error message for diagnose     ##\n");
+    printf("##        Plase read the error message for diagnose           ##\n");
+    printf("## %s: %s##\n", head, message);
     printf("################################################################\n");
     printf("################################################################\n");
     
-    printf("%s: %s\n", head, message);
     exit(-1);
 }
 
@@ -378,11 +378,10 @@ void __attribute__((overloadable)) errorfunct(char head[], char message[], int n
     printf("################################################################\n");
     printf("######################### SAINO Program ########################\n");
     printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##    Plase read the following error message for diagnose     ##\n");
+    printf("##        Plase read the error message for diagnose           ##\n");
+    printf("## %s: %s %d##\n", head, message, n);
     printf("################################################################\n");
     printf("################################################################\n");
-    
-    printf("%s: %s %d\n", head, message, n);
     exit(-1);
 }
 
@@ -392,11 +391,10 @@ void __attribute__((overloadable)) errorfunct(char head[], char message[], doubl
     printf("################################################################\n");
     printf("######################### SAINO Program ########################\n");
     printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##    Plase read the following error message for diagnose     ##\n");
+    printf("##        Plase read the error message for diagnose           ##\n");
+    printf("## %s: %s %f##\n", head, message, n);
     printf("################################################################\n");
     printf("################################################################\n");
-    
-    printf("%s: %s %f\n", head, message, n);
     exit(-1);
 }
 

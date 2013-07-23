@@ -14,6 +14,7 @@
 #import "FEMPElementMaps.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMProjector.h"
+#import "FEMEquation.h"
 #import "Utils.h"
 
 @interface FEMMesh ()
@@ -330,6 +331,7 @@
     FEMElementDescription *elmDescription;
     FEMPElementMaps *pMaps;
     FEMMeshUtils *meshUtils;
+    FEMEquation *equationConditionAtId;
     ElementType_t *elmType;
     NSArray *bList;
     NSString *elementDef0, *elementDef;
@@ -367,8 +369,6 @@
         errorfunct("FEMMesh:loadMeshForModel", "Program terminating now...");
     }
     
-    _globalNodes->numberOfNodes = self.numberOfNodes;
-    
     if (bd == YES) self.numberOfBulkElements = 0;
     
     self.maxElementNodes = 0;
@@ -383,11 +383,12 @@
     _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     if (_globalNodes == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate nodes structure.");
     initNodes(_globalNodes);
+    _globalNodes->numberOfNodes = self.numberOfNodes;
     _globalNodes->x = doublevec(0, self.numberOfNodes-1);
     _globalNodes->y = doublevec(0, self.numberOfNodes-1);
     _globalNodes->z = doublevec(0, self.numberOfNodes-1);
     
-    _elements = (Element_t*) malloc( sizeof(Element_t) * self.numberOfBulkElements+self.numberOfBoundaryElements );
+    _elements = (Element_t*) malloc( sizeof(Element_t) * (self.numberOfBulkElements+self.numberOfBoundaryElements) );
     if (_elements == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate elements structure.");
     initElements(_elements, self.numberOfBulkElements+self.numberOfBoundaryElements);
     self.numberOfElements = self.numberOfBulkElements+self.numberOfBoundaryElements;
@@ -409,14 +410,20 @@
         if (min_array(coordMap.ivector, 3) < 1 || max_array(coordMap.ivector, 3) > 3) {
             errorfunct("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
         }
-        for (i=coordMap.ivector[0]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->x[i] = cCoord[i];
+        j = 0;
+        for (i=coordMap.ivector[0]-1; i<3*self.numberOfNodes; i+=3) {
+            _globalNodes->x[j] = cCoord[i];
+            j++;
         }
-        for (i=coordMap.ivector[1]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->y[i] = cCoord[i];
+        j = 0;
+        for (i=coordMap.ivector[1]-1; i<3*self.numberOfNodes; i+=3) {
+            _globalNodes->y[j] = cCoord[i];
+            j++;
         }
-        for (i=coordMap.ivector[2]; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->z[i] = cCoord[i];
+        j = 0;
+        for (i=coordMap.ivector[2]-1; i<3*self.numberOfNodes; i+=3) {
+            _globalNodes->z[j] = cCoord[i];
+            j++;
         }
     } else {
         for (i=0; i<3*self.numberOfNodes; i+=3) {
@@ -529,12 +536,12 @@
         
         _elements[i].ElementIndex = i+1;
         //TODO: If parallel mesh, set the element partition index here
-        _elements[i].PartIndex = *partID;
+        _elements[i].PartIndex = 0;
         
         
         elmType = NULL;
         _elements[i].BoundaryInfo = NULL;
-        elmType = [elmDescription getElementType:type inMesh:self stabilization:NO];
+        elmType = [elmDescription getElementType:type inMesh:self stabilization:NULL];
         _elements[i].Type = *elmType;
         
         if (elmType != NULL) {
@@ -558,14 +565,15 @@
             bid = _elements[i].BodyID;
             if ([(model.bodies)[bid-1] objectForKey:@"equation"] != nil) {
                 j = [[(model.bodies)[bid-1] objectForKey:@"equation"] intValue];
-                elementDef0 = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:@"element" info:&found];
+                equationConditionAtId = (model.equations)[j-1];
+                elementDef0 = [listUtil listGetString:model inArray:equationConditionAtId.valuesList forVariable:@"element" info:&found];
                 k = 1;
                 for (FEMSolution *solution in model.solutions) {
                     if (found == NO) elementDef0 = solution.solutionInfo[@"element"];
-                    str = [NSMutableString stringWithString:@"element{"];
+                    str = [NSMutableString stringWithString:@"element{'"];
                     [str appendString:[[NSNumber numberWithInt:k] stringValue]];
-                    [str appendString:@"}"];
-                    elementDef = [listUtil listGetString:model inArray:[(model.equations)[j-1] valuesList] forVariable:str info:&gotIt];
+                    [str appendString:@"'}"];
+                    elementDef = [listUtil listGetString:model inArray:equationConditionAtId.valuesList forVariable:str info:&gotIt];
                     if (gotIt == YES) {
                         [self FEMMesh_getMaxdefs:model element:&_elements[i] elementDef:elementDef solverID:k-1 bodyID:bid-1 defDofs:inDofs];
                     } else {
@@ -663,7 +671,7 @@
         localEPerm[elementTags[i]-minEIndex] = i;
     }
     
-    // TODO: Read element property file not supported yet. Is that really needed?
+    // TODO: Read element property file (.dat) not supported yet. Is that really needed?
     
     //Mesh boundary elements
     coord = doublevec(0, self.maxElementNodes-1);
@@ -675,7 +683,7 @@
             self.numberOfBoundaryElements = i - self.numberOfBulkElements;
             break;
         }
-        
+                
         if (left >= minEIndex && left <= maxEIndex) {
             left = localEPerm[left - minEIndex];
         } else if (left > 0) {
@@ -692,9 +700,9 @@
         
         _elements[i].ElementIndex = i+1;
         elmType = NULL;
-        elmType = [elmDescription getElementType:type inMesh:self stabilization:NO];
+        elmType = [elmDescription getElementType:type inMesh:self stabilization:NULL];
         _elements[i].Type = *elmType;
-        
+                
         self.maxElementNodes = max(self.maxElementNodes, type-100*(type/100));
         
         if (elmType != NULL) {
@@ -716,15 +724,14 @@
             }
             
             //TODO: If parallel mesh, set the element partition index here
-            _elements[i].PartIndex = *partID;
+            _elements[i].PartIndex = 0;
             
             _elements[i].BodyID = 0;
         
             defaultTargetBC = 0;
             j = 1;
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-                if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"default target" info:&found] == YES)
-                    defaultTargetBC = j;
+                if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"default target" info:&found] == YES) defaultTargetBC = j;
                 
                 gotIt = [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target boundaries" buffer:&bdList];
                 if (gotIt == YES) {
@@ -742,7 +749,7 @@
             }
                        
             j = _elements[i].BoundaryInfo->Constraint;
-            if ((j<=0 || j>model.numberOfBoundaryConditions) && defaultTargetBC > 0); {
+            if ((j<=0 || j>model.numberOfBoundaryConditions) && defaultTargetBC > 0) {
                 _elements[i].BoundaryInfo->Constraint = defaultTargetBC;
                 addr1 = 1;
                 addr2 = model.numberOfBodies;
@@ -760,21 +767,21 @@
             _elements[i].sizeNodeIndexes = n;
             
             // Set local to global mapping for boundary element
-            for (j=0; i<n; j++) {
+            for (j=0; j<n; j++) {
                 _elements[i].NodeIndexes[j] = localPerm[nodes[j] - minIndex];
             }
-            
+
             _elements[i].EdgeIndexes = NULL;
             _elements[i].FaceIndexes = NULL;
             
             _elements[i].BoundaryInfo->Left = NULL;
-            if (left >= 1 ) {
+            if (left >= 0 ) {
                 _elements[i].BoundaryInfo->Left = &_elements[left];
                 
             }
             
             _elements[i].BoundaryInfo->Right = NULL;
-            if (right >= 1) {
+            if (right >= 0) {
                 _elements[i].BoundaryInfo->Right = &_elements[right];
             }
             
@@ -922,7 +929,7 @@
             _elements[i].BubbleIndexes = intvec(0, _elements[i].BDOFs-1);
             _elements[i].sizeBubbleIndexes = _elements[i].BDOFs;
             for (j=0; j<_elements[i].BDOFs; j++) {
-                _elements[i].BubbleIndexes[j] = self.maxBdofs*(i)+j;
+                _elements[i].BubbleIndexes[j] = self.maxBdofs*i+j;
             }
         }
     }
