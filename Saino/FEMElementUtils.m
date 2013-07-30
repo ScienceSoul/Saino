@@ -20,7 +20,7 @@
 #import "Utils.h"
 
 @interface FEMElementUtils ()
--(void)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh list:(ListMatrix_t *)list reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles;
+-(ListMatrix_t *)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles;
 -(void)FEMElementUtils_initializeMatrix:(FEMMatrix *)matrix size:(int)n list:(ListMatrix_t *)list reorder:(int *)reorder invInitialReorder:(int *)invInitialReorder dofs:(int)dofs;
 @end
 
@@ -33,16 +33,16 @@
     matrix is flexible since it can account for any entries. Also constraints and periodic BCs may give rise to 
     entries in the list matrix topology.
 ************************************************************************************************************************/
--(void)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh list:(ListMatrix_t *)list reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles {
+-(ListMatrix_t *)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles {
     
-    int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs, this;
+    int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs;
     int indexSize, numberOfFactors;
-    int invPerm[localNodes], *indexes;
+    int invPerm[localNodes], *indexes = NULL;
     BOOL foundDG, gb, found, radiation;
     FEMMatrix *projector;
     FEMListUtilities *listUtilities;
     FEMListMatrix *listMatrix;
-    FEMBoundaryCondition *boundaryConditions;
+    ListMatrix_t *list;
     ListMatrixEntry_t *cList, *lptr;
     Element_t *elements, *element, *edges, *faces;
     matrixArraysContainer *matContainers = NULL;
@@ -194,93 +194,92 @@
                     n++;
                 }
             }
-        }
-        
-        for (i=0; i<n; i++) {
-            k1 = reorder[indexes[i]];
-            if (k1 < 0) continue;
-            for (j=0; j<n; j++) {
-                k2 = reorder[indexes[j]];
-                if (k2 < 0) continue;
-                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];
-            }
-        }
-        t++;
-    }
-    
-    if (indexes != NULL) free_ivector(indexes, 0, indexSize-1);
-    
-    // Diffuse gray radiation condition
-    radiation = [listUtilities listGetLogical:model inArray:solution.valuesList forVariable:@"radiation solver" info:&found];
-    if (found == NO && equation != nil) radiation = (radiation == YES || [equation isEqualToString:@"heat equation"] == YES) ? YES : NO;
-    
-    if (radiation == YES) {
-        for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements + mesh.numberOfBoundaryElements; i++) {
-            
-            if (elements[i].BoundaryInfo->GebhardtFactors != NULL) {
-                for (j=0; j<elements[i].Type.NumberOfNodes; j++) {
-                    k1 = reorder[elements[i].NodeIndexes[j]];
-                    numberOfFactors = elements[i].BoundaryInfo->GebhardtFactors->NumberOfImplicitFactors;
-                    
-                    for (n=0; n<numberOfFactors; n++) {
-                        for (k=0; k<elements[elements[i].BoundaryInfo->GebhardtFactors->Elements[n]].Type.NumberOfNodes; k++) {
-                            k2 = reorder[elements[elements[i].BoundaryInfo->GebhardtFactors->Elements[n]].NodeIndexes[k]];
-                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements + mesh.numberOfBoundaryElements; i++) {
-        if (elements[i].Type.ElementCode < 102 || elements[i].Type.ElementCode >= 200) continue;
-        
-        k1 = reorder[elements[i].NodeIndexes[0]];
-        if (k1 >= 0) {
-            for (k=0; k<elements[i].Type.NumberOfNodes; k++) {
-                k2 = reorder[elements[i].NodeIndexes[k]];
-                if (k2 >= 0) {
+            for (i=0; i<n; i++) {
+                k1 = reorder[indexes[i]];
+                if (k1 < 0) continue;
+                for (j=0; j<n; j++) {
+                    k2 = reorder[indexes[j]];
+                    if (k2 < 0) continue;
                     lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];
-                    lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k2 andIndex:k1];
+                }
+            }
+            t++;
+        }
+        
+        if (indexes != NULL) free_ivector(indexes, 0, indexSize-1);
+        
+        // Diffuse gray radiation condition
+        radiation = [listUtilities listGetLogical:model inArray:solution.valuesList forVariable:@"radiation solver" info:&found];
+        if (found == NO && equation != nil) radiation = (radiation == YES || [equation isEqualToString:@"heat equation"] == YES) ? YES : NO;
+        
+        if (radiation == YES) {
+            for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements + mesh.numberOfBoundaryElements; i++) {
+                
+                if (elements[i].BoundaryInfo->GebhardtFactors != NULL) {
+                    for (j=0; j<elements[i].Type.NumberOfNodes; j++) {
+                        k1 = reorder[elements[i].NodeIndexes[j]];
+                        numberOfFactors = elements[i].BoundaryInfo->GebhardtFactors->NumberOfImplicitFactors;
+                        
+                        for (n=0; n<numberOfFactors; n++) {
+                            for (k=0; k<elements[elements[i].BoundaryInfo->GebhardtFactors->Elements[n]].Type.NumberOfNodes; k++) {
+                                k2 = reorder[elements[elements[i].BoundaryInfo->GebhardtFactors->Elements[n]].NodeIndexes[k]];
+                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];
+                            }
+                        }
+                    }
                 }
             }
         }
         
-        if (elements[i].Type.ElementCode == 102) {
-            k2 = reorder[elements[i].NodeIndexes[1]];
-            if (k2 >= 0) lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k2 andIndex:k2];
+        for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements + mesh.numberOfBoundaryElements; i++) {
+            if (elements[i].Type.ElementCode < 102 || elements[i].Type.ElementCode >= 200) continue;
+            
+            k1 = reorder[elements[i].NodeIndexes[0]];
+            if (k1 >= 0) {
+                for (k=0; k<elements[i].Type.NumberOfNodes; k++) {
+                    k2 = reorder[elements[i].NodeIndexes[k]];
+                    if (k2 >= 0) {
+                        lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];
+                        lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k2 andIndex:k1];
+                    }
+                }
+            }
+            
+            if (elements[i].Type.ElementCode == 102) {
+                k2 = reorder[elements[i].NodeIndexes[1]];
+                if (k2 >= 0) lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k2 andIndex:k2];
+            }
         }
-    }
-    
-    for (this=0; this<model.numberOfBoundaryConditions; this++) {
-        boundaryConditions = (model.boundaryConditions)[this];
-        projector = boundaryConditions.pMatrix;
-        if (projector == nil) continue;
         
-        if ([listUtilities listGetLogical:model inArray:boundaryConditions.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
-        
-        matContainers = projector.getContainers;
-        for (i=0; i<projector.numberOfRows; i++) {
-            k = reorder[matContainers->InvPerm[i]];
-            if (k >= 0) {
-                for (l=matContainers->Rows[i]; l<=matContainers->Rows[i+1]-1; l++) {
-                    if (matContainers->Cols[l] < 0) continue;
-                    m = reorder[matContainers->Cols[l]];
-                    if (m >= 0) {
-                        lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k andIndex:m];
-                        lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:k]; // Keep structure symmetric
-                        cList = list[k].Head;
-                        while (cList != NULL) {
-                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:cList->Index];
-                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:cList->Index andIndex:m]; // Keep structure symmetric
-                            cList = cList->Next;
+        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+            projector = boundaryCondition.pMatrix;
+            if (projector == nil) continue;
+            
+            if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
+            
+            matContainers = projector.getContainers;
+            for (i=0; i<projector.numberOfRows; i++) {
+                k = reorder[matContainers->InvPerm[i]];
+                if (k >= 0) {
+                    for (l=matContainers->Rows[i]; l<=matContainers->Rows[i+1]-1; l++) {
+                        if (matContainers->Cols[l] < 0) continue;
+                        m = reorder[matContainers->Cols[l]];
+                        if (m >= 0) {
+                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k andIndex:m];
+                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:k]; // Keep structure symmetric
+                            cList = list[k].Head;
+                            while (cList != NULL) {
+                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:cList->Index];
+                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:cList->Index andIndex:m]; // Keep structure symmetric
+                                cList = cList->Next;
+                            }
                         }
                     }
                 }
             }
         }
     }
+
     
     k = 0;
     for (i=0; i<sizeOfReorder; i++) {
@@ -296,6 +295,7 @@
         modelContainers->rowNonZeros[invPerm[i]] = list[i].Degree;
         model.totalMatrixElements = model.totalMatrixElements + list[i].Degree;
     }
+    return list;
 }
 
 /***************************************************************************************************************
@@ -319,7 +319,7 @@
             for (l=0; l<dofs; l++) {
                 for (m=0; m<dofs; m++) {
                     k1 = dofs * j + l;
-                    k2 = dofs * k * m;
+                    k2 = dofs * k + m;
                     [crsMatrix makeMatrixIndex:matrix atIndex:k1 andIndex:k2];
                 }
             }
@@ -352,18 +352,14 @@
     modelArraysContainer *modelContainers = NULL;
     ListMatrix_t *listMatrix;
     FEMMatrix *matrix, *constraint;
-    FEMListUtilities *listUtils;
-    FEMUtilities *utils;
     FEMBandwidthOptimize *optimizeBW;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
-    FEMListMatrix *list;
     matrixArraysContainer *matContainers;
     listBuffer ivals = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    listUtils = [[FEMListUtilities alloc] init];
-    utils = [[FEMUtilities alloc] init];
-    list = [[FEMListMatrix alloc] init];
+    FEMListUtilities *listUtils = [[FEMListUtilities alloc] init];
+    FEMUtilities *utils = [[FEMUtilities alloc] init];
     
     modelContainers = model.getContainers;
     
@@ -432,10 +428,10 @@
     optimizeBW = [[FEMBandwidthOptimize alloc] init];
     
     if (equation != nil) {
-        [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh list:listMatrix reorder:perm sizeOfReorder:permSize localNodes:k equation:equation dgSolver:&dg globalBubbles:&gb];
+        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:equation dgSolver:&dg globalBubbles:&gb];
         n = [optimizeBW optimizeBandwidthInListMatrix:listMatrix permutation:perm sizeOfPerm:permSize invInitialReorder:invInitialReorder localNodes:k optimize:optimizeBandwidth useOptimized:useOptimized equation:equation];
     } else {
-        [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh list:listMatrix reorder:perm sizeOfReorder:permSize localNodes:k equation:nil dgSolver:&dg globalBubbles:&gb];
+        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:nil dgSolver:&dg globalBubbles:&gb];
         n = [optimizeBW optimizeBandwidthInListMatrix:listMatrix permutation:perm sizeOfPerm:permSize invInitialReorder:invInitialReorder localNodes:k optimize:optimizeBandwidth useOptimized:useOptimized equation:@"[empty field]"];
     }
     
@@ -459,6 +455,7 @@
             break;
     }
     
+    FEMListMatrix *list = [[FEMListMatrix alloc] init];
     [list freeMatrix:listMatrix size:k];
     
     matrix.dgMatrix = dg;
@@ -466,7 +463,10 @@
     matrix.complexMatrix = NO;
     matrix.format = matrixFormat;
     
-    n = [listUtils listGetInteger:model inArray:solution.valuesList forVariable:@"constraint dofs" info:&found minValue:NULL maxValue:NULL];
+    if ((solution.solutionInfo)[@"constraint dofs"] != nil) {
+        n = [(solution.solutionInfo)[@"constraint dofs"] intValue];
+    } n = 0;
+    
     if (n > 0) {
         constraint = [[FEMMatrix alloc] init];
         matrix.constraint = constraint;
@@ -658,7 +658,10 @@
     free_ivector(modelContainers->rowNonZeros, 0, modelContainers->sizeRowNonZeros-1);
     modelContainers->rowNonZeros = NULL;
     free_ivector(invInitialReorder, 0, k-1);
-    free_ivector(ivals.ivector, 0, ivals.m-1);
+    if (ivals.ivector != NULL) {
+        free_ivector(ivals.ivector, 0, ivals.m-1);
+        ivals.vector = NULL;
+    }
     
     return matrix;
 }

@@ -680,13 +680,8 @@
 ***************************************************************************/
  
     int i, j, k, l;
-    double s, *p, *q, *p0, *p1;
-    
-    p = doublevec(1, n+1);
-    q = doublevec(1, n);
-    p0 = doublevec(1, n);
-    p1 = doublevec(1, n+1);
-    
+    double s, p[n+1], p0[n], p1[n+1];
+        
     if (n <= 1) {
         basis[0][0] = 1.0;
         return;
@@ -697,12 +692,12 @@
     // (i+1)P_{i+1}(x) = (2i+1)*x*P_i(x) - i*P{i-1}(x), P_{0} = 1; P_{1} = x;
     // IMPORTANT: Computed coefficients inaccurate for n > ~15
     //--------------------------------------------------------------------------
-    memset( p, 0.0, (n+1)*sizeof(double) );
-    memset( p0, 0.0, n*sizeof(double) );
-    memset( p1, 0.0, (n+1)*sizeof(double) );
-    p0[1] = 1;
-    p1[1] = 1;
-    p1[2] = 0;
+    memset( p, 0.0, sizeof(p) );
+    memset( p0, 0.0, sizeof(p0) );
+    memset( p1, 0.0, sizeof(p1) );
+    p0[0] = 1;
+    p1[0] = 1;
+    p1[1] = 0;
     
     basis[0][0] = 0.5;
     basis[0][1] = -0.5;
@@ -710,37 +705,31 @@
     basis[1][0] = 0.5;
     basis[1][1] = 0.5;
     
-    for (k=2; k<=n; k++) {
-        if (k > 2) {
-            s = sqrt( (2.0*(k-1)-1) / 2.0 );
-            for (j=1; j<=k-1; j++) {
-                basis[k-1][(k-1)-j+1] = s * p0[j] / (k-j);
-                basis[k-1][0] = basis[k-1][0] - s * p0[j]*pow((-1), (j+1)) / (k-j);
+    for (k=1; k<n; k++) {
+        if (k > 1) {
+            s = sqrt( (2.0*k-1) / 2.0 );
+            for (j=0; j<k; j++) {
+                basis[k][k-j] = s * p0[j] / (k-j);
+                basis[k][0] = basis[k][0] - s * p0[j]*pow((-1), (j+2)) / (k-j);
             }
         }
         
-        i = k - 1;
-        for (j=1; j<=i+1; j++) {
+        i = k;
+        for (j=0; j<i+1; j++) {
             p[j] = (2*i+1) * p[j] / (i+1);
         }
-        for (j=3; j<=i+2; j++) {
-            for (l=0; l<=i; l++) {
+        for (j=2; j<i+2; j++) {
+            for (l=0; l<i; l++) {
                 p[j] = p[j] - i*p0[l] / (i+1);
             }
         }
-        for (j=1; j<=i+1; j++) {
+        for (j=0; j<i+1; j++) {
             p0[j] = p1[j];
         }
-        for (j=1; j<=i+2; j++) {
+        for (j=0; j<i+2; j++) {
             p1[j] = p[j];
         }
     }
-    
-    free_dvector(p, 1, n+1);
-    free_dvector(q, 1, n);
-    free_dvector(p0, 1, n);
-    free_dvector(p1, 1, n+1);
-    
 }
 
 /**********************************************************************************************
@@ -879,7 +868,6 @@
     
     int i, j, k, n, upow, vpow, wpow;
     double u, v, w;
-    double **a;
     FEMLinearAlgebra *algebra;
     ElementType_t *temp;
     
@@ -893,7 +881,7 @@
     
     if (element->ElementCode >= 200) {
         
-        a = doublematrix(0, n-1, 0, n-1);
+        double **a = doublematrix(0, n-1, 0, n-1);
         
         //------------------------------
         // 1D line element
@@ -1025,7 +1013,7 @@
         free_dmatrix(a, 0, n-1, 0, n-1);
         
         if (element->ElementCode == 202) {
-            a = doublematrix(0, 13, 0, 13);
+            double **a = doublematrix(0, 13, 0, 13);
             memset( *a, 0.0, (14*14)*sizeof(double) );
             [self FEMElementDescription_compute1DPBasis:a sizeOfBasis:14];
             
@@ -1380,7 +1368,7 @@
     int i, j, k, family;
     double x0, y0, z0, hk, a, s, cx, cy, cz;
     double j11, j12, j13, j21, j22, j23, g11, g12, g22;
-    int **edgeMap, size;
+    int **edgeMap = NULL, size;
     
     family = element->Type.ElementCode / 100;
     
@@ -1396,7 +1384,7 @@
             j22 = nodes->y[2] - nodes->y[0];
             j23 = nodes->z[2] - nodes->z[0];
             g11 = pow(j11, 2.0) + pow(j12, 2.0) + pow(j13, 2.0);
-            g12 = j11*j21 + j12+j22 + j13*j23;
+            g12 = j11*j21 + j12*j22 + j13*j23;
             g22 = pow(j21, 2.0) + pow(j22, 2.0) + pow(j23, 2.0);
             a = sqrt(g11*g22 - pow(g12, 2.0)) / 2.0;
             
@@ -1450,7 +1438,6 @@
             }
             break;
     }
-    edgeMap = NULL;
     return sqrt(hk);
 }
 

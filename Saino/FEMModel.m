@@ -395,7 +395,12 @@
     
     [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"output intervals" withValue:1];
+    
+    int *intervals = intvec(0, 0);
+    intervals[0] = 1;
+    [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"output intervals" withValues:intervals size:1];
+    free_ivector(intervals, 0, 0);
+    
     [listUtilities addStringInClassList:self.simulation theVariable:@"output file" withValue:@"TempDist.result"];
     [listUtilities addStringInClassList:self.simulation theVariable:@"post file" withValue:@"TempDist.ep"];
     
@@ -424,6 +429,7 @@
     FEMSolution *solution = [[FEMSolution alloc] init];
     [solution.solutionInfo setObject:@"always" forKey:@"invoke solution computer"];
     [solution.solutionInfo setObject:@"heat equation" forKey:@"equation"];
+    [solution.solutionInfo setObject:@"temperature" forKey:@"variable"];
     [solution.solutionInfo setObject:@1 forKey:@"variable dofs"];
     [solution.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
     [solution.solutionInfo setObject:@"bi-cgstab" forKey:@"linear system iterative method"];

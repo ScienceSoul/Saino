@@ -153,10 +153,13 @@
                         }
                     }
                 }
-                free_ivector(activeSolvers.ivector, 0, activeSolvers.m-1);
             }
         }
         i++;
+    }
+    
+    if (activeSolvers.ivector != NULL) {
+        free_ivector(activeSolvers.ivector, 0, activeSolvers.m-1);
     }
     
     utilities = [[FEMUtilities alloc] init];
@@ -173,7 +176,7 @@
             }
         }
         
-        if (solution.plugInPrincipalClassInstance == nil || solution.selector == NULL || initSolution == YES) {
+        if ((solution.plugInPrincipalClassInstance == nil && solution.selector == nil) || initSolution == YES) {
             //TODO: Make sure that this is alsways correct. Here if the solution has no mesh
             // we assigned it to the first mesh listed in model.meshes
             if (solution.mesh == nil) solution.mesh = model.meshes[0];
@@ -442,7 +445,6 @@
     FEMSolution *solution = nil;
     FEMListUtilities *listUtilities;
     FEMMeshUtils *meshUtilities;
-    FEMElementDescription *elementDescription;
     FEMElementUtils *elementUtils;
     Element_t *elements = NULL;
     Nodes_t *nodes = NULL;
@@ -464,14 +466,14 @@
     _initDirichlet = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"initialize dirichlet conditions" info:&found];
     if (found == NO) _initDirichlet = YES;
     
-    elementDescription = [[FEMElementDescription alloc] init];
-    nrm = doublevec(0, 2);
-    t1 = doublevec(0, 2);
-    t2 = doublevec(0, 2);
-    vec = doublevec(0, 2);
-    tmp = doublevec(0, 2);
-    
     if (_initDirichlet == YES) {
+        FEMElementDescription * elementDescription = [[FEMElementDescription alloc] init];
+        nrm = doublevec(0, 2);
+        t1 = doublevec(0, 2);
+        t2 = doublevec(0, 2);
+        vec = doublevec(0, 2);
+        tmp = doublevec(0, 2);
+
         meshUtilities = [[FEMMeshUtils alloc] init];
         for (FEMMesh *mesh in model.meshes) {
             [meshUtilities setCurrentMesh:mesh inModel:model];
@@ -634,17 +636,16 @@
                 }
             }
         }
+        [elementDescription deallocation];
+        free_dvector(nrm, 0, 2);
+        free_dvector(t1, 0, 2);
+        free_dvector(t2, 0, 2);
+        free_dvector(vec, 0, 2);
+        free_dvector(tmp, 0, 2);
     }
     
     if (work.vector != NULL) free_dvector(work.vector, 0, work.m-1);
     if (work.tensor != NULL) free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
-    
-    [elementDescription deallocation];
-    free_dvector(nrm, 0, 2);
-    free_dvector(t1, 0, 2);
-    free_dvector(t2, 0, 2);
-    free_dvector(vec, 0, 2);
-    free_dvector(tmp, 0, 2);
 }
 
 -(void)FEMJob_runSimulation:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning{
@@ -661,7 +662,7 @@
     listUtilities = [[FEMListUtilities alloc] init];
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
         if (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_ALL) {
             [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
@@ -910,7 +911,7 @@
                 k = (timeStep-1) % outputIntervals[interval-1];
                 if (k == 0 || steadyStateReached == YES) {
                     for (FEMSolution *solution in model.solutions) {
-                        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                              _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -923,7 +924,7 @@
                     _lastSaved = YES;
                     
                     for (FEMSolution *solution in model.solutions) {
-                        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                             _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -954,7 +955,7 @@
     
 jump:
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
         if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
             _when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([_when isEqualToString:@"after simulation"] || [_when isEqualToString:@"after all"]) {
@@ -971,7 +972,7 @@ jump:
     
     if (_lastSaved == NO) {
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+            if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
             execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
             if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                 _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -1773,7 +1774,7 @@ jump:
         // Always save the last step to output
         if (_lastSaved == NO) {
             for (FEMSolution *solution in self.model.solutions) {
-                if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
                 execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
                 if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                     when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -1788,7 +1789,7 @@ jump:
             [self FEMJob_saveCurrent:self.model currentStep:timeStep];
             
             for (FEMSolution *solution in self.model.solutions) {
-                if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+                if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
                  execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
                 if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                     when = (solution.solutionInfo)[@"invoke solution computer"];

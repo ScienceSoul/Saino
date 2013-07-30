@@ -730,7 +730,7 @@
         }
     }
     
-    if (aContainers->Cols[n] < 0) {
+    if (aContainers->Cols[n] >= 0) {
         NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d\n", n, aContainers->Cols[n]);
         errorfunct("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
@@ -793,9 +793,9 @@
         if (sortValues == YES) {
             buffer1 = intvec(0, aContainers->sizeValues-1);
             buffer2 = doublevec(0, aContainers->sizeValues-1);
-            memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
-            memset( buffer2, 0.0, aContainers->sizeValues*sizeof(double) );
             for (i=0; i<n; i++) {
+                memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
+                memset( buffer2, 0.0, aContainers->sizeValues*sizeof(double) );
                 k = 0;
                 for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
                     buffer1[k] = aContainers->Cols[j];
@@ -815,8 +815,8 @@
             
         } else {
             buffer1 = intvec(0, aContainers->sizeValues-1);
-            memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
             for (i=0; i<n; i++) {
+                memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
                 k = 0;
                 for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
                     buffer1[k] = aContainers->Cols[j];

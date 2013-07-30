@@ -50,7 +50,7 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
-        _selector = NULL;
+        _selector = nil;
         _plugInPrincipalClassInstance = nil;
         
         _solutionInfo = [[NSMutableDictionary alloc] init];

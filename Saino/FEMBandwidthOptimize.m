@@ -30,7 +30,7 @@
             if (doneIndex[k] < 0) {
                 permLocal[*index] = k;
                 doneIndex[k] = *index;
-                *index = *index++;
+                *index = *index + 1;
             }
         }
         p = p->Next;
@@ -47,7 +47,7 @@
     level = levelin;
     
     stack = (Stack_t*)malloc(sizeof(Stack_t) * 512 );
-    stackp = 0;
+    stackp = -1;
     
     p = listMatrix[n].Head;
     while (p != NULL) {
@@ -59,6 +59,7 @@
             free(stack);
             stack = copystack;
         }
+        stackp++;
         stack[stackp].p = p;
         
         listMatrix[n].Level = level;
@@ -85,7 +86,6 @@
             }
             p = p->Next;
         }
-        stackp++;
     }
     free(stack);
 }
@@ -168,7 +168,7 @@
     
     doneAlready = (BOOL*)malloc(sizeof(BOOL) * localNodes);
     maxLevel = 0;
-    memset( doneAlready, NO, localNodes*sizeof(BOOL) );
+    memset( doneAlready, 0, localNodes*sizeof(BOOL) );
     
     [self FEMBandwidthOptimize_levelSize:listMatrix maxLevel:&maxLevel localNodes:localNodes doneAlready:doneAlready nin:startNode levelin:0];
     
@@ -190,10 +190,7 @@
         if (k != startNode) {
             j = maxLevel;
             maxLevel = 0;
-            for (i=0; i<localNodes; i++) {
-                doneAlready[i] = NO;
-            }
-            
+            memset( doneAlready, 0, localNodes*sizeof(BOOL) );            
             [self FEMBandwidthOptimize_levelSize:listMatrix maxLevel:&maxLevel localNodes:localNodes doneAlready:doneAlready nin:k levelin:0];
             
             if (j > maxLevel) {
@@ -242,7 +239,7 @@
     free_ivector(doneIndex, 0, localNodes-1);
 
     halfBandwidthAfter = [self computeBandWidthInListMatrix:listMatrix size:localNodes reorder:perm invInitialReorder:invInitialReorder] + 1;
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: done.\n");
+    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: ...done.\n");
     NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth after optimization: %d\n", halfBandwidthAfter);
     halfBandwidth = halfBandwidthAfter;
     if (halfBandwidthBefore < halfBandwidth && useOptimized == NO) {

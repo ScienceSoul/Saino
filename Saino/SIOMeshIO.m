@@ -70,7 +70,6 @@
     
     [self.meshAgent closeMesh];
     self.info = 0;
-    self.meshAgent = nil;
 }
 
 -(void)close {

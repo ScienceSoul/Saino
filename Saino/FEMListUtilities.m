@@ -41,6 +41,8 @@
     Element_t *element;
     BOOL found;
     
+    if (str == nil) return;
+    
     utilities = [[FEMUtilities alloc] init];
     
     //TODO: This method only support one string passed at a time, not several strings separeted by a comma. 

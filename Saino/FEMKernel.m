@@ -2295,7 +2295,7 @@ static const int PRECOND_VANKA     =  560;
         // Go through number of solutions (heat, laminar or turbulent flow, etc...)
         k = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) {
+            if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) {
                 if (solution.solutionMode != SOLUTION_MODE_COUPLED || solution.solutionMode != SOLUTION_MODE_ASSEMBLY
                     || solution.solutionMode != SOLUTION_MODE_BLOCK) {
                     NSLog(@"FEMKernel:SolveEquations: no routine related to solution!\n");
@@ -2489,8 +2489,9 @@ static const int PRECOND_VANKA     =  560;
             utilities = [[FEMUtilities alloc] init];
             elements = solution.mesh.getElements;
             maxDim = 0;
+            FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
             for (i=0; i<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; i++) {
-                if ([utilities checkEquationForElement:&elements[i] model:model equation:equationName] == YES) {
+                if ([listUtilities checkElementEquation:model forElement:&elements[i] andEquation:equationName] == YES) {
                     solContainers->activeElements[solution.numberOfActiveElements] = i;
                     maxDim = max(elements[i].Type.dimension, maxDim);
                     solution.numberOfActiveElements++;
@@ -2515,7 +2516,7 @@ static const int PRECOND_VANKA     =  560;
         // TODO: add support for parallel run
     }
     
-    if (solution.selector != NULL) {
+    if (solution.selector != nil) {
         if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             // Acquire signature invocations and set selector for invocations
             solutionSelectorSignature = [FEMFlowSolution instanceMethodSignatureForSelector:solution.selector];
@@ -7852,7 +7853,7 @@ static const int PRECOND_VANKA     =  560;
     
     if (transient) {
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector != NULL || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
+            if (solution.selector != nil || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
         }
     }
     
@@ -7864,7 +7865,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([when isEqualToString:@"before time step"] == YES) {
@@ -7893,7 +7894,7 @@ static const int PRECOND_VANKA     =  560;
     if (*realTimeStep > 2) {
         i = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+            if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
             
             rungeKutta = NO;
             if (transient == YES && solution.timeOrder == 1) {
@@ -8016,7 +8017,7 @@ static const int PRECOND_VANKA     =  560;
     prevDt = *dt;
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == NULL || solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
         
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];

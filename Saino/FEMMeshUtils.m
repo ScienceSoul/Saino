@@ -3136,7 +3136,7 @@
     
     for (i=0; i<mesh.numberOfBulkElements; i++) {
         n = elements[i].Type.NumberOfNodes;
-        for (j=0; i<n; j++) {
+        for (j=0; j<n; j++) {
             nodes->x[j] = meshNodes->x[elements[i].NodeIndexes[j]];
             nodes->y[j] = meshNodes->y[elements[i].NodeIndexes[j]];
             nodes->z[j] = meshNodes->z[elements[i].NodeIndexes[j]];

@@ -35,6 +35,8 @@
     solutionArraysContainer *solContainers = NULL;
     NSRange substr;
     
+    if (elementDef == nil) return;
+    
     solution = (model.solutions)[solverID];
     solContainers = solution.getContainers;
     
@@ -121,6 +123,12 @@
             defDofs[5] = max(defDofs[5], l);
         }
     }
+    for (i=0; i<model.numberOfBodies; i++) {
+        for (j=0; j<6; j++) {
+            NSLog(@"defdofs: %d\n", solContainers->defDofs[i][j]);
+        }
+    }
+    
 }
 
 /***********************************************************************
@@ -320,7 +328,7 @@
     int meshDim, saveDim;
     int minIndex, maxIndex, minEIndex, maxEIndex, dgIndex, bid, defaultTargetBC;
     int *countByType, *types, typeCount, *inDofs, *nodes;
-    int *nodeTags, *localPerm, *localEPerm, *elementTags, *edgeDofs, *faceDofs;
+    int *nodeTags, *localPerm, *localEPerm, *elementTags, *edgeDofs = NULL, *faceDofs = NULL;
     listBuffer coordMap = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer wrk = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer bdList = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -507,11 +515,9 @@
     elmDescription = [[FEMElementDescription alloc] init];
     elementTags = intvec(0, (self.numberOfBulkElements+1)-1);
     
-    edgeDofs = NULL;
     edgeDofs = intvec(0, self.numberOfBulkElements-1);
     if (edgeDofs == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate edge dofs.");
     
-    faceDofs = NULL;
     faceDofs = intvec(0, self.numberOfBulkElements-1);
     if (faceDofs == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate face dofs.");
     
@@ -688,16 +694,16 @@
             left = localEPerm[left - minEIndex];
         } else if (left > 0) {
             NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d\n", *partID, tag, left);
-            left = 0;
-        }
+            left = -1;
+        } else if (left == 0) left = -1; // No left parent element
         
         if (right >= minEIndex && right <= maxEIndex) {
             right = localEPerm[right - minEIndex];
         } else if (right > 0) {
             NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d\n", *partID, tag, right);
-            right = 0;
-        }
-        
+            right = -1;
+        } else if (right == 0) right = -1; // No right parent element
+
         _elements[i].ElementIndex = i+1;
         elmType = NULL;
         elmType = [elmDescription getElementType:type inMesh:self stabilization:NULL];
@@ -775,13 +781,13 @@
             _elements[i].FaceIndexes = NULL;
             
             _elements[i].BoundaryInfo->Left = NULL;
-            if (left >= 0 ) {
+            if (left > -1 ) {
                 _elements[i].BoundaryInfo->Left = &_elements[left];
                 
             }
             
             _elements[i].BoundaryInfo->Right = NULL;
-            if (right >= 0) {
+            if (right > -1) {
                 _elements[i].BoundaryInfo->Right = &_elements[right];
             }
             
@@ -933,12 +939,9 @@
             }
         }
     }
-    if (edgeDofs != NULL) {
-        free_ivector(edgeDofs, 0, self.numberOfBulkElements-1);
-        free_ivector(faceDofs, 0, self.numberOfBulkElements-1);
-        edgeDofs = NULL;
-        faceDofs = NULL;
-    }
+    
+    free_ivector(edgeDofs, 0, self.numberOfBulkElements-1);
+    free_ivector(faceDofs, 0, self.numberOfBulkElements-1);
     
     // Reallocate coordinate arrays for iso-parametric p-elements
     n = self.numberOfNodes + self.maxEdgeDofs * self.numberOfEdges + self.maxFaceDofs * self.numberOfFaces + self.maxBdofs * self.numberOfBulkElements;
