@@ -68,8 +68,8 @@
                         s = s - covMetric[i][k] * symbols[l][j][k] * velo[l];
                         s = s - covMetric[j][k] * symbols[l][i][k] * velo[l];
                         
-                        t = t - crtMatrix[j][k] + symbols[l][k][i] * velo[l];
-                        t = t - crtMatrix[i][k] + symbols[l][k][j] * velo[l];
+                        t = t - crtMatrix[j][k] * symbols[l][k][i] * velo[l];
+                        t = t - crtMatrix[i][k] * symbols[l][k][j] * velo[l];
                     }
                 }
                 secInv = secInv + s * t;
@@ -388,11 +388,10 @@
             }
         }
         
-        FEMElementDescription *elementDescription = [[FEMElementDescription alloc] init];
+        FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
         h = [elementDescription elementDiameter:element nodes:nodes];
         viscosity = viscosity + density * c2 * pow(h, 2.0) * sqrt(2.0*ss) / 2.0;
         if (muder != NULL) *muder = density * c2 * pow(h, 2.0) * sqrt(2.0)/(4.0*sqrt(ss));
-        [elementDescription deallocation];
     } else if ([viscosityFlag isEqualToString:@"ke"] == YES || [viscosityFlag isEqualToString:@"k-epsilon"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"kinetic energy" onlySearch:NULL maskName:nil info:&found];

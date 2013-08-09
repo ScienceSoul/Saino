@@ -336,7 +336,7 @@
     FEMMatrix *projector;
     FEMListUtilities *listUtil;
     SIOMeshIO *meshIO;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     FEMPElementMaps *pMaps;
     FEMMeshUtils *meshUtils;
     FEMEquation *equationConditionAtId;
@@ -512,7 +512,7 @@
     }
     
     // Mesh elements
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     elementTags = intvec(0, (self.numberOfBulkElements+1)-1);
     
     edgeDofs = intvec(0, self.numberOfBulkElements-1);
@@ -547,7 +547,7 @@
         
         elmType = NULL;
         _elements[i].BoundaryInfo = NULL;
-        elmType = [elmDescription getElementType:type inMesh:self stabilization:NULL];
+        elmType = [elementDescription getElementType:type inMesh:self stabilization:NULL];
         _elements[i].Type = *elmType;
         
         if (elmType != NULL) {
@@ -706,7 +706,7 @@
 
         _elements[i].ElementIndex = i+1;
         elmType = NULL;
-        elmType = [elmDescription getElementType:type inMesh:self stabilization:NULL];
+        elmType = [elementDescription getElementType:type inMesh:self stabilization:NULL];
         _elements[i].Type = *elmType;
                 
         self.maxElementNodes = max(self.maxElementNodes, type-100*(type/100));
@@ -1000,7 +1000,6 @@
     
     model.dimension = saveDim;
     
-    [elmDescription deallocation];
     [pMaps deallocation];
     free_ivector(nodeTags, 0, self.numberOfNodes-1); // TODO: This should be not deallocated if parallel mesh is supported
     free_ivector(countByType, 0, 63);

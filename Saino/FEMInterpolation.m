@@ -120,7 +120,7 @@
     BOOL isInElement;
     
     elementMaps = [[FEMPElementMaps alloc] init];
-    elementDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     isInElement = NO;
     n = element->Type.NumberOfNodes;
@@ -338,7 +338,6 @@
     localCoords[2] = wg;
     
     [elementMaps deallocation];
-    [elementDescription deallocation];
     return isInElement;
 }
 

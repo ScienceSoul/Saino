@@ -58,17 +58,17 @@
     if (_elementMetric == NULL) return NO;
     memset( *_elementMetric, 0.0, (3*3)*sizeof(double) );
     
-    _covariantMetrixTensor = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
+    _covariantMetrixTensor = doublematrix(0, 2, 0, 2);
     if (_covariantMetrixTensor == NULL) return NO;
-    memset( *_covariantMetrixTensor, 0.0, (mesh.dimension*mesh.dimension)*sizeof(double) );
+    memset( *_covariantMetrixTensor, 0.0, (3*3)*sizeof(double) );
     
-    _ltoGMap = doublematrix(0, mesh.dimension-1, 0, mesh.dimension-1);
+    _ltoGMap = doublematrix(0, 2, 0, 2);
     if (_ltoGMap == NULL) return NO;
-    memset( *_ltoGMap, 0.0, (mesh.dimension*mesh.dimension)*sizeof(double) );
+    memset( *_ltoGMap, 0.0, (3*3)*sizeof(double) );
 
-    _dx = doublematrix(0, 2, 0, mesh.dimension-1);
+    _dx = doublematrix(0, 2, 0, 2);
     if (_dx == NULL) return NO;
-    memset( *_dx, 0.0, (3*mesh.dimension)*sizeof(double) );
+    memset( *_dx, 0.0, (3*3)*sizeof(double) );
     
     return YES;
 }
@@ -79,9 +79,9 @@
     free_dmatrix(_basisFirstDerivative, 0, mesh.maxElementNodes-1, 0, 2);
     free_d3tensor(_basisSecondDerivative, 0, mesh.maxElementNodes-1, 0, 2, 0, 2);
     free_dmatrix(_elementMetric, 0, 2, 0, 2);
-    free_dmatrix(_covariantMetrixTensor, 0, mesh.dimension-1, 0, mesh.dimension-1);
-    free_dmatrix(_ltoGMap, 0, mesh.dimension-1, 0, mesh.dimension-1);
-    free_dmatrix(_dx, 0, 2, 0, mesh.dimension-1);
+    free_dmatrix(_covariantMetrixTensor, 0, 2, 0, 2);
+    free_dmatrix(_ltoGMap, 0, 2, 0, 2);
+    free_dmatrix(_dx, 0, 2, 0, 2);
 }
 
 
@@ -109,7 +109,7 @@
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     if (element->Type.ElementCode == 101) {
         self.basis[0] = 1.0;
@@ -146,26 +146,27 @@
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     if (element->Type.ElementCode == 101) {
         for (i=0; i<2; i++) {
             self.basisFirstDerivative[0][i] = 0.0;
         }
+        return YES;
     }
     
     dLBasisdx = doublematrix(0, n-1, 0, 2);
-    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );    
+    memset( *dLBasisdx, 0.0, (n*3)*sizeof(double) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     
     q = n;
-    memset( *_basisFirstDerivative, 0.0, (n*2)*sizeof(double) );
+    memset( *_basisFirstDerivative, 0.0, (n*3)*sizeof(double) );
     [self setLtoGMapForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     for (i=0; i<q; i++) {
         for (j=0; j<cdim; j++) {
             for (k=0; k<dim; k++) {
-                self.basisFirstDerivative[i][j] = self.basisFirstDerivative[i][j] * dLBasisdx[i][k]*self.ltoGMap[j][k];
+                self.basisFirstDerivative[i][j] = self.basisFirstDerivative[i][j] + dLBasisdx[i][k]*self.ltoGMap[j][k];
             }
         }
     }
@@ -210,16 +211,16 @@
     Values = doublematrix(0, 2, 0, 2);
     
     memset( NodalBasis, 0.0, n*sizeof(double) );
-    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );
-    memset(**_basisSecondDerivative, 0.0, (n*2*2)*sizeof(double) );
+    memset( *dLBasisdx, 0.0, (n*3)*sizeof(double) );
+    memset(**_basisSecondDerivative, 0.0, (n*3*3)*sizeof(double) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     [self setMetricForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
     for (q=0; q<n; q++) {
         NodalBasis[q] = 1.0;
         [self globalSecondDerivativesForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w nodalValues:NodalBasis dLBasisdx:dLBasisdx values:Values];
-        for (i=0; i<2; i++) {
-            for (j=0; j<2; j++) {
+        for (i=0; i<3; i++) {
+            for (j=0; j<3; j++) {
                 self.basisSecondDerivative[q][i][j] = Values[i][j];
             }
         }
@@ -258,7 +259,7 @@
     double detG, **GI;
     
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     detG = [self detJForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
@@ -311,7 +312,7 @@
     double s;
     
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     [self setDxForElement:element nDOFs:nDOFs nodes:nodes dLBasisdx:dLBasisdx];
     
@@ -332,7 +333,7 @@
     double s;
     
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     [self setMetricForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
@@ -407,10 +408,11 @@
     
     int n, dim, cdim;
     double detG, **dLBasisdx;
+    BOOL success = YES;
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
     dLBasisdx = doublematrix(0, n-1, 0, 2);
     memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );    
@@ -421,30 +423,20 @@
     switch (dim) {
            
         case 1:  // Line elements
-            detG = self.covariantMetrixTensor[1][1];
-            if (detG <= 0.0) {
-                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 1D element");
-            }
+            detG = self.covariantMetrixTensor[0][0];
+            if (detG <= DBL_MIN) success = NO;
             break;
             
         case 2: // Surface elements
             detG = ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][0] );
-            if (detG <= 0.0) {
-                if (cdim < dim) {
-                    NSLog(@"FEMNumericIntegration:detJForElement: 2D element in 1D coordinate systrem?\n");
-                }
-                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 2D element");
-            }
+            if (detG <= DBL_MIN) success = NO;
             break;
             
         case 3: // Volume elements 
-            detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] ) + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] ) + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
-            if (detG <= 0.0) {
-                if (cdim < dim) {
-                    NSLog(@"FEMNumericIntegration:detJForElement: 2D/3D element in 1D/2D coordinate systrem?\n");
-                }
-                errorfunct("FEMNumericIntegration:detJForElement", "Degenerate 3D element");
-            }
+            detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] )
+                + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] )
+                + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
+            if (detG <= DBL_MIN) success = NO;
             break;
             
         default:
@@ -453,6 +445,17 @@
     }
     free_dmatrix(dLBasisdx, 0, n-1, 0, 2);
     
+    if (success == NO) {
+        NSLog(@"detJForElement: Degenerate %d D element: %d.\n", dim, element->ElementIndex);
+        NSLog(@"detJForElement: detJ: %f\n", detG);
+        for (int i=0; i<cdim; i++) {
+            NSLog(@"detJForElement: Dir: %d, Coord: %f %f %f\n", cdim, nodes->x[i], nodes->y[i], nodes->z[i]);
+        }
+        if (cdim < dim) {
+            NSLog(@"detJForElement: element dimension larger than mesh dimension: %d vs %d\n", dim, cdim);
+        }
+        errorfunct("detJForElement", "Programm terminating now...");
+    }
     return detG;
 }
 
@@ -463,21 +466,15 @@
     s = 1.0 / detG;
     
     GI[0][0] = s * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][1]*self.covariantMetrixTensor[1][2] );
-    
     GI[1][0] = -s * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[1][2] );
-    
     GI[2][0] = s * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[1][1] );
     
     GI[0][1] = -s * ( self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][1]*self.covariantMetrixTensor[0][2] );
-    
     GI[1][1] = s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[0][2] );
-    
     GI[2][1] = -s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[0][1] );
     
     GI[0][2] = s * ( self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][2] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[0][2] );
-    
     GI[1][2] = -s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][2] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[0][2] );
-    
     GI[2][2] = s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[0][1] );
 }
 
@@ -495,9 +492,9 @@
 ******************************************************************************************************/
     
     int i, j, k, l, n, dim, cdim;
-    double ***C1, ***C2, ***ddx;
-    double *df;
-    double **cddf, **ddf, **dxx, **bf;
+    double C1[3][3][3], C2[3][3][3], ddx[3][3][3];
+    double df[3];
+    double cddf[3][3], ddf[3][3], dxx[3][3], **bf;
     double accum1, accum2, accum3, accum4;
     double s;
 
@@ -506,21 +503,11 @@
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
-    
-    C1 = d3tensor(0, 2, 0, 2, 0, 2);
-    C2 = d3tensor(0, 2, 0, 2, 0, 2);
-    ddx = d3tensor(0, 2, 0, 2, 0, 2);
-    
-    df = doublevec(0, 2);
-    
-    cddf = doublematrix(0, 2, 0, 2);
-    ddf = doublematrix(0, 2, 0, 2);
-    dxx = doublematrix(0, 2, 0, 2);
+    cdim = mesh.dimension;
 
     // Partial derivatives of the basis functions are given, just
     // sum for the first partial derivatives.
-    memset( df, 0.0, 3*sizeof(double) );
+    memset( df, 0.0, sizeof(df) );
     memset( *dxx, 0.0, (3*3)*sizeof(double) );
     
     switch (cdim) {
@@ -682,7 +669,7 @@
             SecondDerivatives2D(bf, element, f, u, v);
             for (i=0; i<2; i++) {
                 for (j=0; j<2; j++) {
-                    ddf[i][j] = bf[1][2];
+                    ddf[i][j] = bf[i][j];
                 }
             }
             
@@ -711,7 +698,7 @@
         for (j=0; j<dim; j++) {
             s = 0.0;
             for (k=0; k<dim; k++) {
-                s = s + C1[i][j][k]*df[k];
+                s = s - C1[i][j][k]*df[k];
             }
             ddf[i][j] = ddf[i][j] + s;
         }
@@ -743,16 +730,6 @@
             values[i][j] = s;
         }
     }
-    
-    free_d3tensor(C2, 0, 2, 0, 2, 0, 2);
-    free_d3tensor(C1, 0, 2, 0, 2, 0, 2);
-    free_d3tensor(ddx, 0, 2, 0, 2, 0, 2);
-    
-    free_dvector(df, 0, 2);
-    
-    free_dmatrix(cddf, 0, 2, 0, 2);
-    free_dmatrix(ddf, 0, 2, 0, 2);
-    free_dmatrix(dxx, 0, 2, 0, 2);
 }
 
 @end

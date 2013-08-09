@@ -258,6 +258,7 @@ typedef struct matrixArraysContainer {
     
     // For flux corrected transport
     double *FCT_D;
+    double *MassValuesLumped;
     int sizeFct;
     
 } matrixArraysContainer;

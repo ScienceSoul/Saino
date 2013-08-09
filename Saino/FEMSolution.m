@@ -32,7 +32,7 @@
 @synthesize dt = _dt;
 @synthesize multigridSolution = _multigridSolution;
 @synthesize multigridEqualPlit = _multigridEqualPlit;
-@synthesize selector = _selector;
+@synthesize builtInSolution = _builtInSolution;
 @synthesize plugInPrincipalClassInstance = _plugInPrincipalClassInstance;
 @synthesize plugInName = _plugInName;
 @synthesize matrix = _matrix;
@@ -50,7 +50,7 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
-        _selector = nil;
+        _builtInSolution = NO;
         _plugInPrincipalClassInstance = nil;
         
         _solutionInfo = [[NSMutableDictionary alloc] init];

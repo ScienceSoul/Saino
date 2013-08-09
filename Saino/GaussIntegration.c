@@ -129,17 +129,17 @@ static double STriangle11P[11] = {
 /* Triangle - 12 point; exact integration of x^py^q, p+q,=7                */
 /***************************************************************************/
 static double UTriangle12P[12] = {
-    0.6232720494911090, 0.3215024938520235, 0.5522545665686063E-01,
-    0.2777161669760336, 0.5158423343535236, 0.2064414986704435, 
-    0.3432430294535058E-01, 0.3047265008682535, 0.6609491961864082,
-    0.6238226509441210E-01, 0.8700998678316921, 0.6751786707389329E-01
+    0.6232720494911090E+00, 0.3215024938520235E+00, 0.5522545665686063E-01,
+    0.2777161669760336E+00, 0.5158423343535236E+00, 0.2064414986704435E+00,
+    0.3432430294535058E-01, 0.3047265008682535E+00, 0.6609491961864082E+00,
+    0.6238226509441210E-01, 0.8700998678316921E+00, 0.6751786707389329E-01
 };
 
 static double VTriangle12P[12] = {
-    0.3215024938520235, 0.5522545665686063E-01, 0.6232720494911090,
-    0.5158423343535236, 0.2064414986704435, 0.2777161669760336, 
-    0.3047265008682535, 0.6609491961864082, 0.3432430294535058E-01,
-    0.8700998678316921, 0.6751786707389329E-01, 0.6238226509441210E-01
+    0.3215024938520235E+00, 0.5522545665686063E-01, 0.6232720494911090E+00,
+    0.5158423343535236E+00, 0.2064414986704435E+00, 0.2777161669760336E+00,
+    0.3047265008682535E+00, 0.6609491961864082E+00, 0.3432430294535058E-01,
+    0.8700998678316921E+00, 0.6751786707389329E-01, 0.6238226509441210E-01
 };
 
 static double STriangle12P[12] = {
@@ -224,50 +224,50 @@ static double STetra1P[1] = {1.00E-00};
 /* Tetrahedron - 4 point rule; exact integration of x^py^qz^r, p+q+r<=2    */
 /***************************************************************************/
 static double UTetra4P[4] = {
-    0.1757281246520584E-00, 0.2445310270213291E-00, 
-    0.5556470949048655E-00, 0.0240937534217468E-00
+    0.1757281246520584E+00, 0.2445310270213291E+00,
+    0.5556470949048655E+00, 0.0240937534217468E+00
 };
 
 static double VTetra4P[4] = {
-    0.5656137776620919E-00, 0.0501800797762026E-00, 
-    0.1487681308666864E-00, 0.2354380116950194E-00
+    0.5656137776620919E+00, 0.0501800797762026E+00,
+    0.1487681308666864E+00, 0.2354380116950194E+00
 };
 
 static double WTetra4P[4] = {
-    0.2180665126782654E-00, 0.5635595064952189E-00, 
-    0.0350112499848832E-00, 0.1833627308416330E-00
+    0.2180665126782654E+00, 0.5635595064952189E+00,
+    0.0350112499848832E+00, 0.1833627308416330E+00
 };
 
 static double STetra4P[4] = {
-    0.2500000000000000E-00, 0.2500000000000000E-00,
-    0.2500000000000000E-00, 0.2500000000000000E-00
+    0.2500000000000000E+00, 0.2500000000000000E+00,
+    0.2500000000000000E+00, 0.2500000000000000E+00
 };
 
 /***************************************************************************/
 /* Tetrahedron - 5 point rule; exact integration of x^py^qz^r, p+q+r<=3    */
 /***************************************************************************/
 static double UTetra5P[5] = {
-    0.25000000000000000E-00, 0.50000000000000000E-00, 
-    0.16666666666666667E-00, 0.16666666666666667E-00,
-    0.16666666666666667E-00
+    0.25000000000000000E+00, 0.50000000000000000E+00,
+    0.16666666666666667E+00, 0.16666666666666667E+00,
+    0.16666666666666667E+00
 };
 
 static double VTetra5P[5] = {
-    0.25000000000000000E-00, 0.16666666666666667E-00, 
-    0.50000000000000000E-00, 0.16666666666666667E-00,
-    0.16666666666666667E-00
+    0.25000000000000000E+00, 0.16666666666666667E+00,
+    0.50000000000000000E+00, 0.16666666666666667E+00,
+    0.16666666666666667E+00
 };
 
 static double WTetra5P[5] = {
-    0.25000000000000000E-00, 0.16666666666666667E-00, 
-    0.16666666666666667E-00, 0.50000000000000000E-00,
-    0.16666666666666667E-00
+    0.25000000000000000E+00, 0.16666666666666667E+00,
+    0.16666666666666667E+00, 0.50000000000000000E+00,
+    0.16666666666666667E+00
 };
 
 static double STetra5P[5] = {
-    -0.80000000000000000E-00, 0.45000000000000000E-00, 
-    0.45000000000000000E-00, 0.45000000000000000E-00,
-    0.45000000000000000E-00
+   -0.80000000000000000E+00, 0.45000000000000000E+00,
+    0.45000000000000000E+00, 0.45000000000000000E+00,
+    0.45000000000000000E+00
 };
 
 /***************************************************************************/
@@ -335,7 +335,7 @@ void RefineRoots(int n, double *P, double *Q, double *Points) {
             x = x - s;
             if( fabs(s) <= fabs(x)*DBL_EPSILON ) break;
         }
-        if( fabs(EvalPoly(n,Points,x)) < fabs(EvalPoly(n,P,Points[i])) ) {
+        if( fabs(EvalPoly(n,P,x)) < fabs(EvalPoly(n,P,Points[i])) ) {
             if( fabs(x-Points[i]) < 1.0e-8 ) Points[i] = x;
         }
     }
@@ -350,20 +350,11 @@ void GaussQuadraturePoints1D(int n) {
     int i, j, k, np, info;
     int arg1, arg2, arg3, arg4;
     char ch1, ch2;
-    double *Points, *Weights;
-    double **A, *AT, s, *Work;
-    double *P, *Q, *P0, *P1;
-    double buffer;
-    
-    Points = doublevec(0, n-1);
-    Weights = doublevec(0, n-1);
-    A = doublematrix(0, (n/2)-1, 0, (n/2)-1);
-    Work = doublevec(0, (8*n)-1);
-    P = doublevec(0, (n+1)-1);
-    Q = doublevec(0, n-1);
-    P0 = doublevec(0, n-1);
-    P1 = doublevec(0, (n+1)-1);
-    
+    double Points[n], Weights[n];
+    double A[n/2][n/2], *AT, s, Work[8*n];
+    double P[n+1], Q[n], P0[n], P1[n+1];
+    double sum;
+        
     // One point is trivial
     if (n <=1) {
         AllPoints[0][0] = 0.0;
@@ -371,37 +362,33 @@ void GaussQuadraturePoints1D(int n) {
         return;
     }
     
+    memset( Points, 0.0, sizeof(Points) );
+    memset( Weights, 0.0, sizeof(Weights) );
+    
     // Compute coefficients of n:th Legendre polynomial from the recurrence:
     // (i+p)P_{i+1}(x) = (2i+1)*x*P_i{x} - i*P_{i-1}(x), P_{0} = 1; P_{1} = x;
     // Caveat: Computed coefficients inaccurate for n > ~15
     
-    memset( P, 0.0, (n+1)*sizeof(double) );
+    memset( P, 0.0, sizeof(P) );
     P0[0] = 1.0;
     P1[0] = 1.0;
     P1[1] = 0.0;
     
     for (i=1;i<=n-1;i++) {
-        
         for (j=0;j<i+1;j++) {
             P[j] = (2*i+1) * P1[j] / (i+1);
         }
-        
+        k = 0;
         for (j=2;j<i+2;j++) {
-            buffer = 0.0;
-            for(k=0;k<i;k++) {
-                buffer = buffer - i*P0[k];
-            }
-            P[j] = P[j] - buffer / (i+1);
+            P[j] = P[j] - i*P0[k] / (i+1);
+            k++;
         }
-        
         for(j=0;j<i+1;j++) {
             P0[j] = P1[j];
         }
-        
         for(j=0;j<i+2;j++) {
             P1[j] = P[j];
         }
-        
     }
     
     // Odd n implicates zero as one of the roots...
@@ -410,10 +397,10 @@ void GaussQuadraturePoints1D(int n) {
     // Variable substitution: y=x^2
     np = np / 2;
     for(i=0;i<np+1;i++) {
-        P[i] = P[2*(i+1)-2];
+        P[i] = P[2*i];
     }
     
-    // Solve the roots of the polynomial by forming a matrux whose
+    // Solve the roots of the polynomial by forming a matrix whose
     // characteristic is the n:th Legendre polynomial and solving 
     // for the eigenvalues
     memset( *A, 0.0, (n/2*n/2)*sizeof(double) );
@@ -423,7 +410,7 @@ void GaussQuadraturePoints1D(int n) {
     for(i=0;i<np;i++) {
         A[np-1][i] = -P[(np-1)+2-(i+1)] / P[0];
     }
-    
+
     ch1 = 'N';
     ch2 = 'N';
     arg1 = n/2;
@@ -438,7 +425,6 @@ void GaussQuadraturePoints1D(int n) {
             AT[j+(n/2)*i] = A[j][i];
         }
     }
-    
     dgeev_(&ch1, &ch2, &np, AT, &arg1, Points, P0, Work, &arg2, Work, &arg3, Work, &arg4, &info);
     
     // Backsubstitute from y=x^2
@@ -446,25 +432,22 @@ void GaussQuadraturePoints1D(int n) {
         Q[i] = P[i];
     }
     
-    memset( P, 0.0, (n+1)*sizeof(double) );
-
+    memset( P, 0.0, sizeof(P) );
     for(i=0;i<np+1;i++) {
-        P[2*(i+1)-2] = Q[i];
+        P[2*i] = Q[i];
     }
     
-    for(i=0;i<np+1;i++) {
+    for(i=0;i<np;i++) {
         Q[i] = Points[i];
     }
     for(i=0;i<np;i++) {
         Points[2*(i+1)-2] = +sqrt(Q[i]);
         Points[2*(i+1)-1] = -sqrt(Q[i]);
     }
-    if ((n % 2) == 1) {
-        memset( Points, 0.0, n*sizeof(double) );
-    }
+    if ((n % 2) == 1) Points[n-1] = 0.0;
     
     DerivPoly(n,Q,P);
-    RefineRoots(n,Points,Q,Points);
+    RefineRoots(n,P,Q,Points);
     
     // Check for roots
     for(i=0;i<n;i++) {
@@ -495,13 +478,13 @@ void GaussQuadraturePoints1D(int n) {
     
     
     // Make really sure the weights add up:
-    buffer = 0.0;
+    sum = 0.0;
     for(i=0;i<n;i++) {
-        buffer = buffer + Weights[i];
+        sum = sum + Weights[i];
     }
     for(i=0;i<n;i++) {
         
-        Weights[i] = 2.0 * Weights[i] / buffer; 
+        Weights[i] = 2.0 * Weights[i] / sum;
     }
     
     //Copy data so that it's available later
@@ -511,22 +494,14 @@ void GaussQuadraturePoints1D(int n) {
         AllWeights[i][n-1] = Weights[i];
     }
     
-    free_dvector(Points, 0, n-1);
-    free_dvector(Weights, 0, n-1);
-    free_dmatrix(A, 0, (n/2)-1, 0, (n/2)-1);
     free_dvector(AT, 0, (n/2*n/2)-1);
-    free_dvector(Work, 0, (8*n)-1);
-    free_dvector(P, 0, (n+1)-1);
-    free_dvector(Q, 0, n-1);
-    free_dvector(P0, 0, n-1);
-    free_dvector(P1, 0, n-1);
 }
 
 void GaussQuadratureInit(GaussIntegrationPoints *pt) {
     
     int n;
     
-    if (GInit == false || (pt->u == NULL && pt->v == NULL && pt->w == NULL && pt->s == NULL)) {
+    if (GInit == false) {
         GInit = true;
         for(n=1;n<=MAXN;n++) {
             GaussQuadraturePoints1D(n);
@@ -596,7 +571,8 @@ void GaussQuadrature1D(int n, GaussIntegrationPoints *pt) {
     
     if(n < 1 || n > MAXN) {
         pt->n = 0;
-        errorfunct("GaussQuadrature1D", "Invalid number of points: ", n);
+        warnfunct("GaussQuadrature1D", "Invalid number of points: ", n);
+        return;
     }
     
     pt->n = n;
@@ -809,7 +785,8 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
     
     if( n < 1 || n > MAXN ) {
         pt->n = 0;
-        errorfunct("GaussQuadraturePyramid", "Invalid number of points: ", n);
+        warnfunct("GaussQuadraturePyramid", "Invalid number of points: ", n);
+        return;
     }
     
     t = 0;
@@ -830,7 +807,7 @@ void GaussQuadraturePyramid(int np, GaussIntegrationPoints *pt) {
         pt->w[t] = (pt->w[t] + 1.0) / 2.0;
         pt->u[t] = pt->u[t] * (1.0-pt->w[t]);
         pt->v[t] = pt->v[t] * (1.0-pt->w[t]);
-        pt->s[t] = pt->s[t] * pow((1.0-pt->w[t]), 2.0/2.0);
+        pt->s[t] = pt->s[t] * pow((1.0-pt->w[t]), 2.0) / 2.0;
     }
 }
 
@@ -844,7 +821,8 @@ void GaussQuadratureWedge(int np, GaussIntegrationPoints *pt) {
     
     if ( n < 1 || n > MAXN) {
         pt->n = 0;
-        errorfunct("GaussQuadratureWedge", "Invalid number of points: ", n);
+        warnfunct("GaussQuadratureWedge", "Invalid number of points: ", n);
+        return;
     }
     
     t = 0;
@@ -878,7 +856,8 @@ void GaussQuadratureQuad(int np, GaussIntegrationPoints *pt) {
     
     if( n < 1 || n > MAXN ) {
         pt->n = 0.0;
-        errorfunct("GaussQuadratureQuad", "Invalid number of points: ", n);
+        warnfunct("GaussQuadratureQuad", "Invalid number of points: ", n);
+        return;
     }
     
     t = 0;
@@ -903,7 +882,8 @@ void GaussQuadratureBrick(int np, GaussIntegrationPoints *pt) {
     
     if ( n < 1 || n > MAXN) {
         pt->n = 0;
-        errorfunct("GaussQuadratureBrick", "Invalid number of points: ", n);
+        warnfunct("GaussQuadratureBrick", "Invalid number of points: ", n);
+        return;
     }
     
     t = 0;
@@ -938,7 +918,7 @@ GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrd
                //No ops
             } else {
                 eldim = element->Type.dimension;
-                p1d = (int)ceil(pow((double)n, (1.0/(double)eldim))) + *relOrder;
+                p1d = (int)round(pow((double)n, (1.0/(double)eldim))) + *relOrder;
                 if (p1d < 1) {
                     errorfunct("GaussIntegrationPoints", "Number of integration points must remain positive!");
                 }
@@ -980,6 +960,7 @@ GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrd
             break;
             
         case 3:
+            // TODO: add support for p element
             GaussQuadratureTriangle(n, IntegStuff);
             break;
           
@@ -988,14 +969,17 @@ GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrd
             break;
             
         case 5:
+             // TODO: add support for p element
             GaussQuadratureTetra(n, IntegStuff);
             break;
             
         case 6:
+             // TODO: add support for p element
             GaussQuadraturePyramid(n, IntegStuff);
             break;
             
         case 7:
+             // TODO: add support for p element
             GaussQuadratureWedge(n, IntegStuff);
             break;
             

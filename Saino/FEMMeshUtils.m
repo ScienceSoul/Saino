@@ -183,10 +183,10 @@
     HashEntry_t *hashPtr, *hashPtr1;
     Element_t *elements, *element, *edges;
     ElementType_t *elmType;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     BOOL found;
     
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     elements = mesh.getElements;
     edges = mesh.getEdges;
@@ -270,7 +270,7 @@
                 edges[edge].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
                 initBoundaryInfo(edges[edge].BoundaryInfo);
                 BOOL noStab = NO;
-                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
+                elmType = [elementDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
                 edges[edge].Type = *elmType;
                 
                 edges[edge].NodeIndexes[0] = element->NodeIndexes[k];
@@ -328,8 +328,6 @@
         }
     }
     free(hashTable);
-    
-    [elmDescription deallocation];
 }
 
 /************************************************************************
@@ -350,7 +348,7 @@
     Element_t *elements, *element, *edges, *faces;
     ElementType_t *elmType;
     FEMPElementMaps *elementMaps;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     BOOL found;
 
     tetraEdgeMap = intmatrix(0, 5, 0, 2);
@@ -432,7 +430,7 @@
     brickFaceEdgeMap[4][0] = 2; brickFaceEdgeMap[4][1] = 11; brickFaceEdgeMap[4][2] = 6; brickFaceEdgeMap[4][3] = 10;
     brickFaceEdgeMap[5][0] = 3; brickFaceEdgeMap[5][1] = 8; brickFaceEdgeMap[5][2] = 7; brickFaceEdgeMap[5][3] = 11;
     
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     elementMaps = [[FEMPElementMaps alloc] init];
     
     elements = mesh.getElements;
@@ -552,7 +550,7 @@
                 
                 // Edge is always a line segment with deg+1 nodes
                 BOOL noStab = NO;
-                elmType = [elmDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
+                elmType = [elementDescription getElementType:(201+degree) inMesh:mesh stabilization:&noStab];
                 edges[edge].Type = *elmType;
                 
                 edges[edge].NDOFs = 0;
@@ -644,7 +642,6 @@
     free_imatrix(wedgeFaceEdgeMap, 0, 5, 0, 3);
     free_imatrix(pyramidFaceEdgeMap, 0, 4, 0, 3);
 
-    [elmDescription deallocation];
     [elementMaps deallocation];
 }
 
@@ -666,11 +663,11 @@
     Element_t *elements, *element, *faces;
     ElementType_t *elmType;
     FEMPElementMaps *elementMaps;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     BOOL found;
     
     elementMaps = [[FEMPElementMaps alloc] init];
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     tetraFaceMap = intmatrix(0, 3, 0, 5);
     brickFaceMap = intmatrix(0, 5, 0, 8);
@@ -870,7 +867,7 @@
                         }
                         n1 = 3; // TODO: The switch statement above is then useless?
                         BOOL noStab = NO;
-                        elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
+                        elmType = [elementDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
                         faces[face].Type = *elmType;
                         break;
                         
@@ -880,12 +877,12 @@
                         if (k == 0) {
                             n1 = 4 ;
                             BOOL noStab = NO;
-                            elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
+                            elmType = [elementDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;
                         } else {
                             n1 = 3;
                             BOOL noStab = NO;
-                            elmType = [elmDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
+                            elmType = [elementDescription getElementType:(300+n1) inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;;
                         }
                         break;
@@ -896,12 +893,12 @@
                         if (k <= 1) {
                             n1 = 3;
                             BOOL noStab = NO;
-                            elmType = [elmDescription getElementType:303 inMesh:mesh stabilization:&noStab];
+                            elmType = [elementDescription getElementType:303 inMesh:mesh stabilization:&noStab];
                             face[faces].Type = *elmType;
                         } else {
                             n1 = 4;
                             BOOL noStab = NO;
-                            elmType = [elmDescription getElementType:404 inMesh:mesh stabilization:&noStab];
+                            elmType = [elementDescription getElementType:404 inMesh:mesh stabilization:&noStab];
                             faces[face].Type = *elmType;
                         }
                         break;
@@ -921,7 +918,7 @@
                                 break;
                         }
                         noStab = NO;
-                        elmType = [elmDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
+                        elmType = [elementDescription getElementType:(400+n1) inMesh:mesh stabilization:&noStab];
                         faces[face].Type = *elmType;
                         break;
                         
@@ -991,7 +988,6 @@
     free_ivector(nf, 0, 3);
     
     [elementMaps deallocation];
-    [elmDescription deallocation];
 }
 
 /************************************************************************
@@ -1145,7 +1141,7 @@
     FEMMesh *bmesh1, *bmesh2;
     FEMMatrix *projector;
     FEMBoundaryCondition *boundaryConditionAtId;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     FEMListUtilities *listUtil;
     FEMUtilities *utilities;
     Element_t *elements, *mesh1elements, *mesh2elements;
@@ -1157,7 +1153,7 @@
     
     if (this < 0 || trgt < 0) return nil;
     
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     listUtil = [[FEMListUtilities alloc] init];
     utilities = [[FEMUtilities alloc] init];
     
@@ -1236,7 +1232,7 @@
             
             // Angle smaller than 180 is always chosen
             check = NO;
-            [elmDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals];
+            [elementDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals];
             
             if (thisActive == YES && targetActive == YES) {
                 numbBothActive++;
@@ -1487,7 +1483,7 @@
                 }
                 
                 check = NO;
-                [elmDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals2r];
+                [elementDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals2r];
                 break;
             }
             
@@ -1763,7 +1759,6 @@
     bmesh1 = nil;
     bmesh2 = nil;
     
-    [elmDescription deallocation];
     return projector;
 }
 
@@ -1795,7 +1790,7 @@
     
     newMesh = [[FEMMesh alloc] init];
     
-    elementDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     [self findEdgesForMesh:mesh findEdges:NULL];
     
@@ -2046,7 +2041,6 @@
         free_dvector(xh, 0, nodeCnt-1);
     }
     free_dvector(nodals, 0, mesh.maxElementNodes-1);
-    [elementDescription deallocation];
     
     // Update new mesh node count
     newMesh.numberOfEdges = 0;
@@ -3114,7 +3108,7 @@
     int i, j, n;
     Element_t *elements;
     Nodes_t *nodes, *meshNodes;
-    FEMElementDescription *elmDescription;
+    FEMElementDescription *elementDescription;
     
     for (FEMSolution *solution in model.solutions) {
         if (mesh == solution.mesh) {
@@ -3132,7 +3126,7 @@
     elements = mesh.getElements;
     meshNodes = mesh.getNodes;
     
-    elmDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     for (i=0; i<mesh.numberOfBulkElements; i++) {
         n = elements[i].Type.NumberOfNodes;
@@ -3142,16 +3136,15 @@
             nodes->z[j] = meshNodes->z[elements[i].NodeIndexes[j]];
         }
         if (mesh.stabilize == YES) {
-            [elmDescription computeStabilizationParameterInElement:&elements[i] nodes:nodes mesh:mesh numberOfNodes:n mk:&elements[i].StabilizationMK hk:&elements[i].hK];
+            [elementDescription computeStabilizationParameterInElement:&elements[i] nodes:nodes mesh:mesh numberOfNodes:n mk:&elements[i].StabilizationMK hk:&elements[i].hK];
         } else {
-            [elmDescription elementDiameter:&elements[i] nodes:nodes];
+            [elementDescription elementDiameter:&elements[i] nodes:nodes];
         }
     }
     
     free_dvector(nodes->x, 0, mesh.maxElementNodes-1);
     free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
     free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
-    [elmDescription deallocation];
 }
 
 -(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model {

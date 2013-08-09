@@ -14,7 +14,7 @@
 #include "Constructors.h"
 #include "memory.h"
 
-#define MAXN 14
+#define MAXN 13
 #define MAX_INTEGRATION_POINTS MAXN*MAXN*MAXN
 
 void DerivPoly(int n, double *Q, double *P);

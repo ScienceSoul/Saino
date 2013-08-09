@@ -267,7 +267,6 @@ void NodalBasisFunctions3D(double *y, Element_t *element, double u, double v, do
         
         s = 0.0;
         for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
-            
             s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
         }
         y[n] = s;
@@ -694,7 +693,7 @@ double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
             coeff = element->Type.BasisFunctions[n].coeff;
             
             s = 0.0;
-            for (i=0; element->Type.BasisFunctions[n].n; i++) {
+            for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (p[i] >= 2) s = s + p[i] * (p[i]-1) * coeff[i] * pow(u, (double)(p[i]-2));
             }
             y = y + s *nodes[n];

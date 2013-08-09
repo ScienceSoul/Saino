@@ -288,7 +288,7 @@
     int i, j, k, n1, n2;
     BOOL found;
     NSMutableString *strn;
-    listBuffer buffer;
+    listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     valueListArraysContainer *containers = NULL;
     
     found = NO;

@@ -11,6 +11,9 @@
 
 @implementation FEMTimeIntegration
 
+/*************************************************
+    Fractional step integration scheme.
+*************************************************/
 -(void)fractionalStepInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution rows:(int *)rows {
     
     int i, j, nb;
@@ -19,7 +22,8 @@
     if (rows != NULL) {
         nb = *rows;
     } else {
-        nb = solution.mesh.maxElementNodes;
+        NSLog(@"fractionalStepInSolution: dimension(s) missing!");
+        return;
     }
     
     fsStep = 0.0;
@@ -46,7 +50,7 @@
     switch ((int)fsStep) {
         case 1:
             massCoeff = fsAlpha * fsTheta;
-            forceCoeff = fsBeta + fsTheta;
+            forceCoeff = fsBeta * fsTheta;
             break;
         case 2:
             massCoeff = fsBeta * fsdTheta;
@@ -72,28 +76,27 @@
     
 }
 
+/**************************************************************************
+    Constant time step BDF integration scheme to elementwise matrix entry.
+**************************************************************************/
 -(void)bdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols {
     
     int i, j, nb1, nb2;
     double s;
     
-    if (rows != NULL) {
+    if (rows != NULL && cols != NULL) {
         nb1 = *rows;
-    } else {
-        nb1 = solution.mesh.maxElementNodes;
-    }
-    
-    if (cols != NULL) {
         nb2 = *cols;
     } else {
-        nb2 = solution.mesh.maxElementNodes;
+        NSLog(@"bdfLocalInSolution: dimension(s) missing!");
+        return;
     }
     
     switch (order) {
         case 1:
             for (i=0; i<nb1; i++) {
                 s = 0.0;
-                for (j=0; j<n; i++) {
+                for (j=0; j<n; j++) {
                     s = s + (1.0/dt)*massMatrix[i][j]*prevSolution[j][0];
                 }
                 force[i] = force[i] + s;
@@ -107,7 +110,7 @@
             for (i=0; i<nb1; i++) {
                 s = 0.0;
                 for (j=0; j<n; j++) {
-                    s = s + (1.0/dt)*massMatrix[i][j] + (2.0*prevSolution[j][0] - 0.5*prevSolution[j][1]); 
+                    s = s + (1.0/dt)*massMatrix[i][j] * (2.0*prevSolution[j][0] - 0.5*prevSolution[j][1]);
                 }
                 force[i] = force[i] + s;
                 
@@ -161,27 +164,23 @@
     }
 }
 
+/***************************************************************************
+    Variable time step BDF integration scheme to elementwise matrix entry.
+***************************************************************************/
 -(void)vbdfLocalInSolution:(FEMSolution *)solution numberOfNodes:(int)n dts:(double *)dts massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double **)prevSolution order:(int)order rows:(int *)rows cols:(int *)cols {
-/***********************************************************************************************************************************************
-    Variable time step BDF
-***********************************************************************************************************************************************/
     
     int i, j, k, nb1, nb2;
     double s, a[4];
     
-    if (rows != NULL) {
+    if (rows != NULL && cols != NULL) {
         nb1 = *rows;
-    } else {
-        nb1 = solution.mesh.maxElementNodes;
-    }
-    
-    if (cols != NULL) {
         nb2 = *cols;
     } else {
-        nb2 = solution.mesh.maxElementNodes;
+        NSLog(@"vbdfLocalInSolution: dimension(s) missing!");
+        return;
     }
-    
-    memset( a, 0.0, sizeof(double) );
+
+    memset( a, 0.0, sizeof(a) );
     
     a[0] = 1.0 / dts[0];
     a[1] = -1.0 / dts[0];
@@ -204,7 +203,7 @@
         s = 0.0;
         for (k=0; k<min(order, 3); k++) {
             for (j=0; j<n; j++) {
-                s = s - a[k+1]*massMatrix[i][k] * prevSolution[j][k];
+                s = s - a[k+1]*massMatrix[i][j] * prevSolution[j][k];
             }
         }
         force[i] = force[i] + s;
@@ -213,25 +212,23 @@
             stiffMatrix[i][j] = a[0]*massMatrix[i][j] + stiffMatrix[i][j];
         }
     }
-    
-    free_dvector(a, 0, 3);
 }
 
+/****************************************************************************************************************
+    Apply newmark beta scheme to local matrix equation. This is used also for Implicit Euler with beta=1.0 and
+    Crank-Nicolson with beta=0.5.
+****************************************************************************************************************/
 -(void)newMarkBetaInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution beta:(double)beta rows:(int *)rows cols:(int *)cols{
     
     int i, j, nb1, nb2;
     double s;
   
-    if (rows != NULL) {
+    if (rows != NULL && cols != NULL) {
         nb1 = *rows;
-    } else {
-        nb1 = solution.mesh.maxElementNodes;
-    }
-    
-    if (cols != NULL) {
         nb2 = *cols;
     } else {
-        nb2 = solution.mesh.maxElementNodes;
+        NSLog(@"newMarkBetaInSolution: dimension(s) missing!");
+        return;
     }
 
     for (i=0; i<nb1; i++) {
@@ -246,21 +243,20 @@
     }
 }
 
+/*********************************************************************************
+    Second order Bossok time integration scheme to the elememtwise matrix entry.
+*********************************************************************************/
 -(void)bossakSecondOrder:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix dampMatrix:(double **)dampMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution1:(double *)x prevSolution2:(double *)v prevSolution3:(double *)a alpha:(double)alpha rows:(int *)rows cols:(int *)cols {
     
     int i, j, nb1, nb2;
     double beta, gamma, s;
     
-    if (rows != NULL) {
+    if (rows != NULL && cols != NULL) {
         nb1 = *rows;
-    } else {
-        nb1 = solution.mesh.maxElementNodes;
-    }
-    
-    if (cols != NULL) {
         nb2 = *cols;
     } else {
-        nb2 = solution.mesh.maxElementNodes;
+        NSLog(@"bossakSecondOrder: dimension(s) missing!");
+        return;
     }
     
     nb1 = min(n, nb1);

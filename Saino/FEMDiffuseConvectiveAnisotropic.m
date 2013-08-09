@@ -208,7 +208,7 @@
                 }
             }
             for (j=0; j<n; j++) {
-                lc[i][j] = 2.0* (lc[i][j]-minl)/(maxl-minl) - 1.0;
+                lc[i][j] = 2.0 * (lc[i][j]-minl)/(maxl-minl) - 1.0;
             }
         }
         
@@ -227,11 +227,11 @@
             u = element->Type.NodeU[p];
             v = element->Type.NodeV[p];
             w = element->Type.NodeW[p];
-        }
-        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
-        for (i=0; i<n; i++) {
-            for (j=0; j<3; j++) {
-                dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+            stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+            for (i=0; i<n; i++) {
+                for (j=0; j<3; j++) {
+                    dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                }
             }
         }
     }
@@ -252,7 +252,7 @@
         w = IP->w[t];
         
         // Basis function values & derivatives at the integration point
-        stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
         stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
         detJ = integration.metricDeterminant;
         s = detJ * IP->s[t];

@@ -918,7 +918,7 @@ static const int PRECOND_VANKA     =  560;
         }
     } else {
         // Compute sum of element-wise normals for nodes on boundaries
-        elementDescription = [[FEMElementDescription alloc] init];
+        elementDescription = [FEMElementDescription sharedElementDescription];
         integration = [[FEMNumericIntegration alloc] init];
         if ([integration allocation:mesh] == NO) errorfunct("FEMKernel:FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
         elements = mesh.getElements;
@@ -1070,7 +1070,6 @@ static const int PRECOND_VANKA     =  560;
         
         // TODO: add support for parallel runs
         
-        [elementDescription deallocation];
         [integration deallocation:mesh];
         free_dvector(nrm, 0, 2);
         free_dvector(lrnm, 0, 2);
@@ -1123,17 +1122,11 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMKernel_rotateMatrix:(double **)matrix solution:(FEMSolution *)solution vector:(double *)vector size:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int *)nodeIndexes {
     
     int i, j, k, l;
-    double s, **r, **q, *n1, *t1, *t2;
-    
-    r = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
-    q = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
-    n1 = doublevec(0, 2);
-    t1 = doublevec(0, 2);
-    t2 = doublevec(0, 2);
+    double s, r[n*dofs][n*dofs], q[n*dofs][n*dofs], n1[3], t1[3], t2[3];
     
     for (i=0; i<n; i++) {
         
-        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 > self.size1boundaryNormals) continue;
+        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 >= self.size1boundaryNormals) continue;
         
         memset( *r, 0.0, ((n*dofs)*(n*dofs))*sizeof(double) );
         for (j=0; j<n*dofs; j++) {
@@ -1146,11 +1139,11 @@ static const int PRECOND_VANKA     =  560;
         
         switch (dim) {
             case 2:
-                r[dofs*(i-1)+1][dofs*(i-1)+1] = n1[0];
-                r[dofs*(i-1)+1][dofs*(i-1)+2] = n1[1];
+                r[dofs*i][dofs*i] = n1[0];
+                r[dofs*i][dofs*i+1] = n1[1];
                 
-                r[dofs*(i-1)+2][dofs*(i-1)+1] = -n1[1];
-                r[dofs*(i-1)+2][dofs*(i-1)+2] = n1[0];
+                r[dofs*i+1][dofs*i] = -n1[1];
+                r[dofs*i+1][dofs*i+1] = n1[0];
                 break;
             case 3:
                 for (j=0; j<2; j++) {
@@ -1158,17 +1151,17 @@ static const int PRECOND_VANKA     =  560;
                     t2[j] = self.boundaryTangent2[nodeIndexes[i]][j];
                 }
                 
-                r[dofs*(i-1)+1][dofs*(i-1)+1] = n1[0];
-                r[dofs*(i-1)+1][dofs*(i-1)+2] = n1[1];
-                r[dofs*(i-1)+1][dofs*(i-1)+3] = n1[2];
+                r[dofs*i][dofs*i] = n1[0];
+                r[dofs*i][dofs*i+1] = n1[1];
+                r[dofs*i][dofs*i+2] = n1[2];
                 
-                r[dofs*(i-1)+2][dofs*(i-1)+1] = t1[0];
-                r[dofs*(i-1)+2][dofs*(i-1)+2] = t1[1];
-                r[dofs+(i-1)+2][dofs*(i-1)+3] = t1[2];
+                r[dofs*i+1][dofs*i] = t1[0];
+                r[dofs*i+1][dofs*i+1] = t1[1];
+                r[dofs*i+1][dofs*i+2] = t1[2];
                 
-                r[dofs*(i-1)+3][dofs*(i-1)+1] = t2[0];
-                r[dofs*(i-1)+3][dofs*(i-1)+2] = t2[1];
-                r[dofs*(i-1)+3][dofs*(i-1)+3] = t2[2];
+                r[dofs*i+2][dofs*i] = t2[0];
+                r[dofs*i+2][dofs*i+1] = t2[1];
+                r[dofs*i+2][dofs*i+2] = t2[2];
                 break;
         }
         
@@ -1204,12 +1197,6 @@ static const int PRECOND_VANKA     =  560;
             vector[j] = q[j][0];
         }
     }
-    
-    free_dmatrix(r, 0, (n*dofs)-1, 0, (n*dofs)-1);
-    free_dmatrix(q, 0, (n*dofs)-1, 0, (n*dofs)-1);
-    free_dvector(n1, 0, 2);
-    free_dvector(t1, 0, 2);
-    free_dvector(t2, 0, 2);
 }
 
 -(void)FEMKernel_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT {
@@ -1280,7 +1267,7 @@ static const int PRECOND_VANKA     =  560;
     
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
-    if ([simulation isEqualToString:@"transient"]) {
+    if ([simulation isEqualToString:@"transient"] == YES) {
         method = (solution.solutionInfo)[@"time stepping method"];
         order = min(solution.doneTime, solution.order);
         
@@ -2282,9 +2269,7 @@ static const int PRECOND_VANKA     =  560;
             *steadyIt = (double)i;
         }
         
-        for (j=0; j<model.numberOfSolutions; j++) {
-            doneThis[j] = NO;
-        }
+        memset( doneThis, 0, model.numberOfSolutions*sizeof(BOOL) );
         
         // Initialize the mesh output flag to NO here, reactivated later
         // for meshes connected to active solutions.
@@ -2295,7 +2280,7 @@ static const int PRECOND_VANKA     =  560;
         // Go through number of solutions (heat, laminar or turbulent flow, etc...)
         k = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) {
+            if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) {
                 if (solution.solutionMode != SOLUTION_MODE_COUPLED || solution.solutionMode != SOLUTION_MODE_ASSEMBLY
                     || solution.solutionMode != SOLUTION_MODE_BLOCK) {
                     NSLog(@"FEMKernel:SolveEquations: no routine related to solution!\n");
@@ -2474,8 +2459,6 @@ static const int PRECOND_VANKA     =  560;
     FEMUtilities *utilities;
     solutionArraysContainer *solContainers = NULL;
     Element_t *elements = NULL;
-    NSMethodSignature *solutionSelectorSignature;
-    NSInvocation *solutionSelectorInvocation;
     
     if (solution.mesh.changed == YES || solution.numberOfActiveElements <= 0) {
         solution.numberOfActiveElements = 0;
@@ -2516,72 +2499,31 @@ static const int PRECOND_VANKA     =  560;
         // TODO: add support for parallel run
     }
     
-    if (solution.selector != nil) {
+    if (solution.isBuiltInSolution == YES) {
         if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
-            // Acquire signature invocations and set selector for invocations
-            solutionSelectorSignature = [FEMFlowSolution instanceMethodSignatureForSelector:solution.selector];
-            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
-            [solutionSelectorInvocation setSelector:solution.selector];
             
-            FEMFlowSolution *flowSolution;
-            [solutionSelectorInvocation setTarget:flowSolution];
-            [solutionSelectorInvocation setArgument:&solution atIndex:2];
-            [solutionSelectorInvocation setArgument:&model atIndex:3];
-            [solutionSelectorInvocation setArgument:&dt atIndex:4];
-            [solutionSelectorInvocation setArgument:&transient atIndex:5];
-            [solutionSelectorInvocation invoke];
+            FEMFlowSolution *flowSolution = [[FEMFlowSolution alloc] init];
+            [flowSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
             
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
-            solutionSelectorSignature = [FEMMagneticInductionSolution instanceMethodSignatureForSelector:solution.selector];
-            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
-            [solutionSelectorInvocation setSelector:solution.selector];
             
-            FEMMagneticInductionSolution *magneticInductionSolution;
-            [solutionSelectorInvocation setTarget:magneticInductionSolution];
-            [solutionSelectorInvocation setArgument:&solution atIndex:2];
-            [solutionSelectorInvocation setArgument:&model atIndex:3];
-            [solutionSelectorInvocation setArgument:&dt atIndex:4];
-            [solutionSelectorInvocation setArgument:&transient atIndex:5];
-            [solutionSelectorInvocation invoke];
+            FEMMagneticInductionSolution *magneticInductionSolution = [[FEMMagneticInductionSolution alloc] init];
+            [magneticInductionSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
-            solutionSelectorSignature = [FEMStressAnalysisSolution instanceMethodSignatureForSelector:solution.selector];
-            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
-            [solutionSelectorInvocation setSelector:solution.selector];
             
-            FEMStressAnalysisSolution *stressAnalysisSolution;
-            [solutionSelectorInvocation setTarget:stressAnalysisSolution];
-            [solutionSelectorInvocation setArgument:&solution atIndex:2];
-            [solutionSelectorInvocation setArgument:&model atIndex:3];
-            [solutionSelectorInvocation setArgument:&dt atIndex:4];
-            [solutionSelectorInvocation setArgument:&transient atIndex:5];
-            [solutionSelectorInvocation invoke];
-            
+            FEMStressAnalysisSolution *stressAnalysisSolution = [[FEMStressAnalysisSolution alloc] init];
+            [stressAnalysisSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+ 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
-            solutionSelectorSignature = [FEMMeshUpdateSolution instanceMethodSignatureForSelector:solution.selector];
-            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
-            [solutionSelectorInvocation setSelector:solution.selector];
-            
-            FEMMeshUpdateSolution *meshUpdateSolution;
-            [solutionSelectorInvocation setTarget:meshUpdateSolution];
-            [solutionSelectorInvocation setArgument:&solution atIndex:2];
-            [solutionSelectorInvocation setArgument:&model atIndex:3];
-            [solutionSelectorInvocation setArgument:&dt atIndex:4];
-            [solutionSelectorInvocation setArgument:&transient atIndex:5];
-            [solutionSelectorInvocation invoke];
+
+            FEMMeshUpdateSolution *meshUpdateSolution = [[FEMMeshUpdateSolution alloc] init];
+            [meshUpdateSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
-            solutionSelectorSignature = [FEMHeatSolution instanceMethodSignatureForSelector:solution.selector];
-            solutionSelectorInvocation = [NSInvocation invocationWithMethodSignature:solutionSelectorSignature];
-            [solutionSelectorInvocation setSelector:solution.selector];
             
-            FEMHeatSolution *heatSolution;
-            [solutionSelectorInvocation setTarget:heatSolution];
-            [solutionSelectorInvocation setArgument:&solution atIndex:2];
-            [solutionSelectorInvocation setArgument:&model atIndex:3];
-            [solutionSelectorInvocation setArgument:&dt atIndex:4];
-            [solutionSelectorInvocation setArgument:&transient atIndex:5];
-            [solutionSelectorInvocation invoke];
+            FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
+            [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
 
         } else {
             NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
@@ -3056,7 +2998,7 @@ static const int PRECOND_VANKA     =  560;
             
             if (element->BoundaryInfo != NULL) {
                 if (element->BoundaryInfo->Left != NULL) {
-                    for (i=0; element->BoundaryInfo->Left->DGDOFs; i++) {
+                    for (i=0; i<element->BoundaryInfo->Left->DGDOFs; i++) {
                         indexes[nb] = element->BoundaryInfo->Left->DGIndexes[i];
                         nb++;
                     }
@@ -3085,7 +3027,7 @@ static const int PRECOND_VANKA     =  560;
     solContainers = solution.getContainers;
     
     if (solContainers->defDofs[bid-1][0] > 0) {
-        for (i=0; i>element->NDOFs; i++) {
+        for (i=0; i<element->NDOFs; i++) {
             indexes[nb] = element->NodeIndexes[i];
             nb++;
         }
@@ -3104,7 +3046,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfEdges; j++) {
             edofs = edges[element->EdgeIndexes[j]].BDOFs;
             for (i=0; i<edofs; i++) {
-                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]-1) + i + solution.mesh.numberOfNodes;
+                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]) + i + solution.mesh.numberOfNodes;
                 nb++;
             }
         }
@@ -3114,7 +3056,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfFaces; j++) {
             fdofs = faces[element->FaceIndexes[j]].BDOFs;
             for (i=0; i<fdofs; i++) {
-                indexes[nb] = faceDofs*(element->FaceIndexes[j]-1) + i + solution.mesh.numberOfNodes + 
+                indexes[nb] = faceDofs*(element->FaceIndexes[j]) + i + solution.mesh.numberOfNodes +
                 edgeDofs*solution.mesh.numberOfEdges;
                 nb++;
             }
@@ -3143,7 +3085,7 @@ static const int PRECOND_VANKA     =  560;
                     for (ind=0; ind<parent->Type.NumberOfEdges; ind++) {
                         k = 0;
                         for (i=0; i<edges[parent->EdgeIndexes[ind]].Type.NumberOfNodes; i++) {
-                            for (j=0; element->Type.NumberOfNodes; j++) {
+                            for (j=0; j<element->Type.NumberOfNodes; j++) {
                                 if (edges[parent->EdgeIndexes[ind]].NodeIndexes[i] == element->NodeIndexes[j]) k++;
                             }
                         }
@@ -3153,7 +3095,7 @@ static const int PRECOND_VANKA     =  560;
                 
                 edofs = element->BDOFs;
                 for (i=0; i<edofs; i++) {
-                    indexes[nb] = edgeDofs*(parent->EdgeIndexes[ind]-1) + i + solution.mesh.numberOfNodes; 
+                    indexes[nb] = edgeDofs*(parent->EdgeIndexes[ind]) + i + solution.mesh.numberOfNodes;
                     nb++;
                 }
             }
@@ -3176,7 +3118,7 @@ static const int PRECOND_VANKA     =  560;
                 
                 fdofs = element->BDOFs;
                 for (i=0; i<fdofs; i++) {
-                    indexes[nb] = faceDofs*(parent->FaceIndexes[ind]-1) + i + solution.mesh.numberOfNodes
+                    indexes[nb] = faceDofs*(parent->FaceIndexes[ind]) + i + solution.mesh.numberOfNodes
                     + edgeDofs*solution.mesh.numberOfEdges;
                     nb++;
                 }
@@ -3223,7 +3165,7 @@ static const int PRECOND_VANKA     =  560;
             
             if (element->BoundaryInfo != NULL) {
                 if (element->BoundaryInfo->Left != NULL) {
-                    for (i=0; element->BoundaryInfo->Left->DGDOFs; i++) {
+                    for (i=0; i<element->BoundaryInfo->Left->DGDOFs; i++) {
                         indexes[nb] = element->BoundaryInfo->Left->DGIndexes[i];
                         nb++;
                     }
@@ -3255,7 +3197,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfEdges; j++) {
             edofs = edges[element->EdgeIndexes[j]].BDOFs;
             for (i=0; i<edofs; i++) {
-                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]-1) + i + solution.mesh.numberOfNodes;
+                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]) + i + solution.mesh.numberOfNodes;
                 nb++;
             }
         }
@@ -3265,7 +3207,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfFaces; j++) {
             fdofs = faces[element->FaceIndexes[j]].BDOFs;
             for (i=0; i<fdofs; i++) {
-                indexes[nb] = faceDofs*(element->FaceIndexes[j]-1) + i + solution.mesh.numberOfNodes + 
+                indexes[nb] = faceDofs*(element->FaceIndexes[j]) + i + solution.mesh.numberOfNodes +
                 edgeDofs*solution.mesh.numberOfEdges;
                 nb++;
             }
@@ -3293,7 +3235,7 @@ static const int PRECOND_VANKA     =  560;
         if (parent->EdgeIndexes != NULL) {
             edofs = element->BDOFs;
             for (i=0; i<edofs; i++) {
-                indexes[nb] = edgeDofs*(parent->EdgeIndexes[element->Pdefs->LocalNumber-1]-1) + i + solution.mesh.numberOfNodes;
+                indexes[nb] = edgeDofs*(parent->EdgeIndexes[element->Pdefs->LocalNumber]) + i + solution.mesh.numberOfNodes;
                 nb++;
             }
         }
@@ -3301,7 +3243,7 @@ static const int PRECOND_VANKA     =  560;
         if (parent->FaceIndexes != NULL) {
             fdofs = element->BDOFs;
             for (i=0; i<fdofs; i++) {
-                indexes[nb] = faceDofs*(parent->FaceIndexes[element->Pdefs->LocalNumber-1]-1) + i + solution.mesh.numberOfNodes + edgeDofs*solution.mesh.numberOfEdges;
+                indexes[nb] = faceDofs*(parent->FaceIndexes[element->Pdefs->LocalNumber]) + i + solution.mesh.numberOfNodes + edgeDofs*solution.mesh.numberOfEdges;
                 nb++;
             }
         }
@@ -3327,7 +3269,6 @@ static const int PRECOND_VANKA     =  560;
         solutionContainers = solution.getContainers;
         elements = solution.mesh.getElements;
         element = &elements[solutionContainers->activeElements[t]];
-        
         currentElement = model.getCurrentElement;
         currentElement = element;
     } else {
@@ -3719,38 +3660,38 @@ static const int PRECOND_VANKA     =  560;
                     return;
                 }
                 
-                indexes[n] = mesh.numberOfNodes + parent->EdgeIndexes[element->Pdefs->LocalNumber-1] * mesh.maxEdgeDofs + i;
+                indexes[n] = mesh.numberOfNodes + parent->EdgeIndexes[element->Pdefs->LocalNumber] * mesh.maxEdgeDofs + i;
                 n++;
             }
             *indSize = n;
             break;
         case 3:
             // Add indexes of faces edges
-            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].Type.NumberOfEdges; i++) {
+            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].Type.NumberOfEdges; i++) {
                 
                 // If edge has no dofs jump to next edge
-                if (edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]].BDOFs <= 0) continue;
+                if (edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].EdgeIndexes[i]].BDOFs <= 0) continue;
                 
-                for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]].BDOFs; j++) {
+                for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].EdgeIndexes[i]].BDOFs; j++) {
                     
                     if (mesh.numberOfNodes < n) {
                         errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                         return;
                     }
                     
-                    indexes[n] = mesh.numberOfNodes + faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].EdgeIndexes[i]*mesh.maxEdgeDofs + j;
+                    indexes[n] = mesh.numberOfNodes + faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].EdgeIndexes[i]*mesh.maxEdgeDofs + j;
                     n++;
                 }
             }
             
             // Add indexes of gaces bubbles
-            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber-1]].BDOFs; i++) {
+            for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].BDOFs; i++) {
                 if (mesh.numberOfNodes < n) {
                     errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
-                indexes[n] = mesh.numberOfNodes + mesh.numberOfEdges * mesh.maxEdgeDofs + parent->FaceIndexes[element->Pdefs->LocalNumber-1] * mesh.maxFaceDofs;
+                indexes[n] = mesh.numberOfNodes + mesh.numberOfEdges * mesh.maxEdgeDofs + parent->FaceIndexes[element->Pdefs->LocalNumber] * mesh.maxFaceDofs;
                 n++;
             }
             
@@ -4020,7 +3961,7 @@ static const int PRECOND_VANKA     =  560;
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
-    elementDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
     if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMKernel:localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
@@ -4180,7 +4121,6 @@ static const int PRECOND_VANKA     =  560;
     GaussQuadratureDeallocation(IP);
     
     [numericIntegration deallocation:solution.mesh];
-    [elementDescription deallocation];
 }
 
 -(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
@@ -5989,7 +5929,7 @@ static const int PRECOND_VANKA     =  560;
         }
         _n1 = 0;
         for (i=0; i<solution.matrix.numberOfRows; i++) {
-            _n1 = max(_n1, (int)(matContainers->RHS[i+1]-matContainers->RHS[i]));
+            _n1 = max(_n1, (int)(matContainers->Rows[i+1]-matContainers->Rows[i]));
         }
         _k1 = varContainers->size2PrevValues;
         _stiff = doublematrix(0, 0, 0, _n1-1);
@@ -6022,11 +5962,10 @@ static const int PRECOND_VANKA     =  560;
     }
     
     FEMTimeIntegration *timeIntegration = [[FEMTimeIntegration alloc] init];
-    double *prevSol = doublevec(0, _n1-1);
     int rows = 1;
     for (i=0; i<solution.matrix.numberOfRows; i++) {
         n = 0;
-        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
             _stiff[0][n] = matContainers->Values[j];
             if (hasMass == YES) _mass[0][n] = matContainers->MassValues[j];
             for (k=0; k<varContainers->size2PrevValues; k++) {
@@ -6038,10 +5977,12 @@ static const int PRECOND_VANKA     =  560;
         matContainers->Force[i][0] = force[0];
         
         if ([method isEqualToString:@"fs"] == YES) {
+            double *prevSol = doublevec(0, _n1-1);
             for (j=0; j<_n1; j++) {
                 prevSol[j] = _x[j][0];
             }
             [timeIntegration fractionalStepInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:prevSol rows:&rows];
+            free_dvector(prevSol, 0, _n1-1);
         } else if ([method isEqualToString:@"bdf"] == YES) {
             if (constantDt == YES) {
                 [timeIntegration bdfLocalInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:_x order:order rows:&rows cols:&_n1];
@@ -6049,19 +5990,20 @@ static const int PRECOND_VANKA     =  560;
                 [timeIntegration vbdfLocalInSolution:solution numberOfNodes:n dts:dts massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:_x order:order rows:&rows cols:&_n1];
             }
         } else {
+            double *prevSol = doublevec(0, _n1-1);
             for (j=0; j<_n1; j++) {
                 prevSol[j] = _x[j][0];
             }
             [timeIntegration newMarkBetaInSolution:solution numberOfNodes:n dt:solution.dt massMatrix:_mass stiffMatrix:_stiff force:force prevSolution:prevSol beta:solution.beta rows:&rows cols:&_n1];
+            free_dvector(prevSol, 0, _n1-1);
         }
         n = 0;
-        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
             matContainers->Values[j] = _stiff[0][n];
             n++;
         }
         matContainers->RHS[i] = force[0];
     }
-    free_dvector(prevSol, 0, _n1-1);
 }
 
 -(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution {
@@ -6083,7 +6025,7 @@ static const int PRECOND_VANKA     =  560;
         }
         _n1 = 0;
         for (i=0; i<solution.matrix.numberOfRows; i++) {
-            _n1 = max(_n1, (int)(matContainers->RHS[i+1]-matContainers->RHS[i]));
+            _n1 = max(_n1, (int)(matContainers->Rows[i+1]-matContainers->Rows[i]));
         }
         _k1 = varContainers->size2PrevValues;
         _stiff = doublematrix(0, 0, 0, _n1-1);
@@ -6106,7 +6048,7 @@ static const int PRECOND_VANKA     =  560;
     int rows = 1;
     for (i=0; i<solution.matrix.numberOfRows; i++) {
         n = 0;
-        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
             if (hasMass == YES) _mass[0][n] = matContainers->MassValues[j];
             if (hasDamping == YES) _damp[0][n] = matContainers->DampValues[j];
             _stiff[0][n] = matContainers->Values[j];
@@ -6129,7 +6071,7 @@ static const int PRECOND_VANKA     =  560;
         [timeIntegration bossakSecondOrder:solution numberOfNodes:n dt:solution.dt massMatrix:_mass dampMatrix:_damp stiffMatrix:_stiff force:force prevSolution1:x1 prevSolution2:x2 prevSolution3:x3 alpha:solution.alpha rows:&rows cols:&_n1];
         
         n = 0;
-        for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
             matContainers->Values[j] = _stiff[0][n];
             n++;
         }
@@ -6171,7 +6113,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (rotate == YES && self.normalTangentialNumberOfNodes > 0) {
-        dim = [model dimension];
+        dim = model.dimension;
         memset( indexes, -1, n*sizeof(int) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
@@ -7701,7 +7643,7 @@ static const int PRECOND_VANKA     =  560;
     
     int j, timei, timestep, passiveBCId;
     double st, dtScale = 1.0;
-    double tCond;
+    double rst, rt0, tCond, t0;
     BOOL found, timing, timeDerivativeActive, isPassiveBC;
     NSString *str;
     listBuffer execIntervals = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -7718,7 +7660,7 @@ static const int PRECOND_VANKA     =  560;
     [meshUtils setCurrentMesh:solution.mesh inModel:model];
     model.solution = solution;
     
-    // The solution be be skipped by giving the start time, or stop time, or
+    // The solution may be skipped by giving the start time, or stop time, or
     // the active execution intervals
     if ((solution.solutionInfo)[@"start time"] != nil) {
         st = [(solution.solutionInfo)[@"start time"] doubleValue];
@@ -7758,7 +7700,8 @@ static const int PRECOND_VANKA     =  560;
         timing = [(solution.solutionInfo)[@"solution timing"] boolValue];
     }
     if (timing == YES) {
-        //TODO: implement this...
+        t0 = cputime();
+        rt0 = realtime();
     }
     
     solution.mesh.outputActive = YES;
@@ -7828,7 +7771,9 @@ static const int PRECOND_VANKA     =  560;
     
     // After solution register the timing if requested
     if (timing == YES) {
-        // TODO: implement this...
+        st = cputime() - t0;
+        rst = realtime() - rt0;
+        // TODO: implement the rest...
     }
 }
 
@@ -7853,7 +7798,7 @@ static const int PRECOND_VANKA     =  560;
     
     if (transient) {
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector != nil || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
+            if (solution.isBuiltInSolution != NO || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
         }
     }
     
@@ -7865,7 +7810,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([when isEqualToString:@"before time step"] == YES) {
@@ -7894,7 +7839,7 @@ static const int PRECOND_VANKA     =  560;
     if (*realTimeStep > 2) {
         i = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
+            if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
             
             rungeKutta = NO;
             if (transient == YES && solution.timeOrder == 1) {
@@ -8017,7 +7962,7 @@ static const int PRECOND_VANKA     =  560;
     prevDt = *dt;
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.selector == nil && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];

@@ -92,7 +92,7 @@
     _1nodePoint.nodes = @1;
     _1nodePoint.nodeU = @[@0.0];
     _1nodePoint.basis = @[@1];
-    _1nodePoint.gaussPoints = @[@1, @0];
+    _1nodePoint.gaussPoints = @[@1];
     _1nodePoint.stabilization = @0.0;
     
     //-------------------------
@@ -105,7 +105,7 @@
     _2nodePeriodic.nodes = @2;
     _2nodePeriodic.nodeU = @[@0.0, @1.0];
     _2nodePeriodic.basis = @[@1, @2];
-    _2nodePeriodic.gaussPoints = @[@0, @0];
+    _2nodePeriodic.gaussPoints = @[@0];
     _2nodePeriodic.stabilization = @0.0;
     
     //---------------------
@@ -116,7 +116,7 @@
     _2nodeLine.topology = @"line";
     _2nodeLine.code = @202;
     _2nodeLine.nodes = @2;
-    //          1    2 
+    //                      1    2 
     _2nodeLine.nodeU = @[@-1.0, @1.0];
     //          1  2   3   4
     //          1  u  u^2 u^3
@@ -132,7 +132,7 @@
     _3nodeLine.topology = @"line";
     _3nodeLine.code = @203;
     _3nodeLine.nodes = @3;
-    //          1     2     3
+    //                     1     2     3
     _3nodeLine.nodeU = @[@-1.0, @1.0, @0.0];
     //          1  2   3   4
     //          1  u  u^2 u^3
@@ -148,9 +148,8 @@
     _4nodeLine.topology = @"line";
     _4nodeLine.code = @204;
     _4nodeLine.nodes = @4;
-    //          1     2     3     
-    _4nodeLine.nodeU = @[@-1.0, @1.0, @-0.333333333333333333,
-                        @0.3333333333333333333];
+    //                      1     2     3                      4    
+    _4nodeLine.nodeU = @[@-1.0, @1.0, @-0.333333333333333333, @0.3333333333333333333];
     //          1  2   3   4
     //          1  u  u^2 u^3
     _4nodeLine.basis = @[@1, @2, @3, @4];
@@ -165,7 +164,7 @@
     _3nodeTriangle.topology = @"triangle";
     _3nodeTriangle.code = @303;
     _3nodeTriangle.nodes = @3;
-    //          1     2     3
+    //                        1     2     3
     _3nodeTriangle.nodeU = @[@0.0, @1.0, @0.0];
     _3nodeTriangle.nodeV = @[@0.0, @0.0, @1.0];
     //       1  2   3   4   5   6   7     8    9     10 
@@ -174,7 +173,7 @@
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
     _3nodeTriangle.basis = @[@1, @2, @5];
-    _3nodeTriangle.gaussPoints = @[@3, @20];
+    _3nodeTriangle.gaussPoints = @[@3, @20, @1];
     _3nodeTriangle.stabilization = @0.333333333333333333333;
     
     //-------------------------
@@ -185,18 +184,15 @@
     _6nodeTriangle.topology = @"triangle";
     _6nodeTriangle.code = @306;
     _6nodeTriangle.nodes = @6;
-    //          1     2     3     4     5     6
-    _6nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, 
-                            @0.5, @0.5, @0.0];
-    _6nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, 
-                            @0.0, @0.5, @0.5];
+    //                         1     2     3     4     5     6
+    _6nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, @0.5, @0.5, @0.0];
+    _6nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, @0.0, @0.5, @0.5];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _6nodeTriangle.basis = @[@1, @2, @3, 
-                            @5, @6, @9];
+    _6nodeTriangle.basis = @[@1, @2, @3, @5, @6, @9];
     _6nodeTriangle.gaussPoints = @[@6, @17];
     _6nodeTriangle.stabilization = @0.041666666666666666;
     
@@ -208,25 +204,17 @@
     _10nodeTriangle.topology = @"triangle";
     _10nodeTriangle.code = @310;
     _10nodeTriangle.nodes = @10;
-    //          1     2     3     ......
-    _10nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, 
-                             @0.333333333333333333, @0.666666666666666667, 
-                             @0.666666666666666667, @0.333333333333333333, 
-                             @0.000000000000000000, @0.000000000000000000, 
-                             @0.333333333333333333];
-    _10nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, 
-                             @0.000000000000000000, @0.000000000000000000, 
-                             @0.333333333333333333, @0.666666666666666667, 
-                             @0.666666666666666667, @0.333333333333333333, 
-                             @0.333333333333333333];
+    //                          1     2     3     ......
+    _10nodeTriangle.nodeU = @[@0.0, @1.0, @0.0, @0.333333333333333333, @0.666666666666666667,
+                             @0.666666666666666667, @0.333333333333333333, @0.000000000000000000, @0.000000000000000000, @0.333333333333333333];
+    _10nodeTriangle.nodeV = @[@0.0, @0.0, @1.0, @0.000000000000000000, @0.000000000000000000,
+                             @0.333333333333333333, @0.666666666666666667, @0.666666666666666667, @0.333333333333333333, @0.333333333333333333];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _10nodeTriangle.basis = @[@1, @2, @3, 
-                             @4, @5, @6, @7, 
-                             @9, @10, @13];
+    _10nodeTriangle.basis = @[@1, @2, @3, @4, @5, @6, @7, @9, @10, @13];
     _10nodeTriangle.gaussPoints = @[@25, @64];
     _10nodeTriangle.stabilization = @0.01341555597798937329;
        
@@ -238,18 +226,15 @@
     _4nodeQuadrilateral.topology = @"quadrilateral";
     _4nodeQuadrilateral.code = @404;
     _4nodeQuadrilateral.nodes = @4;
-    //          1     2     3     4
-    _4nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0,
-                                 @-1.0];
-    _4nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0,
-                                 @1.0];
+    //                              1     2     3     4
+    _4nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, @-1.0];
+    _4nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, @1.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _4nodeQuadrilateral.basis = @[@1, @2, @5,
-                                 @6];
+    _4nodeQuadrilateral.basis = @[@1, @2, @5, @6];
     _4nodeQuadrilateral.gaussPoints = @[@4, @16];
     _4nodeQuadrilateral.stabilization = @0.333333333333333333333;
     
@@ -261,20 +246,15 @@
     _8nodeQuadrilateral.topology = @"quadrilateral";
     _8nodeQuadrilateral.code = @408;
     _8nodeQuadrilateral.nodes = @8;
-    //          1     2     3     4     5     6      7      8
-    _8nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
-                                 @-1.0, @0.0, @1.0, @0.0,
-                                 @-1.0];
-    _8nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
-                                 @1.0, @-1.0, @0.0, @1.0,
-                                 @0.0];
+    //                              1     2     3     4     5     6      7      8
+    _8nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0];
+    _8nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _8nodeQuadrilateral.basis = @[@1, @2, @3, @5,
-                                 @6, @7, @9, @10];
+    _8nodeQuadrilateral.basis = @[@1, @2, @3, @5, @6, @7, @9, @10];
     _8nodeQuadrilateral.gaussPoints = @[@9, @25];
     _8nodeQuadrilateral.stabilization = @0.0833333333333333333333;
     
@@ -286,21 +266,15 @@
     _9nodeQuadrilateral.topology = @"quadrilateral";
     _9nodeQuadrilateral.code = @409;
     _9nodeQuadrilateral.nodes = @9;
-    //          1     2     3     4     5     6      7      8      9
-    _9nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
-                                 @-1.0, @0.0, @1.0, @0.0,
-                                 @-1.0, @0.0];
-    _9nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, 
-                                 @1.0, @-1.0, @0.0, @1.0,
-                                 @0.0, @0.0];
+    //                              1     2     3     4     5     6      7      8      9
+    _9nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0, @0.0];
+    _9nodeQuadrilateral.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @0.0];
     //       1  2   3   4   5   6   7     8    9     10 
     //       1  u  u^2  u^3 v  uv  u^2v  u^3v v^2   uv^2 
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _9nodeQuadrilateral.basis = @[@1, @2, @3, @5,
-                                 @6, @7, @9, @10, 
-                                 @11];
+    _9nodeQuadrilateral.basis = @[@1, @2, @3, @5, @6, @7, @9, @10, @11];
     _9nodeQuadrilateral.gaussPoints = @[@9, @25];
     _9nodeQuadrilateral.stabilization = @0.0833333333333333333333;
     
@@ -312,7 +286,7 @@
     _12nodeQuadrilateral.topology = @"quadrilateral";
     _12nodeQuadrilateral.code = @412;
     _12nodeQuadrilateral.nodes = @12;
-    //          1     2     3     ......
+    //                               1     2     3     ......
     _12nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
                                   @-1.0, @-0.3333333333333333333, @0.3333333333333333333,
                                   @1.0000000000000000000, @1.0000000000000000000, 
@@ -328,9 +302,7 @@
     //
     //      11      12     13 14    15     16
     //      u^2v^2 u^3v^2 v^3 uv^3 u^2v^3 u^3v^3
-    _12nodeQuadrilateral.basis = @[@1, @2, @3, @4,
-                                  @5, @6, @7, @8, 
-                                  @9, @10, @13, @14];
+    _12nodeQuadrilateral.basis = @[@1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @13, @14];
     _12nodeQuadrilateral.gaussPoints = @[@16, @36];
     _12nodeQuadrilateral.stabilization = @0.0;
     
@@ -342,7 +314,7 @@
     _16nodeQuadrilateral.topology = @"quadrilateral";
     _16nodeQuadrilateral.code = @416;
     _16nodeQuadrilateral.nodes = @16;
-    //          1     2     3     ......
+    //                               1     2     3     ......
     _16nodeQuadrilateral.nodeU = @[@-1.0, @1.0, @1.0, 
                                   @-1.0, @-0.3333333333333333333, @0.3333333333333333333,
                                   @1.0000000000000000000, @1.0000000000000000000, 
@@ -357,10 +329,7 @@
                                   @0.3333333333333333333, @-0.3333333333333333333, 
                                   @-0.3333333333333333333, @-0.3333333333333333333, 
                                   @0.3333333333333333333, @0.3333333333333333333];
-    _16nodeQuadrilateral.basis = @[@1, @2, @3, @4,
-                                  @5, @6, @7, @8, 
-                                  @9, @10, @11, @12, 
-                                  @13, @14, @15, @16];
+    _16nodeQuadrilateral.basis = @[@1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12, @13, @14, @15, @16];
     _16nodeQuadrilateral.gaussPoints = @[@16, @36];
     _16nodeQuadrilateral.stabilization = @0.01766875890919188522;
     
@@ -372,13 +341,10 @@
     _4nodeTetrahedron.topology = @"tetrahedron";
     _4nodeTetrahedron.code = @504;
     _4nodeTetrahedron.nodes = @4;
-    //          1     2     3     4
-    _4nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, 
-                               @0.0];
-    _4nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, 
-                               @0.0];
-    _4nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, 
-                               @1.0];
+    //                           1     2     3     4
+    _4nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, @0.0];
+    _4nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, @0.0];
+    _4nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -391,7 +357,7 @@
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
     _4nodeTetrahedron.basis = @[@1, @2, @5, @17];
-    _4nodeTetrahedron.gaussPoints = @[@4, @11];
+    _4nodeTetrahedron.gaussPoints = @[@4, @11, @1];
     _4nodeTetrahedron.stabilization = @0.333333333333333333;
     
     //-----------------------------
@@ -402,16 +368,10 @@
     _10nodeTetrahedron.topology = @"tetrahedron";
     _10nodeTetrahedron.code = @510;
     _10nodeTetrahedron.nodes = @10;
-    //          1     2     3     4     5     6      7      8      9     10
-    _10nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, 
-                                @0.0, @0.5, @0.5, @0.0, 
-                                @0.0, @0.5, @0.0];
-    _10nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, 
-                                @0.0, @0.0, @0.5, @0.5, 
-                                @0.0, @0.0, @0.5];
-    _10nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, 
-                                @1.0, @0.0, @0.0, @0.0, 
-                                @0.5, @0.5, @0.5];
+    //                           1     2     3     4     5     6      7      8      9     10
+    _10nodeTetrahedron.nodeU = @[@0.0, @1.0, @0.0, @0.0, @0.5, @0.5, @0.0, @0.0, @0.5, @0.0];
+    _10nodeTetrahedron.nodeV = @[@0.0, @0.0, @1.0, @0.0, @0.0, @0.5, @0.5, @0.0, @0.0, @0.5];
+    _10nodeTetrahedron.nodeW = @[@0.0, @0.0, @0.0, @1.0, @0.0, @0.0, @0.0, @0.5, @0.5, @0.5];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -423,9 +383,7 @@
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _10nodeTetrahedron.basis = @[@1, @2, @3, @5, 
-                                @6, @9, @17, @18, 
-                                @21, @33];
+    _10nodeTetrahedron.basis = @[@1, @2, @3, @5, @6, @9, @17, @18, @21, @33];
     _10nodeTetrahedron.gaussPoints = @[@27, @64];
     _10nodeTetrahedron.stabilization = @0.0416666666666666666;
     
@@ -439,13 +397,10 @@
     _5nodePyramid.topology = @"pyramid";
     _5nodePyramid.code = @605;
     _5nodePyramid.nodes = @5;
-    //          1     2     3     4     5
-    _5nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, 
-                           @-1.0, @0.0];
-    _5nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, 
-                           @1.0, @0.0];
-    _5nodePyramid.nodeW = @[@0.0, @0.0, @0.0, 
-                           @0.0, @1.0];
+    //                        1     2     3     4     5
+    _5nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @0.0];
+    _5nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @0.0];
+    _5nodePyramid.nodeW = @[@0.0, @0.0, @0.0, @0.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -457,8 +412,7 @@
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _5nodePyramid.basis = @[@1, @2, @5, @6, 
-                           @17];
+    _5nodePyramid.basis = @[@1, @2, @5, @6, @17];
     _5nodePyramid.gaussPoints = @[@8, @64];
     _5nodePyramid.stabilization = @0.333333333333333333;
     
@@ -470,19 +424,10 @@
     _13nodePyramid.topology = @"pyramid";
     _13nodePyramid.code = @613;
     _13nodePyramid.nodes = @13;
-    //          1     2     3     4     5     6      7      8      9     10    11    12    13
-    _13nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, 
-                            @-1.0, @0.0, @0.0, @1.0, 
-                            @0.0, @-1.0, @-0.5, @0.5, 
-                            @0.5, @-0.5];
-    _13nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, 
-                            @1.0, @0.0, @-1.0, @0.0, 
-                            @1.0, @0.0, @-0.5, @-0.5, 
-                            @0.5, @0.5];
-    _13nodePyramid.nodeW = @[@0.0, @0.0, @0.0, 
-                            @0.0, @1.0, @0.0, @0.0, 
-                            @0.0, @0.0, @0.5, @0.5, 
-                            @0.5, @0.5];
+    //                          1     2     3     4     5     6      7      8      9     10    11    12    13
+    _13nodePyramid.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @0.0, @0.0, @1.0, @0.0, @-1.0, @-0.5, @0.5, @0.5, @-0.5];
+    _13nodePyramid.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @0.0, @-1.0, @0.0, @1.0, @0.0, @-0.5, @-0.5, @0.5, @0.5];
+    _13nodePyramid.nodeW = @[@0.0, @0.0, @0.0, @0.0, @1.0, @0.0, @0.0, @0.0, @0.0, @0.5, @0.5, @0.5, @0.5];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -494,9 +439,7 @@
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _13nodePyramid.basis = @[@1, @2, @3, @5, 
-                            @6, @7, @9, @10, @17,
-                            @18, @21, @22, @33];
+    _13nodePyramid.basis = @[@1, @2, @3, @5, @6, @7, @9, @10, @17, @18, @21, @22, @33];
     _13nodePyramid.gaussPoints = @[@27, @125];
     _13nodePyramid.stabilization = @0.333333333333333333;
     
@@ -508,13 +451,10 @@
     _6nodeWedge.topology = @"wedge";
     _6nodeWedge.code = @706;
     _6nodeWedge.nodes = @6;
-    //          1     2     3     4     5     6
-    _6nodeWedge.nodeU = @[@0.0, @1.0, @0.0, 
-                         @0.0, @1.0, @0.0];
-    _6nodeWedge.nodeV = @[@0.0, @0.0, @1.0, 
-                         @0.0, @0.0, @1.0];
-    _6nodeWedge.nodeW = @[@-1.0, @-1.0, @-1.0, 
-                         @1.0, @1.0, @1.0];
+    //                     1     2     3     4     5     6
+    _6nodeWedge.nodeU = @[@0.0, @1.0, @0.0, @0.0, @1.0, @0.0];
+    _6nodeWedge.nodeV = @[@0.0, @0.0, @1.0, @0.0, @0.0, @1.0];
+    _6nodeWedge.nodeW = @[@-1.0, @-1.0, @-1.0, @1.0, @1.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -526,8 +466,7 @@
     //
     //   28    
     // u^3v^2w v^3w  uv^3w u^2v^3w u^3v^3w ...
-    _6nodeWedge.basis = @[@1, @2, @5, @17, 
-                         @18, @21];
+    _6nodeWedge.basis = @[@1, @2, @5, @17, @18, @21];
     _6nodeWedge.gaussPoints = @[@8, @64];
     _6nodeWedge.stabilization = @0.333333333333333333;
     
@@ -539,16 +478,10 @@
     _8nodeOctahedron.topology = @"brick";
     _8nodeOctahedron.code = @808;
     _8nodeOctahedron.nodes = @8;
-    //          1     2     3     4     5     6     7     8
-    _8nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, 
-                              @-1.0, @-1.0, @1.0, @1.0, 
-                              @-1.0];
-    _8nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
-                              @1.0, @-1.0, @-1.0, @1.0, 
-                              @1.0];
-    _8nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
-                              @-1.0, @1.0, @1.0, @1.0, 
-                              @1.0];
+    //                           1     2     3     4     5      6     7     8
+    _8nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0];
+    _8nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @-1.0, @-1.0, @1.0, @1.0];
+    _8nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, @-1.0, @1.0, @1.0, @1.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -563,8 +496,7 @@
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _8nodeOctahedron.basis = @[@1, @2, @5, @6,
-                              @17, @18, @21, @22];
+    _8nodeOctahedron.basis = @[@1, @2, @5, @6, @17, @18, @21, @22];
     _8nodeOctahedron.gaussPoints = @[@8, @64];
     _8nodeOctahedron.stabilization = @0.166666666666666666667;
     
@@ -576,25 +508,10 @@
     _20nodeOctahedron.topology = @"brick";
     _20nodeOctahedron.code = @820;
     _20nodeOctahedron.nodes = @20;
-    //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20
-    _20nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, 
-                               @-1.0, @-1.0, @1.0, @1.0,
-                               @-1.0, @0.0, @1.0, @0.0,
-                               @-1.0, @-1.0, @1.0, @1.0,
-                               @-1.0, @0.0, @1.0, @0.0, 
-                               @-1.0];
-    _20nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
-                               @1.0, @-1.0, @-1.0, @1.0,
-                               @1.0, @-1.0, @0.0, @1.0,
-                               @0.0, @-1.0, @-1.0, @1.0,
-                               @1.0, @-1.0, @0.0, @1.0, 
-                               @0.0];
-    _20nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
-                               @-1.0, @1.0, @1.0, @1.0,
-                               @1.0, @-1.0, @-1.0, @-1.0,
-                               @-1.0, @0.0, @0.0, @0.0,
-                               @0.0, @1.0, @1.0, @1.0,
-                               @1.0];
+    //                            1     2     3     4       5     6      7      8      9     10    11    12    13    14    15     16   17     18    19    20
+    _20nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0,  @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0];
+    _20nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0];
+    _20nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, @-1.0, @1.0, @1.0, @1.0, @1.0, @-1.0, @-1.0, @-1.0, @-1.0, @0.0, @0.0, @0.0, @0.0, @1.0, @1.0, @1.0, @1.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -609,11 +526,7 @@
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _20nodeOctahedron.basis = @[@1, @2, @3, @5,
-                               @6, @7, @9, @10, @17,
-                               @18, @19, @21, @22, 
-                               @23, @25, @26, @33, 
-                               @34, @37, @38];
+    _20nodeOctahedron.basis = @[@1, @2, @3, @5, @6, @7, @9, @10, @17, @18, @19, @21, @22, @23, @25, @26, @33, @34, @37, @38];
     _20nodeOctahedron.gaussPoints = @[@27, @125];
     _20nodeOctahedron.stabilization = @0.08148148148148;
     
@@ -625,29 +538,14 @@
     _27nodeOctahedron.topology = @"brick";
     _27nodeOctahedron.code = @827;
     _27nodeOctahedron.nodes = @27;
-    //          1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20    21    22    23    24    25
-    //          26    27
-    _27nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0,
-                               @-1.0, @-1.0, @1.0, @1.0,
-                               @-1.0, @0.0, @1.0, @0.0,
-                               @-1.0, @-1.0, @1.0, @1.0,
-                               @-1.0, @0.0, @1.0, @0.0, 
-                               @-1.0, @0.0, @1.0, @0.0, 
-                               @-1.0, @0.0, @0.0, @0.0];
-    _27nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, 
-                               @1.0, @-1.0, @-1.0, @1.0,
-                               @1.0, @-1.0, @0.0, @1.0,
-                               @0.0, @-1.0, @-1.0, @1.0, 
-                               @1.0, @-1.0, @0.0, @1.0, 
-                               @0.0, @-1.0, @0.0, @1.0, 
-                               @0.0, @0.0, @0.0, @0.0];
-    _27nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, 
-                               @-1.0, @1.0, @1.0, @1.0, 
-                               @1.0, @-1.0, @-1.0, @-1.0, 
-                               @-1.0, @0.0, @0.0, @0.0,
-                               @0.0, @1.0, @1.0, @1.0, 
-                               @1.0, @0.0, @0.0, @0.0,
-                               @0.0, @-1.0, @1.0, @0.0];
+    //                           1     2     3     4     5     6      7      8      9     10    11    12    13    14    15   16   17    18    19    20    21    22
+    //                            23   24    25    26    27
+    _27nodeOctahedron.nodeU = @[@-1.0, @1.0, @1.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, 
+                               @-1.0, @0.0, @1.0, @0.0, @-1.0, @0.0, @0.0, @0.0];
+    _27nodeOctahedron.nodeV = @[@-1.0, @-1.0, @1.0, @1.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, @0.0, @-1.0, @-1.0, @1.0, @1.0, @-1.0, @0.0, @1.0, 
+                               @0.0, @-1.0, @0.0, @1.0, @0.0, @0.0, @0.0, @0.0];
+    _27nodeOctahedron.nodeW = @[@-1.0, @-1.0, @-1.0, @-1.0, @1.0, @1.0, @1.0, @1.0, @-1.0, @-1.0, @-1.0, @-1.0, @0.0, @0.0, @0.0, @0.0, @1.0, @1.0, @1.0, 
+                               @1.0, @0.0, @0.0, @0.0, @0.0, @-1.0, @1.0, @0.0];
     // 1       2     3      4     5       6        7       8         9
     // 1       u    u^2    u^3    v       uv      u^2v   u^3v       v^2 
     //
@@ -662,13 +560,7 @@
     //
     //
     // vw^2 uvw^2 u^2vw^2 u^3vw^2 v^2w^2 uv^2w^2 u^2v^2w^2 u^3v^2w^2
-    _27nodeOctahedron.basis = @[@1, @2, @3, @5, 
-                               @6, @7, @9, @10, 
-                               @11, @17, @18, @19, 
-                               @21, @22, @23, @25, 
-                               @26, @27, @33, @34, 
-                               @35, @37, @38, @39, 
-                               @41, @42, @43];
+    _27nodeOctahedron.basis = @[@1, @2, @3, @5, @6, @7, @9, @10, @11, @17, @18, @19, @21, @22, @23, @25, @26, @27, @33, @34, @35, @37, @38, @39, @41, @42, @43];
     _27nodeOctahedron.gaussPoints = @[@27, @125];
     _27nodeOctahedron.stabilization = @0.08148148148148;
     
@@ -718,10 +610,10 @@
         for (j=0; j<i+1; j++) {
             p[j] = (2*i+1) * p[j] / (i+1);
         }
+        l = 0;
         for (j=2; j<i+2; j++) {
-            for (l=0; l<i; l++) {
-                p[j] = p[j] - i*p0[l] / (i+1);
-            }
+            p[j] = p[j] - i*p0[l] / (i+1);
+            l++;
         }
         for (j=0; j<i+1; j++) {
             p0[j] = p1[j];
@@ -767,6 +659,19 @@
     }
     
     return y;
+}
+
+
+#pragma mark Singleton method
+
++(id)sharedElementDescription {
+    
+    static FEMElementDescription *sharedElementDescription = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedElementDescription = [[self alloc] init];
+    });
+    return sharedElementDescription;
 }
 
 #pragma mark Public methods...
@@ -1006,7 +911,7 @@
                 element->BasisFunctions[i].p[j] = upow;
                 element->BasisFunctions[i].q[j] = vpow;
                 element->BasisFunctions[i].r[j] = wpow;
-                element->BasisFunctions[i].coeff[j] = a[i][j];
+                element->BasisFunctions[i].coeff[j] = a[j][i];
             }
         }
         
@@ -1149,10 +1054,13 @@
             }
         }
         element->GaussPoints = [(defs.gaussPoints)[0] intValue];
-        element->GaussPoints2 = [(defs.gaussPoints)[1] intValue];
+        if ([defs.gaussPoints count] > 1) element->GaussPoints2 = [(defs.gaussPoints)[1] intValue];
+        if ([defs.gaussPoints count] > 2) element->GaussPoints0 = [(defs.gaussPoints)[2] intValue];
+        
         element->StabilizationMK = [defs.stabilization doubleValue];
         
         if (element->GaussPoints2 <= 0) element->GaussPoints2 = element->GaussPoints;
+        if (element->GaussPoints0 <= 0) element->GaussPoints0 = element->GaussPoints;
         
         // Reassign 0 to stabilization. Don't know why yet!!!
         element->StabilizationMK = 0.0;

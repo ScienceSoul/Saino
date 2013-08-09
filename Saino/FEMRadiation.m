@@ -104,17 +104,17 @@
     FEMElementUtils *elementUtils;
     FEMListUtilities *listUtilities;
     FEMBoundaryCondition *boundaryConditionAtID = nil;
-    Element_t *currentElement = NULL, *parent = NULL;
+    Element_t *currentElements = NULL, *parent = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     kernel = [FEMKernel sharedKernel];
     listUtilities = [[FEMListUtilities alloc] init];
     
-    currentElement = model.getElements;
-    n = currentElement[element->BoundaryInfo->GebhardtFactors->Elements[k]].Type.NumberOfNodes;
+    currentElements = model.getElements;
+    n = currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].Type.NumberOfNodes;
     
-    boundaryConditionAtID = (model.boundaryConditions)[currentElement[element->BoundaryInfo->GebhardtFactors->Elements[k]].BoundaryInfo->Constraint-1];
-    found = [listUtilities listGetReal:model inArray:boundaryConditionAtID.valuesList forVariable:@"emissivity" numberOfNodes:n indexes:currentElement[element->BoundaryInfo->GebhardtFactors->Elements[k]].NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+    boundaryConditionAtID = (model.boundaryConditions)[currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].BoundaryInfo->Constraint-1];
+    found = [listUtilities listGetReal:model inArray:boundaryConditionAtID.valuesList forVariable:@"emissivity" numberOfNodes:n indexes:currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
     sum = 0.0;
     if (found == YES) {
         for (i=0; i<buffer.m; i++) {
@@ -122,7 +122,7 @@
         }
         emissivity = sum / n;
     } else {
-        found = [kernel getParentMaterialProperty:@"emissivity" forElement:&currentElement[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model buffer:&buffer];
+        found = [kernel getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model buffer:&buffer];
         for (i=0; i<buffer.m; i++) {
             sum = sum + buffer.vector[i];
         }
@@ -130,7 +130,7 @@
     }
     
     elementUtils = [[FEMElementUtils alloc] init];
-    area = emissivity * [elementUtils elementArea:&currentElement[element->BoundaryInfo->GebhardtFactors->Elements[k]] numberOfNodes:n mesh:mesh nodel:model];
+    area = emissivity * [elementUtils elementArea:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] numberOfNodes:n mesh:mesh nodel:model];
     t = fabs(element->BoundaryInfo->GebhardtFactors->Factors[k]) * area;
     
     if (buffer.vector != NULL) {

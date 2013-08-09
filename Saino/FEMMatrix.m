@@ -90,6 +90,7 @@
         _containers->GOrder = NULL;
         
         _containers->FCT_D = NULL;
+        _containers->MassValuesLumped = NULL;
     }
     
     return self;

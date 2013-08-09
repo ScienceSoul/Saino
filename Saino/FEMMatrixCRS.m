@@ -371,12 +371,14 @@
                             for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
                                     matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    break;
                                 }
                             }
                         } else {
                             for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
                                     matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    break;
                                 }
                             }
                         }
@@ -551,7 +553,7 @@
     matrixArraysContainer *matContainers = NULL;
     
     if (solution == nil && matrix == nil) {
-        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least of the method argumens should be non-nil\n");
+        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least one the method argumens should be non-nil\n");
         return;
     }
     
@@ -578,14 +580,14 @@
     memcpy(matContainers->BulkValues, matContainers->Values, matContainers->sizeValues*sizeof(double));
     
     for (i=0; i<n; i++) {
-        for (k=matContainers->RHS[i]; k<=matContainers->RHS[i+1]-1; k++) {
+        for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
             j = matContainers->Cols[k];
             
             // Go through the lower symmetric part (i,j) and find the corresponding entry (j,i)
             if (i >= j) continue;
             
             // First find entry (j,i)
-            for (k2=matContainers->RHS[j]; k2<=matContainers->RHS[j+1]-1; k2++) {
+            for (k2=matContainers->Rows[j]; k2<=matContainers->Rows[j+1]-1; k2++) {
                 if (matContainers->Cols[k2] == i) {
                     found = YES;
                     break;

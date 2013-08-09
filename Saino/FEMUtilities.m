@@ -133,7 +133,7 @@
     
     listUtilities = [[FEMListUtilities alloc] init];
     interpolation = [[FEMInterpolation alloc] init];
-    elementDescription = [[FEMElementDescription alloc] init];
+    elementDescription = [FEMElementDescription sharedElementDescription];
     
     // If projector argument given, search for existing projector matrix or
     // generate new projector if not already there
@@ -493,8 +493,6 @@
         free_ivector(rInd, 0,  oldMesh.numberOfNodes-1);
         if (oldVar != nil) [self FEMUtils_applyProjector:oldVar model:aModel fromMesh:oldMesh toMesh:newMesh projector:projector];
     }
-    
-    [elementDescription deallocation];
     
     free_dvector(elementNodes->x, 0, oldMesh.maxElementNodes-1);
     free_dvector(elementNodes->y, 0, oldMesh.maxElementNodes-1);
@@ -1775,7 +1773,7 @@
     isCoupledSolution = (solution.solutionMode == SOLUTION_MODE_COUPLED) ? YES : NO;
     isBlockSolution = (solution.solutionMode == SOLUTION_MODE_BLOCK) ? YES : NO;
     isAssemblySolution = (solution.solutionMode == SOLUTION_MODE_ASSEMBLY) ? YES : NO;
-    isAssemblySolution = (isAssemblySolution == YES || (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.selector == nil)) || (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.selector == nil))) ? YES : NO;
+    isAssemblySolution = (isAssemblySolution == YES || (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.isBuiltInSolution == NO)) || (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.isBuiltInSolution == NO))) ? YES : NO;
     
     // Default order of equation
     solution.order = 1;
@@ -1895,7 +1893,7 @@
             errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
         }
     } else { // We are woking with a built-in solution computer
-        solution.selector = @selector(fieldSolutionComputer::::);
+        solution.builtInSolution = YES;
     }
     
     //Initialize and get the variable
@@ -1906,10 +1904,10 @@
         //Variable does not exist
         variable = [[FEMVariable alloc] init];
         solution.variable = variable;
-    } else if (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.selector == nil)) {
+    } else if (isCoupledSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.isBuiltInSolution == NO)) {
         // Coupled solver may inherit the matrix only if procedure is given
         
-    } else if (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.selector == nil)) {
+    } else if (isBlockSolution == YES && (solution.plugInPrincipalClassInstance == nil && solution.isBuiltInSolution == NO)) {
         // Block solver may inherit the matrix only if procedure is given
 
     } else {
