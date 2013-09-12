@@ -268,7 +268,6 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
-        _savesDone = NO;
         _outputActive = NO;
         _adaptiveMesh = NO;
         _changed = NO;
@@ -287,6 +286,7 @@
         _maxElementDofs = 0;
         _maxElementNodes = 0;
         _numberOfPassiveBCs = 0;
+        _savesDone = 0;
                 
         _elements = NULL;
         _edges = NULL;
@@ -666,7 +666,6 @@
         }
     }
     free_ivector(inDofs, 0, 6);
-    free_ivector(nodes, 0, MAX_ELEMENT_NODES-1);
     
     minEIndex = min_array(elementTags, self.numberOfBulkElements);
     maxEIndex = max_array(elementTags, self.numberOfBulkElements);
@@ -680,8 +679,8 @@
     // TODO: Read element property file (.dat) not supported yet. Is that really needed?
     
     //Mesh boundary elements
-    coord = doublevec(0, self.maxElementNodes-1);
-    memset( coord, 0.0, self.maxElementNodes*sizeof(double) );
+    coord = doublevec(0, (3*self.maxElementNodes)-1);
+    memset( coord, 0.0, (3*self.maxElementNodes)*sizeof(double) );
     for (i=self.numberOfBulkElements; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
         
         [meshIO getMeshBoundaryElement:&tag boundary:&bndry leftElement:&left rightElement:&right type:&type nodes:nodes coord:coord];
@@ -826,10 +825,10 @@
     }
     if (self.maxElementDofs <= 0) self.maxElementDofs = self.maxElementNodes;
     
-    free_dvector(coord, 0, self.maxElementNodes-1);
+    free_ivector(nodes, 0, MAX_ELEMENT_NODES-1);
+    free_dvector(coord, 0, (3*self.maxElementNodes)-1);
     if (bdList.ivector != NULL) {
         free_ivector(bdList.ivector, 0, bdList.m-1);
-        bdList.ivector = NULL;
     }
     free_ivector(localEPerm, 0, (maxEIndex-minEIndex+1)-1);
     
@@ -1267,6 +1266,9 @@
     // Deallocate quadrant tree (used in mesh to mesh interpolation)
     [self FEMMesh_deallocateQuadrantTree:_rootQuadrant];
     _rootQuadrant = NULL;
+    
+    _parent = nil;
+    _child = nil;
 }
 
 -(void)Simple2DMeshBorders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {

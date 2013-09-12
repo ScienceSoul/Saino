@@ -140,6 +140,7 @@
 
         // Basis function values & derivatives at the integration point
         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
+        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
         stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
         detJ = integration.metricDeterminant;
         
@@ -215,7 +216,7 @@
             convection = YES;
             if (phaseChange == YES) c1 = ct;
             // Velocity from previous iteration at the integration point
-            memset( velo, 0.0, sizeof(int) );
+            memset( velo, 0.0, sizeof(velo) );
             for (i=0; i<n; i++) {
                 velo[0] = velo[0] + (ux[i]-mux[i])*integration.basis[i];
                 velo[1] = velo[1] + (uy[i]-muy[i])*integration.basis[i];

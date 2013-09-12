@@ -121,6 +121,7 @@
     }
     
     free(_containers);
+    _containers = NULL;
 }
 
 -(variableArraysContainer*)getContainers {

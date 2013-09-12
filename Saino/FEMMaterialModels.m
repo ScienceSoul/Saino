@@ -134,7 +134,7 @@
         }
     }
     
-    memset( velo, 0.0, sizeof(int) );
+    memset( velo, 0.0, sizeof(velo) );
     for (i=0; i<nd; i++) {
         velo[0] = velo[0] + integration.basis[i]*ux[i];
         velo[1] = velo[1] + integration.basis[i]*uy[i];

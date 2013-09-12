@@ -19,7 +19,7 @@
 -(void)FEMPost_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle;
 -(void)FEMPost_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle;
 -(void)FEMPost_writeDouble:(double)number toFileHandle:(NSFileHandle *)fileHandle;
--(void)FEMPost_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle;
+-(void)FEMPost_writeBytes:(const void *)bytes length:(int)length toFileHandle:(NSFileHandle *)fileHandle;
 @end
 
 @implementation FEMPost
@@ -51,7 +51,7 @@
     [fileHandle writeData:buffer];
 }
 
--(void)FEMPost_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle {
+-(void)FEMPost_writeBytes:(const void *)bytes length:(int)length toFileHandle:(NSFileHandle *)fileHandle {
     
     NSData *buffer;
     buffer = [NSData dataWithBytes:bytes length:length];
@@ -120,8 +120,13 @@
                 if (*append == YES && mesh.savesDone != 0) {
                     postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
                     [postFileHandle seekToEndOfFile];
-                } else {
-                    postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
+                } else { // File already exists, erase it and start from scratch
+                    [fileManager removeItemAtPath:outputPath error:nil];
+                    if ([fileManager createFileAtPath:outputPath contents:nil attributes:nil] == YES) {
+                        postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
+                    } else {
+                        errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
+                    }
                 }
             }
         } else {
@@ -135,8 +140,13 @@
                  if (*append == YES && mesh.savesDone != 0) {
                      postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
                      [postFileHandle seekToEndOfFile];
-                 } else {
-                     postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
+                 } else { // File already exists, erase it and start from scratch
+                     [fileManager removeItemAtPath:outputPath error:nil];
+                     if ([fileManager createFileAtPath:outputPath contents:nil attributes:nil] == YES) {
+                         postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
+                     } else {
+                         errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
+                     }
                  }
             }
         }
@@ -151,8 +161,13 @@
             if (*append == YES && mesh.savesDone != 0) {
                 postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
                 [postFileHandle seekToEndOfFile];
-            } else {
-                postFileHandle = [NSFileHandle fileHandleForWritingAtPath:postFile];
+            } else { // File already exists, erase it and start from scratch
+                [fileManager removeItemAtPath:outputPath error:nil];
+                if ([fileManager createFileAtPath:outputPath contents:nil attributes:nil] == YES) {
+                    postFileHandle = [NSFileHandle fileHandleForWritingAtPath:outputPath];
+                } else {
+                    errorfunct("FEMPost:writeElmerPostFile", "Can't create post file.");
+                }
             }
         }
     }
@@ -222,7 +237,7 @@
         for (i=0; i<model.numberOfBulkElements+model.numberOfBoundaryElements; i++) {
             all = YES;
             for (j=0; j<elements[i].Type.NumberOfNodes; j++) {
-                if (maskVarContainers->Perm[elements[i].NodeIndexes[i]] == -1) {
+                if (maskVarContainers->Perm[elements[i].NodeIndexes[j]] == -1) {
                     all = NO;
                     break;
                 }
@@ -386,8 +401,7 @@
                     [self FEMPost_writeString:varName toFileHandle:postFileHandle];
                     if (varContainers->CValues != NULL) {
                         [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                        [varName appendString:@".im"];
-                        [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                        [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                     }
                 } else {
                     ind = [variable.name rangeOfString:@"["];
@@ -423,27 +437,27 @@
                                 [self FEMPost_writeString:varName toFileHandle:postFileHandle];
                                 if (varContainers->CValues != NULL) {
                                     [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                                    [varName appendString:@".im"];
-                                    [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                    [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                 }
                             } else if (k <= 3) {
                                 [self FEMPost_writeString:@" vector: " toFileHandle:postFileHandle];
                                 [self FEMPost_writeString:varName toFileHandle:postFileHandle];
                                 if (varContainers->CValues != NULL) {
                                     [self FEMPost_writeString:@" vector: " toFileHandle:postFileHandle];
-                                    [varName appendString:@".im"];
-                                    [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                    [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                 }
                             } else {
                                 for (l=1; l<=k; l++) {
                                     [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                                    [varName appendString:@"."];
-                                    [varName appendString:[NSString stringWithFormat:@"%d",l]];
-                                    [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                    NSMutableString *componentName = [NSMutableString stringWithString:varName];
+                                    [componentName appendString:@"."];
+                                    [self FEMPost_writeString:[componentName stringByAppendingString:[NSString stringWithFormat:@"%d",l]] toFileHandle:postFileHandle];
                                     if (varContainers->CValues != NULL) {
                                         [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                                        [varName appendString:@".im"];
-                                        [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                        NSMutableString *componentName = [NSMutableString stringWithString:varName];
+                                        [componentName appendString:@"."];
+                                        [componentName appendString:[NSString stringWithFormat:@"%d",l]];
+                                        [self FEMPost_writeString:[componentName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                     }
                                 }
                             }
@@ -464,14 +478,15 @@
         [postFileHandle writeData:newLineBuff];
         
         [self FEMPost_writeString:@"#File started at: " toFileHandle:postFileHandle];
-        [self FEMPost_writeBytes:dateAndTime() length:sizeof(dateAndTime())*20 toFileHandle:postFileHandle];
+        NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
+        [self FEMPost_writeString:dateString toFileHandle:postFileHandle];
         [postFileHandle writeData:newLineBuff];
         
         // Coordinates
         meshScale = 1.0;
         for (FEMSolution *solution in model.solutions) {
             if ((solution.solutionInfo)[@"displace mesh"] != nil) {
-                if ([(solution.solutionInfo)[@"dosplace mesh"] boolValue] == NO) meshScale = 0.0;
+                if ([(solution.solutionInfo)[@"displace mesh"] boolValue] == NO) meshScale = 0.0;
             } else {
                 if ((solution.solutionInfo)[@"output mesh deformation"] != nil) {
                     if ([(solution.solutionInfo)[@"output mesh deformation"] boolValue] == YES) meshScale = 0.0;
@@ -538,7 +553,7 @@
             if (maskExists == YES) {
                 all = YES;
                 for (j=0; j<elements[i].Type.NumberOfNodes; j++) {
-                    if (maskVarContainers->Perm[elements[i].NodeIndexes[j]] == -1) {
+                    if (maskVarContainers->Perm[elements[i].NodeIndexes[j]] < 0) {
                         all = NO;
                         break;
                     }
@@ -549,7 +564,7 @@
             k = elements[i].BodyID;
             if (k >= 1 && k <= model.numberOfBodies) {
                 if ((model.bodies)[k-1][@"name"] != nil) {
-                    bodyName = (model.bodies)[k-1][@"name"];
+                    bodyName = [NSMutableString stringWithString:(model.bodies)[k-1][@"name"]];
                     [bodyName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [bodyName length])];
                     [self FEMPost_writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 } else {
@@ -562,7 +577,8 @@
             [self FEMPost_writeInteger:elements[i].Type.ElementCode toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             n = 0;
             for (j=0; j<elements[i].Type.NumberOfNodes; j+=4) {
-                for (k=0; k<min(4, elements[i].Type.NumberOfNodes-n); k++) {
+                l = min(4, elements[i].Type.NumberOfNodes-n);
+                for (k=0; k<l; k++) {
                     index = elements[i].NodeIndexes[n];
                     if (maskExists == YES) index = maskVarContainers->Perm[index];
                     [self FEMPost_writeInteger:index toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
@@ -577,7 +593,7 @@
             if (maskExists == YES) {
                 all = YES;
                 for (j=0; j<elements[i].Type.NumberOfNodes; j++) {
-                    if (maskVarContainers->Perm[elements[i].NodeIndexes[j]] == -1) {
+                    if (maskVarContainers->Perm[elements[i].NodeIndexes[j]] < 0) {
                         all = NO;
                         break;
                     }
@@ -588,7 +604,7 @@
             k = elements[i].BoundaryInfo->Constraint;
             if (k >= 1 && k <= model.numberOfBoundaryConditions) {
                 boundaryConditionAtId = model.boundaryConditions[k-1];
-                bodyName = (NSMutableString *)[listUtiltiies listGetString:model inArray:boundaryConditionAtId.valuesList forVariable:@"name" info:&found];
+                bodyName = [NSMutableString stringWithString:[listUtiltiies listGetString:model inArray:boundaryConditionAtId.valuesList forVariable:@"name" info:&found]];
             }
             if (found == YES) {
                 [bodyName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [bodyName length])];

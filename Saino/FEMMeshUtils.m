@@ -3149,22 +3149,19 @@
 
 -(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model {
     
-    Element_t *modelElements, *meshElements;
-    Nodes_t *modelNodes, *meshNodes;
+    Element_t *meshElements;
+    Nodes_t *meshNodes;
     
     model.variables = mesh.variables;
     model.mesh = mesh;
     
-    modelElements = model.getElements;
-    modelNodes = model.getNodes;
     meshElements = mesh.getElements;
     meshNodes = mesh.getNodes;
     
-    modelNodes = meshNodes;
+    [model setNodes:meshNodes];
     model.numberOfNodes = mesh.numberOfNodes;
-    modelNodes->numberOfNodes = meshNodes->numberOfNodes;
     
-    modelElements = meshElements;
+    [model SetElements:meshElements];
     model.maxElementNodes = mesh.maxElementNodes;
     model.numberOfBulkElements = mesh.numberOfBulkElements;
     model.numberOfBoundaryElements = mesh.numberOfBoundaryElements;

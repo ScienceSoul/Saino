@@ -25,5 +25,6 @@
 @property(nonatomic, strong) NSString *modelName;
 
 -(void)runWithInitialize:(int)initialize;
+-(void)deallocation;
 
 @end

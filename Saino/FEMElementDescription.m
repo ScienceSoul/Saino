@@ -1544,9 +1544,7 @@
 }
 
 -(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab {
-    
-    int i;
-    
+        
     Element_t *elm = NULL;
     ElementType_t *element = NULL;
     Nodes_t *nodes;
@@ -1580,20 +1578,11 @@
         elm->BubbleIndexes = NULL;
         nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
         initNodes(nodes);
-        nodes->x = doublevec(0, element->NumberOfNodes-1);
-        nodes->y = doublevec(0, element->NumberOfNodes-1);
-        nodes->z = doublevec(0, element->NumberOfNodes-1);
-        for (i=0; i<element->NumberOfNodes; i++) {
-            nodes->x[i] = element->NodeU[i];
-            nodes->y[i] = element->NodeV[i];
-            nodes->z[i] = element->NodeW[i];
-        }
+        nodes->x = element->NodeU;
+        nodes->y = element->NodeV;
+        nodes->z = element->NodeW;
         [self computeStabilizationParameterInElement:elm nodes:nodes mesh:mesh numberOfNodes:element->NumberOfNodes mk:&element->StabilizationMK hk:NULL];
         free(elm);
-        
-        free_dvector(nodes->x, 0, element->NumberOfNodes-1);
-        free_dvector(nodes->y, 0, element->NumberOfNodes-1);
-        free_dvector(nodes->z, 0, element->NumberOfNodes-1);
         free(nodes);
     }
     

@@ -719,21 +719,25 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_STRING;
-        
-        newValueList.cValue = [NSString stringWithString:value];
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
+        
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_STRING;
+    
+    newValueList.cValue = [NSString stringWithString:value];
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
+
     
     boundary = nil;
     bodyForce = nil;
@@ -779,22 +783,25 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_LOGICAL;
-        
-        newValueList.lValue = value;
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
-
+        
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_LOGICAL;
+    
+    newValueList.lValue = value;
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
+    
     boundary = nil;
     bodyForce = nil;
     simulation = nil;
@@ -840,24 +847,28 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_INTEGER;
-        
-        containers = newValueList.getContainers;
-        containers->iValues = intvec(0, 0);
-        containers->sizeIValues = 1;
-        containers->iValues[0] = value;
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
+        
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_INTEGER;
+    
+    containers = newValueList.getContainers;
+    containers->iValues = intvec(0, 0);
+    containers->sizeIValues = 1;
+    containers->iValues[0] = value;
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
+
 }
 
 /**********************************************************************************
@@ -900,24 +911,27 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_CONSTANT_TENSOR;
-        
-        containers = newValueList.getContainers;
-        containers->iValues = intvec(0, n-1);
-        containers->sizeIValues = n;
-        memcpy(containers->iValues, values, n*sizeof(int));
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
+        
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_CONSTANT_TENSOR;
+    
+    containers = newValueList.getContainers;
+    containers->iValues = intvec(0, n-1);
+    containers->sizeIValues = n;
+    memcpy(containers->iValues, values, n*sizeof(int));
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
 }
 
 /**********************************************************************************
@@ -960,32 +974,35 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_CONSTANT_SCALAR;
-        
-        containers = newValueList.getContainers;
-        containers->tValues = NULL;
-        containers->fValues = d3tensor(0, 0, 0, 0, 0, 0);
-        containers->sizeFValues1 = 1;
-        containers->sizeFValues2 = 1;
-        containers->sizeFValues3 = 1;
-        containers->fValues[0][0][0] = value;
-        
-        if (str != nil) {
-            newValueList.cValue = [NSString stringWithString:str];
-            newValueList.type = LIST_TYPE_CONSTANT_SCALAR_STR;
-        }
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
+
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_CONSTANT_SCALAR;
+    
+    containers = newValueList.getContainers;
+    containers->tValues = NULL;
+    containers->fValues = d3tensor(0, 0, 0, 0, 0, 0);
+    containers->sizeFValues1 = 1;
+    containers->sizeFValues2 = 1;
+    containers->sizeFValues3 = 1;
+    containers->fValues[0][0][0] = value;
+    
+    if (str != nil) {
+        newValueList.cValue = [NSString stringWithString:str];
+        newValueList.type = LIST_TYPE_CONSTANT_SCALAR_STR;
+    }
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
 }
 
 -(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n string:(NSString *)str {
@@ -1026,35 +1043,38 @@
     
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
             found = YES;
             break;
         }
     }
     
-    if (found == NO) {
-        
-        newValueList = [[FEMValueList alloc] init];
-        newValueList.type = LIST_TYPE_CONSTANT_TENSOR;
-        
-        containers = newValueList.getContainers;
-        containers->fValues = d3tensor(0, m-1, 0, n-1, 0, 0);
-        containers->sizeFValues1 = m;
-        containers->sizeFValues2 = n;
-        containers->sizeFValues3 = 1;
-        for (i=0; i<m; i++) {
-            for (j=0; j<n; j++) {
-                containers->fValues[i][j][0] = fvalues[i][j];
-            }
-        }
-        
-        if (str != nil) {
-            newValueList.cValue = [NSString stringWithString:str];
-            newValueList.type = LIST_TYPE_CONSTANT_TENSIOR_STR;
-        }
-        
-        newValueList.name = varName;
-        [valuesArray addObject:newValueList];
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
     }
+        
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = LIST_TYPE_CONSTANT_TENSOR;
+    
+    containers = newValueList.getContainers;
+    containers->fValues = d3tensor(0, m-1, 0, n-1, 0, 0);
+    containers->sizeFValues1 = m;
+    containers->sizeFValues2 = n;
+    containers->sizeFValues3 = 1;
+    for (i=0; i<m; i++) {
+        for (j=0; j<n; j++) {
+            containers->fValues[i][j][0] = fvalues[i][j];
+        }
+    }
+    
+    if (str != nil) {
+        newValueList.cValue = [NSString stringWithString:str];
+        newValueList.type = LIST_TYPE_CONSTANT_TENSIOR_STR;
+    }
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
 }
 
 /*****************************************************************************************

@@ -510,6 +510,7 @@
         
         _elements = NULL;
         _currentElement = NULL;
+        _nodes = NULL;
             
         _containers = (modelArraysContainer*)malloc(sizeof(modelArraysContainer));
         _containers->freeSurfaceNodes = NULL;
@@ -580,6 +581,13 @@
         _containers->boundaryCurvatures = NULL;
     }
     free(_containers);
+    _containers = NULL;
+    
+    _mesh = nil;
+    _solution = nil;
+    _elements = NULL;
+    _currentElement = NULL;
+    _nodes = NULL;
 }
 
 -(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2 {
@@ -966,6 +974,15 @@
 -(Nodes_t *)getNodes {
     
     return _nodes;
+}
+
+#pragma mark Elements and Nodes setter
+-(void)SetElements:(Element_t *)elements {
+    _elements = elements;
+}
+
+-(void)setNodes:(Nodes_t *)nodes {
+    _nodes = nodes;
 }
 
 -(modelArraysContainer*)getContainers {

@@ -11,7 +11,7 @@
 
 @interface FEMMatrixCRS ()
 
--(int)FEMMatrixCRS_Search:(int)n :(int *)array :(int)value;
+-(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int *)array theValue:(int)value;
 
 @end
 
@@ -20,12 +20,12 @@
 
 #pragma mark Private methods
 
--(int)FEMMatrixCRS_Search:(int)n :(int *)array :(int)value {
+-(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int *)array theValue:(int)value {
     
     int lower, upper, lou, index;
     
     index = 0;
-    upper = n;
+    upper = n-1;
     lower = 0;
     
     // Handle the special case returns -1
@@ -250,26 +250,26 @@
  
 *********************************************************************************************************/
     
-    int ii, jj, k;
-    int *buffer;
+    int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         jj = matContainers->Rows[i+1]-matContainers->Rows[i];
-        buffer = intvec( 0, jj );
-        memset( buffer, 0, (jj+1)*sizeof(int) );
+        int buffer[jj];
+        memset( buffer, 0, sizeof(buffer) );
+        l = 0;
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
-            buffer[ii] = matContainers->Cols[ii];
+            buffer[l] = matContainers->Cols[ii];
+            l++;
         }
-        k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0) {
             NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f\n", i, j, value);
             return;
         }
         k = k + matContainers->Rows[i];
-        free_ivector(buffer, 0, jj);
     } else {
         k = matContainers->Diag[i];
     }
@@ -287,24 +287,24 @@
  
 ************************************************************************************************************/
     
-    int k, ii, jj;
-    int *buffer;
+    int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         jj = matContainers->Rows[i+1]-matContainers->Rows[i];
-        buffer = intvec( 0, jj );
-        memset( buffer, 0, (jj+1)*sizeof(int) );
+        int buffer[jj];
+        memset( buffer, 0, sizeof(buffer) );
+        l = 0;
         for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
-            buffer[ii] = matContainers->Cols[ii];
+            buffer[l] = matContainers->Cols[ii];
+            l++;
         }
-        k = [self FEMMatrixCRS_Search:matContainers->Rows[i+1]-matContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f\n", i, j, value);
         if (k < 0) return;
         k = k + matContainers->Rows[i];
-        free_ivector(buffer, 0, jj);
     } else {
         k = matContainers->Diag[i];
     }
@@ -404,16 +404,15 @@
 ************************************************************************************************************/
     
     int i, j, k, l, m, k1, k2;
-    int *buffer;
     BOOL isMass, isDamp;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
     isMass = (matContainers->MassValues != NULL) ? YES : NO;
-    isMass = (isMass == YES && matContainers->sizeMassValues == matContainers->sizeValues) ? YES : NO;
+    if (isMass == YES) isMass = (isMass == YES && matContainers->sizeMassValues == matContainers->sizeValues) ? YES : NO;
     isDamp = (matContainers->DampValues != NULL) ? YES : NO;
-    isDamp = (isDamp == YES && matContainers->sizeDampValues == matContainers->sizeValues) ? YES : NO;
+    if (isDamp == YES) isDamp = (isDamp == YES && matContainers->sizeDampValues == matContainers->sizeValues) ? YES : NO;
     
     for (l=matContainers->Rows[n]; l<=matContainers->Rows[n+1]-1; l++) {
         i = matContainers->Cols[l];
@@ -427,11 +426,11 @@
             k2 = matContainers->Diag[i]-1;
         }
         
-        k = k2 - k1;
+        k = k2 - k1 + 1;
         if (k <= 30) {
             for (j=k1; j<=k2; j++) {
                 if (matContainers->Cols[j] == n) {
-                    matContainers->Rows[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
+                    matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
                     matContainers->Values[j] = 0.0;
                     if (isMass == YES) matContainers->MassValues[j] = 0.0;
                     if (isDamp == YES) matContainers->DampValues[j] = 0.0;
@@ -441,13 +440,14 @@
                 }
             }
         } else {
-            buffer = intvec(k1, k2);
+            int buffer[k2-k1+1];
+            memset( buffer, 0, sizeof(buffer) );
             m = 0;
             for (i=k1; i<=k2; i++) {
                 buffer[m] = matContainers->Cols[i];
                 m++;
             }
-            j = [self FEMMatrixCRS_Search:k1 :buffer :n];
+            j = [self FEMMatrixCRS_SearchWithinLength:k1 inArray:buffer theValue:n];
             if (j >= 0) {
                 j = j + k1;
                 matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
@@ -455,7 +455,6 @@
                 if (isMass == YES) matContainers->MassValues[j] = 0.0;
                 if (isDamp == YES) matContainers->DampValues[j] = 0.0;
             }
-            free_ivector(buffer, k1, k2);
         }
     }
     
@@ -860,26 +859,26 @@
  
 ************************************************************************************************/
     
-    int ii, jj, k;
-    int *buffer;
+    int ii, jj, k, l;
     matrixArraysContainer *aContainers = NULL;
     
     aContainers = a.getContainers;
     
     if (aContainers->Diag != NULL || i != j || a.isOrdered == NO) {
         jj = aContainers->Rows[i+1]-aContainers->Rows[i];
-        buffer = intvec( 0, jj );
-        memset( buffer, 0, (jj+1)*sizeof(int) );
+        int buffer[jj];
+        memset( buffer, 0, sizeof(buffer) );
+        l = 0;
         for (ii=aContainers->Rows[i]; ii<=aContainers->Rows[i+1]-1; ii++) {
-            buffer[ii] = aContainers->Cols[ii];
+            buffer[l] = aContainers->Cols[ii];
+            l++;
         }
-        k = [self FEMMatrixCRS_Search:aContainers->Rows[i+1]-aContainers->Rows[i] :buffer :j];
+        k = [self FEMMatrixCRS_SearchWithinLength:aContainers->Rows[i+1]-aContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0) {
             NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f\n", i, j, value);
             return;
         }
         k = k + aContainers->Rows[i];
-        free_ivector(buffer, 0, jj);
     } else {
         k = aContainers->Diag[i];
     }
@@ -954,21 +953,21 @@
     }
 }
 
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v {
 /*******************************************************************************************
  
     Description:
-    Matrix vector product (v = Au) for a matrix given in CRS format. 
+    Matrix vector product (v = Au) for a matrix given in CRS format.
  
     Arguments:
  
-    FEMMatrix *matrix  -> the input matrix class.
+        FEMMatrix *matrix  -> the input matrix class.
  
-    double *u          -> Vector to multiply
+        double *u          -> Vector to multiply
  
-    double *v          -> Result vector
+        double *v          -> Result vector
  
 *******************************************************************************************/
+-(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v {
     
     int i, j, n;
     double rsum;
@@ -978,7 +977,7 @@
     
     n = matrix.numberOfRows;
     
-    //TODO: Can we optimize the loop below
+    //TODO: Can we optimize the loop below?
     for (i=0; i<n; i++) {
         rsum = 0.0;
         for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
@@ -988,7 +987,6 @@
     }
 }
 
--(void)complexMatrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double complex *)u resultVector:(double complex *)v {
 /*******************************************************************************************
  
     Description:
@@ -996,13 +994,14 @@
  
     Arguments:
  
-    FEMMatrix *matrix  -> the input matrix class.
+        FEMMatrix *matrix  -> the input matrix class.
  
-    double *u          -> Vector to multiply
+        double *u          -> Vector to multiply
  
-    double *v          -> Result vector
+        double *v          -> Result vector
  
 *******************************************************************************************/
+-(void)complexMatrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double complex *)u resultVector:(double complex *)v {
     
     int i, j, n;
     double complex s, rsum;
@@ -1015,7 +1014,7 @@
     //TODO: Can we optimize the loop below
     for (i=0; i<n; i++) {
         rsum = 0.0 + 0.0 * I;
-        for (j=matContainers->Rows[2*i-1]; j<=matContainers->Rows[2*i]-1; j+=2) {
+        for (j=matContainers->Rows[2*i]; j<=matContainers->Rows[2*i+1]-1; j+=2) {
             s = matContainers->Values[j] + (-matContainers->Values[j+1] * I);
             rsum = rsum + s * u[(matContainers->Cols[j]+1)/2];
         }

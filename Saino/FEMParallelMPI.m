@@ -23,9 +23,9 @@
 -(double)parallelReductionOfValue:(double)r operArg:(int *)oper_arg{
     
     double rsum;
-    //int oper;
     
     rsum = r;
+    //TODO: add support for parallel run
     
     return rsum;
 }

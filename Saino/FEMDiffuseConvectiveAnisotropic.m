@@ -184,7 +184,7 @@
                 grav[i] = gwrk.matrix[i][0]*gwrk.matrix[3][0];
             }
         } else {
-            memset( grav, 0.0, sizeof(double) );
+            memset( grav, 0.0, sizeof(grav) );
             grav[1] = -9.81;
         }
         lc1 = 2.0/mk;
@@ -253,6 +253,7 @@
         
         // Basis function values & derivatives at the integration point
         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
+        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
         stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
         detJ = integration.metricDeterminant;
         s = detJ * IP->s[t];
@@ -309,13 +310,14 @@
         for (i=0; i<dim; i++) {
             c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:rho element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model];
         }
+
         // If there's no convection term we don't need the velocities and also no need for stabilzation
         convection = NO;
         if (c1 != 0.0) {
             convection = YES;
             if (phaseChange == YES) c1 = ct;
             // Velocity from previous iteration at the integration point
-            memset( velo, 0.0, sizeof(int) );
+            memset( velo, 0.0, sizeof(velo) );
             for (i=0; i<n; i++) {
                 velo[0] = velo[0] + (ux[i]-mux[i])*integration.basis[i];
                 velo[1] = velo[1] + (uy[i]-muy[i])*integration.basis[i];
@@ -363,7 +365,7 @@
                 for (i=0; i<n; i++) {
                     temperature = temperature + integration.basis[i]*nodalTemperature[i];
                 }
-                memset( gradP, 0.0, sizeof(double) );
+                memset( gradP, 0.0, sizeof(gradP) );
                 for (i=0; i<dim; i++) {
                     for (j=0; j<n; j++) {
                         gradP[i] = gradP[i] + nodalPressure[j]*integration.basisFirstDerivative[j][i];
@@ -371,7 +373,7 @@
                 }
                 
                 memset( *gmat, 0.0, (3*3)*sizeof(double) );
-                memset( gvec, 0.0, sizeof(double) );
+                memset( gvec, 0.0, sizeof(gvec) );
                 for (i=0; i<dim; i++) {
                     for (j=0; j<dim; j++) {
                         sum = 0.0;
@@ -392,7 +394,7 @@
                 }
                 
                 sum = 0.0;
-                memset( y, 0.0, sizeof(double) );
+                memset( y, 0.0, sizeof(y) );
                 cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, (double *)gmat, 3, velo, 1, 0.0, y, 1);
                 for (i=0; i<3; i++) {
                     sum = sum + velo[i]*y[i];
@@ -414,7 +416,7 @@
                     tau = hk * pe / (2.0 * c1 * vnorm);
                 }
                 
-                memset( rm, 0.0, sizeof(double) );
+                memset( rm, 0.0, sizeof(rm) );
                 for (p=0; p<n; p++) {
                     rm[p] = c0 * integration.basis[p];
                     for (i=0; i<dim; i++) {
@@ -429,7 +431,7 @@
                     }
                 }
                 
-                memset( vrm, 0.0, sizeof(double) );
+                memset( vrm, 0.0, sizeof(vrm) );
                 for (i=0; i<dim; i++) {
                     for (l=0; l<n; l++) {
                         vrm[i] = vrm[i] + nodalPVelo[i][l]*integration.basis[l];

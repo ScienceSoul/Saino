@@ -48,6 +48,7 @@
         _containers->fValues = NULL;
     }
     free(_containers);
+    _containers = NULL;
 }
 
 -(valueListArraysContainer*)getContainers {

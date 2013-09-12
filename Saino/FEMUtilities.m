@@ -2847,6 +2847,10 @@
     return (range.location != NSNotFound || [file characterAtIndex:0] == '/' || [file characterAtIndex:0] == _backSlash) ? YES : NO;
 }
 
+/****************************************************************
+    Given the filename0 (and suffix0) find the 1st free filename
+    that does not exist in the current working directory
+****************************************************************/
 -(NSMutableString *)nextFreeFileName:(NSString *)fileName0 suffix:(NSString *)suffix0 lastExisting:(BOOL *)lastExisting {
     
     int no;

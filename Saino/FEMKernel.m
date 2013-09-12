@@ -62,9 +62,9 @@ static const int PRECOND_VANKA     =  560;
 
 // Solving linear systems and compute norms
 -(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
--(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution vector:(double *)vec nodeNumber:(int)nodeNumber;
--(void)FEMKernel_backRotateNTSystem:(double *)solution permutation:(int *)perm ndofs:(int)ndofs;
--(double)FEMKernel_computeNormInSolution:(FEMSolution *)solution size:(int)n values:(double *)values;
+-(void)FEMKernel_rotateNTSystem:(double *)vec nodeNumber:(int)nodeNumber model:(FEMModel *)model;
+-(void)FEMKernel_backRotateNTSystem:(double *)solution permutation:(int *)perm ndofs:(int)ndofs model:(FEMModel *)model;
+-(double)FEMKernel_computeNormInSolution:(FEMSolution *)solution model:(FEMModel *)model size:(int)n values:(double *)values;
 -(void)FEMKernel_solveLinearSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution model:(FEMModel *)model bulkMatrix:(FEMMatrix *)bulkMatrix;
 
 // Check passive element
@@ -86,19 +86,20 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMKernel_finishAssemblyModel:(FEMModel *)model solution:(FEMSolution *)solution forceVector:(double *)forceVector sizeForceVector:(int)n;
 
 // Loads
--(void)FEMKernel_setElementLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes doneLoad:(BOOL *)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs;
--(void)FEMKernel_setPointLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs;
+-(void)FEMKernel_setElementLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSString *)name indexes:(int*)indexes doneLoad:(BOOL *)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double *)diagScaling;
+-(void)FEMKernel_setPointLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSString *)name indexes:(int*)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double *)diagScaling;
 
 // Element and point values
--(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
--(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal;
+-(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal;
 
 // Periodic
--(void)FEMKernel_setPeriodicBoundariesPass1Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done;
--(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done;
+-(void)FEMKernel_setPeriodicBoundariesPass1Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done diaginalScaling:(double *)diagScaling;
+-(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done diaginalScaling:(double *)diagScaling;
 
 // Limiter
 -(void)FEMKernel_determineSoftLimiterInSolution:(FEMSolution *)solution model:(FEMModel *)model;
+-(void)FEMKernel_setLimiterValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values  orderOfDofs:(int)dof limitActive:(bool *)limitActive conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal;
 
 // Rows equilibration
 -(void)FEMKernel_rowEquilibrationMatrix:(FEMMatrix *)matrix vector:(double *)f parallel:(BOOL)parallel;
@@ -109,6 +110,9 @@ static const int PRECOND_VANKA     =  560;
 
 // Single solution
 -(void)FEMKernel_singleSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
+
+//
+-(void)FEMKErnel_updateExportedVariablesSolution:(FEMSolution *)solution model:(FEMModel *)model;
 
 @end
 
@@ -146,70 +150,79 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMKernel_iterCallType:(int)iterType solution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
         
     if (pcondrMethod == 0) {
-        pcondrMethod = @selector(CRSPCondDummyMatrix::::);
+        pcondrMethod = @selector(CRSPCondDummyMatrix:afterPrecondition:rightHandSide:info:);
     }
     
-    if (iterType == ITER_BICGSTAB) { // Solve with BI-CGSTAB
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dbicgstabSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_BICGSTAB2) { // Solve with BI-CGSTAB2
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dbicgstab2SolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_TFQMR) { // Solve with TFQMR
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dtfqmrSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_CG) { // Solve with CG
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_CGS) { // Solve with CGS
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_GCR) { // Solve with GMRES
-        
-        FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-        [iterSolver dgmresSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-        
-    }
-    else if (iterType == ITER_SGS) { // Solve with SGS
-    
-        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-        [iterSolver dsgsSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_JACOBI) { // Solve with Jacobi
-        
-        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-        [iterSolver djacobiSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_BICGSTABL) { // Solve with BI-CGSTAB(l)
-        
-        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-        [iterSolver dbicgstablSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
-    }
-    else if (iterType == ITER_GCR) { // Solve with GCR
-        
-        FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-        [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+    if (matrix.isComplexMatrix == NO) {
+        // Solvers from the FEMHUTiter class:
+        // ----------------------------------
+        if (iterType == ITER_BICGSTAB) { // Solve with BI-CGSTAB
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dbicgstabSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_BICGSTAB2) { // Solve with BI-CGSTAB2
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dbicgstab2SolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_TFQMR) { // Solve with TFQMR
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dtfqmrSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_CG) { // Solve with CG
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_CGS) { // Solve with CGS
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_GMRES) { // Solve with GMRES
+            
+            FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
+            [iterSolver dgmresSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            
+        }
+        // Solvers from the FEMIterativeMethods class:
+        // -------------------------------------------
+        else if (iterType == ITER_SGS) { // Solve with SGS
+            
+            FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+            [iterSolver dsgsSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_JACOBI) { // Solve with Jacobi
+            
+            FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+            [iterSolver djacobiSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_BICGSTABL) { // Solve with BI-CGSTAB(l)
+            
+            FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+            [iterSolver dbicgstablSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+        else if (iterType == ITER_GCR) { // Solve with GCR
+            
+            FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+            [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+    } else {
+        //TODO: implements solvers for complex matrix
+        errorfunct("FEMKernel:FEMKernel_iterCallType:", "linear solvers for complex matrix not implemented yet");
     }
 }
 
--(void)FEMKernel_rotateNTSystem:(FEMSolution *)solution vector:(double *)vec nodeNumber:(int)nodeNumber {
+-(void)FEMKernel_rotateNTSystem:(double *)vec nodeNumber:(int)nodeNumber model:(FEMModel *)model {
     
     int i, k, dim;
-    double bu, bv, bw, **rm;
+    double bu, bv, bw, rm[3][3];
     
     if (self.normalTangentialNumberOfNodes <= 0) return;
     
-    dim = [solution coordinateSystemDimension];
+    dim = model.dimension;
     
     k = self.boundaryReorder[nodeNumber];
     if (k < 0) return;
@@ -220,13 +233,12 @@ static const int PRECOND_VANKA     =  560;
         vec[0] = self.boundaryNormals[k][0]*bu + self.boundaryNormals[k][1]*bv;
         vec[1] = -self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
     } else {
-        rm = doublematrix(0, 2, 0, 2);
         
         bu = vec[0];
         bv = vec[1];
         bw = vec[2];
         
-        for (i=0; i<2; i++) {
+        for (i=0; i<3; i++) {
             rm[i][0] = self.boundaryNormals[k][i];
             rm[i][1] = self.boundaryTangent1[k][i];
             rm[i][2] = self.boundaryTangent2[k][i];
@@ -235,17 +247,15 @@ static const int PRECOND_VANKA     =  560;
         vec[0] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
         vec[1] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
         vec[2] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
-
-        free_dmatrix(rm, 0, 2, 0, 2);
     }
 }
 
--(void)FEMKernel_backRotateNTSystem:(double *)solution permutation:(int *)perm ndofs:(int)ndofs {
+-(void)FEMKernel_backRotateNTSystem:(double *)solution permutation:(int *)perm ndofs:(int)ndofs model:(FEMModel *)model {
     
     int i, j, k, l, dim;
-    double bu, bv, bw, **rm;
+    double bu, bv, bw, rm[3][3];
     
-    dim = self.coordinateSystemDimension;
+    dim = model.dimension;
     
     if (self.normalTangentialNumberOfNodes <= 0 || ndofs < dim) return;
     
@@ -257,41 +267,43 @@ static const int PRECOND_VANKA     =  560;
         
         if (dim < 3) {
             
-            bu = solution[(ndofs*(j-1)+1)];
-            bv = solution[(ndofs*(j-1)+2)];
+            bu = solution[(ndofs*j)];
+            bv = solution[(ndofs*j+1)];
             
-            solution[(ndofs*(j-1)+1)] = self.boundaryNormals[k][0]*bu - self.boundaryNormals[k][1]*bv;
-            solution[(ndofs*(j-1)+2)] = self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
+            solution[(ndofs*j)] = self.boundaryNormals[k][0]*bu - self.boundaryNormals[k][1]*bv;
+            solution[(ndofs*j+1)] = self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
         } else {
+                        
+            bu = solution[(ndofs*j)];
+            bv = solution[(ndofs*j+1)];
+            bw = solution[(ndofs*j+2)];
             
-            rm = doublematrix(0, 2, 0, 2);
-            
-            bu = solution[(ndofs*(j-1)+1)];
-            bv = solution[(ndofs*(j-1)+2)];
-            bw = solution[(ndofs*(j-1)+3)];
-            
-            for (l=0; l<2; l++) {
+            for (l=0; l<3; l++) {
                 rm[0][l] = self.boundaryNormals[k][l];
                 rm[1][l] = self.boundaryTangent1[k][l];
                 rm[2][l] = self.boundaryTangent2[k][l];
             }
             
-            solution[(ndofs*(j-1)+1)] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
-            solution[(ndofs*(j-1)+2)] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
-            solution[(ndofs*(j-1)+3)] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
-            
-            free_dmatrix(rm, 0, 2, 0, 2);
+            solution[(ndofs*j)] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
+            solution[(ndofs*j+1)] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
+            solution[(ndofs*j+2)] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
         }
     }
 }
 
--(double)FEMKernel_computeNormInSolution:(FEMSolution *)solution size:(int)n values:(double *)values {
+/*******************************************************
+    Computes the norm related to a solution vector.
+*******************************************************/
+-(double)FEMKernel_computeNormInSolution:(FEMSolution *)solution model:(FEMModel *)model size:(int)n values:(double *)values {
     
-    int normDim, normDofs, dofs, i, j, k, l, totn;
+    int normDim, normDofs, dofs, i, j, k, l, nn, permStart, totn;
+    int *iPerm;
     double norm, nscale, sum;
-    double *x = NULL, *buffer;
+    double *x = NULL, *buffer, *y;
     FEMParallelMPI *parallelUtil;
     variableArraysContainer *varContainers = NULL;
+    listBuffer normComponents = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL componentsAllocated, found;
     
     parallelUtil = [[FEMParallelMPI alloc] init];
     varContainers = solution.variable.getContainers;
@@ -309,56 +321,100 @@ static const int PRECOND_VANKA     =  560;
     }
     
     dofs = solution.variable.dofs;
-    if ((solution.solutionInfo)[@"nonlinear system norm dofs"] != nil) {
-        normDofs = [(solution.solutionInfo)[@"nonlinear system norm dofs"] intValue];
+    
+    componentsAllocated = NO;
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    found = [listUtilities listGetIntegerArray:model inArray:solution.valuesList forVariable:@"nonlinear system norm components" buffer:&normComponents]; //Those are indexes
+    if (found == YES) {
+        normDofs = normComponents.m;
+        componentsAllocated = YES;
     } else {
-        normDofs = dofs;
+        if ((solution.solutionInfo)[@"nonlinear system norm dofs"] != nil) {
+            normDofs = [(solution.solutionInfo)[@"nonlinear system norm dofs"] intValue];
+            normComponents.ivector = intvec(0, normDofs-1);
+            componentsAllocated = YES;
+            for (i=0; i<normDofs; i++) {
+                normComponents.ivector[i] = i;
+            }
+        } else {
+            normDofs = dofs;
+        }
     }
+    
+    nn = n;
+    
+    if ((solution.solutionInfo)[@"norm permutation"] != nil) { // This is an index
+        permStart = [(solution.solutionInfo)[@"norm permutation"] intValue];
+        iPerm = intvec(0, varContainers->sizePerm-1);
+        memset( iPerm, -1, varContainers->sizePerm*sizeof(int) );
+        nn = 0;
+        for (i=permStart; i<varContainers->sizePerm; i++) {
+            if (varContainers->Perm[i] >= 0) {
+                iPerm[nn] = varContainers->Perm[i];
+                nn++;
+            }
+        }
+        y = doublevec(0, nn-1);
+        for (i=0; i<nn; i++) {
+            y[i] = x[iPerm[i]];
+        }
+        x = y;
+        free_ivector(iPerm, 0, varContainers->sizePerm-1);
+    }
+    
     
     totn = [parallelUtil parallelReductionOfValue:(1.0*n) operArg:NULL];
     nscale = normDofs * totn/(1.0*dofs);
     
-    // Zero is used instead of infinity as the sign for the max norm
     if (normDofs < dofs) {
+        norm = 0.0;
         switch (normDim) {
             case 0:
-                norm = 0.0;
-                for (i=0; i<n/dofs; i++) {
-                    for (j=0; j<normDofs; j++) {
-                        k = dofs*(i) + j;
-                        norm = max(norm, fabs(x[k]));
+                buffer = doublevec(0, nn-1);
+                for (i=0; i<normDofs; i++) {
+                    j = normComponents.ivector[i];
+                    memset( buffer, 0.0, nn*sizeof(int) );
+                    l = 0;
+                    for (k=j; k<nn; k+=dofs) {
+                        buffer[l] = fabs(x[k]);
+                        l++;
                     }
+                    norm = max(norm, max_array(buffer, nn));
                 }
                 l = 2;
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
+                free_dvector(buffer, 0, nn-1);
                 break;
             case 1:
-                norm = 0.0;
-                for (i=0; i<n/dofs; i++) {
-                    for (j=0; j<normDofs; j++) {
-                        k = dofs*(i) + j;
-                        norm = norm + fabs(x[k]);
+                for (i=0; i<normDofs; i++) {
+                    j = normComponents.ivector[i];
+                    sum = 0;
+                    for (k=j; k<nn; k+=dofs) {
+                        sum = sum + fabs(x[k]);
                     }
+                    norm = norm + sum;
                 }
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale;
                 break;
             case 2:
-                norm = 0.0;
-                for (i=0; i<n/dofs; i++) {
-                    for (j=0; j<normDofs; j++) {
-                        k = dofs*(i) + j;
-                        norm = norm + pow(x[k], 2.0);
+                for (i=0; i<normDofs; i++) {
+                    j = normComponents.ivector[i];
+                    sum = 0;
+                    for (k=j; k<nn; k+=dofs) {
+                        sum = sum + pow(x[k], 2.0);
                     }
+                    norm = norm + sum;
                 }
                 norm = sqrt([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale);
                 break;
             default:
-                norm = 0.0;
-                for (i=0; i<n/dofs; i++) {
-                    for (j=0; j<normDofs; j++) {
-                         k = dofs*(i) + j;
-                        norm = norm + pow(x[k], normDim);
+                for (i=0; i<normDofs; i++) {
+                    j = normComponents.ivector[i];
+                    sum = 0;
+                    for (k=j; k<nn; k+=dofs) {
+                        sum = sum + pow(x[k], normDim);
                     }
+                    norm = norm + sum;
                 }
                 norm = pow( ([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale), (1.0/normDim) );
                 break;
@@ -366,37 +422,42 @@ static const int PRECOND_VANKA     =  560;
     } else {
         switch (normDim) {
             case 0:
-                buffer = doublevec(0, n-1); 
+                buffer = doublevec(0, nn-1);
+                memset( buffer, 0.0, nn*sizeof(int) );
                 for (i=0; i<n; i++) {
                     buffer[i] = fabs(x[i]);
                 }
-                sum = max_array(buffer, n);
+                norm = max_array(buffer, nn);
                 l = 2;
-                norm = [parallelUtil parallelReductionOfValue:sum operArg:&l];
-                free_dvector(buffer, 0, n-1);
+                norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
+                free_dvector(buffer, 0, nn-1);
                 break;
             case 1:
                 sum = 0.0;
-                for (i=0; i<n; i++) {
+                for (i=0; i<nn; i++) {
                     sum = sum + fabs(x[i]);
                 }
                 norm = [parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale;
                 break;
             case 2:
                 sum = 0.0;
-                for (i=0; i<n; i++) {
+                for (i=0; i<nn; i++) {
                     sum = sum + pow(x[i], 2.0);
                 }
                 norm = sqrt([parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale);
                 break;
             default:
                 sum = 0.0;
-                for (i=0; i<n; i++) {
+                for (i=0; i<nn; i++) {
                     sum = sum + pow(x[i], normDim);
                 }
                 norm = pow( ([parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale), (1.0/normDim));
                 break;
         }
+    }
+    
+    if (componentsAllocated == YES) {
+        free_ivector(normComponents.ivector, 0, normDofs-1);
     }
     
     return norm;
@@ -442,8 +503,8 @@ static const int PRECOND_VANKA     =  560;
                     if (fabs(matContainers->Values[matContainers->Diag[i]]) > 0.0)
                         x[i] = b[i] / matContainers->Values[matContainers->Diag[i]];
                 }
-                if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs];
-                *norm = [self FEMKernel_computeNormInSolution:solution size:n values:varContainers->Values];
+                if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs model:model];
+                *norm = [self FEMKernel_computeNormInSolution:solution model:model size:n values:x];
                 return;
             }
         }
@@ -451,7 +512,6 @@ static const int PRECOND_VANKA     =  560;
     
     // These definitions are needed if changing the iterative solver on the fly
     solution.multigridSolution = ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"]) ? YES : NO;
-    
     solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"mg levels"] intValue]);
     solution.multiGridTotal = max(solution.multiGridTotal, [(solution.solutionInfo)[@"multigrid levels"] intValue]);
     solution.multigridLevel = solution.multiGridTotal;
@@ -493,15 +553,15 @@ static const int PRECOND_VANKA     =  560;
     // If solving harmonic anaysis go there:
     if (harmonicAnalysis == YES) {
         
-        // TODO:
+        // TODO: implement the harmonic pass
         
     }
     
     // If solving eigen system go there:
     if (eigenAnalysis) {
         
-        // TODO:
-        
+        // TODO:implement the eigen pass
+
     }
     
     // If whether b=0 sice then equation Ax=b has only the trivial solution, x=0.
@@ -589,7 +649,7 @@ static const int PRECOND_VANKA     =  560;
         matAidContainers->Values = matAidContainers->BulkValues;
         
         //TODO: Add support for parallel run
-        [self matrixVectorMultplyInMatrix:matrixAid multiplyVector:varContainers->Values resultVector:tempVector];
+        [self matrixVectorMultplyInMatrix:matrixAid multiplyVector:x resultVector:tempVector];
         
         if ([(solution.solutionInfo)[@"calculate energy norm"] boolValue] == YES) {
             energy = 0.0;
@@ -618,19 +678,19 @@ static const int PRECOND_VANKA     =  560;
             projector = boundaryCondition.pMatrix;
             if (projector != nil) {
                 projectorContainers = projector.getContainers;
-                for (dof=0; dof<solution.variable.dofs; dof++) {
+                for (dof=0; dof<dofs; dof++) {
                     for (i=0; i<projector.numberOfRows; i++) {
                         ii = projectorContainers->InvPerm[i];
                         k = varContainers->Perm[ii];
                         if (k < 0) continue;
-                        k = solution.variable.dofs * k + dof;
+                        k = dofs * k + dof;
                         tempVector[k] = 0.0;
                         
                         for (l=projectorContainers->Rows[i]; l<=projectorContainers->Rows[i+1]-1; l++) {
                             if (projectorContainers->Cols[l] < 0) continue;
                             m = varContainers->Perm[projectorContainers->Cols[l]];
                             if (m >= 0) {
-                                m = solution.variable.dofs * m + dof;
+                                m = dofs * m + dof;
                                 tempVector[k] = tempVector[k] + projectorContainers->Values[l]*tempVector[m];
                             }
                         }
@@ -643,21 +703,21 @@ static const int PRECOND_VANKA     =  560;
         nodalContainers = nodalLoads.getContainers;
         for (i=0; i<nodalContainers->sizePerm; i++) {
             if (nodalContainers->Perm[i] >= 0 && varContainers->Perm[i] >= 0) {
-                for (j=0; j<solution.variable.dofs; j++) {
-                    nodalContainers->Values[solution.variable.dofs*nodalContainers->Perm[i]+j] = tempVector[solution.variable.dofs*varContainers->Perm[i]+j];
+                for (j=0; j<dofs; j++) {
+                    nodalContainers->Values[dofs*nodalContainers->Perm[i]+j] = tempVector[dofs*varContainers->Perm[i]+j];
                 }
             }
         }
         free_dvector(tempVector, 0, matrixAid.numberOfRows-1);
         
-        if (backRotation == YES) [self FEMKernel_backRotateNTSystem:nodalContainers->Values permutation:nodalContainers->Perm ndofs:solution.variable.dofs];
+        if (backRotation == YES) [self FEMKernel_backRotateNTSystem:nodalContainers->Values permutation:nodalContainers->Perm ndofs:dofs model:model];
         
     }
     
-    if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs];
+    if (backRotation == YES) [self FEMKernel_backRotateNTSystem:x permutation:varContainers->Perm ndofs:dofs model:model];
     
     // Compute the change of the solution with different methods
-    [self computeChange:solution model:model isSteadyState:NO nsize:&n values:x values0:NULL];
+    [self computeChange:solution model:model isSteadyState:NO nsize:&n values:x values0:NULL sizeValues0:NULL];
     *norm = solution.variable.norm;
     
     // Create soft limiters to be later applied by the dirichlet conditions in the next round.
@@ -1284,13 +1344,12 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Loads
 
--(void)FEMKernel_setElementLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes doneLoad:(BOOL *)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs {
+-(void)FEMKernel_setElementLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSString *)name indexes:(int*)indexes doneLoad:(BOOL *)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double *)diagScaling {
     
     int j, k, l, k1;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     FEMListUtilities *listUtil;
-    NSString *str;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     BOOL stat;
@@ -1303,8 +1362,9 @@ static const int PRECOND_VANKA     =  560;
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         if (stat == NO) {
-            [name appendString:@" dofs"];
-            str = [NSString stringWithString:name];
+            NSMutableString *componentName = [NSMutableString stringWithString:name];
+            [componentName appendString:@" dofs"];
+            stat = [listUtil listGetReal:model inArray:values forVariable:componentName numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         }
     } else {
         stat = [listUtil listGetRealArray:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&workA];
@@ -1321,11 +1381,11 @@ static const int PRECOND_VANKA     =  560;
             if (k >= 0) {
                 if (dof >= 0) {
                     k = ndofs * k + dof;
-                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j];
+                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j] * diagScaling[k];
                 } else {
                     for (l=0; l<min(ndofs, workA.m); l++) {
                         k1 = ndofs * k + l;
-                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j];
+                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j] * diagScaling[k1];
                     }
                 }
             }
@@ -1341,7 +1401,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMKernel_setPointLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSMutableString *)name indexes:(int*)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs {
+-(void)FEMKernel_setPointLoadsModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element values:(NSArray *)values name:(NSString *)name indexes:(int*)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double *)diagScaling {
     
     int j, k, l, k1;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
@@ -1366,7 +1426,7 @@ static const int PRECOND_VANKA     =  560;
         
         for (j=0; j<n; j++) {
             
-            if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
+            if (indexes[j] >= varContainers->sizePerm || indexes[j] < 0) {
                 NSLog(@"FEMKernel:FEMKernel_setPointLoadsModel: invalid node number.\n");
                 continue;
             }
@@ -1375,16 +1435,15 @@ static const int PRECOND_VANKA     =  560;
             if (k >= 0) {
                 if (dof >= 0) {
                     k = ndofs * k + dof;
-                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j];
+                    matContainers->RHS[k] = matContainers->RHS[k] + work.vector[j] *diagScaling[k];
                 } else {
                     for (l=0; l<min(ndofs, workA.m); l++) {
                         k1 = ndofs * k + l;
-                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j];
+                        matContainers->RHS[k1] = matContainers->RHS[k1] + workA.tensor[l][0][j] * diagScaling[k1];
                     }
                 }
             }
         }
-        
     }
     
     if (workA.tensor != NULL) {
@@ -1397,7 +1456,7 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Element and point values
 
--(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+-(void)FEMKernel_setElementValues:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal {
     
     int i, j, k, l, m, dim, k1;
     BOOL checkNT, stat, all;
@@ -1405,8 +1464,6 @@ static const int PRECOND_VANKA     =  560;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    NSMutableString *str;
-    FEMListUtilities *listUtil;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers = NULL;
@@ -1417,14 +1474,11 @@ static const int PRECOND_VANKA     =  560;
     varContainers = solution.variable.getContainers;
     solContainers = solution.getContainers;
     
-    listUtil = [[FEMListUtilities alloc] init];
-    
     rotvec = doublevec(0, 2);
+    dim = model.dimension;
     
-    dim = [model dimension];
-    
-    str = [NSMutableString stringWithString:name];
-    [str appendString:@" dofs"];
+    NSString *str = [name stringByAppendingString:@" dofs"];
+    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         if (stat == NO) {
@@ -1447,8 +1501,7 @@ static const int PRECOND_VANKA     =  560;
             checkNT = YES;
             all = YES;
             for (i=0; i<n; i++) {
-                k = indexes[i];
-                if (self.boundaryReorder[k] < 0) {
+                if (self.boundaryReorder[indexes[i]] < 0) {
                     continue;
                 } else {
                     all = NO;
@@ -1456,7 +1509,7 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
             if (all == YES) checkNT = NO;
-            if ([listUtil listGetLogical:model inArray:values forVariable:[solution normalTangentialName] info:&stat] == YES) checkNT = NO;
+            if ([listUtil listGetLogical:model inArray:values forVariable:solution.normalTangentialName info:&stat] == YES) checkNT = NO;
         }
         
         for (j=0; j<n; j++) {
@@ -1472,7 +1525,7 @@ static const int PRECOND_VANKA     =  560;
                         if (m >= 0 && checkNT == YES) {
                             memset( rotvec, 0.0, 3*sizeof(double) );
                             rotvec[dof] = 1.0;
-                            [self FEMKernel_rotateNTSystem:solution vector:rotvec nodeNumber:indexes[j]];
+                            [self FEMKernel_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
                             for (k=0; k<dim; k++) {
                                 if (fabs(rotvec[k]) > 1.0e-8) {
                                     if (self.ntElement[m][k] == elno) {
@@ -1480,10 +1533,10 @@ static const int PRECOND_VANKA     =  560;
                                         if (self.ntZeroingDone[m][k] == false) {
                                             matContainers->RHS[l] = 0.0;
                                             [self zeroTheNumberOfRows:l inSolutionMatrix:solution];
-                                            [self setMatrixElementForSolution:solution atIndex:l andIndex:l value:1.0];
+                                            if (offDiaginal == NO) [self setMatrixElementForSolution:solution atIndex:l andIndex:l value:1.0];
                                             self.ntZeroingDone[m][k] = true;
                                         }
-                                        matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k]+work.vector[j];
+                                        if (offDiaginal == NO) matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k] * work.vector[j]/diagScaling[l];
                                     }
                                 }
                             }
@@ -1494,11 +1547,13 @@ static const int PRECOND_VANKA     =  560;
                                 [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                                 crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]];
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
                             } else {
-                                matContainers->RHS[k] = work.vector[j];
                                 [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
-                                [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                                if (offDiaginal == NO) {
+                                    [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                                    matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                                }
                             }
                         }
                     } else {
@@ -1508,12 +1563,16 @@ static const int PRECOND_VANKA     =  560;
                                 bandMatrix = [[FEMMatrixBand alloc] init];
                                 [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                                crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]];
+                                if (offDiaginal == NO) {
+                                    crsMatrix = [[FEMMatrixCRS alloc] init];
+                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
+                                }
                             } else {
-                                matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
-                                [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                if (offDiaginal == NO) {
+                                    [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                    matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
+                                }
                             }
                         }
                     }
@@ -1534,14 +1593,13 @@ static const int PRECOND_VANKA     =  560;
     free_dvector(rotvec, 0, 2);
 }
 
--(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset {
+-(void)FEMKernel_setPointValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal {
     
     int j, k, l, k1;
     BOOL stat;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMListUtilities *listUtil;
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers = NULL;
@@ -1550,8 +1608,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    listUtil = [[FEMListUtilities alloc] init];
-    
+    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
     } else {
@@ -1569,7 +1626,7 @@ static const int PRECOND_VANKA     =  560;
             
             @autoreleasepool {
                 if (conditional == YES && condition.vector[j] < 0.0) continue;
-                if (indexes[j] > varContainers->sizePerm || indexes[j] < 0) {
+                if (indexes[j] >= varContainers->sizePerm || indexes[j] < 0) {
                     NSLog(@"FEMKernel:FEMKernel_setPointValues: invalid node number.\n");
                     continue;
                 }
@@ -1584,11 +1641,13 @@ static const int PRECOND_VANKA     =  560;
                             [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
                         } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
                             crsMatrix = [[FEMMatrixCRS alloc] init];
-                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
                         } else {
-                            matContainers->RHS[k] = work.vector[j];
                             [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
-                            [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                            if (offDiaginal == NO) {
+                                [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                                matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                            }
                         }
                     } else {
                         for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
@@ -1597,12 +1656,16 @@ static const int PRECOND_VANKA     =  560;
                                 bandMatrix = [[FEMMatrixBand alloc] init];
                                 [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
                             } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                                crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]];
+                                if (offDiaginal == NO) {
+                                    crsMatrix = [[FEMMatrixCRS alloc] init];
+                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
+                                }
                             } else {
-                                matContainers->RHS[k1] = workA.tensor[l][0][j];
                                 [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
-                                [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                if (offDiaginal == NO) {
+                                    [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                    matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
+                                }
                             }                        
                         }
                     }
@@ -1620,13 +1683,13 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (workA.tensor != NULL) {
-        free_d3tensor(workA.tensor, 0,  workA.m, 0,  workA.n-1, 0, workA.p-1);
+        free_d3tensor(workA.tensor, 0,  workA.m-1, 0,  workA.n-1, 0, workA.p-1);
     }
 }
 
 #pragma mark Periodics
 
--(void)FEMKernel_setPeriodicBoundariesPass1Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done {
+-(void)FEMKernel_setPeriodicBoundariesPass1Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done diaginalScaling:(double *)diagScaling {
 /*****************************************************************************************************************
     A first pass sum together the rows related to the periodic dofs.
  
@@ -1643,13 +1706,11 @@ static const int PRECOND_VANKA     =  560;
     int i, j, k, l, m, n, ii, p, q, nn;
     double scale;
     BOOL stat;
-    FEMMatrix *a, *b;
     FEMVariable *var;
     FEMListUtilities *listUtil;
     FEMUtilities *util;
     FEMMatrixCRS *crsMatrix;
     FEMBoundaryCondition *boundaryConditionAtId;
-    NSMutableString *str1, *str2, *str3;
     matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL, *aContainers = NULL;
     variableArraysContainer *varContainers = NULL, *containers = NULL;
     
@@ -1657,14 +1718,9 @@ static const int PRECOND_VANKA     =  560;
     util = [[FEMUtilities alloc] init];
     crsMatrix = [[FEMMatrixCRS alloc] init];
     
-    str1 = [NSMutableString stringWithString:@"periodic bc "];
-    [str1 appendString:name];
-    
-    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
-    [str2 appendString:name];
-    
-    str3 = [NSMutableString stringWithString:@"periodic bc scale "];
-    [str3 appendString:name];
+    NSString *str1 = [@"periodic bc " stringByAppendingString:name];
+    NSString *str2 = [@"anti periodic bc " stringByAppendingString:name];
+    NSString *str3 = [@"periodic bc scale " stringByAppendingString:name];
 
     boundaryConditionAtId = (model.boundaryConditions)[this];
     
@@ -1677,7 +1733,7 @@ static const int PRECOND_VANKA     =  560;
         if (stat == NO) return;
     }
     
-    if (boundaryConditionAtId.pMatrix != NULL) return;
+    if (boundaryConditionAtId.pMatrix == NULL) return;
     
     matContainers = solution.matrix.getContainers;
     projectorContainers = boundaryConditionAtId.pMatrix.getContainers;
@@ -1685,9 +1741,7 @@ static const int PRECOND_VANKA     =  560;
     
     // For explicit conditions just create the dependency almost like a normal Dirichlet BC, 
     // for implicit one (otherwise) do the assembly of the projector
-    str1 = [NSMutableString stringWithString:@"periodic bc explicit"];
-    str2 = [NSMutableString stringWithString:@"periodic bc use lagrange coefficient"];
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str1 info:&stat] == YES) {
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc explicit" info:&stat] == YES) {
         
         var = [util getVariableFrom:model.variables model:model name:name onlySearch:NULL maskName:NULL info:&stat];
         containers = var.getContainers;
@@ -1706,17 +1760,17 @@ static const int PRECOND_VANKA     =  560;
                     m = varContainers->Perm[projectorContainers->Cols[l]];
                     if (m >= 0) {
                         m = solution.variable.dofs * m + dof;
-                        matContainers->RHS[k] = matContainers->RHS[k] - scale*projectorContainers->Values[l]*containers->Values[m];
+                        matContainers->RHS[k] = matContainers->RHS[k] - scale * projectorContainers->Values[l] * containers->Values[m]/diagScaling[k];
                     }
                 }
             }
         }
         containers = NULL;
         
-    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:str2 info:&stat] == YES) {
+    } else if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc use lagrange coefficient" info:&stat] == YES) {
         
-        b = nil;
-        a = solution.matrix.constraint;
+        FEMMatrix *b = nil;
+        FEMMatrix *a = solution.matrix.constraint;
         while (a != NULL) {
             b = boundaryConditionAtId.pMatrix.child;
             while (b != NULL) {
@@ -1728,7 +1782,7 @@ static const int PRECOND_VANKA     =  560;
         }
         
         if (a != b) {
-            a = [[FEMMatrix alloc] init];
+            FEMMatrix *a = [[FEMMatrix alloc] init];
             a.constraint = solution.matrix.constraint;
             solution.matrix.constraint = a;
             
@@ -1803,9 +1857,15 @@ static const int PRECOND_VANKA     =  560;
                     if (m >= 0 ) {
                         m = solution.variable.dofs*m+dof;
                         for (nn=matContainers->Rows[k]; nn<=matContainers->Rows[k+1]-1; nn++) {
-                            [self addToMatrixElementForSolution:solution atIndex:m andIndex:matContainers->Cols[nn] value:projectorContainers->Values[l]*matContainers->Values[nn]];
+                            [self addToMatrixElementForSolution:solution atIndex:m andIndex:matContainers->Cols[nn] value:projectorContainers->Values[l]*matContainers->Values[nn]/diagScaling[k] * diagScaling[m]];
+                            if (matContainers->BulkValues != NULL) {
+                                [self addToMatrixElementForSolution:solution atIndex:m andIndex:matContainers->Cols[nn] value:projectorContainers->Values[l]*matContainers->BulkValues[nn]];
+                            }
                         }
-                        matContainers->RHS[m] = matContainers->RHS[m] + projectorContainers->Values[l]*matContainers->RHS[k];
+                        matContainers->RHS[m] = matContainers->RHS[m] + projectorContainers->Values[l]*matContainers->RHS[k] * diagScaling[m]/diagScaling[k];
+                        if (matContainers->BulkRHS != NULL) {
+                            matContainers->BulkRHS[m] = matContainers->BulkRHS[m] + projectorContainers->Values[l] * matContainers->BulkRHS[k];
+                        }
                     }
                 }
             }
@@ -1814,7 +1874,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done {
+-(void)FEMKernel_setPeriodicBoundariesPass2Model:(FEMModel *)model solution:(FEMSolution *)solution name:(NSMutableString *)name dof:(int)dof this:(int)this done:(BOOL *)done diaginalScaling:(double *)diagScaling {
 /*****************************************************************************************************************
     At second pass add the [...1.. -1 ...] row structure that results from the equality of the pediodic dofs.
  
@@ -1829,23 +1889,18 @@ static const int PRECOND_VANKA     =  560;
 *****************************************************************************************************************/
     
     int i, k, l, m, ii;
-    double scale;
+    double scale, valueOffset;
     BOOL stat;
     FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
-    NSMutableString *str1, *str2, *str3;
     matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     listUtil = [[FEMListUtilities alloc] init];
 
-    str1 = [NSMutableString stringWithString:@"periodic bc "];
-    [str1 appendString:name];
-    
-    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
-    [str2 appendString:name];
-    
-    str3 = [NSMutableString stringWithString:@"periodic bc scale "];
-    [str3 appendString:name];
+    NSString *str1 = [@"periodic bc " stringByAppendingString:name];
+    NSString *str2 = [@"anti periodic bc " stringByAppendingString:name];
+    NSString *str3 = [@"periodic bc scale " stringByAppendingString:name];
+    NSString *str4 = [@"periodic bc offset " stringByAppendingString:name];
     
     boundaryConditionAtId = (model.boundaryConditions)[this];
     
@@ -1858,7 +1913,9 @@ static const int PRECOND_VANKA     =  560;
         if (stat == NO) return;
     }
     
-    if (boundaryConditionAtId.pMatrix != NULL) return;
+    valueOffset = [listUtil listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:str4 info:&stat minValue:NULL maxValue:NULL];
+    
+    if (boundaryConditionAtId.pMatrix == NULL) return;
     
     matContainers = solution.matrix.getContainers;
     projectorContainers = boundaryConditionAtId.pMatrix.getContainers;
@@ -1881,10 +1938,10 @@ static const int PRECOND_VANKA     =  560;
                 m = varContainers->Perm[projectorContainers->Cols[l]];
                 if (m >= 0) {
                     m = solution.variable.dofs*m + dof;
-                    [self addToMatrixElementForSolution:solution atIndex:k andIndex:m value:projectorContainers->Values[l]];
+                    [self addToMatrixElementForSolution:solution atIndex:k andIndex:m value:projectorContainers->Values[l] * diagScaling[m]/diagScaling[k]];
                 }
             }
-            matContainers->RHS[k] = 0.0;
+            matContainers->RHS[k] = -valueOffset / diagScaling[k];
             [self addToMatrixElementForSolution:solution atIndex:k andIndex:k value:scale];
         }
         done[ii] = YES;
@@ -1905,7 +1962,8 @@ static const int PRECOND_VANKA     =  560;
     BOOL found, onlySearch, newLimiter, anyDofActive, anyLimitBC, anyLimitBF, set;
     bool *limitActive, *limitDone = NULL;
     listBuffer elemLimit = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    NSMutableString *name, *limitName;
+    NSString *limitName;
+    NSMutableString *name;
     Element_t *elements;
     FEMVariable *loadVar;
     FEMBodyForce *bodyForceAtID;
@@ -1971,7 +2029,7 @@ static const int PRECOND_VANKA     =  560;
         // These are the default sign that come from standard formulation
         // of Laplace equation
         if (upper == 0) {
-            limitSign = 1.0;
+            limitSign = -1.0;
         } else {
             limitSign = 1.0;
         }
@@ -2003,18 +2061,16 @@ static const int PRECOND_VANKA     =  560;
             }
             
             if (upper == 0) {
-                limitName = [NSMutableString stringWithString:name];
-                [limitName appendString:@" lower limit"];
+                limitName = [name stringByAppendingString:@" lower limit"];
             } else {
-                limitName = [NSMutableString stringWithString:name];
-                [limitName appendString:@" upper limit"];
+                limitName = [name stringByAppendingString:@" upper limit"];
             }
             
             // Check whether limiters exist at all
             anyLimitBC = [listUtilities listCheckPresentAnyBoundaryCondition:model name:limitName];
             anyLimitBF = [listUtilities listCheckPresentAnyBodyForce:model name:limitName];
             
-            if (anyLimitBC == NO || anyLimitBF == NO) continue;
+            if (!(anyLimitBC || anyLimitBF)) continue;
             anyDofActive = YES;
             
             if (limitDone == NULL) {
@@ -2032,7 +2088,7 @@ static const int PRECOND_VANKA     =  560;
             elemLast = model.numberOfBulkElements;
             
             if (anyLimitBF == YES) elemFirst = 0;
-            if (anyLimitBC) elemLast = model.numberOfBulkElements + model.numberOfBoundaryElements;
+            if (anyLimitBC == YES) elemLast = model.numberOfBulkElements + model.numberOfBoundaryElements;
             
             // Go through the elements
             elements = model.getElements;
@@ -2118,6 +2174,54 @@ static const int PRECOND_VANKA     =  560;
     
     if (elemLimit.vector != NULL) {
         free_dvector(elemLimit.vector, 0, elemLimit.m-1);
+    }
+}
+
+-(void)FEMKernel_setLimiterValues:(FEMModel *)model inSolution:(FEMSolution *)solution numberofNodes:(int)n atIndexes:(int *)indexes forValues:(NSArray *)values  orderOfDofs:(int)dof limitActive:(bool *)limitActive conditionName:(NSString *)condName permutationOffset:(int)offset diaginalScaling:(double *)diagScaling offDiaginal:(BOOL)offDiaginal {
+    
+    int j, k;
+    BOOL stat;
+    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    FEMMatrixCRS *crsMatrix;
+    FEMMatrixBand *bandMatrix;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
+    
+    if (stat == YES) {
+        
+        for (j=0; j<n; j++) {
+            
+            @autoreleasepool {
+                k = varContainers->Perm[indexes[j]];
+                if (k < 0) continue;
+                if (!limitActive[solution.variable.dofs*k+dof]) continue;
+                
+                k = offset + solution.variable.dofs*k + dof;
+                if (solution.matrix.format == MATRIX_SBAND) {
+                    bandMatrix = [[FEMMatrixBand alloc] init];
+                    [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
+                } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                    crsMatrix = [[FEMMatrixCRS alloc] init];
+                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
+                } else {
+                    [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                    if (offDiaginal == NO) {
+                        [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                        matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                    }
+                }
+            }
+        }
+    }
+    
+    if (work.vector != NULL) {
+        free_dvector(work.vector, 0, work.m-1);
     }
 }
 
@@ -2240,7 +2344,7 @@ static const int PRECOND_VANKA     =  560;
     }
     for (i=0; i<n; i++) {
         for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-            matContainers->Values[j] = matContainers->Values[j] / matContainers->Diag[i];
+            matContainers->Values[j] = matContainers->Values[j] / matContainers->DiagScaling[i];
         }
     }
     
@@ -2281,8 +2385,8 @@ static const int PRECOND_VANKA     =  560;
         k = 0;
         for (FEMSolution *solution in model.solutions) {
             if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) {
-                if (solution.solutionMode != SOLUTION_MODE_COUPLED || solution.solutionMode != SOLUTION_MODE_ASSEMBLY
-                    || solution.solutionMode != SOLUTION_MODE_BLOCK) {
+                if (!(solution.solutionMode == SOLUTION_MODE_COUPLED || solution.solutionMode == SOLUTION_MODE_ASSEMBLY
+                    || solution.solutionMode == SOLUTION_MODE_BLOCK)) {
                     NSLog(@"FEMKernel:SolveEquations: no routine related to solution!\n");
                     doneThis[k] = YES;
                     continue;
@@ -2316,7 +2420,7 @@ static const int PRECOND_VANKA     =  560;
                     break;
                 }
             }
-            if (afterConverged[k] == YES && (allAfterConverged == NO || allDoneThis == NO)) continue;
+            if (afterConverged[k] == YES && !(allAfterConverged == YES || allDoneThis == YES)) continue;
             
             n = 0;
             if (solution.variable != nil) {
@@ -2345,7 +2449,7 @@ static const int PRECOND_VANKA     =  560;
             }
             
             if (needSol == YES && n > 0) {
-                if (varContainers->SteadyValues != NULL) found = YES;
+                found = (varContainers->SteadyValues != NULL) ? YES : NO;
                 if (found == YES && varContainers->sizeSteadyValues != n) {
                     free_dvector(varContainers->SteadyValues, 0, varContainers->sizeSteadyValues-1);
                     varContainers->SteadyValues = NULL;
@@ -2371,7 +2475,7 @@ static const int PRECOND_VANKA     =  560;
                 testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
                 if (testConvergence == YES || calculateDerivative == YES) {
                     // TODO: add support for parallel run
-                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL sizeValues0:NULL];
                     
                     // The ComputeChange method sets a flag to zero if not yet converged (otherwise -1/1)
                     if (testConvergence == YES) {
@@ -2386,7 +2490,7 @@ static const int PRECOND_VANKA     =  560;
                 testConvergence = (i >= coupledMinIter && i != coupleMaxIter) ? YES : NO;
                 if (testConvergence == YES) {
                     // TODO: add support for parallel run
-                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                    [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL sizeValues0:NULL];
                     if (solution.variable.steadyConverged == 0) {
                         doneThis[k] = NO;
                     } else {
@@ -2395,7 +2499,7 @@ static const int PRECOND_VANKA     =  560;
                 }
             } else { // Steady state
                 // TODO: add support for parallel run
-                [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL];
+                [self computeChange:solution model:model isSteadyState:YES nsize:NULL values:NULL values0:NULL sizeValues0:NULL];
                 if (solution.variable.steadyConverged == 0) {
                     doneThis[k] = NO;
                 } else {
@@ -2456,7 +2560,6 @@ static const int PRECOND_VANKA     =  560;
     int i, maxDim;
     BOOL meActive;
     NSString *equationName;
-    FEMUtilities *utilities;
     solutionArraysContainer *solContainers = NULL;
     Element_t *elements = NULL;
     
@@ -2469,7 +2572,6 @@ static const int PRECOND_VANKA     =  560;
             solContainers->activeElements = intvec(0, (solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements)-1);
             solContainers->sizeActiveElements = solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements;
             
-            utilities = [[FEMUtilities alloc] init];
             elements = solution.mesh.getElements;
             maxDim = 0;
             FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
@@ -2504,26 +2606,31 @@ static const int PRECOND_VANKA     =  560;
             
             FEMFlowSolution *flowSolution = [[FEMFlowSolution alloc] init];
             [flowSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [flowSolution deallocation:solution];
             
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
             
             FEMMagneticInductionSolution *magneticInductionSolution = [[FEMMagneticInductionSolution alloc] init];
             [magneticInductionSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [magneticInductionSolution deallocation:solution];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
             
             FEMStressAnalysisSolution *stressAnalysisSolution = [[FEMStressAnalysisSolution alloc] init];
             [stressAnalysisSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [stressAnalysisSolution deallocation:solution];
  
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
 
             FEMMeshUpdateSolution *meshUpdateSolution = [[FEMMeshUpdateSolution alloc] init];
             [meshUpdateSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [meshUpdateSolution deallocation:solution];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
             
             FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
             [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [heatSolution deallocation:solution];
 
         } else {
             NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
@@ -2533,16 +2640,100 @@ static const int PRECOND_VANKA     =  560;
     } else if (solution.plugInPrincipalClassInstance != nil) {
         _instance = solution.plugInPrincipalClassInstance;
         [_instance fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        [_instance deallocation:solution];
         
     } else {
-        NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no selector or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
+        NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
         errorfunct("FEMKernel:FEMKernel_singleSolution", "Program terminating now...");
     }
 }
 
+-(void)FEMKErnel_updateExportedVariablesSolution:(FEMSolution *)solution model:(FEMModel *)model {
+    
+    int i, j, l, m, dofs;
+    double *localSol, *localCond;
+    NSString *varName;
+    FEMUtilities *utilities;
+    FEMVariable *expVariable;
+    variableArraysContainer *expVariableContainers = NULL;
+    static BOOL allocationdDone = NO;
+    BOOL *activePart, *activeCond, found, stateVariable, variableOutput, variableGlobal;
+    
+    utilities = [[FEMUtilities alloc] init];
+    
+    l = 0;
+    while (1) {
+        l++;
+        NSString *componentName = [@"exported variable " stringByAppendingString:[@(l) stringValue]];
+        if ((solution.solutionInfo)[componentName] != nil) {
+            varName = (solution.solutionInfo)[componentName];
+            found = YES;
+        } else found = NO;
+        
+        if (found == NO) break;
+        
+        if ([varName characterAtIndex:0] == '-') {
+            if ([[[varName substringFromIndex:0] substringToIndex:10] isEqualToString:@"-nooutput "] == YES) {
+                variableOutput = NO;
+                varName = [varName substringFromIndex:10];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:8] isEqualToString:@"-global "] == YES) {
+                variableGlobal = YES;
+                varName = [varName substringFromIndex:8];
+            }
+            if ([[[varName substringFromIndex:0] substringToIndex:6] isEqualToString:@"-dofs "] == YES) {
+                i = 5;
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                j = i;
+                while (1) {
+                    if ([varName characterAtIndex:j] == ' ') break;
+                    j++;
+                }
+                dofs = [[[varName substringFromIndex:i] substringToIndex:j-i] intValue];
+                // If we get 0 then we are dealing with an invalid dof number
+                if (dofs == 0) {
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                }
+                varName = [varName substringFromIndex:j+1];
+            }
+        }
+        
+        expVariable = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+        if (expVariable == nil) continue;
+        
+        NSLog(@"FEMKernel:FEMKErnel_updateExportedVariablesSolution: trying to set values for variable: %@\n", varName);
+        
+        if (allocationdDone == NO) {
+            m = model.numberOfBodyForces;
+            activePart = (BOOL*)malloc(sizeof(BOOL) * m );
+            activeCond = (BOOL*)malloc(sizeof(BOOL) * m );
+            
+            m = solution.mesh.maxElementDofs;
+            localSol = doublevec(0, m-1);
+            localCond = doublevec(0, m-1);
+            
+            allocationdDone = YES;
+        }
+        
+        dofs = expVariable.dofs;
+        expVariableContainers = expVariable.getContainers;
+        
+        stateVariable = (expVariableContainers->sizeValues == dofs);
+        if (stateVariable == YES) {
+            if (dofs > 1) {
+                
+            }
+        }
+    }
+    
+    //TODO: implementation incomplete, seems that there is a mistake in the Elmer implementation
+}
+
 #pragma mark Public methods...
 
-@synthesize coordinateSystemDimension = _coordinateSystemDimension;
 @synthesize normalTangentialNumberOfNodes = _normalTangentialNumberOfNodes;
 @synthesize size1NtZeroingDone = _size1NtZeroingDone;
 @synthesize size2NtZeroingDone = _size2NtZeroingDone;
@@ -3178,9 +3369,7 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
             
-            if (nb > 0) {
-                return nb;
-            }
+            if (nb > 0) return nb;
         }
     }
     
@@ -3197,7 +3386,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfEdges; j++) {
             edofs = edges[element->EdgeIndexes[j]].BDOFs;
             for (i=0; i<edofs; i++) {
-                indexes[nb] = edgeDofs*(element->EdgeIndexes[j]) + i + solution.mesh.numberOfNodes;
+                indexes[nb] = edgeDofs*element->EdgeIndexes[j] + i + solution.mesh.numberOfNodes;
                 nb++;
             }
         }
@@ -3207,7 +3396,7 @@ static const int PRECOND_VANKA     =  560;
         for (j=0; j<element->Type.NumberOfFaces; j++) {
             fdofs = faces[element->FaceIndexes[j]].BDOFs;
             for (i=0; i<fdofs; i++) {
-                indexes[nb] = faceDofs*(element->FaceIndexes[j]) + i + solution.mesh.numberOfNodes +
+                indexes[nb] = faceDofs*element->FaceIndexes[j] + i + solution.mesh.numberOfNodes +
                 edgeDofs*solution.mesh.numberOfEdges;
                 nb++;
             }
@@ -3226,16 +3415,12 @@ static const int PRECOND_VANKA     =  560;
         
         parent = element->BoundaryInfo->Left;
         if (parent == NULL) parent = element->BoundaryInfo->Right;
-        if (parent == NULL) {
-            edges = NULL;
-            faces = NULL;
-            return nb;
-        }
+        if (parent == NULL) return nb;
         
         if (parent->EdgeIndexes != NULL) {
             edofs = element->BDOFs;
             for (i=0; i<edofs; i++) {
-                indexes[nb] = edgeDofs*(parent->EdgeIndexes[element->Pdefs->LocalNumber]) + i + solution.mesh.numberOfNodes;
+                indexes[nb] = edgeDofs*parent->EdgeIndexes[element->Pdefs->LocalNumber] + i + solution.mesh.numberOfNodes;
                 nb++;
             }
         }
@@ -3513,7 +3698,7 @@ static const int PRECOND_VANKA     =  560;
                 edgeMap[0][1] = 1;
                 
                 edgeMap[1][0] = 1;
-                edgeMap[1][0] = 2;
+                edgeMap[1][1] = 2;
                 
                 edgeMap[2][0] = 2;
                 edgeMap[2][1] = 0;
@@ -3634,28 +3819,30 @@ static const int PRECOND_VANKA     =  560;
         int *indexes       -> Calculated indexes of boundary element in global system
     int resultSize     -> Size of created index vector, i.e., how many indexes were created
 ************************************************************************************************/
--(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int *)indSize {
+-(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes sizeVector:(int)size indexSize:(int *)indexSize {
     
     int i, j, n;
-    Element_t *edges, *faces;
+    Element_t *edges = NULL, *faces = NULL;
     
     // Clear indexes
-    memset( indexes, 0, mesh.numberOfNodes*sizeof(int) );
+    memset( indexes, 0, size*sizeof(int) );
     
     n = element->Type.NumberOfNodes;
     
-    edges = [mesh getEdges];
-    faces = [mesh getFaces];
+    edges = mesh.getEdges;
+    faces = mesh.getFaces;
     
     // Nodal indexes
     memcpy(indexes, element->NodeIndexes, n*sizeof(int));
     
     // Assign rest of indexes if necessary
     switch (parent->Type.dimension) {
+        case 1:
+            *indexSize = n;
         case 2:
             // Add index for each bubble dof in edge
             for (i=0; i<element->BDOFs; i++) {
-                if (mesh.numberOfNodes < n) {
+                if (size < n) {
                     errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
@@ -3663,7 +3850,7 @@ static const int PRECOND_VANKA     =  560;
                 indexes[n] = mesh.numberOfNodes + parent->EdgeIndexes[element->Pdefs->LocalNumber] * mesh.maxEdgeDofs + i;
                 n++;
             }
-            *indSize = n;
+            *indexSize = n;
             break;
         case 3:
             // Add indexes of faces edges
@@ -3674,7 +3861,7 @@ static const int PRECOND_VANKA     =  560;
                 
                 for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].EdgeIndexes[i]].BDOFs; j++) {
                     
-                    if (mesh.numberOfNodes < n) {
+                    if (size < n) {
                         errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                         return;
                     }
@@ -3684,20 +3871,18 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
             
-            // Add indexes of gaces bubbles
+            // Add indexes of faces bubbles
             for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].BDOFs; i++) {
-                if (mesh.numberOfNodes < n) {
+                if (size < n) {
                     errorfunct("FEMKernel:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
-                indexes[n] = mesh.numberOfNodes + mesh.numberOfEdges * mesh.maxEdgeDofs + parent->FaceIndexes[element->Pdefs->LocalNumber] * mesh.maxFaceDofs;
+                indexes[n] = mesh.numberOfNodes + mesh.numberOfEdges * mesh.maxEdgeDofs + parent->FaceIndexes[element->Pdefs->LocalNumber] * mesh.maxFaceDofs + i;
                 n++;
             }
             
-            *indSize = n;
-            faces = NULL;
-            edges = NULL;
+            *indexSize = n;
             break;
         default:
             errorfunct("FEMKernel:getBoundaryIndexes", "Unsupported dimension.");
@@ -3816,16 +4001,12 @@ static const int PRECOND_VANKA     =  560;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     double *rotvec;
     BOOL stat, all;
-    FEMListUtilities *listUtil;
     FEMBoundaryCondition *boundaryConditionAtId;
     variableArraysContainer *varContainers = NULL;
     solutionArraysContainer *solContainers = NULL;
     
-    listUtil = [[FEMListUtilities alloc] init];
-    
     rotvec = doublevec(0, 2);
-    
-    dim = [model dimension];
+    dim = model.dimension;
     
     boundaryConditionAtId = (model.boundaryConditions)[bc];
     
@@ -3835,22 +4016,20 @@ static const int PRECOND_VANKA     =  560;
     
     all = YES;
     for (i=0; i<n; i++) {
-        k = indexes[i];
-        if (self.boundaryReorder[k] < 0) {
+        if (self.boundaryReorder[indexes[i]] < 0) {
             continue;
         } else {
             all = NO;
             break;
         }
     }
-    if (all == YES) {
-        return;
-    }
+    if (all == YES) return;
     
     varContainers = solution.variable.getContainers;
     
+    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
     if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) return;
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:[solution normalTangentialName] info:&stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:solution.normalTangentialName info:&stat] == YES) return;
     
     if (conditional == YES) {
         stat = [listUtil listGetReal:model inArray:boundaryConditionAtId.valuesList forVariable:condName numberOfNodes:n indexes:indexes buffer:&condition minValue:NULL maxValue:NULL];
@@ -3867,7 +4046,7 @@ static const int PRECOND_VANKA     =  560;
             if (m >= 0) {
                 memset( rotvec, 0.0, 3*sizeof(double) );
                 rotvec[dof] = 1.0;
-                [self FEMKernel_rotateNTSystem:solution vector:rotvec nodeNumber:indexes[j]];
+                [self FEMKernel_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
                 for (k=0; k<dim; k++) {
                     if (fabs(rotvec[k]) > 1.0e-8) self.ntElement[m][k] = elno;
                 }
@@ -3882,12 +4061,9 @@ static const int PRECOND_VANKA     =  560;
 }
 
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution {
-    
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
-    
+        
     if (solution.matrix.format == MATRIX_CRS) {
-        crsMatrix = [[FEMMatrixCRS alloc] init];
+        FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix zeroRowInGlobal:solution numberOfRows:n];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
@@ -3895,76 +4071,74 @@ static const int PRECOND_VANKA     =  560;
         // TODO: implement the zeroRow method for list matrix.
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
-        bandMatrix = [[FEMMatrixBand alloc] init];
+        FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix zeroRowInGlobal:solution numberOfRows:n];
     }
 }
 
 -(void)setMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
-    
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
-    
+        
     if (solution.matrix.format == MATRIX_CRS) {
-         crsMatrix = [[FEMMatrixCRS alloc] init];
+        FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
-        bandMatrix = [[FEMMatrixBand alloc] init];
+        FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
     }
 }
 
 -(void)addToMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
-    
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
-    
+        
     if (solution.matrix.format == MATRIX_CRS) {
-        crsMatrix = [[FEMMatrixCRS alloc] init];
+        FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
         [crsMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
-        bandMatrix = [[FEMMatrixBand alloc] init];
+        FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
         [bandMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
     }
 }
 
--(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)uSolution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double *)integral {
+/***************************************************************************************************************
+    Integral given function over element j
+    
+    Arguments:
+ 
+        NSArray *bc           ->   boundary condition value list
+        Element_t *element    ->   boundary element to get stiffness matrix to
+        int nd                ->   number of boundary element nodes
+        NSString *name        ->   name of boundary condition
+        double *integral      ->   integral of the given function
+        
+***************************************************************************************************************/
+-(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSString *)name functionIntegral:(double *)integral {
     
     int i, n, jj, kk, t, size;
     int **edgeMap = NULL;
     double s, l, sum;
-    double **vLoad, *g, *vl;
+    double **vLoad, g[3], *vl;
     listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMSolution *solution;
     FEMElementDescription *elementDescription;
     FEMNumericIntegration *numericIntegration;
     ElementType_t savedType;
     GaussIntegrationPoints *IP;
     Nodes_t *nodes, *pNodes;
-    NSMutableString *string;
+    NSString *string;
     BOOL stat;
     
-    if (uSolution != nil) {
-        solution = uSolution;
-    } else {
-        solution = model.solution;
-    }
-    
-    n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
-    
     elementDescription = [FEMElementDescription sharedElementDescription];
-    
     numericIntegration = [[FEMNumericIntegration alloc] init];
     if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMKernel:localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
+    
+    n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(nodes);
@@ -3987,10 +4161,9 @@ static const int PRECOND_VANKA     =  560;
     vl = doublevec(0, 2);
     memset( vl, 0.0, 3*sizeof(double) );
     
-    g = doublevec(0, 2);
-    memset( g, 0.0, 3*sizeof(double) );
+    memset( g, 0.0, sizeof(g) );
     
-    [self getReal:model forElement:element inArray:bc variableName:name buffer:&load];
+    stat = [self getReal:model forElement:element inArray:bc variableName:name buffer:&load];
     
     edgeMap = [self getEdgeMap:[self getElementFamily:parent]];
     
@@ -4021,27 +4194,26 @@ static const int PRECOND_VANKA     =  560;
     for (i=0; i<size; i++) {
         jj = edgeMap[i][0];
         kk = edgeMap[i][1];
-        if ( (parent->NodeIndexes[jj] == element->NodeIndexes[0] && parent->NodeIndexes[kk] == element->NodeIndexes[1]) ||
-            (parent->NodeIndexes[jj] == element->NodeIndexes[1] && parent->NodeIndexes[kk] == element->NodeIndexes[0]) ) break;
+        if ( (parent->NodeIndexes[jj] == element->NodeIndexes[0]
+              && parent->NodeIndexes[kk] == element->NodeIndexes[1])
+              || (parent->NodeIndexes[jj] == element->NodeIndexes[1]
+              && parent->NodeIndexes[kk] == element->NodeIndexes[0]) ) break;
     }
     
-    string = [string initWithString:name];
-    [string appendString:@" 1"];
-    [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    string = [name stringByAppendingString:@" 1"];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
         vLoad[0][i] = buffer.vector[i];
     }
     
-    string = [string initWithString:name];
-    [string appendString:@" 2"];
-    [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    string = [name stringByAppendingString:@" 2"];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
         vLoad[1][i] = buffer.vector[i];
     }
     
-    string = [string initWithString:name];
-    [string appendString:@" 3"];
-    [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    string = [name stringByAppendingString:@" 3"];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
     for (i=0; i<nd; i++) {
         vLoad[2][i] = buffer.vector[i];
     }
@@ -4072,7 +4244,7 @@ static const int PRECOND_VANKA     =  560;
                                              firstEvaluationPoint:IP->u[t]
                                             secondEvaluationPoint:IP->v[t]
                                              thirdEvaluationPoint:IP->w[t]];
-        s = IP->s[t] * [numericIntegration metricDeterminant];
+        s = IP->s[t] * numericIntegration.metricDeterminant;
         
         stat = [numericIntegration setBasisForElement:element 
                                          elementNodes:nodes 
@@ -4097,7 +4269,9 @@ static const int PRECOND_VANKA     =  560;
     element->Type = savedType;
     
     jj = parent->NodeIndexes[jj];
+    // TODO: add support for parallel run
     kk = parent->NodeIndexes[kk];
+    // TODO: add support for parallel run
     
     if (kk < jj) *integral = -*integral;
         
@@ -4116,14 +4290,11 @@ static const int PRECOND_VANKA     =  560;
     }
     free_dmatrix(vLoad, 0, 2, 0, np-1);
     free_dvector(vl, 0, 2);
-    free_dvector(g, 0, 2);
     
     GaussQuadratureDeallocation(IP);
-    
     [numericIntegration deallocation:solution.mesh];
 }
 
--(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
 /*************************************************************************************************************************************
     Given boundary condition, element and stiffness matrix and force vector, assemble boundary problem local
     stiffness matrix and force vector
@@ -4138,6 +4309,7 @@ static const int PRECOND_VANKA     =  560;
         double **stiff, double *force   ->  Output: boundary problem stiffness matrix and force vector
  
 *************************************************************************************************************************************/
+-(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
     
     GaussIntegrationPoints *IP;
     int i, n, p, q, t;
@@ -4176,7 +4348,7 @@ static const int PRECOND_VANKA     =  560;
                                             secondEvaluationPoint:IP->v[t]
                                              thirdEvaluationPoint:IP->w[t]];
         
-        s = IP->s[t] * [numericIntegration metricDeterminant];
+        s = IP->s[t] * numericIntegration.metricDeterminant;
         
         stat = [numericIntegration setBasisForElement:element 
                                          elementNodes:nodes 
@@ -4196,6 +4368,8 @@ static const int PRECOND_VANKA     =  560;
             yip = yip + numericIntegration.basis[i]*nodes->y[i];
             zip = zip + numericIntegration.basis[i]*nodes->z[i];
         }
+        //TODO: xip, yip, zip are used inside listGetConstReal when a user function is used.
+        // But we don't support that yet so they are not used yet
         load = [listUtil listGetConstReal:model inArray:bc forVariable:name info:&stat minValue:NULL maxValue:NULL];
         
         // Build local stiffness matrix and force vector
@@ -4291,7 +4465,6 @@ static const int PRECOND_VANKA     =  560;
     free_dvector(b, 0, n-1);
 }
 
--(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof {
 /*****************************************************************************************************************
     Set nodel load for given dof
  
@@ -4300,21 +4473,21 @@ static const int PRECOND_VANKA     =  560;
     NSMutableString *name     -> name of the dof to be set
     int dof                   -> the order number of the dof
  
-    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the
     beginning of the simulation by the bandwidth optimization
- 
+
 *****************************************************************************************************************/
+-(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSString *)name orderOfDofs:(int)dof {
     
-    int i, j, n, bc, t, bf_id, noNodes, noDims;
+    int i, j, n, bc, t, bf_id, noNodes=0, noDims=0;
     int *indexes, *inNodes;
-    double minDist, dist;
+    double minDist, dist, *diagScaling = NULL;
     listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    BOOL *activePort, *activePortAll, *doneLoad, anyActive;
+    BOOL *activePart, *activePartAll, *doneLoad = NULL, anyActive;
     Element_t *elements = NULL;
     Nodes_t *globalNodes = NULL;
     FEMListUtilities *listUtil;
-    FEMBoundaryCondition *boundaryConditionAtId;
     FEMBodyForce *bodyForceAtId;
     NSMutableString *loadName, *str;
     matrixArraysContainer *matContainers = NULL;
@@ -4329,9 +4502,11 @@ static const int PRECOND_VANKA     =  560;
     loadName = [NSMutableString stringWithString:name];
     [loadName appendString:@" load"];
     
+    NSLog(@"setNodalLoads: checking load for: %@\n", name);
+    
     n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
-    activePort = (BOOL*)malloc(sizeof(BOOL) * n );
-    activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePart = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePartAll = (BOOL*)malloc(sizeof(BOOL) * n );
     
     elements = solution.mesh.getElements;
     globalNodes = solution.mesh.getNodes;
@@ -4340,8 +4515,16 @@ static const int PRECOND_VANKA     =  560;
     
     // Go through the boundaries
     
-    memset( activePort, NO, n*sizeof(BOOL) );
-    memset( activePortAll, NO, n*sizeof(BOOL) );
+    diagScaling = matContainers->DiagScaling;
+    if (diagScaling == NULL) {
+        diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            diagScaling[i] = 1.0;
+        }
+    }
+    
+    memset( activePart, NO, n*sizeof(BOOL) );
+    memset( activePartAll, NO, n*sizeof(BOOL) );
     
     str = [NSMutableString stringWithString:loadName];
     [str appendString:@" dofs"];
@@ -4349,33 +4532,33 @@ static const int PRECOND_VANKA     =  560;
     bc = 0;
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
         if ([listUtil listCheckPresentVariable:@"target boundaries" inArray:boundaryCondition.valuesList] == NO) continue;
-        activePort[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList];
-        activePortAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryConditionAtId.valuesList];
+        activePart[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList];
+        activePartAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryCondition.valuesList];
         bc++;
     }
     
     anyActive = NO;
     for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        if (activePort[bc] == YES || activePortAll[bc] == YES) {
+        if (activePart[bc] == YES || activePartAll[bc] == YES) {
             anyActive = YES;
             break;
         }
     }
     
     if (anyActive == YES) {
+        NSLog(@"setNodalLoads: settings nodals on boundaries: %@\n", name);
         doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
         memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
 
-        for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-            if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
-            
-              
-            for (t=[model numberOfBulkElements]; t<[model numberOfBulkElements]+[model numberOfBoundaryElements]; t++) {
+        bc = 0;
+        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+            if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+        
+            for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
                 
-                boundaryConditionAtId = (model.boundaryConditions)[bc];
-                if (elements[t].BoundaryInfo->Constraint != [boundaryConditionAtId tag]) continue;
+                if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
                 
-                if (activePort[bc] == YES) {
+                if (activePart[bc] == YES) {
                     n = elements[t].Type.NumberOfNodes;
                     for (i=0; i<n; i++) {
                         indexes[i] = elements[t].NodeIndexes[i];
@@ -4384,42 +4567,45 @@ static const int PRECOND_VANKA     =  560;
                     n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                 }
                 
-                [self FEMKernel_setElementLoadsModel:model solution:solution element:&elements[t] values:boundaryConditionAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs];
+                [self FEMKernel_setElementLoadsModel:model solution:solution element:&elements[t] values:boundaryCondition.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
             }
+            bc++;
         }
     }
     
     // Go though the nodal load conditions for the body force list
         
-    memset( activePort, NO, n*sizeof(BOOL) );
-    memset( activePortAll, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, n*sizeof(BOOL) );
+    memset( activePartAll, NO, n*sizeof(BOOL) );
     
-    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-        bodyForceAtId = (model.bodyForces)[bf_id];
-        activePort[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForceAtId.valuesList];
-        activePortAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForceAtId.valuesList];
+    bf_id = 0;
+    for (FEMBodyForce *bodyForce in model.bodyForces) {
+        activePart[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForce.valuesList];
+        activePartAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForce.valuesList];
+        bf_id++;
     }
     
     anyActive = NO;
-    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-        if (activePort[bf_id] == YES || activePortAll[bf_id] == YES) {
+    for (bf_id=0; bf_id<model.numberOfBodyForces; bf_id++) {
+        if (activePart[bf_id] == YES || activePartAll[bf_id] == YES) {
             anyActive = YES;
             break;
         }
     }
     
     if (anyActive == YES) {
+        NSLog(@"setNodalLoads: settings nodals on bulk: %@\n", name);
         if (doneLoad == NULL) doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
         memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
-        for (t=0; t<[model numberOfBulkElements]; t++) {
-            
-            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+        for (t=0; t<model.numberOfBulkElements; t++) {
             
             if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
-            if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+            
+            if (activePart[bf_id] == NO && activePartAll[bf_id] == NO) continue;
             
             
-            if (activePort[bf_id] == YES) {
+            if (activePart[bf_id] == YES) {
                 n = elements[t].Type.NumberOfNodes;
                 for (i=0; i<n; i++) {
                     indexes[i] = elements[t].NodeIndexes[i];
@@ -4429,25 +4615,23 @@ static const int PRECOND_VANKA     =  560;
             }
             
             bodyForceAtId = (model.bodyForces)[bf_id];
-            [self FEMKernel_setElementLoadsModel:model solution:solution element:&elements[t] values:bodyForceAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs];
+            [self FEMKernel_setElementLoadsModel:model solution:solution element:&elements[t] values:bodyForceAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
         }
     }
     
-    free(activePort);
-    free(activePortAll);
+    free(activePart);
+    free(activePartAll);
     if (doneLoad != NULL) free(doneLoad);
     
     // Go through the point loads which are created on the fly
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        
-        boundaryConditionAtId = (model.boundaryConditions)[bc];
-        if ([listUtil listCheckPresentVariable:loadName inArray:boundaryConditionAtId.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryConditionAtId.valuesList];
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        if ([listUtil listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList] == NO) continue;
+        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
         
         // At the first calling, the list of coordinates is transformed to list of nodes
         if (nodesFound == NO) {
             
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
+            stat = [listUtil listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
             
             if (stat == YES) {
                 
@@ -4458,7 +4642,7 @@ static const int PRECOND_VANKA     =  560;
                     inNodes = intvec(0, noNodes-1);
                     for (j=0; j<noNodes; j++) {
                         minDist = HUGE_VAL;
-                        for (i=0; i<[model numberOfNodes]; i++) {
+                        for (i=0; i<model.numberOfNodes; i++) {
                             if (varContainers->Perm[i] < 0) continue;
                             
                             dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
@@ -4472,7 +4656,7 @@ static const int PRECOND_VANKA     =  560;
                         }
                     }
                     // Add the found nodes to the list values
-                    [listUtil addIntegerArrayInClassList:boundaryConditionAtId theVariable:@"target nodes" withValues:inNodes size:noNodes];
+                    [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:noNodes];
                     free_ivector(inNodes, 0, noNodes-1);
                     nodesFound = YES;
                 }
@@ -4481,26 +4665,27 @@ static const int PRECOND_VANKA     =  560;
         
         if (coordNodes.matrix != NULL) {
             free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
-            coordNodes.matrix = NULL;
         }
         
         if (nodesFound == YES) {
-            [listUtil listGetIntegerArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
-            
-            [self FEMKernel_setPointLoadsModel:model solution:solution element:elements values:boundaryConditionAtId.valuesList name:loadName indexes:nodeIndexes.ivector size:n dof:dof ndofs:solution.variable.dofs];
+            NSLog(@"setNodalLoads: settings nodal nodals on target nodes: %@\n", name);
+            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            n = nodeIndexes.m;
+            [self FEMKernel_setPointLoadsModel:model solution:solution element:elements values:boundaryCondition.valuesList name:loadName indexes:nodeIndexes.ivector size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
             if (nodeIndexes.ivector != NULL) {
                 free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
-                nodeIndexes.ivector = NULL;
             }
         }
     }
     
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
+    if (diagScaling != matContainers->DiagScaling) free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
 }
 
--(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset {
 /*****************************************************************************************************************
-    Set dirichlet boundary condition for given dof
+    Set dirichlet boundary condition for given dof. The conditions are set based on the given name and applied 
+    directly to the matrix structure so that a row is zeroed execpt for the diagonal which is set to one. Then 
+    the RHS balue determines the value of the field variable in the solution of the linear system.
  
     FEMModel *model           -> class containing the model
     FEMSolution *solution     -> solution class containing the matrix and variable
@@ -4508,23 +4693,26 @@ static const int PRECOND_VANKA     =  560;
     int dof                   -> the order number of the dof
     int *offset               -> Optional: If the matrix and pernutation vectors are not in sync the offset
                                  may be used as a remedy. Needed in fully coupled systems.
- 
-    The permutation (node reordoring info) is contained in the class solution and has been generated at the 
+    BOLL *offDiaginalMatrix   -> Optional: For block systems only the diagonal matrix should be given non-zero
+                                 entries for matrix and RHS. for off-diagonal matrices just set the row to zero.
+
+    The permutation (node reordoring info) is contained in the class solution and has been generated at the
     beginning of the simulation by the bandwidth optimization
  
 *****************************************************************************************************************/
+-(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix{
     
-    int i, j, k, n, bc, t, bf_id, noNodes, noDims, permOffset, numberOfNodesFound;
-    int *indexes, *inNodes, bndry_start, bndry_end;
-    double minDist, dist, eps;
+    int i, j, k, n, bc, t, bf_id, bndry_start, bndry_end, noNodes, noDims, permOffset, numberOfNodesFound;
+    int *indexes;
+    double dist, eps, *diagScaling = NULL;
     listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    BOOL *activePort, *activePortAll, *activeCond, *donePeriodic, anyActive, passive;
+    BOOL *activePart, *activePartAll, *activeCond, *donePeriodic, anyActive, offDiaginal, passive;
     Element_t *elements = NULL;
     Nodes_t *globalNodes = NULL;
     FEMListUtilities *listUtil;
     FEMBodyForce *bodyForceAtId;
-    NSMutableString *condName, *passName, *str1, *str2;
+    NSString *str1, *str2;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     solutionArraysContainer *solContainers = NULL;
@@ -4536,20 +4724,29 @@ static const int PRECOND_VANKA     =  560;
     
     listUtil = [[FEMListUtilities alloc] init];
     
+    diagScaling = matContainers->DiagScaling;
+    if (diagScaling == NULL) {
+        diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            diagScaling[i] = 1.0;
+        }
+    }
+    
     // These logical vectors are used to minimize extra effort in setting up different BCs
     n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
-    activePort = (BOOL*)malloc(sizeof(BOOL) * n );
-    activePortAll = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePart = (BOOL*)malloc(sizeof(BOOL) * n );
+    activePartAll = (BOOL*)malloc(sizeof(BOOL) * n );
     activeCond = (BOOL*)malloc(sizeof(BOOL) * n );
     
-    condName = [NSMutableString stringWithString:name];
-    [condName appendString:@" condition"];
-    
-    passName = [NSMutableString stringWithString:name];
-    [passName appendString:@" passive"];
+    NSString *condName = [name stringByAppendingString:@" condition"];
+    NSString *passName = [name stringByAppendingString:@" passive"];
+    NSString *passCondName = [name stringByAppendingString:@" condition passive"];
     
     permOffset = 0;
     if (offset != NULL) permOffset = *offset;
+    
+    offDiaginal = NO;
+    if (offDiaginalMatrix != NULL) offDiaginal = *offDiaginalMatrix;
     
     elements = solution.mesh.getElements;
     globalNodes = solution.mesh.getNodes;
@@ -4558,24 +4755,21 @@ static const int PRECOND_VANKA     =  560;
     
     // Go through the perdiodic BCs and set the linear dependence
     
-    memset( activePort, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, n*sizeof(BOOL) );
     
-    str1 = [NSMutableString stringWithString:@"periodic bc "];
-    [str1 appendString:name];
-    
-    str2 = [NSMutableString stringWithString:@"anti periodic bc "];
-    [str2 appendString:name];
+    str1 = [@"periodic bc " stringByAppendingString:name];
+    str2 = [@"anti periodic bc " stringByAppendingString:name];
 
     bc = 0;
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str1 info:&stat] == NO) activePort[bc] = YES;
-        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str2 info:&stat] == NO) activePort[bc] = YES;
+        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str1 info:&stat] == YES) activePart[bc] = YES;
+        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str2 info:&stat] == YES) activePart[bc] = YES;
         bc++;
     }
     
     anyActive = NO;
     for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        if (activePort[bc] == YES) {
+        if (activePart[bc] == YES) {
             anyActive = YES;
             break;
         }
@@ -4583,17 +4777,19 @@ static const int PRECOND_VANKA     =  560;
     
     if (anyActive == YES) {
         
+        if (permOffset > 0) errorfunct("setDirichletBoundaries", "Periodicity not supported with offset");
+        
         donePeriodic = (BOOL*)malloc(sizeof(BOOL) * solution.mesh.numberOfNodes );
         memset( donePeriodic, NO, solution.mesh.numberOfNodes*sizeof(BOOL) );
         
         for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-            [self FEMKernel_setPeriodicBoundariesPass1Model:model solution:solution name:name dof:dof this:bc done:donePeriodic];
+            if (activePart[bc] == YES) [self FEMKernel_setPeriodicBoundariesPass1Model:model solution:solution name:name dof:dof this:bc done:donePeriodic diaginalScaling:diagScaling];
             
         }
         
         memset( donePeriodic, NO, solution.mesh.numberOfNodes*sizeof(BOOL) );
         for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-            [self FEMKernel_setPeriodicBoundariesPass2Model:model solution:solution name:name dof:dof this:bc done:donePeriodic];
+            if (activePart[bc] == YES) [self FEMKernel_setPeriodicBoundariesPass2Model:model solution:solution name:name dof:dof this:bc done:donePeriodic diaginalScaling:diagScaling];
         }
         
         free(donePeriodic);
@@ -4601,25 +4797,24 @@ static const int PRECOND_VANKA     =  560;
     
     // Go through the normal Dirichlet BCs applied on the boundaries
     
-    memset( activePort, NO, n*sizeof(BOOL) );
-    memset( activePortAll, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, n*sizeof(BOOL) );
+    memset( activePartAll, NO, n*sizeof(BOOL) );
     memset( activeCond, NO, n*sizeof(BOOL) );
-    
-    str1 = [NSMutableString stringWithString:name];
-    [str1 appendString:@" dofs"];
+
+    str1 = [name stringByAppendingString:@" dofs"];
     
     bc = 0;
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        activePortAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryCondition.valuesList];
-        activePort[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
+        activePartAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryCondition.valuesList];
+        activePart[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
         activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
         bc++;
     }
     
     orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
     
-    bndry_start = [model numberOfBulkElements];
-    bndry_end = bndry_start + [model numberOfBoundaryElements]-1;
+    bndry_start = model.numberOfBulkElements;
+    bndry_end = bndry_start + model.numberOfBoundaryElements - 1;
     
     // Check and set some flags for nodes belonging to n-t boundaries getting set by other bcs
     if (self.normalTangentialNumberOfNodes > 0) {
@@ -4627,12 +4822,12 @@ static const int PRECOND_VANKA     =  560;
             bc = 0;
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
-                if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
                 conditional = activeCond[bc];
                 
                 for (t=bndry_start; t<bndry_end; t++) {
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
-                    if (activePort[bc] == YES) {
+                    if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                    if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
                             indexes[i] = elements[t].NodeIndexes[i];
@@ -4648,12 +4843,12 @@ static const int PRECOND_VANKA     =  560;
              for (t=bndry_start; t<bndry_end; t++) {
                  bc = 0;
                  for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-                     if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                     if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
                      conditional = activeCond[bc];
                      
-                     if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
+                     if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
                      
-                     if (activePort[bc] == YES) {
+                     if (activePart[bc] == YES) {
                          n = elements[t].Type.NumberOfNodes;
                          for (i=0; i<n; i++) {
                              indexes[i] = elements[t].NodeIndexes[i];
@@ -4674,6 +4869,7 @@ static const int PRECOND_VANKA     =  560;
                     k = self.boundaryReorder[elements[t].NodeIndexes[j]];
                     if (k >= 0) {
                         for (i=0; i<3; i++) {
+                            self.ntElement[k][i] = 0;
                             self.ntZeroingDone[k][i] = false;
                         }
                     }
@@ -4685,7 +4881,7 @@ static const int PRECOND_VANKA     =  560;
     // Set the Dirichlet BCs from active boundary elements, if any...
     anyActive = NO;
     for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        if (activePort[bc] == YES || activePortAll[bc] == YES) {
+        if (activePart[bc] == YES || activePartAll[bc] == YES) {
             anyActive = YES;
             break;
         }
@@ -4696,12 +4892,12 @@ static const int PRECOND_VANKA     =  560;
             bc = 0;
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
-                if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
                 conditional = activeCond[bc];
                 
                 for (t=bndry_start; t<bndry_end; t++) {
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
-                    if (activePort[bc] == YES) {
+                    if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                    if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
                             indexes[i] = elements[t].NodeIndexes[i];
@@ -4709,7 +4905,7 @@ static const int PRECOND_VANKA     =  560;
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
                 }
                 bc++;
             }
@@ -4717,12 +4913,12 @@ static const int PRECOND_VANKA     =  560;
             for (t=bndry_start; t<bndry_end; t++) {
                 bc = 0;
                 for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-                    if (activePort[bc] == NO && activePortAll[bc] == NO) continue;
+                    if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
                     conditional = activeCond[bc];
                     
-                    if (elements[t].BoundaryInfo->Constraint != [boundaryCondition tag]) continue;
+                    if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
                     
-                    if (activePort[bc] == YES) {
+                    if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
                         for (i=0; i<n; i++) {
                             indexes[i] = elements[t].NodeIndexes[i];
@@ -4730,7 +4926,7 @@ static const int PRECOND_VANKA     =  560;
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+                    [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
                     bc++;
                 }
             }
@@ -4739,38 +4935,47 @@ static const int PRECOND_VANKA     =  560;
     
     // Go through the Dirichlet conditions in the body force lists
     
-    memset( activePort, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, n*sizeof(BOOL) );
     memset( activeCond, NO, n*sizeof(BOOL) );
-    memset( activePortAll, NO, n*sizeof(BOOL) );
+    memset( activePartAll, NO, n*sizeof(BOOL) );
     passive = NO;
     
-    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-        bodyForceAtId = (model.bodyForces)[bf_id];
-        activePort[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForceAtId.valuesList ];
-        activePortAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForceAtId.valuesList];
-        activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForceAtId.valuesList];
-        
-        passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForceAtId.valuesList] == YES) ? YES : NO;
+    bf_id = 0;
+    for (FEMBodyForce *bodyForce in model.bodyForces) {
+        activePart[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForce.valuesList ];
+        activePartAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForce.valuesList];
+        activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForce.valuesList];
+        passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForce.valuesList] == YES) ? YES : NO;
+        bf_id++;
     }
     
     anyActive = NO;
-    for (bf_id=0; bf_id<[model numberOfBodyForces]; bf_id++) {
-        if (activePort[bf_id] == YES || activePortAll[bf_id] == YES) {
+    for (bf_id=0; bf_id<model.numberOfBodyForces; bf_id++) {
+        if (activePart[bf_id] == YES || activePartAll[bf_id] == YES) {
             anyActive = YES;
             break;
         }
     }
 
     if (anyActive == YES) {
-        for (t=0; t<[model numberOfBulkElements]; t++) {
-            
-            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+        int passMerm[solution.mesh.numberOfNodes];
+        int nodeIndexes[1];
+        for (i=1; i<=solution.mesh.numberOfPassiveBCs; i++) {
+            j = solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements-i;
+            for (k=0; k<elements[j].Type.NumberOfNodes; k++) {
+                passMerm[elements[j].NodeIndexes[k]] = 1;
+            }
+        }
+        
+        for (t=0; t<model.numberOfBulkElements; t++) {
             
             if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
-            if (activePort[bf_id] == NO && activePortAll[bf_id] == NO) continue;
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+            
+            if (activePart[bf_id] == NO && activePartAll[bf_id] == NO) continue;
             conditional = activeCond[bf_id];
             
-            if (activePort[bf_id] == YES) {
+            if (activePart[bf_id] == YES) {
                 n = elements[t].Type.NumberOfNodes;
                 for (i=0; i<n; i++) {
                     indexes[i] = elements[t].NodeIndexes[i];
@@ -4779,11 +4984,20 @@ static const int PRECOND_VANKA     =  560;
                 n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
             }
             bodyForceAtId = (model.bodyForces)[bf_id];
-            [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            
+            if ([listUtil listGetLogical:model inArray:bodyForceAtId.valuesList forVariable:passCondName info:&stat] == YES) {
+                if ([self FEMKernel_checkPassiveElement:&elements[t] model:model solution:solution] == NO) continue;
+                for (j=0; j<n; j++) {
+                    nodeIndexes[0] = indexes[j];
+                    if (passMerm[nodeIndexes[0]] == 0) [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:1 atIndexes:nodeIndexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                }
+            } else {
+                [self FEMKernel_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+            }
         }
     }
-    free(activePort);
-    free(activePortAll);
+    free(activePart);
+    free(activePartAll);
     free(activeCond);
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
     
@@ -4815,11 +5029,14 @@ static const int PRECOND_VANKA     =  560;
                 noDims = coordNodes.n;
                 
                 if (noNodes > 0) {
-                    inNodes = intvec(0, noNodes-1);
-                    memset( inNodes, -1, noNodes*sizeof(int) );
+                    int indNodes[noNodes];
+                    int minDist[noNodes];
+                    memset( indNodes, -1, sizeof(indNodes) );
                     for (j=0; j<noNodes; j++) {
-                        minDist = HUGE_VAL;
-                        for (i=0; i<[model numberOfNodes]; i++) {
+                        minDist[j] = HUGE_VAL;
+                    }
+                    for (j=0; j<noNodes; j++) {
+                        for (i=0; i<model.numberOfNodes; i++) {
                             if (varContainers->Perm[i] < 0) continue;
                             
                             dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
@@ -4828,58 +5045,138 @@ static const int PRECOND_VANKA     =  560;
                             
                             dist = sqrt(dist);
                             
-                            if (dist < minDist && dist <= eps) {
-                                minDist = dist;
-                                inNodes[j] = i;
+                            if (dist < minDist[j] && dist <= eps) {
+                                minDist[j] = dist;
+                                indNodes[j] = i;
                             }
                         }
                     }
                     
+                    // In parallel case, eliminate all exept the nearest node.
+                    // This relies on the fact that for each node partition, the distance
+                    // to nearest node is computed accurately
+                    FEMParallelMPI *parallelUtil = [[FEMParallelMPI alloc] init];
+                    int oper = 1;
+                    double globalMinDist;
+                    for (j=0; j<noNodes; j++) {
+                        globalMinDist = [parallelUtil parallelReductionOfValue:minDist[j] operArg:&oper];
+                        if (fabs(globalMinDist - minDist[j]) > DBL_MIN) indNodes[j] = -1;
+                    }
+                    
                     numberOfNodesFound = 0;
                     for (j=0; j<noNodes; j++) {
-                        if (inNodes[j] >= 0) {
-                            inNodes[numberOfNodesFound] = inNodes[j];
+                        if (indNodes[j] >= 0) {
+                            indNodes[numberOfNodesFound] = indNodes[j];
                             numberOfNodesFound++;
                         }
                     }
                     
-                    // In the first time add teh found nodes to the list
+                    // In the first time add the found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:numberOfNodesFound];
-                        free_ivector(inNodes, 0, noNodes-1);
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:numberOfNodesFound];
                         nodesFound = YES;
+                    } else {
+                        // If no nodes found, add still an empty list and make sure the negative value is not
+                        // treated later one. Otherwise this search would be retreated each time
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:1];
                     }
                 }
             }
             
             if (coordNodes.matrix != NULL) {
                 free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
-                coordNodes.matrix = NULL;
             }
+        }
+        
+        // If the target coordinates has already been assigned to an empty list,
+        // cycle over it by testing the first node
+        if (nodesFound == YES) {
+            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            if (nodeIndexes.ivector[0] == -1) nodesFound = NO;
         }
         
         if (nodesFound == YES) {
             conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
-            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            n = nodeIndexes.m;
+            [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+        }
+        if (nodeIndexes.ivector != NULL) {
+            free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+            nodeIndexes.ivector = NULL;
+        }
+    }
+    
+    // Go through soft upper and lower  limits
+    if (dof >= 0 && [(solution.solutionInfo)[@"apply limiter"] boolValue] == YES) {
+        NSString *condName;
+        bool *limitActive;
+        for (int upper=0; upper<=1; upper++) {
+            limitActive = NULL;
+            // The limiters have been implemented only component-wise
+            if (upper == 0) {
+                if (varContainers->lowerLimitActive != NULL) limitActive = varContainers->lowerLimitActive;
+            } else {
+                if (varContainers->upperLimitActive != NULL) limitActive = varContainers->upperLimitActive;
+            }
             
-            [self FEMKernel_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset];
+            if (limitActive == NULL) continue;
+            if (upper == 0) {
+                condName = [name stringByAppendingString:@" lower limit"];
+            } else {
+                condName = [name stringByAppendingString:@" upper limit"];
+            }
             
-            if (nodeIndexes.ivector != NULL) {
-                free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
-                nodeIndexes.ivector = NULL;
+            // Check and set sone flags for nodes belonging to n-t boundaries
+            // getting set by other bcs
+            for (t=0; t<model.numberOfBulkElements+model.numberOfBoundaryConditions; t++) {
+                n = elements[t].Type.NumberOfNodes;
+                if (t>=model.numberOfBulkElements) {
+                    for (FEMBoundaryCondition *boundaryCondition in model.boundaries) {
+                        if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                        [self FEMKernel_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:boundaryCondition.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                    }
+                } else {
+                    if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
+                    bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+                    bodyForceAtId = (model.bodyForces)[bf_id];
+                    [self FEMKernel_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:bodyForceAtId.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                }
             }
         }
     }
     
     // Take care of the matrix entries of passive elements
     if (passive == YES) {
-        for (i=0; i<solution.matrix.numberOfRows; i++) {
-            if (fabs(matContainers->Values[matContainers->Diag[i]]) < 1.0e-14) {
-                matContainers->Values[matContainers->Diag[i]] = 1.0;
-                matContainers->RHS[i] = varContainers->Values[i];
+        int m;
+        double s;
+        for (i=0; i<solution.numberOfActiveElements; i++) {
+            if ([self FEMKernel_checkPassiveElement:&elements[solContainers->activeElements[i]] model:model solution:solution] == YES) {
+                n = [self sgetElementDofsSolution:solution model:model forElement:&elements[solContainers->activeElements[i]] atIndexes:indexes];
+                for (j=0; j<n; j++) {
+                    k = indexes[j];
+                    if (k < 0) continue;
+                    
+                    k = varContainers->Perm[k];
+                    if (k < 0) continue;
+                    s = 0.0;
+                    for (int l=0; l<solution.variable.dofs; l++) {
+                        m = solution.variable.dofs * k + l;
+                        s = s + fabs(matContainers->Values[matContainers->Diag[m]]);
+                    }
+                    if (s > DBL_EPSILON) continue;
+                    
+                    for (int l=0; l<solution.variable.dofs; l++) {
+                        m = solution.variable.dofs * k + l;
+                        [self zeroTheNumberOfRows:m inSolutionMatrix:solution];
+                        matContainers->Values[matContainers->Diag[m]] = 1.0;
+                        matContainers->RHS[m] = varContainers->Values[m]/diagScaling[m];
+                    }
+                }
             }
         }
     }
+    
+    if (diagScaling != matContainers->DiagScaling) free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
 }
 
 /****************************************************************************************************************
@@ -4997,8 +5294,6 @@ static const int PRECOND_VANKA     =  560;
         
         for (i=0; i<n; i++) {
             diag[i] = diag[i] * bnorm;
-        }
-        for (i=0; i<n; i++) {
             b[i] = b[i] / bnorm;
         }
         if (x != NULL) {
@@ -5056,11 +5351,11 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
+    varContainers = solution.variable.getContainers;
     for (i=0; i<solution.nOfEigenValues; i++) {
         
         // Solve x: INV(D)x = y
         if (solution.matrix.complexMatrix == YES) {
-            varContainers = solution.variable.getContainers;
             k = 0;
             for (j=0; j<n/2; j++) {
                 varContainers->EigenVectors[i][j] = varContainers->EigenVectors[i][j] * diag[k];
@@ -5105,6 +5400,10 @@ static const int PRECOND_VANKA     =  560;
     matContainers->DiagScaling = NULL;
 }
 
+/****************************************************************************
+    Matrix vector multiplication of sparse matrices.
+    Operates ditectly on the solution matrix
+****************************************************************************/
 -(void)matrixVectorMultplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
     
     FEMMatrixCRS *crsMatrix;
@@ -5128,6 +5427,9 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
+/****************************************************************************
+    Matrix vector multiplication of sparse matrices.
+****************************************************************************/
 -(void)matrixVectorMultplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v {
     
     FEMMatrixCRS *crsMatrix;
@@ -5157,7 +5459,7 @@ static const int PRECOND_VANKA     =  560;
     BOOL onlySearch, found;
     FEMVariable *var = nil, *var1 = nil, *primVar = nil;
     FEMUtilities *utilities;
-    NSMutableString *tmpName;
+    NSString *tmpName;
     
     utilities = [[FEMUtilities alloc] init];
     onlySearch = YES;
@@ -5173,7 +5475,7 @@ static const int PRECOND_VANKA     =  560;
             }
             
             if (primVar.dofs > 1) {
-                if ([primVar.name isEqualToString:@"flow solution"] == YES) {
+                if (NO && [primVar.name isEqualToString:@"flow solution"] == YES) {
                     var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 1" onlySearch:&onlySearch maskName:NULL info:&found];
                     if (var1 != nil) {
                         var1.valid = NO;
@@ -5201,7 +5503,7 @@ static const int PRECOND_VANKA     =  560;
                     }
                 } else {
                     for (i=1; i<=primVar.dofs; i++) {
-                        tmpName = (NSMutableString *)[utilities appendNameFromString:name component:&i];
+                        tmpName = [utilities appendNameFromString:name component:&i];
                         var1 = [utilities getVariableFrom:mesh.variables model:model name:tmpName onlySearch:&onlySearch maskName:NULL info:&found];
                         if (var1 != nil) {
                             var1.valid = NO;
@@ -5215,7 +5517,7 @@ static const int PRECOND_VANKA     =  560;
     
     primVar.valuesChanged = YES;
     if (primVar.dofs > 1) {
-        if ([primVar.name isEqualToString:@"flow solution"] == YES) {
+        if (NO && [primVar.name isEqualToString:@"flow solution"] == YES) {
             var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"surface" onlySearch:&onlySearch maskName:NULL info:&found];
             if (var != nil) var.valuesChanged = YES;
             var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"pressure" onlySearch:&onlySearch maskName:NULL info:&found];
@@ -5228,7 +5530,7 @@ static const int PRECOND_VANKA     =  560;
             if (var != nil) var.valuesChanged = YES;
         } else {
             for (i=1; i<=primVar.dofs; i++) {
-                tmpName = (NSMutableString *)[utilities appendNameFromString:name component:&i];
+                tmpName = [utilities appendNameFromString:name component:&i];
                 var = [utilities getVariableFrom:primaryMesh.variables model:model name:tmpName onlySearch:&onlySearch maskName:NULL info:&found];
                 if (var != nil) var.valuesChanged = YES;
             }
@@ -5319,9 +5621,9 @@ static const int PRECOND_VANKA     =  560;
     int *intPerm = NULL, *localIndexes;
     double detJ;
     double *sol = NULL;
-    BOOL found, stat;
+    BOOL any, found, stat;
     Nodes_t *elementNodes, *nodes = NULL;
-    NSMutableString *intVarName;
+    NSString *intVarName;
     FEMVariable *weightsVar = nil;
     FEMUtilities *utilities;
     FEMNumericIntegration *integration;
@@ -5330,13 +5632,11 @@ static const int PRECOND_VANKA     =  560;
     variableArraysContainer *variableContainers = NULL, *weightsVarContainers = NULL, *bufferContainers = NULL;
     
     if (variableName != nil) {
-        intVarName = (NSMutableString *)variableName;
+        intVarName = variableName;
     } else if (weightBoundary == YES) {
-        intVarName = [NSMutableString stringWithString:solution.variable.name];
-        [intVarName appendString:@" boundary weights"];
+        intVarName = [solution.variable.name stringByAppendingString:@" boundary weights"];
     } else {
-        intVarName = [NSMutableString stringWithString:solution.variable.name];
-        [intVarName appendString:@" weights"];
+        intVarName = [solution.variable.name stringByAppendingString:@" weights"];
     }
     utilities = [[FEMUtilities alloc] init];
     weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
@@ -5401,9 +5701,16 @@ static const int PRECOND_VANKA     =  560;
     for (e=elemStart; e<elemEnd; e++) {
         n = elements[e].Type.NumberOfNodes;
         for (i=0; i<n; i++) {
-            localIndexes[i] = weightsVarContainers->Perm[elements[e].NodeIndexes[i]];
+            localIndexes[i] = intPerm[elements[e].NodeIndexes[i]];
         }
-        if (any(localIndexes, '=', 0, n)) continue;
+        any = NO;
+        for (i=0; i<n; i++) {
+            if (localIndexes[i] < 0) {
+                any = YES;
+                break;
+            }
+        }
+        if (any == YES) continue;
         
         n = elements[e].Type.NumberOfNodes;
         for (i=0; i<n; i++) {
@@ -5417,7 +5724,6 @@ static const int PRECOND_VANKA     =  560;
             // Basis function values & derivatives at the integration point
             stat = [integration setBasisForElement:&elements[e] elementNodes:elementNodes  inMesh:solution.mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t] withBubbles:NO basisDegree:NULL];
             stat = [integration setMetricDeterminantForElement:&elements[e] elementNodes:elementNodes inMesh:solution.mesh firstEvaluationPoint:IP->u[t] secondEvaluationPoint:IP->v[t] thirdEvaluationPoint:IP->w[t]];
-            
             detJ = integration.metricDeterminant;
             
             for (i=0; i<n; i++) {
@@ -5461,7 +5767,7 @@ static const int PRECOND_VANKA     =  560;
     linearAlgebra = [[FEMLinearAlgebra alloc] init];
     [linearAlgebra invertMatrix:kbb ofSize:n];
     
-    memset( y, 0.0, sizeof(double) );
+    memset( y, 0.0, sizeof(y) );
     cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, *kbb, n, fb, 1, 0.0, y, 1);
     memcpy(x, y, sizeof(double));
     cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, (double *)klb, n, x, 1, 0.0, y, 1);
@@ -5482,7 +5788,7 @@ static const int PRECOND_VANKA     =  560;
         for (i=0; i<n; i++) {
             fb[i] = force1[bdofs[i]];
         }
-        memset( y, 0.0, sizeof(double) );
+        memset( y, 0.0, sizeof(y) );
         cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, *kbb, n, fb, 1, 0.0, y, 1);
         memcpy(x, y, sizeof(double));
         cblas_dgemv(CblasRowMajor, CblasNoTrans, n, n, 1.0, (double *)klb, n, x, 1, 0.0, y, 1);
@@ -6328,14 +6634,14 @@ static const int PRECOND_VANKA     =  560;
 
 
 #pragma mark Boundary conditions
-
--(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset {
+//TODO: Update this method so that it's similar to the version in Elmer 5908
+-(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix {
     
     int i, j, k, kk, l, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
+    double *diagScaling;
     Element_t *element, *parent, *edges, *faces;
     NSNumber *appendDof;
     NSMutableString *name, *componentName;
-    NSMutableString *str1, *str2;
     NSArray *bc;    
     FEMMatrixCRS *crsMatrix;
     FEMListUtilities *listUtil; 
@@ -6343,8 +6649,7 @@ static const int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     solutionArraysContainer *solContainers = NULL;
-    
-    BOOL constantValue;
+    BOOL constantValue, scaleSystem;
     
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
@@ -6355,6 +6660,25 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     solContainers = solution.getContainers;
+    
+    if ((solution.solutionInfo)[@"linear system dirichlet scaling"] != nil) {
+        scaleSystem = [(solution.solutionInfo)[@"linear system dirichlet scaling"] boolValue];
+    } else {
+        if ((solution.solutionInfo)[@"linear system scaling"] != nil) {
+            scaleSystem = [(solution.solutionInfo)[@"linear system scaling"] boolValue];
+        } else scaleSystem = YES;
+    }
+    
+    if (scaleSystem == YES) {
+        BOOL rhsScaling = NO;
+        [self scaleLinearSystem:solution matrix:solution.matrix rhs:matContainers->RHS result:NULL diagScaling:NULL applyScaling:NULL rhsScaling:&rhsScaling];
+        diagScaling = matContainers->DiagScaling;
+    } else {
+        diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            diagScaling[i] = 1.0;
+        }
+    }
     
     u_offset = 0;
     if (offset != NULL) {
@@ -6398,7 +6722,7 @@ static const int PRECOND_VANKA     =  560;
     name = [NSMutableString stringWithString:solution.variable.name];
         
     if (solution.variable.dofs > 1) {
-        [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-2 permutationOffset:NULL];
+        [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-2 permutationOffset:NULL offDiaginalMatrix:NULL];
     }
     
     constantValue = NO;
@@ -6437,7 +6761,7 @@ static const int PRECOND_VANKA     =  560;
             n = [self getNumberOfNodesForElement:element];
             
             if (parent->Pdefs != NULL) {
-                [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
+                [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind sizeVector:_size_g_Ind indexSize:&numEdgeDofs];
             } else {
                 continue;
             }
@@ -6469,7 +6793,7 @@ static const int PRECOND_VANKA     =  560;
         
         [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
         
-        [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset];
+        [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix];
         
         // Dirichlet BCs for face and edge dofs
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
@@ -6480,11 +6804,8 @@ static const int PRECOND_VANKA     =  560;
             bc = [self getBoundaryCondition:model forElement:element];
             if (bc == nil) continue;
             
-            
-            str1 = [NSString stringWithString:componentName];
-            str2 = [NSString stringWithString:componentName];
-            [str1 appendString:@" {e}"];
-            [str2 appendString:@" {f}"];
+            NSString *str1 = [componentName stringByAppendingString:@" {e}"];
+            NSString *str2 = [componentName stringByAppendingString:@" {f}"];
             if ( [listUtil listCheckPresentVariable:componentName inArray:bc] == NO
                 && [listUtil listCheckPresentVariable:str1 inArray:bc] == NO
                 && [listUtil listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
@@ -6497,12 +6818,11 @@ static const int PRECOND_VANKA     =  560;
             if (parent == NULL) continue;
             
             if ([listUtil listCheckPresentVariable:str1 inArray:bc] == YES) {
-                if (solution.mesh.isAssociatedEdges == YES) {
+                if (edges != NULL) {
                     switch ([self getElementFamily:element]) {
                         case 1:
                         case 2:
                             for (j=0; j<parent->Type.NumberOfEdges; j++) {
-                                
                                 n = 0;
                                 for (k=0; k<element->Type.NumberOfNodes; k++) {
                                     for (l=0; l<edges[parent->EdgeIndexes[j]].Type.NumberOfNodes; l++) {
@@ -6521,10 +6841,10 @@ static const int PRECOND_VANKA     =  560;
                                 if (nb < 0) continue;
                                 nb = u_offset + solution.variable.dofs*nb + dof;
                                 if (solution.matrix.isSymmetric == YES) {
-                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]];
+                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]/diagScaling[nb]];
                                 } else {
                                     [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                    matContainers->RHS[nb] = _kernWork[0];
+                                    matContainers->RHS[nb] = _kernWork[0]/diagScaling[nb];
                                     [self setMatrixElementForSolution:solution atIndex:nb andIndex:nb value:1.0];
                                 }
                             }
@@ -6554,10 +6874,10 @@ static const int PRECOND_VANKA     =  560;
                                     if (nb < 0) continue;
                                     nb = u_offset + solution.variable.dofs*nb + dof;
                                     if (solution.matrix.isSymmetric == YES) {
-                                        [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]];
+                                        [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]/diagScaling[nb]];
                                     } else {
                                         [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
-                                        matContainers->RHS[nb] = _kernWork[0];
+                                        matContainers->RHS[nb] = _kernWork[0]/diagScaling[nb];
                                         [self setMatrixElementForSolution:solution atIndex:nb andIndex:nb value:1.0];
                                     }
                                 }
@@ -6565,15 +6885,16 @@ static const int PRECOND_VANKA     =  560;
                     }
                 } // end associated edges
             } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
+                n = element->Type.NumberOfNodes;
                 n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_g_Ind];
                 for (k=0; k<n; k++) {
                     nb = varContainers->Perm[_g_Ind[k]];
                     if (nb < 0) continue;
-                    nb = u_offset + solution.variable.dofs+nb + dof;
+                    nb = u_offset + solution.variable.dofs*nb + dof;
                     
                     [self zeroTheNumberOfRows:nb inSolutionMatrix:solution];
                     [self setMatrixElementForSolution:solution atIndex:nb andIndex:nb value:1.0];
-                    matContainers->RHS[nb] = _kernWork[0];
+                    matContainers->RHS[nb] = _kernWork[0]/diagScaling[nb];
                 }
             }
             
@@ -6587,7 +6908,7 @@ static const int PRECOND_VANKA     =  560;
                 case 2:
                     // If no edges do not try to set boundary conditions
                     // TODO: change to break instead of continue ??
-                    if (solution.mesh.isAssociatedEdges == NO) continue;
+                    if (edges == NULL) continue;
                     
                     // If boundary edge has not dofs, move on to next edge
                     if (element->BDOFs <= 0) continue;
@@ -6596,17 +6917,16 @@ static const int PRECOND_VANKA     =  560;
                     n = element->Type.NumberOfNodes;
                     
                     // Get indexes for boundary and values dofs associated to them
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind sizeVector:_size_g_Ind indexSize:&numEdgeDofs];
                     [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
                     
                     if (solution.matrix.isSymmetric == YES) {
-                        
                         for (l=0; l<n; l++) {
                             nb = varContainers->Perm[_g_Ind[l]];
                             if (nb < 0) continue;
                             nb = u_offset + solution.variable.dofs*nb + dof;
                             for (k=n; k<numEdgeDofs; k++) {
-                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l]*matContainers->RHS[nb];
+                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l]*matContainers->RHS[nb]*diagScaling[nb];
                             }
                         }
                         
@@ -6626,7 +6946,7 @@ static const int PRECOND_VANKA     =  560;
                             nb = varContainers->Perm[_g_Ind[k]];
                             if (nb < 0) continue;
                             nb = u_offset + solution.variable.dofs*nb + dof;
-                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[k-n]];
+                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[k-n]/diagScaling[nb]];
                         }
                     } else {
                         // Contribute this boundary to global system
@@ -6635,14 +6955,14 @@ static const int PRECOND_VANKA     =  560;
                             nb = varContainers->Perm[_g_Ind[k]];
                             if (nb < 0) continue;
                             nb = u_offset + solution.variable.dofs*nb + dof;
-                            matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
+                            matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k]/diagScaling[nb];
                             for (l=0; l<numEdgeDofs; l++) {
                                 mb = varContainers->Perm[_g_Ind[l]];
                                 if (mb < 0) continue;
                                 mb = u_offset + solution.variable.dofs*mb + dof;
                                 for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
                                     if (matContainers->Cols[kk] == mb) {
-                                        matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
+                                        matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l] * diagScaling[mb]/diagScaling[nb];
                                         break;
                                     }
                                 }
@@ -6653,13 +6973,13 @@ static const int PRECOND_VANKA     =  560;
                 case 3:
                     // If no faces present do not try to set boundary conditions
                     // TODO: change to break instead of continue ??
-                    if (solution.mesh.isAssociatedFaces == NO) continue;
+                    if (faces == NULL) continue;
                     
                     // Parameters of element
                     n = element->Type.NumberOfNodes;
                     
                     // Get global boundary indexes and solve dofs asscociated to them
-                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind resultSize:&numEdgeDofs];
+                    [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind sizeVector:_size_g_Ind indexSize:&numEdgeDofs];
                     
                     // If boundary face has no dofs, skip to next boundary element
                     if (numEdgeDofs == n) continue;
@@ -6674,7 +6994,7 @@ static const int PRECOND_VANKA     =  560;
                             if (nb < 0) continue;
                             nb = u_offset + solution.variable.dofs*nb + dof;
                             for (k=n; k<numEdgeDofs; k++) {
-                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l] * matContainers->RHS[nb];
+                                _kernWork[k] = _kernWork[k] - _kernStiff[k][l] * matContainers->RHS[nb]*diagScaling[nb];
                             }
                         }
                         n_start++;
@@ -6685,14 +7005,14 @@ static const int PRECOND_VANKA     =  560;
                         nb = varContainers->Perm[_g_Ind[k]];
                         if (nb < 0) continue;
                         nb = u_offset + solution.variable.dofs*nb + dof;
-                        matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k];
+                        matContainers->RHS[nb] = matContainers->RHS[nb] + _kernWork[k]/diagScaling[nb];
                         for (l=n_start; l<numEdgeDofs; l++) {
                             mb = varContainers->Perm[_g_Ind[l]];
                             if (mb < 0) continue;
                             mb = u_offset + solution.variable.dofs*mb + dof;
                             for (kk=matContainers->Rows[nb]+dof; kk<=matContainers->Rows[nb+1]-1; k+=solution.variable.dofs) {
                                 if (matContainers->Cols[kk] == mb) {
-                                    matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l];
+                                    matContainers->Values[kk] = matContainers->Values[kk] + _kernStiff[k][l] * diagScaling[mb]/diagScaling[nb];
                                     break;
                                 }
                             }
@@ -6701,23 +7021,32 @@ static const int PRECOND_VANKA     =  560;
             }
         } //end loop over boundary elements
     } //end loop over dofs
+    
+    if (scaleSystem == YES) {
+        [self backScaleLinearSystem:solution matrix:solution.matrix rhs:matContainers->RHS result:NULL diagScaling:NULL sizeOFDiagScaling:NULL];
+    } else {
+        free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
+    }
+    
+    NSLog(@"dirichletBoundaryConditions: dirichlet boundary conditions set\n");
 }
 
 #pragma mark Solve
 
--(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 {
+/*****************************************************************************************************
+    When a new field has been computed compare it to the previous one. Different convergence measures 
+    may be used. Also performs relaxation if a non-unity relaxation factor is given.
+*****************************************************************************************************/
+-(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 sizeValues0:(int *)sizeValues0 {
     
     NSString *convergenceType, *solverName;
-    int i, n, relaxAfter, iterNo;
+    int i, n, n0, relaxAfter, iterNo;
     double norm, prevNorm, bNorm, change, relaxation, maxNorm, dt, tolerance, eps;
     double *x = NULL, *r, *x0 = NULL;
     BOOL skip, convergenceAbsolute, relax, relaxBefore, stat, doIt;
     FEMVariable *iterV, *timeStepVar, *veloVar;
-    NSMutableString *str1;
-    NSString *str2;
     matrixArraysContainer *matContainers = NULL;
-    variableArraysContainer *varContainers = NULL, *itervContainers = NULL, *containers = NULL;
-    FEMMatrixCRS *crsMatrix;
+    variableArraysContainer *varContainers = NULL, *itervContainers = NULL;
     FEMUtilities *utilities;
     
     varContainers = solution.variable.getContainers;
@@ -6731,7 +7060,7 @@ static const int PRECOND_VANKA     =  560;
         if (skip == YES) return;
         
         if ((solution.solutionInfo)[@"steady state convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"steady state convergence measure"]];
+            convergenceType = (solution.solutionInfo)[@"steady state convergence measure"];
         } else {
             convergenceType = @"norm";
         }
@@ -6740,7 +7069,7 @@ static const int PRECOND_VANKA     =  560;
             convergenceAbsolute = [(solution.solutionInfo)[@"steady state convergence absolute"] boolValue];
         } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
             convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
-        }
+        } else convergenceAbsolute = NO;
         
         if ((solution.solutionInfo)[@"steady state relaxation factor"] != nil) {
             relaxation = [(solution.solutionInfo)[@"steady state relaxation factor"] doubleValue];
@@ -6768,15 +7097,15 @@ static const int PRECOND_VANKA     =  560;
         }
     } else {
         
-        if ((solution.solutionInfo)[@"skip compute non linear change"] != nil) {
-            skip  = [(solution.solutionInfo)[@"skip compute non linear change"] boolValue];
+        if ((solution.solutionInfo)[@"skip compute nonlinear change"] != nil) {
+            skip  = [(solution.solutionInfo)[@"skip compute nonlinear change"] boolValue];
         } else {
             skip = NO;
         }
         if (skip == YES) return;
         
         if ((solution.solutionInfo)[@"nonlinear system convergence measure"] != nil) {
-            convergenceType = [NSString stringWithString:(solution.solutionInfo)[@"nonlinear system convergence measure"]];
+            convergenceType = (solution.solutionInfo)[@"nonlinear system convergence measure"];
         } else {
             convergenceType = @"norm";
         }
@@ -6785,9 +7114,7 @@ static const int PRECOND_VANKA     =  560;
             convergenceAbsolute = [(solution.solutionInfo)[@"nonlinear system convergence absolute"] boolValue];
         } else if ((solution.solutionInfo)[@"use absolute norm for convergence"] != nil) {
             convergenceAbsolute = [(solution.solutionInfo)[@"use absolute norm for convergence"] boolValue];
-        } else {
-            convergenceAbsolute = NO;
-        }
+        } else convergenceAbsolute = NO;
         
         iterV = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&stat];
         itervContainers = iterV.getContainers;
@@ -6810,11 +7137,8 @@ static const int PRECOND_VANKA     =  560;
         if (relax == YES) {
             if ((solution.solutionInfo)[@"nonlinear system relaxation before"] != nil) {
                 relaxBefore = [(solution.solutionInfo)[@"nonlinear system relaxation before"] boolValue];
-            } else {
-                relaxBefore = YES;
-            }
+            } else relaxBefore = YES;
         }
-        
     }
     
     if (values != NULL) {
@@ -6823,7 +7147,7 @@ static const int PRECOND_VANKA     =  560;
         x = varContainers->Values;
     }
     
-    if (values == NULL) {
+    if (x == NULL) {
         solution.variable.norm = 0.0;
         if (steadyState == YES) {
             solution.variable.steadyChange = 0.0;
@@ -6835,32 +7159,35 @@ static const int PRECOND_VANKA     =  560;
     
     if (nsize != NULL && values != NULL) {
         n = *nsize;
-    } else if (varContainers->Values != NULL) {
+    } else {
         n = varContainers->sizeValues;
     }
     
     stat = NO;
+    n0 = 0;
     if (values0 != NULL) {
         x0 = values0;
+        n0 = *sizeValues0;
         stat = YES;
     } else if (steadyState == YES) {
         if (varContainers->SteadyValues != NULL) {
             x0 = varContainers->SteadyValues;
+            n0 = varContainers->sizeSteadyValues;
             stat = YES;
         }
     } else {
         if (varContainers->NonLinValues != NULL) {
             x0 = varContainers->NonLinValues;
+            n0 = varContainers->sizeNonLinValues;
             stat = YES;
         }
     }
     
-    // TODO: Possibly check here if length mismatch between x0 and x
-    //.....
+    if (stat == YES && n0 != n) NSLog(@"FEMKernel:computeChange: possible mismatch in length of vectors\n");
     
     if (relax == YES && relaxBefore == YES) {
         for (i=0; i<n; i++) {
-            x[i] = (1-relaxation) * x0[i] + relaxation*x[i];
+            x[i] = (1.0-relaxation) * x0[i] + relaxation*x[i];
         }
     }
     
@@ -6871,7 +7198,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     // Compute norm here
-    norm = [self FEMKernel_computeNormInSolution:solution size:n values:x];
+    norm = [self FEMKernel_computeNormInSolution:solution model:aModel size:n values:x];
     solution.variable.norm = norm;
     
     // The norm should be bounded in order to reach convergence
@@ -6881,7 +7208,7 @@ static const int PRECOND_VANKA     =  560;
         maxNorm = HUGE_VAL;
     }
     
-    if (isnan(norm) != 0 && norm > maxNorm) {
+    if (isnan(norm) != 0 || norm > maxNorm) {
         NSLog(@"FEMKernel:computeChange: computed norm: %lf\n", norm);
         errorfunct("FEMKernel:computeChange", "Norm of solution has crossed given bounds.");
     }
@@ -6895,14 +7222,13 @@ static const int PRECOND_VANKA     =  560;
         // ------------------------------------------------------------------------------
         r = doublevec(0, n-1);
         
-        crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x0 resultVector:r];
+        [self matrixVectorMultplyInMatrix:solution.matrix multiplyVector:x0 resultVector:r];
         for (i=0; i<n; i++) {
             r[i] = r[i] - matContainers->RHS[i];
         }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        change = [self FEMKernel_computeNormInSolution:solution model:aModel size:n values:r];
         if (convergenceAbsolute == NO) {
-            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
+            bNorm = [self FEMKernel_computeNormInSolution:solution model:aModel size:n values:matContainers->RHS];
             if (bNorm > 0.0) {
                 change = change / bNorm;
             }
@@ -6914,16 +7240,17 @@ static const int PRECOND_VANKA     =  560;
         // Here the true linear system redisual r = b(x)-A(x)x is computed.
         // This option is useful for some special solvers
         // ------------------------------------------------------------------------------
-        r = doublevec(0, n-1);
         
-        crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:x resultVector:r];
+        //TODO: add support for parallel run
+        
+        r = doublevec(0, n-1);
+        [self matrixVectorMultplyInMatrix:solution.matrix multiplyVector:x resultVector:r];
         for (i=0; i<n; i++) {
             r[i] = r[i] - matContainers->RHS[i];
         }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        change = sqrt(cblas_ddot(n, r, 1, r, 1));
         if (convergenceAbsolute == NO) {
-            bNorm = [self FEMKernel_computeNormInSolution:solution size:n values:matContainers->RHS];
+            bNorm = sqrt(cblas_ddot(n, matContainers->RHS, 1, matContainers->RHS, 1));
             if (bNorm > 0.0) {
                 change = change / bNorm;
             }
@@ -6932,11 +7259,10 @@ static const int PRECOND_VANKA     =  560;
     }
     else if ([convergenceType isEqualToString:@"solution"] == YES) {
         r = doublevec(0, n-1);
-        
         for (i=0; i<n; i++) {
             r[i] = x[i] - x0[i];
         }
-        change = [self FEMKernel_computeNormInSolution:solution size:n values:r];
+        change = [self FEMKernel_computeNormInSolution:solution model:aModel size:n values:r];
         if (convergenceAbsolute == NO && (norm + prevNorm) > 0.0) {
             change = change * 2.0 / (norm+prevNorm);
         }
@@ -6977,27 +7303,82 @@ static const int PRECOND_VANKA     =  560;
     
     if (relax == YES && relaxBefore == NO) {
         for (i=0; i<n; i++) {
-            x[i] = (1-relaxation)*x0[i] + relaxation*x[i];
+            x[i] = (1.0-relaxation)*x0[i] + relaxation*x[i];
         }
-        solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:x ];
+        solution.variable.norm = [self FEMKernel_computeNormInSolution:solution model:aModel size:n values:x ];
     }
     
     if ((solution.solutionInfo)[@"equation"] != nil) {
-        solverName = [NSString stringWithString:(solution.solutionInfo)[@"equation"]];
+        solverName = (solution.solutionInfo)[@"equation"];
     } else {
         solverName = solution.variable.name;
     }
     
     if (steadyState == YES) {
-        NSLog(@"FEMKernel:computeChange: SS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMKernel:computeChange: SS (Iter=%d) (NRM,RELC): (%e %e) :: %@\n", iterNo, norm, change, solverName);
     } else {
-        NSLog(@"FEMKernel:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e):: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMKernel:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e) :: %@\n", iterNo, norm, change, solverName);
     }
     
+    // The update of exported variables may be done internally to allow some nonlinear features
+    // or in steady state level to allow coupling to other solvers.
+    doIt = NO;
+    if (steadyState == YES) {
+        doIt = [(solution.solutionInfo)[@"update exported variable"] boolValue];
+    } else {
+        doIt = [(solution.solutionInfo)[@"nonlinear update exported variable"] boolValue];
+    }
+    if (doIt == YES) [self FEMKErnel_updateExportedVariablesSolution:solution model:aModel]; // TODO: This method is not fully implemented
+    
+    // Optional a posteriori scaling for the computed fields
+    // May be usefull for some floating systems where one want to impose some intergral
+    // constraints without actually using them. Then first use just one Dirichlet point
+    // and then fix the level a posteriori using this condition.
+    doIt = NO;
+    if (steadyState == YES) {
+        doIt = [(solution.solutionInfo)[@"nonlinear system set average solution"] boolValue];
+    } else {
+        doIt = [(solution.solutionInfo)[@"linear system set average solution"] boolValue];
+    }
+    if (doIt == YES) {
+        // TODO: add support for parallel run
+        double cTarget = [(solution.solutionInfo)[@"average solution value"] doubleValue];
+        NSString *str = (solution.solutionInfo)[@"average solution weight variable"];
+        if (str != nil) {
+            FEMVariable *weightVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str onlySearch:NULL maskName:NULL info:&stat];
+            if (weightVar == nil) {
+                NSLog(@"FEMKernel:computeChange: average solution weight missing: %@\n", str);
+                errorfunct("FEMKernel:computeChange", "Program terminating now");
+            }
+            variableArraysContainer *weightVarContainers = weightVar.getContainers;
+            if (n != weightVarContainers->sizeValues) {
+                NSLog(@"FEMKernel:computeChange: field and weight mismatch: %@\n", str);
+                errorfunct("FEMKernel:computeChange", "Program terminating now");
+            }
+            double sum1 = 0.0;
+            for (i=0; i<weightVarContainers->sizeValues; i++) {
+                sum1 = sum1 + weightVarContainers->Values[i] * x[i];
+            }
+            double sum2 = 0.0;
+            for (i=0; i<weightVarContainers->sizeValues; i++) {
+                sum2 = sum2 + weightVarContainers->Values[i];
+            }
+            cTarget = cTarget - sum1 / sum2;
+        } else {
+            double sum1 = 0.0;
+            for (i=0; i<n; i++) {
+                sum1 = sum1 + x[i];
+            }
+            cTarget = cTarget - sum1 / n;
+        }
+        for (i=0; i<n; i++) {
+            x[i] = x[i] + cTarget;
+        }
+    }
+
     // Only 1st order velocity computation is implemented so far...
-    if ([solution timeOrder] == 1) {
-        doIt = YES;
-        
+    if (solution.timeOrder == 1) {
+        doIt = NO;
         if (steadyState == YES) {
             if ((solution.solutionInfo)[@"calculate velocity"] != nil) {
                 doIt = [(solution.solutionInfo)[@"calculate velocity"] boolValue];
@@ -7014,63 +7395,57 @@ static const int PRECOND_VANKA     =  560;
         
         if (doIt == YES) {
             timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"time step size" onlySearch:NULL maskName:NULL info:&stat];
-            containers = timeStepVar.getContainers;
+            variableArraysContainer *containers = timeStepVar.getContainers;
             dt = containers->Values[0];
-            str2 = @" velocity";
-            str1 = [NSMutableString stringWithString:solution.variable.name];
-            [str1 appendString:str2];
+            NSString *str1 = [solution.variable.name stringByAppendingString:@" velocity"];
             veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
             containers = veloVar.getContainers;
-            for (i=0; i<n; i++) {
+            for (i=0; i<containers->sizeValues; i++) {
                 containers->Values[i] = (x[i] - varContainers->PrevValues[i][0]) / dt;
             }
-            containers = NULL;
         }
-        
     }
     
     // Calculate derivative a.k.a sensitivity
     if (steadyState == YES) {
-        
-        stat = NO;
-        
-        if ((solution.solutionInfo)[@"calculate derivative"] != nil) {
-            if ([(solution.solutionInfo)[@"calculate derivative"]  boolValue] == YES) {
+        if ([(solution.solutionInfo)[@"calculate derivative"]  boolValue] == YES) {
+            if (iterNo > 1) {
+                timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"derivative eps" onlySearch:NULL maskName:NULL info:&stat];
+                stat = NO;
+                if (timeStepVar != nil) {
+                    variableArraysContainer *containers = timeStepVar.getContainers;
+                    eps = containers->Values[0];
+                    stat = YES;
+                } else {
+                    eps = [(solution.solutionInfo)[@"derivative eps"] doubleValue];
+                }
+                if (stat == NO) {
+                    NSLog(@"FEMKernel:computeChange: derivative eps not given, using one.\n");
+                    eps = 1.0;
+                }
                 
-                if (iterNo > 1) {
-                    timeStepVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:@"derivative eps" onlySearch:NULL maskName:NULL info:&stat];
-                    if (timeStepVar != nil) {
-                        containers = timeStepVar.getContainers;
-                        eps = containers->Values[0];
-                        stat = YES;
-                        containers = NULL;
-                    } else {
-                        eps = [(solution.solutionInfo)[@"derivative eps"] doubleValue];
+                NSString *str1 = [solution.variable.name stringByAppendingString:@" derivative"];
+                veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
+                if (veloVar != nil) {
+                    NSLog(@"FEMKernel:computeChange: computing variable: %@\n", str1);
+                    variableArraysContainer *containers = veloVar.getContainers;
+                    for (i=0; i<containers->sizeValues; i++) {
+                        containers->Values[i] = (x[i] - x0[i]) / eps;
                     }
-                    if (stat == NO) {
-                        NSLog(@"FEMKernel:computeChange: derivative eps not given, using one.\n");
-                    }
-                    
-                    str2 = @" derivative";
-                    str1 = [NSMutableString stringWithString:solution.variable.name];
-                    [str1 appendString:str2];
-                    veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
-                    if (veloVar != nil) {
-                        NSLog(@"FEMKernel:computeChange: computing variable: %@\n", str1);
-                        containers = veloVar.getContainers;
-                        for (i=0; i<n; i++) {
-                            containers->Values[i] = (x[i] - x0[i]) / eps;
-                        }
-                        containers = NULL;
-                    } else {
-                        NSLog(@"FEMKernel:computeChange: derivative variable not present.\n");
-                    }
+                } else {
+                    NSLog(@"FEMKernel:computeChange: derivative variable not present.\n");
                 }
             }
         }
     }
 }
 
+/******************************************************************************************************************************
+    This method decides which linear system solver to call and calls it. 
+    There are two main sources of iterations whithin Saino (similar to Elmer).
+    1) The FEMHUTiter class that includes the most classic iterative Krylov methods.
+    2) The FEMIterativeMethods class that includes some classic iterative methods and also some more recent Krylov methods.
+******************************************************************************************************************************/
 -(void)iterativeSolveMatrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b dimensions:(int *)ndim solution:(FEMSolution *)solution {
     
     NSString *str;
@@ -7093,9 +7468,9 @@ static const int PRECOND_VANKA     =  560;
     memset( ipar, 0, 50*sizeof(int) );
     memset( dpar, 0.0, 50*sizeof(double) );
     
-    if ((solution.solutionInfo)[@"linear system iteration method"] != nil) {
+    if ((solution.solutionInfo)[@"linear system iterative method"] != nil) {
+        str = (solution.solutionInfo)[@"linear system iterative method"];
         NSLog(@"FEMKernel:iterativeSolveMatrix: using iterative method: %@\n", str);
-        str = (solution.solutionInfo)[@"linear system iteration method"];
     } else {
         NSLog(@"FEMKernel:iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab\n");
         str = @"bi-cgstab";
@@ -7147,7 +7522,8 @@ static const int PRECOND_VANKA     =  560;
     
     ipar[3] = 0;
     internal = NO;
-    
+        // Solvers from the FEMHUTiter class
+        // ------------------------------------------
     if (iterType == ITER_BICGSTAB) {
         ipar[3] = 8;
     }
@@ -7172,6 +7548,8 @@ static const int PRECOND_VANKA     =  560;
         }
         ipar[3] = 7 + ipar[14];
     }
+    // Solvers from the FEMIterativeMethods class
+    // ------------------------------------------
     else if (iterType == ITER_SGS) {
         ipar[3] = 1;
         if ((solution.solutionInfo)[@"sgs over relaxation factor"] != nil) {
@@ -7225,6 +7603,7 @@ static const int PRECOND_VANKA     =  560;
     
     if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
         ipar[9] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
+        if (ipar[9] < 1) ipar[9] = 1;
     } else {
         ipar[9] = 1;
     }
@@ -7275,16 +7654,14 @@ static const int PRECOND_VANKA     =  560;
         }
         pCondType = PRECOND_ILUT;
     }
-    else if ([str isEqualToString:@"ilu"] == YES) {
+    else if ([[str substringToIndex:3] isEqualToString:@"ilu"] == YES) {
         if ((solution.solutionInfo)[@"linear system ilu order"] != nil) {
             ilun = [(solution.solutionInfo)[@"linear system ilu order"] intValue];
-        } else {
-            ilun = [str characterAtIndex:3] - '0';
-            if (ilun < 0 || ilun > 9 ) ilun = 0;
-            pCondType = PRECOND_ILUN;
-        }
+        } else ilun = [str characterAtIndex:3] - '0';
+        if (ilun < 0 || ilun > 9 ) ilun = 0;        
+        pCondType = PRECOND_ILUN;
     }
-    else if ([str isEqualToString:@"bilu"] == YES) {
+    else if ([[str substringToIndex:4] isEqualToString:@"bilu"] == YES) {
         ilun = [str characterAtIndex:4] - '0';
         if (ilun < 0 || ilun > 9 ) ilun = 0;
         if (solution.variable.dofs == 1) {
@@ -7329,7 +7706,7 @@ static const int PRECOND_VANKA     =  560;
                         condition = [preconditioning CRSComplexIncompleteLUMatrix:matrix fillsOrder:ilun];
                     } else if (pCondType == PRECOND_ILUT) {
                         FEMPrecondition *preconditioning = [[FEMPrecondition alloc] init];
-                        condition = [preconditioning CRSComplexIlutMatrix:matrix dropTolerance:ilun];
+                        condition = [preconditioning CRSComplexIlutMatrix:matrix dropTolerance:ilut_tol];
                     }
                 } else {
                     FEMPrecondition *preconditioning = [[FEMPrecondition alloc] init];
@@ -7390,29 +7767,33 @@ static const int PRECOND_VANKA     =  560;
     }
     
     // Get the selector for the matrix-vector multiplication method we want to use
-    if (matrix.isComplexMatrix == YES) {
-        mvSelector = @selector(CRSComplexMatrixVectorProduct::::);
+    if (matrix.isComplexMatrix == NO) {
+        mvSelector= @selector(CRSMatrixVectorProduct:vector:result:info:);
     } else {
-        mvSelector= @selector(CRSMatrixVectorProduct::::);
+        mvSelector = @selector(CRSComplexMatrixVectorProduct:vector:result:info:);
     }
     
     // Get the selector for the preconditioning method we want to use
     if (pCondType == PRECOND_NONE) {
         
-        pcondSelector = @selector(CRSPCondDummyMatrix::::);
-    }
-    else if (pCondType == PRECOND_DIAGONAL) {
-        if (matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRSComplexDiagPreconditionMatrix::::);
+        if (matrix.isComplexMatrix == NO) {
+            pcondSelector = @selector(CRSPCondDummyMatrix:afterPrecondition:rightHandSide:info:);
         } else {
-            pcondSelector = @selector(CRSDiagPreconditionMatrix::::);
+            pcondSelector = @selector(CRSPCondDummyComplexMatrix:afterPrecondition:rightHandSide:info:);
         }
     }
-    else if (pCondType == PRECOND_ILUN == pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
-        if (matrix.isComplexMatrix == YES) {
-            pcondSelector = @selector(CRSComplexLuPreconditionMatrix::::);
+    else if (pCondType == PRECOND_DIAGONAL) {
+        if (matrix.isComplexMatrix == NO) {
+            pcondSelector = @selector(CRSDiagPreconditionMatrix:afterPrecondition:rightHandSide:info:);
         } else {
-            pcondSelector = @selector(CRSLuPreconditionMatrix::::);
+            pcondSelector = @selector(CRSComplexDiagPreconditionMatrix:afterPrecondition:rightHandSide:info:);
+        }
+    }
+    else if (pCondType == PRECOND_ILUN || pCondType == PRECOND_ILUT || pCondType == PRECOND_BILUN) {
+        if (matrix.isComplexMatrix == NO) {
+            pcondSelector = @selector(CRSLuPreconditionMatrix:afterPrecondition:rightHandSide:info:);
+        } else {
+            pcondSelector = @selector(CRSComplexLuPreconditionMatrix:afterPrecondition:rightHandSide:info:);
         }
     }
     
@@ -7430,7 +7811,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     // Everything is happening in this method...
-    [self FEMKernel_iterCallType:iterType solution:solution matrix:matrix result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondSelector pcondrMethod:pcondrSelector matvecMethod:mvSelector mstopMethod:@selector(stopc::::)];
+    [self FEMKernel_iterCallType:iterType solution:solution matrix:matrix result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondSelector pcondrMethod:pcondrSelector matvecMethod:mvSelector mstopMethod:@selector(stopc:multiplyVector:righHandSide:ipar:)];
     
     if (matrix.isComplexMatrix == YES) ipar[2] = ipar[2] * 2;
     
@@ -7451,6 +7832,15 @@ static const int PRECOND_VANKA     =  560;
     Solve a system. Various additional utilities are included and naturally a
     call to the linear system solver
  
+    Arguments:
+        FEMMatrix *matrix      ->   The coefficient matrix
+        double *b              ->   The RHS vector
+        double *x              ->   Previous solution on entry, new solution on exit (hopefully)
+        double *norm           ->   L2 norm of the solution
+        int dofs               ->   Number of degrees of freedom per node for this equation
+        FEMSolution *solution  ->   Object for active solution
+        FEMModel *model        ->   Object for active model
+
     TODO: Add support for parallel run
 ******************************************************************************/
 -(void)solveSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution  model:(FEMModel *)model {
@@ -7470,7 +7860,6 @@ static const int PRECOND_VANKA     =  560;
     }
     
     n = matrix.numberOfRows;
-    
     varContainers = solution.variable.getContainers;
     
     // The allocation of previous values has to be here in order to work properly
@@ -7489,9 +7878,8 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (needPrevSol == YES) {
-        found = NO;
-        if (varContainers->NonLinValues != NULL) {
-            found = YES;
+        found = (varContainers->NonLinValues != NULL) ? YES : NO;
+        if (found == YES) {
             if (varContainers->sizeNonLinValues != n) {
                 free_dvector(varContainers->NonLinValues, 0, varContainers->sizeNonLinValues-1);
                 varContainers->NonLinValues = NULL;
@@ -7522,12 +7910,11 @@ static const int PRECOND_VANKA     =  560;
         [self FEMKernel_solveLinearSystemMatrix:matrix rhs:b result:x norm:norm dofs:dofs solution:solution model:model bulkMatrix:nil];
     }
     
-    if ([solution timeOrder] == 2) {
+    if (solution.timeOrder == 2) {
         if (varContainers->PrevValues != NULL) {
-            
             gamma = 0.5 - solution.alpha;
             beta = ( pow((1.0 - solution.alpha), 2.0) ) / 4.0;
-            for (i = 0; i<n; i++) {
+            for (i=0; i<n; i++) {
                 varContainers->PrevValues[i][1] = (1.0/(beta*pow(solution.dt, 2.0))) * (x[i]-varContainers->PrevValues[i][2]) -
                 (1.0/(beta*solution.dt))*varContainers->PrevValues[i][3] + (1.0-1.0/(2.0*beta))*varContainers->PrevValues[i][4];
                 
@@ -7542,10 +7929,20 @@ static const int PRECOND_VANKA     =  560;
             st = cputime() - t0;
             rst = realtime() - rt0;
             
-            NSLog(@"FEMKernel:solveSystemMatrix: solution time for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
+            FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:solution.variable.name] withValue:st string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:solution.variable.name] withValue:rst string:nil];
             
-            // TODO: Add support for cumulative timing
+            NSLog(@"FEMKernel:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
             
+            if ([(solution.solutionInfo)[@"linear system timing cumulative"] boolValue] == YES) {
+                double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] info:&found minValue:NULL maxValue:NULL];
+                st = st + ct;
+                ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] info:&found minValue:NULL maxValue:NULL];
+                rst = rst + ct;
+                 [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] withValue:st string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] withValue:rst string:nil];
+            }
         }
     }
 }
@@ -7709,33 +8106,31 @@ static const int PRECOND_VANKA     =  560;
     
     // This is to avoid resetting of certain info that could be interesting when
     // saving data, i.e., using an auxiliary solution
-    if ((solution.solutionInfo)[@"auxiliary solution"] != nil) {
-        if ([(solution.solutionInfo)[@"auxiliary solution"] boolValue] == NO) {
-            if ((solution.solutionInfo)[@"time step scale"] != nil) {
-                dtScale = [(solution.solutionInfo)[@"time step scale"] doubleValue];
-            }
-            solution.dt = dtScale * dt;
-            
-            if (transient == YES) {
-                if ((solution.solutionInfo)[@"time derivative active"] != nil) {
-                    timeDerivativeActive = [(solution.solutionInfo)[@"time derivative active"] boolValue];
-                } else {
-                    timeDerivativeActive = YES;
-                    if ((solution.solutionInfo)[@"time derivative condition"] != nil) {
-                        tCond = [(solution.solutionInfo)[@"time derivative condition"] doubleValue];
-                        timeDerivativeActive = (timeDerivativeActive == YES && tCond > 0) ? YES : NO;
-                    }
+    if ([(solution.solutionInfo)[@"auxiliary solution"] boolValue] == NO) {
+        if ((solution.solutionInfo)[@"time step scale"] != nil) {
+            dtScale = [(solution.solutionInfo)[@"time step scale"] doubleValue];
+        }
+        solution.dt = dtScale * dt;
+        
+        if (transient == YES) {
+            if ((solution.solutionInfo)[@"time derivative active"] != nil) {
+                timeDerivativeActive = [(solution.solutionInfo)[@"time derivative active"] boolValue];
+            } else {
+                timeDerivativeActive = YES;
+                if ((solution.solutionInfo)[@"time derivative condition"] != nil) {
+                    tCond = [(solution.solutionInfo)[@"time derivative condition"] doubleValue];
+                    timeDerivativeActive = (timeDerivativeActive == YES && tCond > 0) ? YES : NO;
                 }
             }
-            
-            iterV = [utilities getVariableFrom:solution.mesh.variables model:model name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&found];
-            iterVContainers = iterV.getContainers;
-            iterVContainers->Values[0] = 1;
-            
-            if ((solution.solutionInfo)[@"namespace"] != nil) {
-                str = (solution.solutionInfo)[@"namespace"];
-                [listUtilities listSetNameSpace:str];
-            }
+        }
+        
+        iterV = [utilities getVariableFrom:solution.mesh.variables model:model name:@"nonlin iter" onlySearch:NULL maskName:NULL info:&found];
+        iterVContainers = iterV.getContainers;
+        iterVContainers->Values[0] = 1;
+        
+        if ((solution.solutionInfo)[@"namespace"] != nil) {
+            str = (solution.solutionInfo)[@"namespace"];
+            [listUtilities listSetNameSpace:str];
         }
     }
     
@@ -7773,7 +8168,20 @@ static const int PRECOND_VANKA     =  560;
     if (timing == YES) {
         st = cputime() - t0;
         rst = realtime() - rt0;
-        // TODO: implement the rest...
+        NSString *str = (solution.solutionInfo)[@"equation"];
+        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution cpu time " stringByAppendingString:str] withValue:st string:nil];
+        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution real time " stringByAppendingString:str] withValue:rst string:nil];
+        
+        NSLog(@"FEMKernel:solveSystemMatrix: solution time (CPU, REAL) for %@: %lf %lf (s)\n", str, st, rst);
+        
+        if ([(solution.solutionInfo)[@"solution timing cumulative"] boolValue] == YES) {
+            double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum solution cpu time " stringByAppendingString:str] info:&found minValue:NULL maxValue:NULL];
+            st = st + ct;
+            ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum solution real time " stringByAppendingString:str] info:&found minValue:NULL maxValue:NULL];
+            rst = rst + ct;
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution cpu time " stringByAppendingString:str] withValue:st string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution real time " stringByAppendingString:str] withValue:rst string:nil];
+        }
     }
 }
 
@@ -7782,7 +8190,7 @@ static const int PRECOND_VANKA     =  560;
     
     int i, j, n, rgOrder=0;
     double *steadyIt, prevDt=0.0;
-    BOOL found, all, scanning, *doneThis, *afterConverged, rungeKutta;
+    BOOL found, scanning, *doneThis, *afterConverged, rungeKutta;
     NSString *when;
     RungeKutta_t *rgCoeff = NULL;
     FEMVariable *iterV = nil;
@@ -7896,7 +8304,7 @@ static const int PRECOND_VANKA     =  560;
                     for (j=0; j<variableContainers->sizeValues; j++) {
                         variableContainers->Values[j] = variableContainers->PrevValues[j][0] + (rgCoeff[i].k1[j] + rgCoeff[i].k2[j])/2.0;
                     }
-                    solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:variableContainers->Values];
+                    solution.variable.norm = [self FEMKernel_computeNormInSolution:solution model:model size:n values:variableContainers->Values];
                     break;
                 case 4:
                     for (j=0; j<n; j++) {
@@ -7941,7 +8349,7 @@ static const int PRECOND_VANKA     =  560;
                     variableContainers->Values[j] = variableContainers->PrevValues[j][0]
                        + (rgCoeff[i].k1[j] + 2.0*rgCoeff[i].k2[j] + 2.0*rgCoeff[i].k3[j] + rgCoeff[i].k4[j]) / 6.0;
                 }
-                solution.variable.norm = [self FEMKernel_computeNormInSolution:solution size:n values:variableContainers->Values];
+                solution.variable.norm = [self FEMKernel_computeNormInSolution:solution model:model size:n values:variableContainers->Values];
                 i++;
             }
         }
@@ -7979,7 +8387,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if (transient == NO) {
-        all = YES;
+        BOOL all = YES;
         for (i=0; i<model.numberOfSolutions; i++) {
             if (doneThis[i] == NO) {
                 all = NO;

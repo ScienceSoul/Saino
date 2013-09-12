@@ -72,7 +72,7 @@
         }
     } else {
         for (j=max(0, n-solution.matrix.subband); j<=n; j++) {
-            matContainers->Values[(j*solution.matrix.subband + (n)-(j))] = 0.0;
+            matContainers->Values[(j*(solution.matrix.subband+1) + (n)-(j))] = 0.0;
         }
     }
 }
@@ -93,9 +93,9 @@
     matContainers = solution.matrix.getContainers;
     
     if (solution.matrix.format == MATRIX_BAND) {
-        matContainers->Values[(j*(3*solution.matrix.subband) + (i)-(j)+2*solution.matrix.subband)] = value;
+        matContainers->Values[(j*(3*solution.matrix.subband+1) + (i)-(j)+2*solution.matrix.subband)] = value;
     } else {
-        if (j <= i) matContainers->Values[(j*solution.matrix.subband + (i)-(j))] = value;
+        if (j <= i) matContainers->Values[(j*(solution.matrix.subband+1) + (i)-(j))] = value;
     }
 }
 
@@ -115,11 +115,13 @@
     matContainers = solution.matrix.getContainers;
     
     if (solution.matrix.format == MATRIX_BAND) {
-        k = (j*(3*solution.matrix.subband) + (i)-(j)+2*solution.matrix.subband);
+        k = (j*(3*solution.matrix.subband+1) + (i)-(j)+2*solution.matrix.subband);
         matContainers->Values[k] = matContainers->Values[k] + value;
     } else {
-        k = (j*solution.matrix.subband + (i)-(j));
-        if (j <= i) matContainers->Values[k] = matContainers->Values[k] + value;
+        if (j <= i) {
+            k = (j*(solution.matrix.subband+1) + (i)-(j));
+            matContainers->Values[k] = matContainers->Values[k] + value;
+        }
     }
 }
 
@@ -152,7 +154,7 @@
                 for (j=0; j<n; j++) {
                     for (l=1; l<=dofs; l++) {
                         col = dofs * (indexes[j]+1) - l;
-                        ind = ( (col-1)*(3*solution.matrix.subband) + row - col + 2*solution.matrix.subband );
+                        ind = ( (col-1)*(3*solution.matrix.subband+1) + row - col + 2*solution.matrix.subband );
                         matContainers->Values[ind] = matrix[dofs*(i+1)-k][dofs*(j+1)-l];
                     }
                 }
@@ -167,7 +169,7 @@
                     for (l=1; l<=dofs; l++) {
                         col = dofs * (indexes[j]+1) - l;
                         if (col <= row) {
-                            ind = ( (col-1)*solution.matrix.subband + row - col + 1 );
+                            ind = ( (col-1)*(solution.matrix.subband+1) + row - col + 1 );
                             matContainers->Values[ind] = matrix[dofs*(i+1)-k][dofs*(j+1)-l];
                         }
                     }
@@ -204,12 +206,12 @@
     }
     
     for (j=n+1; j<=min(n+solution.matrix.subband, solution.matrix.numberOfRows-1); j++) {
-        matContainers->RHS[j] = matContainers->RHS[j]-value*matContainers->Values[n*solution.matrix.subband+(j)-(n)];
-        matContainers->Values[n*solution.matrix.subband+(j)-(n)] = 0.0;
+        matContainers->RHS[j] = matContainers->RHS[j]-value*matContainers->Values[n*(solution.matrix.subband+1)+(j)-(n)];
+        matContainers->Values[n*(solution.matrix.subband+1)+(j)-(n)] = 0.0;
     }
     
     matContainers->RHS[n] = value;
-    matContainers->Values[n*solution.matrix.subband+(n)-(n)] = 1.0;
+    matContainers->Values[n*(solution.matrix.subband+1)+(n)-(n)] = 1.0;
 }
 
 -(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
@@ -239,7 +241,7 @@
         for (i=0; i<n; i++) {
             s = 0.0;
             for (j=max(0, i-solution.matrix.subband); j<=min(n-1, i+solution.matrix.subband); j++) {
-                s = s + u[j] * matContainers->Values[((j)*(3*solution.matrix.subband) + (i)-(j)+2*solution.matrix.subband)];
+                s = s + u[j] * matContainers->Values[((j)*(3*solution.matrix.subband+1) + (i)-(j)+2*solution.matrix.subband)];
             }
             v[i] = s;
         }
@@ -247,11 +249,11 @@
         for (i=0; i<n; i++) {
             s = 0.0;
             for (j=max(0, i-solution.matrix.subband); j<=i; j++) {
-                s = s + u[j] * matContainers->Values[(j)*solution.matrix.subband + (i)-(j)];
+                s = s + u[j] * matContainers->Values[(j)*(solution.matrix.subband+1) + (i)-(j)];
             }
             
             for (j=i+1; j<=min(i+solution.matrix.subband, solution.matrix.numberOfRows-1); j++) {
-                s = s + u[j] + matContainers->Values[(i)*solution.matrix.subband + (j)-(i)];
+                s = s + u[j] + matContainers->Values[(i)*(solution.matrix.subband+1) + (j)-(i)];
             }
             v[i] = s;
         }
@@ -267,51 +269,50 @@
     
     if (a.format == MATRIX_BAND) {
         for (j=max(0, n-a.subband); j<=min(a.numberOfRows-1, n+a.subband); j++) {
-            matContainers->Values[(j*(3*a.subband) + (n)-(j)+2*a.subband)] = 0.0;
+            matContainers->Values[(j*(3*a.subband+1) + (n)-(j)+2*a.subband)] = 0.0;
         }
     } else {
         for (j=max(0, n-a.subband); j<=n; j++) {
-            matContainers->Values[(j*a.subband + (n)-(j))] = 0.0;
+            matContainers->Values[(j*(a.subband+1) + (n)-(j))] = 0.0;
         }
     }
 }
 
--(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
 /************************************************************************************************
     Set a given value to an element of a Band format Matrix
  
     Arguments:
-    Matrix_t *a             ->  the matrix
-    int i, j                ->  row and column numbers respectively of the matrix element
-    double value            ->  value to be set
+        Matrix_t *a             ->  the matrix
+        int i, j                ->  row and column numbers respectively of the matrix element
+        double value            ->  value to be set
  
- ************************************************************************************************/
+************************************************************************************************/
+-(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = a.getContainers;
     
     if (a.format == MATRIX_BAND) {
-        matContainers->Values[(j*(3*a.subband) + (i)-(j)+2*a.subband)] = value;
+        matContainers->Values[(j*(3*a.subband+1) + (i)-(j)+2*a.subband)] = value;
     } else {
-        if (j <= i) matContainers->Values[(j*a.subband + (i)-(j))] = value;
+        if (j <= i) matContainers->Values[(j*(a.subband+1) + (i)-(j))] = value;
     }
 }
 
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v {
 /*******************************************************************************************
  
-    Description:
     Matrix vector product (v = Au) for a matrix given in band format.
  
     Arguments:
  
-    FEMMatrix *a  -> input matrix.
+        FEMMatrix *a  -> input matrix.
  
-    double *u     -> Vector to multiply
+        double *u     -> Vector to multiply
  
-    double *v     -> Result vector
+        double *v     -> Result vector
 *******************************************************************************************/
+-(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v {
     
     int i, j, n;
     double s;
@@ -324,7 +325,7 @@
         for (i=0; i<n; i++) {
             s = 0.0;
             for (j=max(0, i-a.subband); j<=min(n-1, i+a.subband); j++) {
-                s = s + u[j] * matContainers->Values[((j)*(3*a.subband) + (i)-(j)+2*a.subband)];
+                s = s + u[j] * matContainers->Values[((j)*(3*a.subband+1) + (i)-(j)+2*a.subband)];
             }
             v[i] = s;
         }
@@ -332,11 +333,11 @@
         for (i=0; i<n; i++) {
             s = 0.0;
             for (j=max(0, i-a.subband); j<=i; j++) {
-                s = s + u[j] * matContainers->Values[(j)*a.subband + (i)-(j)];
+                s = s + u[j] * matContainers->Values[(j)*(a.subband+1) + (i)-(j)];
             }
             
             for (j=i+1; j<=min(i+a.subband, a.numberOfRows-1); j++) {
-                s = s + u[j] + matContainers->Values[(i)*a.subband + (j)-(i)];
+                s = s + u[j] + matContainers->Values[(i)*(a.subband+1) + (j)-(i)];
             }
             v[i] = s;
         }

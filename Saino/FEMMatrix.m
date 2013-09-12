@@ -226,8 +226,8 @@
         }
         
         free(_containers);
+         _containers = NULL;
     }
-    _containers = NULL;
     
     if (_ematrix != nil) [self deallocation];
     if (_constraint != nil) [self deallocation];

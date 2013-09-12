@@ -53,14 +53,14 @@
     perm[2][0][1] = -1.0 / sqrtMetric;
     perm[2][1][0] =  1.0 / sqrtMetric;
     
-    memset( bc, 0.0, sizeof(double) );
+    memset( bc, 0.0, sizeof(bc) );
     for (i=0; i<3; i++) {
         for (j=0; j<3; j++) {
             bc[i] = bc[i] + metric[i][j]*b[j];
         }
     }
     
-    memset( ji, 0.0, sizeof(double) );
+    memset( ji, 0.0, sizeof(ji) );
     for (i=0; i<3; i++) {
         s = 0.0;
         for (j=0; j<3; j++) {
@@ -78,7 +78,7 @@
         ji[i] = s;
     }
     
-    memset( jc, 0.0, sizeof(double) );
+    memset( jc, 0.0, sizeof(jc) );
     for (i=0; i<3; i++) {
         for (j=0; j<3; j++) {
             jc[i] = jc[i] + metric[i][j]*ji[j];

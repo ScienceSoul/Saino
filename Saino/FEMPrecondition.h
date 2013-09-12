@@ -39,6 +39,7 @@
 
 // Dummy method when preconditioning is not needed
 -(void)CRSPCondDummyMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar;
+-(void)CRSPCondDummyComplexMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar;
 
 @end
 

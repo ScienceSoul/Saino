@@ -110,7 +110,7 @@
     
     NSData *buffer;
     NSString *strBuffer;
-    strBuffer = [NSString stringWithFormat:@"%17.8e", number];
+    strBuffer = [NSString stringWithFormat:@"%17.16e", number];
     buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
     [fileHandle writeData:buffer];
 }
@@ -916,11 +916,12 @@
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                              _when = (solution.solutionInfo)[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
-                            if (execThis) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                         }
+                        if (execThis) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                     }
                     
                     // TODO: Call save current here
+                    [self FEMJob_saveCurrent:model currentStep:timeStep];
                     _lastSaved = YES;
                     
                     for (FEMSolution *solution in model.solutions) {
@@ -947,7 +948,7 @@
                 goto jump;
             }
             
-            if (steadyStateReached == YES && (transient == NO || scanning == NO)) {
+            if (steadyStateReached == YES && !(transient == YES || scanning == YES)) {
                 if (timeStep >= coupledMinIter) break;
             }
         } // Time step within an interval
@@ -958,7 +959,7 @@ jump:
         if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
             _when = (solution.solutionInfo)[@"invoke solution computer"];
-            if ([_when isEqualToString:@"after simulation"] || [_when isEqualToString:@"after all"]) {
+            if ([_when isEqualToString:@"after simulation"] == YES || [_when isEqualToString:@"after all"] == YES) {
                 [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
             }
@@ -1047,7 +1048,7 @@ jump:
             // Set the current mesh pointer in the model
             [meshUtilities setCurrentMesh:mesh inModel:model];
             
-            // Use number of time steps or number of eigenmodes
+            // Use number of time steps or number of eigen modes
             timeSteps = _totalTimeSteps;
             for (FEMSolution *solution in model.solutions) {
                 if (solution.mesh == mesh) {
@@ -1096,11 +1097,13 @@ jump:
                                             varContainers->Values[k] = atan2(cimag(varContainers->EigenVectors[j][k]), creal(varContainers->EigenVectors[j][k]));
                                         }
                                     } else {
-                                        varContainers->CValues = malloc ( varContainers->size2EigenVectors * sizeof ( double * ));
+                                        if (varContainers->CValues == NULL) {
+                                            varContainers->CValues = malloc ( varContainers->size2EigenVectors * sizeof ( double complex * ));
+                                            varContainers->sizeCValues = varContainers->size2EigenVectors;
+                                        }
                                         for (k=0; k<varContainers->size2EigenVectors; k++) {
                                             varContainers->CValues[k] = &varContainers->EigenVectors[j][k];
                                         }
-                                        varContainers->sizeCValues = varContainers->size2EigenVectors;
                                     }
                                 }
                             }
@@ -1132,6 +1135,7 @@ jump:
                 varContainers = variable.getContainers;
                 if (varContainers->EigenValues != NULL) {
                     memset( varContainers->Values, 0.0, varContainers->sizeValues*sizeof(double) );
+                    free(varContainers->CValues);
                     varContainers->CValues = NULL;
                 }
             }
@@ -1196,13 +1200,19 @@ jump:
             } else {
                 errorfunct("FEMJob:FEMJob_saveResult", "Can't create result file.");
             }
-        } else {
-            outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
+        } else { // File already exists, erase it and start from scratch
+            [fileManager removeItemAtPath:fName error:nil];
+            if ([fileManager createFileAtPath:fName contents:nil attributes:nil] == YES) {
+                outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
+            } else {
+                errorfunct("FEMJob:FEMJob_saveResult", "Can't create result file.");
+            }
         }
         // The first time, we start by writing the header
         [self FEMJob_writeString:@"ACSII 1" toFileHandle:outputFileHandle]; [outputFileHandle writeData:newLineBuff];
         [self FEMJob_writeString:@"!File started at: " toFileHandle:outputFileHandle];
-        [self FEMJob_writeBytes:dateAndTime() length:sizeof(dateAndTime())*20 toFileHandle:outputFileHandle];
+        NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
+        [self FEMJob_writeString:dateString toFileHandle:outputFileHandle];
         [outputFileHandle writeData:newLineBuff];
         
         [self FEMJob_writeString:@"Degrees of freedom:" toFileHandle:outputFileHandle];
@@ -1212,30 +1222,29 @@ jump:
             if (variable.output == YES) {
                 varContainers = variable.getContainers;
                 if (variable.dofs > 1 && varContainers->sizeValues > 1) {
-                    if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                    if ( [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                         [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
-                        
+                        [outputFileHandle writeData:newLineBuff];
                     }
                 }
             }
-            [outputFileHandle writeData:newLineBuff];
         }
         
         for (FEMVariable *variable in mesh.variables) {
             if (variable.output == YES) {
                 varContainers = variable.getContainers;
                 if (variable.dofs == 1 && varContainers->sizeValues > 1) {
-                    if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                    if ([[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                         [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
                         if (variable.dofs == 1) dofs++;
+                        [outputFileHandle writeData:newLineBuff];
                     }
                 }
             }
-            [outputFileHandle writeData:newLineBuff];
         }
         [self FEMJob_writeString:@"Total Dofs: " toFileHandle:outputFileHandle];
         [self FEMJob_writeInteger:dofs toFileHandle:outputFileHandle];
@@ -1259,7 +1268,7 @@ jump:
     for (FEMVariable *variable in mesh.variables) {
         varContainers = variable.getContainers;
         if (variable.output == YES && variable.dofs == 1 && varContainers->sizeValues > 1) {
-            if ([variable.name isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+            if ([[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                 if (saveAll == YES || variable.valuesChanged == YES) {
                     [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle];
                     [outputFileHandle writeData:newLineBuff];
@@ -1318,8 +1327,8 @@ jump:
                         if (varContainers->Perm != NULL) k = varContainers->Perm[i];
                         if (k >= 0) {
                             [self FEMJob_writeDouble:varContainers->Values[k] toFileHandle:outputFileHandle];
+                            [outputFileHandle writeData:newLineBuff];
                         }
-                        [outputFileHandle writeData:newLineBuff];
                     }
                     variable.valuesChanged = NO;
                 }
@@ -1369,7 +1378,7 @@ jump:
                     [_outputName setString:outputFile];
                 }
                 
-                for (FEMSolution *solution in model.solution) {
+                for (FEMSolution *solution in model.solutions) {
                     if (solution.mesh == mesh) {
                         eigenAnal = [(solution.solutionInfo)[@"eigen analysis"] boolValue];
                         eigenAnal = (eigenAnal == YES|| [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
@@ -1603,7 +1612,9 @@ jump:
                 self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             }
             
-            // TODO: Add support for reloading MDF
+            // TODO: Add support for reloading MDF if we really need that
+            // For now, we always get out of the loop
+            if(YES) break;
             
             for (FEMMesh *mesh in self.model.meshes) {
                 mesh.savesDone = 0;
@@ -1630,6 +1641,7 @@ jump:
             _sizeTimeSteps = listBuffer.m;
             memcpy(_timeSteps, listBuffer.ivector, listBuffer.m*sizeof(int));
             free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
+            listBuffer.ivector = NULL;
             
             found = [listUtilities listGetConstRealArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step size" buffer:&listBuffer];
             if (found == NO) {
@@ -1653,6 +1665,7 @@ jump:
                     }
                 }
                 free_dmatrix(listBuffer.matrix, 0, listBuffer.m-1, 0, listBuffer.n-1);
+                listBuffer.matrix = NULL;
             }
             
             _timeIntervals = _sizeTimeSteps;
@@ -1691,7 +1704,7 @@ jump:
             _sizeSSize = 1;
             
             _steadyIt = doublevec(0, 0);
-            _sizeSStep = 1;
+            _sizeSteadyIt = 1;
             
             _nonLinIt = doublevec(0, 0);
             _sizeNonLinIt = 1;
@@ -1730,6 +1743,7 @@ jump:
             _sizeOutputIntervals = listBuffer.m;
             memcpy(_outputIntervals, listBuffer.ivector, listBuffer.m*sizeof(int));
             free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
+            listBuffer.ivector = NULL;
         }
         
         // Initial conditions
@@ -1783,10 +1797,8 @@ jump:
                 if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                     when = (solution.solutionInfo)[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"before saving"] == YES) ? YES : NO;
-                    if (execThis == YES) {
-                        [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
-                    }
                 }
+                if (execThis == YES) [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
             }
             
             [self FEMJob_saveToPostModel:self.model currentStep:0];
@@ -1799,9 +1811,7 @@ jump:
                     when = (solution.solutionInfo)[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"after saving"] == YES) ? YES : NO;
                 }
-                if (execThis == YES) {
-                    [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
-                }
+                if (execThis == YES) [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
             }
         }
         
@@ -1812,7 +1822,6 @@ jump:
     // THIS IS THE END LITTLE APPRENTICE, SAY GOOD BYE TO THE DARK SAMOURAI...
     // -----------------------------------------------------------------------
     if (initialize != 1) NSLog(@"JOB: *** ALL DONE ***\n");
-    if (initialize <= 0) [self.model deallocation];
     
     // TODO: add support for parallel runs
     NSLog(@"JOB: The end.\n");

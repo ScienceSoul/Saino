@@ -14,7 +14,6 @@
 
 @interface FEMKernel : NSObject {
     
-    int _coordinateSystemDimension;
     int _normalTangentialNumberOfNodes;
     int _size1NtZeroingDone;
     int _size2NtZeroingDone;
@@ -44,7 +43,6 @@
     int _outputPE;
 }
 
-@property(nonatomic, assign) int coordinateSystemDimension;
 @property(nonatomic, assign) int normalTangentialNumberOfNodes;
 @property(nonatomic, assign) int size1NtZeroingDone;
 @property(nonatomic, assign) int size2NtZeroingDone;
@@ -95,7 +93,7 @@
 -(void)getScalarLocalField:(double *)field sizeField:(int)sizeField name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep;
 -(void)getVectorLocalField:(double **)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep;
 -(int **)getEdgeMap:(int)elementFamily;
--(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes resultSize:(int *)indSize;
+-(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes sizeVector:(int)size indexSize:(int *)indexSize;
 -(int)getBodyForceIDForElement:(Element_t *)element model:(FEMModel *)model;
 -(int)getMaterialIDForElement:(Element_t *)element model:(FEMModel *)model;
 -(int)getEquationIDForElement:(Element_t *)element model:(FEMModel *)model;
@@ -105,12 +103,12 @@
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution;
 -(void)setMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
 -(void)addToMatrixElementForSolution:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)uSolution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSMutableString *)name functionIntegral:(double *)integral;
+-(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSString *)name functionIntegral:(double *)integral;
 -(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force;
 -(void)solveWithLapackMatrix:(double *)a andVector:(double *)x size:(int)n leadingDimension:(int)lda;
 -(void)solveLinearSystemWithMatrix:(double **)a andVector:(double *)x size:(int)n leadingDimension:(int)lda;
--(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof;
--(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset;
+-(void)setNodalLoads:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSString *)name orderOfDofs:(int)dof;
+-(void)setDirichletBoundaries:(FEMModel *)model inSolution:(FEMSolution *)solution variableName:(NSMutableString *)name orderOfDofs:(int)dof permutationOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix;
 -(void)scaleLinearSystem:(FEMSolution *)solution matrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x diagScaling:(double *)diagScaling applyScaling:(BOOL *)applyScaling rhsScaling:(BOOL *)rhsScaling;
 -(void)backScaleLinearSystem:(FEMSolution *)solution matrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x diagScaling:(double *)diagScaling sizeOFDiagScaling:(int *)sizeOfDiagScaling;
 -(void)matrixVectorMultplyInSolution:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
@@ -139,9 +137,9 @@
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate;
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double **)cstiff complexForce:(double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate;
 -(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model;
--(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset;
+-(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix;
 
--(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0;
+-(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 sizeValues0:(int *)sizeValues0;
 -(void)iterativeSolveMatrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b dimensions:(int *)ndim solution:(FEMSolution *)solution;
 -(void)solveSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution  model:(FEMModel *)model;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)model backRorateNT:(BOOL *)backRorateNT;

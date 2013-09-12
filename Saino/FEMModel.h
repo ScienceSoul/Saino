@@ -32,8 +32,8 @@
     int _totalMatrixElements;
     int _maxElementNodes;
     
-    id _mesh;
-    id _solution;
+    id __weak _mesh;
+    id __weak _solution;
     NSMutableString *_outputPath;
     NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
     NSArray *_solutions;                            // Array of all solutions in the model
@@ -71,8 +71,8 @@
 @property(nonatomic, assign) int coordinates;
 @property(nonatomic, assign) int totalMatrixElements;
 @property(nonatomic, assign) int maxElementNodes;
-@property(nonatomic, strong) id mesh;
-@property(nonatomic, strong) id solution;
+@property(nonatomic, weak) id mesh;
+@property(nonatomic, weak) id solution;
 @property(nonatomic, strong) NSMutableString *outputPath;
 @property(nonatomic, strong) NSArray *boundaryID;
 @property(nonatomic, strong) NSArray *solutions;
@@ -100,6 +100,10 @@
 
 // Nodes getter
 -(Nodes_t *)getNodes;
+
+// Elements and nodes setters
+-(void)SetElements:(Element_t *)elements;
+-(void)setNodes:(Nodes_t *)nodes;
 
 -(modelArraysContainer *)getContainers;
 

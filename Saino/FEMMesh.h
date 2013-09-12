@@ -29,7 +29,7 @@
     int _maxFaceDofs; 
     int _maxBdofs;
     int _numberOfPassiveBCs;
-    BOOL _savesDone;
+    int _savesDone;
     BOOL _outputActive;
     BOOL _adaptiveMesh;
     BOOL _changed;
@@ -64,7 +64,7 @@
 @property(nonatomic, assign) int maxFaceDofs;
 @property(nonatomic, assign) int maxBdofs;
 @property(nonatomic, assign) int numberOfPassiveBCs;
-@property(nonatomic, assign, getter = isSavesDone) BOOL savesDone;
+@property(nonatomic, assign) int savesDone;
 @property(nonatomic, assign, getter = isOutputActive) BOOL outputActive;
 @property(nonatomic, assign, getter = isAdaptiveMesh) BOOL adaptiveMesh;
 @property(nonatomic, assign, getter = isChanged) BOOL changed;

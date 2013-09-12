@@ -744,7 +744,6 @@ enum {
     
     if (phaseChangeIntervals.matrix != NULL) {
         free_dmatrix(phaseChangeIntervals.matrix, 0, phaseChangeIntervals.m-1, 0, phaseChangeIntervals.n-1);
-        phaseChangeIntervals.matrix = NULL;
     }
     
     return failure;
@@ -1892,6 +1891,7 @@ enum {
                     if (bubbles == YES) {
                         [kernel condensateStiff:_stiff force:_force numberOfNodes:n force1:_timeForce];
                     }
+                    
                     [kernel defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:&saveBulk];
                 }
             } // Bulk elements
@@ -1940,7 +1940,7 @@ enum {
             [kernel defaultFinishAssemblySolution:solution model:model];
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
             
-            [kernel dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL];
+            [kernel dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
             // Solve the system and check for convergence
             at = cputime() -  at;
@@ -1968,6 +1968,7 @@ enum {
                     [solution.solutionInfo setObject:@NO forKey:@"skip compute nonlinear change"];
                 } else {
                     [kernel solveSystemMatrix:solution.matrix rhs:matContainers->RHS result:_temperature norm:&norm dofs:1 solution:solution model:model];
+                    memcpy(_yy, _temperature, tempContainers->sizeValues*sizeof(double));
                 }
                 
                 if (smartHeaterAverage == NO) {
@@ -2009,7 +2010,7 @@ enum {
                     }
                     
                     // The change is computed seperately for the controlled temperature field
-                    [kernel computeChange:solution model:model isSteadyState:NO nsize:&_localNodes values:_temperature values0:NULL];
+                    [kernel computeChange:solution model:model isSteadyState:NO nsize:&_localNodes values:_temperature values0:NULL sizeValues0:NULL];
                     norm = solution.variable.norm;
                 }
                 
@@ -2029,7 +2030,7 @@ enum {
                     if (_smarterHeaters[i]) _heaterScaling[i] = _powerScaling;
                     NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater for body %d\n", i+1);
                     if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater type: smart heater\n");
-                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: hater type: integral heater\n");
+                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater type: integral heater\n");
                     
                     NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater volutme (m^3): %f\n", _heaterArea[i]);
                     s = _heaterSource[i] * _heaterScaling[i];
@@ -2072,8 +2073,8 @@ enum {
             }
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: result norm: %f\n", norm);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: relative change: %f\n", relativeChange);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: result norm: %e\n", norm);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: relative change: %e\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol && (smartHeaterControl == NO || smartTolReached == YES)) break;
@@ -2103,10 +2104,9 @@ enum {
         }
         
         // Compute cumulative time done by now and time remaining
-        if (transient == NO) {
-            cumulativeTime = cumulativeTime + _dt;
-            _dt = timeStep - cumulativeTime;
-        }
+        if (transient == NO) break;
+        cumulativeTime = cumulativeTime + _dt;
+        _dt = timeStep - cumulativeTime;
         
         if (buffer.vector != NULL) {
             free_dvector(buffer.vector, 0, buffer.m-1);

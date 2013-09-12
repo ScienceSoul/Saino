@@ -142,7 +142,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Iterative Methods", 1993.
  
     All matrix-vector operations are done externally, so we don't need to know about the matrix structure (sparse or dense).
-    Memory allocationf for the work array has also been done externally.
+    Memory allocation for the work array has also been done externally.
  
     Double precision version.
  
@@ -383,7 +383,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %lf\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e\n", iter_count, residual);
             }
         }
         
@@ -410,7 +410,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %lf\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
