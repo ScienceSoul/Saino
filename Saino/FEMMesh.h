@@ -30,6 +30,7 @@
     int _maxBdofs;
     int _numberOfPassiveBCs;
     int _savesDone;
+    int _numberOfColors;
     BOOL _outputActive;
     BOOL _adaptiveMesh;
     BOOL _changed;
@@ -43,9 +44,10 @@
     Factors_t *_viewFactors;
     
     NSMutableString *_name;
-    NSMutableArray *_variables;         // Mutable array of FEMVariable classes
-    NSMutableArray *_projectors;        // Mutable array of FEMProjector classes
-    NSMutableArray *_next;              // Mutable array of FEMMesh classes
+    NSMutableArray *_variables;              // Mutable array of FEMVariable classes
+    NSMutableArray *_projectors;             // Mutable array of FEMProjector classes
+    NSMutableArray *_next;                   // Mutable array of FEMMesh classes
+    NSMutableArray *_elementsPerColor;       // Number of elements for a given color
     FEMMesh *_parent;
     FEMMesh *_child;
 }
@@ -65,6 +67,7 @@
 @property(nonatomic, assign) int maxBdofs;
 @property(nonatomic, assign) int numberOfPassiveBCs;
 @property(nonatomic, assign) int savesDone;
+@property(nonatomic, assign) int numberOfColors;
 @property(nonatomic, assign, getter = isOutputActive) BOOL outputActive;
 @property(nonatomic, assign, getter = isAdaptiveMesh) BOOL adaptiveMesh;
 @property(nonatomic, assign, getter = isChanged) BOOL changed;
@@ -73,6 +76,7 @@
 @property(nonatomic, strong) NSMutableArray *variables;
 @property(nonatomic, strong) NSMutableArray *projectors;
 @property(nonatomic, strong) NSMutableArray *next;
+@property(nonatomic, strong) NSMutableArray *elementsPerColor;
 @property(nonatomic, strong) FEMMesh *parent;
 @property(nonatomic, strong) FEMMesh *child;
 

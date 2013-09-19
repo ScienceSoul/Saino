@@ -1222,7 +1222,7 @@ jump:
             if (variable.output == YES) {
                 varContainers = variable.getContainers;
                 if (variable.dofs > 1 && varContainers->sizeValues > 1) {
-                    if ( [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                    if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                         [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
@@ -1236,7 +1236,7 @@ jump:
             if (variable.output == YES) {
                 varContainers = variable.getContainers;
                 if (variable.dofs == 1 && varContainers->sizeValues > 1) {
-                    if ([[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                    if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                         [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [self FEMJob_writeString:@" :fs" toFileHandle:outputFileHandle];
@@ -1268,7 +1268,7 @@ jump:
     for (FEMVariable *variable in mesh.variables) {
         varContainers = variable.getContainers;
         if (variable.output == YES && variable.dofs == 1 && varContainers->sizeValues > 1) {
-            if ([[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+            if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
                 if (saveAll == YES || variable.valuesChanged == YES) {
                     [self FEMJob_writeString:variable.name toFileHandle:outputFileHandle];
                     [outputFileHandle writeData:newLineBuff];

@@ -396,6 +396,8 @@
     [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
     
+    [listUtilities addLogicalInClassList:self.simulation theVariable:@"parallel assembly" withValue:YES];
+    
     int *intervals = intvec(0, 0);
     intervals[0] = 1;
     [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"output intervals" withValues:intervals size:1];

@@ -170,21 +170,32 @@ typedef struct {
     
 } PElementDefs_t;
 
+typedef struct {
+    float red;              // The red component of the color object, specified as a value from 0.0 to 1.0.
+    float green;            // The green component of the color object, specified as a value from 0.0 to 1.0.
+    float blue;             // The blue component of the color object, specified as a value from 0.0 to 1.0.
+    int colorIndex;
+} RGBColors;
+
 typedef struct Element_t {
     
     ElementType_t Type;
     BoundaryInfo_t *BoundaryInfo;
     PElementDefs_t *Pdefs;                         // Initialize to NULL somewhere!!
     
+    RGBColors color;                               // Color of the element
+    
+    bool colored;
     bool copy;
     int *NodeIndexes, *EdgeIndexes, *FaceIndexes, 
         *BubbleIndexes, *DGIndexes;                // Initialize that to NULL somewhere!!
     
     int sizeNodeIndexes, sizeEdgeIndexes,
-        sizeFaceIndexes, sizeBubbleIndexes, sizeDGIndexes;
+        sizeFaceIndexes, sizeBubbleIndexes,
+        sizeDGIndexes;
     int BodyID;
     int Splitted;
-    int ElementIndex, // Index counted from 1 to n
+    int ElementIndex,                              // Index counted from 1 to n
         PartIndex, NDOFs, BDOFs, DGDOFs;
     
     double StabilizationMK, hK;

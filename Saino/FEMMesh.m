@@ -21,6 +21,8 @@
 -(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs;
 -(void)FEMMesh_convertToACTetra:(Element_t *)tetra;
 -(void)FEMMesh_deallocateQuadrantTree:(Quadrant_t *)root;
+-(void)FEMMesh_generateColor:(RGBColors *)color;
+-(void)FEMMesh_colorMesh;
 @end
 
 @implementation FEMMesh
@@ -235,6 +237,59 @@
     free(root);
 }
 
+-(void)FEMMesh_generateColor:(RGBColors *)color {
+    
+    int red = arc4random() % 256;
+    int green = arc4random() % 256;
+    int blue = arc4random() % 256;
+    
+    color->red = (float)red / 255.0;
+    color->green = (float)green / 255.0;
+    color->blue = (float)blue / 255.0;
+}
+
+-(void)FEMMesh_colorMesh {
+    
+    int numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
+    RGBColors currentColor;
+    BOOL isShared;
+    
+    while (numberOfColoredElements != self.numberOfBulkElements) {
+        [self FEMMesh_generateColor:&currentColor];
+        numberOfElementsWithCurrentColor = 0;
+                
+        for (int i=0; i<self.numberOfBulkElements; i++) {
+            if (!_elements[i].colored) {
+                // Check if neighbors do not have current color
+                numberOfSameColors = 0;
+                for (int j=0; j<self.numberOfBulkElements; j++) {
+                    isShared = NO;
+                    for (int k=0; k<_elements[i].Type.NumberOfNodes; k++) {
+                        if (_elements[i].NodeIndexes[k] == _elements[j].NodeIndexes[k]) {
+                            isShared = YES;
+                            break;
+                        }
+                    }
+                    if (isShared == YES) {
+                        if (_elements[j].color.red == currentColor.red && _elements[j].color.green == currentColor.green && _elements[j].color.blue == currentColor.blue) numberOfSameColors++;
+                    }
+                }
+                if (numberOfSameColors == 0) { // No neighbors with current color so color the element with current color
+                    _elements[i].color.red = currentColor.red;
+                    _elements[i].color.green = currentColor.green;
+                    _elements[i].color.blue = currentColor.blue;
+                    _elements[i].color.colorIndex = self.numberOfColors;
+                    _elements[i].colored = true;
+                    numberOfColoredElements++;
+                    numberOfElementsWithCurrentColor++;
+                }
+            }
+        }
+        [self.elementsPerColor addObject:@(numberOfElementsWithCurrentColor)];
+        self.numberOfColors++;
+    }
+}
+
 #pragma mark Public methods
 
 @synthesize dimension = _dimension;
@@ -252,6 +307,7 @@
 @synthesize maxBdofs = _maxBdofs;
 @synthesize numberOfPassiveBCs = _numberOfPassiveBCs;
 @synthesize savesDone = _savesDone;
+@synthesize numberOfColors = _numberOfColors;
 @synthesize outputActive = _outputActive;
 @synthesize adaptiveMesh = _adaptiveMesh;
 @synthesize changed = _changed;
@@ -260,6 +316,7 @@
 @synthesize variables = _variables;
 @synthesize projectors = _projectors;
 @synthesize next = _next;
+@synthesize elementsPerColor = _elementsPerColor;
 @synthesize parent = _parent;
 @synthesize child = _child;
 
@@ -287,6 +344,7 @@
         _maxElementNodes = 0;
         _numberOfPassiveBCs = 0;
         _savesDone = 0;
+        _numberOfColors = 0;
                 
         _elements = NULL;
         _edges = NULL;
@@ -297,6 +355,7 @@
         
         _variables = [[NSMutableArray alloc] init];
         _projectors = [[NSMutableArray alloc] init];
+        _elementsPerColor = [[NSMutableArray alloc] init];
         
         _parent = nil;
         _child = nil;
@@ -998,6 +1057,19 @@
     }
     
     model.dimension = saveDim;
+    
+    // Color the mesh if parallel assembly is required
+    if ([listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"parallel assembly" info:&found] == YES) {
+        NSLog(@"FEMMesh:loadMeshForModel: coloring the mesh...\n");
+        [self FEMMesh_colorMesh];
+        NSLog(@"FEMMesh:loadMeshForModel: number of colors: %d\n", self.numberOfColors);
+        NSLog(@"FEMMesh:loadMeshForModel: number of elements per color before optimization:\n");
+        i = 1;
+        for (NSNumber *number in self.elementsPerColor) {
+            NSLog(@"color %d : number of elements: %d\n", i, [number intValue]);
+            i++;
+        }
+    }
     
     [pMaps deallocation];
     free_ivector(nodeTags, 0, self.numberOfNodes-1); // TODO: This should be not deallocated if parallel mesh is supported
