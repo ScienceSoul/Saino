@@ -2933,7 +2933,7 @@
 -(BOOL)plugInClassIsValid:(Class)plugInClass {
     
     if ([plugInClass conformsToProtocol:@protocol(SainoFieldSolutionsComputing)] == YES) {
-        if ([plugInClass instancesRespondToSelector:@selector(fieldSolutionComputer)] == YES) {
+        if ([plugInClass instancesRespondToSelector:@selector(fieldSolutionComputer:model:timeStep:transientSimulation:)] == YES) {
             return YES;
         }
     }
