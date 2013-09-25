@@ -250,19 +250,20 @@
 
 -(void)FEMMesh_colorMesh {
     
-    int numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
+    int i, j, numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
     RGBColors currentColor;
     BOOL isShared;
     
+    // Color the elements with the greedy algorithm First Fit (FF)
     while (numberOfColoredElements != self.numberOfBulkElements) {
         [self FEMMesh_generateColor:&currentColor];
         numberOfElementsWithCurrentColor = 0;
                 
-        for (int i=0; i<self.numberOfBulkElements; i++) {
+        for (i=0; i<self.numberOfBulkElements; i++) {
             if (!_elements[i].colored) {
                 // Check if neighbors do not have current color
                 numberOfSameColors = 0;
-                for (int j=0; j<self.numberOfBulkElements; j++) {
+                for (j=0; j<self.numberOfBulkElements; j++) {
                     isShared = NO;
                     for (int k=0; k<_elements[i].Type.NumberOfNodes; k++) {
                         if (_elements[i].NodeIndexes[k] == _elements[j].NodeIndexes[k]) {
@@ -285,8 +286,91 @@
                 }
             }
         }
-        [self.elementsPerColor addObject:@(numberOfElementsWithCurrentColor)];
+        NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:@(numberOfElementsWithCurrentColor), @(self.numberOfColors), @(currentColor.red), @(currentColor.green), @(currentColor.blue), nil];
+        [self.colors addObject:color];
         self.numberOfColors++;
+    }
+    
+    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of colors: %d\n", self.numberOfColors);
+    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set before optimization:\n");
+    i = 1;
+    for (NSMutableArray *array in self.colors) {
+        NSLog(@"color %d : number of elements: %d\n", i, [array[0] intValue]);
+        i++;
+    }
+    
+    // The FF algorithm produces an unbalanced distribution of elements per color set since the initial sets
+    // are the first to get the elements. The following optimization redistributes elements from "rish" sets to "poor" sets
+    int meanValue = self.numberOfBulkElements/self.numberOfColors;
+    int kk = self.numberOfColors-1; // Start with the poorest set and then up to the richest set
+    for (NSMutableArray *color in self.colors) {
+        if ([color[0] intValue] > meanValue) {
+            int k = [color[1] intValue];
+            while ([color[0] intValue] > meanValue) {
+                for (i=0; i<self.numberOfBulkElements; i++) {
+                    if (_elements[i].color.colorIndex == k) {
+                        isShared = NO;
+                        for (j=0; j<self.numberOfBulkElements; j++) {
+                            if (_elements[j].color.colorIndex == kk) {
+                                for (int l=0; l<_elements[j].Type.NumberOfNodes; l++) {
+                                    if (_elements[i].NodeIndexes[l] == _elements[j].NodeIndexes[l]) {
+                                        isShared = YES;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (isShared == YES) break;
+                        }
+                        NSMutableArray *poorColor = self.colors[kk];
+                        if (isShared == NO) {
+                            _elements[i].color.red = [poorColor[2] doubleValue];
+                            _elements[i].color.green = [poorColor[3] doubleValue];
+                            _elements[i].color.blue = [poorColor[4] doubleValue];
+                            _elements[i].color.colorIndex = [poorColor[1] intValue];
+                            color[0] = @([color[0] intValue]-1);
+                            poorColor[0] = @([poorColor[0] intValue]+1);
+                        }
+                        if ([poorColor[0] intValue] >= (meanValue-DBL_EPSILON) && [poorColor[0] intValue] <= (meanValue+DBL_EPSILON)) {
+                            kk--;
+                            break;
+                        }
+                        if ([color[0] intValue] <= meanValue) break;
+                    }
+                }
+                if (i == self.numberOfBulkElements) break; // Already done all elements for given color set so go to next set
+            }
+        }
+    }
+    
+    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set after optimization:\n");
+    i = 1;
+    for (NSMutableArray *array in self.colors) {
+        NSLog(@"color %d : number of elements: %d\n", i, [array[0] intValue]);
+        i++;
+    }
+    
+    // Makes a last check to be sure...
+    isShared = NO;
+    for (NSMutableArray *color in self.colors) {
+         for (i=0; i<self.numberOfBulkElements; i++) {
+             if (_elements[i].color.colorIndex == [color[1] intValue]) {
+                  for (j=0; j<self.numberOfBulkElements; j++) {
+                      if (_elements[i].color.colorIndex == _elements[j].color.colorIndex && i != j) {
+                          for (int l=0; l<_elements[j].Type.NumberOfNodes; l++) {
+                              if (_elements[i].NodeIndexes[l] == _elements[j].NodeIndexes[l]) {
+                                  isShared = YES;
+                                  break;
+                              }
+                          }
+                          if (isShared == YES) break;
+                      }
+                  }
+                 if (isShared == YES) {
+                     NSLog(@"FEMMesh:FEMMesh_colorMesh: elements %d and %d have similar color but shares nodes.\n", i, j);
+                     errorfunct("FEMMesh:FEMMesh_colorMesh", "Programm terminating now...");
+                 }
+             }
+         }
     }
 }
 
@@ -316,7 +400,7 @@
 @synthesize variables = _variables;
 @synthesize projectors = _projectors;
 @synthesize next = _next;
-@synthesize elementsPerColor = _elementsPerColor;
+@synthesize colors = _colors;
 @synthesize parent = _parent;
 @synthesize child = _child;
 
@@ -355,7 +439,7 @@
         
         _variables = [[NSMutableArray alloc] init];
         _projectors = [[NSMutableArray alloc] init];
-        _elementsPerColor = [[NSMutableArray alloc] init];
+        _colors = [[NSMutableArray alloc] init];
         
         _parent = nil;
         _child = nil;
@@ -1062,13 +1146,6 @@
     if ([listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"parallel assembly" info:&found] == YES) {
         NSLog(@"FEMMesh:loadMeshForModel: coloring the mesh...\n");
         [self FEMMesh_colorMesh];
-        NSLog(@"FEMMesh:loadMeshForModel: number of colors: %d\n", self.numberOfColors);
-        NSLog(@"FEMMesh:loadMeshForModel: number of elements per color before optimization:\n");
-        i = 1;
-        for (NSNumber *number in self.elementsPerColor) {
-            NSLog(@"color %d : number of elements: %d\n", i, [number intValue]);
-            i++;
-        }
     }
     
     [pMaps deallocation];

@@ -47,7 +47,8 @@
     NSMutableArray *_variables;              // Mutable array of FEMVariable classes
     NSMutableArray *_projectors;             // Mutable array of FEMProjector classes
     NSMutableArray *_next;                   // Mutable array of FEMMesh classes
-    NSMutableArray *_elementsPerColor;       // Number of elements for a given color
+    NSMutableArray *_colors;                 // Mutable array of mutable arrays for each color. Each array stores the number of elements for that color,
+                                             // the color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
     FEMMesh *_parent;
     FEMMesh *_child;
 }
@@ -76,7 +77,7 @@
 @property(nonatomic, strong) NSMutableArray *variables;
 @property(nonatomic, strong) NSMutableArray *projectors;
 @property(nonatomic, strong) NSMutableArray *next;
-@property(nonatomic, strong) NSMutableArray *elementsPerColor;
+@property(nonatomic, strong) NSMutableArray *colors;
 @property(nonatomic, strong) FEMMesh *parent;
 @property(nonatomic, strong) FEMMesh *child;
 

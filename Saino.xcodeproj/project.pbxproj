@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
+		73051E3117F2D539001861D8 /* kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 73051E3017F2D539001861D8 /* kernel.cl */; };
 		730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 7308738F1509F5BF001DE27F /* FEMParallelMPI.m */; };
 		7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7310B08913B0BCD100F5E96B /* Accelerate.framework */; };
 		7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7315512113583FFD004CCD09 /* Cocoa.framework */; };
@@ -95,6 +97,8 @@
 
 /* Begin PBXFileReference section */
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = file; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
+		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
+		73051E3017F2D539001861D8 /* kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = kernel.cl; sourceTree = "<group>"; };
 		7308738E1509F5BF001DE27F /* FEMParallelMPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMParallelMPI.h; sourceTree = "<group>"; };
 		7308738F1509F5BF001DE27F /* FEMParallelMPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMParallelMPI.m; sourceTree = "<group>"; };
 		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
@@ -253,6 +257,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */,
 				7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */,
 				7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */,
 			);
@@ -282,6 +287,14 @@
 			name = "Saino Constructor classes";
 			sourceTree = "<group>";
 		};
+		73051E2F17F2D4E4001861D8 /* OpenCL kernels */ = {
+			isa = PBXGroup;
+			children = (
+				73051E3017F2D539001861D8 /* kernel.cl */,
+			);
+			name = "OpenCL kernels";
+			sourceTree = "<group>";
+		};
 		7315511213583FFD004CCD09 = {
 			isa = PBXGroup;
 			children = (
@@ -304,6 +317,7 @@
 		7315512013583FFD004CCD09 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				73051E2D17F2B582001861D8 /* OpenCL.framework */,
 				7315512113583FFD004CCD09 /* Cocoa.framework */,
 				7315512313583FFD004CCD09 /* Other Frameworks */,
 			);
@@ -326,6 +340,7 @@
 			children = (
 				73456ED114ECF82C00ECD602 /* Docs */,
 				7315515A1358610F004CCD09 /* FEM Classes */,
+				73051E2F17F2D4E4001861D8 /* OpenCL kernels */,
 				73155155135848B4004CCD09 /* Low level C routines */,
 				7315513313583FFD004CCD09 /* SainoAppDelegate.h */,
 				7315513413583FFD004CCD09 /* SainoAppDelegate.m */,
@@ -693,6 +708,7 @@
 				73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */,
 				737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */,
 				73F2105514E3D41000D52906 /* memory.c in Sources */,
+				73051E3117F2D539001861D8 /* kernel.cl in Sources */,
 				73456ECD14ECDBDC00ECD602 /* FEMHUTIter.m in Sources */,
 				73A4696915076F8500BDDEA6 /* Lists.c in Sources */,
 				730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */,
@@ -823,9 +839,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = "";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -847,8 +863,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				SDKROOT = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -864,6 +880,7 @@
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
 				INFOPLIST_FILE = "Saino/Saino-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OPENCL_COMPILER_VERSION = CL1.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -882,6 +899,7 @@
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
 				INFOPLIST_FILE = "Saino/Saino-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OPENCL_COMPILER_VERSION = CL1.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
