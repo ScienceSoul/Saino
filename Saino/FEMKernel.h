@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <OpenCL/OpenCL.h>
 
 #import "FEMModel.h"
 #import "FEMSolution.h"
@@ -144,9 +145,14 @@
 -(void)solveSystemMatrix:(FEMMatrix *)matrix rhs:(double *)b result:(double *)x norm:(double *)norm dofs:(int)dofs solution:(FEMSolution *)solution  model:(FEMModel *)model;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)model backRorateNT:(BOOL *)backRorateNT;
 
+// Utility method in matrix-vector multiplication
 -(double)stopc:(FEMMatrix *)matrix multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar;
 
+// Activating solution and starting the calculation
 -(void)activateSolution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(double)dt transientSimulation:(BOOL)transient;
 -(void)solveEquationsModel:(FEMModel *)model timeStep:(double *)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL *)steadyStateReached realTimeStep:(int *)realTimeStep;
+
+// OpenCL stuff
+-(dispatch_queue_t)getDispatchQueueAndInfoForDeviceType:(NSString *)deviceType;
 
 @end

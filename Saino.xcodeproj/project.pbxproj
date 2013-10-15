@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
-		73051E3117F2D539001861D8 /* kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 73051E3017F2D539001861D8 /* kernel.cl */; };
+		73051E3117F2D539001861D8 /* heatSolutiomAssemblyKernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 73051E3017F2D539001861D8 /* heatSolutiomAssemblyKernel.cl */; };
 		730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 7308738F1509F5BF001DE27F /* FEMParallelMPI.m */; };
 		7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7310B08913B0BCD100F5E96B /* Accelerate.framework */; };
 		7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7315512113583FFD004CCD09 /* Cocoa.framework */; };
@@ -30,6 +30,7 @@
 		7320677D169C00DF00BAE816 /* FEMBandwidthOptimize.m in Sources */ = {isa = PBXBuildFile; fileRef = 7320677C169C00DE00BAE816 /* FEMBandwidthOptimize.m */; };
 		7320CC62159970510050D3B6 /* NodeCompare.c in Sources */ = {isa = PBXBuildFile; fileRef = 7320CC61159970510050D3B6 /* NodeCompare.c */; };
 		7320CC66159C6B9D0050D3B6 /* SIOMeshIO.m in Sources */ = {isa = PBXBuildFile; fileRef = 7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */; };
+		7323550C17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m in Sources */ = {isa = PBXBuildFile; fileRef = 7323550B17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m */; };
 		73275A3913C2BD0D006EC4BA /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 73275A3713C2BD0D006EC4BA /* Utils.c */; };
 		73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 73281C6314D2898100854B7D /* FEMPrecondition.m */; };
 		7328669615C2744B000E1128 /* FEMVariable.m in Sources */ = {isa = PBXBuildFile; fileRef = 7328669515C2744B000E1128 /* FEMVariable.m */; };
@@ -98,7 +99,7 @@
 /* Begin PBXFileReference section */
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = file; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
-		73051E3017F2D539001861D8 /* kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = kernel.cl; sourceTree = "<group>"; };
+		73051E3017F2D539001861D8 /* heatSolutiomAssemblyKernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = heatSolutiomAssemblyKernel.cl; sourceTree = "<group>"; };
 		7308738E1509F5BF001DE27F /* FEMParallelMPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMParallelMPI.h; sourceTree = "<group>"; };
 		7308738F1509F5BF001DE27F /* FEMParallelMPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMParallelMPI.m; sourceTree = "<group>"; };
 		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
@@ -139,6 +140,8 @@
 		7320CC63159970680050D3B6 /* NodeCompare.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeCompare.h; sourceTree = "<group>"; };
 		7320CC64159C6B9C0050D3B6 /* SIOMeshIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshIO.h; sourceTree = "<group>"; };
 		7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshIO.m; sourceTree = "<group>"; };
+		7323550A17F4162400AAC8CA /* FEMHeatSolution_OpenCL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMHeatSolution_OpenCL.h; sourceTree = "<group>"; };
+		7323550B17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMHeatSolution_OpenCL.m; sourceTree = "<group>"; };
 		73275A3713C2BD0D006EC4BA /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
 		73275A3813C2BD0D006EC4BA /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		73281C6214D2898100854B7D /* FEMPrecondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPrecondition.h; sourceTree = "<group>"; };
@@ -290,7 +293,7 @@
 		73051E2F17F2D4E4001861D8 /* OpenCL kernels */ = {
 			isa = PBXGroup;
 			children = (
-				73051E3017F2D539001861D8 /* kernel.cl */,
+				73051E3017F2D539001861D8 /* heatSolutiomAssemblyKernel.cl */,
 			);
 			name = "OpenCL kernels";
 			sourceTree = "<group>";
@@ -340,6 +343,7 @@
 			children = (
 				73456ED114ECF82C00ECD602 /* Docs */,
 				7315515A1358610F004CCD09 /* FEM Classes */,
+				7323550917F3D67F00AAC8CA /* OpenCL Based Solutions */,
 				73051E2F17F2D4E4001861D8 /* OpenCL kernels */,
 				73155155135848B4004CCD09 /* Low level C routines */,
 				7315513313583FFD004CCD09 /* SainoAppDelegate.h */,
@@ -438,6 +442,15 @@
 				73DFEE5B16F327F30081A3A4 /* Solutions */,
 			);
 			name = "FEM Classes";
+			sourceTree = "<group>";
+		};
+		7323550917F3D67F00AAC8CA /* OpenCL Based Solutions */ = {
+			isa = PBXGroup;
+			children = (
+				7323550A17F4162400AAC8CA /* FEMHeatSolution_OpenCL.h */,
+				7323550B17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m */,
+			);
+			name = "OpenCL Based Solutions";
 			sourceTree = "<group>";
 		};
 		73355E721510743100F959D8 /* Time integration */ = {
@@ -708,8 +721,9 @@
 				73281C6414D2898100854B7D /* FEMPrecondition.m in Sources */,
 				737B0D7514E2274B00ED409D /* TimeProfile.c in Sources */,
 				73F2105514E3D41000D52906 /* memory.c in Sources */,
-				73051E3117F2D539001861D8 /* kernel.cl in Sources */,
+				73051E3117F2D539001861D8 /* heatSolutiomAssemblyKernel.cl in Sources */,
 				73456ECD14ECDBDC00ECD602 /* FEMHUTIter.m in Sources */,
+				7323550C17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m in Sources */,
 				73A4696915076F8500BDDEA6 /* Lists.c in Sources */,
 				730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */,
 				73355E761510745100F959D8 /* FEMTimeIntegration.m in Sources */,
@@ -876,11 +890,15 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
 				INFOPLIST_FILE = "Saino/Saino-Info.plist";
+				LLVM_VECTORIZE_LOOPS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OPENCL_AUTO_VECTORIZE_ENABLE = YES;
 				OPENCL_COMPILER_VERSION = CL1.1;
+				OPENCL_DOUBLE_AS_SINGLE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -895,11 +913,15 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
 				INFOPLIST_FILE = "Saino/Saino-Info.plist";
+				LLVM_VECTORIZE_LOOPS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OPENCL_AUTO_VECTORIZE_ENABLE = YES;
 				OPENCL_COMPILER_VERSION = CL1.1;
+				OPENCL_DOUBLE_AS_SINGLE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;

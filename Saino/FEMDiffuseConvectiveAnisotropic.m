@@ -606,8 +606,8 @@
             forceVector[p] = forceVector[p] + s * load;
         }
     }
-    free_dmatrix(c2, 0, 2, 0, 2);
     
+    free_dmatrix(c2, 0, 2, 0, 2);
     GaussQuadratureDeallocation(IP);
     [integration deallocation:mesh];
 }

@@ -35,6 +35,7 @@
 #import "FEMMeshUpdateSolution.h"
 #import "FEMMaterial.h"
 #import "FEMHeatSolution.h"
+#import "FEMHeatSolution_OpenCL.h"
 #import "GaussIntegration.h"
 #import "Utils.h"
 
@@ -2628,10 +2629,15 @@ static const int PRECOND_VANKA     =  560;
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
             
-            FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
-            [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-            [heatSolution deallocation:solution];
-
+            if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+                FEMHeatSolution_OpenCL *heatSolution = [[FEMHeatSolution_OpenCL alloc] init];
+                [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+                [heatSolution deallocation:solution];
+            } else {
+                FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
+                [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+                [heatSolution deallocation:solution];
+            }
         } else {
             NSLog(@"FEMKernel:FEMKernel_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
             errorfunct("FEMKernel:FEMKernel_singleSolution", "Program terminating now...");
@@ -8399,6 +8405,83 @@ static const int PRECOND_VANKA     =  560;
     
     free(doneThis);
     free(afterConverged);
+}
+
+-(dispatch_queue_t)getDispatchQueueAndInfoForDeviceType:(NSString *)deviceType {
+    
+    dispatch_queue_t queue = NULL;
+    cl_int error;
+    cl_device_local_mem_type localMemType;
+    cl_ulong globalMemSize, globalMemCacheSize, localMemSize, maxMemAllocSize;
+    cl_uint clockFrequency, vectorWidth, maxComputeUnits;
+    size_t maxWorkItemDims, maxWorkGroupSize, maxWorkItemSizes[3];
+    char name[128];
+    char vendor[128];
+    char driver[128];
+    char profile[128];
+    char extensions[1024];
+    
+    if ([deviceType isEqualToString:@"gpu"] == YES) {
+        queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_GPU, NULL);
+        // If no OpenCL compatible GPU found, try to use the CPU
+        if (queue == NULL) {
+            queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);
+        }
+    } else if ([deviceType isEqualToString:@"cpu"] == YES) {
+        queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);
+    } else {
+        errorfunct("FEMKernel:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Program terminating now...");
+    }
+    
+    cl_uint vectorTypes[] = {CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE};
+	char *vectorTypeNames[] = {"char", "short", "int", "long", "float", "double"};
+    
+    // Print some informations about the device
+    cl_device_id device = gcl_get_device_id_with_dispatch_queue(queue);
+    error = clGetDeviceInfo(device, CL_DEVICE_NAME, 128, name, NULL);
+    error |= clGetDeviceInfo(device, CL_DEVICE_VENDOR, 128, vendor, NULL);
+    error |= clGetDeviceInfo(device, CL_DRIVER_VERSION, 128, driver, NULL);
+    error |= clGetDeviceInfo(device, CL_DEVICE_PROFILE, 128, profile, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_TYPE, sizeof(localMemType), &localMemType, NULL);
+	
+	error |= clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(globalMemSize), &globalMemSize, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemSize), &localMemSize, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE, sizeof(globalMemCacheSize), &globalMemCacheSize, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(maxMemAllocSize), &maxMemAllocSize, NULL);
+	
+	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(clockFrequency), &clockFrequency, NULL);
+    error |= clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(maxComputeUnits), &maxComputeUnits, NULL);
+	
+	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkGroupSize), &maxWorkGroupSize, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(maxWorkItemDims), &maxWorkItemDims, NULL);
+	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(maxWorkItemSizes), &maxWorkItemSizes, NULL);
+    
+    NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Device Name: %s\n", name);
+    NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Vendor: %s\n", vendor);
+    NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Driver: %s\n", driver);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Profile: %s\n", profile);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Supported Extensions: %s\n", extensions);
+	
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Local Mem Type (Local=1, Global=2): %i\n", (int)localMemType);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Global Mem Size (MB): %i\n", (int)globalMemSize/(1024*1024));
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Global Mem Cache Size (Bytes): %i\n", (int)globalMemCacheSize);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Local Mem Size (Bytes): %i\n", (int)localMemSize);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Max Mem Alloc Size (MB): %ld\n", (long int)maxMemAllocSize/(1024*1024));
+	
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Clock Frequency (MHz): %i\n", clockFrequency);
+    NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Max Compute Units: %i\n", maxComputeUnits);
+	
+	for(int i=0;i<6;i++) {
+		error |= clGetDeviceInfo(device, vectorTypes[i], sizeof(vectorWidth), &vectorWidth, NULL);
+		NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Vector type width for: %s = %i\n", vectorTypeNames[i], vectorWidth);
+	}
+	
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Max Work Group Size: %lu\n", maxWorkGroupSize);
+	NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Max Work Item Dimensions: %i\n", (int)maxWorkItemDims);
+    NSLog(@"FEMKernel:getDispatchQueueAndInfoForDeviceType: Max Work Item Sizes: %i %i %i\n", (int)maxWorkItemSizes[0], (int)maxWorkItemSizes[1], (int)maxWorkItemSizes[2]);
+
+    return queue;
 }
 
 

@@ -203,7 +203,7 @@ static char *_parallel_extensions[] = {
 
 -(int)openMesh:(NSString *)dir {
     
-    int i, j, lineCount = 0;
+    int i, j, isLineBreak, lineCount = 0;
     char filename[PATH_MAX];
     FileReader *reader;
     NSString *line;
@@ -239,13 +239,17 @@ static char *_parallel_extensions[] = {
         // Parse the line
         NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
         NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-        if ([filteredArray count] == 3) { // First line of header file, three elements
+        isLineBreak = 0;
+        for (NSString *string in filteredArray) {
+            if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
+        }
+        if (([filteredArray count]-isLineBreak) == 3) { // First line of header file, three elements
             self.nodeCount = [filteredArray[0] intValue];
             self.elementCount = [filteredArray[1] intValue];
             self.boundaryElementCount = [filteredArray[2] intValue];
-        } else if ([filteredArray count] == 1) { // Second line, one element
+        } else if (([filteredArray count]-isLineBreak) == 1) { // Second line, one element
             self.elementTypes = [filteredArray[0] intValue];
-        } else if ([filteredArray count] == 2) { // The rest of the file, two elements
+        } else if (([filteredArray count]-isLineBreak) == 2) { // The rest of the file, two elements
             [self.elementTypeTags addObject:filteredArray[0]];
             [self.elementTypeCount addObject:filteredArray[1]];
             j++;
@@ -315,12 +319,10 @@ static char *_parallel_extensions[] = {
     line = nil;
     reader = (self.meshFileStreams)[ELEMENTS];
     if (step == self.elementCount) {
-        
         [reader rewind];
         step = 0;
         return -1;
     }
-    
     line = [reader readLine];
     NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
     NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];

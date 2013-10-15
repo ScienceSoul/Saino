@@ -181,7 +181,7 @@
         }
     }
     
-    if (found == 0) return jouleheat;
+    if (jouleNode == 0) return jouleheat;
     
     // Get element info
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];

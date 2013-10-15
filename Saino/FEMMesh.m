@@ -264,13 +264,18 @@
                 // Check if neighbors do not have current color
                 numberOfSameColors = 0;
                 for (j=0; j<self.numberOfBulkElements; j++) {
+                    if (j == i) continue;
                     isShared = NO;
-                    for (int k=0; k<_elements[i].Type.NumberOfNodes; k++) {
-                        if (_elements[i].NodeIndexes[k] == _elements[j].NodeIndexes[k]) {
-                            isShared = YES;
-                            break;
+                    for (int k=0; k<_elements[j].Type.NumberOfNodes; k++) {
+                        for (int l=0; l<_elements[i].Type.NumberOfNodes; l++) {
+                            if (_elements[j].NodeIndexes[k] == _elements[i].NodeIndexes[l]) {
+                                isShared = YES;
+                                break;
+                            }
                         }
+                        if (isShared == YES) break;
                     }
+                   
                     if (isShared == YES) {
                         if (_elements[j].color.red == currentColor.red && _elements[j].color.green == currentColor.green && _elements[j].color.blue == currentColor.blue) numberOfSameColors++;
                     }
@@ -294,8 +299,8 @@
     NSLog(@"FEMMesh:FEMMesh_colorMesh: number of colors: %d\n", self.numberOfColors);
     NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set before optimization:\n");
     i = 1;
-    for (NSMutableArray *array in self.colors) {
-        NSLog(@"color %d : number of elements: %d\n", i, [array[0] intValue]);
+    for (NSMutableArray *color in self.colors) {
+        NSLog(@"color %d : number of elements: %d\n", i, [color[0] intValue]);
         i++;
     }
     
@@ -309,20 +314,25 @@
             while ([color[0] intValue] > meanValue) {
                 for (i=0; i<self.numberOfBulkElements; i++) {
                     if (_elements[i].color.colorIndex == k) {
-                        isShared = NO;
+                        numberOfSameColors = 0;
                         for (j=0; j<self.numberOfBulkElements; j++) {
+                            if (j == i) continue;
                             if (_elements[j].color.colorIndex == kk) {
+                                isShared = NO;
                                 for (int l=0; l<_elements[j].Type.NumberOfNodes; l++) {
-                                    if (_elements[i].NodeIndexes[l] == _elements[j].NodeIndexes[l]) {
-                                        isShared = YES;
-                                        break;
+                                    for (int ll=0; ll<_elements[i].Type.NumberOfNodes; ll++) {
+                                        if (_elements[j].NodeIndexes[l] == _elements[i].NodeIndexes[ll]) {
+                                            isShared = YES;
+                                            break;
+                                        }
                                     }
+                                    if (isShared == YES) break;
                                 }
+                                if (isShared == YES) numberOfSameColors++;
                             }
-                            if (isShared == YES) break;
                         }
                         NSMutableArray *poorColor = self.colors[kk];
-                        if (isShared == NO) {
+                        if (numberOfSameColors == 0) {
                             _elements[i].color.red = [poorColor[2] doubleValue];
                             _elements[i].color.green = [poorColor[3] doubleValue];
                             _elements[i].color.blue = [poorColor[4] doubleValue];
@@ -349,29 +359,32 @@
         i++;
     }
     
-    // Makes a last check to be sure...
-    isShared = NO;
-    for (NSMutableArray *color in self.colors) {
-         for (i=0; i<self.numberOfBulkElements; i++) {
-             if (_elements[i].color.colorIndex == [color[1] intValue]) {
-                  for (j=0; j<self.numberOfBulkElements; j++) {
-                      if (_elements[i].color.colorIndex == _elements[j].color.colorIndex && i != j) {
-                          for (int l=0; l<_elements[j].Type.NumberOfNodes; l++) {
-                              if (_elements[i].NodeIndexes[l] == _elements[j].NodeIndexes[l]) {
-                                  isShared = YES;
-                                  break;
-                              }
-                          }
-                          if (isShared == YES) break;
-                      }
-                  }
-                 if (isShared == YES) {
-                     NSLog(@"FEMMesh:FEMMesh_colorMesh: elements %d and %d have similar color but shares nodes.\n", i, j);
-                     errorfunct("FEMMesh:FEMMesh_colorMesh", "Programm terminating now...");
-                 }
-             }
-         }
-    }
+    // Make a last check to be sure...
+//    for (NSMutableArray *color in self.colors) {
+//         for (i=0; i<self.numberOfBulkElements; i++) {
+//             if (_elements[i].color.colorIndex == [color[1] intValue]) {
+//                 for (j=0; j<self.numberOfBulkElements; j++) {
+//                     if (j == i) continue;
+//                     isShared = NO;
+//                     for (int k=0; k<_elements[j].Type.NumberOfNodes; k++) {
+//                         for (int l=0; l<_elements[i].Type.NumberOfNodes; l++) {
+//                             if (_elements[j].NodeIndexes[k] == _elements[i].NodeIndexes[l]) {
+//                                 isShared = YES;
+//                                 break;
+//                             }
+//                         }
+//                         if (isShared == YES) break;
+//                     }
+//                     if (isShared == YES) {
+//                         if (_elements[i].color.colorIndex == _elements[j].color.colorIndex) {
+//                             NSLog(@"FEMMesh:FEMMesh_colorMesh: elements %d and %d have similar color but share nodes.\n", i, j);
+//                             errorfunct("FEMMesh:FEMMesh_colorMesh", "Programm terminating now...");
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//    }
 }
 
 #pragma mark Public methods
@@ -672,7 +685,7 @@
     
     inDofs = intvec(0, 6);
     nodes = intvec(0, MAX_ELEMENT_NODES-1);
-    for (i=0; i<self.numberOfBulkElements; i++) {
+    for (i=0; i<=self.numberOfBulkElements; i++) {
         memset( inDofs, 0, 7*sizeof(int) );
         [meshIO getMeshElementConnection:&elementTags[i] body:&body type:&type pdofs:inDofs nodes:nodes];
         if (meshIO.info != 0) break;
@@ -824,7 +837,7 @@
     //Mesh boundary elements
     coord = doublevec(0, (3*self.maxElementNodes)-1);
     memset( coord, 0.0, (3*self.maxElementNodes)*sizeof(double) );
-    for (i=self.numberOfBulkElements; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
+    for (i=self.numberOfBulkElements; i<=self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
         
         [meshIO getMeshBoundaryElement:&tag boundary:&bndry leftElement:&left rightElement:&right type:&type nodes:nodes coord:coord];
         if (meshIO.info != 0) {
@@ -1142,8 +1155,15 @@
     
     model.dimension = saveDim;
     
-    // Color the mesh if parallel assembly is required
-    if ([listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"parallel assembly" info:&found] == YES) {
+    // Color the mesh if parallel assembly is required by a solution computer
+    BOOL isParallelAssembly = NO;
+    for (FEMSolution *solution in model.solutions) {
+        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+            isParallelAssembly = YES;
+            break;
+        }
+    }
+    if (isParallelAssembly == YES) {
         NSLog(@"FEMMesh:loadMeshForModel: coloring the mesh...\n");
         [self FEMMesh_colorMesh];
     }
@@ -1338,8 +1358,6 @@
 
 -(void)deallocation {
     
-    int i;
-    
     //Deallocate mesh variables
     [self deallocationMeshVariables];
     
@@ -1365,7 +1383,7 @@
     _viewFactors = NULL;
     
     if (_elements != NULL) {
-        for (i=0; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
+        for (int i=0; i<self.numberOfBulkElements+self.numberOfBoundaryElements; i++) {
             // Boundary structure for boundary elements
             if (_elements[i].copy == true) continue;
             

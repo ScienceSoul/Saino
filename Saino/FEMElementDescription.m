@@ -754,6 +754,10 @@
                 }
             }
             free(_elementTypeList->BasisFunctions);
+            
+            free_dvector(_elementTypeList->NodeU, 0, _elementTypeList->NumberOfNodes-1);
+            free_dvector(_elementTypeList->NodeV, 0, _elementTypeList->NumberOfNodes-1);
+            free_dvector(_elementTypeList->NodeW, 0, _elementTypeList->NumberOfNodes-1);
         }
         free(_elementTypeList);
         _elementTypeList = ptr;
@@ -899,8 +903,8 @@
                         upow = k;
                         break;
                     case 2:
-                        upow = k % _maxDeg;
                         vpow = k / _maxDeg;
+                        upow = k % _maxDeg;
                         break;
                     case 3:
                         upow = k % _maxDeg;
@@ -1075,11 +1079,6 @@
         }
         
         [self addDescriptionOfElement:element withBasisTerms:basisTerms];
-        
-        free_dvector(element->NodeU, 0, element->NumberOfNodes-1);
-        free_dvector(element->NodeV, 0, element->NumberOfNodes-1);
-        free_dvector(element->NodeW, 0, element->NumberOfNodes-1);
-        
     }
 
     free_ivector(basisTerms, 0, _maxDeg3-1);

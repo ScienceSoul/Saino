@@ -483,7 +483,6 @@ void GaussQuadraturePoints1D(int n) {
         sum = sum + Weights[i];
     }
     for(i=0;i<n;i++) {
-        
         Weights[i] = 2.0 * Weights[i] / sum;
     }
     
@@ -498,15 +497,12 @@ void GaussQuadraturePoints1D(int n) {
 }
 
 void GaussQuadratureInit(GaussIntegrationPoints *pt) {
-    
-    int n;
-    
+
     if (GInit == false) {
         GInit = true;
-        for(n=1;n<=MAXN;n++) {
+        for(int n=1;n<=MAXN;n++) {
             GaussQuadraturePoints1D(n);
         }
-    
         // The caller which gets the pointer to the structure of Gauss integration points
         // is responsible for releasing this memory by calling GaussQuadratureDeallocation()
         pt->u = doublevec(0, MAX_INTEGRATION_POINTS-1);

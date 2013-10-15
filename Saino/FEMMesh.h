@@ -48,7 +48,7 @@
     NSMutableArray *_projectors;             // Mutable array of FEMProjector classes
     NSMutableArray *_next;                   // Mutable array of FEMMesh classes
     NSMutableArray *_colors;                 // Mutable array of mutable arrays for each color. Each array stores the number of elements for that color,
-                                             // the color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
+                                             // The color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
     FEMMesh *_parent;
     FEMMesh *_child;
 }

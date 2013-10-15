@@ -396,8 +396,6 @@
     [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
     
-    [listUtilities addLogicalInClassList:self.simulation theVariable:@"parallel assembly" withValue:YES];
-    
     int *intervals = intvec(0, 0);
     intervals[0] = 1;
     [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"output intervals" withValues:intervals size:1];
@@ -447,6 +445,7 @@
     [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
     [solution.solutionInfo setObject:@1.0e-02 forKey:@"nonlinear system newton after tolerance"];
     [solution.solutionInfo setObject:@1.0 forKey:@"nonlinear system relaxation factor"];
+    [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
     self.solutions = @[solution];
     self.numberOfSolutions = 1;
     
@@ -465,8 +464,8 @@
     
     FEMBoundaryCondition *boundaryCondition = [[FEMBoundaryCondition alloc] init];
     [listUtilities addStringInClassList:boundaryCondition theVariable:@"name" withValue:@"constraint1"];
-    vector = intvec(0, 5);
-    vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; vector[4] = 5; vector[5] = 6;
+    vector = intvec(0, 3);
+    vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; //vector[4] = 5; vector[5] = 6;
     [listUtilities addIntegerArrayInClassList:boundaryCondition theVariable:@"target boundaries" withValues:vector size:6];
     free_ivector(vector, 0, 5);
     [listUtilities addConstRealInClassList:boundaryCondition theVariable:@"temperature" withValue:0.0 string:nil];
@@ -475,7 +474,7 @@
     self.numberOfBoundaryConditions = 1;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Mesh"];
+    _meshName = [NSMutableString stringWithString:@"Tube"];
 }
 
 #pragma mark Public methods

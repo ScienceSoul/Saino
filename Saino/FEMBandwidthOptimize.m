@@ -39,26 +39,18 @@
 
 -(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t *)listMatrix maxLevel:(int *)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin {
     
-    int j, n, level, stackp;
+    int n, level, stackp;
     ListMatrixEntry_t *p;
-    Stack_t *stack, *copystack;
+    Stack_t *stack;
     
     n = nin;
     level = levelin;
     
-    stack = (Stack_t*)malloc(sizeof(Stack_t) * 512 );
+    stack = (Stack_t*)malloc(sizeof(Stack_t) * localNodes );
     stackp = -1;
     
     p = listMatrix[n].Head;
     while (p != NULL) {
-        if (stackp >= 512) {
-            copystack = (Stack_t*)malloc(sizeof(Stack_t) * (stackp*2) );
-            for (j=0; j<stackp; j++) {
-                copystack[j] = stack[j];
-            }
-            free(stack);
-            stack = copystack;
-        }
         stackp++;
         stack[stackp].p = p;
         

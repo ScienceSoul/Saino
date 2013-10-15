@@ -42,7 +42,7 @@
     FEMMatrix *projector;
     FEMListUtilities *listUtilities;
     FEMListMatrix *listMatrix;
-    ListMatrix_t *list;
+    ListMatrix_t *list = NULL;
     ListMatrixEntry_t *cList, *lptr;
     Element_t *elements, *element, *edges, *faces;
     matrixArraysContainer *matContainers = NULL;
@@ -94,7 +94,7 @@
             for (i=0; i<n; i++) {
                 k1 = reorder[indexes[i]];
                 if (k1 < 0) continue;
-                for (j = 0; j<n; j++) {
+                for (j=0; j<n; j++) {
                     k2 = reorder[indexes[j]];
                     if (k2 < 0) continue;
                     lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k1 andIndex:k2];

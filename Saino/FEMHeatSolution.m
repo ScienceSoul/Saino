@@ -902,7 +902,7 @@ enum {
     double at, at0, C1, dist, dt0, jx, jy, jz, cumulativeTime, newtonTol, meltPoint, minDist, nonLinearTol, norm, powerRelax, powerSensitivity, powerTimeScale,
            prevNorm, referencePressure, relax, relativeChange, s, saveRelax, smartTol, specificHeatRatio, st, sum, totat, totst, xave, yave;
     double controlPoint[3], *forceVector, *flowSolution;
-    BOOL all, bubbles = YES, checkLatentHeatRelease=NO, found, heatFluxBC, gotIt, isRadiation, firstTime, gotMeltPoint,
+    BOOL all, bubbles, checkLatentHeatRelease=NO, found, heatFluxBC, gotIt, isRadiation, firstTime, gotMeltPoint,
          integralHeaterControl, heaterControlLocal, phaseChange=NO, saveBulk, smartHeaterControl, smartHeaterAverage, smartTolReached, stabilize = YES, transientHeaterControl, useBubbles;
     NSString *convectionField, *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
@@ -1897,6 +1897,8 @@ enum {
             } // Bulk elements
             
         jump:
+            at = cputime() -  at;
+            
             // Neumann & Newton boundary conditions
             for (t=0; t<solution.mesh.numberOfBoundaryElements; t++) {
                  element = [kernel getBoundaryElement:solution atIndex:t];
@@ -1943,7 +1945,6 @@ enum {
             [kernel dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
             // Solve the system and check for convergence
-            at = cputime() -  at;
             st = cputime();
             
             prevNorm = norm;

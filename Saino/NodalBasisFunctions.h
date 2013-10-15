@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include "Constructors.h"
-#include "memory.h"
 
 void NodalBasisFunctions1D (double *y, Element_t *element, double u);
 void NodalBasisFunctions2D(double *y, Element_t *element, double u, double v);

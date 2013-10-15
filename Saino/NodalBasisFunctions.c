@@ -586,11 +586,9 @@ void NodalFirstDerivatives3D(double **y, Element_t *element, double u, double v,
 void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, double v,double w)
 {
     int q, dim;
-    double *NodalBasis;
+    double NodalBasis[n];
     
     dim = element->Type.dimension;
-    
-    NodalBasis = doublevec(0, n-1);
     
     // TODO: Add support for p-elements
     
@@ -606,7 +604,7 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
         case 3:
             if( element->Type.ElementCode/100 == 6) {
                 
-                memset( NodalBasis, 0.0, n*sizeof(double) );
+                memset( NodalBasis, 0.0, sizeof(NodalBasis) );
                 for(q=0;q<n;q++) {
                     NodalBasis[q] = 1.0;
                     Basis[q] = InterpolateInElement3D(element, NodalBasis, u, v, w);
@@ -617,18 +615,14 @@ void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, dou
             }
             break;
     }
-    
-    free_dvector(NodalBasis, 0, n-1);
 }
 
 void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double u, double v, double w) {
     
     int q, dim;
-    double *NodalBasis;
+    double NodalBasis[n];
     
     dim = element->Type.dimension;
-    
-    NodalBasis = doublevec(0, n-1);
     
     switch(dim) {
         case 1:
@@ -641,7 +635,7 @@ void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double
         case 3:
             if(element->Type.ElementCode / 100 == 6) {
                 
-                memset( NodalBasis, 0.0, n*sizeof(double) );
+                memset( NodalBasis, 0.0, sizeof(NodalBasis) );
                 for(q=0;q<n;q++) {
                     NodalBasis[q] = 1.0;
                     dLBasisdx[q][0] = FirstDerivativeInU3D(element, NodalBasis, u, v, w);
@@ -655,8 +649,6 @@ void NodalFirstDerivatives(int n, double **dLBasisdx, Element_t *element, double
             }
             break;
     }
-    
-    free_dvector(NodalBasis, 0, n-1);
 }
 
 double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
