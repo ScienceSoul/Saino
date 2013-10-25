@@ -175,7 +175,7 @@
     if (*append == NO) {
         if ([utilities isFileNameQualified:resultFile] == NO) {
             if ([model.outputPath length] > 0) {
-                outputPath = [NSString stringWithString:model.outputPath];
+                outputPath = [NSMutableString stringWithString:model.outputPath];
                 [outputPath appendString:@"/"];
                 [outputPath appendString:resultFile];
                 if ([fileManager fileExistsAtPath:outputPath] == NO) {

@@ -1299,7 +1299,7 @@
         for (i = 0; i<3; i++) {
             sum = sum + normals1[i] * normals2[i];
         }
-        alpha = acos(sum) * 180 / pi;
+        alpha = acos(sum) * 180 / M_PI;
         NSLog(@"FEMMeshUtils:periodicProjectorInModel: suggested angle between two normals in degrees: %e\n", alpha);
     }
     
@@ -1419,7 +1419,7 @@
 
         
         for (i=0; i<pArray.m; i++) {
-            alpha = angles[i] * pi / 180;
+            alpha = angles[i] * M_PI / 180;
             if (fabs(alpha) < DBL_MIN) continue;
             
             memcpy(trfMatrix, identity, sizeof(identity));
@@ -1494,14 +1494,14 @@
             for (i=0; i<3; i++) {
                 sum = sum + normals1[i] * normals2[i];
             }
-            alpha = acos(sum) * 180.0 / pi;
+            alpha = acos(sum) * 180.0 / M_PI;
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and initial target: %e\n", alpha);
             
             sum = 0.0;
             for (i=0; i<3; i++) {
                 sum = sum + normals1[i] * normals2r[i];
             }
-            alpha = acos(sum) * 180.0 / pi;
+            alpha = acos(sum) * 180.0 / M_PI;
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and rotated target: %e\n", alpha);
             
             if (fabs(alpha) > 1.0e-2 && fabs(alpha - 180.0) > 1.0e-2) {

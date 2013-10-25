@@ -7,8 +7,8 @@
 //
 
 #import <float.h>
-#include <complex.h>
-#include <stdbool.h>
+#import <complex.h>
+#import <stdbool.h>
 
 #ifndef CONSTRUCTORS_H
 #define CONSTRUCTORS_H
@@ -101,21 +101,7 @@ typedef struct {
     int *p, *q, *r;
     double *coeff;
     
-    
 } BasisFunctions_t;
-
-typedef struct QuadrantPointer_t {
-    struct Quadrant_t *quadrant;
-} QuadrantPointer_t;
-
-typedef struct Quadrant_t {
-    
-    int nElementsInQuadrant;
-    double size, minElementSize, boundingBox[6];
-    int *elements;
-    struct QuadrantPointer_t *childQuadrants;
-    int numberOfchildQuadrants;
-} Quadrant_t;
 
 typedef struct ElementType_t {
     
@@ -123,9 +109,9 @@ typedef struct ElementType_t {
     
     int ElementCode;                       // Numeric code for element
     int BasisFunctionDegree,               // Linear or quadratic
-        NumberOfNodes, 
-        NumberOfEdges, 
-        NumberOfFaces, 
+        NumberOfNodes,
+        NumberOfEdges,
+        NumberOfFaces,
         dimension;                         // 1=Line; 2=Surface; 3=Volume
     
     int GaussPoints,                       // Number of Gauss points to use
@@ -160,8 +146,8 @@ typedef struct {
 } BoundaryInfo_t;
 
 typedef struct {
-
-    int p;  
+    
+    int p;
     int TetraType;          // Type of p tetrahedron={0,1,2}
     bool isEdge;            // Is element an edge or face.
     int GaussPoints;        // Number of gauss points to use when using p elements
@@ -187,7 +173,7 @@ typedef struct Element_t {
     
     bool colored;
     bool copy;
-    int *NodeIndexes, *EdgeIndexes, *FaceIndexes, 
+    int *NodeIndexes, *EdgeIndexes, *FaceIndexes,
         *BubbleIndexes, *DGIndexes;                // Initialize that to NULL somewhere!!
     
     int sizeNodeIndexes, sizeEdgeIndexes,
@@ -200,19 +186,20 @@ typedef struct Element_t {
     
     double StabilizationMK, hK;
     
-    
 } Element_t;
 
-typedef struct {               // Boundary element
+typedef struct QuadrantPointer_t {
+    struct Quadrant_t *quadrant;
+} QuadrantPointer_t;
+
+typedef struct Quadrant_t {
     
-    int ID;                    // Boundary element identification number 
-    int boundary;              // Part of the boundary where element is located
-    int p1;                    // First parent element
-    int p2;                    // Second parent element
-    int code;                  // Element code
-    int *NodeIndexes;          // Element nodes
-    
-} BDElement_t;
+    int nElementsInQuadrant;
+    double size, minElementSize, boundingBox[6];
+    int *elements;
+    struct QuadrantPointer_t *childQuadrants;
+    int numberOfchildQuadrants;
+} Quadrant_t;
 
 typedef struct {
     //TODO

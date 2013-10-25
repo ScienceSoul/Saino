@@ -19,7 +19,7 @@
     double **_basisFirstDerivative;
     double ***_basisSecondDerivative;
     double **_elementMetric;
-    double **_covariantMetrixTensor;
+    double **_covariantMetricTensor;
     double **_ltoGMap;
     double **_dx;                             // Partial derivatives of global coordinates with respect to local coordinates
 }
@@ -30,7 +30,7 @@
 @property(nonatomic, assign) double **basisFirstDerivative;
 @property(nonatomic, assign) double ***basisSecondDerivative;
 @property(nonatomic, assign) double **elementMetric;
-@property(nonatomic, assign) double **covariantMetrixTensor;
+@property(nonatomic, assign) double **covariantMetricTensor;
 @property(nonatomic, assign) double **ltoGMap;
 @property(nonatomic, assign) double **dx;
 

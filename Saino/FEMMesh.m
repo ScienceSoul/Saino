@@ -16,6 +16,7 @@
 #import "FEMProjector.h"
 #import "FEMEquation.h"
 #import "Utils.h"
+#import "TimeProfile.h"
 
 @interface FEMMesh ()
 -(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs;
@@ -251,8 +252,10 @@
 -(void)FEMMesh_colorMesh {
     
     int i, j, numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
-    RGBColors currentColor;
     BOOL isShared;
+    RGBColors currentColor;
+    
+    double at = cputime();
     
     // Color the elements with the greedy algorithm First Fit (FF)
     while (numberOfColoredElements != self.numberOfBulkElements) {
@@ -295,6 +298,8 @@
         [self.colors addObject:color];
         self.numberOfColors++;
     }
+    
+    NSLog(@"FEMMesh:FEMMesh_colorMesh:Timing: %f\n", cputime() - at);
     
     NSLog(@"FEMMesh:FEMMesh_colorMesh: number of colors: %d\n", self.numberOfColors);
     NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set before optimization:\n");
@@ -354,9 +359,21 @@
     
     NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set after optimization:\n");
     i = 1;
-    for (NSMutableArray *array in self.colors) {
-        NSLog(@"color %d : number of elements: %d\n", i, [array[0] intValue]);
+    for (NSMutableArray *color in self.colors) {
+        NSLog(@"color %d : number of elements: %d\n", i, [color[0] intValue]);
         i++;
+    }
+    
+    // Build the element color mapping
+    _colorMapping = intvec(0, self.numberOfBulkElements-1);
+    int indx = 0;
+    for (NSMutableArray *color in self.colors) {
+        for (i=0; i<self.numberOfBulkElements; i++) {
+            if (_elements[i].color.colorIndex == [color[1] intValue]) {
+                _colorMapping[indx] = _elements[i].ElementIndex-1;
+                indx++;
+            }
+        }
     }
     
     // Make a last check to be sure...
@@ -456,6 +473,8 @@
         
         _parent = nil;
         _child = nil;
+        
+        _colorMapping = NULL;
     }
     
     return self;
@@ -1208,6 +1227,12 @@
     return _rootQuadrant;
 }
 
+#pragma mark Color mapping getter
+-(int *)getColorMapping {
+    
+    return _colorMapping;
+}
+
 #pragma mark Test associativity
 
 -(BOOL)isAssociatedEdges {
@@ -1436,6 +1461,11 @@
     
     _parent = nil;
     _child = nil;
+    
+    if (_colorMapping != NULL) {
+        free_ivector(_colorMapping, 0, self.numberOfBulkElements-1);
+        _colorMapping = NULL;
+    }
 }
 
 -(void)Simple2DMeshBorders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {

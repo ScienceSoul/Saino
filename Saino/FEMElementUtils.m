@@ -478,7 +478,7 @@
         
         for (i=0; i<n; i++) {
             str1 = [NSMutableString stringWithString:@"constraint dof "];
-            str2 = [NSString stringWithFormat:@"%d",i+1];
+            str2 = [NSMutableString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" value"];
             matContainers->RHS[i] = [listUtils listGetConstReal:model inArray:solution.valuesList forVariable:str1 info:&found minValue:NULL maxValue:NULL];
@@ -490,7 +490,7 @@
         matContainers->Rows[0] = 0;
         for (i=0; i<n; i++) {
             str1 = [NSMutableString stringWithString:@"constraint dof "];
-            str2 = [NSString stringWithFormat:@"%d",i+1];
+            str2 = [NSMutableString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" body"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {
@@ -527,7 +527,7 @@
             }
             
             str1 = [NSMutableString stringWithString:@"constraint dof "];
-            str2 = [NSString stringWithFormat:@"%d",i+1];
+            str2 = [NSMutableString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" bc"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {
@@ -575,7 +575,7 @@
         
         for (i=0; i<n; i++) {
             str1 = [NSMutableString stringWithString:@"constraint dof "];
-            str2 = [NSString stringWithFormat:@"%d",i+1];
+            str2 = [NSMutableString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" body"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {
@@ -614,7 +614,7 @@
             }
             
             str1 = [NSMutableString stringWithString:@"constraint dof "];
-            str2 = [NSString stringWithFormat:@"%d",i+1];
+            str2 = [NSMutableString stringWithFormat:@"%d",i+1];
             [str1 appendString:str2];
             [str1 appendString:@" bc"];
             if ([listUtils listGetIntegerArray:model inArray:solution.valuesList forVariable:str1 buffer:&ivals] == YES) {

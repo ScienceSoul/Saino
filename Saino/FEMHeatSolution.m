@@ -1381,7 +1381,6 @@ enum {
         norm = solution.variable.norm;
         
         for (iter=1; iter<=nonLinearIter; iter++) {
-            at = cputime();
             at0 = realtime();
             
             NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
@@ -1431,7 +1430,7 @@ enum {
                     
                     _s = [elementUtils elementArea:element numberOfNodes:n mesh:solution.mesh nodel:model];
                     
-                    if (model.coordinates == axis_symmetric || model.coordinates == cylindric_symmetric) _s = 2.0 * pi * _s;
+                    if (model.coordinates == axis_symmetric || model.coordinates == cylindric_symmetric) _s = 2.0 * M_PI * _s;
                     
                     sum = 0.0;
                     for (i=0; i<n; i++) {
@@ -1462,6 +1461,8 @@ enum {
             materialAtID = nil;
             bodyForceAtID = nil;
             nb = 0;
+            
+            at = cputime();
             // Bulk elements
             for (t=0; t<solution.numberOfActiveElements; t++) {
                 

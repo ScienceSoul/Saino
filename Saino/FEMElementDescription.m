@@ -825,7 +825,7 @@
                     upow = k % _maxDeg;
                     
                     if (upow == 0) {
-                        a[i][j] = 1;
+                        a[i][j] = 1.0;
                     } else {
                         a[i][j] = pow(u, upow);
                     }

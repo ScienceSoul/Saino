@@ -51,6 +51,8 @@
                                              // The color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
     FEMMesh *_parent;
     FEMMesh *_child;
+    
+    int *_colorMapping;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -100,6 +102,9 @@
 
 // Quadrant getter
 -(Quadrant_t *)getQuadrant;
+
+// Color mapping getter
+-(int *)getColorMapping;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;

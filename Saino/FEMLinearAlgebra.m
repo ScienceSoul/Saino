@@ -69,7 +69,6 @@
     if (fabs(a[n-1][n-1]) == 0.0) {
         NSLog(@"FEMLinearAlgebra:LUDecompositionOfMatrix: matrix is (at least almost) singular.\n");
     }
-    
 }
 
 -(void)invertMatrix:(double **)a ofSize:(int)n {

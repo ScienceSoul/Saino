@@ -474,7 +474,7 @@
     self.numberOfBoundaryConditions = 1;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Tube"];
+    _meshName = [NSMutableString stringWithString:@"Tube2"];
 }
 
 #pragma mark Public methods
@@ -808,7 +808,7 @@
         }
         
         modelMesh = self.meshes[0];
-        modelMesh.name = [NSString stringWithString:[_meshName substringFromIndex:i]];
+        modelMesh.name = [NSMutableString stringWithString:[_meshName substringFromIndex:i]];
         
         for (FEMSolution *solution in self.solutions) {
             solution.mesh = self.meshes[0];

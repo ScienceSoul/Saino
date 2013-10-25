@@ -18,7 +18,7 @@
 @synthesize basisFirstDerivative = _basisFirstDerivative;
 @synthesize basisSecondDerivative = _basisSecondDerivative;
 @synthesize elementMetric = _elementMetric;
-@synthesize covariantMetrixTensor = _covariantMetrixTensor;
+@synthesize covariantMetricTensor = _covariantMetricTensor;
 @synthesize ltoGMap = _ltoGMap;
 @synthesize dx = _dx;
 
@@ -32,7 +32,7 @@
         _basisFirstDerivative = NULL;
         _basisSecondDerivative = NULL;
         _elementMetric = NULL;
-        _covariantMetrixTensor = NULL;
+        _covariantMetricTensor = NULL;
         _ltoGMap = NULL;
         _dx = NULL;
     }
@@ -58,9 +58,9 @@
     if (_elementMetric == NULL) return NO;
     memset( *_elementMetric, 0.0, (3*3)*sizeof(double) );
     
-    _covariantMetrixTensor = doublematrix(0, 2, 0, 2);
-    if (_covariantMetrixTensor == NULL) return NO;
-    memset( *_covariantMetrixTensor, 0.0, (3*3)*sizeof(double) );
+    _covariantMetricTensor = doublematrix(0, 2, 0, 2);
+    if (_covariantMetricTensor == NULL) return NO;
+    memset( *_covariantMetricTensor, 0.0, (3*3)*sizeof(double) );
     
     _ltoGMap = doublematrix(0, 2, 0, 2);
     if (_ltoGMap == NULL) return NO;
@@ -79,7 +79,7 @@
     free_dmatrix(_basisFirstDerivative, 0, mesh.maxElementNodes-1, 0, 2);
     free_d3tensor(_basisSecondDerivative, 0, mesh.maxElementNodes-1, 0, 2, 0, 2);
     free_dmatrix(_elementMetric, 0, 2, 0, 2);
-    free_dmatrix(_covariantMetrixTensor, 0, 2, 0, 2);
+    free_dmatrix(_covariantMetricTensor, 0, 2, 0, 2);
     free_dmatrix(_ltoGMap, 0, 2, 0, 2);
     free_dmatrix(_dx, 0, 2, 0, 2);
 }
@@ -269,10 +269,10 @@
             self.elementMetric[0][0] = 1.0 / detG;
             break;
         case 2:
-            self.elementMetric[0][0] = self.covariantMetrixTensor[1][1] / detG;
-            self.elementMetric[0][1] = -self.covariantMetrixTensor[0][1] / detG;
-            self.elementMetric[1][0] = -self.covariantMetrixTensor[1][0] / detG;
-            self.elementMetric[1][1] = self.covariantMetrixTensor[0][0] / detG;
+            self.elementMetric[0][0] = self.covariantMetricTensor[1][1] / detG;
+            self.elementMetric[0][1] = -self.covariantMetricTensor[0][1] / detG;
+            self.elementMetric[1][0] = -self.covariantMetricTensor[1][0] / detG;
+            self.elementMetric[1][1] = self.covariantMetricTensor[0][0] / detG;
             break;
         case 3:
             GI = doublematrix(0, 2, 0, 2);
@@ -322,7 +322,7 @@
             for (k=0; k<cdim; k++) {
                 s = s + ( self.dx[k][i] * self.dx[k][j]);
             }
-            self.covariantMetrixTensor[i][j] = s;
+            self.covariantMetricTensor[i][j] = s;
         }
     }
 }
@@ -415,7 +415,7 @@
     cdim = mesh.dimension;
     
     dLBasisdx = doublematrix(0, n-1, 0, 2);
-    memset( *dLBasisdx, 0.0, (n*dim)*sizeof(double) );    
+    memset( *dLBasisdx, 0.0, (n*2)*sizeof(double) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     [self setCovariantMetrixTensorForElement:element nDOFs:n nodes:nodes mesh:mesh dLBasisdx:dLBasisdx];
     
@@ -423,19 +423,19 @@
     switch (dim) {
            
         case 1:  // Line elements
-            detG = self.covariantMetrixTensor[0][0];
+            detG = self.covariantMetricTensor[0][0];
             if (detG <= DBL_MIN) success = NO;
             break;
             
         case 2: // Surface elements
-            detG = ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][0] );
+            detG = ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][1] - self.covariantMetricTensor[0][1]*self.covariantMetricTensor[1][0] );
             if (detG <= DBL_MIN) success = NO;
             break;
             
         case 3: // Volume elements 
-            detG = self.covariantMetrixTensor[0][0] * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][1] )
-                + self.covariantMetrixTensor[0][1] * ( self.covariantMetrixTensor[1][2]*self.covariantMetrixTensor[2][0] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] )
-                + self.covariantMetrixTensor[0][2] * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][0] );
+            detG = self.covariantMetricTensor[0][0] * ( self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[1][2]*self.covariantMetricTensor[2][1] )
+                + self.covariantMetricTensor[0][1] * ( self.covariantMetricTensor[1][2]*self.covariantMetricTensor[2][0] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][2] )
+                + self.covariantMetricTensor[0][2] * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][0] );
             if (detG <= DBL_MIN) success = NO;
             break;
             
@@ -465,17 +465,17 @@
     
     s = 1.0 / detG;
     
-    GI[0][0] = s * ( self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][1]*self.covariantMetrixTensor[1][2] );
-    GI[1][0] = -s * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[1][2] );
-    GI[2][0] = s * ( self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[1][1] );
+    GI[0][0] = s * ( self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][1]*self.covariantMetricTensor[1][2] );
+    GI[1][0] = -s * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[1][2] );
+    GI[2][0] = s * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[1][1] );
     
-    GI[0][1] = -s * ( self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][1]*self.covariantMetrixTensor[0][2] );
-    GI[1][1] = s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[2][2] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[0][2] );
-    GI[2][1] = -s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[2][1] - self.covariantMetrixTensor[2][0]*self.covariantMetrixTensor[0][1] );
+    GI[0][1] = -s * ( self.covariantMetricTensor[0][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][1]*self.covariantMetricTensor[0][2] );
+    GI[1][1] = s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[0][2] );
+    GI[2][1] = -s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[0][1] );
     
-    GI[0][2] = s * ( self.covariantMetrixTensor[0][1]*self.covariantMetrixTensor[1][2] - self.covariantMetrixTensor[1][1]*self.covariantMetrixTensor[0][2] );
-    GI[1][2] = -s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][2] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[0][2] );
-    GI[2][2] = s * ( self.covariantMetrixTensor[0][0]*self.covariantMetrixTensor[1][1] - self.covariantMetrixTensor[1][0]*self.covariantMetrixTensor[0][1] );
+    GI[0][2] = s * ( self.covariantMetricTensor[0][1]*self.covariantMetricTensor[1][2] - self.covariantMetricTensor[1][1]*self.covariantMetricTensor[0][2] );
+    GI[1][2] = -s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][2] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[0][2] );
+    GI[2][2] = s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][1] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[0][1] );
 }
 
 -(void)globalSecondDerivativesForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w nodalValues:(double*)f dLBasisdx:(double**)dLBasisdx values:(double **)values {
