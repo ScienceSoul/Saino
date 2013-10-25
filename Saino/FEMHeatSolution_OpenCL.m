@@ -25,8 +25,7 @@
 #import "GaussIntegration.h"
 #import "Utils.h"
 #import "TimeProfile.h"
-
-#import "heatSolutiomAssemblyKernel.cl.h"
+#import "OpenCLUtils.h"
 
 static int k1 = 0, n1 = 0;
 static double **stiff = NULL, **mass = NULL, **x = NULL;
@@ -263,14 +262,21 @@ enum {
 
 -(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, n, nb, t, bf_id, body_id, cols, compressibilityModel, eq_id, indx1, iter, kernelDof, mat_id, nBasis, nn, nonLinearIter, newtonIter, position, rows;
+    int i, j, k, n, nb, t, bf_id, body_id, cols, compressibilityModel, eq_id, indx1, iter, kernelDof, mat_id, nBasis, nn, nonLinearIter, newtonIter, position, returnValue, rows;
+    static int firstTimeCL = 0;
     int *colorMapping = NULL, *elementPermutationStore, *indexes = NULL, indexStore[511];
+    char *program_source;
     double at, at0, C1, dt0, cumulativeTime, newtonTol, nonLinearTol, norm,
     prevNorm, referencePressure, relax, relativeChange, saveRelax, specificHeatRatio, st, totat, totst;
     double *forceVector, *nodesInfo;
     BOOL all, bubbles, found, heatFluxBC, firstTime, stabilize = YES, useBubbles;
     NSString *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
+    cl_context         context;
+	cl_command_queue   cmd_queue;
+	cl_device_id       devices;
+	cl_int             err;
+	size_t src_len;
     Element_t *elements = NULL, *element = NULL;
     Nodes_t *meshNodes = NULL;
     FEMMesh *mesh;
@@ -471,24 +477,78 @@ enum {
     NSString *stabilizationFlag = (solution.solutionInfo)[@"stabilization method"];
     BOOL vms = ([stabilizationFlag isEqualToString:@"vms"] == YES) ? YES : NO;
     
-    // Connect to the OpenCL device
-    dispatch_queue_t queue = [kernel getDispatchQueueAndInfoForDeviceType:@"cpu"];
-    
     kernelDof = 17;
     
     nodesInfo = doublevec(0, (kernelDof*mesh.numberOfNodes)-1);
     elementPermutationStore = intvec(0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
     
-    // Set the data to be passed to the device
-    void *matrixDiag = gcl_malloc(sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR);
-    void *matrixRows = gcl_malloc(sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR);
-    void *matrixCols = gcl_malloc(sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR);
-    void *matrixValues = gcl_malloc(sizeof(cl_double)*matContainers->sizeValues, matContainers->Values, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR);
-    void *matrixRHS = gcl_malloc(sizeof(cl_double)*matContainers->sizeRHS, matContainers->RHS, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR);
+	// Connect to a compute devise
+	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, &devices, NULL);
+
+    size_t returned_size = 0;
+	cl_char vendor_name[1024] = {0};
+	cl_char device_name[1024] = {0};
+	err = clGetDeviceInfo(devices, CL_DEVICE_VENDOR, sizeof(vendor_name), vendor_name, &returned_size);
+	err = clGetDeviceInfo(devices, CL_DEVICE_NAME, sizeof(device_name), device_name, &returned_size);
     
-    void *nodesInfoIn = gcl_malloc(sizeof(cl_double)*(kernelDof*mesh.numberOfNodes), NULL, CL_MEM_READ_WRITE);
-    void *colorMappingIn = gcl_malloc(sizeof(cl_int)*mesh.numberOfBulkElements, NULL, CL_MEM_READ_WRITE);
-    void *elementPermutationStoreIn = gcl_malloc(sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), NULL, CL_MEM_READ_WRITE);
+    if (firstTimeCL == 0) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Connecting to %s %s...\n\n", vendor_name, device_name);
+		device_stats(devices);
+	}
+    
+    returnValue = LoadFileIntoString("Saino/heatSolutiomAssemblyKernel.cl", &program_source, &src_len);
+	if (returnValue) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Error: Can't load kernel source\n");
+        exit(-1);
+	}
+    
+    // Create the context of the command queue
+	context = clCreateContext(0, 1, &devices, NULL, NULL, &err);
+	cmd_queue = clCreateCommandQueue(context, devices, 0, NULL);
+	
+	// Allocate memory for program and kernels
+    // Create the program .cl file
+	cl_program program = clCreateProgramWithSource(context, 1, (const char**)&program_source, NULL, &err);
+	if (err) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Can't create program. Error was: %d\n", err);
+		exit(-1);
+	}
+    
+    // Build the program (compile it)
+	err = clBuildProgram(program, 0, NULL, NULL, NULL, &err);
+	char build[2048];
+	clGetProgramBuildInfo(program, devices, CL_PROGRAM_BUILD_LOG, 2048, build, NULL);
+	if (err) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Can't build program. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Build Log:\n%s\n", build);
+		exit(-1);
+	}
+
+    // Create the kernel
+	cl_kernel CLkernel = clCreateKernel(program, "heatSolutionAssembly", &err);
+	if (err) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer:heatAssembly: Can't create kernel. Error was: %d\n", err);
+		exit(-1);
+	}
+    
+    size_t thread_size;
+	clGetKernelWorkGroupInfo(CLkernel, devices, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &thread_size, NULL);
+    
+    if (firstTimeCL == 0) {
+        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer:heatAssembly: Recommended Work Group Size: %lu\n", thread_size);
+	}
+    
+    // Allocate memory and queue it to be written to the device
+	cl_mem matDiag = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*matContainers->sizeDiag, NULL, NULL);
+	cl_mem matRows = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*matContainers->sizeRows, NULL, NULL);
+	cl_mem matCols = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*matContainers->sizeCols, NULL, NULL);
+	cl_mem matValues = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeValues, NULL, NULL);
+	cl_mem matRhs = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeRHS, NULL, NULL);
+    cl_mem nodesInfoIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes), NULL, NULL);
+    cl_mem colorMappingIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*mesh.numberOfBulkElements, NULL, NULL);
+    cl_mem elementPermutationStoreIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), NULL, NULL);
+
+    firstTimeCL = 1;
     
     double allocationSize = sizeof(cl_int)*matContainers->sizeDiag + sizeof(cl_int)*matContainers->sizeRows + sizeof(cl_int)*matContainers->sizeCols + sizeof(cl_double)*matContainers->sizeValues +
                          + sizeof(cl_double)*matContainers->sizeRHS
@@ -720,37 +780,6 @@ enum {
                         found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer];
                         if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
                     }
-                    //                        } else if ([convectionFlag isEqualToString:@"computed"] == YES && flowSol != nil) {
-                    //                            for (i=0; i<n; i++) {
-                    //                                k = flowPerm[element->NodeIndexes[i]];
-                    //                                if (k >= 0) {
-                    //                                    _pressure[i] = flowSolution[nsdofs*(k+1)-1] + referencePressure;
-                    //                                    switch (compressibilityModel) {
-                    //                                        case perfect_gas1:
-                    //                                            _density[i] = _pressure[i] / (_gasConstant[i] * _localTemperature[i]);
-                    //                                            break;
-                    //                                    }
-                    //                                    if (transient == YES) {
-                    //                                        _dPressureDt[i] = ( flowSolution[nsdofs*(k+1)-1] - flowSolContainers->PrevValues[nsdofs*(k+1)-1][0]) / timeStep;
-                    //                                    }
-                    //                                    switch (nsdofs) {
-                    //                                        case 3:
-                    //                                            _u[i] = flowSolution[nsdofs*k];
-                    //                                            _v[i] = flowSolution[nsdofs*k+1];
-                    //                                            _w[i] = 0.0;
-                    //                                            break;
-                    //                                        case 4:
-                    //                                            _u[i] = flowSolution[nsdofs*k];
-                    //                                            _v[i] = flowSolution[nsdofs*k+1];
-                    //                                            _w[i] = flowSolution[nsdofs*k+2];
-                    //                                            break;
-                    //                                    }
-                    //                                } else {
-                    //                                    _u[i] = 0.0;
-                    //                                    _v[i] = 0.0;
-                    //                                    _w[i] = 0.0;
-                    //                                }
-                    //                            }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
                     NSLog(@"FEMHeatSolution:fieldSolutionComputer: convection model specified but no accociated flow field present?\n");
                 } else {
@@ -839,7 +868,7 @@ enum {
                 
                 // Copy the element wise node info to global node that each kernel can read
                 // Data are serialized as follows:
-                // [_heatCapacity, _heatConductivity[][], _pressureCoeff, _density, _localTemperature, _load, _pressure, _dPressureDt, _enthalpy, _u, _v, _w, _viscosity, heatCapacity, mux, muy, muz, _c0, phaseSpatial, next node...]
+                // [_heatCapacity, _heatConductivity[][], _density, _load, C1 * _heatCapacity, _c0, elementNodes->x, elementNodes->y, elementNodes->z, next node...]
                 for (i=0; i<n; i++) {
                     j = tempContainers->Perm[element->NodeIndexes[i]];
                     nodesInfo[kernelDof*j] = _heatCapacity[i];
@@ -869,6 +898,37 @@ enum {
                 }
             }
             
+            // Queue memory to be written to the device
+            err = clEnqueueWriteBuffer(cmd_queue, matDiag, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeDiag, (void*)matContainers->Diag, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, matRows, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeRows, (void*)matContainers->Rows, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, matCols, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeCols, (void*)matContainers->Cols, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, (void*)matContainers->Values, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, (void*)matContainers->RHS, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, nodesInfoIn, CL_TRUE, 0, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes), (void*)nodesInfo, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, colorMappingIn, CL_TRUE, 0, sizeof(cl_int)*mesh.numberOfBulkElements, (void*)colorMapping, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, elementPermutationStoreIn, CL_TRUE, 0, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), (void*)elementPermutationStore, 0, NULL, NULL);
+            
+            // Push the data out to the device
+            clFinish(cmd_queue);
+            
+            int dimension = model.dimension;
+            int varDofs = solution.variable.dofs;
+            // Set kernel arguments
+            err = clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matDiag);
+            err |= clSetKernelArg(CLkernel, 1, sizeof(cl_mem), &matRows);
+            err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &matCols);
+            err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matValues);
+            err |= clSetKernelArg(CLkernel, 4, sizeof(cl_mem), &matRhs);
+            err |= clSetKernelArg(CLkernel, 5, sizeof(cl_mem), &colorMappingIn);
+            err |= clSetKernelArg(CLkernel, 6, sizeof(cl_mem), &nodesInfoIn);
+            err |= clSetKernelArg(CLkernel, 7, sizeof(cl_mem), &elementPermutationStoreIn);
+            err |= clSetKernelArg(CLkernel, 9, sizeof(int), &dimension);
+            err |= clSetKernelArg(CLkernel, 10, sizeof(int), &nn);
+            err |= clSetKernelArg(CLkernel, 11, sizeof(int), &n);
+            err |= clSetKernelArg(CLkernel, 12, sizeof(int), &nBasis);
+            err |= clSetKernelArg(CLkernel, 13, sizeof(int), &kernelDof);
+            err |= clSetKernelArg(CLkernel, 14, sizeof(int), &varDofs);
+
             for (NSMutableArray *color in mesh.colors) {
                 
                 position = 0;
@@ -877,38 +937,21 @@ enum {
                     position = position + [cc[0] intValue];
                 }
                 
-                // Dispatch the kernel block using the queue created earlier
-                dispatch_sync(queue, ^{
-                    
-                    void *map;
-                    
-                    map = gcl_map_ptr(nodesInfoIn, CL_MEM_READ_WRITE, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes));
-                    memcpy(map, nodesInfo, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes));
-                    
-                    map = gcl_map_ptr(colorMappingIn, CL_MEM_READ_WRITE, sizeof(cl_int)*mesh.numberOfBulkElements);
-                    memcpy(map, colorMapping, sizeof(cl_int)*mesh.numberOfBulkElements);
-                    
-                    map = gcl_map_ptr(elementPermutationStoreIn, CL_MEM_READ_WRITE, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs));
-                    memcpy(map, elementPermutationStore, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs));
-                    
-                    cl_ndrange range = {
-                        1,
-                        {0, 0, 0},
-                        {[color[0] intValue], 0, 0},
-                        {0, 0, 0}
-                    };
-                    
-                    // Call the kernel
-                    //heatSolutionAssembly_kernel(&range, (cl_int*)matrixDiag, (cl_int*)matrixRows, (cl_int*)matrixCols, (cl_double*)matrixValues, (cl_double*)matrixRHS, (cl_int *)colorMappingIn, (cl_double*)nodesInfoIn, (cl_int*)elementPermutationStoreIn,
-                    //                            (cl_double*)elementBasisIn, (cl_double*)elementdBasisIn, position, model.dimension, nn, n, nnn, nBasis, kernelDof, solution.variable.dofs);
-                    heatSolutionAssembly_kernel(&range, (cl_int*)matrixDiag, (cl_int*)matrixRows, (cl_int*)matrixCols, (cl_double*)matrixValues, (cl_double*)matrixRHS, (cl_int *)colorMappingIn, (cl_double*)nodesInfoIn, (cl_int*)elementPermutationStoreIn, position, model.dimension, nn, n, nBasis, kernelDof, solution.variable.dofs);
-                });
+                size_t global_work_size = [color[0] intValue];
+                //size_t local_work_size = 64;
+                err |= clSetKernelArg(CLkernel, 8, sizeof(int), &position);
+
+                //Queue up the kernels
+                err = clEnqueueNDRangeKernel(cmd_queue, CLkernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+                
+                // Finish the calculation
+                clFinish(cmd_queue);
             }
-            dispatch_sync(queue, ^{
-                // Copy data from device to host
-                gcl_memcpy(matContainers->Values, matrixValues, sizeof(cl_double)*matContainers->sizeValues);
-                gcl_memcpy(matContainers->RHS, matrixRHS, sizeof(cl_double)*matContainers->sizeRHS);
-            });
+            
+            // Read results data from the device
+            err = clEnqueueReadBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, matContainers->Values, 0, NULL, NULL);
+            err = clEnqueueReadBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, matContainers->RHS, 0, NULL, NULL);
+            clFinish(cmd_queue);
             
             at = cputime() -  at;
 
@@ -972,19 +1015,22 @@ enum {
         }
     } // time interval
     
+    // Release kernel, program and memory objects
+	clReleaseKernel(CLkernel);
+	clReleaseProgram(program);
+	clReleaseCommandQueue(cmd_queue);
+	clReleaseContext(context);
+	
+	clReleaseMemObject(matDiag);
+	clReleaseMemObject(matRows);
+	clReleaseMemObject(matCols);
+	clReleaseMemObject(matValues);
+	clReleaseMemObject(matRhs);
+    clReleaseMemObject(nodesInfoIn);
+    clReleaseMemObject(colorMappingIn);
+    clReleaseMemObject(elementPermutationStoreIn);
+    
     free_ivector(elementPermutationStore, 0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
-    
-    gcl_free(nodesInfoIn);
-    gcl_free(colorMappingIn);
-    gcl_free(elementPermutationStoreIn);
-    
-    gcl_free(matrixDiag);
-    gcl_free(matrixRows);
-    gcl_free(matrixCols);
-    gcl_free(matrixValues);
-    gcl_free(matrixRHS);
-    //dispatch_release(queue);
-    
     free_dvector(nodesInfo, 0, (kernelDof*mesh.numberOfNodes)-1);
     [integration deallocation:mesh];
     

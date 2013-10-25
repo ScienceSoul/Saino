@@ -212,7 +212,7 @@ void NodalFirstDerivatives2D(float y[],struct BasisFunctionsTiangle basisFunctio
     }
 }
 
-void setDxForElement(float dx[], struct BasisFunctionsTiangle basisFunctions[],  double u, double v, int globalID, int numberElementDofs, int kernelDof, global int *elementPermutationStore, global double *nodesInfo) {
+void setDxForElement(float dx[], struct BasisFunctionsTiangle basisFunctions[],  double u, double v, int globalID, int numberElementDofs, int kernelDof, __global int *elementPermutationStore, __global double *nodesInfo) {
     
     int i, j, k, n, dim;
     float accum1, accum2, accum3;
@@ -237,7 +237,7 @@ void setDxForElement(float dx[], struct BasisFunctionsTiangle basisFunctions[], 
 }
 
 // Function returns sqrt(detG) and also computes dBasisdx
-double setBasisFirstDerivativeMetricDeterminant (double dBasisdx[], struct BasisFunctionsTiangle basisFunctions[], double u, double v, int globalID, int numberElementDofs, int kernelDof, global int *elementPermutationStore, global double *nodesInfo) {
+double setBasisFirstDerivativeMetricDeterminant (double dBasisdx[], struct BasisFunctionsTiangle basisFunctions[], double u, double v, int globalID, int numberElementDofs, int kernelDof, __global int *elementPermutationStore, __global double *nodesInfo) {
     
     int i, j, k;
     float covariantMetricTensor[2][2], detG, dx[4], elementMetric[2][2], ltoGMap[2][2], s;
@@ -294,7 +294,7 @@ double setBasisFirstDerivativeMetricDeterminant (double dBasisdx[], struct Basis
 }
 
 
-kernel void heatSolutionAssembly(global int *diag, global int *rows, global int *cols, global double *values, global double *rhs, global int *colorMapping, global double *nodesInfo, global int *elementPermutationStore, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int kernelDof, int varDofs) {
+__kernel void heatSolutionAssembly(__global int *diag, __global int *rows, __global int *cols, __global double *values, __global double *rhs, __global int *colorMapping, __global double *nodesInfo, __global int *elementPermutationStore, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int kernelDof, int varDofs) {
     
     int workItemID = get_global_id(0);
     int i, j, k, l, c, col, n, p, q, row, t, globalID;

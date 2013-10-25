@@ -72,6 +72,7 @@
 		73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */ = {isa = PBXBuildFile; fileRef = 73DE8B1B16B2627000DA2D7D /* Constructors.c */; };
 		73DFEE5F16F33D280081A3A4 /* FEMFlowSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */; };
 		73E6B577181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */; };
+		73E6B57D181A55AE00D3AB31 /* OpenCLUtils.c in Sources */ = {isa = PBXBuildFile; fileRef = 73E6B57C181A55AE00D3AB31 /* OpenCLUtils.c */; };
 		73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */ = {isa = PBXBuildFile; fileRef = 73ED563413AA10BB00F088CC /* GaussIntegration.c */; };
 		73EE3A9616F808E30054B7AE /* FEMMagneticInductionSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 73EE3A9516F808E30054B7AE /* FEMMagneticInductionSolution.m */; };
 		73EE3A9916F809640054B7AE /* FEMStressAnalysisSolution.m in Sources */ = {isa = PBXBuildFile; fileRef = 73EE3A9816F809640054B7AE /* FEMStressAnalysisSolution.m */; };
@@ -229,6 +230,8 @@
 		73DFEE5D16F33D280081A3A4 /* FEMFlowSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMFlowSolution.h; sourceTree = "<group>"; };
 		73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMFlowSolution.m; sourceTree = "<group>"; };
 		73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = heatSolutiomAssemblyKernel.cl; sourceTree = "<group>"; };
+		73E6B57B181A556400D3AB31 /* OpenCLUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenCLUtils.h; sourceTree = "<group>"; };
+		73E6B57C181A55AE00D3AB31 /* OpenCLUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenCLUtils.c; sourceTree = "<group>"; };
 		73ED563413AA10BB00F088CC /* GaussIntegration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GaussIntegration.c; sourceTree = "<group>"; };
 		73ED563513AA10BB00F088CC /* GaussIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = GaussIntegration.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		73ED563713AA16F200F088CC /* Numerics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Numerics.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -404,6 +407,8 @@
 				73505DCF13C1BD0600B1C043 /* NodalBasisFunctions.h */,
 				73A4696815076F8500BDDEA6 /* Lists.c */,
 				73A4696B15076F9200BDDEA6 /* Lists.h */,
+				73E6B57B181A556400D3AB31 /* OpenCLUtils.h */,
+				73E6B57C181A55AE00D3AB31 /* OpenCLUtils.c */,
 			);
 			name = "Low level C routines";
 			sourceTree = "<group>";
@@ -756,6 +761,7 @@
 				7316B30316144DC900A8C23C /* FEMInterpolation.m in Sources */,
 				737CCFCB1683F5EA00A94486 /* FEMBoundary.m in Sources */,
 				73206776168D7D9700BAE816 /* FEMElementUtils.m in Sources */,
+				73E6B57D181A55AE00D3AB31 /* OpenCLUtils.c in Sources */,
 				7320677A169A6EA900BAE816 /* FEMListMatrix.m in Sources */,
 				7320677D169C00DF00BAE816 /* FEMBandwidthOptimize.m in Sources */,
 				73DE8B1C16B2627000DA2D7D /* Constructors.c in Sources */,

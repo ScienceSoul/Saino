@@ -474,7 +474,7 @@
     self.numberOfBoundaryConditions = 1;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Tube2"];
+    _meshName = [NSMutableString stringWithString:@"Tube"];
 }
 
 #pragma mark Public methods
