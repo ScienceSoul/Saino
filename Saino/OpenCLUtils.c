@@ -21,6 +21,7 @@ int device_stats(cl_device_id device_id)
 	cl_char device_name[1025] = {0};
 	cl_char device_profile[1024] = {0};
 	cl_char device_extensions[1024] = {0};
+    cl_char device_driver_version[1024] = {0};
 	cl_device_local_mem_type local_mem_type;
 	
 	cl_ulong global_mem_size, global_mem_cache_size, local_mem_size;
@@ -35,6 +36,7 @@ int device_stats(cl_device_id device_id)
 	
 	err = clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendor_name), vendor_name, &returned_size);
 	err |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(device_name), device_name, &returned_size);
+    err |= clGetDeviceInfo(device_id, CL_DRIVER_VERSION, sizeof(device_driver_version), device_driver_version, &returned_size);
 	err |= clGetDeviceInfo(device_id, CL_DEVICE_PROFILE, sizeof(device_profile), device_profile, &returned_size);
 	err |= clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, sizeof(device_extensions), device_extensions, &returned_size);
 	err |= clGetDeviceInfo(device_id, CL_DEVICE_LOCAL_MEM_TYPE, sizeof(local_mem_type), &local_mem_type, &returned_size);
@@ -56,13 +58,14 @@ int device_stats(cl_device_id device_id)
 	
 	printf("Vendor: %s\n", vendor_name);
 	printf("Device Name: %s\n", device_name);
+    printf("Device driver version: %s\n", device_driver_version);
 	printf("Profile: %s\n", device_profile);
 	printf("Supported Extensions: %s\n\n", device_extensions);
 	
 	printf("Local Mem Type (Local=1, Global=2): %i\n", (int)local_mem_type);
 	printf("Global Mem Size (MB): %i\n", (int)global_mem_size/(1024*1024));
-	printf("Global Mem Cache Size (Bytes): %i\n", (int)global_mem_cache_size);
-	printf("Local Mem Size (Bytes): %i\n", (int)local_mem_size);
+	printf("Global Mem Cache Size (KB): %i\n", (int)global_mem_cache_size/1024);
+	printf("Local Mem Size (KB): %i\n", (int)local_mem_size/1024);
 	printf("Max Mem Alloc Size (MB): %ld\n", (long int)max_mem_alloc_size/(1024*1024));
 	
 	printf("Clock Frequency (MHz): %i\n\n", clock_frequency);

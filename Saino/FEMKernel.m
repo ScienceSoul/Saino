@@ -12,7 +12,6 @@
 #import <complex.h>
 
 #import "FEMValueList.h"
-#import "FEMListUtilities.h"
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMSimulation.h"
@@ -22,8 +21,6 @@
 #import "FEMPrecondition.h"
 #import "FEMParallelMPI.h"
 #import "FEMTimeIntegration.h"
-#import "FEMMatrixCRS.h"
-#import "FEMMatrixBand.h"
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
 #import "FEMNumericIntegration.h"
@@ -3074,13 +3071,12 @@ static const int PRECOND_VANKA     =  560;
     Returns a real by its name if found in the array structure and in the
     active element
 *****************************************************************************/
--(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result {
+-(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result listUtilities:(FEMListUtilities *)listUtil {
     
     int n;
     int dNodes[1];
     int *nodeIndexes = NULL;
     BOOL found;
-    FEMListUtilities *listUtil;
     
     if (element != NULL) {
         n = [self getNumberOfNodesForElement:element];
@@ -3090,8 +3086,6 @@ static const int PRECOND_VANKA     =  560;
         nodeIndexes = dNodes;
         nodeIndexes[0] = 0;
     }
-    
-    listUtil = [[FEMListUtilities alloc] init];
     
     found = [listUtil listGetReal:model inArray:array forVariable:name numberOfNodes:n indexes:element->NodeIndexes buffer:result minValue:NULL maxValue:NULL];
     
@@ -3328,7 +3322,6 @@ static const int PRECOND_VANKA     =  560;
                 nb++;
             }
         }
-        
     }
     
     return nb;
@@ -4132,16 +4125,15 @@ static const int PRECOND_VANKA     =  560;
     double **vLoad, g[3], *vl;
     listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMElementDescription *elementDescription;
-    FEMNumericIntegration *numericIntegration;
     ElementType_t savedType;
     GaussIntegrationPoints *IP;
     Nodes_t *nodes, *pNodes;
     NSString *string;
     BOOL stat;
     
-    elementDescription = [FEMElementDescription sharedElementDescription];
-    numericIntegration = [[FEMNumericIntegration alloc] init];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    FEMNumericIntegration *numericIntegration = [[FEMNumericIntegration alloc] init];
     if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMKernel:localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
@@ -4169,7 +4161,7 @@ static const int PRECOND_VANKA     =  560;
     
     memset( g, 0.0, sizeof(g) );
     
-    stat = [self getReal:model forElement:element inArray:bc variableName:name buffer:&load];
+    stat = [self getReal:model forElement:element inArray:bc variableName:name buffer:&load listUtilities:listUtilities];
     
     edgeMap = [self getEdgeMap:[self getElementFamily:parent]];
     
@@ -4207,19 +4199,19 @@ static const int PRECOND_VANKA     =  560;
     }
     
     string = [name stringByAppendingString:@" 1"];
-    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer listUtilities:listUtilities];
     for (i=0; i<nd; i++) {
         vLoad[0][i] = buffer.vector[i];
     }
     
     string = [name stringByAppendingString:@" 2"];
-    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer listUtilities:listUtilities];
     for (i=0; i<nd; i++) {
         vLoad[1][i] = buffer.vector[i];
     }
     
     string = [name stringByAppendingString:@" 3"];
-    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer];
+    stat = [self getReal:model forElement:element inArray:bc variableName:string buffer:&buffer listUtilities:listUtilities];
     for (i=0; i<nd; i++) {
         vLoad[2][i] = buffer.vector[i];
     }
@@ -6406,16 +6398,38 @@ static const int PRECOND_VANKA     =  560;
         int dofs                    -> Number of dofs
         int *nodeIndexes            -> Element node to global node numbering mapping
 ********************************************************************************************************************/
--(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT {
+-(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, j, k, dim;
     int *indexes;
     BOOL rotate;
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
+    
+    static BOOL (*checkPassiveElementIMP)(id, SEL, Element_t *, FEMModel *, FEMSolution *) = nil;
+    static void (*rotateMatrixIMP)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*) = nil;
+    static void (*crsGlueLocalMatrixInGlobalIMP)(id, SEL, FEMSolution *, double **, int, int, int*) = nil;
+    static void (*bandGlueLocalMatrixInGlobalIMP)(id, SEL, FEMSolution *, double **, int, int, int*) = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (!checkPassiveElementIMP) {
+            checkPassiveElementIMP = (BOOL (*)(id, SEL, Element_t *, FEMModel *, FEMSolution *))
+            [self methodForSelector: @selector(FEMKernel_checkPassiveElement:model:solution:)];
+        }
+        if (!rotateMatrixIMP) {
+            rotateMatrixIMP = (void (*)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*))
+            [self methodForSelector: @selector(FEMKernel_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:)];
+        }
+        if (!crsGlueLocalMatrixInGlobalIMP) {
+            crsGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, FEMSolution *, double **, int, int, int*))
+            [crsMatrix methodForSelector: @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:)];
+        }
+        if (!bandGlueLocalMatrixInGlobalIMP) {
+            bandGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, FEMSolution *, double **, int, int, int*))
+            [bandMatrix methodForSelector: @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:)];
+        }
+    });
     
     // Check if this element has been defined as passive
-    if ([self FEMKernel_checkPassiveElement:element model:model solution:solution] == YES) return;
+    if (checkPassiveElementIMP(self, @selector(FEMKernel_checkPassiveElement:model:solution:), element, model, solution) == YES) return;
         
     indexes = intvec(0, n-1);
     
@@ -6430,13 +6444,12 @@ static const int PRECOND_VANKA     =  560;
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
         }
-        [self FEMKernel_rotateMatrix:localStiffMatrix solution:solution vector:localForce size:n dimension:dim dofs:dofs nodeIndexes:indexes];
+        rotateMatrixIMP(self, @selector(FEMKernel_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:), localStiffMatrix, solution, localForce, n, dim, dofs, indexes);
     }
     
     switch (solution.matrix.format) {
         case MATRIX_CRS:
-            crsMatrix = [[FEMMatrixCRS alloc] init];
-            [crsMatrix glueLocalMatrixInGlobal:solution matrix:localStiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            crsGlueLocalMatrixInGlobalIMP(crsMatrix, @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:), solution, localStiffMatrix, n, dofs, nodeIndexes);
             break;
             
         case MATRIX_LIST:
@@ -6445,8 +6458,7 @@ static const int PRECOND_VANKA     =  560;
             
         case MATRIX_BAND:
         case MATRIX_SBAND:
-            bandMatrix = [[FEMMatrixBand alloc] init];
-            [bandMatrix glueLocalMatrixInGlobal:solution matrix:localStiffMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            bandGlueLocalMatrixInGlobalIMP(bandMatrix, @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:), solution, localStiffMatrix, n, dofs, nodeIndexes);
             break;
     }
     
@@ -6461,7 +6473,7 @@ static const int PRECOND_VANKA     =  560;
     free_ivector(indexes, 0, n-1);
 }
 
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate {
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, n;
     int *perm;
@@ -6472,8 +6484,22 @@ static const int PRECOND_VANKA     =  560;
     
     // TODO: add support for parallel runs
     
+    static void (*updateGlobalEquationIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, double*, int, int, int *, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
+    static int (*getElementDofsIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*) = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (!updateGlobalEquationIMP) {
+            updateGlobalEquationIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, double*, int, int, int *, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
+            [self methodForSelector: @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:)];
+        }
+        if (!getElementDofsIMP) {
+            getElementDofsIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*))
+            [self methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:)];
+        }
+    });
+    
     memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, self.indexStore);
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
@@ -6483,7 +6509,8 @@ static const int PRECOND_VANKA     =  560;
     
     matContainers = solution.matrix.getContainers;
     
-    [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL];
+    updateGlobalEquationIMP(self, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:),
+                            model, solution, element, stiff, matContainers->RHS, force, n, solution.variable.dofs, perm, rows, cols, NULL, crsMatrix, bandMatrix);
     
     bupd = NO;
     if (bulkUpdate != NULL) {
@@ -6516,14 +6543,15 @@ static const int PRECOND_VANKA     =  560;
         saveValues = matContainers->Values;
         matContainers->Values = matContainers->BulkValues;
         rotateNT = NO;
-        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT];
+        updateGlobalEquationIMP(self, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:),
+                                model, solution, element, stiff, matContainers->BulkRHS, force, n, solution.variable.dofs, perm, rows, cols, &rotateNT, crsMatrix, bandMatrix);
         matContainers->Values = saveValues;
     }
     
     free_ivector(perm, 0, n-1);
 }
 
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double **)cstiff complexForce:(double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate {
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, j, n, dofs;
     int *perm;
@@ -6563,7 +6591,7 @@ static const int PRECOND_VANKA     =  560;
 
      matContainers = solution.matrix.getContainers;
     
-    [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL];
+    [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
 
     bupd = NO;
     if (bulkUpdate != NULL) {
@@ -6598,7 +6626,7 @@ static const int PRECOND_VANKA     =  560;
         saveValues = matContainers->Values;
         matContainers->Values = matContainers->BulkValues;
         rotateNT = NO;
-        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT];
+        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT crsMatrix:crsMatrix bandMatrix:bandMatrix];
         matContainers->Values = saveValues;
     }
     

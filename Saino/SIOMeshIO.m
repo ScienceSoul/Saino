@@ -90,10 +90,10 @@
     self.info = [self.meshAgent readAllNodes:tags coord:coord];
 }
 
--(void)getMeshElementConnection:(int *)tag body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes {
+-(void)getMeshElementConnection:(int *)tag body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly {
     
     int part;
-    if ([self.meshAgent readNextElementConnections:tag part:&part body:body type:type pdofs:pdofs nodes:nodes] != -1) {
+    if ([self.meshAgent readNextElementConnections:tag part:&part body:body type:type pdofs:pdofs nodes:nodes colorIndex:colorIndex parallelAssembly:(BOOL *)parallelAssembly] != -1) {
         self.info = 0;
     } else self.info = -1;
 }

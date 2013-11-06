@@ -185,6 +185,9 @@
     return s;
 }
 
+/*************************************************************************************
+    Gets a real valued parameter in each node of an element.
+************************************************************************************/
 -(BOOL)listGetReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result minValue:(double *)minv maxValue:(double *)maxv {
 
     int i, j, k;

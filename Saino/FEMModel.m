@@ -445,7 +445,7 @@
     [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
     [solution.solutionInfo setObject:@1.0e-02 forKey:@"nonlinear system newton after tolerance"];
     [solution.solutionInfo setObject:@1.0 forKey:@"nonlinear system relaxation factor"];
-    [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+    [solution.solutionInfo setObject:@NO forKey:@"parallel assembly"];
     self.solutions = @[solution];
     self.numberOfSolutions = 1;
     
@@ -474,7 +474,7 @@
     self.numberOfBoundaryConditions = 1;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Tube"];
+    _meshName = [NSMutableString stringWithString:@"Tube100000"];
 }
 
 #pragma mark Public methods

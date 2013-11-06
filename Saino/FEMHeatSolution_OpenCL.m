@@ -266,9 +266,10 @@ enum {
     static int firstTimeCL = 0;
     int *colorMapping = NULL, *elementPermutationStore, *indexes = NULL, indexStore[511];
     char *program_source;
-    double at, at0, C1, dt0, cumulativeTime, newtonTol, nonLinearTol, norm,
+    double at, at0, ct, mt, mmt, pt, C1, dt0, cumulativeTime, newtonTol, nonLinearTol, norm,
     prevNorm, referencePressure, relax, relativeChange, saveRelax, specificHeatRatio, st, totat, totst;
-    double *forceVector, *nodesInfo;
+    double *forceVector;
+    float *nodesInfo;
     BOOL all, bubbles, found, heatFluxBC, firstTime, stabilize = YES, useBubbles;
     NSString *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
@@ -479,11 +480,11 @@ enum {
     
     kernelDof = 17;
     
-    nodesInfo = doublevec(0, (kernelDof*mesh.numberOfNodes)-1);
+    nodesInfo = floatvec(0, (kernelDof*mesh.numberOfNodes)-1);
     elementPermutationStore = intvec(0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
     
 	// Connect to a compute devise
-	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, &devices, NULL);
+	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &devices, NULL);
 
     size_t returned_size = 0;
 	cl_char vendor_name[1024] = {0};
@@ -496,7 +497,7 @@ enum {
 		device_stats(devices);
 	}
     
-    returnValue = LoadFileIntoString("Saino/heatSolutiomAssemblyKernel.cl", &program_source, &src_len);
+    returnValue = LoadFileIntoString("/Users/seddikhakime/Documents/Saino/Saino/heatSolutiomAssemblyKernel.cl", &program_source, &src_len);
 	if (returnValue) {
         NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Error: Can't load kernel source\n");
         exit(-1);
@@ -544,7 +545,7 @@ enum {
 	cl_mem matCols = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*matContainers->sizeCols, NULL, NULL);
 	cl_mem matValues = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeValues, NULL, NULL);
 	cl_mem matRhs = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeRHS, NULL, NULL);
-    cl_mem nodesInfoIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes), NULL, NULL);
+    cl_mem nodesInfoIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float)*(kernelDof*mesh.numberOfNodes), NULL, NULL);
     cl_mem colorMappingIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*mesh.numberOfBulkElements, NULL, NULL);
     cl_mem elementPermutationStoreIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), NULL, NULL);
 
@@ -552,13 +553,13 @@ enum {
     
     double allocationSize = sizeof(cl_int)*matContainers->sizeDiag + sizeof(cl_int)*matContainers->sizeRows + sizeof(cl_int)*matContainers->sizeCols + sizeof(cl_double)*matContainers->sizeValues +
                          + sizeof(cl_double)*matContainers->sizeRHS
-                         + sizeof(cl_double)*(kernelDof*mesh.numberOfNodes)
+                         + sizeof(cl_float)*(kernelDof*mesh.numberOfNodes)
                          + sizeof(cl_int)*mesh.numberOfBulkElements
-                         + sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs)
-                         + sizeof(cl_double)*(mesh.numberOfBulkElements*((mesh.maxElementNodes+1)*mesh.maxElementNodes))
-                         + sizeof(cl_double)*(mesh.numberOfBulkElements*((mesh.maxElementNodes*3)*mesh.maxElementNodes));
+                         + sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs);
     
-    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
+    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for Nodes info (KB): %f\n", (sizeof(cl_double)*(kernelDof*mesh.numberOfNodes))/1024.0);
+    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for element permutation store info (KB): %f\n", (sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs))/1024.0);
+    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Total allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
 
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
@@ -600,11 +601,12 @@ enum {
             bodyForceAtID = nil;
             nb = 0;
             
-            memset( nodesInfo, 0.0, (kernelDof*mesh.numberOfNodes)*sizeof(double) );
+            memset( nodesInfo, 0.0, (kernelDof*mesh.numberOfNodes)*sizeof(float) );
             memset( elementPermutationStore, -1, (mesh.numberOfBulkElements*mesh.maxElementDofs)*sizeof(int) );
             indx1 = 0;
             
             at = cputime();
+            pt = cputime();
             for (t=0; t<solution.numberOfActiveElements; t++) {
                 // Check if this element belongs to a body where temperature
                 // should be calculated
@@ -640,7 +642,7 @@ enum {
                 
                 // Get element material parameters
                 memset( _heatCapacity, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
                 
                 memset( **_heatConductivity, 0.0, (3*3*solution.mesh.maxElementDofs)*sizeof(double) );
@@ -680,7 +682,7 @@ enum {
                         _gasConstant[i] = (specificHeatRatio - 1.0) * _heatCapacity[i] /  specificHeatRatio;
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -690,21 +692,21 @@ enum {
                     }
                 } else if (compressibilityModel == thermal) {
                     memset( _referenceTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"reference temperature" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"reference temperature" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_referenceTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _heatExpansionCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat expansion coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat expansion coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_heatExpansionCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _density[i] = _density[i] * ( 1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]) );
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -718,20 +720,20 @@ enum {
                         [kernel getScalarLocalField:_density sizeField:solution.mesh.maxElementDofs name:@"density" element:element solution:solution model:model timeStep:NULL];
                     } else {
                         memset( _density, 0.0, n*sizeof(double) );
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     }
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else memset( _pressureCoeff, 0.0, n*sizeof(double) );
                 } else {
                     memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                 }
                 
@@ -757,27 +759,27 @@ enum {
                 
                 if ([convectionFlag isEqualToString:@"constant"] == YES) {
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_u, buffer.vector, n*sizeof(double));
                     } else {
-                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_u, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_v, buffer.vector, n*sizeof(double));
                     } else {
-                        [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer];
+                        [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_v, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_w, buffer.vector, n*sizeof(double));
                     } else {
-                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
@@ -810,13 +812,13 @@ enum {
                 if (bodyForceAtID != nil) {
                     // Frictional viscous heating
                     if ([listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"friction heat" info:&found] == YES) {
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_viscosity, buffer.vector, n*sizeof(double));
                     }
                 }
                 
                 // Get heat source
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) {
                     for (i=0; i<n; i++) {
                         _load[i] = _density[i] * buffer.vector[i];
@@ -830,20 +832,20 @@ enum {
                 
                 // Perfusion (added as suggested by Matthias Zenker)
                 memset( _perfusionRate, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion rate" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion rate" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) {
                     memcpy(_perfusionRate, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionRefTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion reference temperature" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion reference temperature" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionRefTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionDensity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionDensity, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionHeatCapacity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion heat capacity" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion heat capacity" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionHeatCapacity, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _c0[i] = _perfusionHeatCapacity[i] * _perfusionRate[i] * _perfusionDensity[i];
@@ -871,23 +873,23 @@ enum {
                 // [_heatCapacity, _heatConductivity[][], _density, _load, C1 * _heatCapacity, _c0, elementNodes->x, elementNodes->y, elementNodes->z, next node...]
                 for (i=0; i<n; i++) {
                     j = tempContainers->Perm[element->NodeIndexes[i]];
-                    nodesInfo[kernelDof*j] = _heatCapacity[i];
-                    nodesInfo[kernelDof*j+1] = _heatConductivity[0][0][i];
-                    nodesInfo[kernelDof*j+2] = _heatConductivity[0][1][i];
-                    nodesInfo[kernelDof*j+3] = _heatConductivity[0][2][i];
-                    nodesInfo[kernelDof*j+4] = _heatConductivity[1][0][i];
-                    nodesInfo[kernelDof*j+5] = _heatConductivity[1][1][i];
-                    nodesInfo[kernelDof*j+6] = _heatConductivity[1][2][i];
-                    nodesInfo[kernelDof*j+7] = _heatConductivity[2][0][i];
-                    nodesInfo[kernelDof*j+8] = _heatConductivity[2][1][i];
-                    nodesInfo[kernelDof*j+9] = _heatConductivity[2][2][i];
-                    nodesInfo[kernelDof*j+10] = _density[i];
-                    nodesInfo[kernelDof*j+11] = _load[i];
-                    nodesInfo[kernelDof*j+12] =  C1 * _heatCapacity[i];
-                    nodesInfo[kernelDof*j+13] = _c0[i];
-                    nodesInfo[kernelDof*j+14] = _elementNodes->x[i];
-                    nodesInfo[kernelDof*j+15] = _elementNodes->y[i];
-                    nodesInfo[kernelDof*j+16] = _elementNodes->z[i];
+                    nodesInfo[kernelDof*j] = (float)_heatCapacity[i];
+                    nodesInfo[kernelDof*j+1] = (float)_heatConductivity[0][0][i];
+                    nodesInfo[kernelDof*j+2] = (float)_heatConductivity[0][1][i];
+                    nodesInfo[kernelDof*j+3] = (float)_heatConductivity[0][2][i];
+                    nodesInfo[kernelDof*j+4] = (float)_heatConductivity[1][0][i];
+                    nodesInfo[kernelDof*j+5] = (float)_heatConductivity[1][1][i];
+                    nodesInfo[kernelDof*j+6] = (float)_heatConductivity[1][2][i];
+                    nodesInfo[kernelDof*j+7] = (float)_heatConductivity[2][0][i];
+                    nodesInfo[kernelDof*j+8] = (float)_heatConductivity[2][1][i];
+                    nodesInfo[kernelDof*j+9] = (float)_heatConductivity[2][2][i];
+                    nodesInfo[kernelDof*j+10] = (float)_density[i];
+                    nodesInfo[kernelDof*j+11] = (float)_load[i];
+                    nodesInfo[kernelDof*j+12] =  (float)(C1 * _heatCapacity[i]);
+                    nodesInfo[kernelDof*j+13] = (float)_c0[i];
+                    nodesInfo[kernelDof*j+14] = (float)_elementNodes->x[i];
+                    nodesInfo[kernelDof*j+15] = (float)_elementNodes->y[i];
+                    nodesInfo[kernelDof*j+16] = (float)_elementNodes->z[i];
                 }
                 
                 memset( indexStore, -1, sizeof(indexStore) );
@@ -897,6 +899,9 @@ enum {
                     indx1++;
                 }
             }
+            pt = cputime() -  pt;
+            
+            mt = cputime();
             
             // Queue memory to be written to the device
             err = clEnqueueWriteBuffer(cmd_queue, matDiag, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeDiag, (void*)matContainers->Diag, 0, NULL, NULL);
@@ -904,23 +909,27 @@ enum {
             err = clEnqueueWriteBuffer(cmd_queue, matCols, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeCols, (void*)matContainers->Cols, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, (void*)matContainers->Values, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, (void*)matContainers->RHS, 0, NULL, NULL);
-            err = clEnqueueWriteBuffer(cmd_queue, nodesInfoIn, CL_TRUE, 0, sizeof(cl_double)*(kernelDof*mesh.numberOfNodes), (void*)nodesInfo, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, nodesInfoIn, CL_TRUE, 0, sizeof(cl_float)*(kernelDof*mesh.numberOfNodes), (void*)nodesInfo, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, colorMappingIn, CL_TRUE, 0, sizeof(cl_int)*mesh.numberOfBulkElements, (void*)colorMapping, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, elementPermutationStoreIn, CL_TRUE, 0, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), (void*)elementPermutationStore, 0, NULL, NULL);
             
             // Push the data out to the device
             clFinish(cmd_queue);
             
+            mt = cputime() -  mt;
+            
             int dimension = model.dimension;
             int varDofs = solution.variable.dofs;
+            
+            ct = cputime();
             // Set kernel arguments
-            err = clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matDiag);
-            err |= clSetKernelArg(CLkernel, 1, sizeof(cl_mem), &matRows);
-            err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &matCols);
-            err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matValues);
-            err |= clSetKernelArg(CLkernel, 4, sizeof(cl_mem), &matRhs);
-            err |= clSetKernelArg(CLkernel, 5, sizeof(cl_mem), &colorMappingIn);
-            err |= clSetKernelArg(CLkernel, 6, sizeof(cl_mem), &nodesInfoIn);
+            err |= clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matValues);
+            err |= clSetKernelArg(CLkernel, 1, sizeof(cl_mem), &matRhs);
+            err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &nodesInfoIn);
+            err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matDiag);
+            err |= clSetKernelArg(CLkernel, 4, sizeof(cl_mem), &matRows);
+            err |= clSetKernelArg(CLkernel, 5, sizeof(cl_mem), &matCols);
+            err |= clSetKernelArg(CLkernel, 6, sizeof(cl_mem), &colorMappingIn);
             err |= clSetKernelArg(CLkernel, 7, sizeof(cl_mem), &elementPermutationStoreIn);
             err |= clSetKernelArg(CLkernel, 9, sizeof(int), &dimension);
             err |= clSetKernelArg(CLkernel, 10, sizeof(int), &nn);
@@ -928,7 +937,7 @@ enum {
             err |= clSetKernelArg(CLkernel, 12, sizeof(int), &nBasis);
             err |= clSetKernelArg(CLkernel, 13, sizeof(int), &kernelDof);
             err |= clSetKernelArg(CLkernel, 14, sizeof(int), &varDofs);
-
+            
             for (NSMutableArray *color in mesh.colors) {
                 
                 position = 0;
@@ -948,10 +957,16 @@ enum {
                 clFinish(cmd_queue);
             }
             
+            ct = cputime() -  ct;
+            
+            mmt = cputime();
+            
             // Read results data from the device
             err = clEnqueueReadBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, matContainers->Values, 0, NULL, NULL);
             err = clEnqueueReadBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, matContainers->RHS, 0, NULL, NULL);
             clFinish(cmd_queue);
+            
+            mmt = cputime() -  mmt;
             
             at = cputime() -  at;
 
@@ -984,7 +999,7 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (compute, mem up, mem down, data loop, all, tot) (s): %f %f %f %f %f %f\n", iter, ct, mt, mmt, pt, at, totat);
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
             
             relativeChange = solution.variable.nonLinChange;
@@ -1031,7 +1046,7 @@ enum {
     clReleaseMemObject(elementPermutationStoreIn);
     
     free_ivector(elementPermutationStore, 0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
-    free_dvector(nodesInfo, 0, (kernelDof*mesh.numberOfNodes)-1);
+    free_fvector(nodesInfo, 0, (kernelDof*mesh.numberOfNodes)-1);
     [integration deallocation:mesh];
     
     solution.dt = timeStep;

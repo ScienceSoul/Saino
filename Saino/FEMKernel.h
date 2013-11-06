@@ -12,6 +12,9 @@
 #import "FEMModel.h"
 #import "FEMSolution.h"
 #import "FEMMesh.h"
+#import "FEMMatrixCRS.h"
+#import "FEMMatrixBand.h"
+#import "FEMListUtilities.h"
 
 @interface FEMKernel : NSObject {
     
@@ -80,7 +83,7 @@
 -(void)initializeTimeStepInSolution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)initializeToZeroMatrix:(FEMMatrix *)matrix forceVector:(double *)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel *)model solution:(FEMSolution *)solution;
 -(void)defaultInitializeSolution:(FEMSolution *)solution model:(FEMModel *)model;
--(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result;
+-(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result listUtilities:(FEMListUtilities *)listUtil;
 -(int)isPElement:(Element_t *)element;
 -(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd;
 -(int)getElementFamily:(Element_t *)element;
@@ -134,9 +137,9 @@
 -(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution;
 
 // Update global equations
--(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT;
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate;
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double **)cstiff complexForce:(double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate;
+-(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
 -(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix;
 

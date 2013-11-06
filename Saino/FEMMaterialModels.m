@@ -606,19 +606,19 @@
         if ([integration allocation:mesh] == NO) errorfunct("FEMMaterialModels:effectiveConductivity", "Allocation error in FEMNumericIntegration!");
         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
      
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&c1n];
+        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&c1n listUtilities:listUtilities];
         c_p = 0.0;
         for (i=0; i<n; i++) {
             c_p = c_p + integration.basis[i]*c1n.vector[i];
         }
         
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&c1n];
+        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&c1n listUtilities:listUtilities];
         mu = 0.0;
         for (i=0; i<n; i++) {
             mu = mu + integration.basis[i]*c1n.vector[i];
         }
         
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"turbulent prandtl number" buffer:&c1n];
+        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"turbulent prandtl number" buffer:&c1n listUtilities:listUtilities];
         if (found == YES) {
             pr_t = 0.0;
             for (i=0; i<n; i++) {

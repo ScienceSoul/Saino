@@ -38,11 +38,11 @@ enum {
 
 @interface FEMHeatSolution ()
 -(void)FEMHeatSolution_findGapIndexesElement:(Element_t *)element indexes:(int *)indexes numberOfNodes:(int)n solution:(FEMSolution *)solution;
--(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model transientSimulation:(BOOL)transient;
+-(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient;
 -(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t*)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh;
 -(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel *)model solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel element:(Element_t *)element numberOfNodes:(int)n forceVector:(double *)forceVector angleFraction:(double *)angleFraction text:(double *)text;
 -(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution *)solution element:(Element_t *)element numberOfNodes:(int)n kernel:(FEMKernel *)kernel;
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector kernel:(FEMKernel *)kernel solution:(FEMSolution *)solution model:(FEMModel *)model;
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector kernel:(FEMKernel *)kernel solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilites crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
 -(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution *)solution;
 -(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel *)model;
 @end
@@ -162,11 +162,10 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model transientSimulation:(BOOL)transient {
+-(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient{
     
     int i;
     BOOL any, found, specific;
-    FEMListUtilities *listUtilites;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     //---------------------------------------------------------------------
@@ -215,25 +214,24 @@ enum {
     
     _phaseSpatial = (_phaseChangeModel == PHASE_SPATIAL_2) ? YES : NO;
     
-    listUtilites = [[FEMListUtilities alloc] init];
-    specific = [listUtilites listCheckPresentVariable:@"specific enthalpy" inArray:material.valuesList];
+    specific = [listUtilities listCheckPresentVariable:@"specific enthalpy" inArray:material.valuesList];
     
     switch (_phaseChangeModel) {
         // This phase change model is avaiable only for some type of real entries
         // that have an implemented analytical derivation rule
         case PHASE_SPATIAL_1:
-            found = [listUtilites listGetReal:model inArray:material.valuesList forVariable:@"effective heat capacity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+            found = [listUtilities listGetReal:model inArray:material.valuesList forVariable:@"effective heat capacity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
             if (found == YES) {
                 memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
             } else {
                 if (specific == YES) {
-                    found = [listUtilites listGetDerivativeValue:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer];
+                    found = [listUtilities listGetDerivativeValue:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer];
                     if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _heatCapacity[i] = _density[i] * _heatCapacity[i];
                     }
                 } else {
-                    found = [listUtilites listGetDerivativeValue:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer];
+                    found = [listUtilities listGetDerivativeValue:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer];
                     if (found == YES)  memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
                 }
             }
@@ -243,13 +241,13 @@ enum {
         // and thus Enthalpy and PhaseSpatial flag are used instead of HeatCapacity directly
         case PHASE_SPATIAL_2:
             if (specific == YES) {
-                found = [listUtilites listGetReal:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+                found = [listUtilities listGetReal:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 if (found == YES) memcpy(_enthalpy, buffer.vector, n*sizeof(double));
                 for (i=0; i<n; i++) {
                     _enthalpy[i] = _density[i] * _enthalpy[i];
                 }
             } else {
-                found = [listUtilites listGetReal:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+                found = [listUtilities listGetReal:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 if (found == YES)  memcpy(_enthalpy, buffer.vector, n*sizeof(double));
             }
             
@@ -260,14 +258,14 @@ enum {
             // relevant entries of the Temperature solution in the global vector are
             // tampered in order to make the ListGetReal method work as wanted
             if (specific == YES) {
-                found = [listUtilites listGetReal:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+                found = [listUtilities listGetReal:model inArray:material.valuesList forVariable:@"specific enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 if (found == YES) memcpy(_work, buffer.vector, n*sizeof(double));
                 memcpy(_temperature, _tSolution, _localNodes*sizeof(double));
                 for (i=0; i<n; i++) {
                     _work[i] = _work[i] - buffer.vector[i];
                 }
             } else {
-                found = [listUtilites listGetReal:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
+                found = [listUtilities listGetReal:model inArray:material.valuesList forVariable:@"enthalpy" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
                 if (found == YES) memcpy(_work, buffer.vector, n*sizeof(double));
                 memcpy(_temperature, _tSolution, _localNodes*sizeof(double));
                 for (i=0; i<n; i++) {
@@ -450,17 +448,15 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector kernel:(FEMKernel *)kernel solution:(FEMSolution *)solution model:(FEMModel *)model {
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector kernel:(FEMKernel *)kernel solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+ {
     
     int i, j, k;
     BOOL found;
     double sum;
-    FEMListUtilities *listUtilities;
     FEMElementDescription *elementDescription;
     FEMMaterial *materialAtID = nil;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    
-    listUtilities = [[FEMListUtilities alloc] init];
     
     [kernel getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL];
     
@@ -470,7 +466,7 @@ enum {
     // BC: -k@T/@n = \epsilon\sigma(T^4 - Text^4)
     _radiationFlag = [listUtilities listGetString:model inArray:bc forVariable:@"radiation" info:&found];
     if (found == YES && [_radiationFlag isEqualToString:@"none"] == NO) {
-        found = [kernel getReal:model forElement:element inArray:bc variableName:@"emissivity" buffer:&buffer];
+        found = [kernel getReal:model forElement:element inArray:bc variableName:@"emissivity" buffer:&buffer listUtilities:listUtilities];
         memset( _nodalEmissivity, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
         if (found == YES) {
             memcpy(_nodalEmissivity, buffer.vector, n*sizeof(double));
@@ -486,22 +482,22 @@ enum {
         
         memset( _aText, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
         if ([_radiationFlag isEqualToString:@"idealized"] == YES) {
-            found = [kernel getReal:model forElement:element inArray:bc variableName:@"radiation external temperature" buffer:&buffer];
+            found = [kernel getReal:model forElement:element inArray:bc variableName:@"radiation external temperature" buffer:&buffer listUtilities:listUtilities];
             if (found == YES) {
                 memcpy(_aText, buffer.vector, n*sizeof(double));
             } else {
-                found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) memcpy(_aText, buffer.vector, n*sizeof(double));
             }
         } else {
             [self FEMHeatSolution_diffuseGrayRadiationModel:model solution:solution kernel:kernel element:element numberOfNodes:n forceVector:forceVector angleFraction:&_visibleFraction text:&_text];
             
             if ([listUtilities listGetLogical:model inArray:bc forVariable:@"radiation boundary open" info:&found] == YES) {
-                found = [kernel getReal:model forElement:element inArray:bc variableName:@"radiation external temperature" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bc variableName:@"radiation external temperature" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) {
                     memcpy(_aText, buffer.vector, n*sizeof(double));
                 } else {
-                    found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_aText, buffer.vector, n*sizeof(double));
                 }
                 for (i=0; i<n; i++) {
@@ -531,12 +527,12 @@ enum {
         }
     } // end of radiation
     
-    found = [kernel getReal:model forElement:element inArray:bc variableName:@"heat transfert coefficient" buffer:&buffer];
+    found = [kernel getReal:model forElement:element inArray:bc variableName:@"heat transfert coefficient" buffer:&buffer listUtilities:listUtilities];
     if (found == YES) {
         memset( _work, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
         memset( _aText, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
         memcpy(_work, buffer.vector, n*sizeof(double));
-        found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer];
+        found = [kernel getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer listUtilities:listUtilities];
         if (found) memcpy(_aText, buffer.vector, n*sizeof(double));
         for (j=0; j<n; j++) {
             // BC: -k@T/@n = \alpha(T - Text)
@@ -551,15 +547,15 @@ enum {
     if ([listUtilities listGetLogical:model inArray:bc forVariable:@"phase change" info:&found] == YES) {
         elementDescription = [FEMElementDescription sharedElementDescription];
         
-        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 1" buffer:&buffer];
+        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 1" buffer:&buffer listUtilities:listUtilities];
         for (i=0; i<n; i++) {
             _phaseVelocity[0][i] = buffer.vector[i];
         }
-        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 2" buffer:&buffer];
+        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 2" buffer:&buffer listUtilities:listUtilities];
         for (i=0; i<n; i++) {
             _phaseVelocity[1][i] = buffer.vector[i];
         }
-        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 3" buffer:&buffer];
+        found = [kernel getReal:model forElement:element inArray:bc variableName:@"phase change 3" buffer:&buffer listUtilities:listUtilities];
         for (i=0; i<n; i++) {
             _phaseVelocity[2][i] = buffer.vector[i];
         }
@@ -572,7 +568,7 @@ enum {
         } else {
             k = [(model.bodies)[parent->BodyID-1][@"material"] intValue];
             materialAtID = (model.materials)[k-1];
-            found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+            found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
              if (found) memcpy(_density, buffer.vector, n*sizeof(double));
         }
         
@@ -593,7 +589,7 @@ enum {
     }
     
     // BC: -k@T/@n = g
-    found = [kernel getReal:model forElement:element inArray:bc variableName:@"heat flux" buffer:&buffer];
+    found = [kernel getReal:model forElement:element inArray:bc variableName:@"heat flux" buffer:&buffer listUtilities:listUtilities];
     if (found == YES) {
         for (i=0; i<n; i++) {
             _load[i] = _load[i] + buffer.vector[i];
@@ -621,7 +617,7 @@ enum {
     if (_heatGapBC == YES) {
         [self FEMHeatSolution_addHeatGapSolution:solution element:element numberOfNodes:n kernel:kernel];
     }
-    [kernel defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:NULL];
+    [kernel defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
     
     if (buffer.vector != NULL) free_dvector(buffer.vector, 0, buffer.m-1);
 }
@@ -922,7 +918,25 @@ enum {
     FEMKernel *kernel = [FEMKernel sharedKernel];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
+    FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
+    FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
+    FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
     
+    static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
+    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *) = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (!defaultUpdateEquationsIMP) {
+            defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
+            [kernel methodForSelector: @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:)];
+        }
+        if (!diffuseConvectiveComposeMassMatrixIMP) {
+            diffuseConvectiveComposeMassMatrixIMP = (void (*)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *))
+            [diffuseConvectiveAnisotropic methodForSelector: @selector(diffuseConvectiveComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:useBubbles:element:numberOfNodes:nodes:solution:mesh:model:)];
+        }
+    });
+
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
     meshNodes = mesh.getNodes;
@@ -1355,8 +1369,6 @@ enum {
     _prevSolution = doublevec(0, _localNodes-1);
     
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
-    FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
-    FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
     
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
@@ -1420,12 +1432,12 @@ enum {
                     materialAtID = (model.materials)[mat_id-1];
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
 
                     
                     memset( _load, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_load, buffer.vector, n*sizeof(double));
                     
                     _s = [elementUtils elementArea:element numberOfNodes:n mesh:solution.mesh nodel:model];
@@ -1506,7 +1518,7 @@ enum {
                 
                 // Get element material parameters
                 memset( _heatCapacity, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
                 
                 memset( **_heatConductivity, 0.0, (3*3*solution.mesh.maxElementDofs)*sizeof(double) );
@@ -1546,7 +1558,7 @@ enum {
                         _gasConstant[i] = (specificHeatRatio - 1.0) * _heatCapacity[i] /  specificHeatRatio;
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -1556,21 +1568,21 @@ enum {
                     }
                 } else if (compressibilityModel == thermal) {
                     memset( _referenceTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"reference temperature" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"reference temperature" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_referenceTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _heatExpansionCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat expansion coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat expansion coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_heatExpansionCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _density[i] = _density[i] * ( 1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]) );
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -1584,20 +1596,20 @@ enum {
                         [kernel getScalarLocalField:_density sizeField:solution.mesh.maxElementDofs name:@"density" element:element solution:solution model:model timeStep:NULL];
                     } else {
                         memset( _density, 0.0, n*sizeof(double) );
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     }
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else memset( _pressureCoeff, 0.0, n*sizeof(double) );
                 } else {
                     memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                 }
                 
@@ -1624,27 +1636,27 @@ enum {
                 
                 if ([convectionFlag isEqualToString:@"constant"] == YES) {
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_u, buffer.vector, n*sizeof(double));
                     } else {
-                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_u, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_v, buffer.vector, n*sizeof(double));
                     } else {
-                        [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer];
+                        [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_v, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) {
                         memcpy(_w, buffer.vector, n*sizeof(double));
                     } else {
-                         found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer];
+                         found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES && flowSol != nil) {
@@ -1697,7 +1709,7 @@ enum {
                 // Check if modeling phase change with Eulerian approach
                 _phaseSpatial = NO;
                 if (phaseChange == YES) {
-                    [self FEMHeatSolution_effectiveHeatCapacityElement:element numberOfNodes:n material:materialAtID model:model transientSimulation:transient];
+                    [self FEMHeatSolution_effectiveHeatCapacityElement:element numberOfNodes:n material:materialAtID model:model listUtilities:listUtilities transientSimulation:transient];
                 } else {
                     for (i=0; i<n; i++) {
                         _heatCapacity[i] = _density[i] * _heatCapacity[i];
@@ -1712,13 +1724,13 @@ enum {
                 if (bodyForceAtID != nil) {
                     // Frictional viscous heating
                     if ([listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"friction heat" info:&found] == YES) {
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&buffer];
+                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&buffer listUtilities:listUtilities];
                         if (found == YES) memcpy(_viscosity, buffer.vector, n*sizeof(double));
                     }
                 }
                 
                 // Get heat source
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) {
                     for (i=0; i<n; i++) {
                         _load[i] = _density[i] * buffer.vector[i];
@@ -1752,20 +1764,20 @@ enum {
             
                 // Perfusion (added as suggested by Matthias Zenker)
                 memset( _perfusionRate, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion rate" buffer:&buffer];
+                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion rate" buffer:&buffer listUtilities:listUtilities];
                 if (found == YES) {
                     memcpy(_perfusionRate, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionRefTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion reference temperature" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion reference temperature" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionRefTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionDensity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion density" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion density" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionDensity, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionHeatCapacity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion heat capacity" buffer:&buffer];
+                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion heat capacity" buffer:&buffer listUtilities:listUtilities];
                     if (found == YES) memcpy(_perfusionHeatCapacity, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _c0[i] = _perfusionHeatCapacity[i] * _perfusionRate[i] * _perfusionDensity[i];
@@ -1789,37 +1801,7 @@ enum {
                         muy[i] = _mu[1][i];
                         muz[i] = _mu[2][i];
                     }
-                   [diffuseConvectiveAnisotropic diffuseConvectiveComposeMassMatrix:_mass
-                                                                        stiffMatrix:_stiff
-                                                                        forceVector:_force
-                                                                         loadVector:_load
-                                                                 timeDerivativeTerm:_heatCapacity
-                                                                     zeroDegreeTerm:_c0
-                                                                     convectionTerm:heatCapacity
-                                                                      diffusionTerm:_heatConductivity
-                                                                        phaseChange:_phaseSpatial
-                                                                   nodalTemperature:_localTemperature
-                                                                           enthalpy:_enthalpy
-                                                                          velocityX:_u
-                                                                           velocitY:_v
-                                                                          velocityZ:_w
-                                                                          meshVeloX:mux
-                                                                          meshVeloY:muy
-                                                                          meshVeloZ:muz
-                                                                     nodalViscosity:_viscosity
-                                                                       nodaldensity:_density
-                                                                      nodalPressure:_pressure
-                                                                    nodalPressureDt:_dPressureDt
-                                                                 nodalPressureCoeff:_pressureCoeff
-                                                                       compressible:(compressibilityModel != incompressible) ? YES : NO
-                                                                          stabilize:stabilize
-                                                                         useBubbles:useBubbles
-                                                                            element:element
-                                                                      numberOfNodes:n
-                                                                              nodes:_elementNodes
-                                                                           solution:solution
-                                                                               mesh:solution.mesh
-                                                                              model:model];
+                    diffuseConvectiveComposeMassMatrixIMP(diffuseConvectiveAnisotropic,@selector(diffuseConvectiveComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:useBubbles:element:numberOfNodes:nodes:solution:mesh:model:), _mass, _stiff, _force, _load, _heatCapacity, _c0, heatCapacity, _heatConductivity, _phaseSpatial, _localTemperature, _enthalpy, _u, _v, _w, mux, muy, muz, _viscosity, _density, _pressure, _dPressureDt, _pressureCoeff, (compressibilityModel != incompressible) ? YES : NO, stabilize, useBubbles, element, n, _elementNodes, solution, solution.mesh, model);
                 } else {
                     double heatCapacity[n];
                     double mux[n], muy[n], muz[n];
@@ -1873,7 +1855,7 @@ enum {
                     for (i=0; i<n; i++) {
                         indexes[i] = _tempPerm[element->NodeIndexes[i]];
                     }
-                    [kernel updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:_stiff forceVector:_forceHeater localForce:_force size:n dofs:1 nodeIndexes:indexes rows:&rows cols:&cols rotateNT:NULL];
+                    [kernel updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:_stiff forceVector:_forceHeater localForce:_force size:n dofs:1 nodeIndexes:indexes rows:&rows cols:&cols rotateNT:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
                 } else {
                     bubbles = (useBubbles == YES && stabilize == NO && ([convectionFlag isEqualToString:@"computed"] == YES || [convectionFlag isEqualToString:@"constant"] == YES)) ? YES : NO;
                     
@@ -1893,7 +1875,8 @@ enum {
                         [kernel condensateStiff:_stiff force:_force numberOfNodes:n force1:_timeForce];
                     }
                     
-                    [kernel defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:&saveBulk];
+                    defaultUpdateEquationsIMP(kernel, @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:),
+                                              model, solution, element, _stiff, _force, &rows, &cols, &saveBulk, crsMatrix, bandMatrix);
                 }
             } // Bulk elements
             
@@ -1927,13 +1910,13 @@ enum {
                 if (found == YES && heatFluxBC == NO) continue;
                 
                 _heatGapBC = [listUtilities listGetLogical:model inArray:bc forVariable:@"heat gap" info:&found];
-                [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector kernel:kernel solution:solution model:model];
+                [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector kernel:kernel solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix];
                 
                 if (_heatGapBC == YES) {
                     [self FEMHeatSolution_findGapIndexesElement:element indexes:_indexes numberOfNodes:n solution:solution];
                     memcpy(_saveIndexes, element->NodeIndexes, n*sizeof(double));
                     memcpy(element->NodeIndexes, _indexes, n*sizeof(double));
-                    [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector kernel:kernel solution:solution model:model];
+                    [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector kernel:kernel solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix];
                     memcpy(element->NodeIndexes, _saveIndexes, n*sizeof(double));
                 }
             } // Neumann & Newton BCs

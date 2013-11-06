@@ -23,7 +23,7 @@
 -(void)FEMMesh_convertToACTetra:(Element_t *)tetra;
 -(void)FEMMesh_deallocateQuadrantTree:(Quadrant_t *)root;
 -(void)FEMMesh_generateColor:(RGBColors *)color;
--(void)FEMMesh_colorMesh;
+-(void)FEMMesh_readColoredMesh:(NSString *)name;
 @end
 
 @implementation FEMMesh
@@ -249,159 +249,55 @@
     color->blue = (float)blue / 255.0;
 }
 
--(void)FEMMesh_colorMesh {
+-(void)FEMMesh_readColoredMesh:(NSString *)name {
     
-    int i, j, numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
-    BOOL isShared;
-    RGBColors currentColor;
+    int j, isLineBreak, lineCount = 0;
+    NSString *line;
     
-    double at = cputime();
+    NSString *colorFile = [name stringByAppendingString:@"/mesh.colors"];
+
+    FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
+    if (!reader) {
+        NSLog(@"FEMMesh:FEMMesh_readColoredMesh: File color not found in mesh directory\n");
+    }
     
-    // Color the elements with the greedy algorithm First Fit (FF)
-    while (numberOfColoredElements != self.numberOfBulkElements) {
-        [self FEMMesh_generateColor:&currentColor];
-        numberOfElementsWithCurrentColor = 0;
-                
-        for (i=0; i<self.numberOfBulkElements; i++) {
-            if (!_elements[i].colored) {
-                // Check if neighbors do not have current color
-                numberOfSameColors = 0;
-                for (j=0; j<self.numberOfBulkElements; j++) {
-                    if (j == i) continue;
-                    isShared = NO;
-                    for (int k=0; k<_elements[j].Type.NumberOfNodes; k++) {
-                        for (int l=0; l<_elements[i].Type.NumberOfNodes; l++) {
-                            if (_elements[j].NodeIndexes[k] == _elements[i].NodeIndexes[l]) {
-                                isShared = YES;
-                                break;
-                            }
-                        }
-                        if (isShared == YES) break;
-                    }
-                   
-                    if (isShared == YES) {
-                        if (_elements[j].color.red == currentColor.red && _elements[j].color.green == currentColor.green && _elements[j].color.blue == currentColor.blue) numberOfSameColors++;
-                    }
-                }
-                if (numberOfSameColors == 0) { // No neighbors with current color so color the element with current color
-                    _elements[i].color.red = currentColor.red;
-                    _elements[i].color.green = currentColor.green;
-                    _elements[i].color.blue = currentColor.blue;
-                    _elements[i].color.colorIndex = self.numberOfColors;
-                    _elements[i].colored = true;
-                    numberOfColoredElements++;
-                    numberOfElementsWithCurrentColor++;
-                }
-            }
+    // Used to separate strings and filter them from white spaces
+    NSCharacterSet *whitespaces = [NSCharacterSet whitespaceCharacterSet];
+    NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
+    
+    line = nil;
+    j = 0;
+    while ((line = [reader readLine])) {
+        lineCount++;
+        NSLog(@"FEMMEsh:FEMMesh_readColoredMesh: %3.d: %@", lineCount, line);
+        // Parse the line
+        NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
+        NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
+        isLineBreak = 0;
+        for (NSString *string in filteredArray) {
+            if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
         }
-        NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:@(numberOfElementsWithCurrentColor), @(self.numberOfColors), @(currentColor.red), @(currentColor.green), @(currentColor.blue), nil];
-        [self.colors addObject:color];
-        self.numberOfColors++;
-    }
-    
-    NSLog(@"FEMMesh:FEMMesh_colorMesh:Timing: %f\n", cputime() - at);
-    
-    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of colors: %d\n", self.numberOfColors);
-    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set before optimization:\n");
-    i = 1;
-    for (NSMutableArray *color in self.colors) {
-        NSLog(@"color %d : number of elements: %d\n", i, [color[0] intValue]);
-        i++;
-    }
-    
-    // The FF algorithm produces an unbalanced distribution of elements per color set since the initial sets
-    // are the first to get the elements. The following optimization redistributes elements from "rish" sets to "poor" sets
-    int meanValue = self.numberOfBulkElements/self.numberOfColors;
-    int kk = self.numberOfColors-1; // Start with the poorest set and then up to the richest set
-    for (NSMutableArray *color in self.colors) {
-        if ([color[0] intValue] > meanValue) {
-            int k = [color[1] intValue];
-            while ([color[0] intValue] > meanValue) {
-                for (i=0; i<self.numberOfBulkElements; i++) {
-                    if (_elements[i].color.colorIndex == k) {
-                        numberOfSameColors = 0;
-                        for (j=0; j<self.numberOfBulkElements; j++) {
-                            if (j == i) continue;
-                            if (_elements[j].color.colorIndex == kk) {
-                                isShared = NO;
-                                for (int l=0; l<_elements[j].Type.NumberOfNodes; l++) {
-                                    for (int ll=0; ll<_elements[i].Type.NumberOfNodes; ll++) {
-                                        if (_elements[j].NodeIndexes[l] == _elements[i].NodeIndexes[ll]) {
-                                            isShared = YES;
-                                            break;
-                                        }
-                                    }
-                                    if (isShared == YES) break;
-                                }
-                                if (isShared == YES) numberOfSameColors++;
-                            }
-                        }
-                        NSMutableArray *poorColor = self.colors[kk];
-                        if (numberOfSameColors == 0) {
-                            _elements[i].color.red = [poorColor[2] doubleValue];
-                            _elements[i].color.green = [poorColor[3] doubleValue];
-                            _elements[i].color.blue = [poorColor[4] doubleValue];
-                            _elements[i].color.colorIndex = [poorColor[1] intValue];
-                            color[0] = @([color[0] intValue]-1);
-                            poorColor[0] = @([poorColor[0] intValue]+1);
-                        }
-                        if ([poorColor[0] intValue] >= (meanValue-DBL_EPSILON) && [poorColor[0] intValue] <= (meanValue+DBL_EPSILON)) {
-                            kk--;
-                            break;
-                        }
-                        if ([color[0] intValue] <= meanValue) break;
-                    }
-                }
-                if (i == self.numberOfBulkElements) break; // Already done all elements for given color set so go to next set
-            }
+        if (([filteredArray count]-isLineBreak) == 1) { // First line of header file, three elements
+            self.numberOfColors = [filteredArray[0] intValue];
+        } else if (([filteredArray count]-isLineBreak) == 5) { // Store given color
+            NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:filteredArray[0], @([filteredArray[1] intValue]-1), filteredArray[2], filteredArray[3], filteredArray[4], nil];
+            [self.colors addObject:color];
         }
     }
     
-    NSLog(@"FEMMesh:FEMMesh_colorMesh: number of elements for each color set after optimization:\n");
-    i = 1;
-    for (NSMutableArray *color in self.colors) {
-        NSLog(@"color %d : number of elements: %d\n", i, [color[0] intValue]);
-        i++;
-    }
+    [reader closeHandle];
     
     // Build the element color mapping
     _colorMapping = intvec(0, self.numberOfBulkElements-1);
     int indx = 0;
     for (NSMutableArray *color in self.colors) {
-        for (i=0; i<self.numberOfBulkElements; i++) {
-            if (_elements[i].color.colorIndex == [color[1] intValue]) {
+        for (int i=0; i<self.numberOfBulkElements; i++) {
+            if (_elements[i].color.colorIndex-1 == [color[1] intValue]) {
                 _colorMapping[indx] = _elements[i].ElementIndex-1;
                 indx++;
             }
         }
     }
-    
-    // Make a last check to be sure...
-//    for (NSMutableArray *color in self.colors) {
-//         for (i=0; i<self.numberOfBulkElements; i++) {
-//             if (_elements[i].color.colorIndex == [color[1] intValue]) {
-//                 for (j=0; j<self.numberOfBulkElements; j++) {
-//                     if (j == i) continue;
-//                     isShared = NO;
-//                     for (int k=0; k<_elements[j].Type.NumberOfNodes; k++) {
-//                         for (int l=0; l<_elements[i].Type.NumberOfNodes; l++) {
-//                             if (_elements[j].NodeIndexes[k] == _elements[i].NodeIndexes[l]) {
-//                                 isShared = YES;
-//                                 break;
-//                             }
-//                         }
-//                         if (isShared == YES) break;
-//                     }
-//                     if (isShared == YES) {
-//                         if (_elements[i].color.colorIndex == _elements[j].color.colorIndex) {
-//                             NSLog(@"FEMMesh:FEMMesh_colorMesh: elements %d and %d have similar color but share nodes.\n", i, j);
-//                             errorfunct("FEMMesh:FEMMesh_colorMesh", "Programm terminating now...");
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//    }
 }
 
 #pragma mark Public methods
@@ -498,7 +394,7 @@
 
 -(void)loadMeshForModel:(FEMModel *)model meshDirectory:(NSString *)dir meshName:(NSString *)name boundariesOnly:(BOOL)bd numberOfPartitions:(int *)numParts partitionID:(int *)partID definitions:(int *)defDofs {
     
-    int i, j, k, n, body, type, bndry, left, right, tag;
+    int i, j, k, n, body, colorID, type, bndry, left, right, tag;
     int addr1, addr2;
     int meshDim, saveDim;
     int minIndex, maxIndex, minEIndex, maxEIndex, dgIndex, bid, defaultTargetBC;
@@ -519,7 +415,7 @@
     NSArray *bList;
     NSString *elementDef0, *elementDef;
     NSMutableString *str;
-    BOOL parallel, found, gotIt, needEdges, any;
+    BOOL parallel, found, gotIt, isParallelAssembly = NO, needEdges, any;
     
     parallel = NO;
     
@@ -609,14 +505,20 @@
             j++;
         }
     } else {
+        j = 0;
         for (i=0; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->x[i] = cCoord[i];
+            _globalNodes->x[j] = cCoord[i];
+            j++;
         }
+        j = 0;
         for (i=1; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->y[i] = cCoord[i];
+            _globalNodes->y[j] = cCoord[i];
+            j++;
         }
+        j = 0;
         for (i=2; i<3*self.numberOfNodes; i+=3) {
-            _globalNodes->z[i] = cCoord[i];
+            _globalNodes->z[j] = cCoord[i];
+            j++;
         }
     }
     
@@ -702,11 +604,19 @@
     
     pMaps = [[FEMPElementMaps alloc] init];
     
+    // We have a colored mesh if parallel assembly is required by a solution computer
+    for (FEMSolution *solution in model.solutions) {
+        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+            isParallelAssembly = YES;
+            break;
+        }
+    }
+    
     inDofs = intvec(0, 6);
     nodes = intvec(0, MAX_ELEMENT_NODES-1);
     for (i=0; i<=self.numberOfBulkElements; i++) {
         memset( inDofs, 0, 7*sizeof(int) );
-        [meshIO getMeshElementConnection:&elementTags[i] body:&body type:&type pdofs:inDofs nodes:nodes];
+        [meshIO getMeshElementConnection:&elementTags[i] body:&body type:&type pdofs:inDofs nodes:nodes colorIndex:&colorID parallelAssembly:&isParallelAssembly];
         if (meshIO.info != 0) break;
         
         if (defDofs != NULL) {
@@ -718,7 +628,7 @@
         _elements[i].ElementIndex = i+1;
         //TODO: If parallel mesh, set the element partition index here
         _elements[i].PartIndex = 0;
-        
+        _elements[i].color.colorIndex = colorID;
         
         elmType = NULL;
         _elements[i].BoundaryInfo = NULL;
@@ -1174,17 +1084,10 @@
     
     model.dimension = saveDim;
     
-    // Color the mesh if parallel assembly is required by a solution computer
-    BOOL isParallelAssembly = NO;
-    for (FEMSolution *solution in model.solutions) {
-        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
-            isParallelAssembly = YES;
-            break;
-        }
-    }
+
     if (isParallelAssembly == YES) {
-        NSLog(@"FEMMesh:loadMeshForModel: coloring the mesh...\n");
-        [self FEMMesh_colorMesh];
+        NSLog(@"FEMMesh:loadMeshForModel: Load colors...\n");
+        [self FEMMesh_readColoredMesh:name];
     }
     
     [pMaps deallocation];

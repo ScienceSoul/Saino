@@ -1,59 +1,96 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
-// Implementation for three nodes elements
-struct BasisFunctionsTiangle {
-    
-    int p[3], q[3], r[3];
-    double coeff[3];
-    
+
+constant float STriangle3P[3] = {
+    0.333333333f, 0.333333333f, 0.333333333f
+    //0.33333333333333333E+00, 0.33333333333333333E+00, 0.33333333333333333E+00
 };
 
-/***************************************************************************/
-/* Triangle - 3 point rule; exact integration of x^py^q, p+q<=2            */
-/***************************************************************************/
-constant double UTriangle3P[3] = {
-    0.16666666666666667E+00, 0.66666666666666667E+00, 0.16666666666666667E+00
-};
-
-constant double VTriangle3P[3] = {
-    0.16666666666666667E+00, 0.16666666666666667E+00, 0.66666666666666667E+00
-};
-
-constant double STriangle3P[3] = {
-    0.33333333333333333E+00, 0.33333333333333333E+00, 0.33333333333333333E+00
-};
-
-#define CL_DBL_MIN          2.225073858507201383090e-308
-
-void computeBasisFunctions(struct BasisFunctionsTiangle basisFunctions[]) {
+__kernel void heatSolutionAssembly(__global double *values, __global double *rhs, __global float *nodesInfo, __global int *diag, __global int *rows, __global int *cols, __global int *colorMapping, __global int *elementPermutationStore, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int kernelDof, int varDofs) {
     
-    int i, j, k, l, basisFunctionDegree = 0, pivot[3], upow, vpow, wpow;
-    int maxDeg, maxDeg3, maxDeg2;
-    float basisTerms[3], nodeU[3], nodeV[3];
-    float u, v, w;
-    float a[3][3], s, swap;
+    int workItemID = get_global_id(0);
+    int i, j, k, l, c, col, n, p, q, row, t, globalID, pivot[3], upow, vpow, wpow, temp;
+    int basisTerms[3];
+    float basis[3];
+    double dBasisdx[3][2], stiffMatrix[3][3], aa;
+    float c2[3][3];
+    float c0, c1, ct, m, s, force, load, rho, ss, sum, tt, massMatrix[3][3], forceVector[3];
+    float accum1, accum2, accum3;
+    float detJ;
+    float covariantMetricTensor[2][2], dx[3][2], elementMetric[2][2], ltoGMap[2][2];
+    float dLBasisdx[3][2];
+    // Basis functions implementation for three nodes elements
+    int basisFunctionsP[3][3];
+    int basisFunctionsQ[3][3];
+    int basisFunctionsR[3][3];
+    float basisFunctionsCoeff[3][3];
+    float maxDeg, maxDeg3, maxDeg2;
+    float nodeU[3], nodeV[3];
+    float u, v;
+    float a[3][3], swap;
+    /***************************************************************************/
+    /* Triangle - 3 point rule; exact integration of x^py^q, p+q<=2            */
+    /***************************************************************************/
+    float UTriangle3P[3] = {
+        0.166666666f, 0.666666666f, 0.166666666f
+        //0.16666666666666667E+00, 0.66666666666666667E+00, 0.16666666666666667E+00
+    };
     
-    maxDeg = 4;
-    maxDeg3 = pow((float)maxDeg, 3);
-    maxDeg2 = pow((float)maxDeg, 2);
+    float VTriangle3P[3] = {
+        0.166666666f, 0.166666666f, 0.666666666f
+        //0.16666666666666667E+00, 0.16666666666666667E+00, 0.66666666666666667E+00
+    };
     
-    basisTerms[0] = 1.0;
-    basisTerms[1] = 2.0;
-    basisTerms[2] = 5.0;
+    n = 3;
     
-    nodeU[0] = 0.0; nodeU[1] = 1.0; nodeU[2] = 0.0;
-    nodeV[0] = 0.0; nodeV[1] = 0.0; nodeV[2] = 1.0;
+    for (i=0; i<nBasis; i++) {
+        for (j=0; j<nBasis; j++) {
+            massMatrix[i][j] = 0.0f;
+            stiffMatrix[i][j] = 0.0f;
+        }
+        forceVector[i] = 0.0f;
+    }
+    
+    globalID = colorMapping[positionInColorMapping+workItemID];
+    
+    maxDeg = 4.0f;
+    temp = 4;
+    maxDeg3 = pow(maxDeg, 3);
+    maxDeg2 = pow(maxDeg, 2);
+    
+    basisTerms[0] = 1;
+    basisTerms[1] = 2;
+    basisTerms[2] = 5;
+    
+    nodeU[0] = 0.0f; nodeU[1] = 1.0f; nodeU[2] = 0.0f;
+    nodeV[0] = 0.0f; nodeV[1] = 0.0f; nodeV[2] = 1.0f;
+    
+    
+    for (i=0; i<3; i++) {
+        for (j=0; j<3; j++) {
+            basisFunctionsP[i][j] = 0;
+            basisFunctionsQ[i][j] = 0;
+            basisFunctionsR[i][j] = 0;
+            basisFunctionsCoeff[i][j] = 0.0f;
+        }
+    }
+    
+    for (i=0; i<3; i++) {
+        for (j=0; j<3; j++) {
+            a[i][j] = 0.0f;
+        }
+    }
     
     for (i=0; i<3; i++) {
         u = nodeU[i];
         v = nodeV[i];
         for (j=0; j<3; j++) {
             k = basisTerms[j] - 1;
-            vpow = k / maxDeg;
-            upow = k & (maxDeg - 1);
+            vpow = k / temp;
+            upow = k & (temp - 1);
             
             if (upow == 0) {
-                a[i][j] = 1.0;
+                a[i][j] = 1.0f;
             } else {
                 a[i][j] = pow(u, upow);
             }
@@ -61,9 +98,6 @@ void computeBasisFunctions(struct BasisFunctionsTiangle basisFunctions[]) {
             if (vpow != 0) {
                 a[i][j] = a[i][j] * pow(v, vpow);
             }
-            
-            basisFunctionDegree = max(basisFunctionDegree, upow);
-            basisFunctionDegree = max(basisFunctionDegree, vpow);
         }
     }
     
@@ -77,9 +111,10 @@ void computeBasisFunctions(struct BasisFunctionsTiangle basisFunctions[]) {
             if (fabs(a[i][k]) > fabs(a[i][j])) j = k;
         }
         
-        if (fabs(a[i][j]) == 0.0) {
-            return;
-        }
+        // matrix is (at least almost) singular
+        // If we get here that's not good, but we really shoudn't as we are not taking any question
+        //if (fabs(a[i][j]) == 0.0f) {
+        //}
         
         pivot[i] = j;
         
@@ -107,19 +142,22 @@ void computeBasisFunctions(struct BasisFunctionsTiangle basisFunctions[]) {
             }
         }
     }
+    
+    
     pivot[3-1] = 3-1;
-    if (fabs(a[3-1][3-1]) == 0.0) {
-        // matrix is (at least almost) singular
-        // If we get here that's not good, but we really shoudn't as we are not taking any question
-    }
+    // matrix is (at least almost) singular
+    // If we get here that's not good, but we really shoudn't as we are not taking any question
+    //if (fabs(a[3-1][3-1]) == 0.0f) {
+    //}
     
     for (i=0; i<3; i++) {
-        if (fabs(a[i][i]) == 0.0) {
-            return;
-        }
+        // matrix is (at least almost) singular
+        // If we get here that's not good, but we really shoudn't as we are not taking any question
+        //if (fabs(a[i][i]) == 0.0f) {
+        //}
         a[i][i] = 1.0 / a[i][i];
     }
-    
+
     for (i=3-2; i>=0; i--) {
         for (j=3-1; j>=i+1; j--) {
             s = -a[i][j];
@@ -171,167 +209,109 @@ void computeBasisFunctions(struct BasisFunctionsTiangle basisFunctions[]) {
     for (i=0; i<3; i++) {
         for (j=0; j<3; j++) {
             k = basisTerms[j] - 1;
-            vpow = k / maxDeg;
-            upow = k & (maxDeg - 1);
-            basisFunctions[i].p[j] = upow;
-            basisFunctions[i].q[j] = vpow;
-            basisFunctions[i].r[j] = wpow;
-            basisFunctions[i].coeff[j] = a[j][i];
+            vpow = k / temp;
+            upow = k & (temp - 1);
+            basisFunctionsP[i][j] = upow;
+            basisFunctionsQ[i][j] = vpow;
+            basisFunctionsR[i][j] = wpow;
+            basisFunctionsCoeff[i][j] = a[j][i];
+            //printf("%d\n",  basisFunctionsP[i][j]);
         }
     }
-}
-
-void computeBasis(double basis[], struct BasisFunctionsTiangle basisFunctions[], double u, double v) {
-    
-    double s;
-    
-    // Basis 2D three nodes triangle element only
-    for(int n=0; n<3; n++) {
-        s = 0.0;
-        for(int i=0; i<3; i++) {
-            s = s + basisFunctions[n].coeff[i] * pow((float)u, basisFunctions[n].p[i]) * pow((float)v, basisFunctions[n].q[i]);
-        }
-        basis[n] = s;
-    }
-}
-
-void NodalFirstDerivatives2D(float y[],struct BasisFunctionsTiangle basisFunctions[], double u, double v) {
-    
-    int i, n;
-    float s, t;
-    
-    for(n=0;n<3;n++) {
-        s = 0.0f;
-        t = 0.0f;
-        for(i=0;i<3;i++) {
-            if(basisFunctions[n].p[i] >= 1) s = s + basisFunctions[n].p[i] * basisFunctions[n].coeff[i] * pow((float)u, (basisFunctions[n].p[i]-1)) * pow((float)v, basisFunctions[n].q[i]);
-            if(basisFunctions[n].q[i] >= 1) t = t + basisFunctions[n].q[i] * basisFunctions[n].coeff[i] * pow((float)u, basisFunctions[n].p[i]) * pow((float)v, (basisFunctions[n].q[i]-1));
-        }
-        y[2*n] = s;
-        y[2*n+1] = t;
-    }
-}
-
-void setDxForElement(float dx[], struct BasisFunctionsTiangle basisFunctions[],  double u, double v, int globalID, int numberElementDofs, int kernelDof, __global int *elementPermutationStore, __global double *nodesInfo) {
-    
-    int i, j, k, n, dim;
-    float accum1, accum2, accum3;
-    float dLBasisdx[6];
-    
-    NodalFirstDerivatives2D(dLBasisdx, basisFunctions, u, v);
-    
-    for (i=0; i<2; i++) { // Two dimensional element
-        accum1 = 0.0f;
-        accum2 = 0.0f;
-        accum3 = 0.0f;
-        for (j=0; j<3; j++) { // Three nodes element
-            k =  elementPermutationStore[(globalID*numberElementDofs)+j];
-            accum1 = accum1 + (nodesInfo[kernelDof*k+14] * dLBasisdx[2*j+i]);
-            accum2 = accum2 + (nodesInfo[kernelDof*k+15] * dLBasisdx[2*j+i]);
-            accum3 = accum3 + (nodesInfo[kernelDof*k+16] * dLBasisdx[2*j+i]);
-        }
-        dx[2*0+i] = accum1;
-        dx[2*1+i] = accum2;
-        dx[2*2+i] = accum3;
-    }
-}
-
-// Function returns sqrt(detG) and also computes dBasisdx
-double setBasisFirstDerivativeMetricDeterminant (double dBasisdx[], struct BasisFunctionsTiangle basisFunctions[], double u, double v, int globalID, int numberElementDofs, int kernelDof, __global int *elementPermutationStore, __global double *nodesInfo) {
-    
-    int i, j, k;
-    float covariantMetricTensor[2][2], detG, dx[4], elementMetric[2][2], ltoGMap[2][2], s;
-    float dLBasisdx[6];
-    
-    setDxForElement(dx, basisFunctions, u, v, globalID, numberElementDofs, kernelDof, elementPermutationStore, nodesInfo);
-    
-    for (i=0; i<2; i++) { // Two dimensional element
-        for (j=0; j<2; j++) { // Two dimensional element
-            s = 0.0f;
-            for (k=0; k<2; k++) { // Two dimensional mesh
-                s = s + ( dx[2*k+i] * dx[2*k+j]);
-            }
-            covariantMetricTensor[i][j] = s;
-        }
-    }
-    
-    // Surface element
-    detG = (covariantMetricTensor[0][0]*covariantMetricTensor[1][1] - covariantMetricTensor[0][1]*covariantMetricTensor[1][0]);
-    if (detG <= FLT_MIN) {
-        // Don't do anything in the OpenCL kernel but dangerous is something goes wrong
-    };
-    
-    NodalFirstDerivatives2D(dLBasisdx, basisFunctions, u, v);
-    
-    // Two dimensional element
-    elementMetric[0][0] = covariantMetricTensor[1][1] / detG;
-    elementMetric[0][1] = -covariantMetricTensor[0][1] / detG;
-    elementMetric[1][0] = -covariantMetricTensor[1][0] / detG;
-    elementMetric[1][1] = covariantMetricTensor[0][0] / detG;
-    
-    for (i=0; i<2; i++) { // Two dimensional mesh
-        for (j=0; j<2; j++) { // Two dimensional element
-            s = 0.0f;
-            for (k=0; k<2; k++) { // Two dimensional element
-                s = s + dx[2*i+k] * elementMetric[k][j];
-            }
-            ltoGMap[i][j] = s;
-        }
-    }
-    
-    for (i=0; i<6; i++) {
-        dBasisdx[i] = 0.0;
-    }
-    for (i=0; i<3; i++) { // Three nodes element
-        for (j=0; j<2; j++) { // Two dimensional mesh
-            for (k=0; k<2; k++) { // Two dimensional element
-                dBasisdx[2*i+j] = dBasisdx[2*i+j] + dLBasisdx[2*i+k]*ltoGMap[j][k];
-            }
-        }
-    }
-    
-    return sqrt(detG);
-}
-
-
-__kernel void heatSolutionAssembly(__global int *diag, __global int *rows, __global int *cols, __global double *values, __global double *rhs, __global int *colorMapping, __global double *nodesInfo, __global int *elementPermutationStore, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int kernelDof, int varDofs) {
-    
-    int workItemID = get_global_id(0);
-    int i, j, k, l, c, col, n, p, q, row, t, globalID;
-    struct BasisFunctionsTiangle basisFunctions[3];
-    double basis[3], dBasisdx[6];
-    double u[3], v[3], s[3];
-    double a, c0, c1, ct, force, load, m, rho, ss, sum;
-    double c2[3][3];
-    double massMatrix[nBasis][nBasis], stiffMatrix[nBasis][nBasis], forceVector[nBasis];
-    float detJ;
-    
-    // Triangle three gauss points
-    for(i=0;i<3;i++) {
-        u[i] = UTriangle3P[i];
-        v[i] = VTriangle3P[i];
-        s[i] = STriangle3P[i] / 2.0;
-    }
-    n = 3;
-    
-    for (i=0; i<nBasis; i++) {
-        for (j=0; j<nBasis; j++) {
-            massMatrix[i][j] = 0.0;
-            stiffMatrix[i][j] = 0.0;
-        }
-        forceVector[i] = 0.0;
-    }
-    
-    globalID = colorMapping[positionInColorMapping+workItemID];
-    
-    computeBasisFunctions(basisFunctions);
     
     for (t=0; t<n; t++) {
         
-        computeBasis(basis, basisFunctions, u[t], v[t]);
+        for(i=0; i<3; i++) {
+            basis[i] = 0.0f;
+        }
         
-        detJ = setBasisFirstDerivativeMetricDeterminant(dBasisdx, basisFunctions, u[t], v[t], globalID, numberElementDofs, kernelDof, elementPermutationStore, nodesInfo);
-        ss = detJ * s[t];
+        // Basis 2D three nodes triangle element only
+        for(n=0; n<3; n++) {
+            s = 0.0f;
+            for(i=0; i<3; i++) {
+                //printf("%d %d\n", t, basisFunctionsP[n][i]);
+                s = s + basisFunctionsCoeff[n][i] * pow(UTriangle3P[t], basisFunctionsP[n][i]) * pow(VTriangle3P[t], basisFunctionsQ[n][i]);
+                //printf("%d %f\n", basisFunctions[n].p[i], s);
+            }
+            basis[n] = s;
+            //printf("%f\n", basis[n]);
+        }
+        
+        // dLBasisDx
+        for(n=0;n<3;n++) {
+            s = 0.0;
+            tt = 0.0;
+            for(i=0;i<3;i++) {
+                if(basisFunctionsP[n][i] >= 1) s = s + basisFunctionsP[n][i] * basisFunctionsCoeff[n][i] * pow(UTriangle3P[t], (basisFunctionsP[n][i]-1)) * pow(VTriangle3P[t], basisFunctionsQ[n][i]);
+                if(basisFunctionsQ[n][i] >= 1) tt = tt + basisFunctionsQ[n][i] * basisFunctionsCoeff[n][i] * pow(UTriangle3P[t], basisFunctionsP[n][i]) * pow(VTriangle3P[t], (basisFunctionsQ[n][i]-1));
+            }
+            dLBasisdx[n][0] = s;
+            dLBasisdx[n][1] = tt;
+        }
+        
+        for (i=0; i<2; i++) { // Two dimensional element
+            accum1 = 0.0;
+            accum2 = 0.0;
+            accum3 = 0.0;
+            for (j=0; j<3; j++) { // Three nodes element
+                k =  elementPermutationStore[(globalID*numberElementDofs)+j];
+                accum1 = accum1 + (nodesInfo[kernelDof*k+14] * dLBasisdx[j][i]);
+                accum2 = accum2 + (nodesInfo[kernelDof*k+15] * dLBasisdx[j][i]);
+                accum3 = accum3 + (nodesInfo[kernelDof*k+16] * dLBasisdx[j][i]);
+            }
+            dx[0][i] = accum1;
+            dx[1][i] = accum2;
+            dx[2][i] = accum3;
+        }
+        
+        for (i=0; i<2; i++) { // Two dimensional element
+            for (j=0; j<2; j++) { // Two dimensional element
+                ss = 0.0;
+                for (k=0; k<2; k++) { // Two dimensional mesh
+                    ss = ss + ( dx[k][i] * dx[k][j]);
+                }
+                covariantMetricTensor[i][j] = ss;
+            }
+        }
+        
+        // Surface element
+        detJ = (covariantMetricTensor[0][0]*covariantMetricTensor[1][1] - covariantMetricTensor[0][1]*covariantMetricTensor[1][0]);
+        if (detJ <= FLT_MIN) {
+            // Don't do anything in the OpenCL kernel but dangerous is something goes wrong
+        };
+        
+        // Two dimensional element
+        elementMetric[0][0] = covariantMetricTensor[1][1] / detJ;
+        elementMetric[0][1] = -covariantMetricTensor[0][1] / detJ;
+        elementMetric[1][0] = -covariantMetricTensor[1][0] / detJ;
+        elementMetric[1][1] = covariantMetricTensor[0][0] / detJ;
+        
+        for (i=0; i<2; i++) { // Two dimensional mesh
+            for (j=0; j<2; j++) { // Two dimensional element
+                ss = 0.0;
+                for (k=0; k<2; k++) { // Two dimensional element
+                    ss = ss + dx[i][k] * elementMetric[k][j];
+                }
+                ltoGMap[i][j] = ss;
+            }
+        }
+        
+        for (i=0; i<3; i++) {
+            for (j=0; j<2; j++) {
+                dBasisdx[i][j] = 0.0;
+            }
+        }
+        
+        for (i=0; i<3; i++) { // Three nodes element
+            for (j=0; j<2; j++) { // Two dimensional mesh
+                for (k=0; k<2; k++) { // Two dimensional element
+                    dBasisdx[i][j] = dBasisdx[i][j] + dLBasisdx[i][k]*ltoGMap[j][k];
+                }
+            }
+        }
+
+        detJ = sqrt(detJ);
+        s = detJ * STriangle3P[t] / 2.0;
         
         // Coefficient of the convection and time derivative terms at the integration point
         c0 = 0.0;
@@ -375,16 +355,17 @@ __kernel void heatSolutionAssembly(__global int *diag, __global int *rows, __glo
             for (q=0; q<nBasis; q++) {
                 // The diffusive-convective equation without stabilization
                 m = ct * basis[q] * basis[p];
-                a = c0 * basis[q] * basis[p];
+                aa = c0 * basis[q] * basis[p];
                 
                 // The diffusion term
                 for (i=0; i<dimension; i++) {
                     for (j=0; j<dimension; j++) {
-                        a = a + c2[i][j] * dBasisdx[2*q+i] * dBasisdx[2*p+j];
+                        aa = aa + c2[i][j] * dBasisdx[q][i] * dBasisdx[p][j];
                     }
                 }
-                stiffMatrix[p][q] = stiffMatrix[p][q] + ss * a;
-                massMatrix[p][q] = massMatrix[p][q] + ss * m;
+                stiffMatrix[p][q] = stiffMatrix[p][q] + s * aa;
+                //printf("%f %f\n", stiffMatrix[p][q], s);
+                massMatrix[p][q] = massMatrix[p][q] + s * m;
             }
         }
         
@@ -396,10 +377,10 @@ __kernel void heatSolutionAssembly(__global int *diag, __global int *rows, __glo
         
         for (p=0; p<nBasis; p++) {
             load = force * basis[p];
-            forceVector[p] = forceVector[p] + ss * load;
+            forceVector[p] = forceVector[p] + s * load;
         }
     }
-    
+
     if (varDofs == 1) {
         for (i=0; i<numberElementDofs; i++) {
             row = elementPermutationStore[(globalID*numberElementDofs)+i];

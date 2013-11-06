@@ -305,7 +305,7 @@
                                     variableContainers->Values[k] = [listUtilities listGetConstReal:model inArray:initialCondition.valuesList forVariable:variable.name info:&found minValue:NULL maxValue:NULL];
                                 }
                             } else if (variable.dofs <= 1) {
-                                found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work];
+                                found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work listUtilities:listUtilities];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
@@ -317,7 +317,7 @@
                                 if (_transient == YES && solution.timeOrder == 2) {
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" velocity"];
-                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
+                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -327,7 +327,7 @@
                                     }
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" acceleration"];
-                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work];
+                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -495,7 +495,7 @@
                     }
                     
                     if (variable.dofs <= 1) {
-                        found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work];
+                        found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work listUtilities:listUtilities];
                         if (found == YES) {
                             ntBoundary = NO;
                             if ([self.kernel getElementFamily:&elements[t]] != 1) {
@@ -600,7 +600,7 @@
                         if (_transient == YES && solution.timeOrder == 2) {
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" velocity"];
-                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
+                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
@@ -611,7 +611,7 @@
                             
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" acceleration"];
-                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work];
+                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];

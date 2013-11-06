@@ -304,7 +304,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes {
+-(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly {
     
     int i, j, gotnodal;
     FileReader *reader;
@@ -378,6 +378,12 @@ static char *_parallel_extensions[] = {
     for (i=0; i<elNodes; i++) {
         nodes[i] = [filteredArray[j] intValue];
         j++;
+    }
+    
+    if (parallelAssembly != NULL) {
+        if (*parallelAssembly == YES) {
+            *colorIndex = [filteredArray[j] intValue];
+        }
     }
     
     if (!gotnodal) pdofs[0] = 1;

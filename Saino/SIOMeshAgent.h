@@ -63,7 +63,7 @@
 
 // Reading methods
 -(int)readDescriptorNode:(int *)nodeC element:(int *)elementC boundaryElement:(int *)boundaryElementC usedElementTypes:(int *)usedElementTypes usedElementTypeTags:(int *)usedElementTypeTags usedElementTypeCount:(int *)usedElementTypeCount;
--(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes;
+-(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly;
 -(int)readNextElementCoordinates:(int *)tag body:(int *)body type:(int *)type nodes:(int *)nodes coord:(double *)coord;
 -(int)readNextBoundaryElement:(int *)tag part:(int *)part boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord;
 -(int)readAllNodes:(int *)tags coord:(double *)coord;
