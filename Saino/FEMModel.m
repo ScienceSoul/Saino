@@ -445,7 +445,7 @@
     [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
     [solution.solutionInfo setObject:@1.0e-02 forKey:@"nonlinear system newton after tolerance"];
     [solution.solutionInfo setObject:@1.0 forKey:@"nonlinear system relaxation factor"];
-    [solution.solutionInfo setObject:@NO forKey:@"parallel assembly"];
+    [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
     self.solutions = @[solution];
     self.numberOfSolutions = 1;
     

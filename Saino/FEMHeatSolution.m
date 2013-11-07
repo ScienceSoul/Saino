@@ -923,10 +923,82 @@ enum {
     FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
     FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
     
+    static Element_t* (*getActiveElementIMP)(id, SEL, int, FEMSolution*, FEMModel*) = nil;
+    static int (*getEquationIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
+    static NSString* (*listGetStringIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
+    static int (*getMaterialIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
+    static BOOL (*listGetLogicalIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
+    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*) = nil;
+    static void (*getScalarLocalFieldIMP)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
+    static BOOL (*getRealIMP)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*) = nil;
+    static BOOL (*listGetRealArrayIMP)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*) = nil;
+    static double (*listGetConstRealIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*) = nil;
+    static void (*getVectorLocalFieldIMP)(id, SEL, double**, int, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
+    static void (*effectiveHeatCapacityElementIMP)(id, SEL, Element_t*, int, FEMMaterial*, FEMModel*, FEMListUtilities*, BOOL) = nil;
+    static int (*getBodyForceIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
     static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
-    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *) = nil;
+    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *,     double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *) = nil;
+    static void (*diffuseConvectiveGeneralComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *) = nil;
+    static void (*defaultFirstOrderTimeIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*) = nil;
+    static void (*updateGlobalEquationsModelIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, double*, int, int, int*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
+    static void (*defaultUpdateMassIMP)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*) = nil;
+    static void (*defaultUpdateDampIMP)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*) = nil;
+    static void (*condensateStiffIMP)(id, SEL, double**, double*, int, double*) = nil;
+    
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        if (!getActiveElementIMP) {
+            getActiveElementIMP = (Element_t* (*)(id, SEL, int, FEMSolution*, FEMModel*))
+            [kernel methodForSelector: @selector(getActiveElement:solution:model:)];
+        }
+        if (!getEquationIDForElementIMP) {
+            getEquationIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
+            [kernel methodForSelector: @selector(getEquationIDForElement:model:)];
+        }
+        if (!listGetStringIMP) {
+            listGetStringIMP = (NSString* (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))
+            [listUtilities methodForSelector: @selector(listGetString:inArray:forVariable:info:)];
+        }
+        if (!getMaterialIDForElementIMP) {
+            getMaterialIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
+            [kernel methodForSelector: @selector(getMaterialIDForElement:model:)];
+        }
+        if (!listGetLogicalIMP) {
+            listGetLogicalIMP = (BOOL (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))
+            [listUtilities methodForSelector: @selector(listGetLogical:inArray:forVariable:info:)];
+        }
+        if (!getNodesIMP) {
+            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*))
+            [kernel methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:)];
+        }
+        if (!getScalarLocalFieldIMP) {
+            getScalarLocalFieldIMP = (void (*)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*))
+            [kernel methodForSelector: @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:)];
+        }
+        if (!getRealIMP) {
+            getRealIMP = (BOOL (*)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))
+            [kernel methodForSelector: @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:)];
+        }
+        if (!listGetRealArrayIMP) {
+            listGetRealArrayIMP = (BOOL (*)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))
+            [listUtilities methodForSelector: @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:)];
+        }
+        if (!listGetConstRealIMP) {
+            listGetConstRealIMP = (double (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))
+            [listUtilities methodForSelector: @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:)];
+        }
+        if (!getVectorLocalFieldIMP) {
+            getVectorLocalFieldIMP = (void (*)(id, SEL, double**, int, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*))
+            [kernel methodForSelector: @selector(getVectorLocalField:size1Field:size2Field:name:element:solution:model:timeStep:)];
+        }
+        if (!effectiveHeatCapacityElementIMP) {
+            effectiveHeatCapacityElementIMP = (void (*)(id, SEL, Element_t*, int, FEMMaterial*, FEMModel*, FEMListUtilities*, BOOL))
+            [self methodForSelector: @selector(FEMHeatSolution_effectiveHeatCapacityElement:numberOfNodes:material:model:listUtilities:transientSimulation:)];
+        }
+        if (!getBodyForceIDForElementIMP) {
+            getBodyForceIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
+            [kernel methodForSelector: @selector(getBodyForceIDForElement:model:)];
+        }
         if (!defaultUpdateEquationsIMP) {
             defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
             [kernel methodForSelector: @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:)];
@@ -934,6 +1006,30 @@ enum {
         if (!diffuseConvectiveComposeMassMatrixIMP) {
             diffuseConvectiveComposeMassMatrixIMP = (void (*)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *))
             [diffuseConvectiveAnisotropic methodForSelector: @selector(diffuseConvectiveComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:useBubbles:element:numberOfNodes:nodes:solution:mesh:model:)];
+        }
+        if (!diffuseConvectiveGeneralComposeMassMatrixIMP) {
+            diffuseConvectiveGeneralComposeMassMatrixIMP = (void (*)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMMesh *, FEMModel *))
+            [diffuseConvectiveGeneralAnisotropic methodForSelector: @selector(diffuseConvectiveGeneralComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:element:numberOfNodes:nodes:solution:mesh:model:)];
+        }
+        if (!defaultFirstOrderTimeIMP) {
+            defaultFirstOrderTimeIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*))
+            [kernel methodForSelector: @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:)];
+        }
+        if (!updateGlobalEquationsModelIMP) {
+            updateGlobalEquationsModelIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, double*, int, int, int*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
+            [kernel methodForSelector: @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:)];
+        }
+        if (!defaultUpdateMassIMP) {
+            defaultUpdateMassIMP = (void (*)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*))
+            [kernel methodForSelector: @selector(defaultUpdateMass:element:solution:model:)];
+        }
+        if (!defaultUpdateDampIMP) {
+            defaultUpdateDampIMP = (void (*)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*))
+            [kernel methodForSelector: @selector(defaultUpdateDamp:element:solution:model:)];
+        }
+        if (!condensateStiffIMP) {
+            condensateStiffIMP = (void (*)(id, SEL, double**, double*, int, double*))
+            [kernel methodForSelector: @selector(condensateStiff:force:numberOfNodes:force1:)];
         }
     });
 
@@ -1480,16 +1576,16 @@ enum {
                 
                 // Check if this element belongs to a body where temperature
                 // should be calculated
-                element = [kernel getActiveElement:t solution:solution model:model];
+                element = getActiveElementIMP(kernel, @selector(getActiveElement:solution:model:), t, solution, model);
                 if (element->BodyID != body_id) {
-                    eq_id = [kernel getEquationIDForElement:element model:model];
+                    eq_id = getEquationIDForElementIMP(kernel, @selector(getEquationIDForElement:model:), element, model);
                     equationAtID = (model.equations)[eq_id-1];
-                    convectionFlag = [listUtilities listGetString:model inArray:equationAtID.valuesList forVariable:@"convection" info:&found];
+                    convectionFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, equationAtID.valuesList, @"convection", &found);
                     
-                    mat_id = [kernel getMaterialIDForElement:element model:model];
+                    mat_id = getMaterialIDForElementIMP(kernel, @selector(getMaterialIDForElement:model:), element, model);
                     materialAtID = (model.materials)[mat_id-1];
                     
-                    compressibilityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"compressibility model" info:&found];
+                    compressibilityFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, materialAtID.valuesList, @"compressibility model", &found);
                     if (found == NO) compressibilityModel = incompressible;
                     
                     if ([compressibilityFlag isEqualToString:@"incompressible"] == YES) {
@@ -1504,25 +1600,25 @@ enum {
                         compressibilityModel = incompressible;
                     }
                     
-                    _phaseModel = [listUtilities listGetString:model inArray:equationAtID.valuesList forVariable:@"phase change model" info:&found];
-                    if (found == NO) _phaseModel = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"phase change model" info:&found];
+                    _phaseModel = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, equationAtID.valuesList, @"phase change model", &found);
+                    if (found == NO) _phaseModel = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, materialAtID.valuesList, @"phase change model", &found);
                     phaseChange = (found == YES && [_phaseModel isEqualToString:@"none"] == NO) ? YES : NO;
                     if (phaseChange == YES) {
-                        checkLatentHeatRelease = [listUtilities listGetLogical:model inArray:equationAtID.valuesList forVariable:@"check latent heat release" info:&found];
+                        checkLatentHeatRelease = listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, equationAtID.valuesList, @"check latent heat release", &found);
                     }
                 }
                 
                 n = element->Type.NumberOfNodes;
-                [kernel getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL];
-                [kernel getScalarLocalField:_localTemperature sizeField:solution.mesh.maxElementDofs name:nil element:element solution:solution model:model timeStep:NULL];
+                getNodesIMP(kernel, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:), solution, model, element, _elementNodes, NULL);
+                getScalarLocalFieldIMP(kernel, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _localTemperature, solution.mesh.maxElementDofs, nil, element, solution, model, NULL);
                 
                 // Get element material parameters
                 memset( _heatCapacity, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&buffer listUtilities:listUtilities];
+                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat capacity", &buffer, listUtilities);
                 if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
                 
                 memset( **_heatConductivity, 0.0, (3*3*solution.mesh.maxElementDofs)*sizeof(double) );
-                found = [listUtilities listGetRealArray:model inArray:materialAtID.valuesList forVariable:@"heat conductivity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer];
+                found = listGetRealArrayIMP(listUtilities, @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:), model, materialAtID.valuesList, @"heat conductivity", n, element->NodeIndexes, &buffer);
                 if (found == YES) {
                     if (buffer.m == 1) {
                         for (i=0; i<3; i++) {
@@ -1549,7 +1645,7 @@ enum {
                 
                 if (compressibilityModel == perfect_gas1) {
                     // Read specific heat ratio
-                    specificHeatRatio = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"specific heat ratio" info:&found minValue:NULL maxValue:NULL];
+                    specificHeatRatio = listGetConstRealIMP(listUtilities, @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:), model, materialAtID.valuesList, @"specific heat ratio", &found, NULL, NULL);
                     if (found == NO) specificHeatRatio = 5.0/3.0;
                     
                     // For an ideal gas, \gamma, c_p and R are really a constant.
@@ -1558,7 +1654,7 @@ enum {
                         _gasConstant[i] = (specificHeatRatio - 1.0) * _heatCapacity[i] /  specificHeatRatio;
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -1568,21 +1664,21 @@ enum {
                     }
                 } else if (compressibilityModel == thermal) {
                     memset( _referenceTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"reference temperature" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"reference temperature", &buffer, listUtilities);
                     if (found == YES) memcpy(_referenceTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _heatExpansionCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat expansion coefficient" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat expansion coefficient", &buffer, listUtilities);
                     if (found == YES) memcpy(_heatExpansionCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _density[i] = _density[i] * ( 1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]) );
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else {
@@ -1593,30 +1689,30 @@ enum {
                     }
                 } else if (compressibilityModel == user_defined1) {
                     if (densitySol != nil) {
-                        [kernel getScalarLocalField:_density sizeField:solution.mesh.maxElementDofs name:@"density" element:element solution:solution model:model timeStep:NULL];
+                        getScalarLocalFieldIMP(kernel, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _density, solution.mesh.maxElementDofs, @"density", element, solution, model, NULL);
                     } else {
                         memset( _density, 0.0, n*sizeof(double) );
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
+                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
                         if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                     }
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     } else memset( _pressureCoeff, 0.0, n*sizeof(double) );
                 } else {
                     memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"pressure coefficient" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
                     if (found == YES) memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
                     if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
                 }
                 
                 // Take pressure deviation p_d as the dependent variable p = p_0 + p_d.
                 // For perfect gas, read p_0
                 if (compressibilityModel != incompressible) {
-                    referencePressure = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"reference pressure" info:&found minValue:NULL maxValue:NULL];
+                    referencePressure = listGetConstRealIMP(listUtilities, @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:), model, materialAtID.valuesList, @"reference pressure", &found, NULL, NULL);
                     if (found == NO) referencePressure = 0.0;
                 }
                 
@@ -1632,31 +1728,31 @@ enum {
                 memset( _w, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
                 
                 memset( *_mu, 0.0, (3*solution.mesh.maxElementDofs)*sizeof(double) );
-                [kernel getVectorLocalField:_mu size1Field:3 size2Field:solution.mesh.maxElementDofs name:@"mesh velocity" element:element solution:solution model:model timeStep:NULL];
+                getVectorLocalFieldIMP(kernel, @selector(getVectorLocalField:size1Field:size2Field:name:element:solution:model:timeStep:), _mu, 3, solution.mesh.maxElementDofs, @"mesh velocity", element, solution, model, NULL);
                 
                 if ([convectionFlag isEqualToString:@"constant"] == YES) {
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_u, buffer.vector, n*sizeof(double));
                     } else {
-                        found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 1" buffer:&buffer listUtilities:listUtilities];
+                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
                         if (found == YES) memcpy(_u, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_v, buffer.vector, n*sizeof(double));
                     } else {
-                        [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 2" buffer:&buffer listUtilities:listUtilities];
+                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
                         if (found == YES) memcpy(_v, buffer.vector, n*sizeof(double));
                     }
                     
-                    found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
                     if (found == YES) {
                         memcpy(_w, buffer.vector, n*sizeof(double));
                     } else {
-                         found = [kernel getReal:model forElement:element inArray:equationAtID.valuesList variableName:@"convection velocity 3" buffer:&buffer listUtilities:listUtilities];
+                         found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
                         if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES && flowSol != nil) {
@@ -1709,7 +1805,7 @@ enum {
                 // Check if modeling phase change with Eulerian approach
                 _phaseSpatial = NO;
                 if (phaseChange == YES) {
-                    [self FEMHeatSolution_effectiveHeatCapacityElement:element numberOfNodes:n material:materialAtID model:model listUtilities:listUtilities transientSimulation:transient];
+                    effectiveHeatCapacityElementIMP(kernel, @selector(FEMHeatSolution_effectiveHeatCapacityElement:numberOfNodes:material:model:listUtilities:transientSimulation:), element, n, materialAtID, model, listUtilities, transient);
                 } else {
                     for (i=0; i<n; i++) {
                         _heatCapacity[i] = _density[i] * _heatCapacity[i];
@@ -1719,18 +1815,18 @@ enum {
                 memset( _viscosity, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
                 
                 // Add body forces if any
-                bf_id = [kernel getBodyForceIDForElement:element model:model];
+                bf_id = getBodyForceIDForElementIMP(kernel, @selector(getBodyForceIDForElement:model:), element, model);
                 bodyForceAtID = (model.bodyForces)[bf_id-1];
                 if (bodyForceAtID != nil) {
                     // Frictional viscous heating
-                    if ([listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"friction heat" info:&found] == YES) {
-                        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&buffer listUtilities:listUtilities];
+                    if (listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, bodyForceAtID.valuesList, @"friction heat", &found) == YES) {
+                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"viscosity", &buffer, listUtilities);
                         if (found == YES) memcpy(_viscosity, buffer.vector, n*sizeof(double));
                     }
                 }
                 
                 // Get heat source
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer listUtilities:listUtilities];
+                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"heat source", &buffer, listUtilities);
                 if (found == YES) {
                     for (i=0; i<n; i++) {
                         _load[i] = _density[i] * buffer.vector[i];
@@ -1764,20 +1860,20 @@ enum {
             
                 // Perfusion (added as suggested by Matthias Zenker)
                 memset( _perfusionRate, 0.0, n*sizeof(double) );
-                found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion rate" buffer:&buffer listUtilities:listUtilities];
+                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion rate", &buffer, listUtilities);
                 if (found == YES) {
                     memcpy(_perfusionRate, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionRefTemperature, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion reference temperature" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion reference temperature", &buffer, listUtilities);
                     if (found == YES) memcpy(_perfusionRefTemperature, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionDensity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion density" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion density", &buffer, listUtilities);
                     if (found == YES) memcpy(_perfusionDensity, buffer.vector, n*sizeof(double));
                     
                     memset( _perfusionHeatCapacity, 0.0, n*sizeof(double) );
-                    found = [kernel getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"perfusion heat capacity" buffer:&buffer listUtilities:listUtilities];
+                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion heat capacity", &buffer, listUtilities);
                     if (found == YES) memcpy(_perfusionHeatCapacity, buffer.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _c0[i] = _perfusionHeatCapacity[i] * _perfusionRate[i] * _perfusionDensity[i];
@@ -1811,41 +1907,13 @@ enum {
                         muy[i] = _mu[1][i];
                         muz[i] = _mu[2][i];
                     }
-                    [diffuseConvectiveGeneralAnisotropic diffuseConvectiveGeneralComposeMassMatrix:_mass
-                                                                                       stiffMatrix:_stiff
-                                                                                       forceVector:_force
-                                                                                        loadVector:_load
-                                                                                timeDerivativeTerm:_heatCapacity
-                                                                                    zeroDegreeTerm:_c0
-                                                                                    convectionTerm:heatCapacity
-                                                                                     diffusionTerm:_heatConductivity
-                                                                                       phaseChange:_phaseSpatial
-                                                                                  nodalTemperature:_localTemperature
-                                                                                          enthalpy:_enthalpy
-                                                                                         velocityX:_u
-                                                                                          velocitY:_v
-                                                                                         velocityZ:_w
-                                                                                         meshVeloX:mux
-                                                                                         meshVeloY:muy
-                                                                                         meshVeloZ:muz
-                                                                                    nodalViscosity:_viscosity
-                                                                                      nodaldensity:_density
-                                                                                     nodalPressure:_pressure
-                                                                                   nodalPressureDt:_dPressureDt
-                                                                                nodalPressureCoeff:_pressureCoeff
-                                                                                      compressible:(compressibilityModel != incompressible) ? YES : NO
-                                                                                         stabilize:stabilize
-                                                                                           element:element
-                                                                                     numberOfNodes:n
-                                                                                             nodes:_elementNodes
-                                                                                          solution:solution
-                                                                                              mesh:solution.mesh
-                                                                                             model:model];
+                    
+                    diffuseConvectiveGeneralComposeMassMatrixIMP(diffuseConvectiveGeneralAnisotropic, @selector(diffuseConvectiveGeneralComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:element:numberOfNodes:nodes:solution:mesh:model:), _mass, _stiff, _force, _load, _heatCapacity, _c0, heatCapacity, _heatConductivity, _phaseSpatial, _localTemperature, _enthalpy, _u, _v, _w, mux, muy, muz, _viscosity, _density, _pressure, _dPressureDt, _pressureCoeff, (compressibilityModel != incompressible) ? YES : NO, stabilize, element, n, _elementNodes, solution, solution.mesh, model);
                 }
                 
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
                     if (_transientAssembly == YES && _constantBulk == NO) {
-                        [kernel defaultFirstOrderTime:model inSolution:solution forElement:element realMass:_mass realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols];
+                        defaultFirstOrderTimeIMP(kernel, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:), model, solution, element, _mass, _stiff, _force, &rows, &cols);
                     }
                     if (indexes == NULL || n != nb) {
                         if (indexes != NULL) free_ivector(indexes, 0, nb-1);
@@ -1855,7 +1923,7 @@ enum {
                     for (i=0; i<n; i++) {
                         indexes[i] = _tempPerm[element->NodeIndexes[i]];
                     }
-                    [kernel updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:_stiff forceVector:_forceHeater localForce:_force size:n dofs:1 nodeIndexes:indexes rows:&rows cols:&cols rotateNT:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
+                    updateGlobalEquationsModelIMP(kernel, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:), model, solution, element, _stiff, _forceHeater, _force, n, 1, indexes, &rows, &cols, NULL, crsMatrix, bandMatrix);
                 } else {
                     bubbles = (useBubbles == YES && stabilize == NO && ([convectionFlag isEqualToString:@"computed"] == YES || [convectionFlag isEqualToString:@"constant"] == YES)) ? YES : NO;
                     
@@ -1863,16 +1931,16 @@ enum {
                     memset( _timeForce, 0.0, (2*solution.mesh.maxElementDofs)*sizeof(double) );
                     if (_transientAssembly == YES) {
                         if (_constantBulk == YES) {
-                            [kernel defaultUpdateMass:_mass element:element solution:solution model:model];
+                            defaultUpdateMassIMP(kernel, @selector(defaultUpdateMass:element:solution:model:), _mass, element, solution, model);
                         } else {
-                            [kernel defaultFirstOrderTime:model inSolution:solution forElement:element realMass:_mass realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols];
+                            defaultFirstOrderTimeIMP(kernel, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:), model, solution, element, _mass, _stiff, _force, &rows, &cols);
                         }
                     } else if (solution.nOfEigenValues > 0) {
-                        [kernel defaultUpdateDamp:_mass element:element solution:solution model:model];
+                        defaultUpdateDampIMP(kernel, @selector(defaultUpdateDamp:element:solution:model:), _mass, element, solution, model);
                     }
                     // Update global matrices and local matrices
                     if (bubbles == YES) {
-                        [kernel condensateStiff:_stiff force:_force numberOfNodes:n force1:_timeForce];
+                        condensateStiffIMP(kernel, @selector(condensateStiff:force:numberOfNodes:force1:), _stiff, _force, n, _timeForce);
                     }
                     
                     defaultUpdateEquationsIMP(kernel, @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:),
