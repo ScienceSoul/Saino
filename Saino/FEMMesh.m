@@ -298,6 +298,16 @@
             }
         }
     }
+    
+    // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:
+    _elementNodeIndexesStore = intvec(0, (self.numberOfBulkElements*self.maxElementDofs)-1);
+    indx = 0;
+    for (int t=0; t<self.numberOfBulkElements; t++) {
+        for (int i=0; i<_elements[t].Type.NumberOfNodes; i++) {
+            _elementNodeIndexesStore[indx] = _elements[t].NodeIndexes[i];
+            indx++;
+        }
+    }
 }
 
 #pragma mark Public methods
@@ -371,6 +381,7 @@
         _child = nil;
         
         _colorMapping = NULL;
+        _elementNodeIndexesStore = NULL;
     }
     
     return self;
@@ -1136,6 +1147,12 @@
     return _colorMapping;
 }
 
+#pragma mark Element permutation store getter
+-(int *)getElementNodeIndexesStore {
+    
+    return _elementNodeIndexesStore;
+}
+
 #pragma mark Test associativity
 
 -(BOOL)isAssociatedEdges {
@@ -1368,6 +1385,11 @@
     if (_colorMapping != NULL) {
         free_ivector(_colorMapping, 0, self.numberOfBulkElements-1);
         _colorMapping = NULL;
+    }
+    
+    if (_elementNodeIndexesStore != NULL) {
+        free_ivector(_elementNodeIndexesStore, 0, (self.numberOfBulkElements*self.maxElementDofs)-1);
+        _elementNodeIndexesStore = NULL;
     }
 }
 

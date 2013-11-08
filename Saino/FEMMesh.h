@@ -53,6 +53,7 @@
     FEMMesh *_child;
     
     int *_colorMapping;
+    int *_elementNodeIndexesStore;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -105,6 +106,9 @@
 
 // Color mapping getter
 -(int *)getColorMapping;
+
+// Element permutation store getter
+-(int *)getElementNodeIndexesStore;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;

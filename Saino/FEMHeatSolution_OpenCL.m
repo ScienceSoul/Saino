@@ -262,16 +262,14 @@ enum {
 
 -(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, n, nb, t, bf_id, body_id, cols, compressibilityModel, eq_id, indx1, iter, kernelDof, mat_id, nBasis, nn, nonLinearIter, newtonIter, position, returnValue, rows;
+    int i, n, nb, t, body_id, cols, iter, nBasis, nonLinearIter, newtonIter, position, returnValue, rows;
     static int firstTimeCL = 0;
-    int *colorMapping = NULL, *elementPermutationStore, *indexes = NULL, indexStore[511];
+    int *colorMapping = NULL, *elementNodeIndexesStore = NULL;
     char *program_source;
-    double at, at0, ct, mt, mmt, pt, C1, dt0, cumulativeTime, newtonTol, nonLinearTol, norm,
-    prevNorm, referencePressure, relax, relativeChange, saveRelax, specificHeatRatio, st, totat, totst;
+    double at, at0, ct, mt, mmt, dt0, cumulativeTime, newtonTol, nonLinearTol, norm, prevNorm, relax, relativeChange, saveRelax, st, totat, totst;
     double *forceVector;
-    float *nodesInfo;
-    BOOL all, bubbles, found, heatFluxBC, firstTime, stabilize = YES, useBubbles;
-    NSString *stabilizeFlag, *convectionFlag, *compressibilityFlag;
+    BOOL found, heatFluxBC, firstTime, stabilize = YES, useBubbles;
+    NSString *stabilizeFlag;
     NSArray *bc;
     cl_context         context;
 	cl_command_queue   cmd_queue;
@@ -281,10 +279,8 @@ enum {
     Element_t *elements = NULL, *element = NULL;
     Nodes_t *meshNodes = NULL;
     FEMMesh *mesh;
-    FEMVariable *densitySol;
     FEMBodyForce *bodyForceAtID = nil;
     FEMMaterial *materialAtID = nil;
-    FEMEquation *equationAtID = nil;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *tempContainers = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -292,82 +288,12 @@ enum {
     FEMKernel *kernel = [FEMKernel sharedKernel];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     
-    static Element_t* (*getActiveElementIMP)(id, SEL, int, FEMSolution*, FEMModel*) = nil;
-    static int (*getEquationIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
-    static NSString* (*listGetStringIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
-    static int (*getMaterialIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
-    static BOOL (*listGetLogicalIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
-    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*) = nil;
-    static void (*getScalarLocalFieldIMP)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
-    static BOOL (*getRealIMP)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*) = nil;
-    static BOOL (*listGetRealArrayIMP)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*) = nil;
-    static double (*listGetConstRealIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*) = nil;
-    static void (*getVectorLocalFieldIMP)(id, SEL, double**, int, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
-    static int (*getBodyForceIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
-    static int (*getElementDofsSolutionIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*) = nil;
-
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        if (!getActiveElementIMP) {
-            getActiveElementIMP = (Element_t* (*)(id, SEL, int, FEMSolution*, FEMModel*))
-            [kernel methodForSelector: @selector(getActiveElement:solution:model:)];
-        }
-        if (!getEquationIDForElementIMP) {
-            getEquationIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
-            [kernel methodForSelector: @selector(getEquationIDForElement:model:)];
-        }
-        if (!listGetStringIMP) {
-            listGetStringIMP = (NSString* (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))
-            [listUtilities methodForSelector: @selector(listGetString:inArray:forVariable:info:)];
-        }
-        if (!getMaterialIDForElementIMP) {
-            getMaterialIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
-            [kernel methodForSelector: @selector(getMaterialIDForElement:model:)];
-        }
-        if (!listGetLogicalIMP) {
-            listGetLogicalIMP = (BOOL (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))
-            [listUtilities methodForSelector: @selector(listGetLogical:inArray:forVariable:info:)];
-        }
-        if (!getNodesIMP) {
-            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*))
-            [kernel methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:)];
-        }
-        if (!getScalarLocalFieldIMP) {
-            getScalarLocalFieldIMP = (void (*)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*))
-            [kernel methodForSelector: @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:)];
-        }
-        if (!getRealIMP) {
-            getRealIMP = (BOOL (*)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))
-            [kernel methodForSelector: @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:)];
-        }
-        if (!listGetRealArrayIMP) {
-            listGetRealArrayIMP = (BOOL (*)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))
-            [listUtilities methodForSelector: @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:)];
-        }
-        if (!listGetConstRealIMP) {
-            listGetConstRealIMP = (double (*)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))
-            [listUtilities methodForSelector: @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:)];
-        }
-        if (!getVectorLocalFieldIMP) {
-            getVectorLocalFieldIMP = (void (*)(id, SEL, double**, int, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*))
-            [kernel methodForSelector: @selector(getVectorLocalField:size1Field:size2Field:name:element:solution:model:timeStep:)];
-        }
-        if (!getBodyForceIDForElementIMP) {
-            getBodyForceIDForElementIMP = (int (*)(id, SEL, Element_t*, FEMModel*))
-            [kernel methodForSelector: @selector(getBodyForceIDForElement:model:)];
-        }
-        if (!getElementDofsSolutionIMP) {
-            getElementDofsSolutionIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*))
-            [kernel methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:)];
-        }
-    });
-
-    
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
     meshNodes = mesh.getNodes;
     colorMapping = mesh.getColorMapping;
-    
+    elementNodeIndexesStore = mesh.getElementNodeIndexesStore;
+
     if (solution.matrix == nil) return;
     
     // Get variables needed for solution
@@ -546,14 +472,6 @@ enum {
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
     if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution_OpenCL:fieldSolutionComputer", "Allocation error in FEMNumericIntegration!");
     
-    NSString *stabilizationFlag = (solution.solutionInfo)[@"stabilization method"];
-    BOOL vms = ([stabilizationFlag isEqualToString:@"vms"] == YES) ? YES : NO;
-    
-    kernelDof = 17;
-    
-    nodesInfo = floatvec(0, (kernelDof*mesh.numberOfNodes)-1);
-    elementPermutationStore = intvec(0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
-    
 	// Connect to a compute devise
 	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &devices, NULL);
 
@@ -616,20 +534,24 @@ enum {
 	cl_mem matCols = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*matContainers->sizeCols, NULL, NULL);
 	cl_mem matValues = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeValues, NULL, NULL);
 	cl_mem matRhs = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_double)*matContainers->sizeRHS, NULL, NULL);
-    cl_mem nodesInfoIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float)*(kernelDof*mesh.numberOfNodes), NULL, NULL);
     cl_mem colorMappingIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*mesh.numberOfBulkElements, NULL, NULL);
-    cl_mem elementPermutationStoreIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), NULL, NULL);
+    cl_mem elementNodeIndexesStoreIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), NULL, NULL);
+    cl_mem permutationIn = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int)*(tempContainers->sizePerm), NULL, NULL);
+    cl_mem nodesX = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_double)*(mesh.numberOfNodes), NULL, NULL);
+    cl_mem nodesY = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_double)*(mesh.numberOfNodes), NULL, NULL);
+    cl_mem nodesZ = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_double)*(mesh.numberOfNodes), NULL, NULL);
 
     firstTimeCL = 1;
     
     double allocationSize = sizeof(cl_int)*matContainers->sizeDiag + sizeof(cl_int)*matContainers->sizeRows + sizeof(cl_int)*matContainers->sizeCols + sizeof(cl_double)*matContainers->sizeValues +
-                         + sizeof(cl_double)*matContainers->sizeRHS
-                         + sizeof(cl_float)*(kernelDof*mesh.numberOfNodes)
-                         + sizeof(cl_int)*mesh.numberOfBulkElements
-                         + sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs);
+                          + sizeof(cl_double)*matContainers->sizeRHS
+                          + sizeof(cl_int)*mesh.numberOfBulkElements
+                          + sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs)
+                          + sizeof(cl_int)*(tempContainers->sizePerm)
+                          + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes);
     
-    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for Nodes info (KB): %f\n", (sizeof(cl_double)*(kernelDof*mesh.numberOfNodes))/1024.0);
-    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for element permutation store info (KB): %f\n", (sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs))/1024.0);
+    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for the CRS matrix (MB): %f\n",
+          (sizeof(cl_double)*matContainers->sizeValues+sizeof(cl_double)*matContainers->sizeRHS+sizeof(cl_int)*matContainers->sizeCols+sizeof(cl_int)*matContainers->sizeRows+sizeof(cl_int)*matContainers->sizeDiag)/(1024.0*1024.0));
     NSLog(@"FEMHeatSolution:fieldSolutionComputer: Total allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
 
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
@@ -672,305 +594,7 @@ enum {
             bodyForceAtID = nil;
             nb = 0;
             
-            memset( nodesInfo, 0.0, (kernelDof*mesh.numberOfNodes)*sizeof(float) );
-            memset( elementPermutationStore, -1, (mesh.numberOfBulkElements*mesh.maxElementDofs)*sizeof(int) );
-            indx1 = 0;
-            
             at = cputime();
-            pt = cputime();
-            for (t=0; t<solution.numberOfActiveElements; t++) {
-                // Check if this element belongs to a body where temperature
-                // should be calculated
-                element = getActiveElementIMP(kernel, @selector(getActiveElement:solution:model:), t, solution, model);
-                if (element->BodyID != body_id) {
-                    eq_id = getEquationIDForElementIMP(kernel, @selector(getEquationIDForElement:model:), element, model);
-                    equationAtID = (model.equations)[eq_id-1];
-                    convectionFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, equationAtID.valuesList, @"convection", &found);
-                    
-                    mat_id = getMaterialIDForElementIMP(kernel, @selector(getMaterialIDForElement:model:), element, model);
-                    materialAtID = (model.materials)[mat_id-1];
-                    
-                    compressibilityFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, materialAtID.valuesList, @"compressibility model", &found);
-                    if (found == NO) compressibilityModel = incompressible;
-                    
-                    if ([compressibilityFlag isEqualToString:@"incompressible"] == YES) {
-                        compressibilityModel = incompressible;
-                    } else if ([compressibilityFlag isEqualToString:@"user defined"] == YES) {
-                        compressibilityModel = user_defined1;
-                    } else if ([compressibilityFlag isEqualToString:@"perfect gas"] == YES || [compressibilityFlag isEqualToString:@"perfect gas equation 1"] == YES) {
-                        compressibilityModel = perfect_gas1;
-                    } else if ([compressibilityFlag isEqualToString:@"thermal"] == YES) {
-                        compressibilityModel = thermal;
-                    } else {
-                        compressibilityModel = incompressible;
-                    }
-                }
-                
-                n = element->Type.NumberOfNodes;
-                nn = n;
-                getNodesIMP(kernel, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:), solution, model, element, _elementNodes, NULL);
-                getScalarLocalFieldIMP(kernel, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _localTemperature, solution.mesh.maxElementDofs, nil, element, solution, model, NULL);
-                
-                // Get element material parameters
-                memset( _heatCapacity, 0.0, n*sizeof(double) );
-                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat capacity", &buffer, listUtilities);
-                if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
-                
-                memset( **_heatConductivity, 0.0, (3*3*solution.mesh.maxElementDofs)*sizeof(double) );
-                found = listGetRealArrayIMP(listUtilities, @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:), model, materialAtID.valuesList, @"heat conductivity", n, element->NodeIndexes, &buffer);
-                if (found == YES) {
-                    if (buffer.m == 1) {
-                        for (i=0; i<3; i++) {
-                            for (j=0; j<n; j++) {
-                                _heatConductivity[i][i][j] = buffer.tensor[0][0][j];
-                            }
-                        }
-                    } else if (buffer.n == 1) {
-                        for (i=0; i<min(3, buffer.m); i++) {
-                            for (j=0; j<n; j++) {
-                                _heatConductivity[i][i][j] = buffer.tensor[i][0][j];
-                            }
-                        }
-                    } else {
-                        for (i=0; i<min(3, buffer.m); i++) {
-                            for (j=0; j<min(3, buffer.n); j++) {
-                                for (k=0; k<n; k++) {
-                                    _heatConductivity[i][j][k] = buffer.tensor[i][j][k];
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if (compressibilityModel == perfect_gas1) {
-                    // Read specific heat ratio
-                    specificHeatRatio = listGetConstRealIMP(listUtilities, @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:), model, materialAtID.valuesList, @"specific heat ratio", &found, NULL, NULL);
-                    if (found == NO) specificHeatRatio = 5.0/3.0;
-                    
-                    // For an ideal gas, \gamma, c_p and R are really a constant.
-                    // GasConstant is an array only since HeatCapacity formally is
-                    for (i=0; i<n; i++) {
-                        _gasConstant[i] = (specificHeatRatio - 1.0) * _heatCapacity[i] /  specificHeatRatio;
-                    }
-                    
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
-                    } else {
-                        for (i=0; i<n; i++) {
-                            _pressureCoeff[i] = 1.0;
-                        }
-                    }
-                } else if (compressibilityModel == thermal) {
-                    memset( _referenceTemperature, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"reference temperature", &buffer, listUtilities);
-                    if (found == YES) memcpy(_referenceTemperature, buffer.vector, n*sizeof(double));
-                    
-                    memset( _heatExpansionCoeff, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat expansion coefficient", &buffer, listUtilities);
-                    if (found == YES) memcpy(_heatExpansionCoeff, buffer.vector, n*sizeof(double));
-                    
-                    memset( _density, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
-                    for (i=0; i<n; i++) {
-                        _density[i] = _density[i] * ( 1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]) );
-                    }
-                    
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
-                    } else {
-                        for (i=0; i<n; i++) {
-                            _pressureCoeff[i] = _localTemperature[i] *
-                            _heatExpansionCoeff[i] / (1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]));
-                        }
-                    }
-                } else if (compressibilityModel == user_defined1) {
-                    if (densitySol != nil) {
-                        getScalarLocalFieldIMP(kernel, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _density, solution.mesh.maxElementDofs, @"density", element, solution, model, NULL);
-                    } else {
-                        memset( _density, 0.0, n*sizeof(double) );
-                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                        if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
-                    }
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
-                    } else memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                } else {
-                    memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
-                    if (found == YES) memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
-                    
-                    memset( _density, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
-                }
-                
-                // Take pressure deviation p_d as the dependent variable p = p_0 + p_d.
-                // For perfect gas, read p_0
-                if (compressibilityModel != incompressible) {
-                    referencePressure = listGetConstRealIMP(listUtilities, @selector(listGetConstReal:inArray:forVariable:info:minValue:maxValue:), model, materialAtID.valuesList, @"reference pressure", &found, NULL, NULL);
-                    if (found == NO) referencePressure = 0.0;
-                }
-                
-                memset( _load, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                memset( _pressure, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                memset( _dPressureDt, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                
-                // Check for convection model
-                C1 = 1.0;
-                memset( _u, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                memset( _v, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                memset( _w, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                
-                memset( *_mu, 0.0, (3*solution.mesh.maxElementDofs)*sizeof(double) );
-                getVectorLocalFieldIMP(kernel, @selector(getVectorLocalField:size1Field:size2Field:name:element:solution:model:timeStep:), _mu, 3, solution.mesh.maxElementDofs, @"mesh velocity", element, solution, model, NULL);
-                
-                if ([convectionFlag isEqualToString:@"constant"] == YES) {
-                    
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_u, buffer.vector, n*sizeof(double));
-                    } else {
-                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
-                        if (found == YES) memcpy(_u, buffer.vector, n*sizeof(double));
-                    }
-                    
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_v, buffer.vector, n*sizeof(double));
-                    } else {
-                        getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
-                        if (found == YES) memcpy(_v, buffer.vector, n*sizeof(double));
-                    }
-                    
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
-                    if (found == YES) {
-                        memcpy(_w, buffer.vector, n*sizeof(double));
-                    } else {
-                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
-                        if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
-                    }
-                } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: convection model specified but no accociated flow field present?\n");
-                } else {
-                    all = YES;
-                    for (i=0; i<3; i++) {
-                        for (j=0; j<solution.mesh.maxElementDofs; j++) {
-                            if (_mu[i][j] != 0.0) {
-                                all = NO;
-                                break;
-                            }
-                        }
-                        if (all == NO) break;
-                    }
-                    if (all == YES) C1 = 0.0;
-                }
-                
-                // Check if modeling phase change with Eulerian approach
-                _phaseSpatial = NO;
-                for (i=0; i<n; i++) {
-                    _heatCapacity[i] = _density[i] * _heatCapacity[i];
-                }
-                
-                memset( _viscosity, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                
-                // Add body forces if any
-                bf_id = getBodyForceIDForElementIMP(kernel, @selector(getBodyForceIDForElement:model:), element, model);
-                bodyForceAtID = (model.bodyForces)[bf_id-1];
-                if (bodyForceAtID != nil) {
-                    // Frictional viscous heating
-                    if (listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, bodyForceAtID.valuesList, @"friction heat", &found) == YES) {
-                        found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"viscosity", &buffer, listUtilities);
-                        if (found == YES) memcpy(_viscosity, buffer.vector, n*sizeof(double));
-                    }
-                }
-                
-                // Get heat source
-                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"heat source", &buffer, listUtilities);
-                if (found == YES) {
-                    for (i=0; i<n; i++) {
-                        _load[i] = _density[i] * buffer.vector[i];
-                    }
-                }
-                
-                memset( _c0, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
-                
-                // Note at this point HeatCapacity = \rho * c_p or \rho * (c_p - R)
-                // and C1 = 0 (diffusion) or 1 (convection)
-                
-                // Perfusion (added as suggested by Matthias Zenker)
-                memset( _perfusionRate, 0.0, n*sizeof(double) );
-                found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion rate", &buffer, listUtilities);
-                if (found == YES) {
-                    memcpy(_perfusionRate, buffer.vector, n*sizeof(double));
-                    
-                    memset( _perfusionRefTemperature, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion reference temperature", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionRefTemperature, buffer.vector, n*sizeof(double));
-                    
-                    memset( _perfusionDensity, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionDensity, buffer.vector, n*sizeof(double));
-                    
-                    memset( _perfusionHeatCapacity, 0.0, n*sizeof(double) );
-                    found = getRealIMP(kernel, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion heat capacity", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionHeatCapacity, buffer.vector, n*sizeof(double));
-                    for (i=0; i<n; i++) {
-                        _c0[i] = _perfusionHeatCapacity[i] * _perfusionRate[i] * _perfusionDensity[i];
-                        _load[i] = _load[i] + _c0[i] * _perfusionRefTemperature[i];
-                    }
-                }
-                
-                BOOL any = NO;
-                for (i=0; i<n; i++) {
-                    if (C1 * _heatCapacity[i] != 0.0) {
-                        any = YES;
-                        break;
-                    }
-                }
-                BOOL convection = (any == YES) ? YES : NO;
-                nBasis = n;
-                bubbles = NO;
-                if (convection == YES && !(vms == YES || stabilize == YES) && useBubbles == YES) {
-                    nBasis = 2*n;
-                    bubbles = YES;
-                }
-                
-                // Copy the element wise node info to global node that each kernel can read
-                // Data are serialized as follows:
-                // [_heatCapacity, _heatConductivity[][], _density, _load, C1 * _heatCapacity, _c0, elementNodes->x, elementNodes->y, elementNodes->z, next node...]
-                for (i=0; i<n; i++) {
-                    j = tempContainers->Perm[element->NodeIndexes[i]];
-                    nodesInfo[kernelDof*j] = (float)_heatCapacity[i];
-                    nodesInfo[kernelDof*j+1] = (float)_heatConductivity[0][0][i];
-                    nodesInfo[kernelDof*j+2] = (float)_heatConductivity[0][1][i];
-                    nodesInfo[kernelDof*j+3] = (float)_heatConductivity[0][2][i];
-                    nodesInfo[kernelDof*j+4] = (float)_heatConductivity[1][0][i];
-                    nodesInfo[kernelDof*j+5] = (float)_heatConductivity[1][1][i];
-                    nodesInfo[kernelDof*j+6] = (float)_heatConductivity[1][2][i];
-                    nodesInfo[kernelDof*j+7] = (float)_heatConductivity[2][0][i];
-                    nodesInfo[kernelDof*j+8] = (float)_heatConductivity[2][1][i];
-                    nodesInfo[kernelDof*j+9] = (float)_heatConductivity[2][2][i];
-                    nodesInfo[kernelDof*j+10] = (float)_density[i];
-                    nodesInfo[kernelDof*j+11] = (float)_load[i];
-                    nodesInfo[kernelDof*j+12] =  (float)(C1 * _heatCapacity[i]);
-                    nodesInfo[kernelDof*j+13] = (float)_c0[i];
-                    nodesInfo[kernelDof*j+14] = (float)_elementNodes->x[i];
-                    nodesInfo[kernelDof*j+15] = (float)_elementNodes->y[i];
-                    nodesInfo[kernelDof*j+16] = (float)_elementNodes->z[i];
-                }
-                
-                memset( indexStore, -1, sizeof(indexStore) );
-                n = getElementDofsSolutionIMP(kernel, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, indexStore);
-                for (i=0; i<n; i++) {
-                    elementPermutationStore[indx1] = tempContainers->Perm[indexStore[i]];
-                    indx1++;
-                }
-            }
-            pt = cputime() -  pt;
             
             mt = cputime();
             
@@ -980,35 +604,42 @@ enum {
             err = clEnqueueWriteBuffer(cmd_queue, matCols, CL_TRUE, 0, sizeof(cl_int)*matContainers->sizeCols, (void*)matContainers->Cols, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, (void*)matContainers->Values, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, (void*)matContainers->RHS, 0, NULL, NULL);
-            err = clEnqueueWriteBuffer(cmd_queue, nodesInfoIn, CL_TRUE, 0, sizeof(cl_float)*(kernelDof*mesh.numberOfNodes), (void*)nodesInfo, 0, NULL, NULL);
             err = clEnqueueWriteBuffer(cmd_queue, colorMappingIn, CL_TRUE, 0, sizeof(cl_int)*mesh.numberOfBulkElements, (void*)colorMapping, 0, NULL, NULL);
-            err = clEnqueueWriteBuffer(cmd_queue, elementPermutationStoreIn, CL_TRUE, 0, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), (void*)elementPermutationStore, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, elementNodeIndexesStoreIn, CL_TRUE, 0, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), (void*)elementNodeIndexesStore, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, permutationIn, CL_TRUE, 0, sizeof(cl_int)*(tempContainers->sizePerm), (void*)tempContainers->Perm, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, nodesX, CL_TRUE, 0, sizeof(cl_double)*(mesh.numberOfNodes), (void*)meshNodes->x, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, nodesY, CL_TRUE, 0, sizeof(cl_double)*(mesh.numberOfNodes), (void*)meshNodes->y, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(cmd_queue, nodesZ, CL_TRUE, 0, sizeof(cl_double)*(mesh.numberOfNodes), (void*)meshNodes->z, 0, NULL, NULL);
             
             // Push the data out to the device
             clFinish(cmd_queue);
             
             mt = cputime() -  mt;
             
+            n = 3;
+            nBasis = 3;
             int dimension = model.dimension;
             int varDofs = solution.variable.dofs;
             
-            ct = cputime();
             // Set kernel arguments
             err |= clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matValues);
             err |= clSetKernelArg(CLkernel, 1, sizeof(cl_mem), &matRhs);
-            err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &nodesInfoIn);
-            err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matDiag);
-            err |= clSetKernelArg(CLkernel, 4, sizeof(cl_mem), &matRows);
-            err |= clSetKernelArg(CLkernel, 5, sizeof(cl_mem), &matCols);
-            err |= clSetKernelArg(CLkernel, 6, sizeof(cl_mem), &colorMappingIn);
-            err |= clSetKernelArg(CLkernel, 7, sizeof(cl_mem), &elementPermutationStoreIn);
-            err |= clSetKernelArg(CLkernel, 9, sizeof(int), &dimension);
-            err |= clSetKernelArg(CLkernel, 10, sizeof(int), &nn);
-            err |= clSetKernelArg(CLkernel, 11, sizeof(int), &n);
-            err |= clSetKernelArg(CLkernel, 12, sizeof(int), &nBasis);
-            err |= clSetKernelArg(CLkernel, 13, sizeof(int), &kernelDof);
-            err |= clSetKernelArg(CLkernel, 14, sizeof(int), &varDofs);
+            err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &matDiag);
+            err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matRows);
+            err |= clSetKernelArg(CLkernel, 4, sizeof(cl_mem), &matCols);
+            err |= clSetKernelArg(CLkernel, 5, sizeof(cl_mem), &colorMappingIn);
+            err |= clSetKernelArg(CLkernel, 6, sizeof(cl_mem), &elementNodeIndexesStoreIn);
+            err |= clSetKernelArg(CLkernel, 7, sizeof(cl_mem), &permutationIn);
+            err |= clSetKernelArg(CLkernel, 8, sizeof(cl_mem), &nodesX);
+            err |= clSetKernelArg(CLkernel, 9, sizeof(cl_mem), &nodesY);
+            err |= clSetKernelArg(CLkernel, 10, sizeof(cl_mem), &nodesZ);
+            err |= clSetKernelArg(CLkernel, 12, sizeof(int), &dimension);
+            err |= clSetKernelArg(CLkernel, 13, sizeof(int), &n);
+            err |= clSetKernelArg(CLkernel, 14, sizeof(int), &n);
+            err |= clSetKernelArg(CLkernel, 15, sizeof(int), &nBasis);
+            err |= clSetKernelArg(CLkernel, 16, sizeof(int), &varDofs);
             
+            ct = cputime();
             for (NSMutableArray *color in mesh.colors) {
                 
                 position = 0;
@@ -1019,8 +650,8 @@ enum {
                 
                 size_t global_work_size = [color[0] intValue];
                 //size_t local_work_size = 64;
-                err |= clSetKernelArg(CLkernel, 8, sizeof(int), &position);
-
+                err |= clSetKernelArg(CLkernel, 11, sizeof(int), &position);
+                
                 //Queue up the kernels
                 err = clEnqueueNDRangeKernel(cmd_queue, CLkernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
                 
@@ -1070,7 +701,7 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (compute, mem up, mem down, data loop, all, tot) (s): %f %f %f %f %f %f\n", iter, ct, mt, mmt, pt, at, totat);
+            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (compute, mem up, mem down, all, tot) (s): %f %f %f %f %f\n", iter, ct, mt, mmt, at, totat);
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
             
             relativeChange = solution.variable.nonLinChange;
@@ -1095,10 +726,6 @@ enum {
             free_d3tensor(buffer.tensor, 0, buffer.m-1, 0, buffer.n-1, 0, buffer.p-1);
             buffer.tensor = NULL;
         }
-        if (indexes != NULL) {
-            free_ivector(indexes, 0, nb-1);
-            indexes = NULL;
-        }
     } // time interval
     
     // Release kernel, program and memory objects
@@ -1112,12 +739,13 @@ enum {
 	clReleaseMemObject(matCols);
 	clReleaseMemObject(matValues);
 	clReleaseMemObject(matRhs);
-    clReleaseMemObject(nodesInfoIn);
     clReleaseMemObject(colorMappingIn);
-    clReleaseMemObject(elementPermutationStoreIn);
+    clReleaseMemObject(elementNodeIndexesStoreIn);
+    clReleaseMemObject(permutationIn);
+    clReleaseMemObject(nodesX);
+    clReleaseMemObject(nodesY);
+    clReleaseMemObject(nodesZ);
     
-    free_ivector(elementPermutationStore, 0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
-    free_fvector(nodesInfo, 0, (kernelDof*mesh.numberOfNodes)-1);
     [integration deallocation:mesh];
     
     solution.dt = timeStep;

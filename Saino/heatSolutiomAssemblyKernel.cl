@@ -6,7 +6,7 @@ constant float STriangle3P[3] = {
     //0.33333333333333333E+00, 0.33333333333333333E+00, 0.33333333333333333E+00
 };
 
-__kernel void heatSolutionAssembly(__global double *values, __global double *rhs, __global float *nodesInfo, __global int *diag, __global int *rows, __global int *cols, __global int *colorMapping, __global int *elementPermutationStore, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int kernelDof, int varDofs) {
+__kernel void heatSolutionAssembly(__global double *values, __global double *rhs, __global int *diag, __global int *rows, __global int *cols, __global int *colorMapping, __global int *elementNodeIndexesStore, __global int *permutation, __global double *nodesX, __global double *nodesY, __global double *nodesZ, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int varDofs) {
     
     int workItemID = get_global_id(0);
     int i, j, k, l, c, col, n, p, q, row, t, globalID, pivot[3], upow, vpow, wpow, temp;
@@ -215,7 +215,6 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
             basisFunctionsQ[i][j] = vpow;
             basisFunctionsR[i][j] = wpow;
             basisFunctionsCoeff[i][j] = a[j][i];
-            //printf("%d\n",  basisFunctionsP[i][j]);
         }
     }
     
@@ -229,12 +228,9 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
         for(n=0; n<3; n++) {
             s = 0.0f;
             for(i=0; i<3; i++) {
-                //printf("%d %d\n", t, basisFunctionsP[n][i]);
                 s = s + basisFunctionsCoeff[n][i] * pow(UTriangle3P[t], basisFunctionsP[n][i]) * pow(VTriangle3P[t], basisFunctionsQ[n][i]);
-                //printf("%d %f\n", basisFunctions[n].p[i], s);
             }
             basis[n] = s;
-            //printf("%f\n", basis[n]);
         }
         
         // dLBasisDx
@@ -254,10 +250,10 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
             accum2 = 0.0;
             accum3 = 0.0;
             for (j=0; j<3; j++) { // Three nodes element
-                k =  elementPermutationStore[(globalID*numberElementDofs)+j];
-                accum1 = accum1 + (nodesInfo[kernelDof*k+14] * dLBasisdx[j][i]);
-                accum2 = accum2 + (nodesInfo[kernelDof*k+15] * dLBasisdx[j][i]);
-                accum3 = accum3 + (nodesInfo[kernelDof*k+16] * dLBasisdx[j][i]);
+                k =  permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]];
+                accum1 = accum1 + (nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[j][i]);
+                accum2 = accum2 + (nodesY[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[j][i]);
+                accum3 = accum3 + (nodesZ[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[j][i]);
             }
             dx[0][i] = accum1;
             dx[1][i] = accum2;
@@ -318,35 +314,26 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
         c1 = 0.0;
         ct = 0.0;
         for (i=0; i<numberOfNodes; i++) {
-            j =  elementPermutationStore[(globalID*numberElementDofs)+i];
-            c0 = c0 + nodesInfo[kernelDof*j+13]*basis[i];
-            c1 = c1 + nodesInfo[kernelDof*j+12]*basis[i];
-            ct = ct + nodesInfo[kernelDof*j]*basis[i];
+            c0 = c0 + 0.0f*basis[i];
+            c1 = c1 + 0.0f*basis[i];
+            ct = ct + 0.0*basis[i];
         }
         
         // Coefficient of the diffusion term & its derivatives at the integration point
         rho = 0.0;
         for (i=0; i<numberOfNodes; i++) {
-            j = elementPermutationStore[(globalID*numberElementDofs)+i];
-            rho = rho + nodesInfo[kernelDof*j+10]*basis[i];
+            rho = rho + 1.0*basis[i];
         }
         
-        q = 1;
         for (i=0; i<dimension; i++) {
             for (j=0; j<dimension; j++) {
                 sum = 0.0;
-                for (k=0; k<numberOfNodes; k++) {
-                    p = elementPermutationStore[(globalID*numberElementDofs)+k];
-                    sum = sum + nodesInfo[kernelDof*p+q]*basis[k];
+                if ((i == 0 && j == 0) || (i == 1 && j == 1)) {
+                    for (k=0; k<numberOfNodes; k++) {
+                        sum = sum + 1.0*basis[k];
+                    }
                 }
-                q++;
                 c2[i][j] = sum;
-            }
-            // Jump further in the list if actual dimension is smaller than maximum dimension
-            if (dimension == 2) {
-                q = q + 1;
-            } else if (dimension == 1) {
-                q = q + 2;
             }
         }
         
@@ -364,15 +351,13 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
                     }
                 }
                 stiffMatrix[p][q] = stiffMatrix[p][q] + s * aa;
-                //printf("%f %f\n", stiffMatrix[p][q], s);
                 massMatrix[p][q] = massMatrix[p][q] + s * m;
             }
         }
         
         force = 0.0;
         for (i=0; i<numberOfNodes; i++) {
-            j = elementPermutationStore[(globalID*numberElementDofs)+i];
-            force = force + nodesInfo[kernelDof*j+11]*basis[i];
+            force = force + 1.0*basis[i];
         }
         
         for (p=0; p<nBasis; p++) {
@@ -383,10 +368,10 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
 
     if (varDofs == 1) {
         for (i=0; i<numberElementDofs; i++) {
-            row = elementPermutationStore[(globalID*numberElementDofs)+i];
+            row = permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]];
             if (row < 0) continue;
             for (j=0; j<numberElementDofs; j++) {
-                col = elementPermutationStore[(globalID*numberElementDofs)+j];
+                col = permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]];
                 if (col < 0) continue;
                 if (col >= row) {
                     for (c=diag[row]; c<=rows[row+1]-1; c++) {
@@ -408,12 +393,12 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
     } else {
         for (i=0; i<numberElementDofs; i++) {
             for (k=1; k<=varDofs; k++) {
-                if (elementPermutationStore[(globalID*numberElementDofs)+i] < 0) continue;
-                row = varDofs * (elementPermutationStore[(globalID*numberElementDofs)+i]+1) - k;
+                if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] < 0) continue;
+                row = varDofs * (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1) - k;
                 for (j=0; j<numberElementDofs; j++) {
                     for (l=1; l<=varDofs; l++) {
-                        if (elementPermutationStore[(globalID*numberElementDofs)+j] < 0) continue;
-                        col = varDofs * (elementPermutationStore[(globalID*numberElementDofs)+j]+1) - l;
+                        if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+j] < 0) continue;
+                        col = varDofs * (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1) - l;
                         if (col >= row) {
                             for (c=diag[row]; c<=rows[row+1]-1; c++) {
                                 if (cols[c] == col) {
@@ -436,9 +421,9 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
     }
     
     for (i=0; i<numberElementDofs; i++) {
-        if (elementPermutationStore[(globalID*numberElementDofs)+i] >= 0) {
+        if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+i] >= 0) {
             for (j=0; j<varDofs; j++) {
-                k = varDofs * elementPermutationStore[(globalID*numberElementDofs)+i] + j;
+                k = varDofs * permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
                 rhs[k] = rhs[k] + forceVector[varDofs*i+j];
             }
         }
