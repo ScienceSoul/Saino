@@ -72,7 +72,7 @@
     FEMNumericIntegration *integration;
     FEMMaterial *materialAtID = nil;
     FEMBodyForce *bodyForceAtID = nil;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     listBuffer gwrk = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     kernel = [FEMKernel sharedKernel];
@@ -608,7 +608,6 @@
     }
     
     free_dmatrix(c2, 0, 2, 0, 2);
-    GaussQuadratureDeallocation(IP);
     [integration deallocation:mesh];
 }
 
@@ -630,7 +629,7 @@
     double alpha, detJ, force, s;
     BOOL stat;
     FEMNumericIntegration *integration;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     memset( *boundaryMatrix, 0.0, (dimensions.mat1*dimensions.mat2)*sizeof(double) );
     memset( boundaryVector, 0.0, dimensions.vec*sizeof(double) );
@@ -662,7 +661,7 @@
             boundaryVector[q] = boundaryVector[q] + s * integration.basis[q] * force;
         }
     }
-    GaussQuadratureDeallocation(IP);
+
     [integration deallocation:mesh];
 }
 

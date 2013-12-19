@@ -640,6 +640,7 @@ enum {
             err |= clSetKernelArg(CLkernel, 16, sizeof(int), &varDofs);
             
             ct = cputime();
+                
             for (NSMutableArray *color in mesh.colors) {
                 
                 position = 0;
@@ -660,14 +661,13 @@ enum {
             }
             
             ct = cputime() -  ct;
-            
             mmt = cputime();
             
             // Read results data from the device
             err = clEnqueueReadBuffer(cmd_queue, matValues, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeValues, matContainers->Values, 0, NULL, NULL);
             err = clEnqueueReadBuffer(cmd_queue, matRhs, CL_TRUE, 0, sizeof(cl_double)*matContainers->sizeRHS, matContainers->RHS, 0, NULL, NULL);
             clFinish(cmd_queue);
-            
+
             mmt = cputime() -  mmt;
             
             at = cputime() -  at;

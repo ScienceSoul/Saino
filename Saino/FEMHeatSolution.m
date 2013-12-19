@@ -293,7 +293,7 @@ enum {
     BOOL stat;
     FEMNumericIntegration *integration;
     FEMCoordinateSystems *coordinateSystem;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     memset( *_stiff, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
     memset( _force, 0.0, (2*solution.mesh.maxElementDofs)*sizeof(double) );
@@ -340,7 +340,7 @@ enum {
             _force[p] = _force[p] + s * force * integration.basis[p];
         }
     }
-    GaussQuadratureDeallocation(IP);
+
     [integration deallocation:mesh];
 }
 

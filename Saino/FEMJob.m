@@ -19,6 +19,7 @@
 #import "FEMPost.h"
 #import "Utils.h"
 #import "TimeProfile.h"
+#import "GaussIntegration.h"
 
 @interface FEMJob ()
 -(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle;
@@ -1518,6 +1519,9 @@ jump:
         free_dmatrix(_timeStepSizes, 0, _size1TimeStepSizes-1, 0, _size2TimeStepSizes-1);
         _timeStepSizes = NULL;
     }
+    
+    // Finally deallocate the Gauss quadrature points
+    GaussQuadratureDeallocation();
 }
 
 -(void)runWithInitialize:(int)initialize {

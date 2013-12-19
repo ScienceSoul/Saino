@@ -1,14 +1,24 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+//
+//  serial.c
+//  Saino
+//
+//  Created by Seddik hakime on 18/11/2013.
+//  Copyright (c) 2013 Institute of Low Temperature Science. All rights reserved.
+//
 
+#include <stdio.h>
+#include <math.h>
 
-constant float STriangle3P[3] = {
+#include "serial.h"
+#include "Utils.h"
+
+static float STriangle3P[3] = {
     0.333333333f, 0.333333333f, 0.333333333f
     //0.33333333333333333E+00, 0.33333333333333333E+00, 0.33333333333333333E+00
 };
 
-__kernel void heatSolutionAssembly(__global double *values, __global double *rhs, __global int *diag, __global int *rows, __global int *cols, __global int *colorMapping, __global int *elementNodeIndexesStore, __global int *permutation, __global double *nodesX, __global double *nodesY, __global double *nodesZ, int positionInColorMapping, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int varDofs) {
+void heatSolutionAssembly(int workItemID, double *values, double *rhs, int *diag, int *rows, int *cols, int *elementNodeIndexesStore, int *permutation, double *nodesX, double *nodesY, double *nodesZ, int dimension, int numberOfNodes, int numberElementDofs, int nBasis, int varDofs) {
     
-    int workItemID = get_global_id(0);
     int i, j, k, l, c, col, n, p, q, row, t, globalID, pivot[3], upow, vpow, wpow, temp;
     int basisTerms[3];
     float basis[3];
@@ -51,7 +61,7 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
         forceVector[i] = 0.0f;
     }
     
-    globalID = colorMapping[positionInColorMapping+workItemID];
+    globalID = workItemID;
     
     maxDeg = 4.0f;
     temp = 4;
@@ -157,7 +167,7 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
         //}
         a[i][i] = 1.0 / a[i][i];
     }
-
+    
     for (i=3-2; i>=0; i--) {
         for (j=3-1; j>=i+1; j--) {
             s = -a[i][j];
@@ -304,7 +314,7 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
                 }
             }
         }
-
+        
         detJ = sqrt(detJ);
         s = detJ * STriangle3P[t] / 2.0;
         
@@ -364,7 +374,7 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
             forceVector[p] = forceVector[p] + s * load;
         }
     }
-
+    
     if (varDofs == 1) {
         for (i=0; i<numberElementDofs; i++) {
             row = permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]];

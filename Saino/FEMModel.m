@@ -169,7 +169,7 @@
     int i, j, t;
     double detJ, loadAtIP, weight;
     BOOL stat;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     Nodes_t nodes, *meshNodes;
     FEMNumericIntegration *integration;
     
@@ -222,7 +222,6 @@
     free_dvector(nodes.y, 0, numberOfNodes-1);
     free_dvector(nodes.z, 0, numberOfNodes-1);
     
-    GaussQuadratureDeallocation(IP);
     [integration deallocation:mesh];
 }
 
@@ -433,7 +432,7 @@
     [solution.solutionInfo setObject:@1 forKey:@"variable dofs"];
     [solution.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
     [solution.solutionInfo setObject:@"bi-cgstab" forKey:@"linear system iterative method"];
-    [solution.solutionInfo setObject:@350 forKey:@"linear system maximum iterations"];
+    [solution.solutionInfo setObject:@1000 forKey:@"linear system maximum iterations"];
     [solution.solutionInfo setObject:@1.0e-08 forKey:@"linear system convergence tolerance"];
     [solution.solutionInfo setObject:@YES forKey:@"linear system abort not converged"];
     [solution.solutionInfo setObject:@"ilu0" forKey:@"linear system preconditioning"];
@@ -445,7 +444,7 @@
     [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
     [solution.solutionInfo setObject:@1.0e-02 forKey:@"nonlinear system newton after tolerance"];
     [solution.solutionInfo setObject:@1.0 forKey:@"nonlinear system relaxation factor"];
-    [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+    [solution.solutionInfo setObject:@NO forKey:@"parallel assembly"];
     self.solutions = @[solution];
     self.numberOfSolutions = 1;
     

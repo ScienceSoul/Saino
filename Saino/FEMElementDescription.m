@@ -1361,7 +1361,7 @@
     int i, j, p, q, t, dim;
     double *eigr, s, *ddp, *ddq, ***dNodalBasisdx;
     double u, v, w, **l, **g, *l_transpose, *g_transpose, *work, sum1, sum2;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     FEMNumericIntegration *numericIntegration;
     BOOL stat;
     
@@ -1538,7 +1538,6 @@
     free_dvector(g_transpose, 0, ((n-1)*(n-1))-1);
     free_dvector(work, 0, (16*n)-1);
     
-    GaussQuadratureDeallocation(IP);
     [numericIntegration deallocation:mesh];
 }
 

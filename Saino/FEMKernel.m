@@ -948,7 +948,7 @@ static const int PRECOND_VANKA     =  560;
     matrixArraysContainer *projectorContainers = NULL;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer rot = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     utilities = [[FEMUtilities alloc] init];
     listUtilities = [[FEMListUtilities alloc] init];
@@ -1038,7 +1038,6 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
             if (condition.vector != NULL) free_dvector(condition.vector, 0, condition.m-1);
-            GaussQuadratureDeallocation(IP);
             
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 if (boundaryCondition.pMatrix == nil) continue;
@@ -4126,7 +4125,7 @@ static const int PRECOND_VANKA     =  560;
     listBuffer load = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     ElementType_t savedType;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     Nodes_t *nodes, *pNodes;
     NSString *string;
     BOOL stat;
@@ -4289,7 +4288,6 @@ static const int PRECOND_VANKA     =  560;
     free_dmatrix(vLoad, 0, 2, 0, np-1);
     free_dvector(vl, 0, 2);
     
-    GaussQuadratureDeallocation(IP);
     [numericIntegration deallocation:solution.mesh];
 }
 
@@ -4309,12 +4307,12 @@ static const int PRECOND_VANKA     =  560;
 *************************************************************************************************************************************/
 -(void)localBoundaryBDOFs:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString *)name resultMatrix:(double **)stiff resultVector:(double *)force {
     
-    GaussIntegrationPoints *IP;
     int i, n, p, q, t;
     double xip, yip, zip, s, load;
     FEMNumericIntegration *numericIntegration;
     FEMListUtilities *listUtil;
     Nodes_t *nodes;
+    GaussIntegrationPoints *IP = NULL;
     BOOL stat;
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
@@ -4384,7 +4382,6 @@ static const int PRECOND_VANKA     =  560;
     free_dvector(nodes->z, 0, n-1);
     free(nodes);
     
-    GaussQuadratureDeallocation(IP);
     [numericIntegration deallocation:solution.mesh];
 }
 
@@ -5626,7 +5623,7 @@ static const int PRECOND_VANKA     =  560;
     FEMUtilities *utilities;
     FEMNumericIntegration *integration;
     Element_t *elements = NULL;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     variableArraysContainer *variableContainers = NULL, *weightsVarContainers = NULL, *bufferContainers = NULL;
     
     if (variableName != nil) {
@@ -5729,7 +5726,7 @@ static const int PRECOND_VANKA     =  560;
             }
         }
     }
-    GaussQuadratureDeallocation(IP);
+    
     [integration deallocation:solution.mesh];
     
     free_dvector( elementNodes->x, 0, m-1);

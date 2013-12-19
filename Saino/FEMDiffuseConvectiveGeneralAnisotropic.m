@@ -68,7 +68,7 @@
     FEMListUtilities *listUtilities;
     FEMNumericIntegration *integration;
     FEMBodyForce *bodyForceAtID = nil;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     cylindrincSymmetry = (model.coordinates == cylindric_symmetric || model.coordinates == axis_symmetric) ? YES : NO;
     
@@ -413,7 +413,6 @@
     }
     free_dmatrix(c2, 0, 2, 0, 2);
     
-    GaussQuadratureDeallocation(IP);
     [integration deallocation:mesh];    
 }
 
@@ -436,7 +435,7 @@
     BOOL stat;
     FEMCoordinateSystems *coordinateSystem;
     FEMNumericIntegration *integration;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     memset( *boundaryMatrix, 0.0, (dimensions.mat1*dimensions.mat2)*sizeof(double) );
     memset( boundaryVector, 0.0, dimensions.vec*sizeof(double) );
@@ -482,7 +481,7 @@
             boundaryVector[q] = boundaryVector[q] + s * integration.basis[q] * force;
         }
     }
-    GaussQuadratureDeallocation(IP);
+
     [integration deallocation:mesh];
 }
 

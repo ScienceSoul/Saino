@@ -718,7 +718,7 @@
     Nodes_t *meshNodes, nodes;
     FEMNumericIntegration *integration;
     FEMCoordinateSystems *coordinateSystem;
-    GaussIntegrationPoints *IP;
+    GaussIntegrationPoints *IP = NULL;
     
     nodes.x = nx;
     nodes.y = ny;
@@ -766,7 +766,6 @@
         }
     }
     
-    GaussQuadratureDeallocation(IP);
     [integration deallocation:mesh];
     return a;
 }
