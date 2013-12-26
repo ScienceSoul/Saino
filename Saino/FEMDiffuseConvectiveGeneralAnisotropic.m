@@ -57,15 +57,13 @@
         int numberOfNodes               -> number of element nodes
         Nodes_t *nodes                  -> element node coordinates
 ********************************************************************************************************************************************/
--(void)diffuseConvectiveGeneralComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(void)diffuseConvectiveGeneralComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
     
     int i, j, k, l, p, q, t, dim, body_id, nBasis;
     double a, c0, c1, ct, dEnth, dTemp, force, hk, mk, dc2dx[3][3][3], density, detJ, divVelo, dNodalBasisdx[n][n][3], dsymb[3][3][3][3],
            dVelodx[3][3], load, m, metric[3][3], pe, pressure, s, su[n], symb[3][3][3], sw[n], tau, sqrtMetric, sum, u, v, velo[3], viscosity,
            vnorm, x, y, z, w;
     BOOL any, bubbles, convection, convectiveAndStabilize, cylindrincSymmetry, found, frictionHeat, stat;
-    FEMKernel *kernel;
-    FEMListUtilities *listUtilities;
     FEMNumericIntegration *integration;
     FEMBodyForce *bodyForceAtID = nil;
     GaussIntegrationPoints *IP = NULL;
@@ -207,7 +205,7 @@
             }
         }
         for (i=0; i<dim; i++) {
-            c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:density element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model];
+            c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:density element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w kernel:kernel mesh:mesh model:model listUtilities:listUtilities];
         }
         
         // If there's no convection term we don't need the velocities and also no need for stabilzation
@@ -357,7 +355,7 @@
         for (i=0; i<n; i++) {
             sum = sum + loadVector[i]*integration.basis[i];
         }
-        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model];
+        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model listUtilities:listUtilities];
         
         if (convection == YES) {
             double pcoeff = 0.0;

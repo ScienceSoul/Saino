@@ -59,7 +59,7 @@
         int numberOfNodes               -> number of element nodes
         Nodes_t *nodes                  -> element node coordinates
 ********************************************************************************************************************************************/
--(void)diffuseConvectiveComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize useBubbles:(BOOL)useBubbles element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(void)diffuseConvectiveComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize useBubbles:(BOOL)useBubbles element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
     
     int i, j, k, l, p, q, t, dim, body_id, mat_id, nBasis, order, tStep;
     double a, c0, c1, ct, dEnth, dTemp, expc, force, hk, mk, dc2dx[3][3][3], detJ, divVelo, dNodalBasisdx[n][n][3], dt=0.0, gmat[3][3], grad[3][3],
@@ -67,20 +67,14 @@
            su[n], sw[n], tau, tau_m, temperature, sum, sum2, u, v, velo[3], vnorm, vrm[3], y[3], w;
     NSString *stabilizationFlag;
     BOOL any, bubbles, convection, convectiveAndStabilize, found, frictionHeat, stat, transient, vms;
-    FEMKernel *kernel;
-    FEMListUtilities *listUtilities;
     FEMNumericIntegration *integration;
     FEMMaterial *materialAtID = nil;
     FEMBodyForce *bodyForceAtID = nil;
     GaussIntegrationPoints *IP = NULL;
     listBuffer gwrk = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    
-    kernel = [FEMKernel sharedKernel];
         
     stabilizationFlag = (solution.solutionInfo)[@"stabilization method"];
     vms = ([stabilizationFlag isEqualToString:@"vms"] == YES) ? YES : NO;
-    
-    listUtilities = [[FEMListUtilities alloc] init];
     transient = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"] == YES) ? YES : NO;
     
     dim = model.dimension;
@@ -308,7 +302,7 @@
             }
         }
         for (i=0; i<dim; i++) {
-            c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:rho element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model];
+            c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:rho element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w kernel:kernel mesh:mesh model:model listUtilities:listUtilities];
         }
 
         // If there's no convection term we don't need the velocities and also no need for stabilzation
@@ -549,7 +543,7 @@
         for (i=0; i<n; i++) {
             sum = sum + loadVector[i]*integration.basis[i];
         }
-        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model];
+        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model listUtilities:listUtilities];
         
         if (convection == YES) {
             double pcoeff = 0.0;

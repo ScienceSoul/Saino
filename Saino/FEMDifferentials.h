@@ -10,6 +10,7 @@
 
 #import "FEMModel.h"
 #import "FEMMesh.h"
+#import "FEMListUtilities.h"
 
 /*******************************************************************************
     This class contains some built-in material laws, and also some
@@ -18,6 +19,6 @@
 *******************************************************************************/
 @interface FEMDifferentials : NSObject
 
--(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model;
+-(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtil;
 
 @end

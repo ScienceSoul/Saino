@@ -580,26 +580,26 @@
 /***************************************************************************
     Returns effective heat conductivity mainly related to turbulent models.
 ***************************************************************************/
--(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
     
     int i, mat_id;
+    static int prevElementBodyID = -1;
     double c_p, mu, pCond, pr_t, tmu;
     NSString *conductivityFlag;
     BOOL found, stat;
-    FEMKernel *kernel;
-    FEMListUtilities *listUtilities;
+    static BOOL heatConductivityModelFound = NO;
     FEMMaterial *materialAtID = nil;
     listBuffer c1n = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    kernel = [FEMKernel sharedKernel];
-    listUtilities = [[FEMListUtilities alloc] init];
-    
     pCond = conductivity;
     
-    mat_id = [kernel getMaterialIDForElement:element model:model];
-    materialAtID = (model.materials)[mat_id-1];
-    conductivityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"heat conductivity model" info:&found];
-    if (found == NO) return pCond;
+    if (element->BodyID-1 != prevElementBodyID) {
+        prevElementBodyID = element->BodyID-1;
+        mat_id = [kernel getMaterialIDForElement:element model:model];
+        materialAtID = (model.materials)[mat_id-1];
+        conductivityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"heat conductivity model" info:&heatConductivityModelFound];
+    }
+    if (heatConductivityModelFound == NO) return pCond;
     
     if ([conductivityFlag isEqualToString:@"ke"] == YES || [conductivityFlag isEqualToString:@"k-epsilon"] == YES || [conductivityFlag isEqualToString:@"turbulent"] == YES) {
         FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];

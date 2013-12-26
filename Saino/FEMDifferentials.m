@@ -109,11 +109,13 @@
     Compute the Joule heating at integration point (u, v, w) given the appropriate electrostatic
     or magnetic field that indicates the current through a conductor
 *************************************************************************************************/
--(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
  
     int i, j, k, bf_id, jouleNode;
+    static int prevElementBodyID = -1;
     double b[3], dhdx[3][3], dSymb[3][3][3][3], elcond, jouleheat, metric[3][3], sqrtElementMetric, sqrtMetric, sum, symb[3][3][3], x, y, z;
     BOOL all, found, stat;
+    static BOOL jouleHeat = NO;
     FEMBodyForce *bodyForceAtID;
     FEMMaterial *materialAtID;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -121,15 +123,17 @@
     
     jouleheat = 0.0;
     
-    if ((model.bodies)[element->BodyID-1][@"body force"] != nil) {
-        bf_id = [(model.bodies)[element->BodyID-1][@"body force"] intValue];
-    } else {
-        return jouleheat;
+    if (element->BodyID-1 != prevElementBodyID) {
+        prevElementBodyID = element->BodyID-1;
+        if ((model.bodies)[element->BodyID-1][@"body force"] != nil) {
+            bf_id = [(model.bodies)[element->BodyID-1][@"body force"] intValue];
+        } else {
+            return jouleheat;
+        }
+        bodyForceAtID = (model.bodyForces)[bf_id-1];
+        jouleHeat = [listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"joule heat" info:&found];
     }
-
-    bodyForceAtID = (model.bodyForces)[bf_id-1];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-    if ([listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"joule heat" info:&found] == NO) return jouleheat;
+    if (jouleHeat == NO) return jouleheat;
     
     jouleNode = 0;
     if (jouleNode == 0) {

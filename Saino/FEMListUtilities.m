@@ -17,14 +17,20 @@
 
 @implementation FEMListUtilities {
     
-    NSMutableString *_nameSpace;
+    char *_nameSpace;
+    char *_nameSpaceStr;
+    BOOL _nameSpaceChanged;
 }
 
 - (id)init
 {
+    char emptyStr = '\0';
+    
     self = [super init];
     if (self) {
-        _nameSpace = [NSMutableString stringWithString:@""];
+        _nameSpace = &emptyStr;
+        _nameSpaceStr = NULL;
+        _nameSpaceChanged = YES;
     }
     
     return self;
@@ -143,39 +149,45 @@
 -(void)listSetNameSpace:(NSString *)str {
     
     if (str != nil) {
-        [_nameSpace setString:str];
+        _nameSpace = (char *)[str UTF8String];
+        _nameSpaceChanged = YES;
     }
 }
 
--(BOOL)listGetNameSpace:(NSMutableString *)str {
+-(char *)listGetNameSpaceForVariable:(char *)varName {
     
-    BOOL l;
+    char *str = NULL;
+    char buffer[100];
+    char emptyStr = '\0';
 
-    if ([_nameSpace isEqual:@""] == YES) {
-        str = nil;
-        l = NO;
+    if ( strcmp(_nameSpace, &emptyStr) == 0) {
+        str = &emptyStr;
     } else {
-        str = [NSMutableString stringWithString:_nameSpace];
-        l = YES;
+        strncpy(buffer, _nameSpace, strlen(_nameSpace));
+        strncat(buffer, " ", 1);
+        strncat(buffer, varName, strlen(varName));
+        str = buffer;
     }
-    
-    return l;
+
+    return str;
 }
 
 -(NSString *)listGetString:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
     NSString *s = nil;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     
     *found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             s = [NSString stringWithString:list.cValue];
             *found = YES;
             break;
@@ -194,19 +206,21 @@
     double *buffer;
     double t[32];
     BOOL allGlobal, found;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     FEMUtilities *utilities;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             // The buffer is allocated here, it's up to the caller to release this memory
             // only once it doesn't need it anymore
             if (result->vector == NULL || result->m != n) {
@@ -290,19 +304,21 @@
 
     int i, j, k, n1, n2;
     BOOL found;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 NSLog(@"FEMListUtilities:listGetRealArray: fValues not allocated in list: %@\n", varName);
@@ -361,18 +377,20 @@
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f = 0.0;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
-
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 NSLog(@"FEMListUtilities:listGetConstReal: fValues not allocated in list: %@\n", varName);
@@ -420,18 +438,20 @@
 
     int i, j, n1, n2;
     BOOL found;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 NSLog(@"FEMListUtilities:listGetConstRealArray: fValues not allocated in list: %@\n", varName);
@@ -469,18 +489,20 @@
     
     int i, n;
     BOOL found;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
                 NSLog(@"FEMListUtilities:listGetIntegerArray: iValues not allocated in list: %@\n", varName);
@@ -513,18 +535,20 @@
 -(int)listGetInteger:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(int *)minv maxValue:(int *)maxv {
     
     int l = 0;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     valueListArraysContainer *containers = NULL;
     
     *found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
                 NSLog(@"FEMListUtilities:listGetInteger: iValues not allocated in list: %@\n", varName);
@@ -560,17 +584,19 @@
 -(BOOL)listGetLogical:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found {
     
     BOOL l = NO;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     
     *found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
     
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             l = list.isLvalue;
             *found = YES;
             break;
@@ -582,15 +608,17 @@
 
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array {
     
-     NSMutableString *strn;
+    char *nameStr = NULL;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
 
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:[list name]] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             return list;
         }
     }
@@ -603,7 +631,7 @@
     int i, k;
     double *buffer, t;
     BOOL found, stat;
-    NSMutableString *strn;
+    char *nameStr = NULL;
     FEMVariable *variable;
     FEMUtilities *utilities;
     valueListArraysContainer *containers = NULL;
@@ -611,13 +639,15 @@
     
     found = NO;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
 
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             // The buffer is allocated here, it's up to the caller to release this memory
             // only once it doesn't need it anymore
             if (result->vector == NULL || result->m != n) {
@@ -667,15 +697,17 @@
 
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array {
     
-    NSMutableString *strn;
+    char *nameStr = NULL;
     
-    if ([self listGetNameSpace:strn] == YES) {
-        [strn appendString:@" "];
-        [strn appendString:varName];
-    } else strn = [NSMutableString stringWithString:@""];
-
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
+    
     for (FEMValueList *list in array) {
-        if ([varName isEqualToString:list.name] == YES || [strn isEqualToString:list.name] == YES) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             return YES;
         }
     }
