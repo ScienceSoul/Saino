@@ -35,7 +35,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     for (i=0; i<HUTI_NDIM; i++) {
         u[i] = rand() % 100;
     }
-    
 }
 
 -(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v {

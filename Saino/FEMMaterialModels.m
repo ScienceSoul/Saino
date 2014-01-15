@@ -10,7 +10,6 @@
 #import "FEMKernel.h"
 #import "FEMListUtilities.h"
 #import "FEMMaterial.h"
-#import "FEMNumericIntegration.h"
 #import "FEMCoordinateSystems.h"
 #import "FEMLinearAlgebra.h"
 #import "FEMUtilities.h"
@@ -86,7 +85,7 @@
     The viscosity model may be either some non-newtonian material law or from turbulence models, 
     but not from both at the same time.
 *************************************************************************************************/
--(double)effectiveViscosity:(double)viscosity density:(double)density velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz element:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w muder:(double *)muder mesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(double)effectiveViscosity:(double)viscosity density:(double)density velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz element:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w muder:(double *)muder mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration {
     
     int i, j, k;
     double a1, a2, arrheniusFactor, c1, c2, c3, c4, cmu, ct, dVelodx[3][3], dSymb[3][3][3][3], ehf, h, ke_k, ke_e, ke_z, metric[3][3], mu, q1, q2,
@@ -107,8 +106,6 @@
     if (found == NO) return mu;
     
     // Basis function values & derivatives at the calculation point
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMMaterialModels:effectiveViscosity", "Allocation error in FEMNumericIntegration!");
     stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
@@ -572,7 +569,6 @@
         double tempCoeff = exp(c1*(1.0/(temp+c3)-1.0/c2));
         mu = tempCoeff * mu;
     }
-    [integration deallocation:mesh];
     
     return mu;
 }
@@ -580,30 +576,18 @@
 /***************************************************************************
     Returns effective heat conductivity mainly related to turbulent models.
 ***************************************************************************/
--(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+-(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w conductivityFlag:(NSString *)conductivityFlag kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
     
-    int i, mat_id;
-    static int prevElementBodyID = -1;
+    int i;
     double c_p, mu, pCond, pr_t, tmu;
-    NSString *conductivityFlag;
     BOOL found, stat;
-    static BOOL heatConductivityModelFound = NO;
     FEMMaterial *materialAtID = nil;
     listBuffer c1n = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     pCond = conductivity;
     
-    if (element->BodyID-1 != prevElementBodyID) {
-        prevElementBodyID = element->BodyID-1;
-        mat_id = [kernel getMaterialIDForElement:element model:model];
-        materialAtID = (model.materials)[mat_id-1];
-        conductivityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"heat conductivity model" info:&heatConductivityModelFound];
-    }
-    if (heatConductivityModelFound == NO) return pCond;
-    
     if ([conductivityFlag isEqualToString:@"ke"] == YES || [conductivityFlag isEqualToString:@"k-epsilon"] == YES || [conductivityFlag isEqualToString:@"turbulent"] == YES) {
-        FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-        if ([integration allocation:mesh] == NO) errorfunct("FEMMaterialModels:effectiveConductivity", "Allocation error in FEMNumericIntegration!");
+        
         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
      
         found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&c1n listUtilities:listUtilities];
@@ -626,15 +610,14 @@
             }
         } else pr_t = 0.85;
         
-        tmu = [self effectiveViscosity:mu density:density velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:nd integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model] - mu;
+        tmu = [self effectiveViscosity:mu density:density velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:nd integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration] - mu;
         pCond = conductivity + c_p * tmu/pr_t;
         
         if (c1n.vector != NULL) {
             free_dvector(c1n.vector, 0, c1n.m-1);
             c1n.vector = NULL;
         }
-        [integration deallocation:mesh];
-    } else if ([conductivityFlag isEqualToString:@"user function"]) {
+    } else if ([conductivityFlag isEqualToString:@"user function"] == YES) {
         // TODO: implement this later if we need it
     } else {
         NSLog(@"FEMMaterialModels:effectiveConductivity: unknown material model\n");

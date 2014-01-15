@@ -10,7 +10,6 @@
 #import "FEMBodyForce.h"
 #import "FEMListUtilities.h"
 #import "FEMUtilities.h"
-#import "FEMNumericIntegration.h"
 #import "FEMCoordinateSystems.h"
 #import "FEMLinearAlgebra.h"
 #import "FEMMaterial.h"
@@ -109,7 +108,7 @@
     Compute the Joule heating at integration point (u, v, w) given the appropriate electrostatic
     or magnetic field that indicates the current through a conductor
 *************************************************************************************************/
--(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+-(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
  
     int i, j, k, bf_id, jouleNode;
     static int prevElementBodyID = -1;
@@ -188,8 +187,6 @@
     if (jouleNode == 0) return jouleheat;
     
     // Get element info
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMDifferentials:jouleHeatElement", "Allocation error in FEMNumericIntegration!");
     stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
     stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
@@ -366,7 +363,6 @@
         free_dvector(buffer.vector, 0, buffer.m-1);
         buffer.vector = NULL;
     }
-    [integration deallocation:mesh];
     
     return jouleheat;
 }

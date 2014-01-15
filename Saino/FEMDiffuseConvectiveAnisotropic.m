@@ -13,9 +13,7 @@
 #import "FEMNumericIntegration.h"
 #import "FEMMaterial.h"
 #import "FEMBodyForce.h"
-#import "FEMMaterialModels.h"
 #import "GaussIntegration.h"
-#import "FEMDifferentials.h"
 #import "Utils.h"
 
 @implementation FEMDiffuseConvectiveAnisotropic
@@ -59,23 +57,39 @@
         int numberOfNodes               -> number of element nodes
         Nodes_t *nodes                  -> element node coordinates
 ********************************************************************************************************************************************/
--(void)diffuseConvectiveComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize useBubbles:(BOOL)useBubbles element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+-(void)diffuseConvectiveComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize useBubbles:(BOOL)useBubbles element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration materialModels:(FEMMaterialModels*)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities {
     
     int i, j, k, l, p, q, t, dim, body_id, mat_id, nBasis, order, tStep;
+    static int prevElementBodyID = -1;
     double a, c0, c1, ct, dEnth, dTemp, expc, force, hk, mk, dc2dx[3][3][3], detJ, divVelo, dNodalBasisdx[n][n][3], dt=0.0, gmat[3][3], grad[3][3],
            gradNodal[n][3][3], gradP[n], grav[3], gvec[3], lc[3][n], lc1, load, m, mu, **nodalPVelo, **nodalVelo, pe, pressure, reft, rho, rm[n], s,
            su[n], sw[n], tau, tau_m, temperature, sum, sum2, u, v, velo[3], vnorm, vrm[3], y[3], w;
+    double *basis = NULL, **basisFirstDerivative = NULL;
     NSString *stabilizationFlag;
-    BOOL any, bubbles, convection, convectiveAndStabilize, found, frictionHeat, stat, transient, vms;
-    FEMNumericIntegration *integration;
-    FEMMaterial *materialAtID = nil;
+    static NSString *conductivityFlag;
+    BOOL any, bubbles, convection, convectiveAndStabilize, found, frictionHeat, stat, vms;
+    static BOOL transient, transientCheck = NO;
+    static FEMMaterial *materialAtID = nil;
     FEMBodyForce *bodyForceAtID = nil;
     GaussIntegrationPoints *IP = NULL;
     listBuffer gwrk = { NULL, NULL, NULL, NULL, 0, 0, 0};
         
     stabilizationFlag = (solution.solutionInfo)[@"stabilization method"];
     vms = ([stabilizationFlag isEqualToString:@"vms"] == YES) ? YES : NO;
-    transient = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"] == YES) ? YES : NO;
+    if (transientCheck == NO) {
+        transient = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"] == YES) ? YES : NO;
+        transientCheck = YES;
+    }
+    
+    if (element->BodyID-1 != prevElementBodyID) {
+        prevElementBodyID = element->BodyID-1;
+        mat_id = [kernel getMaterialIDForElement:element model:model];
+        materialAtID = (model.materials)[mat_id-1];
+        conductivityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"heat conductivity model" info:&found];
+    }
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
     
     dim = model.dimension;
     load = 0.0;
@@ -95,8 +109,6 @@
         bubbles = YES;
     }
     
-    integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
     // Integration stuff
     if (bubbles == YES) {
         IP = GaussQuadrature(element, NULL, &element->Type.GaussPoints2);
@@ -167,9 +179,6 @@
             }
         }
         
-        mat_id = [kernel getMaterialIDForElement:element model:model];
-        materialAtID = (model.materials)[mat_id-1];
-
         expc = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"heat expansion coefficient" info:&found minValue:NULL maxValue:NULL];
         reft = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"reference temperature" info:&found minValue:NULL maxValue:NULL];
         found = [listUtilities listGetConstRealArray:model inArray:model.constants.valuesList forVariable:@"grav" buffer:&gwrk];
@@ -236,8 +245,6 @@
     if (bodyForceAtID != nil) frictionHeat = [listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"friction heat" info:&found];
 
     // Now we start integrating
-    FEMMaterialModels *materialModels = [[FEMMaterialModels alloc] init];
-    FEMDifferentials *differentials = [[FEMDifferentials alloc] init];
     double **c2 = doublematrix(0, 2, 0, 2);
     for (t=0; t<IP->n; t++) {
         
@@ -255,15 +262,15 @@
         // Coefficient of the convection and time derivative terms at the integration point
         c0 = 0.0;
         for (i=0; i<n; i++) {
-            c0 = c0 + nodalC0[i]*integration.basis[i];
+            c0 = c0 + nodalC0[i]*basis[i];
         }
         c1 = 0.0;
         for (i=0; i<n; i++) {
-            c1 = c1 + nodalC1[i]*integration.basis[i];
+            c1 = c1 + nodalC1[i]*basis[i];
         }
         ct = 0.0;
         for (i=0; i<n; i++) {
-            ct = ct + nodalCT[i]*integration.basis[i];
+            ct = ct + nodalCT[i]*basis[i];
         }
         
         // Compute effective heat capacity, if modeling phase change, at the integration point
@@ -274,12 +281,12 @@
             for (i=0; i<3; i++) {
                 sum = 0.0;
                 for (j=0; j<n; j++) {
-                    sum = sum + enthalpy[j]*integration.basisFirstDerivative[j][i];
+                    sum = sum + enthalpy[j]*basisFirstDerivative[j][i];
                 }
                 dEnth = dEnth + pow(sum, 2.0);
                 sum = 0.0;
                 for (j=0; j<n; j++) {
-                    sum = sum + nodalTemperature[j]*integration.basisFirstDerivative[j][i];
+                    sum = sum + nodalTemperature[j]*basisFirstDerivative[j][i];
                 }
                 dTemp = dTemp + pow(sum, 2.0);
             }
@@ -289,20 +296,23 @@
         // Coefficient of the diffusion term & its derivatives at the integration point
         rho = 0.0;
         for (i=0; i<n; i++) {
-            rho = rho + nodalDensity[i]*integration.basis[i];
+            rho = rho + nodalDensity[i]*basis[i];
         }
         
         for (i=0; i<dim; i++) {
             for (j=0; j<dim; j++) {
                 sum = 0.0;
                 for (k=0; k<n; k++) {
-                    sum = sum + nodalC2[i][j][k]*integration.basis[k];
+                    sum = sum + nodalC2[i][j][k]*basis[k];
                 }
                 c2[i][j] = sum;
             }
         }
-        for (i=0; i<dim; i++) {
-            c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:rho element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w kernel:kernel mesh:mesh model:model listUtilities:listUtilities];
+        
+        if ([conductivityFlag isEqualToString:@"ke"] == YES || [conductivityFlag isEqualToString:@"k-epsilon"] == YES || [conductivityFlag isEqualToString:@"turbulent"] == YES || [conductivityFlag isEqualToString:@"user function"] == YES) {
+            for (i=0; i<dim; i++) {
+                c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:rho element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w conductivityFlag:conductivityFlag kernel:kernel mesh:mesh model:model integration:integration listUtilities:listUtilities];
+            }
         }
 
         // If there's no convection term we don't need the velocities and also no need for stabilzation
@@ -313,24 +323,24 @@
             // Velocity from previous iteration at the integration point
             memset( velo, 0.0, sizeof(velo) );
             for (i=0; i<n; i++) {
-                velo[0] = velo[0] + (ux[i]-mux[i])*integration.basis[i];
-                velo[1] = velo[1] + (uy[i]-muy[i])*integration.basis[i];
-                if (dim > 2) velo[2] = velo[2] + (uz[i]-muz[i])*integration.basis[i];
+                velo[0] = velo[0] + (ux[i]-mux[i])*basis[i];
+                velo[1] = velo[1] + (uy[i]-muy[i])*basis[i];
+                if (dim > 2) velo[2] = velo[2] + (uz[i]-muz[i])*basis[i];
             }
             
             if (compressible == YES) {
                 memset( *grad, 0.0, (3*3)*sizeof(double) );
                 for (i=0; i<3; i++) {
                     for (j=0; j<n; j++) {
-                        grad[0][i] = grad[0][i] + ux[j] * integration.basisFirstDerivative[j][i];
-                        grad[1][i] = grad[1][i] + uy[j] * integration.basisFirstDerivative[j][i];
-                        if (dim > 2) grad[2][i] = grad[2][i] + uz[j] * integration.basisFirstDerivative[j][i];
+                        grad[0][i] = grad[0][i] + ux[j] * basisFirstDerivative[j][i];
+                        grad[1][i] = grad[1][i] + uy[j] * basisFirstDerivative[j][i];
+                        if (dim > 2) grad[2][i] = grad[2][i] + uz[j] * basisFirstDerivative[j][i];
                     }
                 }
                 
                 pressure = 0.0;
                 for (i=0; i<n; i++) {
-                    pressure = pressure + nodalPressure[i]*integration.basis[i];
+                    pressure = pressure + nodalPressure[i]*basis[i];
                 }
                 divVelo = 0.0;
                 for (i=0; i<dim; i++) {
@@ -340,14 +350,14 @@
             
             if (vms == YES) {
                 mu = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"viscosity" info:&found minValue:NULL maxValue:NULL];
-                mu = [materialModels effectiveViscosity:mu density:rho velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model];
+                mu = [materialModels effectiveViscosity:mu density:rho velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration];
                 
                 memset( *grad, 0.0, (3*3)*sizeof(double) );
                 for (i=0; i<3; i++) {
                     for (j=0; j<n; j++) {
-                        grad[0][i] = grad[0][i] + ux[j] * integration.basisFirstDerivative[j][i];
-                        grad[1][i] = grad[1][i] + uy[j] * integration.basisFirstDerivative[j][i];
-                        if (dim > 2) grad[2][i] = grad[2][i] + uz[j] * integration.basisFirstDerivative[j][i];
+                        grad[0][i] = grad[0][i] + ux[j] * basisFirstDerivative[j][i];
+                        grad[1][i] = grad[1][i] + uy[j] * basisFirstDerivative[j][i];
+                        if (dim > 2) grad[2][i] = grad[2][i] + uz[j] * basisFirstDerivative[j][i];
                     }
                 }
                 sum = 0.0;
@@ -357,12 +367,12 @@
                 vnorm = sqrt(sum);
                 temperature = 0.0;
                 for (i=0; i<n; i++) {
-                    temperature = temperature + integration.basis[i]*nodalTemperature[i];
+                    temperature = temperature + basis[i]*nodalTemperature[i];
                 }
                 memset( gradP, 0.0, sizeof(gradP) );
                 for (i=0; i<dim; i++) {
                     for (j=0; j<n; j++) {
-                        gradP[i] = gradP[i] + nodalPressure[j]*integration.basisFirstDerivative[j][i];
+                        gradP[i] = gradP[i] + nodalPressure[j]*basisFirstDerivative[j][i];
                     }
                 }
                 
@@ -372,15 +382,15 @@
                     for (j=0; j<dim; j++) {
                         sum = 0.0;
                         for (l=0; l<n; l++) {
-                            sum = sum + lc[j][l]*integration.basisFirstDerivative[l][i];
+                            sum = sum + lc[j][l]*basisFirstDerivative[l][i];
                         }
                         gvec[i] = gvec[i] + sum;
                         for (k=0; k<dim; k++) {
                             sum = 0.0;
                             sum2 = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + lc[k][l]*integration.basisFirstDerivative[l][i];
-                                sum2 = sum2 + lc[k][l]*integration.basisFirstDerivative[l][j];
+                                sum = sum + lc[k][l]*basisFirstDerivative[l][i];
+                                sum2 = sum2 + lc[k][l]*basisFirstDerivative[l][j];
                             }
                             gmat[i][j] = gmat[i][j] + sum * sum2;
                         }
@@ -412,13 +422,13 @@
                 
                 memset( rm, 0.0, sizeof(rm) );
                 for (p=0; p<n; p++) {
-                    rm[p] = c0 * integration.basis[p];
+                    rm[p] = c0 * basis[p];
                     for (i=0; i<dim; i++) {
-                        rm[p] = rm[p] + c1 * velo[i] * integration.basisFirstDerivative[p][i];
+                        rm[p] = rm[p] + c1 * velo[i] * basisFirstDerivative[p][i];
                         for (j=0; j<dim; j++) {
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + dNodalBasisdx[p][l][i]*integration.basisFirstDerivative[l][j];
+                                sum = sum + dNodalBasisdx[p][l][i]*basisFirstDerivative[l][j];
                             }
                             rm[p] = rm[p] - c2[i][j]*sum;
                         }
@@ -428,13 +438,13 @@
                 memset( vrm, 0.0, sizeof(vrm) );
                 for (i=0; i<dim; i++) {
                     for (l=0; l<n; l++) {
-                        vrm[i] = vrm[i] + nodalPVelo[i][l]*integration.basis[l];
+                        vrm[i] = vrm[i] + nodalPVelo[i][l]*basis[l];
                     }
                     for (j=0; j<dim; j++) {
                         vrm[i] = vrm[i] + velo[j] * grad[i][j];
                         sum = 0.0;
                         for (l=0; l<n; l++) {
-                            sum = sum + gradNodal[l][i][j]*integration.basisFirstDerivative[l][j];
+                            sum = sum + gradNodal[l][i][j]*basisFirstDerivative[l][j];
                         }
                         vrm[i] = vrm[i] - (mu/rho)*sum;
                     }
@@ -460,7 +470,7 @@
                         for (k=0; k<dim; k++) {
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + nodalC2[i][j][l]*integration.basisFirstDerivative[l][k];
+                                sum = sum + nodalC2[i][j][l]*basisFirstDerivative[l][k];
                             }
                             dc2dx[i][j][k] = sum;
                         }
@@ -469,26 +479,26 @@
                 
                 // Compute residual & stabilization vectors
                 for (p=0; p<n; p++) {
-                    su[p] = c0 * integration.basis[p];
+                    su[p] = c0 * basis[p];
                     for (i=0; i<dim; i++) {
-                        su[p] = su[p] + c1 * integration.basisFirstDerivative[p][i]*velo[i];
+                        su[p] = su[p] + c1 * basisFirstDerivative[p][i]*velo[i];
                         for (j=0; j<dim; j++) {
-                            su[p] = su[p] - dc2dx[i][j][j]*integration.basisFirstDerivative[p][i];
+                            su[p] = su[p] - dc2dx[i][j][j]*basisFirstDerivative[p][i];
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + dNodalBasisdx[p][l][i]*integration.basisFirstDerivative[l][j];
+                                sum = sum + dNodalBasisdx[p][l][i]*basisFirstDerivative[l][j];
                             }
                             su[p] = su[p] - c2[i][j]*sum;
                         }
                     }
-                    sw[p] = c0 * integration.basis[p];
+                    sw[p] = c0 * basis[p];
                     for (i=0; i<dim; i++) {
-                        sw[p] = sw[p] + c1 * integration.basisFirstDerivative[p][i]*velo[i];
+                        sw[p] = sw[p] + c1 * basisFirstDerivative[p][i]*velo[i];
                         for (j=0; j<dim; j++) {
-                            sw[p] = sw[p] - dc2dx[i][j][j]*integration.basisFirstDerivative[p][i];
+                            sw[p] = sw[p] - dc2dx[i][j][j]*basisFirstDerivative[p][i];
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + dNodalBasisdx[p][l][i]*integration.basisFirstDerivative[l][j];
+                                sum = sum + dNodalBasisdx[p][l][i]*basisFirstDerivative[l][j];
                             }
                             sw[p] = sw[p] - c2[i][j]*sum;
                         }
@@ -501,35 +511,35 @@
         for (p=0; p<nBasis; p++) {
             for (q=0; q<nBasis; q++) {
                 // The diffusive-convective equation without stabilization
-                m = ct * integration.basis[q] * integration.basis[p];
-                a = c0 * integration.basis[q] * integration.basis[p];
+                m = ct * basis[q] * basis[p];
+                a = c0 * basis[q] * basis[p];
                 
                 // The diffusion term
                 for (i=0; i<dim; i++) {
                     for (j=0; j<dim; j++) {
-                        a = a + c2[i][j] * integration.basisFirstDerivative[q][i] * integration.basisFirstDerivative[p][j];
+                        a = a + c2[i][j] * basisFirstDerivative[q][i] * basisFirstDerivative[p][j];
                     }
                 }
                 
                 if (convection == YES) {
                     // The convection term
                     for (i=0; i<dim; i++) {
-                        a = a + c1 * velo[i] * integration.basisFirstDerivative[q][i] * integration.basis[p];
+                        a = a + c1 * velo[i] * basisFirstDerivative[q][i] * basis[p];
                     }
                     // Next we add the stabilization...
                     if (vms == YES) {
                         for (i=0; i<dim; i++) {
-                            a = a - c1 * tau_m * vrm[i] * integration.basisFirstDerivative[q][i] * integration.basis[p];
+                            a = a - c1 * tau_m * vrm[i] * basisFirstDerivative[q][i] * basis[p];
                             
-                            a = a + c1 * velo[i] * tau * rm[q] * integration.basisFirstDerivative[p][i];
-                            m = m + c1 * velo[i] * tau * ct * integration.basis[q] * integration.basisFirstDerivative[p][i];
+                            a = a + c1 * velo[i] * tau * rm[q] * basisFirstDerivative[p][i];
+                            m = m + c1 * velo[i] * tau * ct * basis[q] * basisFirstDerivative[p][i];
                             
-                            a = a - c1 * tau_m * vrm[i] * tau * rm[q] * integration.basisFirstDerivative[p][i];
-                            m = m - c1 * tau_m * vrm[i] * tau * ct * integration.basis[q] * integration.basisFirstDerivative[p][i];
+                            a = a - c1 * tau_m * vrm[i] * tau * rm[q] * basisFirstDerivative[p][i];
+                            m = m - c1 * tau_m * vrm[i] * tau * ct * basis[q] * basisFirstDerivative[p][i];
                         }
                     } else if (stabilize == YES) {
                         a = a + tau * su[q] * sw[p];
-                        m = m + tau * ct * integration.basis[q] * sw[p];
+                        m = m + tau * ct * basis[q] * sw[p];
                     }
                 }
                 stiffMatrix[p][q] = stiffMatrix[p][q] + s * a;
@@ -541,25 +551,25 @@
         // Force at the integration point
         sum = 0.0;
         for (i=0; i<n; i++) {
-            sum = sum + loadVector[i]*integration.basis[i];
+            sum = sum + loadVector[i]*basis[i];
         }
-        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model listUtilities:listUtilities];
+        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model integration:integration listUtilities:listUtilities];
         
         if (convection == YES) {
             double pcoeff = 0.0;
              for (i=0; i<n; i++) {
-                 pcoeff = pcoeff + nodalPressureCoeff[i]+integration.basis[i];
+                 pcoeff = pcoeff + nodalPressureCoeff[i]*basis[i];
              }
             if (pcoeff != 0.0) {
                 sum = 0.0;
                 for (i=0; i<n; i++) {
-                    sum = sum + nodalPressureDt[i]*integration.basis[i];
+                    sum = sum + nodalPressureDt[i]*basis[i];
                 }
                 force = force + pcoeff * sum;
                 for (i=0; i<dim; i++) {
                     sum = 0.0;
                     for (j=0; j<n; j++) {
-                        sum = sum + nodalPressure[j]*integration.basisFirstDerivative[j][i];
+                        sum = sum + nodalPressure[j]*basisFirstDerivative[j][i];
                     }
                     force = force + pcoeff*velo[i]*sum;
                 }
@@ -568,17 +578,17 @@
             if (frictionHeat == YES) {
                 mu = 0.0;
                 for (i=0; i<n; i++) {
-                    mu = mu + nodalviscosity[i]*integration.basis[i];
+                    mu = mu + nodalviscosity[i]*basis[i];
                 }
-                mu = [materialModels effectiveViscosity:mu density:rho velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model];
+                mu = [materialModels effectiveViscosity:mu density:rho velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration];
                 if (mu > 0.0) {
                     if (compressible == NO) {
                         memset( *grad, 0.0, (3*3)*sizeof(double) );
                         for (i=0; i<3; i++) {
                             for (j=0; j<n; j++) {
-                                grad[0][i] = grad[0][i] + ux[j]*integration.basisFirstDerivative[j][i];
-                                grad[1][i] = grad[1][i] + uy[j]*integration.basisFirstDerivative[j][i];
-                                if (dim > 2) grad[2][i] = grad[2][i] + uz[j]*integration.basisFirstDerivative[j][i];
+                                grad[0][i] = grad[0][i] + ux[j]*basisFirstDerivative[j][i];
+                                grad[1][i] = grad[1][i] + uy[j]*basisFirstDerivative[j][i];
+                                if (dim > 2) grad[2][i] = grad[2][i] + uz[j]*basisFirstDerivative[j][i];
                             }
                         }
                     }
@@ -588,11 +598,11 @@
         }
         
         for (p=0; p<nBasis; p++) {
-            load = force * integration.basis[p];
+            load = force * basis[p];
             if (vms == YES) {
                 for (i=0; i<dim; i++) {
-                    load = load + c1 * velo[i] * tau * force * integration.basisFirstDerivative[p][i];
-                    load = load - c1 * tau_m * vrm[i] * tau * force * integration.basisFirstDerivative[p][i];
+                    load = load + c1 * velo[i] * tau * force * basisFirstDerivative[p][i];
+                    load = load - c1 * tau_m * vrm[i] * tau * force * basisFirstDerivative[p][i];
                 }
             } else if (convectiveAndStabilize == YES) {
                 load = load + tau * force * sw[p];
@@ -602,7 +612,6 @@
     }
     
     free_dmatrix(c2, 0, 2, 0, 2);
-    [integration deallocation:mesh];
 }
 
 /*********************************************************************************************************************************
@@ -617,20 +626,17 @@
         - int n                     ->  number of element nodes
         - Nodes_t *nodes            ->  Element node coordinates
 *********************************************************************************************************************************/
--(void)diffuseConvectiveBoundaryMatrix:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector dimensions:(Dimensions_t)dimensions loadVector:(double *)loadVector nodalAlpha:(double *)nodalAlpha element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh; {
+-(void)diffuseConvectiveBoundaryMatrix:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector dimensions:(Dimensions_t)dimensions loadVector:(double *)loadVector nodalAlpha:(double *)nodalAlpha element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh integration:(FEMNumericIntegration *)integration {
     
     int i, p, q, t;
     double alpha, detJ, force, s;
     BOOL stat;
-    FEMNumericIntegration *integration;
     GaussIntegrationPoints *IP = NULL;
     
     memset( *boundaryMatrix, 0.0, (dimensions.mat1*dimensions.mat2)*sizeof(double) );
     memset( boundaryVector, 0.0, dimensions.vec*sizeof(double) );
     
     // Integration stuff
-    integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveBoundaryMatrix", "Allocation error in FEMNumericIntegration!");
     IP = GaussQuadrature(element, NULL, NULL);
 
     for (t=0; t<IP->n; t++) {
@@ -655,8 +661,6 @@
             boundaryVector[q] = boundaryVector[q] + s * integration.basis[q] * force;
         }
     }
-
-    [integration deallocation:mesh];
 }
 
 @end

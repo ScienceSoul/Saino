@@ -10,6 +10,7 @@
 
 #import "FEMModel.h"
 #import "FEMMesh.h"
+#import "FEMNumericIntegration.h"
 #import "FEMListUtilities.h"
 
 /*******************************************************************************
@@ -19,6 +20,6 @@
 *******************************************************************************/
 @interface FEMDifferentials : NSObject
 
--(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtil;
+-(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities;
 
 @end

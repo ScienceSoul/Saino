@@ -10,31 +10,22 @@
 #import "NodalBasisFunctions.h"
 #include "Utils.h"
 
+
 @implementation FEMNumericIntegration
 
-@synthesize IP = _IP;
 @synthesize metricDeterminant = _metricDeterminant;
 @synthesize basis = _basis;
 @synthesize basisFirstDerivative = _basisFirstDerivative;
 @synthesize basisSecondDerivative = _basisSecondDerivative;
-@synthesize elementMetric = _elementMetric;
-@synthesize covariantMetricTensor = _covariantMetricTensor;
-@synthesize ltoGMap = _ltoGMap;
-@synthesize dx = _dx;
 
 - (id)init
 {
     self = [super init];
     if (self) {
-        // TODO: Initialization code here.
         _metricDeterminant = 0.0;
         _basis = NULL;
         _basisFirstDerivative = NULL;
         _basisSecondDerivative = NULL;
-        _elementMetric = NULL;
-        _covariantMetricTensor = NULL;
-        _ltoGMap = NULL;
-        _dx = NULL;
     }
     
     return self;
@@ -54,22 +45,6 @@
     if (_basisSecondDerivative == NULL) return NO;
     memset(**_basisSecondDerivative, 0.0, (mesh.maxElementNodes*3*3)*sizeof(double) );
     
-    _elementMetric = doublematrix(0, 2, 0, 2);
-    if (_elementMetric == NULL) return NO;
-    memset( *_elementMetric, 0.0, (3*3)*sizeof(double) );
-    
-    _covariantMetricTensor = doublematrix(0, 2, 0, 2);
-    if (_covariantMetricTensor == NULL) return NO;
-    memset( *_covariantMetricTensor, 0.0, (3*3)*sizeof(double) );
-    
-    _ltoGMap = doublematrix(0, 2, 0, 2);
-    if (_ltoGMap == NULL) return NO;
-    memset( *_ltoGMap, 0.0, (3*3)*sizeof(double) );
-
-    _dx = doublematrix(0, 2, 0, 2);
-    if (_dx == NULL) return NO;
-    memset( *_dx, 0.0, (3*3)*sizeof(double) );
-    
     return YES;
 }
 
@@ -78,10 +53,6 @@
     free_dvector(_basis, 0, mesh.maxElementNodes-1);
     free_dmatrix(_basisFirstDerivative, 0, mesh.maxElementNodes-1, 0, 2);
     free_d3tensor(_basisSecondDerivative, 0, mesh.maxElementNodes-1, 0, 2, 0, 2);
-    free_dmatrix(_elementMetric, 0, 2, 0, 2);
-    free_dmatrix(_covariantMetricTensor, 0, 2, 0, 2);
-    free_dmatrix(_ltoGMap, 0, 2, 0, 2);
-    free_dmatrix(_dx, 0, 2, 0, 2);
 }
 
 
@@ -112,12 +83,12 @@
     cdim = mesh.dimension;
     
     if (element->Type.ElementCode == 101) {
-        self.basis[0] = 1.0;
+        _basis[0] = 1.0;
         return YES;
     }
     
-    memset( self.basis, 0.0, n*sizeof(double) );
-    NodalBasisFunctions(n, self.basis, element, u, v, w);
+    memset( _basis, 0.0, n*sizeof(double) );
+    NodalBasisFunctions(n, _basis, element, u, v, w);
     
     return YES;
 }
@@ -142,7 +113,8 @@
 ********************************************************************************************/
     
     int i, j, k, n, q, dim, cdim;
-    double **dLBasisdx;
+    double ltoGMap[9];
+    bool success;
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
@@ -155,30 +127,27 @@
         return YES;
     }
     
-    dLBasisdx = doublematrix(0, n-1, 0, 2);
-    memset( *dLBasisdx, 0.0, (n*3)*sizeof(double) );
+    double dLBasisdx[n*3];
+    memset( dLBasisdx, 0.0, sizeof(dLBasisdx) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
     
     q = n;
     memset( *_basisFirstDerivative, 0.0, (n*3)*sizeof(double) );
-    [self setLtoGMapForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+    memset(ltoGMap, 0.0, sizeof(ltoGMap));
+    success = localtoGlobalMap(ltoGMap, element, nodes, cdim, u, v, w, dLBasisdx);
     
     for (i=0; i<q; i++) {
         for (j=0; j<cdim; j++) {
             for (k=0; k<dim; k++) {
-                self.basisFirstDerivative[i][j] = self.basisFirstDerivative[i][j] + dLBasisdx[i][k]*self.ltoGMap[j][k];
+                _basisFirstDerivative[i][j] = _basisFirstDerivative[i][j] + dLBasisdx[3*i+k]*ltoGMap[3*j+k];
             }
         }
     }
     
-    free_dmatrix(dLBasisdx, 0, n-1, 0, 2);
-    
     return YES;
-    
 }
 
 
--(BOOL)setBasisSecondDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree {
 /********************************************************************************************
  
     Global second derivatives of basis functions at (u, v, w)
@@ -191,545 +160,67 @@
     double w           ->  3rd local coordinate
     BOOL bubbles       ->  Are the bubbles to be avaluated
     int *degree        ->  Degree of each basis function in Basis(:) vector.
-                           !! May be used with P element basis functions
+    !! May be used with P element basis functions
  
     Retun NO if element is degenerate
  
 ********************************************************************************************/
-
+-(BOOL)setBasisSecondDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree {
     
     int i, j, n, q, dim, cdim;
-    double *NodalBasis, **dLBasisdx;
-    double **Values;
+    double dx[9], elementMetric[9], values[9];
+    bool success;
     
     n = element->Type.NumberOfNodes;
     dim = element->Type.dimension;
-    cdim = [mesh dimension];
+    cdim = mesh.dimension;
     
-    NodalBasis = doublevec(0, n-1);
-    dLBasisdx = doublematrix(0, n-1, 0, 2);
-    Values = doublematrix(0, 2, 0, 2);
-    
-    memset( NodalBasis, 0.0, n*sizeof(double) );
-    memset( *dLBasisdx, 0.0, (n*3)*sizeof(double) );
+    double NodalBasis[n];
+    double dLBasisdx[n*3];
+    memset( dLBasisdx, 0.0, sizeof(dLBasisdx) );
     memset(**_basisSecondDerivative, 0.0, (n*3*3)*sizeof(double) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
-    [self setMetricForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     
+    memset(dx, 0.0, sizeof(dx));
+    memset(elementMetric, 0.0, sizeof(elementMetric));
+    success = contravariantMetric(elementMetric, dx, element, nodes, cdim, u, v, w, dLBasisdx);
+    
+    memset( NodalBasis, 0.0, sizeof(NodalBasis) );
+    memset(values, 0.0, sizeof(values));
     for (q=0; q<n; q++) {
         NodalBasis[q] = 1.0;
-        [self globalSecondDerivativesForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w nodalValues:NodalBasis dLBasisdx:dLBasisdx values:Values];
+        globalSecondDerivatives(elementMetric, element, nodes, cdim, u, v, w, NodalBasis, dLBasisdx, values);
         for (i=0; i<3; i++) {
             for (j=0; j<3; j++) {
-                self.basisSecondDerivative[q][i][j] = Values[i][j];
+                _basisSecondDerivative[q][i][j] = values[3*i+j];
             }
         }
         NodalBasis[q] = 0.0;
     }
     
-    free_dvector(NodalBasis, 0, n-1);
-    free_dmatrix(dLBasisdx, 0, n-1, 0, 2);
-    free_dmatrix(Values, 0, 2, 0, 2);
-    
     return YES;
-    
 }
 
--(BOOL)setMetricDeterminantForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
 /***************************************************************************************************************************
  
     Square root of determinant of covariant metric tensor (=sqrt(det(J^TJ))).
-
+ 
 ***************************************************************************************************************************/
-    self.metricDeterminant = [self detJForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
-    
-    self.metricDeterminant = sqrt(self.metricDeterminant);
-    
-    return YES;
-}
+-(BOOL)setMetricDeterminantForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
 
--(BOOL)setMetricForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
-/********************************************************************************************************
- 
-    Compute contravariant metric tensor (=J^TJ)^-1 of element coordinate system
- 
-*********************************************************************************************************/
+    int n = element->Type.NumberOfNodes;
+    double covariantMetricTensor[9], dx[9];
     
-    int i, j, dim, cdim;
-    double detG, **GI;
-    
-    dim = element->Type.dimension;
-    cdim = mesh.dimension;
-    
-    detG = [self detJForElement:element nodes:nodes mesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
-    
-    // Convert the metric to contravariant base
-    switch (dim) {
-        case 1:
-            self.elementMetric[0][0] = 1.0 / detG;
-            break;
-        case 2:
-            self.elementMetric[0][0] = self.covariantMetricTensor[1][1] / detG;
-            self.elementMetric[0][1] = -self.covariantMetricTensor[0][1] / detG;
-            self.elementMetric[1][0] = -self.covariantMetricTensor[1][0] / detG;
-            self.elementMetric[1][1] = self.covariantMetricTensor[0][0] / detG;
-            break;
-        case 3:
-            GI = doublematrix(0, 2, 0, 2);
-            [self invertMatrix3x3:GI detJ:detG];
-            for (i=0; i<3; i++) {
-                for (j=0; j<3; j++) {
-                    self.elementMetric[i][j] = GI[i][j];
-                }
-            }
-            free_dmatrix(GI, 0, 2, 0, 2);
-            break;
-            
-        default:
-            errorfunct("FEMNumericIntegration:setMetricForElement", "Dimension not supported!!");
-            break;
-    }
-    
-    return YES;
-    
-}
-
--(void)setCovariantMetrixTensorForElement:(Element_t *)element nDOFs:(int)nDOFs nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh dLBasisdx:(double **)dLBasisdx {
-/******************************************************************************************************
-    Compute the covariant metric tensor of the element coordinate system
- 
-    Arguments:
-        NDOFs              -> Number of DOFs
- 
-        Nodes_t *nodes     -> element nodal cooridnates 
- 
-        double **dLBasisdx -> Derivatives of element basis function with respect to 
-        local coordinates
- 
-******************************************************************************************************/
-    
-    int i, j, k, dim, cdim;
-    double s;
-    
-    dim = element->Type.dimension;
-    cdim = mesh.dimension;
-    
-    [self setDxForElement:element nDOFs:nDOFs nodes:nodes dLBasisdx:dLBasisdx];
-    
-    for (i=0; i<dim; i++) {
-        for (j=0; j<dim; j++) {
-            s = 0.0;
-            for (k=0; k<cdim; k++) {
-                s = s + ( self.dx[k][i] * self.dx[k][j]);
-            }
-            self.covariantMetricTensor[i][j] = s;
-        }
-    }
-}
-
--(BOOL)setLtoGMapForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
-    
-    int i, j, k, dim, cdim;
-    double s;
-    
-    dim = element->Type.dimension;
-    cdim = mesh.dimension;
-    
-    [self setMetricForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
-    
-    for (i=0; i<cdim; i++) {
-        for (j=0; j<dim; j++) {
-            s = 0.0;
-            for (k=0; k<dim; k++) {
-                s = s + self.dx[i][k] * self.elementMetric[k][j];
-            }
-            self.ltoGMap[i][j] = s;
-        }
-    }
-    
-    return YES;
-    
-}
-
--(void)setDxForElement:(Element_t *)element nDOFs:(int)nDOFs nodes:(Nodes_t*)nodes dLBasisdx:(double **)dLBasisdx {
-/***********************************************************************************
-    Partial derivatives of global coordinates with respect to local coordinates
-    
-    Arguments:
-        NDOFs              -> Number of DOFs
-     
-        Nodes_t *nodes     -> element nodal cooridnates 
-     
-        double **dLBasisdx -> Derivatives of element basis function with respect 
-                              to local coordinates
-     
-        int el             -> Element number                                       
-
-***********************************************************************************/
-    int i, j, n, dim;
-    double accum1, accum2, accum3;
-    
-    dim = element->Type.dimension;
-    n = min(element->Type.NumberOfNodes, nDOFs);
-    
-    for (i=0; i<dim; i++) {
-        accum1 = 0.0;
-        accum2 = 0.0;
-        accum3 = 0.0;
-        for (j=0; j<n; j++) {
-            accum1 = accum1 + (nodes->x[j] * dLBasisdx[j][i]);
-            accum2 = accum2 + (nodes->y[j] * dLBasisdx[j][i]);
-            accum3 = accum3 + (nodes->z[j] * dLBasisdx[j][i]);
-        }
-        self.dx[0][i] = accum1;
-        self.dx[1][i] = accum2;
-        self.dx[2][i] = accum3;
-    }
-}
-
--(double)detJForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
-/**********************************************************************************************
-    Compute determinant of covariant metric tensor det(J^TJ) and determinant 
-    of covariant metric tensor det(J^TJ).
- 
-    Arguments:
-        Element_t *element  -> element structure
- 
-        Nodes_t *nodes      -> element nodal cooridnates 
- 
-        double u, v, w      -> Points at which evaluate the value
- 
-        int el              -> Element number
- 
-        Function return value:
-        If function failure, element is degenerate
- 
-**********************************************************************************************/
-    
-    int n, dim, cdim;
-    double detG, **dLBasisdx;
-    BOOL success = YES;
-    
-    n = element->Type.NumberOfNodes;
-    dim = element->Type.dimension;
-    cdim = mesh.dimension;
-    
-    dLBasisdx = doublematrix(0, n-1, 0, 2);
-    memset( *dLBasisdx, 0.0, (n*2)*sizeof(double) );
+    double dLBasisdx[n*3];
+    memset( dLBasisdx, 0.0, sizeof(dLBasisdx) );
     NodalFirstDerivatives(n, dLBasisdx, element, u, v, w);
-    [self setCovariantMetrixTensorForElement:element nDOFs:n nodes:nodes mesh:mesh dLBasisdx:dLBasisdx];
     
-    detG = 0.0;
-    switch (dim) {
-           
-        case 1:  // Line elements
-            detG = self.covariantMetricTensor[0][0];
-            if (detG <= DBL_MIN) success = NO;
-            break;
-            
-        case 2: // Surface elements
-            detG = ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][1] - self.covariantMetricTensor[0][1]*self.covariantMetricTensor[1][0] );
-            if (detG <= DBL_MIN) success = NO;
-            break;
-            
-        case 3: // Volume elements 
-            detG = self.covariantMetricTensor[0][0] * ( self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[1][2]*self.covariantMetricTensor[2][1] )
-                + self.covariantMetricTensor[0][1] * ( self.covariantMetricTensor[1][2]*self.covariantMetricTensor[2][0] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][2] )
-                + self.covariantMetricTensor[0][2] * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][0] );
-            if (detG <= DBL_MIN) success = NO;
-            break;
-            
-        default:
-            errorfunct("FEMNumericIntegration:detJForElement", "Dimension not supported!!");
-            break;
-    }
-    free_dmatrix(dLBasisdx, 0, n-1, 0, 2);
+    memset(dx, 0.0, sizeof(dx));
+    memset(covariantMetricTensor, 0.0, sizeof(covariantMetricTensor) );
+    _metricDeterminant = detJ(covariantMetricTensor, dx, element, nodes, mesh.dimension, u, v, w, dLBasisdx);
+    _metricDeterminant = sqrt(_metricDeterminant);
     
-    if (success == NO) {
-        NSLog(@"detJForElement: Degenerate %d D element: %d.\n", dim, element->ElementIndex);
-        NSLog(@"detJForElement: detJ: %f\n", detG);
-        for (int i=0; i<cdim; i++) {
-            NSLog(@"detJForElement: Dir: %d, Coord: %f %f %f\n", cdim, nodes->x[i], nodes->y[i], nodes->z[i]);
-        }
-        if (cdim < dim) {
-            NSLog(@"detJForElement: element dimension larger than mesh dimension: %d vs %d\n", dim, cdim);
-        }
-        errorfunct("detJForElement", "Programm terminating now...");
-    }
-    return detG;
-}
-
--(void)invertMatrix3x3:(double **)GI detJ:(double)detG {
-    
-    double s;
-    
-    s = 1.0 / detG;
-    
-    GI[0][0] = s * ( self.covariantMetricTensor[1][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][1]*self.covariantMetricTensor[1][2] );
-    GI[1][0] = -s * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[1][2] );
-    GI[2][0] = s * ( self.covariantMetricTensor[1][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[1][1] );
-    
-    GI[0][1] = -s * ( self.covariantMetricTensor[0][1]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][1]*self.covariantMetricTensor[0][2] );
-    GI[1][1] = s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[2][2] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[0][2] );
-    GI[2][1] = -s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[2][1] - self.covariantMetricTensor[2][0]*self.covariantMetricTensor[0][1] );
-    
-    GI[0][2] = s * ( self.covariantMetricTensor[0][1]*self.covariantMetricTensor[1][2] - self.covariantMetricTensor[1][1]*self.covariantMetricTensor[0][2] );
-    GI[1][2] = -s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][2] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[0][2] );
-    GI[2][2] = s * ( self.covariantMetricTensor[0][0]*self.covariantMetricTensor[1][1] - self.covariantMetricTensor[1][0]*self.covariantMetricTensor[0][1] );
-}
-
--(void)globalSecondDerivativesForElement:(Element_t*)element nodes:(Nodes_t*)nodes mesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w nodalValues:(double*)f dLBasisdx:(double**)dLBasisdx values:(double **)values {
-/******************************************************************************************************
-    Arguments:
-        Element_t* element -> structure describing the element
-        Nodes_t* nodes     -> nodal coordinates
-        FEMMesh *mesh      -> mesh
-        double u,v,w       -> point at which to evaluate
-        double *f          -> nodal values of the quantity
- 
-    Output: 3x3 matrix (values) of partial derivatives
-
-******************************************************************************************************/
-    
-    int i, j, k, l, n, dim, cdim;
-    double C1[3][3][3], C2[3][3][3], ddx[3][3][3];
-    double df[3];
-    double cddf[3][3], ddf[3][3], dxx[3][3], **bf;
-    double accum1, accum2, accum3, accum4;
-    double s;
-
-    // Actually not quite correct... 
-    if (element->Type.BasisFunctionDegree <= 1 ) return;
-    
-    n = element->Type.NumberOfNodes;
-    dim = element->Type.dimension;
-    cdim = mesh.dimension;
-
-    // Partial derivatives of the basis functions are given, just
-    // sum for the first partial derivatives.
-    memset( df, 0.0, sizeof(df) );
-    memset( *dxx, 0.0, (3*3)*sizeof(double) );
-    
-    switch (cdim) {
-        case 1:
-            for (i=0; i<dim; i++) {
-                accum1 = 0.0;
-                accum2 = 0.0;
-                for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
-                    accum2 = accum2 + f[j] * dLBasisdx[j][i];
-                }
-                dxx[0][i] = accum1;
-                df[i] = accum2;
-            }
-            break;
-            
-        case 2:
-            for (i=0; i<dim; i++) {
-                accum1 = 0.0;
-                accum2 = 0.0;
-                accum3 = 0.0;
-                for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
-                    accum2 = accum2 + nodes->y[j] * dLBasisdx[j][i];
-                    accum3 = accum3 + f[j] * dLBasisdx[j][i];
-                }
-                dxx[0][i] = accum1;
-                dxx[1][i] = accum2;
-                df[i] = accum3;
-            }
-            break;
-            
-        case 3:
-            for (i=0; i<dim; i++) {
-                accum1 = 0.0;
-                accum2 = 0.0;
-                accum3 = 0.0;
-                accum4 = 0.0;
-                for (j=0; j<n; j++) {
-                    accum1 = accum1 + nodes->x[j] * dLBasisdx[j][i];
-                    accum2 = accum2 + nodes->y[j] * dLBasisdx[j][i];
-                    accum3 = accum3 + nodes->z[j] * dLBasisdx[j][i];
-                    accum4 = accum4 + f[j] * dLBasisdx[j][i];
-                }
-                dxx[0][i] = accum1;
-                dxx[1][i] = accum2;
-                dxx[2][i] = accum3;
-                df[i] = accum4;
-            }
-            break;
-
-        default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Coordinate dimension not supported!!");
-            break;
-    }
-    
-    // Get second partial derivatives with respect to local coordinates
-    switch (dim) {
-        case 1:
-            // Line elements
-            ddx[0][0][0] = SecondDerivatives1D(element, nodes->x, u);
-            ddx[1][0][0] = SecondDerivatives1D(element, nodes->y, u);
-            ddx[2][0][0] = SecondDerivatives1D(element, nodes->z, u);
-            break;
-            
-        case 2:
-            // Surface elements
-            bf = doublematrix(0, 1, 0, 1);
-            SecondDerivatives2D(bf, element, nodes->x, u, v);
-            for (i=0; i<2; i++) {
-                for (j=0; j<2; j++) {
-                    ddx[0][i][j] = bf[i][j];
-                }
-            }
-            
-            SecondDerivatives2D(bf, element, nodes->y, u, v);
-            for (i=0; i<2; i++) {
-                for (j=0; j<2; j++) {
-                    ddx[1][i][j] = bf[i][j];
-                }
-            }
-            
-            SecondDerivatives2D(bf, element, nodes->z, u, v);
-            for (i=0; i<2; i++) {
-                for (j=0; j<2; j++) {
-                    ddx[2][i][j] = bf[i][j];
-                }
-            }
-            
-            free_dmatrix(bf, 0, 1, 0, 1);
-            break;
-            
-        case 3:
-            // Volume elements
-            bf = doublematrix(0, 2, 0, 2);
-            SecondDerivatives3D(bf, element, nodes->x, u, v, w);
-            for (i=0; i<3; i++) {
-                for (j=0; j<3; j++) {
-                    ddx[0][i][j] = bf[i][j];
-                }
-            }
-            
-            SecondDerivatives3D(bf, element, nodes->y, u, v, w);
-            for (i=0; i<3; i++) {
-                for (j=0; j<3; j++) {
-                    ddx[1][i][j] = bf[i][j];
-                }
-            }
-            
-            SecondDerivatives3D(bf, element, nodes->z, u, v, w);
-            for (i=0; i<3; i++) {
-                for (j=0; j<3; j++) {
-                    ddx[2][i][j] = bf[i][j];
-                }
-            }
-
-            free_dmatrix(bf, 0, 2, 0, 2);
-            break;
-            
-        default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
-            break;
-    }
-    
-    // Christoffel symbols of the second kind of the element coordinate system
-    for (i=0; i<dim; i++) {
-        for (j=0; j<dim; j++) {
-            for (k=0; k<dim; k++) {
-                s = 0.0;
-                for (l=0; l<cdim; l++) {
-                    s = s + ddx[l][i][j]*dxx[l][k];
-                }
-                C2[i][j][k] = s;
-            }
-        }
-    }
-    
-    // Christoffel symbols of the first kind
-    for (i=0; i<dim; i++) {
-        for (j=0; j<dim; j++) {
-            for (k=0; k<dim; k++) {
-                s = 0.0;
-                for (l=0; l<dim; l++) {
-                    s = s + self.elementMetric[k][l]*C2[i][j][l];
-                }
-                C1[i][j][k] = s;   
-            }
-        }
-    }
-    
-    // First add ordinary partials (change of the quantity with coordinates)...
-    switch (dim) {
-        case 1:
-            ddf[0][0] = SecondDerivatives1D(element, f, u);
-            break;
-            
-        case 2:
-            bf = doublematrix(0, 1, 0, 1);
-            SecondDerivatives2D(bf, element, f, u, v);
-            for (i=0; i<2; i++) {
-                for (j=0; j<2; j++) {
-                    ddf[i][j] = bf[i][j];
-                }
-            }
-            
-            free_dmatrix(bf, 0, 1, 0, 1);
-            break;
-            
-        case 3:
-            bf = doublematrix(0, 2, 0, 2);
-            SecondDerivatives3D(bf, element, f, u, v, w);
-            for (i=0; i<3; i++) {
-                for (j=0; j<3; j++) {
-                    ddf[i][j] = bf[i][j];
-                }
-            }
-            
-            free_dmatrix(bf, 0, 2, 0, 2);
-            break;
-            
-        default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
-            break;
-    }
-    
-    // ... Then add change of coordinates
-    for (i=0; i<dim; i++) {
-        for (j=0; j<dim; j++) {
-            s = 0.0;
-            for (k=0; k<dim; k++) {
-                s = s - C1[i][j][k]*df[k];
-            }
-            ddf[i][j] = ddf[i][j] + s;
-        }
-    }
-    
-    // Convert to contravariant base
-    for (i=0; i<dim; i++) {
-        for (j=0; j<dim; j++) {
-            s = 0.0;
-            for (k=0; k<dim; k++) {
-                for (l=0; l<dim; l++) {
-                    s = s + self.elementMetric[i][k]*self.elementMetric[j][l]*ddf[k][l];
-                }
-            }
-            cddf[i][j] = s;
-        }
-    }
-    
-    // And finally transform to global coordinates
-    memset( *values, 0.0, (cdim*cdim)*sizeof(double) );
-    for (i=0; i<cdim; i++) {
-        for (j=0; j<cdim; j++) {
-            s = 0.0;
-            for (k=0; k<dim; k++) {
-                for (l=0; l<dim; l++) {
-                    s = s + dxx[i][k]*dxx[j][l]*cddf[k][l];
-                }
-            }
-            values[i][j] = s;
-        }
-    }
+    return YES;
 }
 
 @end
