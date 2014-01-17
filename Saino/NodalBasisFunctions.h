@@ -65,7 +65,7 @@ inline void NodalBasisFunctions2D(double *y, Element_t *element, double u, doubl
     int i, n;
     int *p, *q;
     
-    double s;
+    double s, s1, s2, s3;
     double *coeff;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
@@ -74,11 +74,28 @@ inline void NodalBasisFunctions2D(double *y, Element_t *element, double u, doubl
         q = element->Type.BasisFunctions[n].q;
         coeff = element->Type.BasisFunctions[n].coeff;
         
-        s = 0.0;
-        for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        // The following is the unrolled version of this loop:
+        //
+        //      s = 0.0;
+        //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        //          s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]);
+        //      }
+        //      y[n] = s;
+        //
+        // We assume a minimum of three nodes for a 2D element so we use a
+        // three-way unrolling
+        
+        s = s1 = s2 = s3 = 0.0;
+        for(i=0;i<=element->Type.BasisFunctions[n].n-3;i+=3) {
+            s1 = s1 + coeff[i+0] * pow(u, (double)p[i+0]) * pow(v, (double)q[i+0]);
+            s2 = s2 + coeff[i+1] * pow(u, (double)p[i+1]) * pow(v, (double)q[i+1]);
+            s3 = s3 + coeff[i+2] * pow(u, (double)p[i+2]) * pow(v, (double)q[i+2]);
+        }
+        // Remainder loop
+        for( ;i<element->Type.BasisFunctions[n].n;i++) {
             s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]);
         }
-        y[n] = s;
+        y[n] = s + s1 + s2 + s3;
     }
 }
 
@@ -104,7 +121,7 @@ inline double InterpolateInElement3D(Element_t *element, double *x, double u, do
     int i, l, n;
     int *p, *q, *r;
     
-    double y, s;
+    double y, s, s1, s2, s3, s4;
     double *coeff;
     
     l = element->Type.BasisFunctionDegree;
@@ -154,8 +171,26 @@ inline double InterpolateInElement3D(Element_t *element, double *x, double u, do
             r = element->Type.BasisFunctions[n].r;
             coeff = element->Type.BasisFunctions[n].coeff;
             
-            s = 0.0;
-            for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            // The following is the unrolled version of this loop:
+            //
+            //      s = 0.0;
+            //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            //          s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
+            //      }
+            //      y = y + s*x[n];
+            //
+            // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
+            
+            s = s1 = s2 = s3 = s4 = 0.0;
+            for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+                s1 = s1 + coeff[i+0] * pow(u, (double)p[i+0]) * pow(v, (double)q[i+0]) * pow(w, (double)r[i+0]);
+                s2 = s2 + coeff[i+1] * pow(u, (double)p[i+1]) * pow(v, (double)q[i+1]) * pow(w, (double)r[i+1]);
+                s3 = s3 + coeff[i+2] * pow(u, (double)p[i+2]) * pow(v, (double)q[i+2]) * pow(w, (double)r[i+2]);
+                s4 = s4 + coeff[i+3] * pow(u, (double)p[i+3]) * pow(v, (double)q[i+3]) * pow(w, (double)r[i+3]);
+            }
+            y = y + (s1 + s2 + s3 + s4)*x[n];
+            // Remainder loop
+            for( ;i<element->Type.BasisFunctions[n].n;i++) {
                 s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
             }
             y = y + s*x[n];
@@ -182,7 +217,7 @@ inline void NodalBasisFunctions3D(double *y, Element_t *element, double u, doubl
     int i, n;
     int *p, *q, *r;
     
-    double s;
+    double s, s1, s2, s3, s4;
     double *coeff;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
@@ -192,11 +227,28 @@ inline void NodalBasisFunctions3D(double *y, Element_t *element, double u, doubl
         r = element->Type.BasisFunctions[n].r;
         coeff = element->Type.BasisFunctions[n].coeff;
         
-        s = 0.0;
-        for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        // The following is the unrolled version of this loop:
+        //
+        //      s = 0.0;
+        //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        //          s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
+        //      }
+        //      y[n] = s;
+        //
+        // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
+
+        s = s1 = s2 = s3 = s4 = 0.0;
+        for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+            s1 = s1 + coeff[i+0] * pow(u, (double)p[i+0]) * pow(v, (double)q[i+0]) * pow(w, (double)r[i+0]);
+            s2 = s2 + coeff[i+1] * pow(u, (double)p[i+1]) * pow(v, (double)q[i+1]) * pow(w, (double)r[i+1]);
+            s3 = s3 + coeff[i+2] * pow(u, (double)p[i+2]) * pow(v, (double)q[i+2]) * pow(w, (double)r[i+2]);
+            s4 = s4 + coeff[i+3] * pow(u, (double)p[i+3]) * pow(v, (double)q[i+3]) * pow(w, (double)r[i+3]);
+        }
+        // Remainder loop
+        for( ;i<element->Type.BasisFunctions[n].n;i++) {
             s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
         }
-        y[n] = s;
+        y[n] = s + s1 + s2 + s3 + s4;
     }
 }
 
@@ -283,7 +335,7 @@ inline void NodalFirstDerivatives2D(double *y, Element_t *element, double u, dou
     int i, n;
     int *p, *q;
     
-    double s, t;
+    double s, s1, s2, s3, t, t1, t2, t3;
     double *coeff;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
@@ -292,16 +344,41 @@ inline void NodalFirstDerivatives2D(double *y, Element_t *element, double u, dou
         q = element->Type.BasisFunctions[n].q;
         coeff = element->Type.BasisFunctions[n].coeff;
         
-        s = 0.0;
-        t = 0.0;
-        for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        // The following is the unrolled version of this loop:
+        //
+        //       s = 0.0;
+        //       t = 0.0;
+        //       for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        //          if(p[i] >= 1) s = s + p[i]*coeff[i]*pow(u, (double)(p[i]-1))*pow(v, (double)q[i]);
+        //          if(q[i] >= 1) t = t + q[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)(q[i]-1));
+        //       }
+        //       y[3*n] = s;
+        //       y[3*n+1] = t;
+        //
+        // We assume a minimum of three nodes for a 2D element so we use a
+        // three-way unrolling
+
+        s = s1 = s2 = s3 = 0.0;
+        t = t1 = t2 = t3 = 0.0;
+        for(i=0;i<=element->Type.BasisFunctions[n].n-3;i+=3) {
+            if(p[i+0] >= 1) s1 = s1 + p[i+0]*coeff[i+0]*pow(u, (double)(p[i+0]-1))*pow(v, (double)q[i+0]);
+            if(p[i+1] >= 1) s2 = s2 + p[i+1]*coeff[i+1]*pow(u, (double)(p[i+1]-1))*pow(v, (double)q[i+1]);
+            if(p[i+2] >= 1) s3 = s3 + p[i+2]*coeff[i+2]*pow(u, (double)(p[i+2]-1))*pow(v, (double)q[i+2]);
+            
+            if(q[i+0] >= 1) t1 = t1 + q[i+0]*coeff[i+0]*pow(u, (double)p[i+0])*pow(v, (double)(q[i+0]-1));
+            if(q[i+1] >= 1) t2 = t2 + q[i+1]*coeff[i+1]*pow(u, (double)p[i+1])*pow(v, (double)(q[i+1]-1));
+            if(q[i+2] >= 1) t3 = t3 + q[i+2]*coeff[i+2]*pow(u, (double)p[i+2])*pow(v, (double)(q[i+2]-1));
+        }
+        // Remainder loop
+        for( ;i<element->Type.BasisFunctions[n].n;i++) {
             if(p[i] >= 1) s = s + p[i]*coeff[i]*pow(u, (double)(p[i]-1))*pow(v, (double)q[i]);
             if(q[i] >= 1) t = t + q[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)(q[i]-1));
         }
-        y[3*n] = s;
-        y[3*n+1] = t;
+        y[3*n] = s + s1 + s2 + s3;
+        y[3*n+1] = t + t1 + t2 + t3;
     }
 }
+
 
 /***************************************************************************************
     FirstDerivativeInU3D:
@@ -324,7 +401,7 @@ inline double FirstDerivativeInU3D(Element_t *element, double *x, double u, doub
     int i, l, n;
     int *p, *q, *r;
     
-    double y, s;
+    double y, s, s1, s2, s3, s4;
     double *coeff;
     
     l = element->Type.BasisFunctionDegree;
@@ -378,8 +455,26 @@ inline double FirstDerivativeInU3D(Element_t *element, double *x, double u, doub
             r = element->Type.BasisFunctions[n].r;
             coeff = element->Type.BasisFunctions[n].coeff;
             
-            s = 0.0;
-            for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            // The following is the unrolled version of this loop:
+            //
+            //      s = 0.0;
+            //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            //          if(p[i] >= 1) s = s + p[i] * coeff[i] * pow(u, (double)(p[i]-1)) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
+            //      }
+            //      y = y + s*x[n];
+            //
+            // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
+
+            s = s1 = s2 = s3 = s4 = 0.0;
+            for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+                if(p[i+0] >= 1) s1 = s1 + p[i+0] * coeff[i+0] * pow(u, (double)(p[i+0]-1)) * pow(v, (double)q[i+0]) * pow(w, (double)r[i+0]);
+                if(p[i+1] >= 1) s2 = s2 + p[i+1] * coeff[i+1] * pow(u, (double)(p[i+1]-1)) * pow(v, (double)q[i+1]) * pow(w, (double)r[i+1]);
+                if(p[i+2] >= 1) s3 = s3 + p[i+2] * coeff[i+2] * pow(u, (double)(p[i+2]-1)) * pow(v, (double)q[i+2]) * pow(w, (double)r[i+2]);
+                if(p[i+3] >= 1) s4 = s4 + p[i+3] * coeff[i+3] * pow(u, (double)(p[i+3]-1)) * pow(v, (double)q[i+3]) * pow(w, (double)r[i+3]);
+            }
+            y = y + (s1 + s2 + s3 + s4)*x[n];
+            // Remainder loop
+            for( ;i<element->Type.BasisFunctions[n].n;i++) {
                 if(p[i] >= 1) s = s + p[i] * coeff[i] * pow(u, (double)(p[i]-1)) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
             }
             y = y + s*x[n];
@@ -410,7 +505,7 @@ inline double FirstDerivativeInV3D(Element_t *element, double *x, double u, doub
     int i, l, n;
     int *p, *q, *r;
     
-    double y, s;
+    double y, s, s1, s2, s3, s4;
     double *coeff;
     
     l = element->Type.BasisFunctionDegree;
@@ -465,8 +560,26 @@ inline double FirstDerivativeInV3D(Element_t *element, double *x, double u, doub
             r = element->Type.BasisFunctions[n].r;
             coeff = element->Type.BasisFunctions[n].coeff;
             
-            s = 0.0;
-            for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            // The following is the unrolled version of this loop:
+            //
+            //      s = 0.0;
+            //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            //          if(q[i] >= 1) s = s + q[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)(q[i]-1)) * pow(w, (double)r[i]);
+            //      }
+            //      y = y + s*x[n];
+            //
+            // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
+            
+            s = s1 = s2 = s3 = s4 = 0.0;
+            for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+                if(q[i+0] >= 1) s1 = s1 + q[i+0] * coeff[i+0] * pow(u, (double)p[i+0]) * pow(v, (double)(q[i+0]-1)) * pow(w, (double)r[i+0]);
+                if(q[i+1] >= 1) s2 = s2 + q[i+1] * coeff[i+1] * pow(u, (double)p[i+1]) * pow(v, (double)(q[i+1]-1)) * pow(w, (double)r[i+1]);
+                if(q[i+2] >= 1) s3 = s3 + q[i+2] * coeff[i+2] * pow(u, (double)p[i+2]) * pow(v, (double)(q[i+2]-1)) * pow(w, (double)r[i+2]);
+                if(q[i+3] >= 1) s4 = s4 + q[i+3] * coeff[i+3] * pow(u, (double)p[i+3]) * pow(v, (double)(q[i+3]-1)) * pow(w, (double)r[i+3]);
+            }
+            y = y + (s1 + s2 + s3 + s4)*x[n];
+            // Remainder loop
+            for( ;i<element->Type.BasisFunctions[n].n;i++) {
                 if(q[i] >= 1) s = s + q[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)(q[i]-1)) * pow(w, (double)r[i]);
             }
             y = y + s*x[n];
@@ -497,7 +610,7 @@ inline double FirstDerivativeInW3D(Element_t *element, double *x, double u, doub
     int i, l, n;
     int *p, *q, *r;
     
-    double y, s;
+    double y, s, s1, s2, s3, s4;
     double *coeff;
     
     l = element->Type.BasisFunctionDegree;
@@ -555,8 +668,26 @@ inline double FirstDerivativeInW3D(Element_t *element, double *x, double u, doub
             r = element->Type.BasisFunctions[n].r;
             coeff = element->Type.BasisFunctions[n].coeff;
             
-            s = 0.0;
-            for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            // The following is the unrolled version of this loop:
+            //
+            //      s = 0.0;
+            //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+            //          if(r[i] >= 1) s = s + r[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)(r[i]-1));
+            //      }
+            //      y = y + s*x[n];
+            //
+            // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
+
+            s = s1 = s2 = s3 = s4 = 0.0;
+            for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+                if(r[i+0] >= 1) s1 = s1 + r[i+0] * coeff[i+0] * pow(u, (double)p[i+0]) * pow(v, (double)q[i+0]) * pow(w, (double)(r[i+0]-1));
+                if(r[i+1] >= 1) s2 = s2 + r[i+1] * coeff[i+1] * pow(u, (double)p[i+1]) * pow(v, (double)q[i+1]) * pow(w, (double)(r[i+1]-1));
+                if(r[i+2] >= 1) s3 = s3 + r[i+2] * coeff[i+2] * pow(u, (double)p[i+2]) * pow(v, (double)q[i+2]) * pow(w, (double)(r[i+2]-1));
+                if(r[i+3] >= 1) s4 = s4 + r[i+3] * coeff[i+3] * pow(u, (double)p[i+3]) * pow(v, (double)q[i+3]) * pow(w, (double)(r[i+3]-1));
+            }
+            y = y + (s1 + s2 + s3 + s4)*x[n];
+            // Remainder loop
+            for( ;i<element->Type.BasisFunctions[n].n;i++) {
                 if(r[i] >= 1) s = s + r[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)(r[i]-1));
             }
             y = y + s*x[n];
@@ -583,7 +714,9 @@ inline void NodalFirstDerivatives3D(double *y, Element_t *element, double u, dou
     int i, n;
     int *p, *q, *r;
     
-    double s, t, z;
+    double s, s1, s2, s3, s4;
+    double t, t1, t2, t3, t4;
+    double z, z1, z2, z3, z4;
     double *coeff;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
@@ -593,18 +726,51 @@ inline void NodalFirstDerivatives3D(double *y, Element_t *element, double u, dou
         r = element->Type.BasisFunctions[n].r;
         coeff = element->Type.BasisFunctions[n].coeff;
         
-        s = 0.0;
-        t = 0.0;
-        z = 0.0;
+        // The following is the unrolled version of this loop:
+        //
+        //      s = 0.0;
+        //      t = 0.0;
+        //      z = 0.0;
+        //
+        //      for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        //         if(p[i] >= 1) s = s + p[i]*coeff[i]*pow(u, (double)(p[i]-1))*pow(v, (double)q[i])*pow(w, (double)r[i]);
+        //         if(q[i] >= 1) t = t + q[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)(q[i]-1))*pow(w, (double)r[i]);
+        //         if(r[i] >= 1) z = z + r[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)q[i])*pow(w, (double)(r[i]-1));
+        //      }
+        //      y[3*n] = s;
+        //      y[3*n+1] = t;
+        //      y[3*n+2] = z;
+        //
+        // We assume a minimum of four nodes for a 3D element so we use a four-way unrolling
         
-        for(i=0;i<element->Type.BasisFunctions[n].n;i++) {
+        s = s1 = s2 = s3 = s4 = 0.0;
+        t = t1 = t2 = t3 = t4 = 0.0;
+        z = z1 = z2 = z3 = z4 = 0.0;
+        for(i=0;i<=element->Type.BasisFunctions[n].n-4;i+=4) {
+            if(p[i+0] >= 1) s1 = s1 + p[i+0]*coeff[i+0]*pow(u, (double)(p[i+0]-1))*pow(v, (double)q[i+0])*pow(w, (double)r[i+0]);
+            if(p[i+1] >= 1) s2 = s2 + p[i+1]*coeff[i+1]*pow(u, (double)(p[i+1]-1))*pow(v, (double)q[i+1])*pow(w, (double)r[i+1]);
+            if(p[i+2] >= 1) s3 = s3 + p[i+2]*coeff[i+2]*pow(u, (double)(p[i+2]-1))*pow(v, (double)q[i+2])*pow(w, (double)r[i+2]);
+            if(p[i+3] >= 1) s4 = s4 + p[i+3]*coeff[i+3]*pow(u, (double)(p[i+3]-1))*pow(v, (double)q[i+3])*pow(w, (double)r[i+3]);
+
+            if(q[i+0] >= 1) t1 = t1 + q[i+0]*coeff[i+0]*pow(u, (double)p[i+0])*pow(v, (double)(q[i+0]-1))*pow(w, (double)r[i+0]);
+            if(q[i+1] >= 1) t2 = t2 + q[i+1]*coeff[i+1]*pow(u, (double)p[i+1])*pow(v, (double)(q[i+1]-1))*pow(w, (double)r[i+1]);
+            if(q[i+2] >= 1) t3 = t3 + q[i+2]*coeff[i+2]*pow(u, (double)p[i+2])*pow(v, (double)(q[i+2]-1))*pow(w, (double)r[i+2]);
+            if(q[i+3] >= 1) t4 = t4 + q[i+3]*coeff[i+3]*pow(u, (double)p[i+3])*pow(v, (double)(q[i+3]-1))*pow(w, (double)r[i+3]);
+            
+            if(r[i+0] >= 1) z1 = z1 + r[i+0]*coeff[i+0]*pow(u, (double)p[i+0])*pow(v, (double)q[i+0])*pow(w, (double)(r[i+0]-1));
+            if(r[i+1] >= 1) z2 = z2 + r[i+1]*coeff[i+1]*pow(u, (double)p[i+1])*pow(v, (double)q[i+1])*pow(w, (double)(r[i+1]-1));
+            if(r[i+2] >= 1) z3 = z3 + r[i+2]*coeff[i+2]*pow(u, (double)p[i+2])*pow(v, (double)q[i+2])*pow(w, (double)(r[i+2]-1));
+            if(r[i+3] >= 1) z4 = z4 + r[i+3]*coeff[i+3]*pow(u, (double)p[i+3])*pow(v, (double)q[i+3])*pow(w, (double)(r[i+3]-1));
+
+        }
+        for( ;i<element->Type.BasisFunctions[n].n;i++) {
             if(p[i] >= 1) s = s + p[i]*coeff[i]*pow(u, (double)(p[i]-1))*pow(v, (double)q[i])*pow(w, (double)r[i]);
             if(q[i] >= 1) t = t + q[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)(q[i]-1))*pow(w, (double)r[i]);
             if(r[i] >= 1) z = z + r[i]*coeff[i]*pow(u, (double)p[i])*pow(v, (double)q[i])*pow(w, (double)(r[i]-1));
         }
-        y[3*n] = s;
-        y[3*n+1] = t;
-        y[3*n+2] = z;
+        y[3*n] = s + s1 + s2 + s3 + s4;
+        y[3*n+1] = t + t1 + t2 + t3 + t4;
+        y[3*n+2] = z + z1 + z2 + z3 + z4;
     }
 }
 
