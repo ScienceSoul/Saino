@@ -6,10 +6,10 @@
 //  Copyright 2011 Institute of Low Temperature Science. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
 
-@interface SainoTests : SenTestCase {
+@interface SainoTests : XCTestCase {
 @private
     
 }

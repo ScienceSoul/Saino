@@ -118,7 +118,7 @@
 		7315513313583FFD004CCD09 /* SainoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoAppDelegate.h; sourceTree = "<group>"; };
 		7315513413583FFD004CCD09 /* SainoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoAppDelegate.m; sourceTree = "<group>"; };
 		7315513713583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		7315513E13583FFD004CCD09 /* SainoTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SainoTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7315513E13583FFD004CCD09 /* SainoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SainoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7315514413583FFD004CCD09 /* SainoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SainoTests-Info.plist"; sourceTree = "<group>"; };
 		7315514613583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7315514813583FFD004CCD09 /* SainoTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SainoTests-Prefix.pch"; sourceTree = "<group>"; };
@@ -317,7 +317,7 @@
 			isa = PBXGroup;
 			children = (
 				7315511D13583FFD004CCD09 /* Saino.app */,
-				7315513E13583FFD004CCD09 /* SainoTests.octest */,
+				7315513E13583FFD004CCD09 /* SainoTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -643,8 +643,8 @@
 			);
 			name = SainoTests;
 			productName = SainoTests;
-			productReference = 7315513E13583FFD004CCD09 /* SainoTests.octest */;
-			productType = "com.apple.product-type.bundle";
+			productReference = 7315513E13583FFD004CCD09 /* SainoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -900,13 +900,13 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
 				INFOPLIST_FILE = "Saino/Saino-Info.plist";
-				LLVM_VECTORIZE_LOOPS = YES;
+				LLVM_VECTORIZE_LOOPS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OPENCL_AUTO_VECTORIZE_ENABLE = YES;
 				OPENCL_COMPILER_VERSION = CL1.1;
@@ -949,20 +949,15 @@
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SainoTests/SainoTests-Prefix.pch";
 				INFOPLIST_FILE = "SainoTests/SainoTests-Info.plist";
-				OTHER_LDFLAGS = (
-					"-framework",
-					SenTestingKit,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Debug;
 		};
@@ -974,19 +969,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SainoTests/SainoTests-Prefix.pch";
 				INFOPLIST_FILE = "SainoTests/SainoTests-Info.plist";
-				OTHER_LDFLAGS = (
-					"-framework",
-					SenTestingKit,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Release;
 		};
