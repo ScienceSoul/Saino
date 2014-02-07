@@ -270,9 +270,9 @@
                     }
                 }
                 free_dvector(buffer, 0, containers->sizeTValues-1);
-            } else if ([list type] == LIST_TYPE_CONSTANT_SCALAR_STR) {
+            } else if (list.type == LIST_TYPE_CONSTANT_SCALAR_STR) {
                  // TODO: implement this case
-            } else if ([list type] == LIST_TYPE_VARIABLE_SCALAR_STR) {
+            } else if (list.type == LIST_TYPE_VARIABLE_SCALAR_STR) {
                  // TODO: implement this case
             }
             
@@ -397,7 +397,7 @@
                 errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
             }
             
-            if ([list type] >= 8) {
+            if (list.type >= 8) {
                 
                 // TODO: unimplemented case where type is greater than 8
                 // In Elmer this calls matc. Figure out later what we do in Saino

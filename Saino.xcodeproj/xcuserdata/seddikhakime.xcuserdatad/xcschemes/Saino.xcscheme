@@ -33,10 +33,18 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7315513D13583FFD004CCD09"
-               BuildableName = "SainoTests.octest"
+               BuildableName = "SainoTests.xctest"
                BlueprintName = "SainoTests"
                ReferencedContainer = "container:Saino.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "SainoTests/testExample">
+               </Test>
+               <Test
+                  Identifier = "SainoTests">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

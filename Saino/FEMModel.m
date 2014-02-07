@@ -463,8 +463,8 @@
     
     FEMBoundaryCondition *boundaryCondition = [[FEMBoundaryCondition alloc] init];
     [listUtilities addStringInClassList:boundaryCondition theVariable:@"name" withValue:@"constraint1"];
-    vector = intvec(0, 3);
-    vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; //vector[4] = 5; vector[5] = 6;
+    vector = intvec(0, 5);
+    vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; vector[4] = 5; vector[5] = 6;
     [listUtilities addIntegerArrayInClassList:boundaryCondition theVariable:@"target boundaries" withValues:vector size:6];
     free_ivector(vector, 0, 5);
     [listUtilities addConstRealInClassList:boundaryCondition theVariable:@"temperature" withValue:0.0 string:nil];
@@ -473,7 +473,7 @@
     self.numberOfBoundaryConditions = 1;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Tube100000"];
+    _meshName = [NSMutableString stringWithString:@"Mesh"];
 }
 
 #pragma mark Public methods
