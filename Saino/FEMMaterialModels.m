@@ -7,7 +7,7 @@
 //
 
 #import "FEMMaterialModels.h"
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMListUtilities.h"
 #import "FEMMaterial.h"
 #import "FEMCoordinateSystems.h"
@@ -576,7 +576,7 @@
 /***************************************************************************
     Returns effective heat conductivity mainly related to turbulent models.
 ***************************************************************************/
--(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w conductivityFlag:(NSString *)conductivityFlag kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
+-(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w conductivityFlag:(NSString *)conductivityFlag core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
     
     int i;
     double c_p, mu, pCond, pr_t, tmu;
@@ -590,19 +590,19 @@
         
         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
      
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&c1n listUtilities:listUtilities];
+        found = [core getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"heat capacity" buffer:&c1n listUtilities:listUtilities];
         c_p = 0.0;
         for (i=0; i<n; i++) {
             c_p = c_p + integration.basis[i]*c1n.vector[i];
         }
         
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&c1n listUtilities:listUtilities];
+        found = [core getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"viscosity" buffer:&c1n listUtilities:listUtilities];
         mu = 0.0;
         for (i=0; i<n; i++) {
             mu = mu + integration.basis[i]*c1n.vector[i];
         }
         
-        found = [kernel getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"turbulent prandtl number" buffer:&c1n listUtilities:listUtilities];
+        found = [core getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"turbulent prandtl number" buffer:&c1n listUtilities:listUtilities];
         if (found == YES) {
             pr_t = 0.0;
             for (i=0; i<n; i++) {

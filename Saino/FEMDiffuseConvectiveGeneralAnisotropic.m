@@ -54,7 +54,7 @@
         int numberOfNodes               -> number of element nodes
         Nodes_t *nodes                  -> element node coordinates
 ********************************************************************************************************************************************/
--(void)diffuseConvectiveGeneralComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution kernel:(FEMKernel *)kernel mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration materialModels:(FEMMaterialModels*)materialModels differentials:(FEMDifferentials *)differentials coordinatesSystems:(FEMCoordinateSystems *)coordinatesSystems listUtilities:(FEMListUtilities *)listUtilities{
+-(void)diffuseConvectiveGeneralComposeMassMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double *)loadVector timeDerivativeTerm:(double *)nodalCT zeroDegreeTerm:(double *)nodalC0 convectionTerm:(double *)nodalC1 diffusionTerm:(double ***)nodalC2 phaseChange:(BOOL)phaseChange nodalTemperature:(double *)nodalTemperature enthalpy:(double *)enthalpy velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz meshVeloX:(double *)mux meshVeloY:(double *)muy meshVeloZ:(double *)muz nodalViscosity:(double *)nodalviscosity nodaldensity:(double *)nodalDensity nodalPressure:(double *)nodalPressure nodalPressureDt:(double *)nodalPressureDt nodalPressureCoeff:(double *)nodalPressureCoeff compressible:(BOOL)compressible stabilize:(BOOL)stabilize element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration materialModels:(FEMMaterialModels*)materialModels differentials:(FEMDifferentials *)differentials coordinatesSystems:(FEMCoordinateSystems *)coordinatesSystems listUtilities:(FEMListUtilities *)listUtilities{
     
     int i, j, k, l, p, q, t, dim, body_id, mat_id, nBasis;
     static int prevElementBodyID = -1;
@@ -70,7 +70,7 @@
     
     if (element->BodyID-1 != prevElementBodyID) {
         prevElementBodyID = element->BodyID-1;
-        mat_id = [kernel getMaterialIDForElement:element model:model];
+        mat_id = [core getMaterialIDForElement:element model:model];
         materialAtID = (model.materials)[mat_id-1];
         conductivityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"heat conductivity model" info:&found];
     }
@@ -129,7 +129,7 @@
     }
     
     frictionHeat = NO;
-    body_id = [kernel getBodyForceIDForElement:element model:model];
+    body_id = [core getBodyForceIDForElement:element model:model];
     bodyForceAtID = (model.bodyForces)[body_id-1];
     if (bodyForceAtID != nil) frictionHeat = [listUtilities listGetLogical:model inArray:bodyForceAtID.valuesList forVariable:@"friction heat" info:&found];
 
@@ -212,7 +212,7 @@
         }
         if ([conductivityFlag isEqualToString:@"ke"] == YES || [conductivityFlag isEqualToString:@"k-epsilon"] == YES || [conductivityFlag isEqualToString:@"turbulent"] == YES || [conductivityFlag isEqualToString:@"user function"] == YES) {
             for (i=0; i<dim; i++) {
-                c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:density element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w conductivityFlag:conductivityFlag kernel:kernel mesh:mesh model:model integration:integration listUtilities:listUtilities];
+                c2[i][i] = [materialModels effectiveConductivity:c2[i][i] density:density element:element temperature:nodalTemperature velocityX:ux velocitY:uy velocityZ:uz nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w conductivityFlag:conductivityFlag core:core mesh:mesh model:model integration:integration listUtilities:listUtilities];
             }
         }
         

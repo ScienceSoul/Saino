@@ -8,7 +8,7 @@
 
 #import "FEMModel.h"
 
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMListUtilities.h"
 #import "FEMElementUtils.h"
 #import "FEMUtilities.h"
@@ -239,7 +239,7 @@
     FEMElementUtils *elementUtils;
     FEMUtilities *utils;
     FEMMatrixCRS *crsMatrix;
-    FEMKernel *kernel;
+    FEMCore *core;
     matrixArraysContainer *matrixContainers = NULL;
     variableArraysContainer *bufferContainers = NULL;
     
@@ -315,10 +315,10 @@
     
     memset( h, 0.0, sizeNodal*sizeof(double) );
     
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     // TODO: Add support for parallel run here
     // ....
-    [kernel iterativeSolveMatrix:matrix result:h rhs:matrixContainers->RHS dimensions:NULL solution:solution];
+    [core iterativeSolveMatrix:matrix result:h rhs:matrixContainers->RHS dimensions:NULL solution:solution];
     
     NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, min_array(h,sizeNodal));
     NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, max_array(h,sizeNodal));
@@ -342,34 +342,34 @@
 -(void)FEMModel_initializeOutputLevel {
     
     int i;
-    FEMKernel *kernel;
+    FEMCore *core;
     FEMListUtilities *listUtilities;
     listBuffer outputMask = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL found;
     
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     listUtilities = [[FEMListUtilities alloc] init];
     
-    kernel.minOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"min output level" info:&found minValue:NULL maxValue:NULL];
-    kernel.maxOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"max output level" info:&found minValue:NULL maxValue:NULL];
-    if (found == NO) kernel.maxOutputLevel = 32;
+    core.minOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"min output level" info:&found minValue:NULL maxValue:NULL];
+    core.maxOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"max output level" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) core.maxOutputLevel = 32;
     
     found = [listUtilities listGetIntegerArray:self inArray:self.simulation.valuesList forVariable:@"output level" buffer:&outputMask];
     if (found == YES) {
         for (i=0; i<outputMask.m; i++) {
-            if (outputMask.ivector[i] != 0) kernel.outputLevelMask[i] = @YES;
+            if (outputMask.ivector[i] != 0) core.outputLevelMask[i] = @YES;
         }
     }
     
     for (i=0; i<32; i++) {
-        if ([kernel.outputLevelMask[i] boolValue] == YES && i>= kernel.minOutputLevel && i<= kernel.maxOutputLevel) kernel.outputLevelMask[i] = @YES;
+        if ([core.outputLevelMask[i] boolValue] == YES && i>= core.minOutputLevel && i<= core.maxOutputLevel) core.outputLevelMask[i] = @YES;
     }
     
-    kernel.outputPrefix = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output prefix" info:&found];
-    if (found == NO) kernel.outputPrefix = NO;
+    core.outputPrefix = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output prefix" info:&found];
+    if (found == NO) core.outputPrefix = NO;
     
-    kernel.outputCaller = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output caller" info:&found];
-    if (found == NO) kernel.outputCaller = YES;
+    core.outputCaller = [listUtilities listGetLogical:self inArray:self.simulation.valuesList forVariable:@"output caller" info:&found];
+    if (found == NO) core.outputCaller = YES;
     
     if (outputMask.ivector != NULL) {
         free_ivector(outputMask.ivector, 0, outputMask.m-1);

@@ -7,7 +7,7 @@
 //
 
 #import "FEMHeatSolution_OpenCL.h"
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMListUtilities.h"
 #import "FEMUtilities.h"
@@ -285,7 +285,7 @@ enum {
     variableArraysContainer *tempContainers = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    FEMKernel *kernel = [FEMKernel sharedKernel];
+    FEMCore *core = [FEMCore sharedCore];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     
     mesh = (FEMMesh *)model.mesh;
@@ -556,7 +556,7 @@ enum {
 
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
-        if (transient == YES && firstTime == NO) [kernel initializeTimeStepInSolution:solution model:model];
+        if (transient == YES && firstTime == NO) [core initializeTimeStepInSolution:solution model:model];
         firstTime = NO;
         
         // Save current solution
@@ -587,7 +587,7 @@ enum {
             NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: Starting Assembly...\n");
             
-            [kernel defaultInitializeSolution:solution model:model];
+            [core defaultInitializeSolution:solution model:model];
             
             body_id = -1;
             materialAtID = nil;
@@ -674,29 +674,29 @@ enum {
 
             // Neumann & Newton boundary conditions
             for (t=0; t<solution.mesh.numberOfBoundaryElements; t++) {
-                element = [kernel getBoundaryElement:solution atIndex:t];
-                if ([kernel isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
+                element = [core getBoundaryElement:solution atIndex:t];
+                if ([core isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
                 
                 n = element->Type.NumberOfNodes;
-                if ([kernel getElementFamily:element] == 1) continue;
+                if ([core getElementFamily:element] == 1) continue;
                 
-                bc = [kernel getBoundaryCondition:model forElement:element];
+                bc = [core getBoundaryCondition:model forElement:element];
                 if (bc == nil) continue;
                 
                 heatFluxBC = [listUtilities listGetLogical:model inArray:bc forVariable:@"heat fluc bc" info:&found];
                 if (found == YES && heatFluxBC == NO) continue;
             } // Neumann & Newton BCs
             
-            [kernel defaultFinishAssemblySolution:solution model:model];
+            [core defaultFinishAssemblySolution:solution model:model];
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
             
-            [kernel dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
+            [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
             // Solve the system and check for convergence
             st = cputime();
             
             prevNorm = norm;
-            norm = [kernel findSolution:solution model:model backRorateNT:NULL];
+            norm = [core findSolution:solution model:model backRorateNT:NULL];
             
             st = cputime() - st;
             totat = totat + at;

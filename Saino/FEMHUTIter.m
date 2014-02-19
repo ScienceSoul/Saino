@@ -9,7 +9,7 @@
 #import <Accelerate/Accelerate.h>
 
 #import "FEMHUTIter.h"
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "Utils.h"
 
 // Used in TFQRM solve. This is the magic ratio for upperb and tolerance used in upper bound convergence test
@@ -158,7 +158,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -173,7 +173,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -181,13 +181,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
     
     // Vector allocations
     rtld = doublevec(0, ndim-1);
@@ -451,7 +451,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -466,7 +466,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -474,13 +474,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
     
     // Vector allocations
     rtld = doublevec(0, ndim-1);
@@ -851,7 +851,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -866,7 +866,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -874,13 +874,13 @@ static double UPPERB_TOL_RATIO  =  10.0;
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
         
     // Vector allocations
     v = doublevec(0, ndim-1);
@@ -1510,7 +1510,7 @@ jump:
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -1525,7 +1525,7 @@ jump:
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -1533,13 +1533,13 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
     
     // Vector allocations
     z = doublevec(0, ndim-1);
@@ -1757,7 +1757,7 @@ jump:
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -1772,7 +1772,7 @@ jump:
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -1780,13 +1780,13 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
 
     // Vector allocations
     rtld = doublevec(0, ndim-1);
@@ -2041,7 +2041,7 @@ jump:
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
     
     FEMPrecondition *preconditioning;
-    FEMKernel *kernel;
+    FEMCore *core;
     
     // Acquire signature invocations and set selector for invocations
     pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
@@ -2056,7 +2056,7 @@ jump:
     matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
     [matvecInvocation setSelector:matvecMethod];
     
-    mstopSignature = [FEMKernel instanceMethodSignatureForSelector:mstopMethod];
+    mstopSignature = [FEMCore instanceMethodSignatureForSelector:mstopMethod];
     mstopInvocation = [NSInvocation invocationWithMethodSignature:mstopSignature];
     [mstopInvocation setSelector:mstopMethod];
     
@@ -2064,13 +2064,13 @@ jump:
     preconditioning = [[FEMPrecondition alloc] init];
     
     //Instanciate class for the kernel
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     
     // Targets to invocations
     [pcondlInvocation setTarget:preconditioning];
     [pcondrInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
-    [mstopInvocation setTarget:kernel];
+    [mstopInvocation setTarget:core];
     
     // Vector allocations
     w = doublevec(0, ndim-1);

@@ -84,7 +84,7 @@
     NSString *_when;
 }
 
-@synthesize kernel = _kernel;
+@synthesize core = _core;
 @synthesize elementDescription = _elementDescription;
 @synthesize model = _model;
 @synthesize modelName = _modelName;
@@ -283,13 +283,13 @@
                         if (j < 1) j = 1;
                         if (j > model.numberOfInitialConditions) j = model.numberOfInitialConditions;
                         
-                        n = [self.kernel getNumberOfNodesForElement:&elements[t]];
+                        n = [self.core getNumberOfNodesForElement:&elements[t]];
                         for (FEMVariable *variable in mesh.variables) {
                             variableContainers = variable.getContainers;
                             if (variable.solution != nil) {
-                                dofs = [self.kernel getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.core getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                             } else {
-                                dofs = [self.kernel getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.core getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes];
                             }
                             
                             solution = (FEMSolution *)variable.solution;
@@ -306,7 +306,7 @@
                                     variableContainers->Values[k] = [listUtilities listGetConstReal:model inArray:initialCondition.valuesList forVariable:variable.name info:&found minValue:NULL maxValue:NULL];
                                 }
                             } else if (variable.dofs <= 1) {
-                                found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work listUtilities:listUtilities];
+                                found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work listUtilities:listUtilities];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
@@ -318,7 +318,7 @@
                                 if (_transient == YES && solution.timeOrder == 2) {
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" velocity"];
-                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
+                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -328,7 +328,7 @@
                                     }
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" acceleration"];
-                                    found = [self.kernel getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
+                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
@@ -348,7 +348,7 @@
                                             for (k=0; k<elements[t].Type.NumberOfEdges; k++) {
                                                 l = variableContainers->Perm[elements[t].EdgeIndexes[k]+mesh.numberOfNodes];
                                                 if (l >= 0) {
-                                                    [self.kernel localBoundaryIntegral:model inSolution:solution atBoundary:initialCondition.valuesList forElement:&edges[elements[t].EdgeIndexes[k]] withNumberOfNodes:edges[elements[t].EdgeIndexes[k]].Type.NumberOfNodes andParent:&elements[t] withNumberOfNodes:n boundaryName:varName functionIntegral:&integral];
+                                                    [self.core localBoundaryIntegral:model inSolution:solution atBoundary:initialCondition.valuesList forElement:&edges[elements[t].EdgeIndexes[k]] withNumberOfNodes:edges[elements[t].EdgeIndexes[k]].Type.NumberOfNodes andParent:&elements[t] withNumberOfNodes:n boundaryName:varName functionIntegral:&integral];
                                                     variableContainers->Values[l] = integral;
                                                 }
                                             }
@@ -483,7 +483,7 @@
             elements = mesh.getElements;
             for (t=mesh.numberOfBulkElements; t<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; t++) {
                 n = elements[t].Type.NumberOfNodes;
-                bc = [self.kernel getBoundaryCondition:model forElement:&elements[t]];
+                bc = [self.core getBoundaryCondition:model forElement:&elements[t]];
                 
                 for (FEMVariable *variable in mesh.variables) {
                     variableContainers = variable.getContainers;
@@ -496,10 +496,10 @@
                     }
                     
                     if (variable.dofs <= 1) {
-                        found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work listUtilities:listUtilities];
+                        found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work listUtilities:listUtilities];
                         if (found == YES) {
                             ntBoundary = NO;
-                            if ([self.kernel getElementFamily:&elements[t]] != 1) {
+                            if ([self.core getElementFamily:&elements[t]] != 1) {
                                 k = (int)(variable.name.length);
                                 vectDof = [variable.name characterAtIndex:k-1] - '0';
                                 if (vectDof >= 1 && vectDof <= 3) {
@@ -536,7 +536,7 @@
                                     if (ntBoundary == YES) {
                                         nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
                                         initNodes(nodes);
-                                        [self.kernel getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL];
+                                        [self.core getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL];
                                         parU = 0.0;
                                         parV = 0.0;
                                         check = YES;
@@ -601,7 +601,7 @@
                         if (_transient == YES && solution.timeOrder == 2) {
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" velocity"];
-                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
+                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
@@ -612,7 +612,7 @@
                             
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" acceleration"];
-                            found = [self.kernel getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
+                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
@@ -665,7 +665,7 @@
     for (FEMSolution *solution in model.solutions) {
         if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_ALL) {
-            [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+            [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
     }
     
@@ -808,7 +808,7 @@
                     
                     _sTime[0] = _s + cumTime + ddt;
                     _sSize[0] = ddt;
-                    [self.kernel solveEquationsModel:model timeStep:&ddt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.core solveEquationsModel:model timeStep:&ddt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     
                     maxErr = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive error measure" info:&found minValue:NULL maxValue:NULL];
                     
@@ -835,9 +835,9 @@
                     _sStep[0] = ddt / 2;
                     _sTime[0] = _s + cumTime + ddt/2;
                     arg = ddt / 2;
-                    [self.kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.core solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     _sTime[0] = _s + cumTime + ddt;
-                    [self.kernel solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                    [self.core solveEquationsModel:model timeStep:&arg transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                     
                     maxErr = fabs(maxErr - [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive error measure" info:&found minValue:NULL maxValue:NULL]);
                     
@@ -900,7 +900,7 @@
                 free_dvector(xxnrm, 0, model.numberOfSolutions-1);
                 free_d3tensor(prevxx, 0, model.numberOfSolutions-1, 0, kk-1, 0, jj-1);
             } else {
-                [self.kernel solveEquationsModel:model timeStep:&dt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
+                [self.core solveEquationsModel:model timeStep:&dt transientSimulation:transient coupledMinIteration:coupledMinIter coupleMaxIteration:coupleMaxIter steadyStateReached:&steadyStateReached realTimeStep:&realTimeStep];
                 realTimeStep++;
             }
             
@@ -918,7 +918,7 @@
                              _when = (solution.solutionInfo)[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
                         }
-                        if (execThis) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                        if (execThis) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                     }
                     
                     // TODO: Call save current here
@@ -932,7 +932,7 @@
                             _when = (solution.solutionInfo)[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"after saving"] == YES) ? YES : NO;
                         }
-                        if (execThis == YES) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                        if (execThis == YES) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                     }
                 }
             }
@@ -961,12 +961,12 @@ jump:
         if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
             _when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([_when isEqualToString:@"after simulation"] == YES || [_when isEqualToString:@"after all"] == YES) {
-                [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
             }
         } else {
             if (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_ALL) {
-                [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+                [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
             }
         }
@@ -980,7 +980,7 @@ jump:
                 _when = (solution.solutionInfo)[@"invoke solution computer"];
                 execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
             }
-            if (execThis == YES) [self.kernel activateSolution:solution model:model timeStep:dt transientSimulation:transient];
+            if (execThis == YES) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
     }
 }
@@ -1443,7 +1443,7 @@ jump:
         //TODO: Initialize here
         
         // Instanciate a kernel for this job
-        _kernel = [FEMKernel sharedKernel];
+        _core = [FEMCore sharedCore];
         
         // Instanciate the element description for this job
         _elementDescription = [FEMElementDescription sharedElementDescription];
@@ -1475,7 +1475,7 @@ jump:
 
 -(void)deallocation {
     
-    [_kernel deallocation];
+    [_core deallocation];
     [_elementDescription deallocation];
     [_model deallocation];
     
@@ -1802,7 +1802,7 @@ jump:
                     when = (solution.solutionInfo)[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"before saving"] == YES) ? YES : NO;
                 }
-                if (execThis == YES) [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                if (execThis == YES) [self.core activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
             }
             
             [self FEMJob_saveToPostModel:self.model currentStep:0];
@@ -1815,7 +1815,7 @@ jump:
                     when = (solution.solutionInfo)[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"after saving"] == YES) ? YES : NO;
                 }
-                if (execThis == YES) [self.kernel activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
+                if (execThis == YES) [self.core activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
             }
         }
         

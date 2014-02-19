@@ -21,7 +21,7 @@
 		7315514713583FFD004CCD09 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7315514513583FFD004CCD09 /* InfoPlist.strings */; };
 		7315514A13583FFD004CCD09 /* SainoTests.h in Resources */ = {isa = PBXBuildFile; fileRef = 7315514913583FFD004CCD09 /* SainoTests.h */; };
 		7315514C13583FFD004CCD09 /* SainoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315514B13583FFD004CCD09 /* SainoTests.m */; };
-		7315515913586108004CCD09 /* FEMKernel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMKernel.m */; };
+		7315515913586108004CCD09 /* FEMCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMCore.m */; };
 		7315515D1358615D004CCD09 /* FEMMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515C1358615D004CCD09 /* FEMMesh.m */; };
 		73167EFE177058D8003A1A20 /* FEMDifferentials.m in Sources */ = {isa = PBXBuildFile; fileRef = 73167EFD177058D8003A1A20 /* FEMDifferentials.m */; };
 		7316B30316144DC900A8C23C /* FEMInterpolation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7316B30216144DC800A8C23C /* FEMInterpolation.m */; };
@@ -105,7 +105,7 @@
 		739B416E189F7F4000F3F266 /* FEMElementDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 734BC2C1152D326900AEE0E4 /* FEMElementDescription.m */; };
 		739B416F189F7F4000F3F266 /* FEMNumericIntegration.m in Sources */ = {isa = PBXBuildFile; fileRef = 73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */; };
 		739B4170189F7F4000F3F266 /* FEMModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7361A15714C69E6F006C2FA2 /* FEMModel.m */; };
-		739B4171189F7F4000F3F266 /* FEMKernel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMKernel.m */; };
+		739B4171189F7F4000F3F266 /* FEMCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315515813586108004CCD09 /* FEMCore.m */; };
 		739B4172189F7F4100F3F266 /* FEMJob.m in Sources */ = {isa = PBXBuildFile; fileRef = 73DB203115D3A951006C5F1C /* FEMJob.m */; };
 		739B4173189F7F4100F3F266 /* FEMDiffuseConvectiveAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */; };
 		739B4174189F7F4100F3F266 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */; };
@@ -193,8 +193,8 @@
 		7315514813583FFD004CCD09 /* SainoTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SainoTests-Prefix.pch"; sourceTree = "<group>"; };
 		7315514913583FFD004CCD09 /* SainoTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoTests.h; sourceTree = "<group>"; };
 		7315514B13583FFD004CCD09 /* SainoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoTests.m; sourceTree = "<group>"; };
-		7315515713586108004CCD09 /* FEMKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMKernel.h; sourceTree = "<group>"; };
-		7315515813586108004CCD09 /* FEMKernel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMKernel.m; sourceTree = "<group>"; };
+		7315515713586108004CCD09 /* FEMCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMCore.h; sourceTree = "<group>"; };
+		7315515813586108004CCD09 /* FEMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMCore.m; sourceTree = "<group>"; };
 		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; };
 		7315515C1358615D004CCD09 /* FEMMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73167EFC177058D8003A1A20 /* FEMDifferentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDifferentials.h; sourceTree = "<group>"; };
@@ -518,8 +518,8 @@
 				73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */,
 				7361A15614C69E6F006C2FA2 /* FEMModel.h */,
 				7361A15714C69E6F006C2FA2 /* FEMModel.m */,
-				7315515713586108004CCD09 /* FEMKernel.h */,
-				7315515813586108004CCD09 /* FEMKernel.m */,
+				7315515713586108004CCD09 /* FEMCore.h */,
+				7315515813586108004CCD09 /* FEMCore.m */,
 				73DB203015D3A951006C5F1C /* FEMJob.h */,
 				73DB203115D3A951006C5F1C /* FEMJob.m */,
 				73DFEE5B16F327F30081A3A4 /* Solutions */,
@@ -793,7 +793,7 @@
 			files = (
 				7315512F13583FFD004CCD09 /* main.m in Sources */,
 				7315513513583FFD004CCD09 /* SainoAppDelegate.m in Sources */,
-				7315515913586108004CCD09 /* FEMKernel.m in Sources */,
+				7315515913586108004CCD09 /* FEMCore.m in Sources */,
 				7315515D1358615D004CCD09 /* FEMMesh.m in Sources */,
 				73ED563613AA10BB00F088CC /* GaussIntegration.c in Sources */,
 				73803A7B13AB5EA50036350E /* FEMNumericIntegration.m in Sources */,
@@ -924,7 +924,7 @@
 				739B416E189F7F4000F3F266 /* FEMElementDescription.m in Sources */,
 				739B416F189F7F4000F3F266 /* FEMNumericIntegration.m in Sources */,
 				739B4170189F7F4000F3F266 /* FEMModel.m in Sources */,
-				739B4171189F7F4000F3F266 /* FEMKernel.m in Sources */,
+				739B4171189F7F4000F3F266 /* FEMCore.m in Sources */,
 				739B4172189F7F4100F3F266 /* FEMJob.m in Sources */,
 				739B4173189F7F4100F3F266 /* FEMDiffuseConvectiveAnisotropic.m in Sources */,
 				739B4174189F7F4100F3F266 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */,

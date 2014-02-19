@@ -7,19 +7,19 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMModel.h"
 #import "FEMElementDescription.h"
 
 @interface FEMJob : NSObject {
     
-    FEMKernel *_kernel;
+    FEMCore *_core;
     FEMElementDescription *_elementDescription;
     FEMModel *_model;
     NSString *_modelName;
 }
 
-@property(nonatomic, strong) FEMKernel *kernel;
+@property(nonatomic, strong) FEMCore *core;
 @property(nonatomic, strong) FEMElementDescription *elementDescription;
 @property(nonatomic, strong) FEMModel *model;
 @property(nonatomic, strong) NSString *modelName;

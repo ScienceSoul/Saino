@@ -1,5 +1,5 @@
 //
-//  FEMKernel.h
+//  FEMCore.h
 //  Saino
 //
 //  Created by Seddik hakime on 15/04/11.
@@ -16,7 +16,7 @@
 #import "FEMMatrixBand.h"
 #import "FEMListUtilities.h"
 
-@interface FEMKernel : NSObject {
+@interface FEMCore : NSObject {
     
     int _normalTangentialNumberOfNodes;
     int _size1NtZeroingDone;
@@ -75,8 +75,8 @@
 @property(nonatomic, assign) int minOutputLevel;
 @property(nonatomic, assign) int outputPE;
 
-// This class method retuns an instance (singleton) of FEMKernel
-+(id)sharedKernel;
+// This class method retuns an instance (singleton) of FEMCore
++(id)sharedCore;
 
 -(void)deallocation;
 

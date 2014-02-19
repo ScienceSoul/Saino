@@ -7,7 +7,7 @@
 //
 
 #import "FEMUtilities.h"
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMEquation.h"
 #import "FEMPElementMaps.h"
 #import "FEMProjector.h"
@@ -2333,7 +2333,7 @@
     NSString *tmpName, *methodName;
     NSMutableString *varName, *str;
     BOOL found, onlySearch, secondary, variableOutput, harmonicAnal, eigenAnal, complexFlag, multigridActive, mgAlgebraic;
-    FEMKernel *kernel;
+    FEMCore *core;
     FEMVariable *var;
     FEMMesh *newMesh, *oldMesh;
     FEMMatrix *oldMatrix, *newMatrix, *saveMatrix;
@@ -2823,11 +2823,11 @@
         
         // Set the default verbosity of the iterative solvers accordingly with the global verbosity
         if ((solution.solutionInfo)[@"linear system residual output"] == nil) {
-            kernel = [FEMKernel sharedKernel];
+            core = [FEMCore sharedCore];
             k = 1;
-            if ([kernel.outputLevelMask[4] boolValue] == NO) {
+            if ([core.outputLevelMask[4] boolValue] == NO) {
                 k = 0;
-            } else if ([kernel.outputLevelMask[5] boolValue] == NO) {
+            } else if ([core.outputLevelMask[5] boolValue] == NO) {
                 k = 10;
             }
             if (k != 1) {

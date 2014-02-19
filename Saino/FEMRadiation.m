@@ -8,7 +8,7 @@
 
 #import "FEMRadiation.h"
 
-#import "FEMKernel.h"
+#import "FEMCore.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
 #import "FEMBoundaryCondition.h"
@@ -32,14 +32,14 @@
     int i, j, *cols, n;
     double a1, a2, asum, emissivity1, sum, t, *vals;
     BOOL found;
-    FEMKernel *kernel;
+    FEMCore *core;
     FEMElementUtils *elementUtils;
     FEMListUtilities *listUtilities;
     FEMBoundaryCondition *boundaryConditionAtID = nil;
     Element_t *currentElement = NULL, *parent = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     listUtilities = [[FEMListUtilities alloc] init];
     
     elementUtils = [[FEMElementUtils alloc] init];
@@ -64,7 +64,7 @@
             }
             emissivity1 = sum / n;
         } else {
-            found = [kernel getParentMaterialProperty:@"emissivity" forElement:&currentElement[cols[i]] parentElement:parent model:model buffer:&buffer];
+            found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElement[cols[i]] parentElement:parent model:model buffer:&buffer];
             for (j=0; j<buffer.m; j++) {
                 sum = sum + buffer.vector[j];
             }
@@ -100,14 +100,14 @@
     int i, n;
     double area, emissivity, sum, t;
     BOOL found;
-    FEMKernel *kernel;
+    FEMCore *core;
     FEMElementUtils *elementUtils;
     FEMListUtilities *listUtilities;
     FEMBoundaryCondition *boundaryConditionAtID = nil;
     Element_t *currentElements = NULL, *parent = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    kernel = [FEMKernel sharedKernel];
+    core = [FEMCore sharedCore];
     listUtilities = [[FEMListUtilities alloc] init];
     
     currentElements = model.getElements;
@@ -122,7 +122,7 @@
         }
         emissivity = sum / n;
     } else {
-        found = [kernel getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model buffer:&buffer];
+        found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model buffer:&buffer];
         for (i=0; i<buffer.m; i++) {
             sum = sum + buffer.vector[i];
         }
