@@ -7600,10 +7600,17 @@ static const int PRECOND_VANKA     =  560;
         ipar[3] = 1;
         if ((solution.solutionInfo)[@"linear system gcr restart"] != nil) {
             ipar[16] = [(solution.solutionInfo)[@"linear system gcr restart"] intValue];
+            if (ipar[16] < 1) {
+                NSLog(@"FEMCore:iterativeSolveMatrix: linear system gcr restart is < 1 which is invalid. The value 1 will be used.\n");
+                ipar[16] = 1;
+            }
         } else {
             if ((solution.solutionInfo)[@"linear system maximum iterations"] != nil) {
                 ipar[16] = [(solution.solutionInfo)[@"linear system maximum iterations"] intValue];
-                if (ipar[16] < 1) ipar[16] = 1;
+                if (ipar[16] < 1) {
+                    NSLog(@"FEMCore:iterativeSolveMatrix: linear system gcr restart is < 1 which is invalid. The value 1 will be used.\n");
+                    ipar[16] = 1;
+                }
             }
         }
         internal = YES;

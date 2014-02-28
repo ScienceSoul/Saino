@@ -644,9 +644,6 @@
     
     FEMPrecondition *preconditioning;
     
-    converged = NO;
-    diverged = NO;
-    
     r = doublevec(0, n-1);
     t1 = doublevec(0, n-1);
     t2 = doublevec(0, n-1);
@@ -674,9 +671,6 @@
     [pcondlInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     
-    
-    memcpy(xvec, rhsvec, n*sizeof(double));
-    
     [matvecInvocation setArgument:&matrix atIndex:2];
     [matvecInvocation setArgument:&xvec atIndex:3];
     [matvecInvocation setArgument:&r atIndex:4];
@@ -702,7 +696,6 @@
             free_dmatrix(v, 0, n-1, 0, (m-1)-1);
             free_dmatrix(s, 0, n-1, 0, (m-1)-1);
         }
-        
         return;
     }
     
@@ -770,13 +763,12 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_gcrNumberOfDimension: %d %lf\n", k, *residual);
+            NSLog(@"FEMIterativeMethods:HUTI_gcrNumberOfDimension: %d %11.4e\n", k, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES: NO;
         *diverged = (*residual > maxTolerance) ? YES: NO;
         if (*converged == YES || *diverged == YES) break;
-        
     }
     
     free_dvector(r, 0, n-1);
@@ -811,7 +803,7 @@
     
     int rounds, outputInterval;
     double minTol, maxTol, residual, omega;
-    BOOL converged, diverged;
+    BOOL converged = NO, diverged = NO;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -838,7 +830,7 @@
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;
-    BOOL converged, diverged;
+    BOOL converged = NO, diverged = NO;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -861,7 +853,7 @@
     
     int rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
-    BOOL converged, diverged;
+    BOOL converged = NO, diverged = NO;
     
     //TODO: Add support for constraint matrix
     
@@ -887,7 +879,7 @@
     
     int rounds, outputInterval, restartN;
     double minTol, maxTol, residual;
-    BOOL converged, diverged;
+    BOOL converged = NO, diverged = NO;
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -899,9 +891,7 @@
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
+    if ( converged == NO && diverged == NO) ipar[29] = 2;
 }
-
-
-
 
 @end
