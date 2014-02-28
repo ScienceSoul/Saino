@@ -799,7 +799,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             u[i] = u[i] - omega1 * v[i] - omega2 * w[i];
         }
         
-        // Return back to the top of the iteration loop or exit
+        // Return back to the top of the iteration loop (without initialization)
         iter_count = iter_count + 1;
         if (iter_count > HUTI_MAXIT) {
             HUTI_INFO = HUTI_MAXITER;

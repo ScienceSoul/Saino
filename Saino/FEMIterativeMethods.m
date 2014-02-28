@@ -13,10 +13,10 @@
 #import "Utils.h"
 
 @interface FEMIterativeMethods ()
--(void)HUTI_sgsNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
--(void)HUTI_jacobiNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
--(void)HUTI_BICGStabLNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
--(void)HUTI_gcrNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 
 @end
 
@@ -24,7 +24,7 @@
 
 #pragma mark Private methods
 
--(void)HUTI_sgsNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod {
+-(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod {
     
     int i, j, k;
     double *r;
@@ -118,7 +118,7 @@
     free_dvector(r, 0, n-1);
 }
 
--(void)HUTI_jacobiNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
+-(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod {
     
     int i, k;
     double *r;
@@ -201,17 +201,14 @@
     free_dvector(r, 0, n-1);
 }
 
-/**********************************************************************************************************************************
- 
-    This method solves real linear system Ax = b by usinf the BICGStab(l) algorithm wirh l ≥ 2 and the right-oriented ILU(n)
-    preconditioning.
- 
-    The method has been written using as a starting point the work of D.R. Fokkema (subroutine zbistbl v1.1 1998).
+/**********************************************************************************************************************
+    The subroutine has been written using as a starting point the work of D.R. Fokkema (subroutine zbistbl v1.1 1998). 
+    Dr. Fokkema has given the right to distribute the derived work under GPL and hence the original more conservative
+    copyright notice of the subroutine has been removed accordingly.
  
     Double precision version.
- 
-**********************************************************************************************************************************/
--(void)HUTI_BICGStabLNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+***********************************************************************************************************************/
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
     
     double zero, one, *t, kappa0, kappal;
     double rnrm0, rnrm, mxnrmx, mxnrmr, errorind, delta = 1.0e-2, bnrm;
@@ -255,9 +252,6 @@
     [pcondlInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     
-    converged = NO;
-    diverged = NO;
-    
     if (all(xvec, '=', 0.0, n) == true) {
         for (i=0; i<n; i++) {
             xvec[i] = rhsvec[i];
@@ -293,6 +287,8 @@
     // TODO: Add support for constraint matrix
     for (i=0; i<n; i++) {
         work[i][r] = buffer[i];
+    }
+    for (i=0; i<n; i++) {
         work[i][r] = rhsvec[i] - work[i][r];
     }
     bnrm = cblas_dnrm2(n, rhsvec, 1);
@@ -314,7 +310,7 @@
         free_dvector(rwork_transpose, 0, ( (polyDegree+1)*(3+2*(polyDegree+1)) )-1);
         free_dvector(buffer, 0, n-1);
         free_dvector(buffer2, 0, n-1);
-        
+        free_ivector(iwork, 0, (polyDegree-1)-1);
         return;
     }
     
@@ -336,12 +332,6 @@
     for (i=0; i<n; i++) {
         xvec[i] = zero;
     }
-    
-    free_dvector(buffer, 0, n-1);
-    free_dvector(buffer2, 0, n-1);
-    
-    buffer = doublevec(0, (polyDegree+1)-1);
-    buffer2 = doublevec(0, (polyDegree+1)-1);
     
     for (round = 1; round <= rounds; round++) {
         
@@ -367,6 +357,8 @@
                     work[i][u+j] = work[i][r+j] - beta * work[i][u+j];
                 }
             }
+            
+             // TODO: Add support for constraint matrix. If constrain matrix, then for (i=0; i<n-nc; i++)
             for (i=0; i<n; i++) {
                 buffer[i] = work[i][u+k-1];
             }
@@ -411,7 +403,7 @@
             [pcondlInvocation setArgument:&buffer atIndex:4];
             [pcondlInvocation setArgument:&ipar atIndex:5];
             [pcondlInvocation invoke];
-            
+
             [matvecInvocation setArgument:&matrix atIndex:2];
             [matvecInvocation setArgument:&t atIndex:3];
             [matvecInvocation setArgument:&buffer atIndex:4];
@@ -457,17 +449,17 @@
             }
         }
         
-        k = z;
         for (i=0; i<polyDegree+1; i++) {
+            k = z;
             for (j=zz; j<=zz+polyDegree; j++) {
-                rwork[i][zz] = rwork[i][k];
+                rwork[i][j] = rwork[i][k];
                 k++;
             }
         }
         
         // Transfrom rwork for LAPACK, column-major order
-        for (i=0; i<polyDegree+1; i++) {
-            for (j=0; j<(3+2*(polyDegree+1)); j++) {
+        for (i=0; i<(3+2*(polyDegree+1)); i++) {
+            for (j=0; j<polyDegree+1; j++) {
                 rwork_transpose[j+(polyDegree+1)*i] = rwork[j][i];
             }
         }
@@ -475,59 +467,58 @@
         rows = polyDegree-1;
         cols = polyDegree-1;
         lda = polyDegree+1;
-        dgetrf_(&rows, &cols, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, &info);
+        dgetrf_(&rows, &cols, rwork_transpose+((zz+1)*lda+1), &lda, iwork, &info);
         
         // tild r0 and tild rl (small vectors)
-        
-        rwork_transpose[((y0+1)*lda)-(polyDegree+1)] = -one;
-        for (i=2; i<=polyDegree; i++) {
-            rwork_transpose[((y0+1)*lda)-i] = rwork_transpose[((z+1)*lda)-i];
+        rwork_transpose[y0*(polyDegree+1)] = -one;
+        for (i=1; i<polyDegree; i++) {
+            rwork_transpose[y0*(polyDegree+1)+i] = rwork_transpose[z*(polyDegree+1)+i];
         }
         
         order = polyDegree-1;
         nrhs = 1;
         str = 'N';
         lda = polyDegree+1;
-        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, rwork_transpose+(((y0+1)*lda)-polyDegree), &lda, &info);
-        rwork[(polyDegree+1)-1][y0] = zero;
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+((zz+1)*lda+1), &lda, iwork, rwork_transpose+(y0*(polyDegree+1)+1), &lda, &info);
+        rwork_transpose[y0*(polyDegree+1)+polyDegree] = zero;
         
-        rwork_transpose[((yl+1)*lda)-(polyDegree+1)] = zero;
-        for (i=2; i<=polyDegree; i++) {
-            rwork_transpose[((yl+1)*lda)-i] = rwork_transpose[((z+1+polyDegree)*lda)-i];
+        rwork_transpose[yl*(polyDegree+1)] = zero;
+        for (i=1; i<polyDegree; i++) {
+            rwork_transpose[yl*(polyDegree+1)+i] = rwork_transpose[(z+polyDegree)*(polyDegree+1)+i];
         }
-        dgetrs_(&str, &order, &nrhs, rwork_transpose+(((zz+2)*lda)-polyDegree), &lda, iwork, rwork_transpose+(((yl+1)*lda)-polyDegree), &lda, &info);
-        rwork_transpose[((yl+1)*lda)-1] = -one;
+        dgetrs_(&str, &order, &nrhs, rwork_transpose+((zz+1)*lda+1), &lda, iwork, rwork_transpose+(yl*(polyDegree+1)+1), &lda, &info);
+        rwork_transpose[yl*(polyDegree+1)+polyDegree] = -one;
         
         // Back to the original rwork matrix
-        for (i=0; i<polyDegree+1; i++) {
-            for (j=0; j<(3+2*(polyDegree+1)); j++) {
+        for (i=0; i<(3+2*(polyDegree+1)); i++) {
+            for (j=0; j<polyDegree+1; j++) {
                 rwork[j][i] = rwork_transpose[j+(polyDegree+1)*i];
             }
         }
         
         // Convex combination
         
-        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
-        memset( buffer2, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer, 0.0, n*sizeof(double) );
+        memset( buffer2, 0.0, n*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
         kappa0 = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer, 0.0, n*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
         kappal = sqrt( cblas_ddot(polyDegree+1, buffer, 1, buffer2, 1) );
         
-        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer, 0.0, n*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
         cblas_dsymv(CblasRowMajor, CblasUpper, polyDegree+1, one, *rwork, (3+2*(polyDegree+1)), buffer, 1, zero, buffer2, 1);
-        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer, 0.0, n*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][yl];
         }
@@ -539,16 +530,16 @@
         
         // Update
         
-        omega = rwork[(polyDegree+1)-1][y0];
+        omega = rwork[polyDegree][y0];
         for (j=1; j<=polyDegree; j++) {
             for (i=0; i<n; i++) {
-                work[i][u] = work[i][u] - rwork[(j+1)-1][y0] * work[i][u+j];
-                xvec[i] = xvec[i] + rwork[(j+1)-1][y0] * work[i][r+j-1];
-                work[i][r] = work[i][r] - rwork[(j+1)-1][y0] * work[i][r+j];
+                work[i][u] = work[i][u] - rwork[j][y0] * work[i][u+j];
+                xvec[i] = xvec[i] + rwork[j][y0] * work[i][r+j-1];
+                work[i][r] = work[i][r] - rwork[j][y0] * work[i][r+j];
             }
         }
         
-        memset( buffer, 0.0, (polyDegree+1)*sizeof(double) );
+        memset( buffer, 0.0, n*sizeof(double) );
         for (i=0; i<polyDegree+1; i++) {
             buffer[i] = rwork[i][y0];
         }
@@ -614,7 +605,7 @@
         
         errorind = rnrm / bnrm;
         if (round % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %lf %lf\n", round, rnrm, errorind);
+            NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
         }
         
         *converged = (errorind < minTolerance) ? YES: NO;
@@ -624,7 +615,7 @@
     } // end of rounds
     
     if (outputInterval != HUGE_VAL) {
-        NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %lf %lf\n", round, rnrm, errorind);
+        NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
     }
     
     // We have solved z = P*x, with P the preconditioner, so finally
@@ -645,11 +636,12 @@
     free_dmatrix(work, 0, n-1, 0, (3+2*(polyDegree+1))-1);
     free_dmatrix(rwork, 0, (polyDegree+1)-1, 0, (3+2*(polyDegree+1))-1);
     free_dvector(rwork_transpose, 0, ( (polyDegree+1)*(3+2*(polyDegree+1)) )-1);
-    free_dvector(buffer, 0, (polyDegree+1)-1);
-    free_dvector(buffer2, 0, (polyDegree+1)-1);
+    free_dvector(buffer, 0, n-1);
+    free_dvector(buffer2, 0, n-1);
+    free_ivector(iwork, 0, (polyDegree-1)-1);
 }
 
--(void)HUTI_gcrNumberOfDimension:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+-(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
     
     int i, j, k, l;
     double bnorm, rnorm;
@@ -821,7 +813,10 @@
 }
 
 #pragma mark SGS
-
+/***********************************************************************************
+    Symmetric Gauss-Seidel iterative method for linear systems. This is not really
+    of practical use but may be used for testing, for example.
+***********************************************************************************/
 -(void)dsgsSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
@@ -834,14 +829,20 @@
     outputInterval = ipar[4];
     omega = dpar[2];
     
-    [self HUTI_sgsNumberOfDimension:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval omega:omega matvecMethod:matvecMethod];
+    [self FEMIterativeMethods_sgsNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval omega:omega matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
 }
 
 #pragma mark JACOBI
-
+/******************************************************************************
+    Jacobi iterative method for linear systems. This is not really of practical
+    use but may be used for testing, for example.
+    Note that if the scaling is performed so that the diagonal entry is one
+    the division by it is unnecessary. Hence for this method scaling is not
+    needed.
+*******************************************************************************/
 -(void)djacobiSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
@@ -853,14 +854,17 @@
     maxTol = dpar[1];
     outputInterval = ipar[4];
     
-    [self HUTI_jacobiNumberOfDimension:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval matvecMethod:matvecMethod];
+    [self FEMIterativeMethods_jacobiNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
 }
 
 #pragma mark BI-CGSTAB(l)
-
+/***************************************************************************************
+    This routine solves real linear systems Ax = b by using the BiCGStab(l) algorithm
+    with l >= 2 and the right-oriented ILU(n) preconditioning.
+***************************************************************************************/
 -(void)dbicgstablSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval, polynomialDegree;
@@ -875,14 +879,18 @@
     outputInterval = ipar[4];
     polynomialDegree = ipar[15];
     
-    [self HUTI_BICGStabLNumberOfDimension:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    [self FEMIterativeMethods_BICGStabLNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
+    if ( converged == NO && diverged == NO) ipar[29] = 2;
 }
 
 #pragma mark GCR
-
+/********************************************************************************
+    This routine solves real linear systems Ax = b by using the GCR algorithm
+    (Generalized Conjugate Residual).
+********************************************************************************/
 -(void)dgcrSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval, restartN;
@@ -895,7 +903,7 @@
     outputInterval = ipar[4];
     restartN = ipar[16];
     
-    [self HUTI_gcrNumberOfDimension:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    [self FEMIterativeMethods_gcrNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
