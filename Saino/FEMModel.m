@@ -431,7 +431,7 @@
     [solution.solutionInfo setObject:@"temperature" forKey:@"variable"];
     [solution.solutionInfo setObject:@1 forKey:@"variable dofs"];
     [solution.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
-    [solution.solutionInfo setObject:@"bi-cgstab(l)" forKey:@"linear system iterative method"];
+    [solution.solutionInfo setObject:@"sgs" forKey:@"linear system iterative method"];
     [solution.solutionInfo setObject:@1000 forKey:@"linear system maximum iterations"];
     [solution.solutionInfo setObject:@1.0e-08 forKey:@"linear system convergence tolerance"];
     [solution.solutionInfo setObject:@YES forKey:@"linear system abort not converged"];
