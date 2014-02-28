@@ -138,9 +138,6 @@
     // Targets to invocations
     [matvecInvocation setTarget:preconditioning];
     
-    converged = NO;
-    diverged = NO;
-    
     r = doublevec(0, n-1);
     
     [matvecInvocation setArgument:&matrix atIndex:2];
@@ -161,7 +158,6 @@
     if (*converged == YES || *diverged == YES) {
         
         free_dvector(r, 0, n-1);
-        
         return;
     }
     
@@ -184,13 +180,12 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_jacobiNumberOfDimension: %d %lf %lf\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:HUTI_jacobiNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
         *diverged = (*residual > maxTolerance) ? YES : NO;
         if (*converged == YES || *diverged == YES) break;
-        
     }
     
     free_dvector(r, 0, n-1);
@@ -854,6 +849,7 @@
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
+    if ( converged == NO && diverged == NO) ipar[29] = 2;
 }
 
 #pragma mark BI-CGSTAB(l)
