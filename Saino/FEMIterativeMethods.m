@@ -17,6 +17,8 @@
 -(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
 -(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 -(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+
 
 @end
 
@@ -102,7 +104,7 @@
         
         *residual = rnorm / bnorm;
         if ( (k % outputInterval) == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_sgsNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_sgsNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -180,7 +182,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_jacobiNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_jacobiNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -214,7 +216,7 @@
     FEMPrecondition *preconditioning;
     
     if (polyDegree < 2) {
-        errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Polynomial degree < 2.");
+        errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Polynomial degree < 2.");
     }
     
     t = doublevec(0, n-1);
@@ -337,7 +339,7 @@
             }
             rho1 = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (rho0 == zero) {
-                errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Breakdown error.");
+                errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             beta = alpha * (rho1/rho0);
@@ -373,7 +375,7 @@
             }
             sigma = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (sigma == zero) {
-                errorfunct("FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension", "Breakdown error.");
+                errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             alpha = rho1/sigma;
@@ -595,7 +597,7 @@
         
         errorind = rnrm / bnrm;
         if (round % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
         }
         
         *converged = (errorind < minTolerance) ? YES: NO;
@@ -605,7 +607,7 @@
     } // end of rounds
     
     if (outputInterval != HUGE_VAL) {
-        NSLog(@"FEMIterativeMethods:HUTI_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
+        NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
     }
     
     // We have solved z = P*x, with P the preconditioner, so finally
@@ -763,7 +765,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:HUTI_gcrNumberOfDimension: %d %11.4e\n", k, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_gcrNumberOfDimension: %d %11.4e\n", k, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES: NO;
@@ -779,6 +781,105 @@
         free_dmatrix(v, 0, n-1, 0, (m-1)-1);
         free_dmatrix(s, 0, n-1, 0, (m-1)-1);
     }
+}
+
+-(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+    
+    int i, j, k;
+    double bnorm, rnorm, s;
+    double *r, *m;
+    matrixArraysContainer *matContainers = NULL;
+    
+    matContainers = matrix.getContainers;
+    
+    NSMethodSignature *pCondlSignature, *matvecSignature;
+    NSInvocation *pcondlInvocation, *matvecInvocation;
+
+    FEMPrecondition *preconditioning;
+    
+    r = doublevec(0, n-1);
+    m = doublevec(0, n-1);
+    
+    // Acquire signature invocations and set selector for invocations
+    pCondlSignature = [FEMPrecondition instanceMethodSignatureForSelector:pcondlMethod];
+    pcondlInvocation = [NSInvocation invocationWithMethodSignature:pCondlSignature];
+    [pcondlInvocation setSelector:pcondlMethod];
+    
+    matvecSignature = [FEMPrecondition instanceMethodSignatureForSelector:matvecMethod];
+    matvecInvocation = [NSInvocation invocationWithMethodSignature:matvecSignature];
+    [matvecInvocation setSelector:matvecMethod];
+    
+    // Instanciate class for the preconditioning
+    preconditioning = [[FEMPrecondition alloc] init];
+    
+    // Targets to invocations
+    [pcondlInvocation setTarget:preconditioning];
+    [matvecInvocation setTarget:preconditioning];
+
+    [matvecInvocation setArgument:&matrix atIndex:2];
+    [matvecInvocation setArgument:&xvec atIndex:3];
+    [matvecInvocation setArgument:&r atIndex:4];
+    [matvecInvocation setArgument:&ipar atIndex:5];
+    [matvecInvocation invoke];
+    
+    for (i=0; i<n; i++) {
+        r[i] = rhsvec[i] - r[i];
+    }
+    
+    bnorm = cblas_dnrm2(n, rhsvec, 1);
+    rnorm = cblas_dnrm2(n, r, 1);
+    
+    *residual = rnorm / bnorm;
+    *converged = (*residual < minTolerance) ? YES: NO;
+    *diverged = (*residual > maxTolerance) ? YES: NO;
+    if (*converged == YES || *diverged == YES) {
+        free_dvector(r, 0, n-1);
+        free_dvector(m, 0, n-1);
+        return;
+    }
+    
+    // Perform preconditioning by mass lumping
+    
+    for (i=0; i<n; i++) {
+        s = 0.0;
+        for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            s = s + matContainers->Values[j];
+        }
+        m[i] = s;
+    }
+    
+    for (k=1; k<=rounds; k++) {
+        for (i=0; i<n; i++) {
+            if (k == 1) {
+                xvec[i] = rhsvec[i] / m[i];
+            } else {
+                xvec[i] = xvec[i] + r[i] / m[i];
+            }
+        }
+        
+        [matvecInvocation setArgument:&matrix atIndex:2];
+        [matvecInvocation setArgument:&xvec atIndex:3];
+        [matvecInvocation setArgument:&r atIndex:4];
+        [matvecInvocation setArgument:&ipar atIndex:5];
+        [matvecInvocation invoke];
+        
+        for (i=0; i<n; i++) {
+            r[i] = rhsvec[i] - r[i];
+        }
+        rnorm = cblas_dnrm2(n, r, 1);
+        
+        *residual = rnorm / bnorm;
+        if ( (k % outputInterval) == 0) {
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_richardsonNumberOfDimensions: %d %11.4e %11.4e\n", k, rnorm, *residual);
+        }
+
+        *converged = (*residual < minTolerance) ? YES : NO;
+        *diverged = (*residual > maxTolerance) ? YES : NO;
+        if (*converged == YES || *diverged == YES) break;
+    }
+    
+    free_dvector(r, 0, n-1);
+    free_dvector(m, 0, n-1);
 }
 
 #pragma mark Public methods
@@ -888,6 +989,32 @@
     restartN = ipar[16];
     
     [self FEMIterativeMethods_gcrNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval restart:restartN pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    
+    if (converged == YES) ipar[29] = 1;
+    if (diverged == YES) ipar[29] = 3;
+    if ( converged == NO && diverged == NO) ipar[29] = 2;
+}
+
+#pragma mark Richardson
+/***************************************************************************************************
+    Richardson iterative method for linear systems. This may of actual use for mass matrices.
+    Actually this is not the simple Richardson iteration method as it is preconditioned with 
+    the lumped mass matrix. Note that if scaling is performed by the "row equilibrium" method then
+    lumped mass is by construction unity (assuming all-positive entries). 
+    So for this method scaling is not needed.
+****************************************************************************************************/
+-(void)drichardsonSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+    
+    int rounds, outputInterval;
+    double minTol, maxTol, residual;
+    BOOL converged = NO, diverged = NO;
+
+    rounds = ipar[9];
+    minTol = dpar[0];
+    maxTol = dpar[1];
+    outputInterval = ipar[4];
+    
+    [self FEMIterativeMethods_richardsonNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol residual:&residual converged:&converged diverged:&diverged outputInterval:outputInterval pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;

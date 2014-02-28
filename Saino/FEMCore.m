@@ -146,7 +146,7 @@ static const int PRECOND_VANKA     =  560;
 #pragma mark Solve linear systems and norms
 
 -(void)FEMCore_iterCallType:(int)iterType solution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
-        
+
     if (pcondrMethod == 0) {
         pcondrMethod = @selector(CRSPCondDummyMatrix:afterPrecondition:rightHandSide:info:);
     }
@@ -206,6 +206,11 @@ static const int PRECOND_VANKA     =  560;
             
             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
             [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+        }
+         else if (iterType == ITER_RICHARDSON) { // Solve with Richardson
+             
+             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
+             [iterSolver drichardsonSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
     } else {
         //TODO: implements solvers for complex matrix
@@ -7546,6 +7551,10 @@ static const int PRECOND_VANKA     =  560;
     else if ([str isEqualToString:@"gcr"] == YES)
     {
         iterType = ITER_GCR;
+    }
+    else if ([str isEqualToString:@"richardson"] == YES)
+    {
+        iterType = ITER_RICHARDSON;
     }
     else {
         iterType = ITER_BICGSTAB;
