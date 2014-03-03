@@ -15,9 +15,10 @@
 @interface FEMIterativeMethods ()
 -(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL)matvecMethod;
 -(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval matvecMethod:(SEL)matvecMethod;
--(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 -(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
 -(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double *)residual converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod;
+-(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix *)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double *)u resultVector:(double *)v;
 
 
 @end
@@ -193,6 +194,28 @@
     free_dvector(r, 0, n-1);
 }
 
+-(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix *)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double *)u resultVector:(double *)v {
+    
+    int nc;
+    double s;
+    matrixArraysContainer *matContainers = NULL;
+    
+    if (constrained == NO) return;
+    
+    matContainers = constraintMatrix.getContainers;
+    
+    nc = constraintMatrix.numberOfRows;
+    s = 1.0;
+    for (int i=0; i<nc; i++) {
+        v[n-nc+i] = 0.0;
+        for (int j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            if (matContainers->DiagScaling != NULL) s = matContainers->DiagScaling[matContainers->Cols[j]];
+            v[n-nc+i] = v[n-nc+i] + s*matContainers->Values[j]*u[matContainers->Cols[j]];
+            v[matContainers->Cols[j]] = v[matContainers->Cols[j]] + s*matContainers->Values[j]*u[n-nc+i];
+        }
+    }
+}
+
 /**********************************************************************************************************************
     The subroutine has been written using as a starting point the work of D.R. Fokkema (subroutine zbistbl v1.1 1998). 
     Dr. Fokkema has given the right to distribute the derived work under GPL and hence the original more conservative
@@ -200,7 +223,7 @@
  
     Double precision version.
 ***********************************************************************************************************************/
--(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix *)matrix afterSolve:(double *)xvec rightHandSide:(double *)rhsvec ipar:(int *)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL *)converged diverged:(BOOL *)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL)pcondlMethod matvecMethod:(SEL)matvecMethod {
     
     double zero, one, *t, kappa0, kappal;
     double rnrm0, rnrm, mxnrmx, mxnrmr, errorind, delta = 1.0e-2, bnrm;
@@ -276,7 +299,8 @@
     [matvecInvocation setArgument:&buffer atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
-    // TODO: Add support for constraint matrix
+    if (constrained == YES)
+        [self FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:matrix.constraint constrained:constrained numberOfDimensions:n multiplyVector:xvec resultVector:buffer];
     for (i=0; i<n; i++) {
         work[i][r] = buffer[i];
     }
@@ -351,7 +375,7 @@
             }
             
              // TODO: Add support for constraint matrix. If constrain matrix, then for (i=0; i<n-nc; i++)
-            for (i=0; i<n; i++) {
+            for (i=0; i<n-nc; i++) {
                 buffer[i] = work[i][u+k-1];
             }
             [pcondlInvocation setArgument:&matrix atIndex:2];
@@ -365,6 +389,12 @@
             [matvecInvocation setArgument:&buffer atIndex:4];
             [matvecInvocation setArgument:&ipar atIndex:5];
             [matvecInvocation invoke];
+            if (constrained == YES) {
+                for (i=n-nc; i<n; i++) {
+                    t[i] = work[i][u+k-1];
+                }
+                [self FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:matrix.constraint constrained:constrained numberOfDimensions:n multiplyVector:t resultVector:buffer];
+            }
             for (i=0; i<n; i++) {
                 work[i][u+k] = buffer[i];
             }
@@ -401,6 +431,12 @@
             [matvecInvocation setArgument:&buffer atIndex:4];
             [matvecInvocation setArgument:&ipar atIndex:5];
             [matvecInvocation invoke];
+            if (constrained == YES) {
+                for (i=n-nc; i<n; i++) {
+                    t[i] = work[i][r+k-1];
+                }
+                [self FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:matrix.constraint constrained:constrained numberOfDimensions:n multiplyVector:t resultVector:buffer];
+            }
             for (i=0; i<n; i++) {
                 work[i][r+k] = buffer[i];
             }
@@ -557,6 +593,12 @@
             [matvecInvocation setArgument:&buffer atIndex:4];
             [matvecInvocation setArgument:&ipar atIndex:5];
             [matvecInvocation invoke];
+            if (constrained == YES) {
+                for (i=n-nc; i<n; i++) {
+                    t[i] = xvec[i];
+                }
+                [self FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:matrix.constraint constrained:constrained numberOfDimensions:n multiplyVector:t resultVector:buffer];
+            }
             for (i=0; i<n; i++) {
                 work[i][r] = buffer[i];
             }
@@ -590,6 +632,11 @@
             [pcondlInvocation setArgument:&xvec atIndex:4];
             [pcondlInvocation setArgument:&ipar atIndex:5];
             [pcondlInvocation invoke];
+            if (constrained == YES) {
+                for (i=n-nc; i<n; i++) {
+                    t[i] = xvec[i];
+                }
+            }
             for (i=0; i<n; i++) {
                 t[i] = t[i] + work[i][xp];
             }
@@ -620,6 +667,11 @@
     [pcondlInvocation setArgument:&t atIndex:4];
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
+    if (constrained == YES) {
+        for (i=n-nc; i<n; i++) {
+            xvec[i] = t[i];
+        }
+    }
     for (i=0; i<n; i++) {
         xvec[i] = xvec[i] + work[i][xp];
     }
@@ -952,11 +1004,32 @@
 ***************************************************************************************/
 -(void)dbicgstablSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
-    int rounds, outputInterval, polynomialDegree;
+    int nc = 0, rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
+    double *xx, *bb;
     BOOL converged = NO, diverged = NO;
+    BOOL constrained;
     
     //TODO: Add support for constraint matrix
+    constrained = (matrix.constraint != Nil) ? YES : NO;
+    if (constrained == YES) {
+        matrixArraysContainer *matContainers = matrix.constraint.getContainers;
+        nc = matrix.constraint.numberOfRows;
+        xx = doublevec(0, (ndim+nc)-1);
+        bb = doublevec(0, (ndim+nc)-1);
+        for (int i=0; i<ndim; i++) {
+            xx[i] = x[i];
+        }
+        for (int i=ndim; i<ndim+nc; i++) {
+            xx[i] = 0.0;
+        }
+        for (int i=0; i<ndim; i++) {
+            bb[i] = b[i];
+        }
+        for (int i=ndim; i<ndim+nc; i++) {
+            bb[i] = matContainers->RHS[i];
+        }
+    }
     
     rounds = ipar[9];
     minTol = dpar[0];
@@ -964,7 +1037,20 @@
     outputInterval = ipar[4];
     polynomialDegree = ipar[15];
     
-    [self FEMIterativeMethods_BICGStabLNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    if (constrained) {
+            [self FEMIterativeMethods_BICGStabLNumberOfDimensions:ndim+nc matrix:matrix afterSolve:xx rightHandSide:bb ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree constrained:constrained numberOfConstrains:nc pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    } else {
+         [self FEMIterativeMethods_BICGStabLNumberOfDimensions:ndim matrix:matrix afterSolve:x rightHandSide:b ipar:ipar rounds:rounds minTolerance:minTol maxTolerance:maxTol converged:&converged diverged:&diverged outputInterval:outputInterval polynomialDegree:polynomialDegree constrained:constrained numberOfConstrains:nc pcondlMethod:pcondlMethod matvecMethod:matvecMethod];
+    }
+    
+    if (constrained) {
+        for (int i=0; i<ndim; i++) {
+            x[i] = xx[i];
+            b[i] = bb[i];
+        }
+        free_dvector(xx, 0, (ndim+nc)-1);
+        free_dvector(bb, 0, (ndim+nc)-1);
+    }
     
     if (converged == YES) ipar[29] = 1;
     if (diverged == YES) ipar[29] = 3;
