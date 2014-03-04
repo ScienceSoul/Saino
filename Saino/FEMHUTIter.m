@@ -26,22 +26,21 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 #pragma mark private methods
 
--(void)HUTI_dRandVector:(double *)u ipar:(int *)ipar {
 /**********************************************************
     This method fills a vector with pseudo random numbers
 **********************************************************/
-    int i;
+-(void)HUTI_dRandVector:(double *)u ipar:(int *)ipar {
     
-    for (i=0; i<HUTI_NDIM; i++) {
+    for (int i=0; i<HUTI_NDIM; i++) {
         u[i] = rand() % 100;
     }
 }
 
--(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v {
 /*******************************************************************
-    This method constructs LU decomposition of the given matrix 
-    and solve LUu = v 
- ******************************************************************/   
+    This method constructs LU decomposition of the given matrix
+    and solve LUu = v
+******************************************************************/
+-(void)HUTI_dLuSolveAt:(int)n luMatrix:(double **)lumat afterSolve:(double *)u rightHandSide:(double *)v {
     
     int i, j, k;
     
@@ -85,7 +84,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             u[i] = u[i] - lumat[i][k] * u[k];
         }
         
-        // Ccompute u(i) = u(i) / U(i,i)
+        // Compute u(i) = u(i) / U(i,i)
         u[i] = u[i] / lumat[i][i];
     }
 }
@@ -152,7 +151,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rho, oldrho, alpha, beta, omega;
     double *rtld, *p, *t1v, *v, *s, *t2v, *t, *r;
     double residual, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -224,8 +222,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -445,7 +442,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double tau, delta, myy;
     double *rtld, *u, *t1v, *v, *s, *w, *t, *r;
     double residual, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -518,8 +514,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -786,7 +781,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %lf\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e\n", iter_count, residual);
             }
         }
         
@@ -810,7 +805,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %lf\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -845,7 +840,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
     double *v, *y, *ynew, *rtld, *t1v, *t2v, *w, *d, *r, *trv;
     double residual, upperb, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -914,7 +908,6 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
         
         precrhsnorm = cblas_dnrm2(HUTI_NDIM, d, 1);
-
     }
     
     // Part 1A - 1C
@@ -923,8 +916,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -1090,7 +1082,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 break;
             case HUTI_PRESID_SCALED_BYB:
                 [matvecInvocation setArgument:&matrix atIndex:2];
-                [matvecInvocation setArgument:&varContainers->Values atIndex:3];
+                [matvecInvocation setArgument:&x atIndex:3];
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
@@ -1398,9 +1390,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
                 if (HUTI_STOPC == HUTI_UPPERB_STOPC) {
-                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %lf %lf\n", iter_count, residual, upperb);
+                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e\n", iter_count, residual, upperb);
                 } else {
-                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %lf\n", iter_count, residual);
+                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e\n", iter_count, residual);
                 }
             }
         }
@@ -1440,7 +1432,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         oldrho = rho;
         
-        // Return back to the top of the iteration loop or exit
+        // Return back to the top of the iteration loop (without initialization)
         iter_count = iter_count + 1;
         if (iter_count > HUTI_MAXIT) {
             HUTI_INFO = HUTI_MAXITER;
@@ -1464,9 +1456,9 @@ jump:
     
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
         if (HUTI_STOPC == HUTI_UPPERB_STOPC) {
-            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %lf %lf\n", iter_count, residual, upperb);
+            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e\n", iter_count, residual, upperb);
         } else {
-            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %lf\n", iter_count, residual);
+            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e\n", iter_count, residual);
         }
     }
     
@@ -1504,7 +1496,6 @@ jump:
     double rho, oldrho, alpha, beta;
     double *z, *p, *q, *r;
     double residual, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1552,9 +1543,6 @@ jump:
     // First the initialization part
     iter_count = 1;
     
-    // The following applies for all matrix operations in this solver
-    HUTI_EXTOP_MATTYPE = HUTI_MAT_NOTTRPSED;
-    
     // Norms of right-hand side vector are used in convergence tests
     if (HUTI_STOPC == HUTI_TRESID_SCALED_BYB || HUTI_STOPC == HUTI_PRESID_SCALED_BYB) {
         rhsnorm = cblas_dnrm2(HUTI_NDIM, b, 1);
@@ -1569,12 +1557,14 @@ jump:
         precrhsnorm = cblas_dnrm2(HUTI_NDIM, p, 1);
     }
     
+    // The following applies for all matrix operations in this solver
+    HUTI_EXTOP_MATTYPE = HUTI_MAT_NOTTRPSED;
+    
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -1698,7 +1688,7 @@ jump:
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %lf\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %11.4e\n", iter_count, residual);
             }
         }
         
@@ -1709,7 +1699,7 @@ jump:
         
         oldrho = rho;
         
-        // Return back to the top of the iteration loop or exit
+        // Return back to the top of the iteration loop (without initialization)
         iter_count = iter_count + 1;
         if (iter_count > HUTI_MAXIT) {
             HUTI_INFO = HUTI_MAXITER;
@@ -1720,7 +1710,7 @@ jump:
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %lf\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %11.4e\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -1751,7 +1741,6 @@ jump:
     double rho, oldrho, alpha, beta;
     double *rtld, *p, *q, *u, *t1v, *t2v, *r;
     double residual, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
         
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1823,8 +1812,7 @@ jump:
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -1976,7 +1964,7 @@ jump:
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %lf\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e\n", iter_count, residual);
             }
         }
         
@@ -1987,7 +1975,7 @@ jump:
 
         oldrho = rho;
         
-        // Return back to the top of the iteration loop or exit
+        // Return back to the top of the iteration loop (without initialization)
         iter_count = iter_count + 1;
         if (iter_count > HUTI_MAXIT) {
             HUTI_INFO = HUTI_MAXITER;
@@ -1998,7 +1986,7 @@ jump:
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %lf\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -2032,10 +2020,9 @@ jump:
     int s_ind, vtmp_ind, v_ind;
     double bnrm, alpha, beta;
     double temp, temp2, error;
-    double *w, *r, *s, *vtmp, *t1v, *v, *buffer;
+    double *w, *r, *s, *t1v, *v, *buffer;
     double **h, *cs, *sn, *y; 
     double residual, rhsnorm, precrhsnorm;
-    variableArraysContainer *varContainers = NULL;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -2076,7 +2063,6 @@ jump:
     w = doublevec(0, ndim-1);
     r = doublevec(0, ndim-1);
     s = doublevec(0, ndim-1);
-    vtmp = doublevec(0, ndim-1);
     t1v = doublevec(0, ndim-1);
     v = doublevec(0, ndim-1);
     
@@ -2093,9 +2079,6 @@ jump:
     // First the initialization part
     iter_count = 1;
     
-    // The following applies for all matrix operations in this solver
-    HUTI_EXTOP_MATTYPE = HUTI_MAT_NOTTRPSED;
-    
     bnrm = cblas_dnrm2(HUTI_NDIM, b, 1);
     
     // Norms of right-hand side vector are used in convergence tests
@@ -2111,13 +2094,15 @@ jump:
         
         precrhsnorm = cblas_dnrm2(HUTI_NDIM, t1v, 1);
     }
+    
+    // The following applies for all matrix operations in this solver
+    HUTI_EXTOP_MATTYPE = HUTI_MAT_NOTTRPSED;
 
     // Generate vector xvec if needed
     if (HUTI_INITIALX == HUTI_RANDOMX) {
         [self HUTI_dRandVector:x ipar:ipar];
     } else if (HUTI_INITIALX != HUTI_USERSUPPLIEDX) {
-        varContainers = solution.variable.getContainers;
-        for (i=0; i<varContainers->sizeValues; i++) {
+        for (i=0; i<ndim; i++) {
             x[i] = 1;
         }
     }
@@ -2155,7 +2140,6 @@ jump:
     memset( *h, 0.0, ((HUTI_GMRES_RESTART+1)*(HUTI_GMRES_RESTART+1))*sizeof(double) );
     memset( cs, 0.0, (HUTI_GMRES_RESTART+1)*sizeof(double) );
     memset( sn, 0.0, (HUTI_GMRES_RESTART+1)*sizeof(double) );
-    memset( vtmp, 0.0, ndim*sizeof(double) );
     work[0][vtmp_ind-1] = 1.0;
     
     // This is where the loop starts
@@ -2189,7 +2173,7 @@ jump:
 
         for (i=0; i<ndim; i++) {
             work[i][(v_ind+1-1)-1] = r[i] / alpha;
-            s[i] = alpha * vtmp[i];
+            s[i] = alpha * work[i][vtmp_ind-1];
         }
         
         // Construct orthonormal
@@ -2245,42 +2229,39 @@ jump:
             for (k=0; k<=i-1; k++) {
                 
                 temp = cs[k] * h[k][i] + sn[k] * h[k+1][i];
-                h[k+1][i] = -1 * sn[k] * h[k][i] + cs[k] * h[k+1][i];
+                h[k+1][i] = -1.0 * sn[k] * h[k][i] + cs[k] * h[k+1][i];
                 h[k][i] = temp;
             }
             
             if (h[i+1][i] == 0.0) {
-                cs[i] = 1;
+                cs[i] = 1.0;
                 sn[i] = 0.0;
             } else {
                 if ( fabs(h[i+1][i]) > fabs(h[i][i]) ) {
                     temp2 = h[i][i] / h[i+1][i];
-                    sn[i] = 1 / sqrt( 1 + (temp2 * temp2) );
+                    sn[i] = 1.0 / sqrt( 1.0 + (temp2 * temp2) );
                     cs[i] = temp2 * sn[i];
                 } else {
                     temp2 = h[i+1][i] / h[i][i];
-                    cs[i] = 1 / sqrt( 1 + (temp2 * temp2) );
+                    cs[i] = 1.0 / sqrt( 1.0 + (temp2 * temp2) );
                     sn[i] = temp2 * cs[i];
                 }
             }
-            
-            temp = cs[i] * work[i][s_ind-1];
-            work[i+1][s_ind-1] = -1 * sn[i] * work[i][s_ind-1];
-            work[i][s_ind-1] = temp;
+
+            temp = cs[i] * s[i];
+            s[i+1] = -1.0 * sn[i] * s[i];
+            s[i] = temp;
             
             h[i][i] = ( cs[i] * h[i][i] ) + ( sn[i] * h[i+1][i] );
             h[i+1][i] = 0.0;
             
-            error = fabs( work[i+1][s_ind-1] ) / bnrm;
+            error = fabs(s[i+1]) / bnrm;
             if (error < HUTI_TOLERANCE) {
                 
-                for (j=0; j<ndim; j++) {
-                    buffer[j] = work[j][s_ind-1];
-                }
-                [self HUTI_dLuSolveAt:i luMatrix:h afterSolve:y rightHandSide:buffer];
+                [self HUTI_dLuSolveAt:i luMatrix:h afterSolve:y rightHandSide:s];
                 
                 // Matrix-vector product
-                cblas_dgemv(CblasRowMajor, CblasNoTrans, matrix.numberOfRows, ((v_ind+i)-(v_ind+1-1))+1, 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, x, 1);
+                cblas_dgemv(CblasRowMajor, CblasNoTrans, matrix.numberOfRows, ((v_ind+i)-(v_ind+1-1))+1, 1.0, *work+(v_ind-1), wrkdim, y, 1, 1.0, x, 1);
                 break;
             }
         }
@@ -2289,12 +2270,9 @@ jump:
             goto error_lower_than_tolerance;
         }
         
-        for (j=0; j<ndim; j++) {
-            buffer[j] = work[j][s_ind-1];
-        }
-        [self HUTI_dLuSolveAt:m-1 luMatrix:h afterSolve:y rightHandSide:buffer];
+        [self HUTI_dLuSolveAt:m-1 luMatrix:h afterSolve:y rightHandSide:s];
         // Matrix-vector product
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, matrix.numberOfRows, (v_ind+m-1)-(v_ind+1-1), 1.0, *work+(v_ind+1-1), wrkdim, y, 1, 1.0, x, 1);
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, matrix.numberOfRows, ((v_ind+m-1)-(v_ind+1-1))+1, 1.0, *work+(v_ind-1), wrkdim, y, 1, 1.0, x, 1);
         
     error_lower_than_tolerance:
         
@@ -2393,9 +2371,8 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = buffer[i];
-                }
+                // Matrix-vector product
+                cblas_dgemv(CblasRowMajor, CblasNoTrans, matrix.numberOfRows, ((v_ind+m-1)-(v_ind+1-1))+1, 1.0, *work+(v_ind-1), wrkdim, y, 1, 0.0, t1v, 1);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
             case HUTI_USUPPLIED_STOPC:
@@ -2431,12 +2408,12 @@ jump:
                 break;
         }
         
-        work[(m+1)-1][s_ind-1] = cblas_dnrm2(HUTI_NDIM, r, 1);
+        s[m] = cblas_dnrm2(HUTI_NDIM, r, 1);
 
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %lf\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e\n", iter_count, residual);
             }
         }
         
@@ -2445,7 +2422,7 @@ jump:
             break;
         }
         
-        // Return back to the top of the iteration loop or exit
+        // Return back to the top of the iteration loop (without initialization)
         iter_count = iter_count + 1;
         if (iter_count > HUTI_MAXIT) {
             HUTI_INFO = HUTI_MAXITER;
@@ -2458,7 +2435,7 @@ jump:
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %lf\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -2467,14 +2444,12 @@ jump:
     free_dvector(w, 0, ndim-1);
     free_dvector(r, 0, ndim-1);
     free_dvector(s, 0, ndim-1);
-    free_dvector(vtmp, 0, ndim-1);
     free_dvector(t1v, 0, ndim-1);
     free_dvector(v, 0, ndim-1);
     free_dvector(buffer, 0, ndim-1);
     free_dvector(cs, 0, (HUTI_GMRES_RESTART+1)-1);
     free_dvector(sn, 0, (HUTI_GMRES_RESTART+1)-1);
     free_dvector(y, 0, (HUTI_GMRES_RESTART+1)-1);
-    
     free_dmatrix(h, 0, (HUTI_GMRES_RESTART+1)-1, 0, (HUTI_GMRES_RESTART+1)-1);
 }
 

@@ -177,7 +177,7 @@ static const int PRECOND_VANKA     =  560;
         else if (iterType == ITER_CGS) { // Solve with CGS
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dcgsSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_GMRES) { // Solve with GMRES
             
