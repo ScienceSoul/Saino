@@ -24,16 +24,16 @@
 -(void)hutiExit;
 
 // BI-CGSTAB
--(void)dbicgstabSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+-(void)dbicgstabSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 // BI-CGSTAB2
--(void)dbicgstab2SolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+-(void)dbicgstab2SolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 // TFQMR
--(void)dtfqmrSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+-(void)dtfqmrSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 // CG
--(void)dcgSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+-(void)dcgSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 // CGS
--(void)dcgsSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
-// GNRES
+-(void)dcgsSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
+// GMRES
 -(void)dgmresSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod;
 
 @end

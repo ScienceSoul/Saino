@@ -374,7 +374,6 @@
                 }
             }
             
-             // TODO: Add support for constraint matrix. If constrain matrix, then for (i=0; i<n-nc; i++)
             for (i=0; i<n-nc; i++) {
                 buffer[i] = work[i][u+k-1];
             }
@@ -952,7 +951,7 @@
     Symmetric Gauss-Seidel iterative method for linear systems. This is not really
     of practical use but may be used for testing, for example.
 ***********************************************************************************/
--(void)dsgsSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dsgsSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual, omega;
@@ -979,7 +978,7 @@
     the division by it is unnecessary. Hence for this method scaling is not
     needed.
 *******************************************************************************/
--(void)djacobiSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)djacobiSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;
@@ -1002,7 +1001,7 @@
     This routine solves real linear systems Ax = b by using the BiCGStab(l) algorithm
     with l >= 2 and the right-oriented ILU(n) preconditioning.
 ***************************************************************************************/
--(void)dbicgstablSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dbicgstablSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int nc = 0, rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
@@ -1010,7 +1009,6 @@
     BOOL converged = NO, diverged = NO;
     BOOL constrained;
     
-    //TODO: Add support for constraint matrix
     constrained = (matrix.constraint != Nil) ? YES : NO;
     if (constrained == YES) {
         matrixArraysContainer *matContainers = matrix.constraint.getContainers;
@@ -1062,7 +1060,7 @@
     This routine solves real linear systems Ax = b by using the GCR algorithm
     (Generalized Conjugate Residual).
 ********************************************************************************/
--(void)dgcrSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dgcrSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval, restartN;
     double minTol, maxTol, residual;
@@ -1089,7 +1087,7 @@
     lumped mass is by construction unity (assuming all-positive entries). 
     So for this method scaling is not needed.
 ****************************************************************************************************/
--(void)drichardsonSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)drichardsonSolveMatrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;

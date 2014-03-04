@@ -157,27 +157,27 @@ static const int PRECOND_VANKA     =  560;
         if (iterType == ITER_BICGSTAB) { // Solve with BI-CGSTAB
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dbicgstabSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dbicgstabSolveInSolution:solution matrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_BICGSTAB2) { // Solve with BI-CGSTAB2
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dbicgstab2SolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dbicgstab2SolveInSolution:solution matrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_TFQMR) { // Solve with TFQMR
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dtfqmrSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dtfqmrSolveInSolution:solution matrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_CG) { // Solve with CG
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dcgSolveInSolution:solution matrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_CGS) { // Solve with CGS
             
             FEMHUTIter *iterSolver = [[FEMHUTIter alloc] init];
-            [iterSolver dcgsSolveInSolution:solution matrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dcgsSolveInSolution:solution matrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_GMRES) { // Solve with GMRES
             
@@ -190,27 +190,27 @@ static const int PRECOND_VANKA     =  560;
         else if (iterType == ITER_SGS) { // Solve with SGS
             
             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-            [iterSolver dsgsSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dsgsSolveMatrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_JACOBI) { // Solve with Jacobi
             
             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-            [iterSolver djacobiSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver djacobiSolveMatrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_BICGSTABL) { // Solve with BI-CGSTAB(l)
             
             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-            [iterSolver dbicgstablSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dbicgstablSolveMatrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
         else if (iterType == ITER_GCR) { // Solve with GCR
             
             FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-            [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+            [iterSolver dgcrSolveMatrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
          else if (iterType == ITER_RICHARDSON) { // Solve with Richardson
              
              FEMIterativeMethods *iterSolver = [[FEMIterativeMethods alloc] init];
-             [iterSolver drichardsonSolveMatrix:matrix ndim:ipar[2] wrkdim:ipar[3] result:x rhs:b ipar:ipar dpar:dpar work:work pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
+             [iterSolver drichardsonSolveMatrix:matrix ndim:ipar[2] result:x rhs:b ipar:ipar dpar:dpar pcondlMethod:pcondlMethod pcondrMethod:pcondrMethod matvecMethod:matvecMethod mstopMethod:mstopMethod];
         }
     } else {
         //TODO: implements solvers for complex matrix
@@ -7655,9 +7655,13 @@ static const int PRECOND_VANKA     =  560;
         ipar[9] = 1;
     }
     
-    work = doublematrix(0, n-1, 0, wsize-1);
-    if (work == NULL) {
-        errorfunct("FEMCore:iterativeSolveMatrix", "Memory allocation error");
+    // Turned out that in our implementation, the work array is only used
+    // by the gmres iterative method. So only allocate it when needed.
+    if (iterType == ITER_GMRES) {
+        work = doublematrix(0, n-1, 0, wsize-1);
+        if (work == NULL) {
+            errorfunct("FEMCore:iterativeSolveMatrix", "Memory allocation error");
+        }
     }
     
     if (all(x, '=', 0.0, varContainers->sizeValues) == true) {
@@ -7872,7 +7876,7 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    free_dmatrix(work, 0, n-1, 0, wsize-1);
+    if (work != NULL) free_dmatrix(work, 0, n-1, 0, wsize-1);
 }
 
 /******************************************************************************

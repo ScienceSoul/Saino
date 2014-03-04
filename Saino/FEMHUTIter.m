@@ -140,12 +140,11 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Iterative Methods", 1993.
  
     All matrix-vector operations are done externally, so we don't need to know about the matrix structure (sparse or dense).
-    Memory allocation for the work array has also been done externally.
  
     Double precision version.
  
  **********************************************************************************************************************************/
--(void)dbicgstabSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dbicgstabSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega;
@@ -430,12 +429,11 @@ static double UPPERB_TOL_RATIO  =  10.0;
     arising from Discretized PDE's". This is the Bi-CGSTAB(2) version.
  
     All matrix-vector operations are done externally, so we don't need to know about the matrix structure (sparse or dense).
-    Memory allocationf for the work array has also been done externally.
  
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dbicgstab2SolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dbicgstab2SolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega1, omega2;
@@ -829,12 +827,11 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Linear Systems" (SIAM J. Sci. Comput., March 1993).
  
     All matrix-vector operations are done externally, so we don't need to know about the matrix structure (sparse or dense).
-    Memory allocationf for the work array has also been done externally.
  
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dtfqmrSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dtfqmrSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
@@ -1485,12 +1482,11 @@ jump:
     Iterative Methods", 1993.
  
     All matrix-vector operations are done externally, so we don't need to know about the matrix structure (sparse or dense).
-    Memory allocationf for the work array has also been done externally.
  
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dcgSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dcgSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta;
@@ -1735,7 +1731,7 @@ jump:
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dcgsSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar work:(double **)work pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
+-(void)dcgsSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta;
