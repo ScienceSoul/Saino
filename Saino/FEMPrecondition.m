@@ -192,7 +192,7 @@
     
     matContainers = matrix.getContainers;
     
-    k = matContainers->ILURows[i+1] + min(0.75*matContainers->ILURows[i+1], ((n-1)-i)*(1.0*n));
+    k = matContainers->ILURows[i+1] + min(0.75*matContainers->ILURows[i+1], ((n-(i+1))*(1.0*n))-1);
     
     iWork = intvec(0, k);
     if (iWork == NULL) {
@@ -361,7 +361,7 @@
         if (i < n-1) {
             
             // Check if still enough workspace
-            if (matContainers->sizeILUCols < matContainers->ILURows[i+1]+n) {
+            if (matContainers->sizeILUCols < (matContainers->ILURows[i+1]+n)+1) {
                 
                 t = cputime();
                 [self FEMPrecondition_ilutWorkspaceCheckMatrix:matrix atIndex:i numberOfRows:n];
@@ -659,9 +659,7 @@
 *******************************************************************************************/
 -(void)CRSDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double *)u rightHandSide:(double *)v info:(int *)ipar {
 
-    int i, j, k, n;
-    int *range1;
-    double *range2;
+    int i, j, n;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = matrix.getContainers;
@@ -670,24 +668,7 @@
     
     if (matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
-            // TODO: allocations in loop, this is not effective we should optimize that
-            range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            k = 0;
-            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
-                range1[k] = matContainers->Cols[j];
-                range2[k] = matContainers->Values[j];
-                k++;
-            }
-            sort(matContainers->RHS[i+1]-matContainers->RHS[i], range1-1, range2-1);
-            k = 0;
-            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
-                matContainers->Cols[j] = range1[k];
-                matContainers->Values[j] = range2[k];
-                k++;
-            }
-            free_ivector(range1, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            free_dvector(range2, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            sort(matContainers->Rows[i+1]-matContainers->Rows[i],  matContainers->Cols+(matContainers->Rows[i]-1), matContainers->Values+(matContainers->Rows[i]-1));
         }
         for (i=0; i<n; i++) {
             for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
@@ -728,10 +709,8 @@
 *******************************************************************************************/
 -(void)CRSComplexDiagPreconditionMatrix:(FEMMatrix *)matrix afterPrecondition:(double complex *)u rightHandSide:(double complex *)v info:(int *)ipar {
     
-    int i, j, k, n;
+    int i, j, n;
     double complex A;
-    int *range1;
-    double *range2;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = matrix.getContainers;
@@ -740,23 +719,7 @@
     
     if (matrix.isOrdered == NO) {
         for (i=0; i<n; i++) {
-            range1 = intvec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            range2 = doublevec(0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            k = 0;
-            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
-                range1[k] = matContainers->Cols[j];
-                range2[k] = matContainers->Values[j];
-                k++;
-            }
-            sort(matContainers->RHS[i+1]-matContainers->RHS[i], range1-1, range2-1);
-            k = 0;
-            for (j=matContainers->RHS[i]; j<=matContainers->RHS[i+1]-1; j++) {
-                matContainers->Cols[j] = range1[k];
-                matContainers->Values[j] = range2[k];
-                k++;
-            }
-            free_ivector(range1, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
-            free_dvector(range2, 0, (matContainers->RHS[i+1]-matContainers->RHS[i])-1);
+            sort(matContainers->Rows[i+1]-matContainers->Rows[i],  matContainers->Cols+(matContainers->Rows[i]-1), matContainers->Values+(matContainers->Rows[i]-1));
         }
         for (i=0; i<n; i++) {
             for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {

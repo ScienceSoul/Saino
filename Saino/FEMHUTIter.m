@@ -308,7 +308,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
         
-        omega = ( cblas_ddot(HUTI_NDIM, t, 1, s, 1) ) / ( cblas_ddot(HUTI_NDIM, t, 1, t, 1));
+        omega = ( cblas_ddot(HUTI_NDIM, t, 1, s, 1) ) / ( cblas_ddot(HUTI_NDIM, t, 1, t, 1) );
         for (i=0; i<ndim; i++) {
             x[i] = x[i] + alpha * t1v[i] + omega * t2v[i];
             r[i] = s[i] - omega * t[i];

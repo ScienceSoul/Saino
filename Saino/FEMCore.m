@@ -7701,7 +7701,7 @@ static const int PRECOND_VANKA     =  560;
         if ((solution.solutionInfo)[@"linear system ilut tolerance"] != nil) {
             ilut_tol = [(solution.solutionInfo)[@"linear system ilut tolerance"] doubleValue];
         } else {
-            errorfunct("FEMCore:iterativeSolveMatrix", "Linear system ILUT tolerance not found.");
+            ilut_tol = 0.0;
         }
         pCondType = PRECOND_ILUT;
     }
