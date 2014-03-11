@@ -12,7 +12,6 @@
 #import "FEMMaterial.h"
 #import "FEMCoordinateSystems.h"
 #import "FEMLinearAlgebra.h"
-#import "FEMUtilities.h"
 #include "FEMElementDescription.h"
 #include "Utils.h"
 

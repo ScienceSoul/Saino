@@ -11,7 +11,6 @@
 #import "FEMCore.h"
 #import "FEMListUtilities.h"
 #import "FEMElementUtils.h"
-#import "FEMUtilities.h"
 #import "FEMMeshUtils.h"
 #import "FEMMatrixCRS.h"
 #import "FEMNumericIntegration.h"
@@ -392,7 +391,12 @@
     [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"coordinate mapping" withValues:vector size:3];
     free_ivector(vector, 0, 2);
     
-    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
+    //[listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
+    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"transient"];
+    [listUtilities addStringInClassList:self.simulation theVariable:@"time stepping method" withValue:@"bdf"];
+    [listUtilities addIntegerInClassList:self.simulation theVariable:@"bdf order" withValue:1];
+    [listUtilities addIntegerInClassList:self.simulation theVariable:@"time step intervals" withValue:2];
+    [listUtilities addConstRealInClassList:self.simulation theVariable:@"time step size" withValue:1.0 string:nil];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
     
     int *intervals = intvec(0, 0);

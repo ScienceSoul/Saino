@@ -10,7 +10,6 @@
 #import "FEMCore.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMListUtilities.h"
-#import "FEMUtilities.h"
 #import "FEMElementUtils.h"
 #import "FEMBodyForce.h"
 #import "FEMMaterial.h"
@@ -20,7 +19,6 @@
 #import "FEMElementDescription.h"
 #import "FEMDiffuseConvectiveAnisotropic.h"
 #import "FEMDiffuseConvectiveGeneralAnisotropic.h"
-#import "FEMTimeIntegration.h"
 #import "GaussIntegration.h"
 #import "Utils.h"
 #import "TimeProfile.h"
@@ -39,9 +37,9 @@ enum {
 -(void)FEMHeatSolution_findGapIndexesElement:(Element_t *)element indexes:(int *)indexes numberOfNodes:(int)n solution:(FEMSolution *)solution;
 -(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient;
 -(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t*)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh;
--(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel *)model solution:(FEMSolution *)solution core:(FEMCore *)core element:(Element_t *)element numberOfNodes:(int)n forceVector:(double *)forceVector angleFraction:(double *)angleFraction text:(double *)text;
+-(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel *)model solution:(FEMSolution *)solution core:(FEMCore *)core element:(Element_t *)element numberOfNodes:(int)n forceVector:(double *)forceVector angleFraction:(double *)angleFraction text:(double *)text timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
 -(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution *)solution element:(Element_t *)element numberOfNodes:(int)n core:(FEMCore *)core;
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector core:(FEMCore *)core solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilites crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix integration:(FEMNumericIntegration *)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic *)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic *)diffuseConvectiveGeneralAnisotropic;
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector core:(FEMCore *)core solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilites crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix integration:(FEMNumericIntegration *)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic *)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic *)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
 -(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution *)solution;
 -(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel *)model;
 @end
@@ -343,7 +341,7 @@ enum {
     [integration deallocation:mesh];
 }
 
--(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel *)model solution:(FEMSolution *)solution core:(FEMCore *)core element:(Element_t *)element numberOfNodes:(int)n forceVector:(double *)forceVector angleFraction:(double *)angleFraction text:(double *)text {
+-(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel *)model solution:(FEMSolution *)solution core:(FEMCore *)core element:(Element_t *)element numberOfNodes:(int)n forceVector:(double *)forceVector angleFraction:(double *)angleFraction text:(double *)text timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int i, j, k, k1, k2, l, m, cols, implicitFactors, perm[element->Type.NumberOfNodes], rows;
     double area, asum, s, sum;
@@ -394,7 +392,7 @@ enum {
                     for (i=0; i<element->Type.NumberOfNodes; i++) {
                         perm[i] = _tempPerm[element->NodeIndexes[i]];
                     }
-                    [core addFirstOrderTimeModel:model solution:solution element:element massMatrix:_mass stiffMatrix:_stiff force:_force dt:_dt size:n dofs:1 nodeIndexes:perm rows:&rows cols:&cols];
+                    [core addFirstOrderTimeModel:model solution:solution element:element massMatrix:_mass stiffMatrix:_stiff force:_force dt:_dt size:n dofs:1 nodeIndexes:perm rows:&rows cols:&cols timeIntegration:timeIntegration utilities:utilities];
                 }
                 
                 for (m=0; m<n; m++) {
@@ -447,7 +445,7 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector core:(FEMCore *)core solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilites crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix integration:(FEMNumericIntegration *)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic *)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic *)diffuseConvectiveGeneralAnisotropic {
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray *)bc element:(Element_t *)element parent:(Element_t *)parent numberOfNodes:(int)n forceVector:(double *)forceVector core:(FEMCore *)core solution:(FEMSolution *)solution model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilites crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix integration:(FEMNumericIntegration *)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic *)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic *)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int i, j, k;
     BOOL found;
@@ -488,7 +486,7 @@ enum {
                 if (found == YES) memcpy(_aText, buffer.vector, n*sizeof(double));
             }
         } else {
-            [self FEMHeatSolution_diffuseGrayRadiationModel:model solution:solution core:core element:element numberOfNodes:n forceVector:forceVector angleFraction:&_visibleFraction text:&_text];
+            [self FEMHeatSolution_diffuseGrayRadiationModel:model solution:solution core:core element:element numberOfNodes:n forceVector:forceVector angleFraction:&_visibleFraction text:&_text timeIntegration:timeIntegration utilities:utilities];
             
             if ([listUtilites listGetLogical:model inArray:bc forVariable:@"radiation boundary open" info:&found] == YES) {
                 found = [core getReal:model forElement:element inArray:bc variableName:@"radiation external temperature" buffer:&buffer listUtilities:listUtilites];
@@ -608,7 +606,7 @@ enum {
     int cols = 2*solution.mesh.maxElementDofs;
     if (_transientAssembly == YES && _constantBulk == NO) {
         memset( *_mass, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
-        [core defaultFirstOrderTime:model inSolution:solution forElement:element realMass:_mass realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols];
+        [core defaultFirstOrderTime:model inSolution:solution forElement:element realMass:_mass realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols timeIntegration:timeIntegration utilities:utilities];
     }
     if (_heatGapBC == YES) {
         [self FEMHeatSolution_addHeatGapSolution:solution element:element numberOfNodes:n core:core];
@@ -917,6 +915,7 @@ enum {
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
     FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
     FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
+    FEMTimeIntegration *timeIntegration;
     
     static Element_t* (*getActiveElementIMP)(id, SEL, int, FEMSolution*, FEMModel*) = nil;
     static int (*getEquationIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
@@ -932,9 +931,9 @@ enum {
     static void (*effectiveHeatCapacityElementIMP)(id, SEL, Element_t*, int, FEMMaterial*, FEMModel*, FEMListUtilities*, BOOL) = nil;
     static int (*getBodyForceIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
     static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
-    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *,     double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMCore *, FEMMesh *, FEMModel *, FEMNumericIntegration *, FEMMaterialModels *, FEMDifferentials *, FEMListUtilities *) = nil;
-    static void (*diffuseConvectiveGeneralComposeMassMatrixIMP)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMCore *, FEMMesh *, FEMModel *, FEMNumericIntegration *, FEMMaterialModels *, FEMDifferentials *, FEMCoordinateSystems *, FEMListUtilities *) = nil;
-    static void (*defaultFirstOrderTimeIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*) = nil;
+    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*,     double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*) = nil;
+    static void (*diffuseConvectiveGeneralComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMCoordinateSystems*, FEMListUtilities*) = nil;
+    static void (*defaultFirstOrderTimeIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*) = nil;
     static void (*updateGlobalEquationsModelIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, double*, int, int, int*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
     static void (*defaultUpdateMassIMP)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*) = nil;
     static void (*defaultUpdateDampIMP)(id, SEL, double**, Element_t*, FEMSolution*, FEMModel*) = nil;
@@ -995,20 +994,20 @@ enum {
             [core methodForSelector: @selector(getBodyForceIDForElement:model:)];
         }
         if (!defaultUpdateEquationsIMP) {
-            defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
+            defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
             [core methodForSelector: @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:)];
         }
         if (!diffuseConvectiveComposeMassMatrixIMP) {
-            diffuseConvectiveComposeMassMatrixIMP = (void (*)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMCore *, FEMMesh *, FEMModel *, FEMNumericIntegration *, FEMMaterialModels *, FEMDifferentials *, FEMListUtilities *))
+            diffuseConvectiveComposeMassMatrixIMP = (void (*)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*))
             [diffuseConvectiveAnisotropic methodForSelector: @selector(diffuseConvectiveComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:useBubbles:element:numberOfNodes:nodes:solution:core:mesh:model:integration:materialModels:differentials:listUtilities:)];
         }
         if (!diffuseConvectiveGeneralComposeMassMatrixIMP) {
-            diffuseConvectiveGeneralComposeMassMatrixIMP = (void (*)(id, SEL, double **, double **, double *, double *, double *, double *, double *, double ***, BOOL, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, BOOL, BOOL, Element_t *, int, Nodes_t *, FEMSolution *, FEMCore*, FEMMesh *, FEMModel *, FEMNumericIntegration *, FEMMaterialModels *, FEMDifferentials *, FEMCoordinateSystems *, FEMListUtilities *))
+            diffuseConvectiveGeneralComposeMassMatrixIMP = (void (*)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMCoordinateSystems*, FEMListUtilities*))
             [diffuseConvectiveGeneralAnisotropic methodForSelector: @selector(diffuseConvectiveGeneralComposeMassMatrix:stiffMatrix:forceVector:loadVector:timeDerivativeTerm:zeroDegreeTerm:convectionTerm:diffusionTerm:phaseChange:nodalTemperature:enthalpy:velocityX:velocitY:velocityZ:meshVeloX:meshVeloY:meshVeloZ:nodalViscosity:nodaldensity:nodalPressure:nodalPressureDt:nodalPressureCoeff:compressible:stabilize:element:numberOfNodes:nodes:solution:core:mesh:model:integration:materialModels:differentials:coordinatesSystems:listUtilities:)];
         }
         if (!defaultFirstOrderTimeIMP) {
-            defaultFirstOrderTimeIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*))
-            [core methodForSelector: @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:)];
+            defaultFirstOrderTimeIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))
+            [core methodForSelector: @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:)];
         }
         if (!updateGlobalEquationsModelIMP) {
             updateGlobalEquationsModelIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, double*, int, int, int*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
@@ -1027,6 +1026,10 @@ enum {
             [core methodForSelector: @selector(condensateStiff:force:numberOfNodes:force1:)];
         }
     });
+    
+    if (transient == YES) {
+        timeIntegration = [[FEMTimeIntegration alloc] init];
+    }
 
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
@@ -1913,7 +1916,7 @@ enum {
                 
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
                     if (_transientAssembly == YES && _constantBulk == NO) {
-                        defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:), model, solution, element, _mass, _stiff, _force, &rows, &cols);
+                        defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &rows, &cols, timeIntegration, utilities);
                     }
                     if (indexes == NULL || n != nb) {
                         if (indexes != NULL) free_ivector(indexes, 0, nb-1);
@@ -1933,7 +1936,7 @@ enum {
                         if (_constantBulk == YES) {
                             defaultUpdateMassIMP(core, @selector(defaultUpdateMass:element:solution:model:), _mass, element, solution, model);
                         } else {
-                            defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:), model, solution, element, _mass, _stiff, _force, &rows, &cols);
+                            defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &rows, &cols, timeIntegration, utilities);
                         }
                     } else if (solution.nOfEigenValues > 0) {
                         defaultUpdateDampIMP(core, @selector(defaultUpdateDamp:element:solution:model:), _mass, element, solution, model);
@@ -1978,20 +1981,20 @@ enum {
                 if (found == YES && heatFluxBC == NO) continue;
                 
                 _heatGapBC = [listUtilities listGetLogical:model inArray:bc forVariable:@"heat gap" info:&found];
-                [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector core:core solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix integration:integration diffuseConvectiveAnisotropic:diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:diffuseConvectiveGeneralAnisotropic];
+                [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector core:core solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix integration:integration diffuseConvectiveAnisotropic:diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:diffuseConvectiveGeneralAnisotropic timeIntegration:timeIntegration utilities:utilities];
                 
                 if (_heatGapBC == YES) {
                     [self FEMHeatSolution_findGapIndexesElement:element indexes:_indexes numberOfNodes:n solution:solution];
                     memcpy(_saveIndexes, element->NodeIndexes, n*sizeof(double));
                     memcpy(element->NodeIndexes, _indexes, n*sizeof(double));
-                    [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector core:core solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix integration:integration diffuseConvectiveAnisotropic:diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:diffuseConvectiveGeneralAnisotropic];
+                    [self FEMHeatSolution_addHeatFluxBC:bc element:element parent:parent numberOfNodes:n forceVector:forceVector core:core solution:solution model:model listUtilities:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix integration:integration diffuseConvectiveAnisotropic:diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:diffuseConvectiveGeneralAnisotropic timeIntegration:timeIntegration utilities:utilities];
                     memcpy(element->NodeIndexes, _saveIndexes, n*sizeof(double));
                 }
             } // Neumann & Newton BCs
             
             if (transient == YES && _constantBulk == YES) [self FEMHeatSolution_addGlobalTimeSolution:solution];
             
-            [core defaultFinishAssemblySolution:solution model:model];
+            [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];

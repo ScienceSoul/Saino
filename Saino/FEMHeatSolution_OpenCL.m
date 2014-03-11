@@ -10,7 +10,6 @@
 #import "FEMCore.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMListUtilities.h"
-#import "FEMUtilities.h"
 #import "FEMElementUtils.h"
 #import "FEMBodyForce.h"
 #import "FEMMaterial.h"
@@ -21,7 +20,6 @@
 #import "FEMElementDescription.h"
 #import "FEMDiffuseConvectiveAnisotropic.h"
 #import "FEMDiffuseConvectiveGeneralAnisotropic.h"
-#import "FEMTimeIntegration.h"
 #import "GaussIntegration.h"
 #import "Utils.h"
 #import "TimeProfile.h"
@@ -287,6 +285,12 @@ enum {
     
     FEMCore *core = [FEMCore sharedCore];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    FEMTimeIntegration *timeIntegration;
+    
+    if (transient == YES) {
+        timeIntegration = [[FEMTimeIntegration alloc] init];
+    }
     
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
@@ -687,7 +691,7 @@ enum {
                 if (found == YES && heatFluxBC == NO) continue;
             } // Neumann & Newton BCs
             
-            [core defaultFinishAssemblySolution:solution model:model];
+            [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
             NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];

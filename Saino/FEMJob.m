@@ -10,7 +10,6 @@
 #import "FEMSolution.h"
 #import "FEMListUtilities.h"
 #import "FEMEquation.h"
-#import "FEMUtilities.h"
 #import "FEMMeshUtils.h"
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
@@ -1647,7 +1646,7 @@ jump:
             free_ivector(listBuffer.ivector, 0, listBuffer.m-1);
             listBuffer.ivector = NULL;
             
-            found = [listUtilities listGetConstRealArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step size" buffer:&listBuffer];
+            found = [listUtilities listGetConstRealArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step sizes" buffer:&listBuffer];
             if (found == NO) {
                 if (_scanning == YES || [listUtilities listCheckPresentVariable:@"time step size" inArray:self.model.simulation.valuesList] == YES) {
                     _timeStepSizes = doublematrix(0, _sizeTimeSteps-1, 0, 0);

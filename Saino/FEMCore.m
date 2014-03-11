@@ -15,12 +15,12 @@
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMSimulation.h"
-#import "FEMUtilities.h"
+
 #import "FEMHUTIter.h"
 #import "FEMIterativeMethods.h"
 #import "FEMPrecondition.h"
 #import "FEMParallelMPI.h"
-#import "FEMTimeIntegration.h"
+
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
 #import "FEMNumericIntegration.h"
@@ -78,7 +78,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMCore_rotateMatrix:(double **)matrix solution:(FEMSolution *)solution vector:(double *)vector size:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int *)nodeIndexes;
 
 // Update global force
--(void)FEMCore_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT;
+-(void)FEMCore_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double **)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT;
 
 // Update force vector
 -(void)FEMCore_finishAssemblyModel:(FEMModel *)model solution:(FEMSolution *)solution forceVector:(double *)forceVector sizeForceVector:(int)n;
@@ -1188,15 +1188,15 @@ static const int PRECOND_VANKA     =  560;
     
     for (i=0; i<n; i++) {
         
-        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 >= self.size1boundaryNormals) continue;
+        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 >= _size1boundaryNormals) continue;
         
         memset( *r, 0.0, ((n*dofs)*(n*dofs))*sizeof(double) );
         for (j=0; j<n*dofs; j++) {
             r[j][j] = 1.0;
         }
         
-        for (j=0; j<2; j++) {
-            n1[j] = self.boundaryNormals[nodeIndexes[i]][j];
+        for (j=0; j<_size2boundaryNormals; j++) {
+            n1[j] = _boundaryNormals[nodeIndexes[i]][j];
         }
         
         switch (dim) {
@@ -1208,9 +1208,11 @@ static const int PRECOND_VANKA     =  560;
                 r[dofs*i+1][dofs*i+1] = n1[0];
                 break;
             case 3:
-                for (j=0; j<2; j++) {
-                    t1[j] = self.boundaryTangent1[nodeIndexes[i]][j];
-                    t2[j] = self.boundaryTangent2[nodeIndexes[i]][j];
+                for (j=0; j<_size2boundaryTangent1; j++) {
+                    t1[j] = _boundaryTangent1[nodeIndexes[i]][j];
+                }
+                for (j=0; j<_size2boundaryTangent2; j++) {
+                    t2[j] = _boundaryTangent2[nodeIndexes[i]][j];
                 }
                 
                 r[dofs*i][dofs*i] = n1[0];
@@ -1255,15 +1257,15 @@ static const int PRECOND_VANKA     =  560;
             q[j][0] = s;
         }
         
-        for (j=0 ; j<n*dofs; j++) {
+        for (j=0; j<n*dofs; j++) {
             vector[j] = q[j][0];
         }
     }
 }
 
--(void)FEMCore_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT {
+-(void)FEMCore_updateGlobalForceModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element forceVector:(double **)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rotateNT:(BOOL *)rotateNT {
     
-    int i, j, k, dim, *indexes;
+    int i, j, k, dim, indexes[n];
     BOOL rotate;
     double **localStiffMatrix;
     
@@ -1271,17 +1273,16 @@ static const int PRECOND_VANKA     =  560;
     if ([self FEMCore_checkPassiveElement:element model:model solution:solution] == YES) return;
     
     localStiffMatrix = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
-    indexes = intvec(0, n-1);
     
     rotate = YES;
     if (rotateNT != NULL) rotate = *rotateNT;
     
-    if (rotate == YES && self.normalTangentialNumberOfNodes > 0) {
+    if (rotate == YES && _normalTangentialNumberOfNodes > 0) {
         
-        dim = [model dimension];
-        memset( indexes, -1, n*sizeof(int) );
+        dim = model.dimension;
+        memset( indexes, -1, sizeof(indexes) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
-            indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
+            indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
         [self FEMCore_rotateMatrix:localStiffMatrix solution:solution vector:localForce size:n dimension:dim dofs:dofs nodeIndexes:indexes];
     
@@ -1291,14 +1292,13 @@ static const int PRECOND_VANKA     =  560;
         if (nodeIndexes[i] >= 0) {
             for (j=0; j<dofs; j++) {
                 k = dofs*nodeIndexes[i] + j;
-                forceVector[k] = forceVector[k] + localForce[dofs*(i-1)+j];
+                forceVector[k][index] = forceVector[k][index] + localForce[dofs*i+j];
             }
         }
         
     }
     
     free_dmatrix(localStiffMatrix, 0, (n*dofs)-1, 0, (n*dofs)-1);
-    free_ivector(indexes, 0, n-1);
 }
 
 #pragma mark Update force
@@ -5802,15 +5802,13 @@ static const int PRECOND_VANKA     =  560;
 /*************************************************************************************************************************
     For time dependent simulations add the time derivative coefficient terms to the matrix containing other coefficients.
 *************************************************************************************************************************/
--(void)addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols {
+-(void)addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int i, j, k, l, m, order;
     double s, t;
-    double **prevSol, *matrixForce, *lForce, *buffer;
-    double *dts;
+    double **prevSol, lForce[dofs*n], buffer[dofs*n];
+    double dts[solution.order];
     BOOL constantDt, found;
-    FEMTimeIntegration *timeIntegration;
-    FEMUtilities *utilities;
     NSString *method;
     FEMVariable *dtVar;
     matrixArraysContainer *matContainers = NULL;
@@ -5819,15 +5817,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    prevSol = doublematrix(0, (dofs*n)-1, 0, [solution order]-1);
-    lForce = doublevec(0, (dofs*n)-1);
-    dts = doublevec(0, [solution order]-1);
-    matrixForce = doublevec(0, matContainers->size1force-1);
-    
-    buffer = doublevec(0, (dofs*n)-1);
-    
-    timeIntegration = [[FEMTimeIntegration alloc] init];
-    utilities = [[FEMUtilities alloc] init];
+    prevSol = doublematrix(0, (dofs*n)-1, 0, solution.order-1);
     
     if (solution.matrix.isLumped == YES) {
         s = 0.0;
@@ -5848,13 +5838,13 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    order = min([solution doneTime], [solution order]);
+    order = min(solution.doneTime, solution.order);
     
     for (i=0; i<n; i++) {
         for (j=0; j<dofs; j++) {
             k = dofs * i + j;
             l = dofs * nodeIndexes[i] + j;
-            for (m=0; n<order; m++) {
+            for (m=0; m<order; m++) {
                 prevSol[k][m] = varContainers->PrevValues[l][m];
             }
         }
@@ -5864,16 +5854,10 @@ static const int PRECOND_VANKA     =  560;
         lForce[i] = force[i];
     }
     
-    for (i=0; i<matContainers->size1force; i++) {
-        matrixForce[i] = matContainers->Force[i][0];
-    }
-    
-    [self FEMCore_updateGlobalForceModel:model solution:solution element:element forceVector:matrixForce localForce:lForce size:n dofs:dofs nodeIndexes:nodeIndexes rotateNT:NULL];
+    [self FEMCore_updateGlobalForceModel:model solution:solution element:element forceVector: matContainers->Force forceVectorUpdateAtIndex:0 localForce:lForce size:n dofs:dofs nodeIndexes:nodeIndexes rotateNT:NULL];
     
     if ((solution.solutionInfo)[@"time stepping method"] != nil) {
         method = [NSString stringWithString:(solution.solutionInfo)[@"time stepping method"]];
-    } else {
-        method = @"bdf";
     }
     
     if ([method isEqualToString:@"fs"] == YES) {
@@ -5885,7 +5869,7 @@ static const int PRECOND_VANKA     =  560;
     }
     else if ([method isEqualToString:@"bfs"]) {
         dts[0] = dt;
-        constantDt = NO;
+        constantDt = YES;
         if (order > 1) {
             dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
             containers = dtVar.getContainers;
@@ -5896,7 +5880,6 @@ static const int PRECOND_VANKA     =  560;
             containers = NULL;
         }
         if (constantDt == YES) {
-            
             [timeIntegration bdfLocalInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
         } else {
             [timeIntegration vbdfLocalInSolution:solution numberOfNodes:n*dofs dts:dts massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:prevSol order:order rows:rows cols:cols];
@@ -5910,11 +5893,80 @@ static const int PRECOND_VANKA     =  560;
         [timeIntegration newMarkBetaInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer beta:solution.beta rows:rows cols:cols];
     }
     
-    free_dmatrix(prevSol, 0, (dofs*n)-1, 0, [solution order]-1);
-    free_dvector(lForce, 0, (dofs*n)-1);
-    free_dvector(dts, 0, [solution order]-1);
-    free_dvector(matrixForce, 0, matContainers->size1force-1);
-    free_dvector(buffer, 0, (dofs*n)-1);
+    free_dmatrix(prevSol, 0, (dofs*n)-1, 0, solution.order-1);
+}
+
+/*************************************************************************************************************************
+    For time dependent simulations add the time derivative coefficient terms to the matrix containing other coefficients.
+*************************************************************************************************************************/
+-(void)addSecondOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix dampMatrix:(double **)dampMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration {
+    
+    int i, j, k, l;
+    double s, t;
+    double lForce[dofs*n];
+    double x[dofs*n], v[dofs*n], a[dofs*n];;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    if (solution.matrix.isLumped == YES) {
+        s = 0.0;
+        t = 0.0;
+        for (i=0; i<n*dofs; i++) {
+            for (j=0; j<n*dofs; j++) {
+                s = s + massMatrix[i][j];
+                if (i != j) massMatrix[i][j] = 0.0;
+            }
+            t = t + massMatrix[i][i];
+        }
+        
+        for (i=0; i<n; i++) {
+            for (j=0; j<dofs; j++) {
+                k = dofs * i + j;
+                if (t != 0.0) massMatrix[k][k] = massMatrix[k][k] * s / t;
+            }
+        }
+        
+        s = 0.0;
+        t = 0.0;
+        for (i=0; i<n*dofs; i++) {
+            for (j=0; j<n*dofs; j++) {
+                s = s + dampMatrix[i][j];
+                if (i != j) dampMatrix[i][j] = 0.0;
+            }
+            t = t + dampMatrix[i][i];
+        }
+        
+        for (i=0; i<n; i++) {
+            for (j=0; j<dofs; j++) {
+                k = dofs * i + j;
+                if (t != 0.0) dampMatrix[k][k] = dampMatrix[k][k] * s / t;
+            }
+        }
+    }
+    
+    // Get previous solution vectors and update current force
+    for (i=0; i<n; i++) {
+        for (j=0; j<dofs; j++) {
+            k = dofs * i + j;
+            if (nodeIndexes[i] >= 0) {
+                l = dofs * nodeIndexes[i] + j;
+                x[k] = varContainers->PrevValues[l][2];
+                v[k] = varContainers->PrevValues[l][3];
+                a[k] = varContainers->PrevValues[l][4];
+            }
+        }
+    }
+    
+    for (i=0; i<n*dofs; i++) {
+        lForce[i] = force[i];
+    }
+    
+    [self FEMCore_updateGlobalForceModel:model solution:solution element:element forceVector: matContainers->Force forceVectorUpdateAtIndex:0 localForce:lForce size:n dofs:dofs nodeIndexes:nodeIndexes rotateNT:NULL];
+    
+    [timeIntegration bossakSecondOrder:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix dampMatrix:dampMatrix stiffMatrix:stiffMatrix force:force prevSolution1:x prevSolution2:v prevSolution3:a alpha:solution.alpha rows:rows cols:cols];
 }
 
 #pragma mark First order time
@@ -5946,15 +5998,15 @@ static const int PRECOND_VANKA     =  560;
     if (solution.matrix.lumped == YES) {
         s = 0.0;
         t = 0.0;
-        for (i=0; i<(n*dofs); i++) {
-            for (j=0; j<(n*dofs); j++) {
+        for (i=0; i<n*dofs; i++) {
+            for (j=0; j<n*dofs; j++) {
                 s = s + localMassMatrix[i][j];
                 if (i != j) localMassMatrix[i][j] = 0.0;
             }
             t = t + localMassMatrix[i][i];
         }
         
-        for (i=0; i<(n*dofs); i++) {
+        for (i=0; i<n*dofs; i++) {
             localMassMatrix[i][i] = localMassMatrix[i][i] * s / t;
         }
     }
@@ -5985,12 +6037,12 @@ static const int PRECOND_VANKA     =  560;
 
 -(void)defaultUpdateMass:(double **)mass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
     
-    int i, n,*indexes;
+    int i, n;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     // TODO: Add support for parallel run
     
@@ -6003,24 +6055,23 @@ static const int PRECOND_VANKA     =  560;
         memset( matContainers->MassValues, 0.0, matContainers->sizeMassValues*sizeof(double) );
     }
     
-    indexes = intvec(0, n-1);
+    int indexes[n];
     for (i=0; i<n; i++) {
-        indexes[i] = varContainers->Perm[self.indexStore[i]];
+        indexes[i] = varContainers->Perm[_indexStore[i]];
     }
     [self updateMassMatrixModel:model inSolution:solution localMassMatrix:mass element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
-    free_ivector(indexes, 0, n-1);
 }
 
 -(void)defaultUpdateComplexMass:(double complex **)cmass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
     
-    int i, j, dofs, n, *indexes;
+    int i, j, dofs, n;
     double **mass;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
     dofs = solution.variable.dofs;
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -6043,23 +6094,22 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    indexes = intvec(0, n-1);
+    int indexes[n];
     for (i=0; i<n; i++) {
-        indexes[i] = varContainers->Perm[self.indexStore[i]];
+        indexes[i] = varContainers->Perm[_indexStore[i]];
     }
     [self updateMassMatrixModel:model inSolution:solution localMassMatrix:mass element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
-    free_ivector(indexes, 0, n-1);
     free_dmatrix(mass, 0, (dofs*n)-1, 0, (dofs*n)-1);
 }
 
 -(void)defaultUpdateDamp:(double **)damp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
     
-    int i, n, *indexes;
+    int i, n;
     double *saveValues;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    memset( _indexStore, -1, self.sizeIndexStore*sizeof(int) );
     n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
     
     // TODO: Add support for parallel run
@@ -6075,25 +6125,24 @@ static const int PRECOND_VANKA     =  560;
     
     saveValues = matContainers->MassValues;
     matContainers->MassValues = matContainers->DampValues;
-    indexes = intvec(0, n-1);
+    int indexes[n];
     for (i=0; i<n; i++) {
-        indexes[i] = varContainers->Perm[self.indexStore[i]];
+        indexes[i] = varContainers->Perm[_indexStore[i]];
     }
     [self updateMassMatrixModel:model inSolution:solution localMassMatrix:damp element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
     matContainers->MassValues = saveValues;
-    free_ivector(indexes, 0, n-1);
 }
 
 -(void)defaultUpdateComplexDamp:(double complex **)cdamp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model {
     
-    int i, j, dofs, n, *indexes;
+    int i, j, dofs, n;
     double **damp, *saveValues;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
     dofs = solution.variable.dofs;
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    memset( _indexStore, -1, self.sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     // TODO: Add support for parallel run
     
@@ -6118,21 +6167,19 @@ static const int PRECOND_VANKA     =  560;
     
     saveValues = matContainers->MassValues;
     matContainers->MassValues = matContainers->DampValues;
-    indexes = intvec(0, n-1);
+    int indexes[n];
     for (i=0; i<n; i++) {
-        indexes[i] = varContainers->Perm[self.indexStore[i]];
+        indexes[i] = varContainers->Perm[_indexStore[i]];
     }
     [self updateMassMatrixModel:model inSolution:solution localMassMatrix:damp element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
     matContainers->MassValues = saveValues;
-    free_ivector(indexes, 0, n-1);
     free_dmatrix(damp, 0, (dofs*n)-1, 0, (dofs*n)-1);
 }
 
--(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols { // rows and cols for stiff matrix
+-(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities{ // rows and cols for stiff matrix
     
     int i, n;
     double dt;
-    int *perm;
     variableArraysContainer *varContainers = NULL;
     
     if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
@@ -6140,27 +6187,24 @@ static const int PRECOND_VANKA     =  560;
         return;
     }
     
-    dt = [solution dt];
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    dt = solution.dt;
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
-    perm = intvec(0, n-1);
+    int perm[n];
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[self.indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
-    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
-    
-    free_ivector(perm, 0, n-1);
+    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration utilities:utilities];
 }
 
--(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(_Complex double **)cmass complexStiff:(_Complex double **)cstiff complexForce:(_Complex double *)cforce stiffRows:(int *)rows stiffCols:(int *)cols {
+-(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int i, j, n, dofs;
     double dt;
     double **mass, **stiff, *force;
-    int *perm;
     variableArraysContainer *varContainers = NULL;
     
     if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
@@ -6168,10 +6212,10 @@ static const int PRECOND_VANKA     =  560;
         return;
     }
     
-    dt = [solution dt];
+    dt = solution.dt;
     dofs = solution.variable.dofs;
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -6193,29 +6237,117 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    perm = intvec(0, n-1);
+    int perm[n];
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[self.indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
 
-    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols];
+    [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration utilities:utilities];
     
     for (i=0; i<n*dofs/2; i++) {
         cforce[i] = force[2*i] + force[2*i+1]*I;
         for (j=0; j<n*dofs/2; j++) {
             cmass[i][j] = mass[2*i][2*j] + (-mass[2*i][2*j+1]*I);
-            cstiff[i][j] = cstiff[2*i][2*j] + (-cstiff[2*i][2*j+1]*I);
+            cstiff[i][j] = stiff[2*i][2*j] + (-stiff[2*i][2*j+1]*I);
         }
     }
     
     free_dmatrix(mass, 0, (n*dofs)-1, 0, (n*dofs)-1);
     free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
     free_dvector(force, 0, (n*dofs)-1);
-    
-    free_ivector(perm, 0, n-1);
 }
 
--(void)defaultFirstOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution {
+-(void)defaultSecondOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realDamp:(double **)damp realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration {
+    
+    int i, n;
+    double dt;
+    variableArraysContainer *varContainers = NULL;
+    
+    if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
+        [self defaultUpdateMass:mass element:element solution:solution model:model];
+        [self defaultUpdateDamp:damp element:element solution:solution model:model];
+        return;
+    }
+    
+    dt = solution.dt;
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    varContainers = solution.variable.getContainers;
+    
+    int perm[n];
+    for (i=0; i<n; i++) {
+        perm[i] = varContainers->Perm[_indexStore[i]];
+    }
+    
+    [self addSecondOrderTimeModel:model solution:solution element:element massMatrix:mass dampMatrix:damp stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration];
+}
+
+-(void)defaultSecondOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexDamp:(double complex **)cdamp complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration {
+    
+    int i, j, n, dofs;
+    double dt;
+    double **damp, **mass, **stiff, *force;
+    variableArraysContainer *varContainers = NULL;
+    
+    if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
+        [self defaultUpdateComplexMass:cmass element:element solution:solution model:model];
+        [self defaultUpdateComplexDamp:cdamp element:element solution:solution model:model];
+        return;
+    }
+    
+    dt = solution.dt;
+    dofs = solution.variable.dofs;
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    varContainers = solution.variable.getContainers;
+    
+    mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
+    stiff = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
+    damp = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
+    force = doublevec(0, (n*dofs)-1);
+    
+    for (i=0; i<n*dofs/2; i++) {
+        force[2*i] = creal(cforce[i]);
+        force[2*i+1] = cimag(cforce[i]);
+        for (j=0; j<n*dofs; j++) {
+            mass[2*i][2*j]      = creal(cmass[i][j]);
+            mass[2*i][2*j+1]    = -cimag(cmass[i][j]);
+            mass[2*i+1][2*j]    = cimag(cmass[i][j]);
+            mass[2*i+1][2*j+1]  = creal(cmass[i][j]);
+            damp[2*i][2*j]      = creal(cdamp[i][j]);
+            damp[2*i][2*j+1]    = -cimag(cdamp[i][j]);
+            damp[2*i+1][2*j]    = cimag(cdamp[i][j]);
+            damp[2*i+1][2*j+1]  = creal(cdamp[i][j]);
+            stiff[2*i][2*j]     = creal(cstiff[i][j]);
+            stiff[2*i][2*j+1]   = -cimag(cstiff[i][j]);
+            stiff[2*i+1][2*j]   = cimag(cstiff[i][j]);
+            stiff[2*i+1][2*j+1] = creal(cstiff[i][j]);
+        }
+    }
+    
+    int perm[n];
+    for (i=0; i<n; i++) {
+        perm[i] = varContainers->Perm[_indexStore[i]];
+    }
+    
+    [self addSecondOrderTimeModel:model solution:solution element:element massMatrix:mass dampMatrix:damp stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration];
+    
+    for (i=0; i<n*dofs/2; i++) {
+        cforce[i] = force[2*i] + force[2*i+1]*I;
+        for (j=0; j<n*dofs/2; j++) {
+            cmass[i][j] = mass[2*i][2*j] + (-mass[2*i][2*j+1]*I);
+            cdamp[i][j] = damp[2*i][2*j] + (-damp[2*i][2*j+1]*I);
+            cstiff[i][j] = stiff[2*i][2*j] + (-stiff[2*i][2*j+1]*I);
+        }
+    }
+    
+    free_dmatrix(mass, 0, (n*dofs)-1, 0, (n*dofs)-1);
+    free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
+    free_dmatrix(damp, 0, (n*dofs)-1, 0, (n*dofs)-1);
+    free_dvector(force, 0, (n*dofs)-1);
+}
+
+-(void)defaultFirstOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int i, j, k, n, order;
     double force[1], dts[16];
@@ -6235,7 +6367,7 @@ static const int PRECOND_VANKA     =  560;
         }
         _n1 = 0;
         for (i=0; i<solution.matrix.numberOfRows; i++) {
-            _n1 = max(_n1, (int)(matContainers->Rows[i+1]-matContainers->Rows[i]));
+            _n1 = max(_n1, (matContainers->Rows[i+1]-matContainers->Rows[i]));
         }
         _k1 = varContainers->size2PrevValues;
         _stiff = doublematrix(0, 0, 0, _n1-1);
@@ -6257,7 +6389,6 @@ static const int PRECOND_VANKA     =  560;
         dts[0] = solution.dt;
         constantDt = YES;
         if (order > 1) {
-            FEMUtilities *utilities = [[FEMUtilities alloc] init];
             dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
             dtVarContainers = dtVar.getContainers;
             for (i=1; i<order; i++) {
@@ -6267,7 +6398,6 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    FEMTimeIntegration *timeIntegration = [[FEMTimeIntegration alloc] init];
     int rows = 1;
     for (i=0; i<solution.matrix.numberOfRows; i++) {
         n = 0;
@@ -6312,7 +6442,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution {
+-(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution timeIntegration:(FEMTimeIntegration *)timeIntegration {
     
     int i, j, k, n;
     double force[1];
@@ -6331,7 +6461,7 @@ static const int PRECOND_VANKA     =  560;
         }
         _n1 = 0;
         for (i=0; i<solution.matrix.numberOfRows; i++) {
-            _n1 = max(_n1, (int)(matContainers->Rows[i+1]-matContainers->Rows[i]));
+            _n1 = max(_n1, (matContainers->Rows[i+1]-matContainers->Rows[i]));
         }
         _k1 = varContainers->size2PrevValues;
         _stiff = doublematrix(0, 0, 0, _n1-1);
@@ -6350,7 +6480,6 @@ static const int PRECOND_VANKA     =  560;
     hasDamping = (matContainers->DampValues != NULL) ? YES : NO;
     hasMass = (matContainers->MassValues != NULL) ? YES : NO;
     
-    FEMTimeIntegration *timeIntegration = [[FEMTimeIntegration alloc] init];
     int rows = 1;
     for (i=0; i<solution.matrix.numberOfRows; i++) {
         n = 0;
@@ -6403,7 +6532,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, j, k, dim;
-    int *indexes;
+    int indexes[n];
     BOOL rotate;
     
     static BOOL (*checkPassiveElementIMP)(id, SEL, Element_t *, FEMModel *, FEMSolution *) = nil;
@@ -6432,19 +6561,17 @@ static const int PRECOND_VANKA     =  560;
     
     // Check if this element has been defined as passive
     if (checkPassiveElementIMP(self, @selector(FEMCore_checkPassiveElement:model:solution:), element, model, solution) == YES) return;
-        
-    indexes = intvec(0, n-1);
     
     rotate = YES;
     if (rotateNT != NULL) {
         rotate = *rotateNT;
     }
     
-    if (rotate == YES && self.normalTangentialNumberOfNodes > 0) {
+    if (rotate == YES && _normalTangentialNumberOfNodes > 0) {
         dim = model.dimension;
-        memset( indexes, -1, n*sizeof(int) );
+        memset( indexes, -1, sizeof(indexes) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
-            indexes[i] = self.boundaryReorder[element->NodeIndexes[i]];
+            indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
         rotateMatrixIMP(self, @selector(FEMCore_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:), localStiffMatrix, solution, localForce, n, dim, dofs, indexes);
     }
@@ -6472,13 +6599,11 @@ static const int PRECOND_VANKA     =  560;
             }
         }
     }
-    free_ivector(indexes, 0, n-1);
 }
 
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, n;
-    int *perm;
     BOOL rotateNT, bupd;
     double *saveValues;
     matrixArraysContainer *matContainers = NULL;
@@ -6500,13 +6625,13 @@ static const int PRECOND_VANKA     =  560;
         }
     });
     
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, self.indexStore);
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, _indexStore);
     
     varContainers = solution.variable.getContainers;
-    perm = intvec(0, n-1);
+    int perm[n];
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[self.indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
     matContainers = solution.matrix.getContainers;
@@ -6518,7 +6643,6 @@ static const int PRECOND_VANKA     =  560;
     if (bulkUpdate != NULL) {
         bupd = *bulkUpdate;
         if (bupd == NO) {
-            free_ivector(perm, 0, n-1);
             return;
         }
     } else {
@@ -6549,8 +6673,6 @@ static const int PRECOND_VANKA     =  560;
                                 model, solution, element, stiff, matContainers->BulkRHS, force, n, solution.variable.dofs, perm, rows, cols, &rotateNT, crsMatrix, bandMatrix);
         matContainers->Values = saveValues;
     }
-    
-    free_ivector(perm, 0, n-1);
 }
 
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
@@ -6563,13 +6685,13 @@ static const int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
-    memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
     for (i=0; i<n; i++) {
-        perm[i] = varContainers->Perm[self.indexStore[i]];
+        perm[i] = varContainers->Perm[_indexStore[i]];
     }
     
     // TODO: add support for parallel runs
@@ -6639,7 +6761,7 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Finish assembly
 
--(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model {
+-(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     
     int order;
     NSString *string;
@@ -6655,11 +6777,11 @@ static const int PRECOND_VANKA     =  560;
             } else order = 1;
             switch (order) {
                 case 1:
-                    [self defaultFirstOrderTimeGlobalModel:model inSolution:solution];
+                    [self defaultFirstOrderTimeGlobalModel:model inSolution:solution timeIntegration:timeIntegration utilities:utilities];
                     break;
                     
                 case 2:
-                    [self defaultSecondOrderTimeGlobalModel:model inSolution:solution];
+                    [self defaultSecondOrderTimeGlobalModel:model inSolution:solution timeIntegration:timeIntegration];
                     break;
             }
         }

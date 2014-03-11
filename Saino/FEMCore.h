@@ -15,6 +15,8 @@
 #import "FEMMatrixCRS.h"
 #import "FEMMatrixBand.h"
 #import "FEMListUtilities.h"
+#import "FEMUtilities.h"
+#import "FEMTimeIntegration.h"
 
 @interface FEMCore : NSObject {
     
@@ -123,24 +125,28 @@
 -(void)condensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n force1:(double *)force1;
 
 // Manipulate matrix coefficients for time dependent simulations
--(void)addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols;
+-(void)addFirstOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
+-(void)addSecondOrderTimeModel:(FEMModel *)model solution:(FEMSolution *)solution element:(Element_t *)element massMatrix:(double **)massMatrix dampMatrix:(double **)dampMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration;
 
 -(void)updateMassMatrixModel:(FEMModel *)model inSolution:(FEMSolution *)solution localMassMatrix:(double **)localMassMatrix element:(Element_t *)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes;
 -(void)defaultUpdateMass:(double **)mass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)defaultUpdateComplexMass:(double complex **)cmass element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)defaultUpdateDamp:(double **)damp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)defaultUpdateComplexDamp:(double complex **)cdamp element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model;
--(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols;
--(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols;
+-(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
+-(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
+-(void)defaultSecondOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realDamp:(double **)damp realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration;
+-(void)defaultSecondOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexMass:(double complex **)cmass complexDamp:(double complex **)cdamp complexStiff:(double complex **)cstiff complexForce:(double complex *)cforce stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration;
 
--(void)defaultFirstOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution;
--(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution;
+
+-(void)defaultFirstOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
+-(void)defaultSecondOrderTimeGlobalModel:(FEMModel *)model inSolution:(FEMSolution *)solution timeIntegration:(FEMTimeIntegration *)timeIntegration;
 
 // Update global equations
 -(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
 -(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
--(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model;
+-(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix;
 
 -(void)computeChange:(FEMSolution *)solution model:(FEMModel *)aModel isSteadyState:(BOOL)steadyState nsize:(int*)nsize values:(double *)values values0:(double *)values0 sizeValues0:(int *)sizeValues0;
