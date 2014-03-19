@@ -8409,10 +8409,8 @@ static const int PRECOND_VANKA     =  560;
     doneThis = (BOOL*)malloc(sizeof(BOOL) * model.numberOfSolutions );
     afterConverged = (BOOL*)malloc(sizeof(BOOL) * model.numberOfSolutions );
     
-    i = 0;
-    for (FEMSolution *solutiom in model.solutions) {
+    for (i=0; i<model.numberOfSolutions; i++) {
         afterConverged[i] = [(solution.solutionInfo)[@"coupled system after others converged"] boolValue];
-        i++;
     }
     
     if (prevDt == 0) prevDt = *dt;
@@ -8527,15 +8525,13 @@ static const int PRECOND_VANKA     =  560;
             }
         }
         
-        i = 0;
-        for (FEMSolution *solution in model.solutions) {
+        for (i=0; i<model.numberOfSolutions; i++) {
             if (rgCoeff[i].k1 != NULL) {
                 free_dvector(rgCoeff[i].k1, 0, n-1);
                 free_dvector(rgCoeff[i].k2, 0, n-1);
                 free_dvector(rgCoeff[i].k3, 0, n-1);
                 free_dvector(rgCoeff[i].k4, 0, n-1);
             }
-            i++;
         }
         free(rgCoeff);
     }

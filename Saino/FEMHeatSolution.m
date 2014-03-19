@@ -2080,8 +2080,7 @@ enum {
             if (smartHeaterControl == YES || integralHeaterControl == YES) {
                 [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:_powerScaling string:nil];
                 NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater control information\n");
-                i = 0;
-                for (FEMBodyForce *bodyForce in model.bodyForces) {
+                for (i=0; i<model.numberOfBodyForces; i++) {
                     if (!(_smarterHeaters[i] || _integralHeaters[i])) continue;
                     if (_smarterHeaters[i]) _heaterScaling[i] = _powerScaling;
                     NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater for body %d\n", i+1);
@@ -2096,7 +2095,6 @@ enum {
                     NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
                     
                     if (_smarterHeaters[i]) [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power density" withValue:s/(_heaterDensity[i]*_heaterArea[i]) string:nil];
-                    i++;
                 }
             }
             
