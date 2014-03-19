@@ -2366,11 +2366,11 @@ static const int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers = NULL;
     
     for (i=1; i<=coupleMaxIter; i++) {
-        if (transient == YES && scanning == YES) {
+        if (transient == YES || scanning == YES) {
             if (coupleMaxIter > 1) {
-                NSLog(@"FEMCore:SolveEquations: --------------------------------------------------------------------\n");
-                NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d\n", i);
-                NSLog(@"FEMCore:SolveEquations: --------------------------------------------------------------------\n");
+                NSLog(@"FEMCore:FEMCore_solveCoupledModel: --------------------------------------------------------------------\n");
+                NSLog(@"FEMCore:FEMCore_solveCoupledModel: coupled system iteration: %d\n", i);
+                NSLog(@"FEMCore:FEMCore_solveCoupledModel: --------------------------------------------------------------------\n");
             }
             *steadyIt = (double)i;
         }

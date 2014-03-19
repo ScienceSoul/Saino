@@ -397,7 +397,7 @@
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"bdf order" withValue:1];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"time step intervals" withValue:2];
     [listUtilities addConstRealInClassList:self.simulation theVariable:@"time step size" withValue:1.0 string:nil];
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
+    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:5];
     
     int *intervals = intvec(0, 0);
     intervals[0] = 1;
