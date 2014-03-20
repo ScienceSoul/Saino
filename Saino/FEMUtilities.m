@@ -18,7 +18,7 @@
 #import "FEMListUtilities.h"
 #import "FEMInterpolation.h"
 #import "FEMElementDescription.h"
-#import "SainoFieldSolutionsComputing.h"
+#import "SainoSolutionsComputer.h"
 #import "Utils.h"
 
 @interface FEMUtilities ()
@@ -2932,7 +2932,7 @@
 
 -(BOOL)plugInClassIsValid:(Class)plugInClass {
     
-    if ([plugInClass conformsToProtocol:@protocol(SainoFieldSolutionsComputing)] == YES) {
+    if ([plugInClass conformsToProtocol:@protocol(SainoSolutionsComputer)] == YES) {
         if ([plugInClass instancesRespondToSelector:@selector(fieldSolutionComputer:model:timeStep:transientSimulation:)] == YES) {
             return YES;
         }

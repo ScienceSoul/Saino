@@ -168,7 +168,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = file; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
+		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		73059E42186BD5F8008B5E44 /* Numerics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Numerics.c; sourceTree = "<group>"; };
 		7308738E1509F5BF001DE27F /* FEMParallelMPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMParallelMPI.h; sourceTree = "<group>"; };
@@ -298,7 +298,7 @@
 		73DB203015D3A951006C5F1C /* FEMJob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMJob.h; sourceTree = "<group>"; };
 		73DB203115D3A951006C5F1C /* FEMJob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMJob.m; sourceTree = "<group>"; };
 		73DE8B1B16B2627000DA2D7D /* Constructors.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Constructors.c; sourceTree = "<group>"; };
-		73DFEE5C16F33B790081A3A4 /* SainoFieldSolutionsComputing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoFieldSolutionsComputing.h; sourceTree = "<group>"; };
+		73DFEE5C16F33B790081A3A4 /* SainoSolutionsComputer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoSolutionsComputer.h; sourceTree = "<group>"; };
 		73DFEE5D16F33D280081A3A4 /* FEMFlowSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMFlowSolution.h; sourceTree = "<group>"; };
 		73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMFlowSolution.m; sourceTree = "<group>"; };
 		73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = heatSolutiomAssemblyKernel.cl; sourceTree = "<group>"; };
@@ -610,7 +610,7 @@
 			isa = PBXGroup;
 			children = (
 				73D0F11A175DBAC000CE3326 /* Solutions local matrices & boundary conditions */,
-				73DFEE5C16F33B790081A3A4 /* SainoFieldSolutionsComputing.h */,
+				73DFEE5C16F33B790081A3A4 /* SainoSolutionsComputer.h */,
 				73DFEE5D16F33D280081A3A4 /* FEMFlowSolution.h */,
 				73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */,
 				73EE3A9416F808E30054B7AE /* FEMMagneticInductionSolution.h */,

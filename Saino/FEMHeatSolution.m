@@ -885,7 +885,7 @@ enum {
     if (_tSolution1 != NULL) free_dvector(_tSolution1, 0, _localNodes-1);
 }
 
--(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, j, k, l, n, nb, nd, t, bf_id, body_id, cols, compressibilityModel, eq_id, iter, mat_id, nsdofs, nonLinearIter, newtonIter, rows, smartHeaterNode, smartHeaterBC;
     int *indexes = NULL, *flowPerm;

@@ -258,7 +258,7 @@ enum {
     if (_tSolution1 != NULL) free_dvector(_tSolution1, 0, _localNodes-1);
 }
 
--(void)fieldSolutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, n, nb, t, body_id, cols, iter, nBasis, nonLinearIter, newtonIter, position, returnValue, rows;
     static int firstTimeCL = 0;

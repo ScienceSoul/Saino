@@ -138,7 +138,7 @@ static const int PRECOND_VANKA     =  560;
     double *_saveValues;
     double **_damp, **_stiff, **_mass, **_x;
 
-    id <SainoFieldSolutionsComputing> _instance;
+    id <SainoSolutionsComputer> _instance;
 }
 
 #pragma mark Private methods...
@@ -2607,36 +2607,36 @@ static const int PRECOND_VANKA     =  560;
         if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             
             FEMFlowSolution *flowSolution = [[FEMFlowSolution alloc] init];
-            [flowSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [flowSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
             [flowSolution deallocation:solution];
             
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
             
             FEMMagneticInductionSolution *magneticInductionSolution = [[FEMMagneticInductionSolution alloc] init];
-            [magneticInductionSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [magneticInductionSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
             [magneticInductionSolution deallocation:solution];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
             
             FEMStressAnalysisSolution *stressAnalysisSolution = [[FEMStressAnalysisSolution alloc] init];
-            [stressAnalysisSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [stressAnalysisSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
             [stressAnalysisSolution deallocation:solution];
  
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
 
             FEMMeshUpdateSolution *meshUpdateSolution = [[FEMMeshUpdateSolution alloc] init];
-            [meshUpdateSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+            [meshUpdateSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
             [meshUpdateSolution deallocation:solution];
 
         } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
             
             if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
                 FEMHeatSolution_OpenCL *heatSolution = [[FEMHeatSolution_OpenCL alloc] init];
-                [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+                [heatSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
                 [heatSolution deallocation:solution];
             } else {
                 FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
-                [heatSolution fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+                [heatSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
                 [heatSolution deallocation:solution];
             }
         } else {
@@ -2646,7 +2646,7 @@ static const int PRECOND_VANKA     =  560;
 
     } else if (solution.plugInPrincipalClassInstance != nil) {
         _instance = solution.plugInPrincipalClassInstance;
-        [_instance fieldSolutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         [_instance deallocation:solution];
         
     } else {

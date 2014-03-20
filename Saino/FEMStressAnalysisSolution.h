@@ -8,8 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "SainoFieldSolutionsComputing.h"
+#import "SainoSolutionsComputer.h"
 
-@interface FEMStressAnalysisSolution : NSObject <SainoFieldSolutionsComputing>
+@interface FEMStressAnalysisSolution : NSObject <SainoSolutionsComputer>
 
 @end
