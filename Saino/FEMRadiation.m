@@ -64,7 +64,7 @@
             }
             emissivity1 = sum / n;
         } else {
-            found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElement[cols[i]] parentElement:parent model:model buffer:&buffer];
+            found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElement[cols[i]] parentElement:parent model:model listUtilities:listUtilities buffer:&buffer];
             for (j=0; j<buffer.m; j++) {
                 sum = sum + buffer.vector[j];
             }
@@ -122,7 +122,7 @@
         }
         emissivity = sum / n;
     } else {
-        found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model buffer:&buffer];
+        found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model listUtilities:listUtilities buffer:&buffer];
         for (i=0; i<buffer.m; i++) {
             sum = sum + buffer.vector[i];
         }

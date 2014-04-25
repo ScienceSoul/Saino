@@ -2652,6 +2652,10 @@
                     if (freqv.m < n) {
                         errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'frequency' must be at least the same size as the Harmonic system values.");
                     }
+                    if (freqv.matrix != NULL) {
+                        free_dmatrix(freqv.matrix, 0, freqv.m-1, 0, freqv.n-1);
+                        freqv.matrix = NULL;
+                    }
                 } else {
                     errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'fequency' must be given for harmonic analysis.");
                 }

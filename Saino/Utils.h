@@ -58,3 +58,5 @@ void __attribute((overloadable)) reverse(int *arr, size_t narr);
 void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shift);
 
 char *dateAndTime(void);
+void startAdvanceOutput(char *solverName, char *outputType);
+void advanceOutput(int t, int n, double *dot_t, double *percent_t);

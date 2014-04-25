@@ -35,7 +35,7 @@ enum {
 };
 
 @interface FEMHeatSolution_OpenCL ()
-
+-(void)FEMHeatSolution_nullify;
 @end
 
 @implementation FEMHeatSolution_OpenCL {
@@ -112,6 +112,52 @@ enum {
     NSString *_radiationFlag;
 }
 
+-(void)FEMHeatSolution_nullify {
+    
+    _indexes = NULL;
+    _saveIndexes = NULL;
+    _u = NULL;
+    _v = NULL;
+    _w = NULL;
+    _mu = NULL;
+    _pressure = NULL;
+    _dPressureDt = NULL;
+    _pressureCoeff = NULL;
+    _density = NULL;
+    _work = NULL;
+    _latentHeat = NULL;
+    _phaseVelocity = NULL;
+    _electricConductivity = NULL;
+    _permeability = NULL;
+    _viscosity = NULL;
+    _c0 = NULL;
+    _heatTransferCoeff = NULL;
+    _heatExpansionCoeff = NULL;
+    _referenceTemperature = NULL;
+    _mass = NULL;
+    _localTemperature = NULL;
+    _heatCapacity = NULL;
+    _enthalpy = NULL;
+    _nodalEmissivity = NULL;
+    _gasConstant = NULL;
+    _aText = NULL;
+    _heatConductivity = NULL;
+    _stiff = NULL;
+    _load = NULL;
+    _force = NULL;
+    _timeForce = NULL;
+    _perfusionRate = NULL;
+    _perfusionDensity = NULL;
+    _perfusionHeatCapacity = NULL;
+    _perfusionRefTemperature = NULL;
+    if (_elementNodes != NULL) {
+        _elementNodes->x = NULL;
+        _elementNodes->y = NULL;
+        _elementNodes->z = NULL;
+    }
+    _elementNodes = NULL;
+}
+
 - (id)init
 {
     self = [super init];
@@ -122,60 +168,23 @@ enum {
         _doneTime = 0;
         _powerScaling = 1.0;
         _prevPowerScaling = 1.0;
-        
-        _indexes = NULL;
-        _saveIndexes = NULL;
         _tempPerm = NULL;
-        _u = NULL;
-        _v = NULL;
-        _w = NULL;
-        _mu = NULL;
-        _pressure = NULL;
-        _dPressureDt = NULL;
-        _pressureCoeff = NULL;
-        _density = NULL;
-        _work = NULL;
-        _latentHeat = NULL;
-        _phaseVelocity = NULL;
-        _electricConductivity = NULL;
-        _permeability = NULL;
-        _viscosity = NULL;
-        _c0 = NULL;
-        _heatTransferCoeff = NULL;
-        _heatExpansionCoeff = NULL;
-        _referenceTemperature = NULL;
-        _mass = NULL;
-        _localTemperature = NULL;
-        _heatCapacity = NULL;
-        _enthalpy = NULL;
-        _nodalEmissivity = NULL;
-        _gasConstant = NULL;
-        _aText = NULL;
-        _heatConductivity = NULL;
-        _stiff = NULL;
-        _load = NULL;
-        _force = NULL;
-        _timeForce = NULL;
-        _perfusionRate = NULL;
-        _perfusionDensity = NULL;
-        _perfusionHeatCapacity = NULL;
-        _perfusionRefTemperature = NULL;
+        _temperature = NULL;
+        
+        [self FEMHeatSolution_nullify];
+        
         _heaterArea = NULL;
         _heaterDensity = NULL;
         _heaterSource = NULL;
         _heaterScaling = NULL;
         _heaterTarget = NULL;
+        _smarterHeaters = NULL;
+        _integralHeaters = NULL;
         _xx = NULL;
         _yy = NULL;
         _forceHeater = NULL;
-        _prevSolution = NULL;
-        _temperature = NULL;
-        _tSolution = NULL;
-        _tSolution1 = NULL;
-        _smarterHeaters = NULL;
-        _integralHeaters = NULL;
-        _elementNodes = NULL;
         
+        _prevSolution = NULL;
         _tSolution = NULL;
         _tSolution1 = NULL;
         
@@ -281,8 +290,6 @@ enum {
     FEMMaterial *materialAtID = nil;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *tempContainers = NULL;
-    listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    
     FEMCore *core = [FEMCore sharedCore];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
@@ -359,6 +366,7 @@ enum {
             free_dvector(_elementNodes->y, 0, n-1);
             free_dvector(_elementNodes->z, 0, n-1);
             free(_elementNodes);
+            [self FEMHeatSolution_nullify];
         }
         _indexes = intvec(0, n-1);
         _saveIndexes = intvec(0, n-1);
@@ -409,7 +417,7 @@ enum {
             _load == NULL || _force == NULL || _timeForce == NULL || _perfusionRate == NULL || _perfusionDensity == NULL ||
             _perfusionHeatCapacity == NULL || _perfusionRefTemperature == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL ||
             _elementNodes->z == NULL) {
-            errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
+            errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
         }
         
         cols = 2*n;
@@ -474,7 +482,7 @@ enum {
     _prevSolution = doublevec(0, _localNodes-1);
     
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution_OpenCL:fieldSolutionComputer", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution_OpenCL:solutionComputer", "Allocation error in FEMNumericIntegration!");
     
 	// Connect to a compute devise
 	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &devices, NULL);
@@ -486,13 +494,13 @@ enum {
 	err = clGetDeviceInfo(devices, CL_DEVICE_NAME, sizeof(device_name), device_name, &returned_size);
     
     if (firstTimeCL == 0) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Connecting to %s %s...\n\n", vendor_name, device_name);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Connecting to %s %s...\n\n", vendor_name, device_name);
 		device_stats(devices);
 	}
     
     returnValue = LoadFileIntoString("/Users/seddikhakime/Documents/Saino/Saino/heatSolutiomAssemblyKernel.cl", &program_source, &src_len);
 	if (returnValue) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Error: Can't load kernel source\n");
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Error: Can't load kernel source\n");
         exit(-1);
 	}
     
@@ -504,7 +512,7 @@ enum {
     // Create the program .cl file
 	cl_program program = clCreateProgramWithSource(context, 1, (const char**)&program_source, NULL, &err);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Can't create program. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't create program. Error was: %d\n", err);
 		exit(-1);
 	}
     
@@ -513,15 +521,15 @@ enum {
 	char build[2048];
 	clGetProgramBuildInfo(program, devices, CL_PROGRAM_BUILD_LOG, 2048, build, NULL);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Can't build program. Error was: %d\n", err);
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer: Build Log:\n%s\n", build);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't build program. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Build Log:\n%s\n", build);
 		exit(-1);
 	}
 
     // Create the kernel
 	cl_kernel CLkernel = clCreateKernel(program, "heatSolutionAssembly", &err);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer:heatAssembly: Can't create kernel. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Can't create kernel. Error was: %d\n", err);
 		exit(-1);
 	}
     
@@ -529,7 +537,7 @@ enum {
 	clGetKernelWorkGroupInfo(CLkernel, devices, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &thread_size, NULL);
     
     if (firstTimeCL == 0) {
-        NSLog(@"FEMHeatSolution_OpenCL:fieldSolutionComputer:heatAssembly: Recommended Work Group Size: %lu\n", thread_size);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Recommended Work Group Size: %lu\n", thread_size);
 	}
     
     // Allocate memory and queue it to be written to the device
@@ -554,9 +562,9 @@ enum {
                           + sizeof(cl_int)*(tempContainers->sizePerm)
                           + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes);
     
-    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Allocation for the CRS matrix (MB): %f\n",
+    NSLog(@"FEMHeatSolution:solutionComputer: Allocation for the CRS matrix (MB): %f\n",
           (sizeof(cl_double)*matContainers->sizeValues+sizeof(cl_double)*matContainers->sizeRHS+sizeof(cl_int)*matContainers->sizeCols+sizeof(cl_int)*matContainers->sizeRows+sizeof(cl_int)*matContainers->sizeDiag)/(1024.0*1024.0));
-    NSLog(@"FEMHeatSolution:fieldSolutionComputer: Total allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
+    NSLog(@"FEMHeatSolution:solutionComputer: Total allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
 
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
@@ -583,13 +591,13 @@ enum {
         for (iter=1; iter<=nonLinearIter; iter++) {
             at0 = realtime();
             
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: TEMPERATURE ITERATION %d\n", iter);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Starting Assembly...\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d\n", iter);
+            NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Starting Assembly...\n");
             
             [core defaultInitializeSolution:solution model:model];
             
@@ -692,7 +700,7 @@ enum {
             } // Neumann & Newton BCs
             
             [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
@@ -705,12 +713,12 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (compute, mem up, mem down, all, tot) (s): %f %f %f %f %f\n", iter, ct, mt, mmt, at, totat);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (compute, mem up, mem down, all, tot) (s): %f %f %f %f %f\n", iter, ct, mt, mmt, at, totat);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: result norm: %e\n", norm);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: relative change: %e\n", relativeChange);
+            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e\n", norm);
+            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol) break;
@@ -721,15 +729,6 @@ enum {
         if (transient == NO) break;
         cumulativeTime = cumulativeTime + _dt;
         _dt = timeStep - cumulativeTime;
-        
-        if (buffer.vector != NULL) {
-            free_dvector(buffer.vector, 0, buffer.m-1);
-            buffer.vector = NULL;
-        }
-        if (buffer.tensor != NULL) {
-            free_d3tensor(buffer.tensor, 0, buffer.m-1, 0, buffer.n-1, 0, buffer.p-1);
-            buffer.tensor = NULL;
-        }
     } // time interval
     
     // Release kernel, program and memory objects
@@ -755,10 +754,6 @@ enum {
     solution.dt = timeStep;
     [solution.solutionInfo setValue:@(saveRelax) forKey:@"nonlinear system relaxation factor"];
     free_dvector(_prevSolution, 0, _localNodes-1);
-    
-    if ([(solution.solutionInfo)[@"adaptive mesh refinement"] boolValue] == YES) {
-        // TODO: implement mesh refinement
-    }
 }
 
 @end

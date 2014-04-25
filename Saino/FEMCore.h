@@ -88,9 +88,11 @@
 -(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result listUtilities:(FEMListUtilities *)listUtil;
 -(int)isPElement:(Element_t *)element;
 -(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd;
+-(BOOL)isFluxElement:(Element_t *)element mesh:(FEMMesh *)mesh;
 -(int)getElementFamily:(Element_t *)element;
 -(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes;
 -(int)sgetElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes;
+-(int)getNumberOfBubbleDofsElement:(Element_t *)element solution:(FEMSolution *)solution;
 -(Element_t *)getActiveElement:(int) t solution:(FEMSolution *)solution model:(FEMModel *)model;
 -(int)getNumberOfNodesForElement:(Element_t *)element;
 -(int)getBoundaryConditionID:(FEMModel *)model forElement:(Element_t *)element;
@@ -103,7 +105,7 @@
 -(int)getBodyForceIDForElement:(Element_t *)element model:(FEMModel *)model;
 -(int)getMaterialIDForElement:(Element_t *)element model:(FEMModel *)model;
 -(int)getEquationIDForElement:(Element_t *)element model:(FEMModel *)model;
--(BOOL)getParentMaterialProperty:(NSString *)name forElement:(Element_t *)element parentElement:(Element_t *)parentElement model:(FEMModel *)model buffer:(listBuffer *)result;
+-(BOOL)getParentMaterialProperty:(NSString *)name forElement:(Element_t *)element parentElement:(Element_t *)parentElement model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities buffer:(listBuffer *)result;
 -(BOOL)isActiveBoundaryElement:(Element_t *)element inSolution:(FEMSolution *)solution model:(FEMModel *)model;
 -(void)checkNormalTangential:(FEMModel *)model inSolution:(FEMSolution *)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int *)indexes atBoundary:(int)bc variableName:(NSMutableString *)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString *)condName permutationOffset:(int)offset;
 -(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution *)solution;
@@ -122,6 +124,7 @@
 -(void)invalidateVariableInTopMesh:(NSArray *)topMesh primaryMesh:(FEMMesh *)primaryMesh name:(NSString *)name model:(FEMModel *)model;
 -(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel *)model mesh:(FEMMesh *)mesh solution:(FEMSolution *)solution;
 -(void)computeNodalWeightsInSolution:(FEMSolution *)solution model:(FEMModel *)model weightBoundary:(BOOL)weightBoundary perm:(int *)perm sizePerm:(int *)sizePerm variableName:(NSString *)variableName;
+-(void)nsCondensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double *)force1;
 -(void)condensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n force1:(double *)force1;
 
 // Manipulate matrix coefficients for time dependent simulations
@@ -144,8 +147,9 @@
 
 // Update global equations
 -(void)updateGlobalEquationsModel:(FEMModel *)model inSolution:(FEMSolution *)solution element:(Element_t *)element localStiffMatrix:(double **)localStiffMatrix forceVector:(double *)forceVector localForce:(double *)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int *)nodeIndexes rows:(int *)rows cols:(int *)cols rotateNT:(BOOL *)rotateNT crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix;
+-(void)defaultFinishBulkAssemblySolution:(FEMSolution *)solution bulkUpdate:(BOOL *)bulkUpdate;
 -(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities;
 -(void)dirichletBoundaryConditions:(FEMModel *)model inSolution:(FEMSolution *)solution usingOffset:(int *)offset offDiaginalMatrix:(BOOL *)offDiaginalMatrix;
 

@@ -222,7 +222,7 @@
         nameStr = (char *)[list.name UTF8String];
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             // The buffer is allocated here, it's up to the caller to release this memory
-            // only once it doesn't need it anymore
+            // when it doesn't need it anymore
             if (result->vector == NULL || result->m != n) {
                 if (result->vector != NULL) free_dvector(result->vector, 0, result->m-1);
                 result->vector = doublevec(0, n-1);
@@ -328,7 +328,7 @@
             n2 = containers->sizeFValues2;
             
             // The buffer is allocated here but it's up to the caller to release this memory
-            // only once it doesn't need it anymore
+            // when it doesn't need it anymore
             if (result->tensor == NULL || result->m != n1 || result->n != n2 || result->p != n) {
                 if (result->tensor != NULL) free_d3tensor(result->tensor, 0, result->m-1, 0, result->n-1, 0, result->p-1);
                 result->tensor = d3tensor(0, n1-1, 0, n2-1, 0, n-1);
@@ -461,7 +461,7 @@
             n2 = containers->sizeFValues2;
             
             // The buffer is allocated here, it's up to the caller to release this memory
-            // only once it doesn't need it anymore
+            // when it doesn't need it anymore
             if (result->matrix == NULL || result->m != n1 || result->n != n2) {
                 if (result->matrix != NULL) free_dmatrix(result->matrix, 0, result->m-1, 0, result->n-1);
                 result->matrix = doublematrix(0, n1-1, 0, n2-1);
@@ -511,7 +511,7 @@
             n = containers->sizeIValues;
             
             // The buffer is allocated here, it's up to the caller to release this memory
-            // only once it doesn't need it anymore
+            // when it doesn't need it anymore
             if (result->ivector == NULL || result->m != n) {
                 if (result->ivector != NULL) free_ivector(result->ivector, 0, result->m-1);
                 result->ivector = intvec(0, n-1);

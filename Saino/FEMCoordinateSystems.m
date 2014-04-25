@@ -142,11 +142,13 @@
 
 #pragma mark Public methods
 
+@synthesize coordinates = _coordinates;
+
 - (id)init
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
+        _coordinates = cartesian;
     }
     
     return self;

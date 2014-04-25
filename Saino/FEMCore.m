@@ -3159,6 +3159,24 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
+/*****************************************************************************
+    Return true if the element is a possible flux element
+    Needed to skip nodal elements in 2D and 3D boundary condition setting.
+*****************************************************************************/
+-(BOOL)isFluxElement:(Element_t *)element mesh:(FEMMesh *)mesh {
+    
+    int family, meshDim;
+    
+    meshDim = mesh.dimension;
+    family = [self getElementFamily:element];
+    
+    // This is not generic rule but happens to be true for all combinations
+    // 3D: families 3 and 4
+    // 2D: family 2
+    // 1D: family 1
+    return (meshDim <= family) ? YES : NO;
+}
+
 -(int)getElementFamily:(Element_t *)element {
     
     return element->Type.ElementCode / 100;
@@ -3446,6 +3464,25 @@ static const int PRECOND_VANKA     =  560;
     }
     
     return nb;    
+}
+
+// Return the number of bubble degree of freedom in the active element
+-(int)getNumberOfBubbleDofsElement:(Element_t *)element solution:(FEMSolution *)solution {
+    
+    int n=0;
+    BOOL gb;
+    
+    if ((solution.solutionInfo)[@"bubbles in global system"] !=nil) {
+        gb = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
+    } else {
+        gb = YES;
+    }
+    
+    if (gb == NO) {
+        n = element->BDOFs;
+    }
+    
+    return n;
 }
 
 -(Element_t *)getActiveElement:(int)t solution:(FEMSolution *)solution model:(FEMModel *)model {
@@ -3938,15 +3975,13 @@ static const int PRECOND_VANKA     =  560;
 /*******************************************************************************************
     Returns a material property from either of the parents of the current boundary element
 *******************************************************************************************/
--(BOOL)getParentMaterialProperty:(NSString *)name forElement:(Element_t *)element parentElement:(Element_t *)parentElement model:(FEMModel *)model buffer:(listBuffer *)result {
+-(BOOL)getParentMaterialProperty:(NSString *)name forElement:(Element_t *)element parentElement:(Element_t *)parentElement model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities buffer:(listBuffer *)result {
     
     int leftright, mat_id, n;
     BOOL gotIt, found;
     Element_t *parent = NULL;
-    FEMListUtilities *listUtilities;
     FEMMaterial *materialAtID;
     
-    listUtilities = [[FEMListUtilities alloc] init];
     n = [self getNumberOfNodesForElement:element];
     
     gotIt = NO;
@@ -5743,6 +5778,83 @@ static const int PRECOND_VANKA     =  560;
     NSLog(@"FEMCore:computeNodalWeightsInSolution: all done");
 }
 
+// Eliminates bubble degrees of freedom from a local linear system
+-(void)nsCondensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double *)force1 {
+    
+    int i, j, m, p, cdofs[(dim+1)*n], bdofs[dim*nb];
+    double fb[nb*dim], **kbb, kbl[nb*dim][n*(dim+1)], klb[n*(dim+1)][nb*dim], x[(dim+1)*n], y[(dim+1)*n];
+    double b[nb*dim][n*(dim+1)], c[nb*dim][n*(dim+1)], cc[n*(dim+1)][n*(dim+1)];
+    FEMLinearAlgebra *linearAlgebra;
+    
+    m = 0;
+    for (p=0; p<n; p++) {
+        for (i=0; i<dim+1; i++) {
+            cdofs[m] = (dim+1)*p + i;
+            m++;
+        }
+    }
+    
+    m = 0;
+    for (p=0; p<nb; p++) {
+        for (i=0; i<dim; i++) {
+            bdofs[m] = (dim+1)*p + i + n*(dim+1);
+            m++;
+        }
+    }
+    
+    kbb = doublematrix(0, (nb*dim)-1, 0, (nb*dim)-1);
+    for (i=0; i<nb*dim; i++) {
+        for (j=0; j<nb*dim; j++) {
+            kbb[i][j] = stiff[bdofs[i]][bdofs[j]];
+        }
+        fb[i] = force[bdofs[i]];
+    }
+
+    for (i=0; i<nb*dim; i++) {
+        for (j=0; j<(dim+1)*n; j++) {
+             kbl[i][j] = stiff[bdofs[i]][cdofs[j]];
+        }
+    }
+    
+    for (i=0; i<(dim+1)*n; i++) {
+        for (j=0; j<nb*dim; j++) {
+            klb[i][j] = stiff[cdofs[i]][bdofs[j]];
+        }
+    }
+    
+    linearAlgebra = [[FEMLinearAlgebra alloc] init];
+    [linearAlgebra invertMatrix:kbb ofSize:nb*dim];
+    
+    memset( y, 0.0, sizeof(y) );
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, nb*dim, nb*dim, 1.0, *kbb, nb*dim, fb, 1, 0.0, y, 1);
+    memcpy(x, y, sizeof(double));
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, n*(dim+1), nb*dim, 1.0, (double *)klb, n*(dim+1), x, 1, 0.0, y, 1);
+    for (i=0; i<(dim+1)*n; i++) {
+        force[i] = force[i] - y[i];
+    }
+    
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, nb*dim, n*(dim+1), nb*dim, 1.0, *kbb, nb*dim, (double *)kbl, nb*dim, 0.0,  (double *)c, nb*dim);
+    memcpy(*b, *c, ((nb*dim)*(n*(dim+1)))*sizeof(double));
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, n*(dim+1), n*(dim+1), nb*dim, 1.0, (double *)klb, n*(dim+1), (double *)b, nb*dim, 0.0,  (double *)cc, n*(dim+1));
+    for (i=0; i<(dim+1)*n; i++) {
+        for (j=0; j<(dim+1)*n; j++) {
+            stiff[i][j] = stiff[i][j] - cc[i][j];
+        }
+    }
+    
+    for (i=0; i<dim*nb; i++) {
+        fb[i] = force1[bdofs[i]];
+    }
+    memset( y, 0.0, sizeof(y) );
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, nb*dim, nb*dim, 1.0, *kbb, nb*dim, fb, 1, 0.0, y, 1);
+    memcpy(x, y, sizeof(double));
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, n*(dim+1), nb*dim, 1.0, (double *)klb, n*(dim+1), x, 1, 0.0, y, 1);
+    for (i=0; i<(dim+1)*n; i++) {
+        force1[i] = force1[i] - y[i];
+    }
+    free_dmatrix(kbb, 0, (nb*dim)-1, 0, (nb*dim)-1);
+}
+
 -(void)condensateStiff:(double **)stiff force:(double *)force numberOfNodes:(int)n force1:(double *)force1 {
     
     int i, j, ldofs[n], bdofs[n];
@@ -6601,11 +6713,9 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, n;
-    BOOL rotateNT, bupd;
-    double *saveValues;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
@@ -6638,50 +6748,13 @@ static const int PRECOND_VANKA     =  560;
     
     updateGlobalEquationIMP(self, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:),
                             model, solution, element, stiff, matContainers->RHS, force, n, solution.variable.dofs, perm, rows, cols, NULL, crsMatrix, bandMatrix);
-    
-    bupd = NO;
-    if (bulkUpdate != NULL) {
-        bupd = *bulkUpdate;
-        if (bupd == NO) {
-            return;
-        }
-    } else {
-        if (element->BoundaryInfo != NULL) return;
-    }
-    if ((solution.solutionInfo)[@"calculate loads"] != nil) {
-        bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
-    }
-    
-    if (bupd == YES) {
-        
-        if (matContainers->BulkRHS == NULL) {
-            matContainers->BulkRHS = doublevec(0, matContainers->sizeRHS-1);
-            matContainers->sizeBulkRHS = matContainers->sizeRHS;
-            memset(matContainers->BulkRHS, 0.0, matContainers->sizeBulkRHS*sizeof(double) );
-        }
-        
-        if (matContainers->BulkValues == NULL) {
-            matContainers->BulkValues = doublevec(0, matContainers->sizeValues);
-            matContainers->sizeBulkValues = matContainers->sizeValues;
-            memset(matContainers->BulkValues, 0.0, matContainers->sizeBulkValues*sizeof(double) );
-        }
-        
-        saveValues = matContainers->Values;
-        matContainers->Values = matContainers->BulkValues;
-        rotateNT = NO;
-        updateGlobalEquationIMP(self, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:),
-                                model, solution, element, stiff, matContainers->BulkRHS, force, n, solution.variable.dofs, perm, rows, cols, &rotateNT, crsMatrix, bandMatrix);
-        matContainers->Values = saveValues;
-    }
 }
 
--(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols requestBulkUpdate:(BOOL *)bulkUpdate crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
+-(void)defaultUpdateEquations:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element complexStiff:(double complex **)cstiff complexForce:(double complex*)cforce stiffRows:(int *)rows stiffCols:(int *)cols crsMatrix:(FEMMatrixCRS *)crsMatrix bandMatrix:(FEMMatrixBand *)bandMatrix {
     
     int i, j, n, dofs;
     int *perm;
     double **stiff, *force;
-    BOOL rotateNT, bupd;
-    double *saveValues;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
@@ -6716,50 +6789,68 @@ static const int PRECOND_VANKA     =  560;
      matContainers = solution.matrix.getContainers;
     
     [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->RHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
-
-    bupd = NO;
-    if (bulkUpdate != NULL) {
-        bupd = *bulkUpdate;
-        if (bupd == NO) {
-            free_ivector(perm, 0, n-1);
-            free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
-            free_dvector(force, 0, (n*dofs)-1);
-            return;
-        }
-    } else {
-        if (element->BoundaryInfo != NULL) return;
-    }
-    if ((solution.solutionInfo)[@"calculate loads"] != nil) {
-        bupd = (bupd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
-    }
-    
-    if (bupd == YES) {
-        
-        if (matContainers->BulkRHS == NULL) {
-            matContainers->BulkRHS = doublevec(0, matContainers->sizeRHS-1);
-            matContainers->sizeBulkRHS = matContainers->sizeRHS;
-            memset(matContainers->BulkRHS, 0.0, matContainers->sizeBulkRHS*sizeof(double) );
-        }
-        
-        if (matContainers->BulkValues == NULL) {
-            matContainers->BulkValues = doublevec(0, matContainers->sizeValues);
-            matContainers->sizeBulkValues = matContainers->sizeValues;
-            memset(matContainers->BulkValues, 0.0, matContainers->sizeBulkValues*sizeof(double) );
-        }
-        
-        saveValues = matContainers->Values;
-        matContainers->Values = matContainers->BulkValues;
-        rotateNT = NO;
-        [self updateGlobalEquationsModel:model inSolution:solution element:element localStiffMatrix:stiff forceVector:matContainers->BulkRHS localForce:force size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols rotateNT:&rotateNT crsMatrix:crsMatrix bandMatrix:bandMatrix];
-        matContainers->Values = saveValues;
-    }
-    
-    free_ivector(perm, 0, n-1);
-    free_dmatrix(stiff, 0, (n*dofs)-1, 0, (n*dofs)-1);
-    free_dvector(force, 0, (n*dofs)-1);
 }
 
 #pragma mark Finish assembly
+/*******************************************************************************
+        Finished the bulk assembly of the matrix equation. Optionally save the 
+        matrix for later use.
+*******************************************************************************/
+-(void)defaultFinishBulkAssemblySolution:(FEMSolution *)solution bulkUpdate:(BOOL *)bulkUpdate {
+    
+    int n;
+    BOOL bUpd = NO;
+    matrixArraysContainer *matContainers = NULL;
+    
+    if (bulkUpdate != NULL) {
+        bUpd = *bulkUpdate;
+    } else {
+        bUpd = (bUpd == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
+        bUpd = (bUpd == YES || [(solution.solutionInfo)[@"constant bulk system"] boolValue] == YES) ? YES : NO;
+        bUpd = (bUpd == YES || [(solution.solutionInfo)[@"save bulk system"] boolValue] == YES) ? YES : NO;
+        bUpd = (bUpd == YES || [(solution.solutionInfo)[@"constant bulk matrix"] boolValue] == YES) ? YES : NO;
+    }
+    
+    if (bUpd == YES) {
+        NSString *str = (solution.solutionInfo)[@"equation"];
+        NSLog(@"FEMCore:defaultFinishBulkAssemblySolution: saving bulk values for: %@\n", str);
+        
+        matContainers = solution.matrix.getContainers;
+        
+        n = matContainers->sizeRHS;
+        if (matContainers->BulkRHS != NULL) {
+            if (matContainers->sizeBulkRHS != n) {
+                free_dvector(matContainers->BulkRHS, 0, matContainers->sizeBulkRHS-1);
+                matContainers->BulkRHS = NULL;
+            }
+        }
+        if (matContainers->BulkRHS == NULL) {
+            matContainers->BulkRHS = doublevec(0, n-1);
+            matContainers->sizeBulkRHS = n;
+        }
+        for (int i=0; i<n; i++) {
+            matContainers->BulkRHS[i] = matContainers->RHS[i];
+        }
+        
+        n = matContainers->sizeValues;
+        if (matContainers->BulkValues != NULL) {
+            if (matContainers->sizeBulkValues != n) {
+                free_dvector(matContainers->BulkValues, 0, matContainers->sizeBulkValues-1);
+                matContainers->BulkValues = NULL;
+            }
+        }
+        if (matContainers->BulkValues == NULL) {
+            matContainers->BulkValues = doublevec(0, n-1);
+            matContainers->sizeBulkValues = n;
+        }
+        for (int i=0; i<n; i++) {
+            matContainers->BulkValues[i] = matContainers->Values[i];
+        }
+    }
+    
+    // TODO: Add support for linear system multiply. Elmer 6100.
+    // Also present in defaultFinishAssemblySolution
+}
 
 -(void)defaultFinishAssemblySolution:(FEMSolution *)solution model:(FEMModel *)model timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities {
     

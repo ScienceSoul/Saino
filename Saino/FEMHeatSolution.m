@@ -34,6 +34,7 @@ enum {
 };
 
 @interface FEMHeatSolution ()
+-(void)FEMHeatSolution_nullify;
 -(void)FEMHeatSolution_findGapIndexesElement:(Element_t *)element indexes:(int *)indexes numberOfNodes:(int)n solution:(FEMSolution *)solution;
 -(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient;
 -(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t*)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh;
@@ -118,6 +119,52 @@ enum {
     NSString *_radiationFlag;
 }
 
+-(void)FEMHeatSolution_nullify {
+    
+    _indexes = NULL;
+    _saveIndexes = NULL;
+    _u = NULL;
+    _v = NULL;
+    _w = NULL;
+    _mu = NULL;
+    _pressure = NULL;
+    _dPressureDt = NULL;
+    _pressureCoeff = NULL;
+    _density = NULL;
+    _work = NULL;
+    _latentHeat = NULL;
+    _phaseVelocity = NULL;
+    _electricConductivity = NULL;
+    _permeability = NULL;
+    _viscosity = NULL;
+    _c0 = NULL;
+    _heatTransferCoeff = NULL;
+    _heatExpansionCoeff = NULL;
+    _referenceTemperature = NULL;
+    _mass = NULL;
+    _localTemperature = NULL;
+    _heatCapacity = NULL;
+    _enthalpy = NULL;
+    _nodalEmissivity = NULL;
+    _gasConstant = NULL;
+    _aText = NULL;
+    _heatConductivity = NULL;
+    _stiff = NULL;
+    _load = NULL;
+    _force = NULL;
+    _timeForce = NULL;
+    _perfusionRate = NULL;
+    _perfusionDensity = NULL;
+    _perfusionHeatCapacity = NULL;
+    _perfusionRefTemperature = NULL;
+    if (_elementNodes != NULL) {
+        _elementNodes->x = NULL;
+        _elementNodes->y = NULL;
+        _elementNodes->z = NULL;
+    }
+    _elementNodes = NULL;
+}
+
 -(void)FEMHeatSolution_findGapIndexesElement:(Element_t *)element indexes:(int *)indexes numberOfNodes:(int)n solution:(FEMSolution *)solution {
     
     int i, j, k;
@@ -159,7 +206,7 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient{
+-(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t *)element numberOfNodes:(int)n material:(FEMMaterial *)material model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities transientSimulation:(BOOL)transient {
     
     int i;
     BOOL any, found, specific;
@@ -467,7 +514,7 @@ enum {
         if (found == YES) {
             memcpy(_nodalEmissivity, buffer.vector, n*sizeof(double));
         } else {
-            found = [core getParentMaterialProperty:@"emissivity" forElement:element parentElement:parent model:model buffer:&buffer];
+            found = [core getParentMaterialProperty:@"emissivity" forElement:element parentElement:parent model:model listUtilities:listUtilites buffer:&buffer];
             if (found == YES) memcpy(_nodalEmissivity, buffer.vector, n*sizeof(double));
         }
         sum = 0.0;
@@ -496,8 +543,14 @@ enum {
                     found = [core getReal:model forElement:element inArray:bc variableName:@"external temperature" buffer:&buffer listUtilities:listUtilites];
                     if (found == YES) memcpy(_aText, buffer.vector, n*sizeof(double));
                 }
-                for (i=0; i<n; i++) {
-                    _aText[i] = pow( ( (1.0 - _visibleFraction) * pow(_aText[i], 4.0) + _visibleFraction * pow(_text, 4.0) ), 0.25);
+                if (_visibleFraction >= 1.0) {
+                    for (i=0; i<n; i++) {
+                        _aText[i] = _text;
+                    }
+                } else {
+                    for (i=0; i<n; i++) {
+                        _aText[i] = pow( ( (1.0 - _visibleFraction) * pow(_aText[i], 4.0) + _visibleFraction * pow(_text, 4.0) ), 0.25);
+                    }
                 }
             } else {
                 for (i=0; i<n; i++) {
@@ -557,7 +610,7 @@ enum {
         }
         
         // Ensure that the latent heat and density come from the same side
-        found = [core getParentMaterialProperty:@"latent heat" forElement:element parentElement:parent model:model buffer:&buffer];
+        found = [core getParentMaterialProperty:@"latent heat" forElement:element parentElement:parent model:model listUtilities:listUtilites buffer:&buffer];
         memcpy(_latentHeat, buffer.vector, n*sizeof(double));
         if (parent == NULL) {
             NSLog(@"FEMHeatSolution:FEMHeatSolution_addHeatFluxBC: parent not associated.\n");
@@ -611,7 +664,7 @@ enum {
     if (_heatGapBC == YES) {
         [self FEMHeatSolution_addHeatGapSolution:solution element:element numberOfNodes:n core:core];
     }
-    [core defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols requestBulkUpdate:NULL crsMatrix:crsMatrix bandMatrix:bandMatrix];
+    [core defaultUpdateEquations:model inSolution:solution forElement:element realStiff:_stiff realForce:_force stiffRows:&rows stiffCols:&cols crsMatrix:crsMatrix bandMatrix:bandMatrix];
     
     if (buffer.vector != NULL) free_dvector(buffer.vector, 0, buffer.m-1);
 }
@@ -749,60 +802,23 @@ enum {
         _doneTime = 0;
         _powerScaling = 1.0;
         _prevPowerScaling = 1.0;
-        
-        _indexes = NULL;
-        _saveIndexes = NULL;
         _tempPerm = NULL;
-        _u = NULL;
-        _v = NULL;
-        _w = NULL;
-        _mu = NULL;
-        _pressure = NULL;
-        _dPressureDt = NULL;
-        _pressureCoeff = NULL;
-        _density = NULL;
-        _work = NULL;
-        _latentHeat = NULL;
-        _phaseVelocity = NULL;
-        _electricConductivity = NULL;
-        _permeability = NULL;
-        _viscosity = NULL;
-        _c0 = NULL;
-        _heatTransferCoeff = NULL;
-        _heatExpansionCoeff = NULL;
-        _referenceTemperature = NULL;
-        _mass = NULL;
-        _localTemperature = NULL;
-        _heatCapacity = NULL;
-        _enthalpy = NULL;
-        _nodalEmissivity = NULL;
-        _gasConstant = NULL;
-        _aText = NULL;
-        _heatConductivity = NULL;
-        _stiff = NULL;
-        _load = NULL;
-        _force = NULL;
-        _timeForce = NULL;
-        _perfusionRate = NULL;
-        _perfusionDensity = NULL;
-        _perfusionHeatCapacity = NULL;
-        _perfusionRefTemperature = NULL;
+        _temperature = NULL;
+        
+        [self FEMHeatSolution_nullify];
+        
         _heaterArea = NULL;
         _heaterDensity = NULL;
         _heaterSource = NULL;
         _heaterScaling = NULL;
         _heaterTarget = NULL;
+        _smarterHeaters = NULL;
+        _integralHeaters = NULL;
         _xx = NULL;
         _yy = NULL;
         _forceHeater = NULL;
-        _prevSolution = NULL;
-        _temperature = NULL;
-        _tSolution = NULL;
-        _tSolution1 = NULL;
-        _smarterHeaters = NULL;
-        _integralHeaters = NULL;
-        _elementNodes = NULL;
         
+        _prevSolution = NULL;
         _tSolution = NULL;
         _tSolution1 = NULL;
         
@@ -893,7 +909,7 @@ enum {
            prevNorm, referencePressure, relax, relativeChange, s, saveRelax, smartTol, specificHeatRatio, st, sum, totat, totst, xave, yave;
     double controlPoint[3], *forceVector, *flowSolution;
     BOOL all, bubbles, checkLatentHeatRelease=NO, found, heatFluxBC, gotIt, isRadiation, firstTime, gotMeltPoint,
-         integralHeaterControl, heaterControlLocal, phaseChange=NO, saveBulk, smartHeaterControl, smartHeaterAverage, smartTolReached, stabilize = YES, transientHeaterControl, useBubbles;
+         integralHeaterControl, heaterControlLocal, phaseChange=NO, smartHeaterControl, smartHeaterAverage, smartTolReached, stabilize = YES, transientHeaterControl, useBubbles;
     NSString *convectionField, *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
     Element_t *elements = NULL, *element = NULL, *parent = NULL;
@@ -907,7 +923,8 @@ enum {
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *tempContainers = NULL, *flowSolContainers = NULL;
     listBuffer realWork = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     FEMCore *core = [FEMCore sharedCore];
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
@@ -930,7 +947,7 @@ enum {
     static void (*getVectorLocalFieldIMP)(id, SEL, double**, int, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
     static void (*effectiveHeatCapacityElementIMP)(id, SEL, Element_t*, int, FEMMaterial*, FEMModel*, FEMListUtilities*, BOOL) = nil;
     static int (*getBodyForceIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
-    static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
+    static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
     static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*,     double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*) = nil;
     static void (*diffuseConvectiveGeneralComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMCoordinateSystems*, FEMListUtilities*) = nil;
     static void (*defaultFirstOrderTimeIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*) = nil;
@@ -994,8 +1011,8 @@ enum {
             [core methodForSelector: @selector(getBodyForceIDForElement:model:)];
         }
         if (!defaultUpdateEquationsIMP) {
-            defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*))
-            [core methodForSelector: @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:)];
+            defaultUpdateEquationsIMP = (void (*)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))
+            [core methodForSelector: @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:crsMatrix:bandMatrix:)];
         }
         if (!diffuseConvectiveComposeMassMatrixIMP) {
             diffuseConvectiveComposeMassMatrixIMP = (void (*)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*))
@@ -1040,9 +1057,9 @@ enum {
         isRadiation = ([listUtilities listCheckPresentVariable:@"radiation" inArray:boundaryCondition.valuesList] == YES) ? YES : NO;
         if (isRadiation == YES) break;
     }
-    
     // The view and Gebhardt factors may change. If this is necessary, this is done without this method.
     // This method is called in the start as it may affect the matrix topplogy
+    // Newton lineariarization option is needed only when there is radiation
     if (isRadiation == YES) {
         //TODO: implement the radiation factors computation
     }
@@ -1128,6 +1145,7 @@ enum {
             free_dvector(_elementNodes->y, 0, n-1);
             free_dvector(_elementNodes->z, 0, n-1);
             free(_elementNodes);
+            [self FEMHeatSolution_nullify];
         }
         _indexes = intvec(0, n-1);
         _saveIndexes = intvec(0, n-1);
@@ -1178,7 +1196,7 @@ enum {
             _load == NULL || _force == NULL || _timeForce == NULL || _perfusionRate == NULL || _perfusionDensity == NULL ||
             _perfusionHeatCapacity == NULL || _perfusionRefTemperature == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL ||
             _elementNodes->z == NULL) {
-            errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
+            errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
         }
         
         if (smartHeaterControl == YES || integralHeaterControl == YES) {
@@ -1191,6 +1209,13 @@ enum {
                 free_dvector(_heaterTarget, 0, n-1);
                 free_bvector(_smarterHeaters, 0, n-1);
                 free_bvector(_integralHeaters, 0, n-1);
+                _heaterArea = NULL;
+                _heaterDensity = NULL;
+                _heaterSource = NULL;
+                _heaterScaling = NULL;
+                _heaterTarget = NULL;
+                _smarterHeaters = NULL;
+                _integralHeaters = NULL;
             }
             _heaterArea = doublevec(0, n-1);
             _heaterDensity = doublevec(0, n-1);
@@ -1201,7 +1226,7 @@ enum {
             _integralHeaters = boolvec(0, n-1);
             if (_heaterArea == NULL || _heaterDensity == NULL || _heaterSource == NULL || _heaterScaling == NULL || _heaterTarget == NULL ||
                 _smarterHeaters == NULL || _integralHeaters == NULL) {
-                 errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
+                 errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
             }
             memset( _smarterHeaters, false, n*sizeof(bool) );
             memset( _integralHeaters, false, n*sizeof(bool) );
@@ -1212,13 +1237,16 @@ enum {
                 free_dvector(_xx, 0, tempContainers->sizeValues-1);
                 free_dvector(_yy, 0, tempContainers->sizeValues-1);
                 free_dvector(_forceHeater, 0, tempContainers->sizeValues-1);
+                _xx = NULL;
+                _yy = NULL;
+                _forceHeater = NULL;
             }
             
             _xx = doublevec(0, tempContainers->sizeValues-1);
             _yy = doublevec(0, tempContainers->sizeValues-1);
             _forceHeater = doublevec(0, tempContainers->sizeValues-1);
             if (_xx == NULL || _yy == NULL || _forceHeater == NULL) {
-                errorfunct("FEMHeatSolution:fieldSolutionComputer", "Memory allocation error");
+                errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
             }
             memset( _xx, 0.0, tempContainers->sizeValues*sizeof(double) );
             memset( _yy, 0.0, tempContainers->sizeValues*sizeof(double) );
@@ -1345,8 +1373,8 @@ enum {
                     }
                 }
             }
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: found control point at distance: %f\n", sqrt(minDist));
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: control point index: %d\n", smartHeaterNode);
+            NSLog(@"FEMHeatSolution:solutionComputer: found control point at distance: %f\n", sqrt(minDist));
+            NSLog(@"FEMHeatSolution:solutionComputer: control point index: %d\n", smartHeaterNode);
             if (realWork.matrix != NULL) {
                 free_dmatrix(realWork.matrix, 0, realWork.m-1, 0, realWork.n-1);
                 realWork.matrix = NULL;
@@ -1379,7 +1407,7 @@ enum {
                 }
             }
             if (smartHeaterBC < 0) {
-                errorfunct("FEMHeatSolution:fieldSolutionComputer", "Smart heater boundary / Phase change is undefined");
+                errorfunct("FEMHeatSolution:solutionComputer", "Smart heater boundary / Phase change is undefined");
             }
             
             boundaryConditionAtID = (model.boundaryConditions)[smartHeaterBC];
@@ -1389,7 +1417,7 @@ enum {
                     meltPoint = [listUtilities listGetConstReal:model inArray:material.valuesList forVariable:@"melting point" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) break;
                 }
-                if (found == NO) errorfunct("FEMHeatSolution:fieldSolutionComputer", "Smart heater temperature / melting point is undefined.");
+                if (found == NO) errorfunct("FEMHeatSolution:solutionComputer", "Smart heater temperature / melting point is undefined.");
             }
             
             // Find the node related to temperature control
@@ -1426,10 +1454,10 @@ enum {
     
         if (transient == YES && _dt < powerTimeScale) {
             transientHeaterControl = YES;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: using transient heater control.\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: using transient heater control.\n");
         } else {
             transientHeaterControl = NO;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: using steady-state heater control.\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: using steady-state heater control.\n");
         }
     
         if (solution.doneTime != _doneTime) {
@@ -1439,7 +1467,7 @@ enum {
     }
     
     if (integralHeaterControl == YES) {
-        NSLog(@"FEMHeatSolution:fieldSolutionComputer: using integral heater control");
+        NSLog(@"FEMHeatSolution:solutionComputer: using integral heater control");
         memset( _integralHeaters, false, model.numberOfBodyForces*sizeof(bool) );
         i = 0;
         for (FEMBodyForce *bodyForce in model.bodyForces) {
@@ -1453,8 +1481,6 @@ enum {
     if ((solution.solutionInfo)[@"constant bulk system"] != nil) {
         _constantBulk = [(solution.solutionInfo)[@"constant bulk system"] boolValue];
     }
-    saveBulk = (_constantBulk == YES || [(solution.solutionInfo)[@"save bulk system"] boolValue] == YES) ? YES : NO;
-    saveBulk = (_constantBulk == YES || [(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) ? YES : NO;
     
     saveRelax = relax;
     cumulativeTime = 0.0;
@@ -1494,13 +1520,13 @@ enum {
         for (iter=1; iter<=nonLinearIter; iter++) {
             at0 = realtime();
             
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: TEMPERATURE ITERATION %d\n", iter);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer:\n");
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Starting Assembly...\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d\n", iter);
+            NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
+            NSLog(@"FEMHeatSolution:solutionComputer:\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Starting Assembly...\n");
             
             if (_constantBulk == YES && matContainers->BulkValues != NULL) {
                 memcpy(matContainers->Values, matContainers->BulkValues, matContainers->sizeBulkValues*sizeof(double));
@@ -1531,13 +1557,13 @@ enum {
                     materialAtID = (model.materials)[mat_id-1];
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = [core getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&buffer listUtilities:listUtilities];
-                    if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
+                    found = [core getReal:model forElement:element inArray:materialAtID.valuesList variableName:@"density" buffer:&vector listUtilities:listUtilities];
+                    if (found == YES) memcpy(_density, vector.vector, n*sizeof(double));
 
                     
                     memset( _load, 0.0, n*sizeof(double) );
-                    found = [core getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&buffer listUtilities:listUtilities];
-                    if (found == YES) memcpy(_load, buffer.vector, n*sizeof(double));
+                    found = [core getReal:model forElement:element inArray:bodyForceAtID.valuesList variableName:@"heat source" buffer:&vector listUtilities:listUtilities];
+                    if (found == YES) memcpy(_load, vector.vector, n*sizeof(double));
                     
                     _s = [elementUtils elementArea:element numberOfNodes:n mesh:solution.mesh nodel:model];
                     
@@ -1573,14 +1599,19 @@ enum {
             bodyForceAtID = nil;
             nb = 0;
             
+            startAdvanceOutput((char *)[@"FEMHeatSolution" UTF8String], (char *)[@"Assembly:" UTF8String]);
             at = cputime();
             // Bulk elements
             for (t=0; t<solution.numberOfActiveElements; t++) {
+                
+                advanceOutput(t, solution.numberOfActiveElements, NULL, NULL);
                 
                 // Check if this element belongs to a body where temperature
                 // should be calculated
                 element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
                 if (element->BodyID != body_id) {
+                    body_id = element->BodyID;
+                    
                     eq_id = getEquationIDForElementIMP(core, @selector(getEquationIDForElement:model:), element, model);
                     equationAtID = (model.equations)[eq_id-1];
                     convectionFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, equationAtID.valuesList, @"convection", &found);
@@ -1617,29 +1648,29 @@ enum {
                 
                 // Get element material parameters
                 memset( _heatCapacity, 0.0, n*sizeof(double) );
-                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat capacity", &buffer, listUtilities);
-                if (found == YES) memcpy(_heatCapacity, buffer.vector, n*sizeof(double));
+                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat capacity", &vector, listUtilities);
+                if (found == YES) memcpy(_heatCapacity, vector.vector, n*sizeof(double));
                 
                 memset( **_heatConductivity, 0.0, (3*3*solution.mesh.maxElementDofs)*sizeof(double) );
-                found = listGetRealArrayIMP(listUtilities, @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:), model, materialAtID.valuesList, @"heat conductivity", n, element->NodeIndexes, &buffer);
+                found = listGetRealArrayIMP(listUtilities, @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:), model, materialAtID.valuesList, @"heat conductivity", n, element->NodeIndexes, &tensor);
                 if (found == YES) {
-                    if (buffer.m == 1) {
+                    if (tensor.m == 1) {
                         for (i=0; i<3; i++) {
                             for (j=0; j<n; j++) {
-                                _heatConductivity[i][i][j] = buffer.tensor[0][0][j];
+                                _heatConductivity[i][i][j] = tensor.tensor[0][0][j];
                             }
                         }
-                    } else if (buffer.n == 1) {
-                        for (i=0; i<min(3, buffer.m); i++) {
+                    } else if (tensor.n == 1) {
+                        for (i=0; i<min(3, tensor.m); i++) {
                             for (j=0; j<n; j++) {
-                                _heatConductivity[i][i][j] = buffer.tensor[i][0][j];
+                                _heatConductivity[i][i][j] = tensor.tensor[i][0][j];
                             }
                         }
                     } else {
-                        for (i=0; i<min(3, buffer.m); i++) {
-                            for (j=0; j<min(3, buffer.n); j++) {
+                        for (i=0; i<min(3, tensor.m); i++) {
+                            for (j=0; j<min(3, tensor.n); j++) {
                                 for (k=0; k<n; k++) {
-                                    _heatConductivity[i][j][k] = buffer.tensor[i][j][k];
+                                    _heatConductivity[i][j][k] = tensor.tensor[i][j][k];
                                 }
                             }
                         }
@@ -1657,9 +1688,9 @@ enum {
                         _gasConstant[i] = (specificHeatRatio - 1.0) * _heatCapacity[i] /  specificHeatRatio;
                     }
                     
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
+                        memcpy(_pressureCoeff, vector.vector, n*sizeof(double));
                     } else {
                         for (i=0; i<n; i++) {
                             _pressureCoeff[i] = 1.0;
@@ -1667,23 +1698,23 @@ enum {
                     }
                 } else if (compressibilityModel == thermal) {
                     memset( _referenceTemperature, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"reference temperature", &buffer, listUtilities);
-                    if (found == YES) memcpy(_referenceTemperature, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"reference temperature", &vector, listUtilities);
+                    if (found == YES) memcpy(_referenceTemperature, vector.vector, n*sizeof(double));
                     
                     memset( _heatExpansionCoeff, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat expansion coefficient", &buffer, listUtilities);
-                    if (found == YES) memcpy(_heatExpansionCoeff, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"heat expansion coefficient", &vector, listUtilities);
+                    if (found == YES) memcpy(_heatExpansionCoeff, vector.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &vector, listUtilities);
+                    if (found == YES) memcpy(_density, vector.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _density[i] = _density[i] * ( 1.0 - _heatExpansionCoeff[i] * (_localTemperature[i] - _referenceTemperature[i]) );
                     }
                     
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
+                        memcpy(_pressureCoeff, vector.vector, n*sizeof(double));
                     } else {
                         for (i=0; i<n; i++) {
                             _pressureCoeff[i] = _localTemperature[i] *
@@ -1695,21 +1726,21 @@ enum {
                         getScalarLocalFieldIMP(core, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _density, solution.mesh.maxElementDofs, @"density", element, solution, model, NULL);
                     } else {
                         memset( _density, 0.0, n*sizeof(double) );
-                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                        if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
+                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &vector, listUtilities);
+                        if (found == YES) memcpy(_density, vector.vector, n*sizeof(double));
                     }
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
+                        memcpy(_pressureCoeff, vector.vector, n*sizeof(double));
                     } else memset( _pressureCoeff, 0.0, n*sizeof(double) );
                 } else {
                     memset( _pressureCoeff, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &buffer, listUtilities);
-                    if (found == YES) memcpy(_pressureCoeff, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"pressure coefficient", &vector, listUtilities);
+                    if (found == YES) memcpy(_pressureCoeff, vector.vector, n*sizeof(double));
                     
                     memset( _density, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_density, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"density", &vector, listUtilities);
+                    if (found == YES) memcpy(_density, vector.vector, n*sizeof(double));
                 }
                 
                 // Take pressure deviation p_d as the dependent variable p = p_0 + p_d.
@@ -1735,28 +1766,28 @@ enum {
                 
                 if ([convectionFlag isEqualToString:@"constant"] == YES) {
                     
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 1", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_u, buffer.vector, n*sizeof(double));
+                        memcpy(_u, vector.vector, n*sizeof(double));
                     } else {
-                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 1", &buffer, listUtilities);
-                        if (found == YES) memcpy(_u, buffer.vector, n*sizeof(double));
+                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 1", &vector, listUtilities);
+                        if (found == YES) memcpy(_u, vector.vector, n*sizeof(double));
                     }
                     
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 2", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_v, buffer.vector, n*sizeof(double));
+                        memcpy(_v, vector.vector, n*sizeof(double));
                     } else {
-                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 2", &buffer, listUtilities);
-                        if (found == YES) memcpy(_v, buffer.vector, n*sizeof(double));
+                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 2", &vector, listUtilities);
+                        if (found == YES) memcpy(_v, vector.vector, n*sizeof(double));
                     }
                     
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"convection velocity 3", &vector, listUtilities);
                     if (found == YES) {
-                        memcpy(_w, buffer.vector, n*sizeof(double));
+                        memcpy(_w, vector.vector, n*sizeof(double));
                     } else {
-                         found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 3", &buffer, listUtilities);
-                        if (found == YES) memcpy(_w, buffer.vector, n*sizeof(double));
+                         found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, equationAtID.valuesList, @"convection velocity 3", &vector, listUtilities);
+                        if (found == YES) memcpy(_w, vector.vector, n*sizeof(double));
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES && flowSol != nil) {
                     for (i=0; i<n; i++) {
@@ -1790,7 +1821,7 @@ enum {
                         }
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: convection model specified but no accociated flow field present?\n");
+                    NSLog(@"FEMHeatSolution:solutionComputer: convection model specified but no accociated flow field present?\n");
                 } else {
                     all = YES;
                     for (i=0; i<3; i++) {
@@ -1823,16 +1854,16 @@ enum {
                 if (bodyForceAtID != nil) {
                     // Frictional viscous heating
                     if (listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, bodyForceAtID.valuesList, @"friction heat", &found) == YES) {
-                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"viscosity", &buffer, listUtilities);
-                        if (found == YES) memcpy(_viscosity, buffer.vector, n*sizeof(double));
+                        found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"viscosity", &vector, listUtilities);
+                        if (found == YES) memcpy(_viscosity, vector.vector, n*sizeof(double));
                     }
                 }
                 
                 // Get heat source
-                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"heat source", &buffer, listUtilities);
+                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"heat source", &vector, listUtilities);
                 if (found == YES) {
                     for (i=0; i<n; i++) {
-                        _load[i] = _density[i] * buffer.vector[i];
+                        _load[i] = _density[i] * vector.vector[i];
                     }
                 }
                 
@@ -1863,21 +1894,21 @@ enum {
             
                 // Perfusion (added as suggested by Matthias Zenker)
                 memset( _perfusionRate, 0.0, n*sizeof(double) );
-                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion rate", &buffer, listUtilities);
+                found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion rate", &vector, listUtilities);
                 if (found == YES) {
-                    memcpy(_perfusionRate, buffer.vector, n*sizeof(double));
+                    memcpy(_perfusionRate, vector.vector, n*sizeof(double));
                     
                     memset( _perfusionRefTemperature, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion reference temperature", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionRefTemperature, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion reference temperature", &vector, listUtilities);
+                    if (found == YES) memcpy(_perfusionRefTemperature, vector.vector, n*sizeof(double));
                     
                     memset( _perfusionDensity, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion density", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionDensity, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion density", &vector, listUtilities);
+                    if (found == YES) memcpy(_perfusionDensity, vector.vector, n*sizeof(double));
                     
                     memset( _perfusionHeatCapacity, 0.0, n*sizeof(double) );
-                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion heat capacity", &buffer, listUtilities);
-                    if (found == YES) memcpy(_perfusionHeatCapacity, buffer.vector, n*sizeof(double));
+                    found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"perfusion heat capacity", &vector, listUtilities);
+                    if (found == YES) memcpy(_perfusionHeatCapacity, vector.vector, n*sizeof(double));
                     for (i=0; i<n; i++) {
                         _c0[i] = _perfusionHeatCapacity[i] * _perfusionRate[i] * _perfusionDensity[i];
                         _load[i] = _load[i] + _c0[i] * _perfusionRefTemperature[i];
@@ -1946,10 +1977,12 @@ enum {
                         condensateStiffIMP(core, @selector(condensateStiff:force:numberOfNodes:force1:), _stiff, _force, n, _timeForce);
                     }
                     
-                    defaultUpdateEquationsIMP(core, @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:requestBulkUpdate:crsMatrix:bandMatrix:),
-                                              model, solution, element, _stiff, _force, &rows, &cols, &saveBulk, crsMatrix, bandMatrix);
+                    defaultUpdateEquationsIMP(core, @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:crsMatrix:bandMatrix:),
+                                              model, solution, element, _stiff, _force, &rows, &cols, crsMatrix, bandMatrix);
                 }
             } // Bulk elements
+            
+            [core defaultFinishBulkAssemblySolution:solution bulkUpdate:NULL];
             
         jump:
             at = cputime() -  at;
@@ -1960,7 +1993,9 @@ enum {
                 if ([core isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
                 
                 n = element->Type.NumberOfNodes;
-                if ([core getElementFamily:element] == 1) continue;
+                
+                // Check that the dimension of element is suitable for fluxes
+                if ([core isFluxElement:element mesh:mesh] == NO) continue;
                 
                 bc = [core getBoundaryCondition:model forElement:element];
                 if (bc == nil) continue;
@@ -1995,7 +2030,7 @@ enum {
             if (transient == YES && _constantBulk == YES) [self FEMHeatSolution_addGlobalTimeSolution:solution];
             
             [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: Assembly done\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
@@ -2079,20 +2114,20 @@ enum {
             
             if (smartHeaterControl == YES || integralHeaterControl == YES) {
                 [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:_powerScaling string:nil];
-                NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater control information\n");
+                NSLog(@"FEMHeatSolution:solutionComputer: heater control information\n");
                 for (i=0; i<model.numberOfBodyForces; i++) {
                     if (!(_smarterHeaters[i] || _integralHeaters[i])) continue;
                     if (_smarterHeaters[i]) _heaterScaling[i] = _powerScaling;
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater for body %d\n", i+1);
-                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater type: smart heater\n");
-                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater type: integral heater\n");
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater for body %d\n", i+1);
+                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: smart heater\n");
+                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: integral heater\n");
                     
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater volutme (m^3): %f\n", _heaterArea[i]);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater volutme (m^3): %f\n", _heaterArea[i]);
                     s = _heaterSource[i] * _heaterScaling[i];
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater power (W): %f\n", s);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater power (W): %f\n", s);
                     
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater scaling: %f\n", _heaterScaling[i]);
-                    NSLog(@"FEMHeatSolution:fieldSolutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater scaling: %f\n", _heaterScaling[i]);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
                     
                     if (_smarterHeaters[i]) [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power density" withValue:s/(_heaterDensity[i]*_heaterArea[i]) string:nil];
                 }
@@ -2101,8 +2136,8 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
             
             // If modeling phase change (and if requested by the user), check if any
             // node has jumped over the phase interval, and if so, reduce time step
@@ -2115,11 +2150,11 @@ enum {
                     if (transient == YES) {
                         _dt = _dt / 2;
                         solution.dt = _dt;
-                        NSLog(@"FEMHeatSolution:fieldSolutionComputer: latent heat release check: reducing time step to: %f\n", _dt);
+                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing time step to: %f\n", _dt);
                     } else {
                         relax = relax / 2;
                         [solution.solutionInfo setValue:@(relax) forKey:@"nonlinear system relaxation factor"];
-                        NSLog(@"FEMHeatSolution:fieldSolutionComputer: latent heat release check: reducing relaxation to: %f\n", relax);
+                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing relaxation to: %f\n", relax);
                     }
                     continue;
                 }
@@ -2127,8 +2162,8 @@ enum {
             }
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: result norm: %e\n", norm);
-            NSLog(@"FEMHeatSolution:fieldSolutionComputer: relative change: %e\n", relativeChange);
+            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e\n", norm);
+            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol && (smartHeaterControl == NO || smartTolReached == YES)) break;
@@ -2145,7 +2180,7 @@ enum {
             if ((solution.solutionInfo)[@"smart heater relaxation factor"] != nil) {
                 powerRelax = [(solution.solutionInfo)[@"smart heater relaxation factor"] doubleValue];
             } else powerRelax = 1.0;
-            if ((solution.solutionInfo)[@"smart heater power sensitivity"] != nil) {
+            if ((solution.solutionInfo)[@"smart heater power sensitivity"] != nil) { 
                 powerSensitivity = [(solution.solutionInfo)[@"smart heater power sensitivity"] doubleValue];
             } powerSensitivity = 4.0;
             _powerScaling = _powerScaling * (1.0 + powerSensitivity * powerRelax * (meltPoint/yave - 1.0));
@@ -2162,13 +2197,13 @@ enum {
         cumulativeTime = cumulativeTime + _dt;
         _dt = timeStep - cumulativeTime;
         
-        if (buffer.vector != NULL) {
-            free_dvector(buffer.vector, 0, buffer.m-1);
-            buffer.vector = NULL;
+        if (vector.vector != NULL) {
+            free_dvector(vector.vector, 0, vector.m-1);
+            vector.vector = NULL;
         }
-        if (buffer.tensor != NULL) {
-            free_d3tensor(buffer.tensor, 0, buffer.m-1, 0, buffer.n-1, 0, buffer.p-1);
-            buffer.tensor = NULL;
+        if (tensor.tensor != NULL) {
+            free_d3tensor(tensor.tensor, 0, tensor.m-1, 0, tensor.n-1, 0, tensor.p-1);
+            tensor.tensor = NULL;
         }
         if (indexes != NULL) {
             free_ivector(indexes, 0, nb-1);

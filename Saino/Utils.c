@@ -7,12 +7,15 @@
 //
 
 #include "Utils.h"
+#include "TimeProfile.h"
 
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #define M 7
 #define NSTACK 50
 
 char timeFormat[20];
+static double advanceTime1;
+static double advanceTime2;
 
 int __attribute__((overloadable)) max(int x, int y) {
     
@@ -868,5 +871,41 @@ char *dateAndTime(void){
     return (char *)timeFormat;
 }
 
+void startAdvanceOutput(char *solverName, char *outputType) {
+    
+    advanceTime1 = realtime();
+    advanceTime2 = realtime();
+    printf("%s: %s\n", solverName, outputType);
+}
 
-
+void advanceOutput(int t, int n, double *dot_t, double *percent_t) {
+    
+    int i;
+    double d_t, p_t;
+    static bool newLine = true;
+    
+    d_t = 1.0;
+    p_t = 20.0;
+    if (dot_t != NULL) d_t = *dot_t;
+    if (percent_t != NULL) p_t = *percent_t;
+    
+    if (realtime() - advanceTime1 > d_t) {
+        if (newLine == true) {
+            printf(": ");
+            newLine = false;
+        }
+        printf(".");
+        
+        if (realtime() -  advanceTime2 > p_t) {
+            i = (int)round(t*100.0/n);
+            printf("%d%%\n", i);
+            newLine = true;
+            advanceTime2 = realtime();
+        }
+        advanceTime1 = realtime();
+    }
+    if (t == n-1) {
+        printf("\n");
+        newLine = true;
+    }
+}

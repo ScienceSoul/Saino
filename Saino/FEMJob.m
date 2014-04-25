@@ -258,7 +258,8 @@
     BOOL found;
     NSString *str = nil;
     NSMutableString *varName;
-    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     FEMSolution *solution;
     FEMInitialConditions *initialCondition;
     FEMListUtilities *listUtilities;
@@ -305,34 +306,34 @@
                                     variableContainers->Values[k] = [listUtilities listGetConstReal:model inArray:initialCondition.valuesList forVariable:variable.name info:&found minValue:NULL maxValue:NULL];
                                 }
                             } else if (variable.dofs <= 1) {
-                                found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&work listUtilities:listUtilities];
+                                found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:variable.name buffer:&vector listUtilities:listUtilities];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
                                         if (variableContainers->Perm !=NULL) k1 = variableContainers->Perm[k1];
-                                        if (k1 >= 0) variableContainers->Values[k1] = work.vector[k];
+                                        if (k1 >= 0) variableContainers->Values[k1] = vector.vector[k];
                                     }
                                 }
                                 
                                 if (_transient == YES && solution.timeOrder == 2) {
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" velocity"];
-                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
+                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&vector listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
                                             if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
-                                            if (k1 >= 0) variableContainers->PrevValues[k1][0] = work.vector[k];
+                                            if (k1 >= 0) variableContainers->PrevValues[k1][0] = vector.vector[k];
                                         }
                                     }
                                     varName = [NSMutableString stringWithString:variable.name];
                                     [varName appendString:@" acceleration"];
-                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&work listUtilities:listUtilities];
+                                    found = [self.core getReal:model forElement:&elements[t] inArray:initialCondition.valuesList variableName:varName buffer:&vector listUtilities:listUtilities];
                                     if (found == YES) {
                                         for (k=0; k<n; k++) {
                                             k1 = indexes[k];
                                             if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
-                                            if (k1 >= 0) variableContainers->PrevValues[k1][1] = work.vector[k];
+                                            if (k1 >= 0) variableContainers->PrevValues[k1][1] = vector.vector[k];
                                         }
                                     }
                                 }
@@ -356,13 +357,13 @@
                                 }
                             }
                             else {
-                                found = [listUtilities listGetRealArray:model inArray:initialCondition.valuesList forVariable:variable.name numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&work];
+                                found = [listUtilities listGetRealArray:model inArray:initialCondition.valuesList forVariable:variable.name numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&tensor];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
-                                        for (l=0; l<min(work.m, variable.dofs); l++) {
+                                        for (l=0; l<min(tensor.m, variable.dofs); l++) {
                                             if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
-                                            if (k1 >= 0) variableContainers->Values[variable.dofs*k1+l] = work.tensor[l][0][k];
+                                            if (k1 >= 0) variableContainers->Values[variable.dofs*k1+l] = tensor.tensor[l][0][k];
                                         }
                                     }
                                 }
@@ -375,8 +376,8 @@
             free_ivector(indexes, 0, mesh.maxElementDofs-1);
         }
     }
-    if (work.vector != NULL) free_dvector(work.vector, 0, work.m-1);
-    if (work.tensor != NULL) free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
+    if (vector.vector != NULL) free_dvector(vector.vector, 0, vector.m-1);
+    if (tensor.tensor != NULL) free_d3tensor(tensor.tensor, 0, tensor.m-1, 0, tensor.n-1, 0, tensor.p-1);
 }
 
 /*************************************************************
@@ -438,7 +439,8 @@
     int i, j, k, l, m, n, t, dim, vectDof, realDof;
     double udot, parU, parV, *nrm, *t1, *t2, *vec, *tmp;
     BOOL found, ntBoundary, pointed, check;
-    listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     NSArray *bc;
     NSString *str = nil;
     NSMutableString *varName;
@@ -495,7 +497,7 @@
                     }
                     
                     if (variable.dofs <= 1) {
-                        found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&work listUtilities:listUtilities];
+                        found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:variable.name buffer:&vector listUtilities:listUtilities];
                         if (found == YES) {
                             ntBoundary = NO;
                             if ([self.core getElementFamily:&elements[t]] != 1) {
@@ -584,14 +586,14 @@
                                             udot = udot + (vec[i]*tmp[i]);
                                         }
                                         for (i=0; i<dim; i++) {
-                                            tmp[i] = tmp[i]+(work.vector[j]-udot)*vec[i];
+                                            tmp[i] = tmp[i]+(vector.vector[j]-udot)*vec[i];
                                         }
                                         for (l=0; l<dim; l++) {
                                             m = l + realDof - (--vectDof);
                                             vectVarContainers->Values[vectVariable.dofs*k+m] = tmp[l];
                                         }
                                     } else {
-                                        variableContainers->Values[k] = work.vector[j];
+                                        variableContainers->Values[k] = vector.vector[j];
                                     }
                                 }
                             }
@@ -600,34 +602,34 @@
                         if (_transient == YES && solution.timeOrder == 2) {
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" velocity"];
-                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
+                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&vector listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
                                     if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
-                                    if (k >= 0) variableContainers->PrevValues[k][0] = work.vector[j];
+                                    if (k >= 0) variableContainers->PrevValues[k][0] = vector.vector[j];
                                 }
                             }
                             
                             varName = [NSMutableString stringWithString:variable.name];
                             [varName appendString:@" acceleration"];
-                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&work listUtilities:listUtilities];
+                            found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&vector listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
                                     k = elements[t].NodeIndexes[j];
                                     if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
-                                    if (k >= 0) variableContainers->PrevValues[k][1] = work.vector[j];
+                                    if (k >= 0) variableContainers->PrevValues[k][1] = vector.vector[j];
                                 }
                             }
                         }
                     } else {
-                        found = [listUtilities listGetRealArray:model inArray:bc forVariable:variable.name numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&work];
+                        found = [listUtilities listGetRealArray:model inArray:bc forVariable:variable.name numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&tensor];
                         if (found == YES) {
                             for (j=0; j<n; j++) {
                                 k = elements[t].NodeIndexes[j];
-                                for (l=0; l<min(work.m, variable.dofs); l++) {
+                                for (l=0; l<min(tensor.m, variable.dofs); l++) {
                                     if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
-                                    if (k >= 0) variableContainers->Values[variable.dofs*k+l] = work.tensor[l][0][j];
+                                    if (k >= 0) variableContainers->Values[variable.dofs*k+l] = tensor.tensor[l][0][j];
                                 }
                             }
                         }
@@ -644,8 +646,8 @@
         free_dvector(tmp, 0, 2);
     }
     
-    if (work.vector != NULL) free_dvector(work.vector, 0, work.m-1);
-    if (work.tensor != NULL) free_d3tensor(work.tensor, 0, work.m-1, 0, work.n-1, 0, work.p-1);
+    if (vector.vector != NULL) free_dvector(vector.vector, 0, vector.m-1);
+    if (tensor.tensor != NULL) free_d3tensor(tensor.tensor, 0, tensor.m-1, 0, tensor.n-1, 0, tensor.p-1);
 }
 
 -(void)FEMJob_runSimulation:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning{
