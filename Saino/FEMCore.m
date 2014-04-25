@@ -6793,8 +6793,8 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Finish assembly
 /*******************************************************************************
-        Finished the bulk assembly of the matrix equation. Optionally save the 
-        matrix for later use.
+    Finished the bulk assembly of the matrix equation. Optionally save the
+    matrix for later use.
 *******************************************************************************/
 -(void)defaultFinishBulkAssemblySolution:(FEMSolution *)solution bulkUpdate:(BOOL *)bulkUpdate {
     
