@@ -15,12 +15,107 @@
 #import "FEMMaterial.h"
 
 @interface FEMDifferentials ()
+-(void)FEMDifferentials_computeLorentzMagnetic:(double *)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double *)lorentzForce model:(FEMModel *)model;
 -(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel *)model;
 @end
 
 @implementation FEMDifferentials
 
 #pragma mark Private methods
+
+-(void)FEMDifferentials_computeLorentzMagnetic:(double *)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double *)lorentzForce model:(FEMModel *)model {
+    
+    int i, j, k, l, m;
+    double bc[3], jc[3], ji[3], perm[3][3][3], r, s;
+    
+    if (model.coordinates == cartesian) {
+        ji[0] = dhdx[2][1] - dhdx[1][2];
+        ji[1] = dhdx[0][2] - dhdx[2][0];
+        ji[2] = dhdx[1][0] - dhdx[0][1];
+        lorentzForce[0] = ji[1]*b[2] - ji[2]*b[1];
+        lorentzForce[1] = ji[2]*b[0] - ji[0]*b[2];
+        lorentzForce[2] = ji[0]*b[1] - ji[1]*b[0];
+        return;
+    }
+    
+    r = sqrtMetric;
+    
+    if (model.coordinates == cylindric_symmetric) {
+        ji[0] = -dhdx[2][1];
+        ji[1] = dhdx[2][0];
+        if (r > 1.0e-10) {
+            ji[1] = ji[1] + b[2] / (r*mu);
+        } else {
+            ji[1] = ji[1] + ji[1];
+        }
+        ji[2] = dhdx[0][1] - dhdx[1][0];
+        lorentzForce[0] = ji[2]*b[1] - ji[1]*b[2];
+        lorentzForce[1] = ji[0]*b[2] - ji[2]*b[0];
+        
+        // You might want to use SI units for the azimuthal component,
+        // if you compute Lorentz force at nodal points and symmetry axis,
+        // otherwise you divide by zero.
+        
+        if (r > 1.0e-10) {
+            lorentzForce[2] = (ji[1]*b[0] - ji[0]*b[1]) / r;
+        } else {
+            lorentzForce[2] = 0.0;
+        }
+        return;
+    }
+    
+    memset( **perm, 0.0, (3*3*3)*sizeof(double) );
+    perm[0][1][2] = -1.0 / sqrtMetric;
+    perm[0][2][1] =  1.0 / sqrtMetric;
+    perm[1][0][2] =  1.0 / sqrtMetric;
+    perm[1][2][0] = -1.0 / sqrtMetric;
+    perm[2][0][1] = -1.0 / sqrtMetric;
+    perm[2][1][0] =  1.0 / sqrtMetric;
+    
+    memset( bc, 0.0, sizeof(bc) );
+    for (i=0; i<3; i++) {
+        for (j=0; j<3; j++) {
+            bc[i] = bc[i] + metric[i][j]*b[j];
+        }
+    }
+
+    memset( ji, 0.0, sizeof(ji) );
+    for (i=0; i<3; i++) {
+        s = 0.0;
+        for (j=0; j<3; j++) {
+            for (k=0; k<3; k++) {
+                if (perm[i][j][k] != 0.0) {
+                    for (l=0; l<3; l++) {
+                        s = s + perm[i][j][k]*metric[j][l]*dhdx[l][k];
+                    }
+                    for (m=0; m<3; m++) {
+                        s = s + perm[i][j][k]*metric[j][l]*symb[k][m][l]*b[m]/mu;
+                    }
+                }
+            }
+        }
+        ji[i] = s;
+    }
+    
+    memset( jc, 0.0, sizeof(jc) );
+    for (i=0; i<3; i++) {
+        for (j=0; j<3; j++) {
+            jc[i] = jc[i] + metric[i][j]*ji[j];
+        }
+    }
+    
+    for (i=0; i<3; i++) {
+        s = 0.0;
+        for (j=0; j<3; j++) {
+            for (k=0; k<3; k++) {
+                if (perm[i][j][k] != 0) {
+                    s = s + perm[i][j][k] * jc[k] * bc[j];
+                }
+            }
+        }
+        lorentzForce[i] = s;
+    }
+}
 
 -(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel *)model {
     
@@ -97,16 +192,162 @@
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
-        
     }
     
     return self;
 }
 
+
+/*************************************************************************************************************
+    Computes the Lorentz force resulting from a magnetic field at integration point (u,v,w).
+**************************************************************************************************************/
+-(void)lorentzForceElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double *)lorentzForce mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration coordinateSystems:(FEMCoordinateSystems *)coordinateSystems listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
+    
+    int i, j, k;
+    double mu, sqrtElementMetric, sqrtMetric, sum, x, y, z;
+    double B[3], dHdx[3][3], dSymb[3][3][3][3], ExtMx[n], ExtMy[n], ExtMz[n], metric[3][3], symb[3][3][3];
+    double *basis = NULL, **basisFirstDerivative = NULL;
+    FEMVariable *mx, *my, *mz;
+    FEMVariable *mfx, *mfy, *mfz;
+    FEMMaterial *materialAtID = nil;
+    variableArraysContainer *mxContainers = NULL, *myContainers = NULL, *mzContainers = NULL;
+    variableArraysContainer *mfxContainers = NULL, *mfyContainers = NULL, *mfzContainers = NULL;
+    listBuffer permeability = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer extMx = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer extMy = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    listBuffer extMz = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL any, found, stat;
+    
+    mx = [utilities getVariableFrom:model.variables model:model name:@"magnetic field 1" onlySearch:NULL maskName:nil info:&found];
+    my = [utilities getVariableFrom:model.variables model:model name:@"magnetic field 2" onlySearch:NULL maskName:nil info:&found];
+    mz = [utilities getVariableFrom:model.variables model:model name:@"magnetic field 3" onlySearch:NULL maskName:nil info:&found];
+    if (mx == nil) return;
+    
+    mxContainers = mx.getContainers;
+    myContainers = my.getContainers;
+    mzContainers = mz.getContainers;
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
+    
+    any = NO;
+    for (i=0; i<mxContainers->sizePerm; i++) {
+        if (mxContainers->Perm[i] < 0) {
+            any = YES;
+            break;
+        }
+    }
+    if (any == YES) return;
+    
+    k = [(model.bodies)[element->BodyID-1][@"material"] intValue];
+    if (k < 1) k = 1;
+    if (k > model.numberOfMaterials) k = model.numberOfMaterials;
+    materialAtID = (model.materials)[k-1];
+    
+    found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"magnetic permeability" numberOfNodes:n indexes:element->NodeIndexes buffer:&permeability minValue:NULL maxValue:NULL];
+    found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"applied magnetic field 1" numberOfNodes:n indexes:element->NodeIndexes buffer:&extMx minValue:NULL maxValue:NULL];
+    found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"applied magnetic field 2" numberOfNodes:n indexes:element->NodeIndexes buffer:&extMy minValue:NULL maxValue:NULL];
+    found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"applied magnetic field 3" numberOfNodes:n indexes:element->NodeIndexes buffer:&extMz minValue:NULL maxValue:NULL];
+    
+    mfx = [utilities getVariableFrom:model.variables model:model name:@"magnetic flux density 1" onlySearch:NULL maskName:nil info:&found];
+    mfy = [utilities getVariableFrom:model.variables model:model name:@"magnetic flux density 2" onlySearch:NULL maskName:nil info:&found];
+    mfz = [utilities getVariableFrom:model.variables model:model name:@"magnetic flux density 3" onlySearch:NULL maskName:nil info:&found];
+    if (mfx != nil) {
+        mfxContainers = mfx.getContainers;
+        mfyContainers = mfy.getContainers;
+        mfzContainers = mfz.getContainers;
+        for (i=0; i<n; i++) {
+            ExtMx[i] = extMx.vector[i] + mfxContainers->Values[mfxContainers->Perm[element->NodeIndexes[i]]];
+            ExtMy[i] = extMy.vector[i] + mfyContainers->Values[mfyContainers->Perm[element->NodeIndexes[i]]];
+            ExtMz[i] = extMz.vector[i] + mfzContainers->Values[mfzContainers->Perm[element->NodeIndexes[i]]];
+        }
+    }
+    
+    // Get element info
+    stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+    stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+    stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+    sqrtElementMetric = integration.metricDeterminant;
+
+    memset(B, 0.0, sizeof(B) );
+    for (i=0; i<n; i++) {
+        B[0] = B[0] + basis[i]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
+        B[1] = B[1] + basis[i]*myContainers->Values[myContainers->Perm[element->NodeIndexes[i]]];
+        B[2] = B[2] + basis[i]*mzContainers->Values[mzContainers->Perm[element->NodeIndexes[i]]];
+    }
+    
+    sum = 0.0;
+    for (i=0; i<n; i++) {
+        sum = sum + basis[i]*ExtMx[i];
+    }
+    B[0] = B[0] + sum;
+    sum = 0.0;
+    for (i=0; i<n; i++) {
+        sum = sum + basis[i]*ExtMy[i];
+    }
+    B[1] = B[1] + sum;
+    sum = 0.0;
+    for (i=0; i<n; i++) {
+        sum = sum + basis[i]*ExtMz[i];
+    }
+    B[2] = B[2] + sum;
+    
+    memset( *dHdx, 0.0, (3*3)*sizeof(double) );
+    for (i=0; i<3; i++) {
+        for (j=0; j<n; j++) {
+            dHdx[0][i] = dHdx[0][i] + basisFirstDerivative[j][i]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j];
+            dHdx[1][i] = dHdx[1][i] + basisFirstDerivative[j][i]*myContainers->Values[myContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j];
+            dHdx[2][i] = dHdx[2][i] + basisFirstDerivative[j][i]*mzContainers->Values[mzContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j];
+        }
+    }
+    
+    // Get coordinate system info
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
+    for (i=0; i<n; i++) {
+        x = x + nodes->x[i]*basis[i];
+        y = y + nodes->y[i]*basis[i];
+        z = z + nodes->z[i]*basis[i];
+    }
+    [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
+    if (model.coordinates != cartesian) {
+        FEMLinearAlgebra *linearAlgebra = [[FEMLinearAlgebra alloc] init];
+        double **matrix = doublematrix(0, 2, 0, 2);
+        memcpy(*matrix, *metric, (3*3)*sizeof(double));
+        [linearAlgebra invertMatrix:matrix ofSize:3];
+        memcpy(*metric, *matrix, (3*3)*sizeof(double));
+        free_dmatrix(matrix, 0, 2, 0, 2);
+    }
+    
+    mu = 0.0;
+    for (i=0; i<n; i++) {
+        mu = mu + permeability.vector[i]*basis[i];
+    }
+    [self FEMDifferentials_computeLorentzMagnetic:B dhdx:dHdx permeability:mu sqrtMetric:sqrtMetric metric:metric symbols:symb lorentzForce:lorentzForce model:model];
+    
+    if (permeability.vector != NULL) {
+        free_dvector(permeability.vector, 0, permeability.m-1);
+        permeability.vector = NULL;
+    }
+    if (extMx.vector != NULL) {
+        free_dvector(extMx.vector, 0, extMx.m-1);
+        extMx.vector = NULL;
+    }
+    if (extMy.vector != NULL) {
+        free_dvector(extMy.vector, 0, extMy.m-1);
+        extMy.vector = NULL;
+    }
+    if (extMz.vector != NULL) {
+        free_dvector(extMz.vector, 0, extMz.m-1);
+        extMz.vector = NULL;
+    }
+}
+
+
 /*************************************************************************************************
     Compute the Joule heating at integration point (u, v, w) given the appropriate electrostatic
-    or magnetic field that indicates the current through a conductor
+    or magnetic field that indicates the current through a conductor.
 *************************************************************************************************/
 -(double)jouleHeatElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
  

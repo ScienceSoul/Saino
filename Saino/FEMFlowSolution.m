@@ -8,16 +8,15 @@
 
 #import "FEMFlowSolution.h"
 #import "FEMCore.h"
-#import "FEMCoordinateSystems.h"
 #import "FEMUtilities.h"
 #import "FEMListUtilities.h"
-#import "FEMMaterial.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMMesh.h"
 #import "FEMEquation.h"
 #import "FEMBodyForce.h"
 #import "FEMMaterial.h"
 #import "FEMTimeIntegration.h"
+#import "FEMNavierStokes.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 
@@ -225,6 +224,8 @@
     FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
     FEMCoordinateSystems *coordinatesSystems = [[FEMCoordinateSystems alloc] init];
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    FEMDifferentials *differentials = [[FEMDifferentials alloc] init];
     FEMTimeIntegration *timeIntegration;
     
     static Element_t* (*getActiveElementIMP)(id, SEL, int, FEMSolution*, FEMModel*) = nil;
@@ -1108,6 +1109,9 @@
             }
             
             // Get element local stiffness and mass matrices
+            memset( *_stiff, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
+            memset( *_mass, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
+            memset( _force, 0.0, (2*solution.mesh.maxElementDofs)*sizeof(double) );
             switch (coordinatesSystems.coordinates) {
                 case cartesian:
                     switch (compressibilityModel) {
@@ -1368,7 +1372,7 @@
         
         [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
         
-        // Dirichlet boundary condition
+        // Dirichlet boundary conditions
         [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
         NSLog(@"FEMFlowSolution:solutionComputer: Dirichlet conditions done.\n");
         

@@ -133,6 +133,7 @@
 		73ADFAD115945343009A83C6 /* NSDataExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD015945343009A83C6 /* NSDataExtensions.m */; };
 		73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD31594560F009A83C6 /* DirectoryReader.m */; };
 		73B1B273170570550056322B /* FEMPost.m in Sources */ = {isa = PBXBuildFile; fileRef = 73B1B272170570550056322B /* FEMPost.m */; };
+		73BAD5561911E1470037E58A /* FEMNavierStokes.m in Sources */ = {isa = PBXBuildFile; fileRef = 73BAD5551911E1470037E58A /* FEMNavierStokes.m */; };
 		73BBD72715DB8AC700B5735D /* FEMPElementMaps.m in Sources */ = {isa = PBXBuildFile; fileRef = 73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */; };
 		73D0F11D175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */; };
 		73D0F120175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */; };
@@ -287,6 +288,8 @@
 		73ADFAD31594560F009A83C6 /* DirectoryReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectoryReader.m; sourceTree = "<group>"; };
 		73B1B271170570550056322B /* FEMPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPost.h; sourceTree = "<group>"; };
 		73B1B272170570550056322B /* FEMPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPost.m; sourceTree = "<group>"; };
+		73BAD5541911E1470037E58A /* FEMNavierStokes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNavierStokes.h; sourceTree = "<group>"; };
+		73BAD5551911E1470037E58A /* FEMNavierStokes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNavierStokes.m; sourceTree = "<group>"; };
 		73BBD72515DB8AC700B5735D /* FEMPElementMaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPElementMaps.h; sourceTree = "<group>"; };
 		73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPElementMaps.m; sourceTree = "<group>"; };
 		73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveAnisotropic.h; sourceTree = "<group>"; };
@@ -598,6 +601,8 @@
 		73D0F11A175DBAC000CE3326 /* Solutions local matrices & boundary conditions */ = {
 			isa = PBXGroup;
 			children = (
+				73BAD5541911E1470037E58A /* FEMNavierStokes.h */,
+				73BAD5551911E1470037E58A /* FEMNavierStokes.m */,
 				73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */,
 				73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */,
 				73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */,
@@ -829,6 +834,7 @@
 				73ADFAD41594560F009A83C6 /* DirectoryReader.m in Sources */,
 				7320CC62159970510050D3B6 /* NodeCompare.c in Sources */,
 				7320CC66159C6B9D0050D3B6 /* SIOMeshIO.m in Sources */,
+				73BAD5561911E1470037E58A /* FEMNavierStokes.m in Sources */,
 				7372925415AA879E004532B5 /* SIOInfoParallel.m in Sources */,
 				736DF3BC15BD38DD00D702C7 /* FEMMatrix.m in Sources */,
 				7328669615C2744B000E1128 /* FEMVariable.m in Sources */,
