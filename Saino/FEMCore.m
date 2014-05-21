@@ -3675,7 +3675,10 @@ static const int PRECOND_VANKA     =  560;
     if (needsDeallocation == YES) free_dvector(values, 0, varContainers->size1PrevValues-1);    
 }
 
--(int **)getEdgeMap:(int)elementFamily {
+/****************************************************
+    Return the EdgeMap and its size (number of rows)
+****************************************************/
+-(int **)getEdgeMap:(int)elementFamily mapSize:(int *)mapSize {
     
     int **edgeMap;
     
@@ -3701,6 +3704,32 @@ static const int PRECOND_VANKA     =  560;
         case 8:
             edgeMap = _brickEM;
             break;
+    }
+    
+    if (mapSize != NULL) {
+        switch (elementFamily) {
+            case 2:
+                *mapSize = 1;
+                break;
+            case 3:
+                *mapSize = 3;
+                break;
+            case 4:
+                *mapSize = 4;
+                break;
+            case 5:
+                *mapSize = 6;
+                break;
+            case 6:
+                *mapSize = 8;
+                break;
+            case 7:
+                *mapSize = 9;
+                break;
+            case 8:
+                *mapSize = 12;
+                break;
+        }
     }
     
     if (_initialized[elementFamily-1] == NO) {
@@ -4202,31 +4231,7 @@ static const int PRECOND_VANKA     =  560;
     
     stat = [self getReal:model forElement:element inArray:bc variableName:name buffer:&load listUtilities:listUtilities];
     
-    edgeMap = [self getEdgeMap:[self getElementFamily:parent]];
-    
-    switch ([self getElementFamily:parent]) {
-        case 2:
-            size = 1;
-            break;
-        case 3:
-            size = 3;
-            break;
-        case 4:
-            size = 4;
-            break;
-        case 5:
-            size = 6;
-            break;
-        case 6:
-            size = 8;
-            break;
-        case 7:
-            size = 9;
-            break;
-        case 8:
-            size = 12;
-            break;
-    }
+    edgeMap = [self getEdgeMap:[self getElementFamily:parent] mapSize:&size];
     
     for (i=0; i<size; i++) {
         jj = edgeMap[i][0];

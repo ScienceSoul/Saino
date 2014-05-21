@@ -100,7 +100,7 @@
 -(Element_t *)getBoundaryElement:(FEMSolution *)solution atIndex:(int)index;
 -(void)getScalarLocalField:(double *)field sizeField:(int)sizeField name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep;
 -(void)getVectorLocalField:(double **)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep;
--(int **)getEdgeMap:(int)elementFamily;
+-(int **)getEdgeMap:(int)elementFamily mapSize:(int *)mapSize;
 -(void)getBoundaryIndexes:(FEMMesh *)mesh forBoundaryElement:(Element_t *)element withParentElement:(Element_t *)parent resultVector:(int *)indexes sizeVector:(int)size indexSize:(int *)indexSize;
 -(int)getBodyForceIDForElement:(Element_t *)element model:(FEMModel *)model;
 -(int)getMaterialIDForElement:(Element_t *)element model:(FEMModel *)model;
