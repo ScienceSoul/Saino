@@ -96,7 +96,7 @@
     nBasis = n;
     bubbles = NO;
     if (convection == YES && stabilize == NO) {
-        nBasis = 2*n;
+        nBasis = 2 * n;
         bubbles = YES;
     }
     
@@ -152,9 +152,9 @@
             y = 0.0;
             z = 0.0;
             for (i=0; i<n; i++) {
-                x = x + nodes->x[i]*basis[i];
-                y = y + nodes->y[i]*basis[i];
-                z = z + nodes->z[i]*basis[i];
+                x = x + nodes->x[i] * basis[i];
+                y = y + nodes->y[i] * basis[i];
+                z = z + nodes->z[i] * basis[i];
             }
         }
         [coordinatesSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dsymb coordX:x coordY:y coordZ:z];
@@ -163,15 +163,15 @@
         // Coefficient of the convection and time derivative terms at the integration point
         c0 = 0.0;
         for (i=0; i<n; i++) {
-            c0 = c0 + nodalC0[i]*basis[i];
+            c0 = c0 + nodalC0[i] * basis[i];
         }
         c1 = 0.0;
         for (i=0; i<n; i++) {
-            c1 = c1 + nodalC1[i]*basis[i];
+            c1 = c1 + nodalC1[i] * basis[i];
         }
         ct = 0.0;
         for (i=0; i<n; i++) {
-            ct = ct + nodalCT[i]*basis[i];
+            ct = ct + nodalCT[i] * basis[i];
         }
         
         // Compute effective heat capacity, if modeling phase change, at the integration point
@@ -182,12 +182,12 @@
             for (i=0; i<3; i++) {
                 sum = 0.0;
                 for (j=0; j<n; j++) {
-                    sum = sum + enthalpy[j]*basisFirstDerivative[j][i];
+                    sum = sum + enthalpy[j] * basisFirstDerivative[j][i];
                 }
                 dEnth = dEnth + pow(sum, 2.0);
                 sum = 0.0;
                 for (j=0; j<n; j++) {
-                    sum = sum + nodalTemperature[j]*basisFirstDerivative[j][i];
+                    sum = sum + nodalTemperature[j] * basisFirstDerivative[j][i];
                 }
                 dTemp = dTemp + pow(sum, 2.0);
             }
@@ -197,13 +197,13 @@
         // Coefficient of the diffusion term & its derivatives at the integration point
         density = 0.0;
         for (i=0; i<n; i++) {
-            density = density + nodalDensity[i]*basis[i];
+            density = density + nodalDensity[i] * basis[i];
         }
         for (i=0; i<dim; i++) {
             for (j=0; j<dim; j++) {
                 sum = 0.0;
                 for (k=0; k<n; k++) {
-                    sum = sum + nodalC2[i][j][k]*basis[k];
+                    sum = sum + nodalC2[i][j][k] * basis[k];
                 }
                 c2[i][j] = sqrt(metric[i][i]) * sqrt(metric[j][j]) * sum;
             }
@@ -222,15 +222,15 @@
             // Velocity from previous iteration at the integration point
             memset( velo, 0.0, sizeof(velo) );
             for (i=0; i<n; i++) {
-                velo[0] = velo[0] + (ux[i]-mux[i])*basis[i];
-                velo[1] = velo[1] + (uy[i]-muy[i])*basis[i];
-                if (dim > 2 && model.coordinates != axis_symmetric) velo[2] = velo[2] + (uz[i]-muz[i])*basis[i];
+                velo[0] = velo[0] + (ux[i] - mux[i]) * basis[i];
+                velo[1] = velo[1] + (uy[i] - muy[i]) * basis[i];
+                if (dim > 2 && model.coordinates != axis_symmetric) velo[2] = velo[2] + (uz[i] - muz[i]) * basis[i];
             }
             
             if (compressible == YES) {
                 pressure = 0.0;
                 for (i=0; i<n; i++) {
-                    pressure = pressure + nodalPressure[i]*basis[i];
+                    pressure = pressure + nodalPressure[i] * basis[i];
                 }
                 
                 memset( *dVelodx, 0.0, (3*3)*sizeof(double) );
@@ -251,7 +251,7 @@
                 } else { // General coordinate system
                     for (i=0; i<dim; i++) {
                         for (j=0; j<dim; j++) {
-                            divVelo = divVelo + velo[j]*symb[i][j][i];
+                            divVelo = divVelo + velo[j] * symb[i][j][i];
                         }
                     }
                 }
@@ -261,11 +261,11 @@
             if (stabilize == YES) {
                 vnorm = 0.0;
                 for (i=0; i<dim; i++) {
-                    vnorm = vnorm + velo[i] * velo[i]/metric[i][i];
+                    vnorm = vnorm + velo[i] * velo[i] / metric[i][i];
                 }
                 vnorm = sqrt(vnorm);
                 
-                pe = min(1.0, mk*hk*c1*vnorm/(2.0*fabs(c2[0][0])));
+                pe = min(1.0, mk * hk * c1 * vnorm / (2.0 * fabs(c2[0][0])));
                 tau = 0.0;
                 if (vnorm != 0.0) {
                     tau = hk * pe / (2.0 * c1 * vnorm);
@@ -276,7 +276,7 @@
                         for (k=0; k<dim; k++) {
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + nodalC2[i][j][l]*basisFirstDerivative[l][k];
+                                sum = sum + nodalC2[i][j][l] * basisFirstDerivative[l][k];
                             }
                             dc2dx[i][j][k] = sqrt(metric[i][i]) * sqrt(metric[j][j]) * sum;
                         }
@@ -287,13 +287,13 @@
                 for (p=0; p<n; p++) {
                     su[p] = c0 * basis[p];
                     for (i=0; i<dim; i++) {
-                        su[p] = su[p] + c1 * basisFirstDerivative[p][i]*velo[i];
+                        su[p] = su[p] + c1 * basisFirstDerivative[p][i] * velo[i];
                         if (element->Type.BasisFunctionDegree <= 1) continue;
                         for (j=0; j<dim; j++) {
-                            su[p] = su[p] - dc2dx[i][j][j]*basisFirstDerivative[p][i];
+                            su[p] = su[p] - dc2dx[i][j][j] * basisFirstDerivative[p][i];
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + dNodalBasisdx[p][l][i]*basisFirstDerivative[l][j];
+                                sum = sum + dNodalBasisdx[p][l][i] * basisFirstDerivative[l][j];
                             }
                             su[p] = su[p] - c2[i][j]*sum;
                             for (k=0; k<dim; k++) {
@@ -308,10 +308,10 @@
                         sw[p] = sw[p] + c1 * basisFirstDerivative[p][i]*velo[i];
                         if (element->Type.BasisFunctionDegree <= 1) continue;
                         for (j=0; j<dim; j++) {
-                            sw[p] = sw[p] - dc2dx[i][j][j]*basisFirstDerivative[p][i];
+                            sw[p] = sw[p] - dc2dx[i][j][j] * basisFirstDerivative[p][i];
                             sum = 0.0;
                             for (l=0; l<n; l++) {
-                                sum = sum + dNodalBasisdx[p][l][i]*basisFirstDerivative[l][j];
+                                sum = sum + dNodalBasisdx[p][l][i] * basisFirstDerivative[l][j];
                             }
                             sw[p] = sw[p] - c2[i][j]*sum;
                             for (k=0; k<dim; k++) {
@@ -359,27 +359,27 @@
         // Force at the integration point
         sum = 0.0;
         for (i=0; i<n; i++) {
-            sum = sum + loadVector[i]*basis[i];
+            sum = sum + loadVector[i] * basis[i];
         }
         force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model integration:integration listUtilities:listUtilities];
         
         if (convection == YES) {
             double pcoeff = 0.0;
             for (i=0; i<n; i++) {
-                pcoeff = pcoeff + nodalPressureCoeff[i]*basis[i];
+                pcoeff = pcoeff + nodalPressureCoeff[i] * basis[i];
             }
             if (pcoeff != 0.0) {
                 sum = 0.0;
                 for (i=0; i<n; i++) {
-                    sum = sum + nodalPressureDt[i]*basis[i];
+                    sum = sum + nodalPressureDt[i] * basis[i];
                 }
                 force = force + pcoeff * sum;
                 for (i=0; i<dim; i++) {
                     sum = 0.0;
                     for (j=0; j<n; j++) {
-                        sum = sum + nodalPressure[j]*basisFirstDerivative[j][i];
+                        sum = sum + nodalPressure[j] * basisFirstDerivative[j][i];
                     }
-                    force = force + pcoeff*velo[i]*sum;
+                    force = force + pcoeff * velo[i] * sum;
                 }
             }
             
@@ -394,14 +394,14 @@
                         memset( *dVelodx, 0.0, (3*3)*sizeof(double) );
                         for (i=0; i<3; i++) {
                             for (j=0; j<n; j++) {
-                                dVelodx[0][i] = dVelodx[0][i] + ux[j]*basisFirstDerivative[j][i];
-                                dVelodx[1][i] = dVelodx[1][i] + uy[j]*basisFirstDerivative[j][i];
+                                dVelodx[0][i] = dVelodx[0][i] + ux[j] * basisFirstDerivative[j][i];
+                                dVelodx[1][i] = dVelodx[1][i] + uy[j] * basisFirstDerivative[j][i];
                                 if (dim > 2 && model.coordinates != axis_symmetric)
-                                                   dVelodx[2][i] = dVelodx[2][i] + uz[j]*basisFirstDerivative[j][i];
+                                                   dVelodx[2][i] = dVelodx[2][i] + uz[j] * basisFirstDerivative[j][i];
                             }
                         }
                     }
-                    force = force + 0.5*viscosity*[materialModels secondInvariantVelo:velo dVelodx:dVelodx crtMatrix:NULL symbols:NULL model:model];
+                    force = force + 0.5 * viscosity * [materialModels secondInvariantVelo:velo dVelodx:dVelodx crtMatrix:NULL symbols:NULL model:model];
                 }
             }
         }
@@ -436,10 +436,13 @@
     double alpha, detJ, force, s, x, y, z;
     BOOL stat;
     FEMCoordinateSystems *coordinateSystem;
+    double *basis = NULL;
     GaussIntegrationPoints *IP = NULL;
     
     memset( *boundaryMatrix, 0.0, (dimensions.mat1*dimensions.mat2)*sizeof(double) );
     memset( boundaryVector, 0.0, dimensions.vec*sizeof(double) );
+    
+    basis = integration.basis;
     
     // Integration stuff
     IP = GaussQuadrature(element, NULL, NULL);
@@ -457,9 +460,9 @@
             y = 0.0;
             z = 0.0;
             for (i=0; i<n; i++) {
-                x = x + (nodes->x[i]*integration.basis[i]);
-                y = y + (nodes->y[i]*integration.basis[i]);
-                z = z + (nodes->z[i]*integration.basis[i]);
+                x = x + (nodes->x[i] * basis[i]);
+                y = y + (nodes->y[i] * basis[i]);
+                z = z + (nodes->z[i] * basis[i]);
             }
             s = s * [coordinateSystem coordinateSquareRootMetricModel:model coordX:x coordY:y coordZ:z];
         }
@@ -467,17 +470,17 @@
         force = 0.0;
         alpha = 0.0;
         for (i=0; i<n; i++) {
-            force = force + (loadVector[i] * integration.basis[i]);
-            alpha = alpha + (nodalAlpha[i] * integration.basis[i]);
+            force = force + (loadVector[i] * basis[i]);
+            alpha = alpha + (nodalAlpha[i] * basis[i]);
         }
 
         for (p=0; p<n; p++) {
             for (q=0; q<n; q++) {
-                boundaryMatrix[p][q] = boundaryMatrix[p][q] + s * alpha * integration.basis[q] * integration.basis[p];
+                boundaryMatrix[p][q] = boundaryMatrix[p][q] + s * alpha * basis[q] * basis[p];
             }
         }
         for (q=0; q<n; q++) {
-            boundaryVector[q] = boundaryVector[q] + s * integration.basis[q] * force;
+            boundaryVector[q] = boundaryVector[q] + s * basis[q] * force;
         }
     }
 }
