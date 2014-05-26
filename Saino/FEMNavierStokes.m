@@ -10,6 +10,7 @@
 
 #import "GaussIntegration.h"
 #import "Utils.h"
+#include "Walls.h"
 
 @implementation FEMNavierStokes {
     
@@ -58,7 +59,7 @@
         int n                                      -> number of element nodes
         Nodes_t *nodes                             -> element node coordinates
 *********************************************************************************************************************/
--(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature convect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel pseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant porous:(BOOL)porous nodalDrag:(double **)nodalDrag potentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient magneticForce:(BOOL)magneticForce rotating:(BOOL)rotating omega:(double *)omega divDiscretization:(BOOL)divDiscretization gradDriscretization:(BOOL)gradDriscretization newtonLinearization:(BOOL)newtonLinearization transient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels*)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
+-(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature isConvect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel isPseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant isPorous:(BOOL)porous nodalDrag:(double **)nodalDrag isPotentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient isMagneticForce:(BOOL)magneticForce isRotating:(BOOL)rotating omega:(double *)omega isDivDiscretization:(BOOL)divDiscretization isGradDriscretization:(BOOL)gradDriscretization isNewtonLinearization:(BOOL)newtonLinearization isTransient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels *)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
     
     int c, i, j, k, l, p, q, t, dim, linearBasis, nBasis, order, tStep;
     double baseP, c1, compress, delta, detJ, drhodp, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu, muder, muder0, pressure, re, rho, s, sum, sum1,
@@ -1076,6 +1077,523 @@
     }
     if (drhodp_n.vector != NULL) {
         free_dvector(drhodp_n.vector, 0, drhodp_n.m-1);
+    }
+}
+
+/*****************************************************************************************************************************
+    Return element local matrices and RHS vector for Navier-Stokes equations boundary conditions in cartesian coordinates.
+ 
+     Arguments:
+ 
+        double **boundaryMatrix     -> output: time derivative coefficient matrix
+        double *boundaryVector      -> output: RHS vector
+        double **loadVector         -> nodal values force in coordinate directives
+        double *nodalAlpha          -> nodal values for force in normal direction
+        double *nodalBeta           -> nodal values of something which will be taken derivative in
+                                       tangential direction and added to force
+        Element_t *element          -> structure describing the element (dimension,nof nodes,
+                                       interpolation degree, etc...)
+        int n                       -> number of boundary element nodes
+        Nodes_t *nodes              -> element node coordinates
+*****************************************************************************************************************************/
+-(void)navierStokesBoundary:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector loadVector:(double **)loadVector nodalAlpha:(double *)nodalAlpha nodalBeta:(double *)nodalBeta nodalExtPressure:(double *)nodalExtPressure nodalSlipCoefficient:(double **)nodalSlipCoefficient  isNormalTangential:(BOOL)normalTangential element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh  model:(FEMModel *)model integration:(FEMNumericIntegration *)integration elementDescription:(FEMElementDescription *)elementDescription elementUtils:(FEMElementUtils *)elementUtils {
+    
+    int c, i, j, k, l, p, q, t, dim;
+    double alpha, detJ, massFlux, slipCoeff, s, u, v, w;
+    double force[3], normals[3], tangents[3], tangents2[3], tangentForce[3], vect[3];
+    double *basis = NULL, **basisFirstDerivative = NULL;
+    BOOL stat;
+    GaussIntegrationPoints *IP = NULL;
+    
+    dim = model.dimension;
+    c = dim + 1;
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
+    
+    IP = GaussQuadrature(element, NULL, NULL);
+    
+    // Start integrating
+    for (t=0; t<IP->n; t++) {
+        
+        u = IP->u[t];
+        v = IP->v[t];
+        w = IP->w[t];
+        
+        // Basis function values and derivatives at the integration point
+        stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+        detJ = integration.metricDeterminant;
+        s = detJ * IP->s[t];
+        
+        // Add to load: tangential derivatives of something
+        memset(tangentForce, 0.0, sizeof(tangentForce) );
+        for (i=0; i<dim; i++) {
+            for (j=0; j<n; j++) {
+                tangentForce[i] = tangentForce[i] + nodalBeta[j] * basisFirstDerivative[j][i];
+            }
+        }
+        
+        // Add to load:  given force in coordinate directions
+        memset(force, 0.0, sizeof(force) );
+        for (i=0; i<dim; i++) {
+            for (j=0; j<n; j++) {
+                force[i] = force[i] + loadVector[i][j] * basis[j];
+            }
+        }
+        
+        // Add to load: given force in normal direction
+        BOOL check = YES;
+        [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
+        alpha = 0.0;
+        for (i=0; i<n; i++) {
+            alpha = alpha + nodalExtPressure[i] * basis[i];
+        }
+        if (normalTangential == YES) {
+            force[0] = force[0] + alpha;
+        } else {
+            for (i=0; i<dim; i++) {
+                force[i] = force[i] + alpha * normals[i];
+            }
+        }
+        
+        alpha = 0.0;
+        for (i=0; i<n; i++) {
+            alpha = alpha + nodalAlpha[i] * basis[i];
+        }
+        massFlux = 0.0;
+        for (i=0; i<n; i++) {
+            massFlux = massFlux + loadVector[3][i] * basis[i];
+        }
+        
+        switch (element->Type.dimension) {
+            case 1:
+                tangents[0] = normals[1];
+                tangents[1] = -normals[0];
+                tangents[2] = 0.0;
+                memset(tangents2, 0.0, sizeof(tangents2) );
+                break;
+            case 2:
+                [elementUtils tangentDirectionsForNormal:normals tangent1:tangents tangent2:tangents2];
+                break;
+        }
+        
+        BOOL any = NO;
+        for (i=0; i<3; i++) {
+            for (j=0; j<n; j++) {
+                if (nodalSlipCoefficient[i][j] != 0.0) {
+                    any = YES;
+                    break;
+                }
+            }
+        }
+        if (any == YES) {
+            for (p=0; p<n; p++) {
+                for (q=0; q<n; q++) {
+                    for (i=0; i<dim; i++) {
+                        slipCoeff = 0.0;
+                        for (j=0; j<n; j++) {
+                            slipCoeff = slipCoeff + nodalSlipCoefficient[i][j] * basis[j];
+                        }
+                        
+                        if (normalTangential == YES) {
+                            switch (i) {
+                                case 0:
+                                    memcpy(vect, normals, sizeof(normals));
+                                    break;
+                                case 1:
+                                    memcpy(vect, tangents, sizeof(tangents));
+                                    break;
+                                case 2:
+                                    memcpy(vect, tangents2, sizeof(tangents2));
+                                    break;
+                            }
+                            
+                            for (j=0; j<dim; j++) {
+                                for (k=0; k<dim; k++) {
+                                    boundaryMatrix[p*c+j][q*c+k] = boundaryMatrix[p*c+j][q*c+k] + s * slipCoeff * basis[q] * basis[p] * vect[j] * vect[k];
+                                }
+                            }
+                        } else {
+                            boundaryMatrix[p*c+i][q*c+i] = boundaryMatrix[p*c+i][q*c+i] + s * slipCoeff * basis[q] * basis[p];
+                        }
+                    }
+                    
+                }
+            }
+        }
+        
+        for (q=0; q<n; q++) {
+            for (i=0; i<dim; i++) {
+                k = q * c + i;
+                if (normalTangential == YES) {
+                    switch (i) {
+                        case 0:
+                            memcpy(vect, normals, sizeof(normals));
+                            break;
+                        case 1:
+                            memcpy(vect, tangents, sizeof(tangents));
+                            break;
+                        case 2:
+                            memcpy(vect, tangents2, sizeof(tangents2));
+                            break;
+                    }
+                    for (j=0; j<dim; j++) {
+                        l = q * c + j;
+                        boundaryVector[l] = boundaryVector[l] + s * basis[q] * force[i] * vect[j];
+                    }
+                } else {
+                    boundaryVector[k] = boundaryVector[k] + s * basis[q] * force[i];
+                }
+                boundaryVector[k] = boundaryVector[k] - s * alpha * basisFirstDerivative[q][i];
+                boundaryVector[k] = boundaryVector[k] + s * tangentForce[i] * basis[q];
+            }
+            boundaryVector[((q+1)*c)-1] = boundaryVector[((q+1)*c)-1] + s * massFlux * basis[q];
+        }
+    }
+}
+
+/*****************************************************************************************************************************
+ 
+        Arguments:
+ 
+            double **boundaryMatrix     -> output: time derivative coefficient matrix
+            double *boundaryVector      -> output: RHS vector
+            double *layerThickness      -> boundary layer thickness
+            double *surfaceRoughness    -> measure of surface roughness
+            double *nodalViscosity      -> nodal values of viscosity
+            double *nodalDensity        -> nodal values of density
+            double *ux, *uy, *uz         -> nodal values of velocity from previous iteration
+            Element_t *element          -> structure describing the element (dimension,nof nodes,
+                                           interpolation degree, etc...)
+            int n                       -> number of boundary element nodes
+            Nodes_t *nodes              -> element node coordinates
+ *****************************************************************************************************************************/
+-(void)vmsWallsBoundary:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector layerThickness:(double *)layerThickness surfaceRoughness:(double *)surfaceRoughness nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration elementDescription:(FEMElementDescription *)elementDescription elementUtils:(FEMElementUtils *)elementUtils {
+    
+    int c, i, j, k, k1, k2, p, q, t, dim;
+    int *ind;
+    double detJ, dkerr, dist, dfx, frictionVelocity, h, mu, rho, roughness, s, sum, u, v, vabs, x, y, w, z;
+    double normals[3], tangents[3], tangents2[3], tangentialVelocity[2], velo[3];
+    double *basis = NULL, **basisFirstDerivative = NULL;
+    BOOL stat;
+    Nodes_t *meshNodes = NULL;
+    GaussIntegrationPoints *IP = NULL;
+    
+    if ([solution.solutionInfo[@"stabilization method"] isEqualToString:@"vms"] == NO) return;
+    
+    dim = model.dimension;
+    c = dim + 1;
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
+    
+    ind = element->BoundaryInfo->Left->NodeIndexes;
+    k = 0;
+    x = 0.0; y = 0.0; z = 0.0;
+    for (i=0; i<element->BoundaryInfo->Left->sizeNodeIndexes; i++) {
+        for (j=0; j<n; j++) {
+            if (ind[i] == element->NodeIndexes[j]) break;
+        }
+        if (j >= n) {
+            meshNodes = mesh.getNodes;
+            x = x + meshNodes->x[ind[i]];
+            y = y + meshNodes->y[ind[i]];
+            z = z + meshNodes->z[ind[i]];
+            k++;
+        }
+    }
+    
+    if (k > 0) {
+        sum = 0.0;
+        for (i=0; i<n; i++) {
+            sum = sum + nodes->x[i];
+        }
+        x = x / k - sum / n;
+        
+        sum = 0.0;
+        for (i=0; i<n; i++) {
+            sum = sum + nodes->y[i];
+        }
+        y = y / k - sum / n;
+        
+        sum = 0.0;
+        for (i=0; i<n; i++) {
+            sum = sum + nodes->z[i];
+        }
+        z = z / k - sum / n;
+    }
+    h = sqrt(pow(x, 2.0) + pow(y, 2.0) + pow(z, 2.0));
+    
+    IP = GaussQuadrature(element, NULL, NULL);
+    
+    // Start integrating
+    for (t=0; t<IP->n; t++) {
+        
+        u = IP->u[t];
+        v = IP->v[t];
+        w = IP->w[t];
+        
+        // Basis function values and derivatives at the integration point
+        stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+        detJ = integration.metricDeterminant;
+        s = detJ * IP->s[t];
+        
+        // Density and viscosity at integration point
+        rho = 0.0;
+        for (i=0; i<n; i++) {
+            rho = rho + nodalDensity[i] * basis[i];
+        }
+        mu = 0.0;
+        for (i=0; i<n; i++) {
+            mu = mu + nodalViscosity[i] * basis[i];
+        }
+        
+        // Velocity from previous iteration at the integration point
+        memset(velo, 0.0, sizeof(velo) );
+        for (i=0; i<n; i++) {
+            velo[0] = velo[0] + ux[i] * basis[i];
+            velo[1] = velo[1] + uy[i] * basis[i];
+            if (dim > 2) velo[2] = velo[2] + uz[i] * basis[i];
+        }
+        
+        // Normal and tangent directions
+        BOOL check = NO;
+        [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
+        
+        if (dim <= 2) {
+            tangents[0] = normals[1];
+            tangents[1] = -normals[0];
+            tangents[2] = 0.0;
+        } else {
+             [elementUtils tangentDirectionsForNormal:normals tangent1:tangents tangent2:tangents2];
+        }
+        memset(tangentialVelocity, 0.0, sizeof(tangentialVelocity) );
+        for (i=0; i<dim; i++) {
+            tangentialVelocity[0] = tangentialVelocity[0] + velo[i] * tangents[i];
+        }
+        if (dim == 3) {
+            for (i=0; i<dim; i++) {
+                tangentialVelocity[1] = tangentialVelocity[1] + velo[i] * tangents2[i];
+            }
+        }
+        
+        dist = 0.0;
+        for (i=0; i<n; i++) {
+            dist = dist + layerThickness[i] * basis[i];
+        }
+        if (dist == 0.0) dist = h;
+        
+        roughness = 0.0;
+        for (i=0; i<n; i++) {
+            roughness = roughness + surfaceRoughness[i] * basis[i];
+        }
+        
+        // Solve friction velocity and its derivative with respect to the
+        // tangential velocity
+        frictionVelocity = 0.0;
+        dkerr = 0.0;
+        sum = 0.0;
+        for (i=0; i<3; i++) {
+            sum = sum + pow(velo[i], 2.0);
+        }
+        vabs = max(sqrt(sum), 1.0e-08);
+        solve_ufric(rho, mu, dist, roughness, vabs, &frictionVelocity, &dfx);
+        dkerr = rho * pow(frictionVelocity, 2.0);
+        
+        
+        for (p=0; p<n; p++) {
+            for (q=0; q<n; q++) {
+                for (i=0; i<dim; i++) {
+                    k1 = c * p + i;
+                    k2 = c * q + i;
+                    sum = 0.0;
+                    for (j=0; j<3; j++) {
+                        sum = sum + basisFirstDerivative[q][j] * normals[j];
+                    }
+                    boundaryMatrix[k1][k2] = boundaryMatrix[k1][k2] - s * 2.0 * mu * sum *basis[p];
+                    sum = 0.0;
+                    for (j=0; j<3; j++) {
+                        sum = sum + basisFirstDerivative[p][j] * normals[j];
+                    }
+                    boundaryMatrix[k1][k2] = boundaryMatrix[k1][k2] - s * 2.0 * mu * sum * basis[q];
+                }
+            }
+        }
+        
+        for (p=0; p<n; p++) {
+            for (q=0; q<n; q++) {
+                for (i=0; i<dim; i++) {
+                    k1 = c * p + i;
+                    k2 = c * q + i;
+                    boundaryMatrix[k1][k2] = boundaryMatrix[k1][k2] + s * dkerr * basis[q] * basis[p];
+                }
+            }
+        }
+    }
+}
+
+/*****************************************************************************************************************************
+    Return the local matrices and RHS contribution from the wall law
+ 
+    Arguments:
+ 
+        double **boundaryMatrix     -> output: time derivative coefficient matrix
+        double *boundaryVector      -> output: RHS vector
+        double *layerThickness      -> boundary layer thickness
+        double *surfaceRoughness    -> measure of surface roughness
+        double *nodalViscosity      -> nodal values of viscosity
+        double *nodalDensity        -> nodal values of density
+        double *ux, *uy, *uz         -> nodal values of velocity from previous iteration
+        Element_t *element          -> structure describing the element (dimension,nof nodes,
+                                       interpolation degree, etc...)
+        int n                       -> number of boundary element nodes
+        Nodes_t *nodes              -> element node coordinates
+ *****************************************************************************************************************************/
+-(void)navierStokesWallLawBoundary:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector layerThickness:(double *)layerThickness surfaceRoughness:(double *)surfaceRoughness nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration elementDescription:(FEMElementDescription *)elementDescription elementUtils:(FEMElementUtils *)elementUtils {
+    
+    int c, i, j, k1, k2, p, q, t, dim;
+    double detJ, dist, mu, rho, roughness, s, sum, u, v, vabs, w;
+    double dfx[2], dkerr[2], frictionVelocity[2], normals[3], tangents[3], tangents2[3], tangentialVelocity[2], velo[3];
+    double *basis = NULL, **basisFirstDerivative = NULL;
+    BOOL stat;
+    GaussIntegrationPoints *IP = NULL;
+    
+    dim = model.coordinates;
+    c = dim + 1;
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
+    
+    IP = GaussQuadrature(element, NULL, NULL);
+    
+    // Start integrating
+    for (t=0; t<IP->n; t++) {
+        
+        u = IP->u[t];
+        v = IP->v[t];
+        w = IP->w[t];
+        
+        // Basis function values and derivatives at the integration point
+        stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+        stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+        detJ = integration.metricDeterminant;
+        s = detJ * IP->s[t];
+        
+        // Density and viscosity at integration point
+        rho = 0.0;
+        for (i=0; i<n; i++) {
+            rho = rho + nodalDensity[i] * basis[i];
+        }
+        mu = 0.0;
+        for (i=0; i<n; i++) {
+            mu = mu + nodalViscosity[i] * basis[i];
+        }
+        
+        // Velocity from previous iteration at the integration point
+        memset(velo, 0.0, sizeof(velo) );
+        for (i=0; i<n; i++) {
+            velo[0] = velo[0] + ux[i] * basis[i];
+            velo[1] = velo[1] + uy[i] * basis[i];
+            if (dim > 2) velo[2] = velo[2] + uz[i] * basis[i];
+        }
+        
+        sum = 0.0;
+        for (i=0; i<3; i++) {
+            sum = sum + pow(velo[i], 2.0);
+        }
+        vabs = max(1.0e-09, sqrt(sum));
+        
+        // Normal and tangent directions
+        BOOL check = NO;
+        [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
+        
+        if (dim <= 2) {
+            tangents[0] = normals[1];
+            tangents[1] = -normals[0];
+            tangents[2] = 0.0;
+        } else {
+            [elementUtils tangentDirectionsForNormal:normals tangent1:tangents tangent2:tangents2];
+        }
+        
+        memset(tangentialVelocity, 0.0, sizeof(tangentialVelocity) );
+        for (i=0; i<dim; i++) {
+            tangentialVelocity[0] = tangentialVelocity[0] + velo[i] * tangents[i];
+        }
+        if (tangentialVelocity[0] < 0) {
+            for (i=0; i<3; i++) {
+                tangents[i] = -tangents[i];
+            }
+            tangentialVelocity[0] = -tangentialVelocity[0];
+        }
+        
+        if (dim == 3) {
+            for (i=0; i<dim; i++) {
+                tangentialVelocity[1] = tangentialVelocity[1] + velo[i] * tangents2[i];
+            }
+            if (tangentialVelocity[1] < 0) {
+                for (i=0; i<3; i++) {
+                    tangents2[i] = -tangents2[i];
+                }
+                tangentialVelocity[1] = -tangentialVelocity[1];
+            }
+        }
+        
+        dist = 0.0;
+        for (i=0; i<n; i++) {
+            dist = dist + layerThickness[i] * basis[i];
+        }
+        
+        roughness = 0.0;
+        for (i=0; i<n; i++) {
+            roughness = roughness + surfaceRoughness[i] * basis[i];
+        }
+        
+        // Solve friction velocity and its derivative with respect to
+        // the tangential velocity
+        memset(frictionVelocity, 0.0, sizeof(frictionVelocity) );
+        memset(dkerr, 0.0, sizeof(dkerr) );
+        if (tangentialVelocity[0] > 1.0e-09) {
+            solve_ufric(rho, mu, dist, roughness, tangentialVelocity[0], &frictionVelocity[0], &dfx[0]);
+            dkerr[0] = 2.0 * rho * frictionVelocity[0] / dfx[0];
+        }
+        
+        if (dim == 3) {
+            if (tangentialVelocity[1] > 1.0e-09) {
+                solve_ufric(rho, mu, dist, roughness, tangentialVelocity[1], &frictionVelocity[1], &dfx[1]);
+                dkerr[1] = 2.0 * rho * frictionVelocity[1] / dfx[1];
+            }
+        }
+        
+        for (p=0; p<n; p++) {
+            for (q=0; q<n; q++) {
+                for (i=0; i<dim; i++) {
+                    for (j=0; j<dim; j++) {
+                        k1 = p * c + i;
+                        k2 = q * c + j;
+                        boundaryMatrix[k1][k2] = boundaryMatrix[k1][k2] + s * dkerr[0] * tangents[i] * tangents[j] * basis[q] * basis[p];
+                        if (dim == 3) {
+                            boundaryMatrix[k1][k2] = boundaryMatrix[k1][k2] + s * dkerr[1] * tangents2[i] * tangents2[j] * basis[q] * basis[p];
+                        }
+                    }
+                }
+            }
+        }
+        
+        for (q=0; q<n; q++) {
+            for (i=0; i<dim; i++) {
+                k1 = q * c + i;
+                boundaryVector[k1] = boundaryVector[k1] + s * (dkerr[0] * tangentialVelocity[0] - rho * pow(frictionVelocity[0], 2.0)) * tangents[i] * basis[q];
+                if (dim == 3) {
+                    boundaryVector[k1] = boundaryVector[k1] + s * (dkerr[1] * tangentialVelocity[1] - rho * pow(frictionVelocity[1], 2.0))
+                    * tangents2[i] * basis[q];
+                }
+            }
+        }
     }
 }
 

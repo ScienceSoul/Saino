@@ -1050,7 +1050,7 @@ static const int PRECOND_VANKA     =  560;
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
                 if (found == YES && rot.vector != NULL) {
-                    any = FALSE;
+                    any = NO;
                     for (i=0; i<rot.m; i++) {
                         if (rot.vector[i] != 0.0) {
                             any = YES;
@@ -1102,7 +1102,7 @@ static const int PRECOND_VANKA     =  560;
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
                 if (found == YES && rot.vector != NULL) {
-                    any = FALSE;
+                    any = NO;
                     for (i=0; i<rot.m; i++) {
                         if (rot.vector[i] != 0.0) {
                             any = YES;

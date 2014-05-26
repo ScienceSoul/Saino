@@ -932,6 +932,11 @@ enum {
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
     FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
     FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
+    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
+    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
+    FEMMaterialModels *materialModels = [[FEMMaterialModels alloc] init];
+    FEMDifferentials *differentials = [[FEMDifferentials alloc] init];
+    FEMCoordinateSystems *coordinatesSystems = [[FEMCoordinateSystems alloc] init];
     FEMTimeIntegration *timeIntegration;
     
     static Element_t* (*getActiveElementIMP)(id, SEL, int, FEMSolution*, FEMModel*) = nil;
@@ -948,7 +953,7 @@ enum {
     static void (*effectiveHeatCapacityElementIMP)(id, SEL, Element_t*, int, FEMMaterial*, FEMModel*, FEMListUtilities*, BOOL) = nil;
     static int (*getBodyForceIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
     static void (*defaultUpdateEquationsIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
-    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*,     double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*) = nil;
+    static void (*diffuseConvectiveComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*) = nil;
     static void (*diffuseConvectiveGeneralComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double*, double*, double*, double*, double***, BOOL, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterialModels*, FEMDifferentials*, FEMCoordinateSystems*, FEMListUtilities*) = nil;
     static void (*defaultFirstOrderTimeIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*) = nil;
     static void (*updateGlobalEquationsModelIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t*, double**, double*, double*, int, int, int*, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
@@ -1488,11 +1493,6 @@ enum {
     firstTime = YES;
     _prevSolution = doublevec(0, _localNodes-1);
     
-    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
-    FEMMaterialModels *materialModels = [[FEMMaterialModels alloc] init];
-    FEMDifferentials *differentials = [[FEMDifferentials alloc] init];
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    FEMCoordinateSystems *coordinatesSystems = [[FEMCoordinateSystems alloc] init];
     if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
     
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
