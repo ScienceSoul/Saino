@@ -120,7 +120,7 @@
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
             for (i=0; i<n; i++) {
                 for (j=0; j<3; j++) {
-                    dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                    dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
                 }
             }
         }

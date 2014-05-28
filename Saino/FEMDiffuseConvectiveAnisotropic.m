@@ -138,17 +138,17 @@
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
             for (i=0; i<n; i++) {
                 for (j=0; j<3; j++) {
-                    dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                    dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
                 }
             }
             memset( *c1, 0.0, (dim*dim)*sizeof(double) );
-            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *integration.basisFirstDerivative, 3, 0.0, (double *)c1, dim);
+            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c1, dim);
             for (i=0; i<dim; i++) {
                 for (j=0; j<dim; j++) {
                     gradNodal[p][i][j] = c1[i][j];
                 }
             }
-            cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *integration.basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
             for (i=0; i<dim; i++) {
                 gradNodal[p][dim][i] = yy[i];
             }
@@ -231,7 +231,7 @@
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
             for (i=0; i<n; i++) {
                 for (j=0; j<3; j++) {
-                    dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                    dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
                 }
             }
         }

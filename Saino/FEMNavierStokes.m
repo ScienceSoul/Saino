@@ -41,25 +41,25 @@
         double **massMatrix                        -> output: time derivative coefficient matrix
         double **stiffMatrix                       -> output: rest of the equation coefficients
         double *forceVector                        -> output: RHS vector
-        double **loadVector                         -> loadVector vector
+        double **loadVector                        -> loadVector vector
         double *nodalViscosity                     -> nodal values for viscosity (i.e. if turbulence model or
                                                       power-law viscosity is used, the values vary in space)
         double *nodalDensity                       -> nodal values of density
         double *velocityX, *velocityY, *velocityZ  -> nodal values of velocity components from previous iteration
         double *nodalPressure                      -> nodal values of total pressure from previous iteration
-        BOOL stabilize                             -> should stabilization be used ?
-        BOOL pseudoCompressible                    -> should artificial compressibility be added ?
+        NSString *stabilizeFlag                    -> should stabilization be used?
+        BOOL pseudoCompressible                    -> should artificial compressibility be added?
         double *nodalCompressibility               -> artificial compressibility for the nodes
         BOOL magneticForce                         -> should Lorentz force for magneto-hydrodynamics be included
         BOOL rotating                              -> is the coordinate system rotating
         double *omega                              -> if previous is YES, components of angular velocity
-        BOOL newtonLinearization                   -> Picard or Newton linearization of the convetion term ?
+        BOOL newtonLinearization                   -> Picard or Newton linearization of the convetion term?
         Element_t *element                         -> structure describing the element (dimension,nof nodes,
                                                       interpolation degree, etc...)
         int n                                      -> number of element nodes
         Nodes_t *nodes                             -> element node coordinates
 *********************************************************************************************************************/
--(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature isConvect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel isPseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant isPorous:(BOOL)porous nodalDrag:(double **)nodalDrag isPotentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient isMagneticForce:(BOOL)magneticForce isRotating:(BOOL)rotating omega:(double *)omega isDivDiscretization:(BOOL)divDiscretization isGradDriscretization:(BOOL)gradDriscretization isNewtonLinearization:(BOOL)newtonLinearization isTransient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels *)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
+-(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature isConvect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel isPseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant isPorous:(BOOL)porous nodalDrag:(double **)nodalDrag isPotentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient isMagneticForce:(BOOL)magneticForce isRotating:(BOOL)rotating omega:(double *)omega isDivDiscretization:(BOOL)divDiscretization isGradPDriscretization:(BOOL)gradPDriscretization isNewtonLinearization:(BOOL)newtonLinearization isTransient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels *)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
     
     int c, i, j, k, l, p, q, t, dim, linearBasis, nBasis, order, tStep;
     double baseP, c1, compress, delta, detJ, drhodp, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu, muder, muder0, pressure, re, rho, s, sum, sum1,
@@ -157,7 +157,7 @@
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
             for (i=0; i<n; i++) {
                 for (j=0; j<3; j++) {
-                    dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                    dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
                 }
             }
         }
@@ -183,17 +183,17 @@
         stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
         for (i=0; i<n; i++) {
             for (j=0; j<3; j++) {
-                dNodalBasisdx[i][p][j] = integration.basisFirstDerivative[i][j];
+                dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
             }
         }
         memset( *c1, 0.0, (dim*dim)*sizeof(double) );
-        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *integration.basisFirstDerivative, 3, 0.0, (double *)c1, dim);
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c1, dim);
         for (i=0; i<dim; i++) {
             for (j=0; j<dim; j++) {
                 gradNodal[p][i][j] = c1[i][j];
             }
         }
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *integration.basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
         for (i=0; i<dim; i++) {
             gradNodal[p][dim][i] = yy[i];
         }
@@ -261,9 +261,9 @@
             stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
             for (i=0; i<n; i++) {
-                pBasis[i] = integration.basis[i];
+                pBasis[i] = basis[i];
                 for (j=0; j<3; j++) {
-                    pdBasisdx[i][j] = integration.basisFirstDerivative[i][j];
+                    pdBasisdx[i][j] = basisFirstDerivative[i][j];
                 }
             }
             element->Type = *saveType;
@@ -282,18 +282,18 @@
         }
         switch (compressibilityModel) {
             case perfect_gas1:
+                pressure = 0.0;
+                temperature = 0.0;
+                memset(dPressuredx, 0.0, sizeof(dPressuredx) );
+                memset(dTemperaturedx, 0.0, sizeof(dTemperaturedx) );
                 if (p2p1 == YES) {
                     k = linearBasis;
-                    pressure = 0.0;
                     for (i=0; i<k; i++) {
                         pressure = pressure + nodalPressure[i] * pBasis[i];
                     }
-                    temperature = 0.0;
                     for (i=0; i<k; i++) {
                         temperature = temperature + nodalTemperature[i] * pBasis[i];
                     }
-                    memset(dPressuredx, 0.0, sizeof(dPressuredx) );
-                    memset(dTemperaturedx, 0.0, sizeof(dTemperaturedx) );
                     for (i=0; i<dim; i++) {
                         for (j=0; j<k; j++) {
                             dPressuredx[i] = dPressuredx[i] + nodalPressure[j] * pdBasisdx[j][i];
@@ -301,16 +301,12 @@
                         }
                     }
                 } else {
-                    pressure = 0.0;
                     for (i=0; i<n; i++) {
                         pressure = pressure + nodalPressure[i] * basis[i];
                     }
-                    temperature = 0.0;
                     for (i=0; i<n; i++) {
                         temperature = temperature + nodalTemperature[i] * basis[i];
                     }
-                    memset(dPressuredx, 0.0, sizeof(dPressuredx) );
-                    memset(dTemperaturedx, 0.0, sizeof(dTemperaturedx) );
                     for (i=0; i<dim; i++) {
                         for (j=0; j<n; j++) {
                             dPressuredx[i] = dPressuredx[i] + nodalPressure[j] * basisFirstDerivative[j][i];
@@ -712,6 +708,7 @@
                 }
                 
                 // First plain Navier-Stokes
+                
                 if (p2p1 == YES && p < linearBasis) {
                     baseP = pBasis[p];
                 } else {
@@ -813,14 +810,14 @@
                         }
                     }
                     // Pressure terms
-                    if (gradDriscretization == YES) {
+                    if (gradPDriscretization == YES) {
                         a[i][c] = a[i][c] + s * basisFirstDerivative[q][i] * basis[p];
                     } else {
                         a[i][c] = a[i][c] - s * basis[q] * basisFirstDerivative[p][i];
                     }
                     
                     // Continuity equation
-                    if (gradDriscretization == YES) {
+                    if (gradPDriscretization == YES) {
                         a[c][i] = a[c][i] - s * rho * basis[q] * basisFirstDerivative[p][i];
                     } else {
                         if (compressible == YES || convect == YES) {
@@ -1096,7 +1093,7 @@
         int n                       -> number of boundary element nodes
         Nodes_t *nodes              -> element node coordinates
 *****************************************************************************************************************************/
--(void)navierStokesBoundary:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector loadVector:(double **)loadVector nodalAlpha:(double *)nodalAlpha nodalBeta:(double *)nodalBeta nodalExtPressure:(double *)nodalExtPressure nodalSlipCoefficient:(double **)nodalSlipCoefficient  isNormalTangential:(BOOL)normalTangential element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh  model:(FEMModel *)model integration:(FEMNumericIntegration *)integration elementDescription:(FEMElementDescription *)elementDescription elementUtils:(FEMElementUtils *)elementUtils {
+-(void)navierStokesBoundary:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector loadVector:(double **)loadVector nodalAlpha:(double *)nodalAlpha nodalBeta:(double *)nodalBeta nodalExtPressure:(double *)nodalExtPressure nodalSlipCoefficient:(double **)nodalSlipCoefficient isNormalTangential:(BOOL)normalTangential element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh  model:(FEMModel *)model integration:(FEMNumericIntegration *)integration elementDescription:(FEMElementDescription *)elementDescription elementUtils:(FEMElementUtils *)elementUtils {
     
     int c, i, j, k, l, p, q, t, dim;
     double alpha, detJ, massFlux, slipCoeff, s, u, v, w;
@@ -1458,7 +1455,7 @@
     int c, i, j, k1, k2, p, q, t, dim;
     double detJ, dist, mu, rho, roughness, s, sum, u, v, vabs, w;
     double dfx[2], dkerr[2], frictionVelocity[2], normals[3], tangents[3], tangents2[3], tangentialVelocity[2], velo[3];
-    double *basis = NULL, **basisFirstDerivative = NULL;
+    double *basis = NULL;
     BOOL stat;
     GaussIntegrationPoints *IP = NULL;
     
@@ -1466,7 +1463,6 @@
     c = dim + 1;
     
     basis = integration.basis;
-    basisFirstDerivative = integration.basisFirstDerivative;
     
     IP = GaussQuadrature(element, NULL, NULL);
     
