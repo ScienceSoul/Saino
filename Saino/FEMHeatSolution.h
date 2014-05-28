@@ -10,6 +10,8 @@
 
 #import "SainoSolutionsComputer.h"
 
+// Class for solving the energy a.k.a. heat equation in various coordinate systems.
+
 @interface FEMHeatSolution : NSObject <SainoSolutionsComputer>
 
 @end

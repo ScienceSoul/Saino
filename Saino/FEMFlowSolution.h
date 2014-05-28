@@ -10,6 +10,9 @@
 
 #import "SainoSolutionsComputer.h"
 
+// Class computing Navier-Stokes local matrices in general coordinate system
+// (i.e. not cartesian, axisymmetric or cylindrically symmetric.
+
 @interface FEMFlowSolution : NSObject <SainoSolutionsComputer>
 
 @end
