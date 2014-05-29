@@ -58,10 +58,11 @@
     
     int c, i, j, k, l, m, p, q, t, coordinates, dim, linearBasis, nBasis;
     int imap[3] = {0, 1, 3};
-    double baseP, compress, delta, density, detJ, force[4], gasConstant, hk, lambda=1.0, mk, pressure, re, s, sqrtMetric, sum, sum1, tau, temperature, x, u, v,
+    double baseP, compress, delta, density, detJ, gasConstant, hk, lambda=1.0, mk, pressure, re, s, sqrtMetric, sum, sum1, tau, temperature, x, u, v,
            vNorm, viscosity, y, w, z;
     double a[4][4], dDensitydx[3], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dSymb[3][3][3][3], dTemperaturedx[3], dVelodx[3][3], dViscositydx[3],
-           gMeric[3][3], load[4], lrf[3], mass[4][4], metric[3], pBasis[n], pdBasisdx[n][3], su[n][4][4], sw[n][4][4], symb[3][3][3], uVelo[3], velo[3];
+           force[4], gMeric[3][3], load[4], lrf[3], mass[4][4], metric[3], pBasis[n], pdBasisdx[n][3], su[n][4][4], sw[n][4][4], symb[3][3][3], uVelo[3],
+           velo[3];
     double *basis = NULL, **basisFirstDerivative = NULL;
     BOOL bubbles, cylindricSymmetry, pBubbles, p2p1, stabilize, stat;
     ElementType_t *linearType = NULL, *saveType = NULL;
@@ -439,7 +440,6 @@
                             sw[p][i][l] = sw[p][i][l] - viscosity * metric[j] * symb[i][j][l] * basisFirstDerivative[p][j];
                             sw[p][i][l] = sw[p][i][l] - viscosity * metric[j] * symb[j][j][l] * basisFirstDerivative[p][i];
                             sw[p][i][l] = sw[p][i][l] - viscosity * metric[j] * dSymb[i][j][l][j] * basis[p];
-                            
                             for (m=0; m<dim; m+=2) {
                                 sw[p][i][l] = sw[p][i][l] + viscosity * metric[j] * symb[i][j][m] * symb[m][j][l] * basis[p];
                                 sw[p][i][l] = sw[p][i][l] + viscosity * metric[j] * symb[j][j][m] * symb[m][i][l] * basis[p];
@@ -484,8 +484,8 @@
                     mass[c][c] = (density / pressure) * basis[q] * baseP;
                 }
                 
-                 memset( *a, 0.0, (4*4)*sizeof(double) );
                 // Stiffness matrix
+                memset( *a, 0.0, (4*4)*sizeof(double) );
                 
                 // Possible Porous media effects
                 if (porous == YES) {

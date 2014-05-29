@@ -137,6 +137,7 @@
 		73BBD72715DB8AC700B5735D /* FEMPElementMaps.m in Sources */ = {isa = PBXBuildFile; fileRef = 73BBD72615DB8AC700B5735D /* FEMPElementMaps.m */; };
 		73C494FD192EED3200F36146 /* Walls.c in Sources */ = {isa = PBXBuildFile; fileRef = 73C494FC192EED3200F36146 /* Walls.c */; };
 		73C495011933224500F36146 /* FEMNavierStokesCylindrical.m in Sources */ = {isa = PBXBuildFile; fileRef = 73C495001933224500F36146 /* FEMNavierStokesCylindrical.m */; };
+		73C4950419359CC200F36146 /* FEMNavierStokesGeneral.m in Sources */ = {isa = PBXBuildFile; fileRef = 73C4950319359CC200F36146 /* FEMNavierStokesGeneral.m */; };
 		73D0F11D175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */; };
 		73D0F120175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D0F11F175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.m */; };
 		73D1FAEE1745DA8700D4E5C9 /* FEMMaterial.m in Sources */ = {isa = PBXBuildFile; fileRef = 73D1FAED1745DA8700D4E5C9 /* FEMMaterial.m */; };
@@ -298,6 +299,8 @@
 		73C494FE192EED4900F36146 /* Walls.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Walls.h; sourceTree = "<group>"; };
 		73C494FF1933224500F36146 /* FEMNavierStokesCylindrical.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNavierStokesCylindrical.h; sourceTree = "<group>"; };
 		73C495001933224500F36146 /* FEMNavierStokesCylindrical.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNavierStokesCylindrical.m; sourceTree = "<group>"; };
+		73C4950219359CC200F36146 /* FEMNavierStokesGeneral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNavierStokesGeneral.h; sourceTree = "<group>"; };
+		73C4950319359CC200F36146 /* FEMNavierStokesGeneral.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNavierStokesGeneral.m; sourceTree = "<group>"; };
 		73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveAnisotropic.h; sourceTree = "<group>"; };
 		73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDiffuseConvectiveAnisotropic.m; sourceTree = "<group>"; };
 		73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveGeneralAnisotropic.h; sourceTree = "<group>"; };
@@ -613,6 +616,8 @@
 				73BAD5551911E1470037E58A /* FEMNavierStokes.m */,
 				73C494FF1933224500F36146 /* FEMNavierStokesCylindrical.h */,
 				73C495001933224500F36146 /* FEMNavierStokesCylindrical.m */,
+				73C4950219359CC200F36146 /* FEMNavierStokesGeneral.h */,
+				73C4950319359CC200F36146 /* FEMNavierStokesGeneral.m */,
 				73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */,
 				73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */,
 				73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */,
@@ -825,6 +830,7 @@
 				73E6B577181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl in Sources */,
 				730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */,
 				73355E761510745100F959D8 /* FEMTimeIntegration.m in Sources */,
+				73C4950419359CC200F36146 /* FEMNavierStokesGeneral.m in Sources */,
 				73F70A6815130C5E00A5B3B5 /* FEMValueList.m in Sources */,
 				73F70A6B1513247500A5B3B5 /* FEMBodyForce.m in Sources */,
 				73059E43186BD5F9008B5E44 /* Numerics.c in Sources */,
