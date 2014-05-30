@@ -19,6 +19,7 @@
 #import "FEMNavierStokes.h"
 #import "FEMNavierStokesCylindrical.h"
 #import "FEMNavierStokesGeneral.h"
+#import "FEMFreeSurface.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 
@@ -207,7 +208,7 @@
     double angularVelocity[3], at, at0, at1, freeSTol, gravity[3], nonLinearRelax, nonLinearTol, newtonTol, pseudoCompressibilityScale, referencePressure, relativeChange, relaxation, specificHeatRatio, st, sum, tDiff, totat, totst, uNorm;
     NSString *compressibilitFlag, *flowModel, *localCoords, *stabilizeFlag, *varName;
     BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, hydrostatic = NO, ifTransient, magneticForce = NO, mbFlag, newtonLinearization = NO, normalTangential, porous, potentialForce, pseudoCompressible, pseudoPressureExists, pseudoPressureUpdate, relaxBefore, rotating, stabilize, useLocalCoords = NO;
-    NSArray *bc;
+    NSArray *bc = nil;
     Element_t * element = NULL, *parent = NULL;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *densityContainers = NULL, *flowContainers = NULL, *tempSolContainers = NULL, *meshVeloSolContainers = NULL,
@@ -231,7 +232,6 @@
     FEMNavierStokes *navierStokes = [[FEMNavierStokes alloc] init];
     FEMNavierStokesCylindrical *navierStokesCylindrical = [[FEMNavierStokesCylindrical alloc] init];
     FEMNavierStokesGeneral *navierStokesGeneral = [[FEMNavierStokesGeneral alloc] init];
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
     FEMMaterialModels *materialModels = [[FEMMaterialModels alloc] init];
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
     FEMTimeIntegration *timeIntegration;
@@ -258,7 +258,6 @@
      static void (*navierStokesCylindricalBoundaryIMP)(id, SEL, double**, double*, double**, double*, double*, double*, double**, BOOL, Element_t*, int, Nodes_t*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMElementUtils*, FEMCoordinateSystems*) = nil;
     static void (*navierStokesGeneralComposeMassMatrixIMP)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*) = nil;
     static void (*navierStokesGeneralBoundaryIMP)(id, SEL, double**, double*, double**, double*, double*, double*, double**, Element_t*, int, Nodes_t*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*) = nil;
-
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -677,6 +676,9 @@
         pseudoPressureUpdate = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"pseudo pressure update" info:&found];
         if (found == NO) pseudoPressureUpdate = NO;
     }
+    
+    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
+    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
     
     for (iter=1; iter<=nonLinearIter; iter++) {
         
@@ -1476,6 +1478,7 @@
         
         // If free surface in model, this will move the nodal points
         if (freeSurfaceFlag == YES) {
+            FEMFreeSurface *freeSurface = [[FEMFreeSurface alloc] init];
             if (relativeChange < freeSTol || iter > freeSIter) computeFree = YES;
             if (computeFree == YES) {
                 if ((solution.solutionInfo)[@"free surface relaxation factor"] != nil) {
@@ -1488,7 +1491,7 @@
                     mbFlag = [(solution.solutionInfo)[@"internal move boundary"] boolValue];
                     found = YES;
                 }
-                if (mbFlag == YES || found == NO); //TODO: implement the moving boundary code
+                if (mbFlag == YES || found == NO) [freeSurface moveBoundaryModel:model integration:integration relax:relaxation];
             }
         }
     }
@@ -1505,6 +1508,8 @@
         coordinatesSystems.coordinates = modelCoords;
         model.dimension = modelDim;
     }
+    
+    [integration deallocation:mesh];
     
     if (ifTransient == YES) {
         if (tempPrev != NULL) free_dvector(tempPrev, 0, tempSolContainers->size1PrevValues-1);

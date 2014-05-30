@@ -932,7 +932,6 @@ enum {
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
     FEMDiffuseConvectiveAnisotropic *diffuseConvectiveAnisotropic = [[FEMDiffuseConvectiveAnisotropic alloc] init];
     FEMDiffuseConvectiveGeneralAnisotropic *diffuseConvectiveGeneralAnisotropic = [[FEMDiffuseConvectiveGeneralAnisotropic alloc] init];
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
     FEMMaterialModels *materialModels = [[FEMMaterialModels alloc] init];
     FEMDifferentials *differentials = [[FEMDifferentials alloc] init];
@@ -1493,6 +1492,7 @@ enum {
     firstTime = YES;
     _prevSolution = doublevec(0, _localNodes-1);
     
+    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
     if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
     
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {

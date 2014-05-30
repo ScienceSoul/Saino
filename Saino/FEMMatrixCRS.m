@@ -1022,4 +1022,13 @@
     }
 }
 
+-(void)zeroMatrix:(FEMMatrix *)matrix {
+    
+    matrixArraysContainer *matContainers = NULL;
+    matContainers = matrix.getContainers;
+    if (matContainers == NULL) return;
+    
+    if (matContainers->Values != NULL) memset(matContainers->Values, 0.0, matContainers->sizeValues*sizeof(double) );
+}
+
 @end
