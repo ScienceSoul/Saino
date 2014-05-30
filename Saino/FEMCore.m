@@ -1827,7 +1827,7 @@ static const int PRECOND_VANKA     =  560;
                     
                 }
             }
-            [crsMatrix sortInMatrix:a alsoValues:NULL];
+            [crsMatrix sortMatrix:a alsoValues:NULL];
             
             memset( aContainers->RHS, 0.0, n*sizeof(double) );
             memset( aContainers->Values, 0.0, (projectorContainers->sizeValues*pow(solution.variable.dofs, 2.0)+n)*sizeof(double) );
@@ -4147,7 +4147,7 @@ static const int PRECOND_VANKA     =  560;
         
     if (solution.matrix.format == MATRIX_CRS) {
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
+        [crsMatrix setElementInGlobal:solution row:i col:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
@@ -4162,7 +4162,7 @@ static const int PRECOND_VANKA     =  560;
         
     if (solution.matrix.format == MATRIX_CRS) {
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
+        [crsMatrix addToElementInGlobal:solution row:i col:j value:value];
         
     } else if (solution.matrix.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.
@@ -5452,7 +5452,7 @@ static const int PRECOND_VANKA     =  560;
     switch (solution.matrix.format) {
         case MATRIX_CRS:
             crsMatrix = [[FEMMatrixCRS alloc] init];
-            [crsMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:u resultVector:v];
+            [crsMatrix matrixVectorMultiplyInGlobal:solution vector:u result:v];
             break;
             
         case MATRIX_BAND:
@@ -5478,7 +5478,7 @@ static const int PRECOND_VANKA     =  560;
     switch (matrix.format) {
         case MATRIX_CRS:
             crsMatrix = [[FEMMatrixCRS alloc] init];
-            [crsMatrix matrixVectorMultiplyInMatrix:matrix multiplyVector:u resultVector:v];
+            [crsMatrix matrixVectorMultiply:matrix vector:u result:v];
             break;
             
         case MATRIX_BAND:
@@ -6135,7 +6135,7 @@ static const int PRECOND_VANKA     =  560;
     switch (solution.matrix.format) {
         case MATRIX_CRS:
             crsMatrix = [[FEMMatrixCRS alloc] init];
-            [crsMatrix glueLocalMatrixInGlobal:solution matrix:localMassMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            [crsMatrix glueLocalMatrix:localMassMatrix inGlobal:solution numberOfNodes:n dofs:dofs indexes:nodeIndexes];
             break;
             
         case MATRIX_LIST:
@@ -6654,7 +6654,7 @@ static const int PRECOND_VANKA     =  560;
     
     static BOOL (*checkPassiveElementIMP)(id, SEL, Element_t *, FEMModel *, FEMSolution *) = nil;
     static void (*rotateMatrixIMP)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*) = nil;
-    static void (*crsGlueLocalMatrixInGlobalIMP)(id, SEL, FEMSolution *, double **, int, int, int*) = nil;
+    static void (*crsGlueLocalMatrixInGlobalIMP)(id, SEL, double **, FEMSolution *, int, int, int*) = nil;
     static void (*bandGlueLocalMatrixInGlobalIMP)(id, SEL, FEMSolution *, double **, int, int, int*) = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -6667,8 +6667,8 @@ static const int PRECOND_VANKA     =  560;
             [self methodForSelector: @selector(FEMCore_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:)];
         }
         if (!crsGlueLocalMatrixInGlobalIMP) {
-            crsGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, FEMSolution *, double **, int, int, int*))
-            [crsMatrix methodForSelector: @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:)];
+            crsGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, double **, FEMSolution *, int, int, int*))
+            [crsMatrix methodForSelector: @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:)];
         }
         if (!bandGlueLocalMatrixInGlobalIMP) {
             bandGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, FEMSolution *, double **, int, int, int*))
@@ -6695,7 +6695,7 @@ static const int PRECOND_VANKA     =  560;
     
     switch (solution.matrix.format) {
         case MATRIX_CRS:
-            crsGlueLocalMatrixInGlobalIMP(crsMatrix, @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:), solution, localStiffMatrix, n, dofs, nodeIndexes);
+            crsGlueLocalMatrixInGlobalIMP(crsMatrix, @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:), localStiffMatrix, solution, n, dofs, nodeIndexes);
             break;
             
         case MATRIX_LIST:
@@ -8268,7 +8268,7 @@ static const int PRECOND_VANKA     =  560;
     res = doublevec(0, ipar[2]-1);
     
     crsMatrix = [[FEMMatrixCRS alloc] init];
-    [crsMatrix matrixVectorMultiplyInMatrix:matrix multiplyVector:x resultVector:res];
+    [crsMatrix matrixVectorMultiply:matrix vector:x result:res];
     
     matContainers = matrix.getContainers;
     

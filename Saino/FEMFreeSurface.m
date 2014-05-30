@@ -102,7 +102,7 @@
                 }
             }
         }
-        [crsMatrix glueLocalMatrixInMatrix:cMatrix localMatrix:localMatrix numberOfNodes:n dofs:1 indexes:elements[i].NodeIndexes];
+        [crsMatrix glueLocalMatrix:localMatrix inMatrix:cMatrix numberOfNodes:n dofs:1 indexes:elements[i].NodeIndexes];
     }
     
     for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
@@ -115,7 +115,7 @@
                         k = elements[t].NodeIndexes[j];
                         forceVector[k] = poissonSolution[k];
                         [crsMatrix zeroRowInMatrix:cMatrix numberOfRows:k];
-                        [crsMatrix setMatrixElementInMatrix:cMatrix atIndex:k andIndex:k value:1.0];
+                        [crsMatrix setElementInMatrix:cMatrix row:k col:k value:1.0];
                     }
                 }
             }

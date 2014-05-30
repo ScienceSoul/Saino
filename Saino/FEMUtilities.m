@@ -553,7 +553,7 @@
     
     if (a.format == MATRIX_CRS) {
         crsMatrix = [[FEMMatrixCRS alloc] init];
-        [crsMatrix setMatrixElementInMatrix:a atIndex:i andIndex:j value:value];
+        [crsMatrix setElementInMatrix:a row:i col:j value:value];
         
     } else if (a.format == MATRIX_LIST) {
         // TODO: implement the setMatrixElement method for list matrix.

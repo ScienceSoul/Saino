@@ -306,7 +306,7 @@
         [self FEMModel_localMatrix:stiff force:force mesh:solution.mesh element:&elements[t] numberOfNodes:n power:power noWeight:weight elemMin:&elemMin elemMax:&elemMax];
         
         // Update global matrix and rhs  vector from local matrix and vector
-        [crsMatrix glueLocalMatrixInMatrix:matrix localMatrix:stiff numberOfNodes:n dofs:1 indexes:elements[t].NodeIndexes];
+        [crsMatrix glueLocalMatrix:stiff inMatrix:matrix numberOfNodes:n dofs:1 indexes:elements[t].NodeIndexes];
         for (i=0; i<elements[t].Type.NumberOfNodes; i++) {
             matrixContainers->RHS[elements[t].NodeIndexes[i]] = matrixContainers->RHS[elements[t].NodeIndexes[i]] + force[i];
         }
@@ -391,13 +391,13 @@
     [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"coordinate mapping" withValues:vector size:3];
     free_ivector(vector, 0, 2);
     
-    //[listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
-    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"transient"];
+    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
+    //[listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"transient"];
     [listUtilities addStringInClassList:self.simulation theVariable:@"time stepping method" withValue:@"bdf"];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"bdf order" withValue:1];
     [listUtilities addIntegerInClassList:self.simulation theVariable:@"time step intervals" withValue:2];
     [listUtilities addConstRealInClassList:self.simulation theVariable:@"time step size" withValue:1.0 string:nil];
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:5];
+    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state max iterations" withValue:1];
     
     int *intervals = intvec(0, 0);
     intervals[0] = 1;

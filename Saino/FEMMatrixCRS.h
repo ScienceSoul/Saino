@@ -14,24 +14,24 @@
 
 -(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows totalNonZeros:(int)totalNonZeros rowNonZeros:(int *)rowNonZeros degreesFreedom:(int)degreesFreedom reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder allocateValues:(BOOL)allocateValues;
 -(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n;
--(void)sortInGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues;
--(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
+-(void)sortGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues;
+-(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
+-(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
+-(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
 -(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value;
 // CRS Matrix-vector multiply
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
--(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v;
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v;
+-(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double complex *)u result:(double complex *)v;
 -(void)fctlLowOrderInSolution:(FEMSolution *)solution orMatrix:(FEMMatrix *)matrix;
 
--(void)glueLocalMatrixInMatrix:(FEMMatrix *)matrix localMatrix:(double **)localMatrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes;
--(void)makeMatrixIndex:(FEMMatrix *)a atIndex:(int)i  andIndex:(int)j;
+-(void)glueLocalMatrix:(double **)localMatrix inMatrix:(FEMMatrix *)matrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes;
+-(void)makeMatrixIndex:(FEMMatrix *)a row:(int)i col:(int)j;
 -(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
--(void)sortInMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues;
--(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)sortMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues;
+-(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value;
 -(void)applyProjector:(FEMMatrix *)pMatrix values:(double *)u permutation:(int *)uperm values:(double *)v permutation:(int *)vperm transpose:(BOOL *)trans;
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v;
--(void)complexMatrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double complex *)u resultVector:(double complex *)v;
+-(void)matrixVectorMultiply:(FEMMatrix *)matrix vector:(double *)u result:(double *)v;
+-(void)complexMatrixVectorMultiply:(FEMMatrix *)matrix vector:(double complex *)u result:(double complex *)v;
 -(void)zeroMatrix:(FEMMatrix *)matrix;
 
 

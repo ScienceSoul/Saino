@@ -158,15 +158,14 @@
     }
 }
 
--(void)sortInGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues {
 /************************************************************************************************
     Sort columns to ascending order for rows of a CRS format matrix
  
     Arguments:
         FEMSolution *solution   ->  solution class containing the matrix
         BOOL *alsoValues        ->  whether values are sorted
- 
 ************************************************************************************************/
+-(void)sortGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues {
     
     int i, j, k, n;
     int *buffer1;
@@ -239,7 +238,6 @@
     }
 }
 
--(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
 /*********************************************************************************************************
     Set a given value to an element of a CRS format Matrix
  
@@ -247,8 +245,8 @@
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
- 
-*********************************************************************************************************/
+ *********************************************************************************************************/
+-(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
@@ -276,7 +274,6 @@
     matContainers->Values[k] = value;
 }
 
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
 /************************************************************************************************************
     Add a given value to an element of a CRS format Matrix
  
@@ -284,8 +281,8 @@
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be added
- 
 ************************************************************************************************************/
+-(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
@@ -312,22 +309,21 @@
 }
 
 
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
 /******************************************************************************************************************************************
-   
+ 
     Add a set of values (i.e., element stiffness matrix) to a CRS format matrix
  
     Arguments:
-    
+ 
         FEMSolution *solution  -> Solution class holding the global matrix
         double **matrix        -> (n x dofs) x (n x dofs) matrix holding the values to be
                                   added to the CRS format matrix
         int n                  -> number of nodes in element
         int dofs               -> number of degrees of freemdom for one node
         int *indexes           -> Maps element node number to global (or partition) node number
-                                   (to matrix rows and cols if dofs = 1)
- 
+                                  (to matrix rows and cols if dofs = 1)
 *******************************************************************************************************************************************/
+-(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
     
     int i, j, k, l, c, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -344,14 +340,14 @@
                 if (col >= row) {
                     for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
                         if (matContainers->Cols[c] == col) {
-                            matContainers->Values[c] = matContainers->Values[c] + matrix[i][j];
+                            matContainers->Values[c] = matContainers->Values[c] + localMatrix[i][j];
                             break;
                         }
                     }
                 } else {
                     for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
                         if (matContainers->Cols[c] == col) {
-                            matContainers->Values[c] = matContainers->Values[c] + matrix[i][j];
+                            matContainers->Values[c] = matContainers->Values[c] + localMatrix[i][j];
                             break;
                         }
                     }
@@ -370,14 +366,14 @@
                         if (col >= row) {
                             for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
-                                    matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
                                     break;
                                 }
                             }
                         } else {
                             for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
-                                    matContainers->Values[c] = matContainers->Values[c] + matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
                                     break;
                                 }
                             }
@@ -389,10 +385,9 @@
     }
 }
 
--(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value {
 /*************************************************************************************************************
  
-    When the Dirichlet conditions are set by zeroing the row except for setting the diagonal entry to one, 
+    When the Dirichlet conditions are set by zeroing the row except for setting the diagonal entry to one,
     the matrix symmetry is broken. This routine maintains the symmetric structure of the matrix equation.
  
     Arguments:
@@ -400,8 +395,8 @@
         FEMMatrix *matrix    -> solution class holding the global matrix
         int n                -> index of the dofs to be fixed
         double value         -> Dirichlet value to be set
- 
 ************************************************************************************************************/
+-(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value {
     
     int i, j, k, l, m, k1, k2;
     BOOL isMass, isDamp;
@@ -463,22 +458,19 @@
     matContainers->Values[matContainers->Diag[n]] = 1.0;
 }
 
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
 /*******************************************************************************************
  
     Description:
-    Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
-    is accessed from the solution class. Real version.
+        Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
+        is accessed from the solution class. Real version.
  
     Arguments:
  
-    FEMSolution *solution  -> Class holding input matrix.
- 
-    double *u              -> Vector to multiply
- 
-    double *v              -> Result vector
- 
+        FEMSolution *solution  -> Class holding input matrix.
+        double *u              -> Vector to multiply
+        double *v              -> Result vector
 *******************************************************************************************/
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v {
     
     int i, j, n;
     double rsum;
@@ -498,22 +490,19 @@
     }
 }
 
--(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double complex *)u resultVector:(double complex *)v {
 /*******************************************************************************************
  
     Description:
-    Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
-    is accessed from the solution class. Complex version.
+        Matrix vector product (v = Au) for a matrix given in CRS format. The matrix
+        is accessed from the solution class. Complex version.
  
     Arguments:
  
-    FEMSolution *solution  -> Class holding input matrix.
- 
-    double *u              -> Vector to multiply
- 
-    double *v              -> Result vector
- 
+        FEMSolution *solution  -> Class holding input matrix.
+        double *u              -> Vector to multiply
+        double *v              -> Result vector
 *******************************************************************************************/
+-(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double complex *)u result:(double complex *)v {
     
     int i, j, n;
     double complex s, rsum;
@@ -630,22 +619,21 @@
     }
 }
 
--(void)glueLocalMatrixInMatrix:(FEMMatrix *)matrix localMatrix:(double **)localMatrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes {
 /*************************************************************************************************************
  
     Add a set of values (i.e., element stiffness matrix) to a CRS format matrix
  
-    Arguments:
+        Arguments:
  
-    FEMMatrix *matrix       -> The matrix class
-    double **localMatrix    -> (n x dofs) x (n x dofs) matrix holding the values to be
-                               added to the CRS format matrix
-    int n                   -> number of nodes in element
-    int dofs                -> number of degrees of freemdom for one node
-    int *indexes            -> Maps element node number to global (or partition) node number
-                               (to matrix rows and cols if dofs = 1)
- 
+        FEMMatrix *matrix       -> The matrix class
+        double **localMatrix    -> (n x dofs) x (n x dofs) matrix holding the values to be
+                                   added to the CRS format matrix
+        int n                   -> number of nodes in element
+        int dofs                -> number of degrees of freemdom for one node
+        int *indexes            -> Maps element node number to global (or partition) node number
+                                   (to matrix rows and cols if dofs = 1)
 ************************************************************************************************************/
+-(void)glueLocalMatrix:(double **)localMatrix inMatrix:(FEMMatrix *)matrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes {
     
     int i, j, k, l, c, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -705,16 +693,17 @@
     }
 }
 
--(void)makeMatrixIndex:(FEMMatrix *)a atIndex:(int)i  andIndex:(int)j {
 /*****************************************************************************************
  
     Fill-in the column number to a CRS format matrix (values are not affected in any way)
  
-    FEMMatrix *a -> the matrix class
-    int i        -> row number of the matrix element
-    int j        -> column number of the matrix element
+    Arguments:
  
+        FEMMatrix *a -> the matrix class
+        int i        -> row number of the matrix element
+        int j        -> column number of the matrix element
 *****************************************************************************************/
+-(void)makeMatrixIndex:(FEMMatrix *)a row:(int)i col:(int)j {
     
     int k, n;
     matrixArraysContainer *aContainers = NULL;
@@ -767,15 +756,14 @@
     }
 }
 
--(void)sortInMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues {
 /************************************************************************************************
     Sort columns to ascending order for rows of a CRS format matrix
  
     Arguments:
-    Matrix_t *a             ->  the matrix class
-    BOOL *alsoValues        ->  whether values are sorted
- 
+        Matrix_t *a             ->  the matrix class
+        BOOL *alsoValues        ->  whether values are sorted
 ************************************************************************************************/
+-(void)sortMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues {
     
     int i, j, k, n;
     int *buffer1;
@@ -848,7 +836,6 @@
     }
 }
 
--(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
 /************************************************************************************************
     Set a given value to an element of a CRS format Matrix
  
@@ -858,6 +845,7 @@
         double value            ->  value to be set
  
 ************************************************************************************************/
+-(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
     matrixArraysContainer *aContainers = NULL;
@@ -961,13 +949,11 @@
     Arguments:
  
         FEMMatrix *matrix  -> the input matrix class.
- 
         double *u          -> Vector to multiply
- 
         double *v          -> Result vector
  
 *******************************************************************************************/
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double *)u resultVector:(double *)v {
+-(void)matrixVectorMultiply:(FEMMatrix *)matrix vector:(double *)u result:(double *)v {
     
     int i, j, n;
     double rsum;
@@ -995,13 +981,11 @@
     Arguments:
  
         FEMMatrix *matrix  -> the input matrix class.
- 
         double *u          -> Vector to multiply
- 
         double *v          -> Result vector
  
 *******************************************************************************************/
--(void)complexMatrixVectorMultiplyInMatrix:(FEMMatrix *)matrix multiplyVector:(double complex *)u resultVector:(double complex *)v {
+-(void)complexMatrixVectorMultiply:(FEMMatrix *)matrix vector:(double complex *)u result:(double complex *)v {
     
     int i, j, n;
     double complex s, rsum;

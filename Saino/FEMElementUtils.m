@@ -320,14 +320,14 @@
                 for (m=0; m<dofs; m++) {
                     k1 = dofs * j + l;
                     k2 = dofs * k + m;
-                    [crsMatrix makeMatrixIndex:matrix atIndex:k1 andIndex:k2];
+                    [crsMatrix makeMatrixIndex:matrix row:k1 col:k2];
                 }
             }
             cList = cList->Next;
         }
     }
     
-    if (matrix.format == MATRIX_CRS) [crsMatrix sortInMatrix:matrix alsoValues:NULL];
+    if (matrix.format == MATRIX_CRS) [crsMatrix sortMatrix:matrix alsoValues:NULL];
 }
 
 #pragma mark Public methods
@@ -606,7 +606,7 @@
                             l = perm[elements[j].NodeIndexes[p]];
                             for (m=0; m<dofs; m++) {
                                 k1 = dofs * l + m;
-                                [crsMatrix makeMatrixIndex:matrix.constraint atIndex:i andIndex:k1];
+                                [crsMatrix makeMatrixIndex:matrix.constraint row:i col:k1];
                             }
                         }
                     }
@@ -645,14 +645,14 @@
                             l = perm[elements[j].NodeIndexes[p]];
                             for (m=0; m<dofs; m++) {
                                 k1 = dofs * l + m;
-                                [crsMatrix makeMatrixIndex:matrix.constraint atIndex:i andIndex:k1];
+                                [crsMatrix makeMatrixIndex:matrix.constraint row:i col:k1];
                             }
                         }
                     }
                 }
             }
         }
-        [crsMatrix sortInMatrix:matrix.constraint alsoValues:NULL];
+        [crsMatrix sortMatrix:matrix.constraint alsoValues:NULL];
     }
     
     free_ivector(modelContainers->rowNonZeros, 0, modelContainers->sizeRowNonZeros-1);
