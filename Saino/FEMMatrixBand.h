@@ -14,15 +14,15 @@
 
 -(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues;
 -(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n;
--(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
+-(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
+-(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
+-(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
 -(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value;
 // Band Matrix-vector multiply
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v;
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v;
 
 -(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
--(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v;
+-(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value;
+-(void)matrixVectorMultiply:(FEMMatrix *)a vector:(double *)u result:(double *)v;
 
 @end

@@ -4154,7 +4154,7 @@ static const int PRECOND_VANKA     =  560;
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix setMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
+        [bandMatrix setElementInGlobal:solution row:i col:j value:value];
     }
 }
 
@@ -4169,7 +4169,7 @@ static const int PRECOND_VANKA     =  560;
         
     } else if (solution.matrix.format == MATRIX_BAND || solution.matrix.format == MATRIX_SBAND) {
         FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix addToMatrixElementInGlobal:solution atIndex:i andIndex:j value:value];
+        [bandMatrix addToElementInGlobal:solution row:i col:j value:value];
     }
 }
 
@@ -5458,7 +5458,7 @@ static const int PRECOND_VANKA     =  560;
         case MATRIX_BAND:
         case MATRIX_SBAND:
             bandMatrix = [[FEMMatrixBand alloc] init];
-            [bandMatrix matrixVectorMultiplyInGlobal:solution multiplyVector:u resultVector:v];
+            [bandMatrix matrixVectorMultiplyInGlobal:solution vector:u result:v];
             break;
             
         case MATRIX_LIST:
@@ -5484,7 +5484,7 @@ static const int PRECOND_VANKA     =  560;
         case MATRIX_BAND:
         case MATRIX_SBAND:
             bandMatrix = [[FEMMatrixBand alloc] init];
-            [bandMatrix matrixVectorMultiplyInMatrix:matrix multiplyVector:u resultVector:v];
+            [bandMatrix matrixVectorMultiply:matrix vector:u result:v];
             break;
             
         case MATRIX_LIST:
@@ -6145,7 +6145,7 @@ static const int PRECOND_VANKA     =  560;
         case MATRIX_BAND:
         case MATRIX_SBAND:
             bandMatrix = [[FEMMatrixBand alloc] init];
-            [bandMatrix glueLocalMatrixInGlobal:solution matrix:localMassMatrix numberOfNodes:n dofs:dofs indexes:nodeIndexes];
+            [bandMatrix glueLocalMatrix:localMassMatrix inGlobal:solution numberOfNodes:n dofs:dofs indexes:nodeIndexes];
             break;
     }
     
@@ -6655,7 +6655,7 @@ static const int PRECOND_VANKA     =  560;
     static BOOL (*checkPassiveElementIMP)(id, SEL, Element_t *, FEMModel *, FEMSolution *) = nil;
     static void (*rotateMatrixIMP)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*) = nil;
     static void (*crsGlueLocalMatrixInGlobalIMP)(id, SEL, double **, FEMSolution *, int, int, int*) = nil;
-    static void (*bandGlueLocalMatrixInGlobalIMP)(id, SEL, FEMSolution *, double **, int, int, int*) = nil;
+    static void (*bandGlueLocalMatrixInGlobalIMP)(id, SEL, double **, FEMSolution *, int, int, int*) = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         if (!checkPassiveElementIMP) {
@@ -6671,8 +6671,8 @@ static const int PRECOND_VANKA     =  560;
             [crsMatrix methodForSelector: @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:)];
         }
         if (!bandGlueLocalMatrixInGlobalIMP) {
-            bandGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, FEMSolution *, double **, int, int, int*))
-            [bandMatrix methodForSelector: @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:)];
+            bandGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, double **, FEMSolution *, int, int, int*))
+            [bandMatrix methodForSelector: @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:)];
         }
     });
     
@@ -6704,7 +6704,7 @@ static const int PRECOND_VANKA     =  560;
             
         case MATRIX_BAND:
         case MATRIX_SBAND:
-            bandGlueLocalMatrixInGlobalIMP(bandMatrix, @selector(glueLocalMatrixInGlobal:matrix:numberOfNodes:dofs:indexes:), solution, localStiffMatrix, n, dofs, nodeIndexes);
+            bandGlueLocalMatrixInGlobalIMP(bandMatrix, @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:), localStiffMatrix, solution, n, dofs, nodeIndexes);
             break;
     }
     

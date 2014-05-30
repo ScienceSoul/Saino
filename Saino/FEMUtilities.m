@@ -560,7 +560,7 @@
         
     } else if (a.format == MATRIX_BAND || a.format == MATRIX_SBAND) {
         bandMatrix = [[FEMMatrixBand alloc] init];
-        [bandMatrix setMatrixElementInMatrix:a atIndex:i andIndex:j value:value];
+        [bandMatrix setElementInMatrix:a row:i col:j value:value];
     }
 }
 

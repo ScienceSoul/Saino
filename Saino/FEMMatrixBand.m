@@ -77,16 +77,16 @@
     }
 }
 
--(void)setMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
 /**********************************************************************************************************
     Set a given value to an element of a Band format Matrix
  
     Arguments:
+       
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
- 
 **********************************************************************************************************/
+-(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -99,16 +99,18 @@
     }
 }
 
--(void)addToMatrixElementInGlobal:(FEMSolution *)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+
 /***********************************************************************************************************
     Add a given value to an element of a Band format matrix
  
     Arguments:
+ 
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
- 
- **********************************************************************************************************/
+**********************************************************************************************************/
+-(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
+    
     int k;
     matrixArraysContainer *matContainers = NULL;
     
@@ -125,9 +127,8 @@
     }
 }
 
--(void)glueLocalMatrixInGlobal:(FEMSolution *)solution matrix:(double **)matrix numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
 /*****************************************************************************************************************************************
-    
+ 
     Add a set of values (i.e., element stiffness matrix) to a Band format matrix
  
     Arguments:
@@ -139,8 +140,8 @@
         int dofs                -> number of degrees of freemdom for one node
         int **indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
- 
 *****************************************************************************************************************************************/
+-(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
     
     int i, j, k, l, ind, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -155,7 +156,7 @@
                     for (l=1; l<=dofs; l++) {
                         col = dofs * (indexes[j]+1) - l;
                         ind = ( (col-1)*(3*solution.matrix.subband+1) + row - col + 2*solution.matrix.subband );
-                        matContainers->Values[ind] = matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                        matContainers->Values[ind] = localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
                     }
                 }
             
@@ -170,7 +171,7 @@
                         col = dofs * (indexes[j]+1) - l;
                         if (col <= row) {
                             ind = ( (col-1)*(solution.matrix.subband+1) + row - col + 1 );
-                            matContainers->Values[ind] = matrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                            matContainers->Values[ind] = localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
                         }
                     }
                 }
@@ -179,7 +180,6 @@
     }
 }
 
--(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value {
 /*************************************************************************************************************
  
     Set value of unknown x(n) to given value for symmetric band matrix. This is done by replacing the
@@ -189,11 +189,11 @@
  
     Arguments:
  
-    FEMSolution *solution   -> Solution class holding the global matrix
-    int n                   -> ordered number of the unknown (i.e., matrix row and column number)
-    double value            -> value for the unknown
- 
- ************************************************************************************************************/
+        FEMSolution *solution   -> Solution class holding the global matrix
+        int n                   -> ordered number of the unknown (i.e., matrix row and column number)
+        double value            -> value for the unknown
+************************************************************************************************************/
+-(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -214,21 +214,19 @@
     matContainers->Values[n*(solution.matrix.subband+1)+(n)-(n)] = 1.0;
 }
 
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution multiplyVector:(double *)u resultVector:(double *)v {
 /*******************************************************************************************
  
     Description:
-    Matrix vector product (v = Au) for a matrix given in band format. The matrix
-    is accessed from the solution class. Real version.
+        Matrix vector product (v = Au) for a matrix given in band format. The matrix
+        is accessed from the solution class. Real version.
  
     Arguments:
  
-    FEMSolution *solution  -> Class holding input matrix.
- 
-    double *u              -> Vector to multiply
- 
-    double *v              -> Result vector
+        FEMSolution *solution  -> Class holding input matrix.
+        double *u              -> Vector to multiply
+        double *v              -> Result vector
 *******************************************************************************************/
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v {
     
     int i, j, n;
     double s;
@@ -282,12 +280,12 @@
     Set a given value to an element of a Band format Matrix
  
     Arguments:
+ 
         Matrix_t *a             ->  the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
- 
 ************************************************************************************************/
--(void)setMatrixElementInMatrix:(FEMMatrix *)a atIndex:(int)i andIndex:(int)j value:(double)value {
+-(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -307,12 +305,10 @@
     Arguments:
  
         FEMMatrix *a  -> input matrix.
- 
         double *u     -> Vector to multiply
- 
         double *v     -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiplyInMatrix:(FEMMatrix *)a multiplyVector:(double *)u resultVector:(double *)v {
+-(void)matrixVectorMultiply:(FEMMatrix *)a vector:(double *)u result:(double *)v {
     
     int i, j, n;
     double s;
