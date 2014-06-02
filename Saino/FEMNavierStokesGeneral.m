@@ -77,41 +77,34 @@
         
         // Coordinate system dependent info
         if (coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + nodes->x[i] * basis[i];
-                y = y + nodes->y[i] * basis[i];
-                z = z + nodes->z[i] * basis[i];
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
         }
         
         [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
         s = sqrtMetric * detJ * IP->s[t];
         
         // Density at the integration point
-        density = 0.0;
-        for (i=0; i<n; i++) {
-            density = density + nodalDensity[i] * basis[i];
-        }
+        density = cblas_ddot(n, nodalDensity, 1, basis, 1);
         
         // Velocity from previous iteration at the integration point
         memset(velo, 0.0, sizeof(velo) );
-        for (i=0; i<n; i++) {
-            velo[0] = velo[0] + (ux[i] - mux[i]) * basis[i];
-            velo[1] = velo[1] + (uy[i] - muy[i]) * basis[i];
-            if (dim > 2 && coordinates != axis_symmetric) velo[2] = velo[2] + (uz[i] - muz[i]) * basis[i];
-        }
+        double diffux[n];
+        double diffuy[n];
+        double diffuz[n];
+        vDSP_vsubD(mux, 1, ux, 1, diffux, 1, n);
+        vDSP_vsubD(muy, 1, uy, 1, diffuy, 1, n);
+        if (dim > 2 && coordinates != axis_symmetric) vDSP_vsubD(muz, 1, uz, 1, diffuz, 1, n);
+        velo[0] = cblas_ddot(n, diffux, 1, basis, 1);
+        velo[1] = cblas_ddot(n, diffuy, 1, basis, 1);
+        if (dim > 2 && coordinates != axis_symmetric) velo[2] = cblas_ddot(n, diffuz, 1, basis, 1);
         
         if (newtonLinearization == YES) {
             memset(uVelo, 0.0, sizeof(uVelo) );
-            for (i=0; i<n; i++) {
-                uVelo[0] = uVelo[0] + ux[i] * basis[i];
-                uVelo[1] = uVelo[1] + uy[i] * basis[i];
-                if (dim > 2 && coordinates != axis_symmetric) uVelo[2] = uVelo[2] + uz[i] * basis[i];
-            }
-
+            uVelo[0] = cblas_ddot(n, ux, 1, basis, 1);
+            uVelo[1] = cblas_ddot(n, uy, 1, basis, 1);
+            if (dim > 2 && coordinates != axis_symmetric) uVelo[2] = cblas_ddot(n, uz, 1, basis, 1);
             
             memset( *dVelodx, 0.0, (3*3)*sizeof(double) );
             for (i=0; i<3; i++) {
@@ -147,10 +140,7 @@
         }
         
         // Effective viscosity and derivatives at integration point
-        viscosity = 0.0;
-        for (i=0; i<n; i++) {
-            viscosity = viscosity + nodalViscosity[i] * basis[i];
-        }
+        viscosity = cblas_ddot(n, nodalViscosity, 1, basis, 1);
         viscosity = [materialModels effectiveViscosity:viscosity density:density velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration];
         
         // Stabilization parameters tau and delta
@@ -162,10 +152,7 @@
                 }
             }
             
-            sum = 0.0;
-            for (i=0; i<dim; i++) {
-                sum = sum + pow(velo[i], 2.0);
-            }
+            vDSP_svesqD(velo, 1, &sum, dim);
             vNorm = max(sqrt(sum), 1.0e-12);
             re = min(1.0, density * mk * hk * vNorm / (4.0 * viscosity));
             
@@ -478,14 +465,9 @@
         
         // Coordinate system dependent info
         if (coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + nodes->x[i] * basis[i];
-                y = y + nodes->y[i] * basis[i];
-                z = z + nodes->z[i] * basis[i];
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
         }
         
         [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
@@ -502,20 +484,14 @@
         // Add to load: given force in normal direction
         BOOL check = YES;
         [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalExtPressure[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalExtPressure, 1, basis, 1);
         for (i=0; i<dim; i++) {
             for (j=0; j<dim; j++) {
                 force[i] = force[i] + alpha * metric[i][j] * normals[j];
             }
         }
         
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalAlpha[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalAlpha, 1, basis, 1);
         
         // Add to load: given force in coordinate directions
         for (i=0; i<3; i++) {

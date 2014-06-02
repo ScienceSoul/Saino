@@ -276,24 +276,15 @@
         s = detJ * IP->s[t];
         
         // Density at the integration point
-        rho = 0.0;
-        for (i=0; i<n; i++) {
-            rho = rho + nodalDensity[i]*basis[i];
-        }
+        rho = cblas_ddot(n, nodalDensity, 1, basis, 1);
         switch (compressibilityModel) {
             case perfect_gas1:
-                pressure = 0.0;
-                temperature = 0.0;
                 memset(dPressuredx, 0.0, sizeof(dPressuredx) );
                 memset(dTemperaturedx, 0.0, sizeof(dTemperaturedx) );
                 if (p2p1 == YES) {
                     k = linearBasis;
-                    for (i=0; i<k; i++) {
-                        pressure = pressure + nodalPressure[i] * pBasis[i];
-                    }
-                    for (i=0; i<k; i++) {
-                        temperature = temperature + nodalTemperature[i] * pBasis[i];
-                    }
+                    pressure = cblas_ddot(k, nodalPressure, 1, pBasis, 1);
+                    temperature = cblas_ddot(k, nodalTemperature, 1, pBasis, 1);
                     for (i=0; i<dim; i++) {
                         for (j=0; j<k; j++) {
                             dPressuredx[i] = dPressuredx[i] + nodalPressure[j] * pdBasisdx[j][i];
@@ -301,12 +292,8 @@
                         }
                     }
                 } else {
-                    for (i=0; i<n; i++) {
-                        pressure = pressure + nodalPressure[i] * basis[i];
-                    }
-                    for (i=0; i<n; i++) {
-                        temperature = temperature + nodalTemperature[i] * basis[i];
-                    }
+                    pressure = cblas_ddot(n, nodalPressure, 1, basis, 1);
+                    temperature = cblas_ddot(n, nodalTemperature, 1, basis, 1);
                     for (i=0; i<dim; i++) {
                         for (j=0; j<n; j++) {
                             dPressuredx[i] = dPressuredx[i] + nodalPressure[j] * basisFirstDerivative[j][i];
@@ -314,10 +301,7 @@
                         }
                     }
                 }
-                gasC = 0.0;
-                for (i=0; i<n; i++) {
-                    gasC = gasC + nodalGasConstant[i] * basis[i];
-                }
+                gasC = cblas_ddot(n, nodalGasConstant, 1, basis, 1);
                 rho = pressure / (gasC * temperature);
                 break;
                 
@@ -338,33 +322,27 @@
                         dPressuredx[i] = dPressuredx[i] + nodalPressure[j] * basisFirstDerivative[j][i];
                     }
                 }
-                drhodp = 0.0;
-                for (i=0; i<n; i++) {
-                    drhodp = drhodp + drhodp_n.vector[i] * basis[i];
-                }
+                drhodp = cblas_ddot(n, drhodp_n.vector, 1, basis, 1);
                 break;
         }
         
         if (pseudoCompressible == YES) {
-            pressure = 0.0;
-            for (i=0; i<n; i++) {
-                pressure = pressure + nodalPressure[i] * basis[i];
-            }
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + nodalCompressibility[i] * basis[i];
-            }
-            compress = rho * sum;
+            pressure = cblas_ddot(n, nodalPressure, 1, basis, 1);
+            compress = rho * cblas_ddot(n, nodalCompressibility, 1, basis, 1);
         }
         
         // Velocity from previous iteration (relative to mesh veclocity) at the
         // integration point
         memset(velo, 0.0, sizeof(velo) );
-        for (i=0; i<n; i++) {
-            velo[0] = velo[0] + (ux[i] - mux[i]) * basis[i];
-            velo[1] = velo[1] + (uy[i] - muy[i]) * basis[i];
-            if (dim > 2) velo[2] = velo[2] + (uz[i] - muz[i]) * basis[i];
-        }
+        double diffux[n];
+        double diffuy[n];
+        double diffuz[n];
+        vDSP_vsubD(mux, 1, ux, 1, diffux, 1, n);
+        vDSP_vsubD(muy, 1, uy, 1, diffuy, 1, n);
+        if (dim > 2) vDSP_vsubD(muz, 1, uz, 1, diffuz, 1, n);
+        velo[0] = cblas_ddot(n, diffux, 1, basis, 1);
+        velo[1] = cblas_ddot(n, diffuy, 1, basis, 1);
+        if (dim > 2) velo[2] = cblas_ddot(n, diffuz, 1, basis, 1);
         
         memset( *grad, 0.0, (3*3)*sizeof(double) );
         for (i=0; i<3; i++) {
@@ -393,44 +371,30 @@
         
         if (rotating == YES) {
             memset(coord, 0.0, sizeof(coord) );
-            for (i=0; i<n; i++) {
-                coord[0] = coord[0] + basis[i] * nodes->x[i];
-                coord[1] = coord[1] + basis[i] * nodes->y[i];
-                coord[2] = coord[2] + basis[i] * nodes->z[i];
-            }
+            coord[0] = cblas_ddot(n, nodes->x, 1, basis, 1);
+            coord[1] = cblas_ddot(n, nodes->y, 1, basis, 1);
+            coord[2] = cblas_ddot(n, nodes->z, 1, basis, 1);
             
             // Langranges formula is used to simplify the triple product
             // omega x (omega x coord) = omega(omega.coord) - coord(omega.omega)
             
             // This is will be multiplied by density later on
-            sum = 0.0;
             for (i=0; i<dim; i++) {
-                sum = sum + omega[i]*coord[i];
+                force[i] = force[i] - omega[i] * cblas_ddot(dim, omega, 1, coord, 1);
             }
             for (i=0; i<dim; i++) {
-                force[i] = force[i] - omega[i] * sum;
-            }
-            sum = 0.0;
-            for (i=0; i<dim; i++) {
-                sum = sum + omega[i] * omega[i];
-            }
-            for (i=0; i<dim; i++) {
-                force[i] = force[i] + coord[i] * sum;
+                force[i] = force[i] + coord[i] * cblas_ddot(dim, omega, 1, omega, 1);
             }
         }
         
         // Additional forces due to gradient forces (electrokinetic flow) and viscous flag in porous media
         if (potentialForce == YES) {
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + potentialCoefficient[i] * basis[i];
-            }
             for (i=0; i<dim; i++) {
-                sum1 = 0.0;
+                sum = 0.0;
                 for (j=0; j<n; j++) {
-                    sum1 = sum1 + potentialField[j] * basisFirstDerivative[j][i];
+                    sum = sum + potentialField[j] * basisFirstDerivative[j][i];
                 }
-                force[i] = force[i] -  sum * sum1;
+                force[i] = force[i] - cblas_ddot(n, potentialCoefficient, 1, basis, 1) * sum;
             }
         }
         
@@ -445,11 +409,9 @@
         
         if (convect == YES && newtonLinearization == YES) {
             memset(uVelo, 0.0, sizeof(uVelo) );
-            for (i=0; i<n; i++) {
-                uVelo[0] = uVelo[0] + basis[i] * ux[i];
-                uVelo[1] = uVelo[1] + basis[i] * uy[i];
-                if (dim > 2) uVelo[2] = uVelo[2] + basis[i] * uz[i];
-            }
+            uVelo[0] = cblas_ddot(n, ux, 1, basis, 1);
+            uVelo[1] = cblas_ddot(n, uy, 1, basis, 1);
+            if (dim > 2) uVelo[2] = cblas_ddot(n, uz, 1, basis, 1);
             
             for (i=0; i<dim; i++) {
                 for (j=0; j<dim; j++) {
@@ -460,10 +422,7 @@
         
         // Effective viscosity and derivatives at integration point
         if (isotropic == YES) {
-            mu = 0.0;
-            for (i=0; i<n; i++) {
-                mu = mu + nodalViscosity[i] * basis[i];
-            }
+            mu = cblas_ddot(n, nodalViscosity, 1, basis, 1);
             
             if (viscNonnewtonian == YES) {
                 mu = [materialModels effectiveViscosity:mu density:rho velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:&muder0 mesh:mesh model:model integration:integration];
@@ -503,10 +462,7 @@
             }
             // Stabilization parameters Tau and Delta
             if (convect == YES) {
-                sum = 0.0;
-                for (i=0; i<dim; i++) {
-                    sum = sum + pow(velo[i], 2.0);
-                }
+                vDSP_svesqD(velo, 1, &sum, dim);
                 vnorm = max(sqrt(sum), 1.0e-12);
                 re = min(1.0, rho * mk * hk * vnorm / (4.0 * mu));
                 
@@ -622,24 +578,16 @@
             cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, (double *)gmat, 3, velo, 1.0, 0.0, yy, 1.0);
             sum = 0.0;
             for (i=0; i<3; i++) {
-                sum = sum + velo[i]*yy[i];
-            }
-            sum1 = 0.0;
-            for (i=0; i<3; i++) {
                 for (j=0; j<3; j++) {
-                    sum1 = sum1 + gmat[i][j] * gmat[i][j];
+                    sum = sum + gmat[i][j] * gmat[i][j];
                 }
             }
             if (transient == YES) {
-                tau_m = 1.0 / sqrt( sum + pow(c1, 2.0) * pow((mu/rho), 2.0) * sum1 / dim + 4.0 / pow(dt, 2.0) );
+                tau_m = 1.0 / sqrt( cblas_ddot(3, velo, 1, yy, 1) + pow(c1, 2.0) * pow((mu/rho), 2.0) * sum / dim + 4.0 / pow(dt, 2.0) );
             } else {
-                tau_m = 1.0 / sqrt( sum + pow(c1, 2.0) * pow((mu/rho), 2.0) * sum1 / dim );
+                tau_m = 1.0 / sqrt( cblas_ddot(3, velo, 1, yy, 1) + pow(c1, 2.0) * pow((mu/rho), 2.0) * sum / dim );
             }
-            sum = 0.0;
-            for (i=0; i<3; i++) {
-                sum = sum + gvec[i]*gvec[i];
-            }
-            tau_c = 1.0 / (tau_m * sum);
+            tau_c = 1.0 / (tau_m * cblas_ddot(3, gvec, 1, gvec, 1));
             
             memset( **rm, 0.0, (n*4*4)*sizeof(double) );
             for (p=0; p<n; p++) {
@@ -1143,10 +1091,7 @@
         // Add to load: given force in normal direction
         BOOL check = YES;
         [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalExtPressure[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalExtPressure, 1, basis, 1);
         if (normalTangential == YES) {
             force[0] = force[0] + alpha;
         } else {
@@ -1155,10 +1100,8 @@
             }
         }
         
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalAlpha[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalAlpha, 1, basis, 1);
+        
         massFlux = 0.0;
         for (i=0; i<n; i++) {
             massFlux = massFlux + loadVector[3][i] * basis[i];
@@ -1303,22 +1246,13 @@
     }
     
     if (k > 0) {
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + nodes->x[i];
-        }
+        vDSP_sveD(nodes->x, 1, &sum, n);
         x = x / k - sum / n;
         
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + nodes->y[i];
-        }
+        vDSP_sveD(nodes->y, 1, &sum, n);
         y = y / k - sum / n;
         
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + nodes->z[i];
-        }
+        vDSP_sveD(nodes->z, 1, &sum, n);
         z = z / k - sum / n;
     }
     h = sqrt(pow(x, 2.0) + pow(y, 2.0) + pow(z, 2.0));
@@ -1340,22 +1274,14 @@
         s = detJ * IP->s[t];
         
         // Density and viscosity at integration point
-        rho = 0.0;
-        for (i=0; i<n; i++) {
-            rho = rho + nodalDensity[i] * basis[i];
-        }
-        mu = 0.0;
-        for (i=0; i<n; i++) {
-            mu = mu + nodalViscosity[i] * basis[i];
-        }
+        rho = cblas_ddot(n, nodalDensity, 1, basis, 1);
+        mu = cblas_ddot(n, nodalViscosity, 1, basis, 1);
         
         // Velocity from previous iteration at the integration point
         memset(velo, 0.0, sizeof(velo) );
-        for (i=0; i<n; i++) {
-            velo[0] = velo[0] + ux[i] * basis[i];
-            velo[1] = velo[1] + uy[i] * basis[i];
-            if (dim > 2) velo[2] = velo[2] + uz[i] * basis[i];
-        }
+        velo[0] = cblas_ddot(n, ux, 1, basis, 1);
+        velo[1] = cblas_ddot(n, uy, 1, basis, 1);
+        if (dim > 2) velo[2] = cblas_ddot(n, uz, 1, basis, 1);
         
         // Normal and tangent directions
         BOOL check = NO;
@@ -1369,34 +1295,21 @@
              [elementUtils tangentDirectionsForNormal:normals tangent1:tangents tangent2:tangents2];
         }
         memset(tangentialVelocity, 0.0, sizeof(tangentialVelocity) );
-        for (i=0; i<dim; i++) {
-            tangentialVelocity[0] = tangentialVelocity[0] + velo[i] * tangents[i];
-        }
+        tangentialVelocity[0] = cblas_ddot(dim, velo, 1, tangents, 1);
         if (dim == 3) {
-            for (i=0; i<dim; i++) {
-                tangentialVelocity[1] = tangentialVelocity[1] + velo[i] * tangents2[i];
-            }
+            tangentialVelocity[1] = cblas_ddot(dim, velo, 1, tangents2, 1);
         }
         
-        dist = 0.0;
-        for (i=0; i<n; i++) {
-            dist = dist + layerThickness[i] * basis[i];
-        }
+        dist = cblas_ddot(n, layerThickness, 1, basis, 1);
         if (dist == 0.0) dist = h;
         
-        roughness = 0.0;
-        for (i=0; i<n; i++) {
-            roughness = roughness + surfaceRoughness[i] * basis[i];
-        }
+        roughness = cblas_ddot(n, surfaceRoughness, 1, basis, 1);
         
         // Solve friction velocity and its derivative with respect to the
         // tangential velocity
         frictionVelocity = 0.0;
         dkerr = 0.0;
-        sum = 0.0;
-        for (i=0; i<3; i++) {
-            sum = sum + pow(velo[i], 2.0);
-        }
+        vDSP_svesqD(velo, 1, &sum, 3);
         vabs = max(sqrt(sum), 1.0e-08);
         solve_ufric(rho, mu, dist, roughness, vabs, &frictionVelocity, &dfx);
         dkerr = rho * pow(frictionVelocity, 2.0);
@@ -1481,27 +1394,16 @@
         s = detJ * IP->s[t];
         
         // Density and viscosity at integration point
-        rho = 0.0;
-        for (i=0; i<n; i++) {
-            rho = rho + nodalDensity[i] * basis[i];
-        }
-        mu = 0.0;
-        for (i=0; i<n; i++) {
-            mu = mu + nodalViscosity[i] * basis[i];
-        }
+        rho = cblas_ddot(n, nodalDensity, 1, basis, 1);
+        mu = cblas_ddot(n, nodalViscosity, 1, basis, 1);
         
         // Velocity from previous iteration at the integration point
         memset(velo, 0.0, sizeof(velo) );
-        for (i=0; i<n; i++) {
-            velo[0] = velo[0] + ux[i] * basis[i];
-            velo[1] = velo[1] + uy[i] * basis[i];
-            if (dim > 2) velo[2] = velo[2] + uz[i] * basis[i];
-        }
+        velo[0] = cblas_ddot(n, ux, 1, basis, 1);
+        velo[1] = cblas_ddot(n, uy, 1, basis, 1);
+        if (dim > 2) velo[2] = cblas_ddot(n, uz, 1, basis, 1);
         
-        sum = 0.0;
-        for (i=0; i<3; i++) {
-            sum = sum + pow(velo[i], 2.0);
-        }
+        vDSP_svesqD(velo, 1, &sum, 3);
         vabs = max(1.0e-09, sqrt(sum));
         
         // Normal and tangent directions
@@ -1517,9 +1419,7 @@
         }
         
         memset(tangentialVelocity, 0.0, sizeof(tangentialVelocity) );
-        for (i=0; i<dim; i++) {
-            tangentialVelocity[0] = tangentialVelocity[0] + velo[i] * tangents[i];
-        }
+        tangentialVelocity[0] = cblas_ddot(dim, velo, 1, tangents, 1);
         if (tangentialVelocity[0] < 0) {
             for (i=0; i<3; i++) {
                 tangents[i] = -tangents[i];
@@ -1528,9 +1428,7 @@
         }
         
         if (dim == 3) {
-            for (i=0; i<dim; i++) {
-                tangentialVelocity[1] = tangentialVelocity[1] + velo[i] * tangents2[i];
-            }
+            tangentialVelocity[1] = cblas_ddot(dim, velo, 1, tangents2, 1);
             if (tangentialVelocity[1] < 0) {
                 for (i=0; i<3; i++) {
                     tangents2[i] = -tangents2[i];
@@ -1539,15 +1437,8 @@
             }
         }
         
-        dist = 0.0;
-        for (i=0; i<n; i++) {
-            dist = dist + layerThickness[i] * basis[i];
-        }
-        
-        roughness = 0.0;
-        for (i=0; i<n; i++) {
-            roughness = roughness + surfaceRoughness[i] * basis[i];
-        }
+        dist = cblas_ddot(n, layerThickness, 1, basis, 1);
+        roughness = cblas_ddot(n, surfaceRoughness, 1, basis, 1);
         
         // Solve friction velocity and its derivative with respect to
         // the tangential velocity

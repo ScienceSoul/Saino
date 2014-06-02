@@ -157,14 +157,9 @@
         
         // Coordinate system dependent info
         if (coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + nodes->x[i] * basis[i];
-                y = y + nodes->y[i] * basis[i];
-                z = z + nodes->z[i] * basis[i];
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);;
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
         }
         [coordinateSystems coordinateSystemInfoModel:model metric:gMeric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
         for (i=0; i<3; i++) {
@@ -173,22 +168,16 @@
         s = sqrtMetric * detJ * IP->s[t];
         
         // Density at the integration point
-        density = 0.0;
-        for (i=0; i<n; i++) {
-            density = density + nodalDensity[i] * basis[i];
-        }
+        density = cblas_ddot(n, nodalDensity, 1, basis, 1);
+
         if (compressible == YES) {
-            temperature = 0.0;
-            pressure = 0.0;
             memset(dDensitydx, 0.0, sizeof(dDensitydx) );
             memset(dPressuredx, 0.0, sizeof(dPressuredx) );
             memset(dTemperaturedx, 0.0, sizeof(dTemperaturedx) );
             if (p2p1 == YES) {
                 k = linearBasis;
-                for (i=0; i<k; i++) {
-                    temperature = temperature + nodalTemperature[i] * pBasis[i];
-                    pressure = pressure + nodalPressure[i] * pBasis[i];
-                }
+                temperature = cblas_ddot(k, nodalTemperature, 1, pBasis, 1);
+                pressure = cblas_ddot(k, nodalPressure, 1, pBasis, 1);
                 for (i=0; i<dim; i++) {
                     for (j=0; j<k; j++) {
                         dDensitydx[i] = dDensitydx[i] + nodalDensity[j] * pdBasisdx[j][i];
@@ -197,10 +186,8 @@
                     }
                 }
             } else {
-                for (i=0; i<n; i++) {
-                    temperature = temperature + nodalTemperature[i] * basis[i];
-                    pressure = pressure + nodalPressure[i] * basis[i];
-                }
+                temperature = cblas_ddot(n, nodalTemperature, 1, basis, 1);
+                pressure = cblas_ddot(n, nodalPressure, 1, basis, 1);
                 for (i=0; i<dim; i++) {
                     for (j=0; j<n; j++) {
                         dDensitydx[i] = dDensitydx[i] + nodalDensity[j] * basisFirstDerivative[j][i];
@@ -209,32 +196,26 @@
                     }
                 }
             }
-            gasConstant = 0.0;
-            for (i=0; i<n; i++) {
-                gasConstant = gasConstant + nodalGasConstant[i] * basis[i];
-            }
+            gasConstant = cblas_ddot(n, nodalGasConstant, 1, basis, 1);
             density = pressure / (temperature * gasConstant);
         }
         
         if (pseudoCompressible == YES) {
-            pressure = 0.0;
-            for (i=0; i<n; i++) {
-                pressure = pressure + nodalPressure[i] * basis[i];
-            }
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + nodalCompressibility[i] * basis[i];
-            }
-            compress = density * sum;
+            pressure = cblas_ddot(n, nodalPressure, 1, basis, 1);
+            compress = density * cblas_ddot(n, nodalCompressibility, 1, basis, 1);
         }
         
         // Velocity from previous iteration at the integration point
         memset(velo, 0.0, sizeof(velo) );
-        for (i=0; i<n; i++) {
-            velo[0] = velo[0] + (ux[i] - mux[i]) * basis[i];
-            velo[1] = velo[1] + (uy[i] - muy[i]) * basis[i];
-            if (dim > 2 && coordinates != axis_symmetric) velo[2] = velo[2] + (uz[i] - muz[i]) * basis[i];
-        }
+        double diffux[n];
+        double diffuy[n];
+        double diffuz[n];
+        vDSP_vsubD(mux, 1, ux, 1, diffux, 1, n);
+        vDSP_vsubD(muy, 1, uy, 1, diffuy, 1, n);
+        if (dim > 2 && coordinates != axis_symmetric) vDSP_vsubD(muz, 1, uz, 1, diffuz, 1, n);
+        velo[0] = cblas_ddot(n, diffux, 1, basis, 1);
+        velo[1] = cblas_ddot(n, diffuy, 1, basis, 1);
+        if (dim > 2 && coordinates != axis_symmetric) velo[2] = cblas_ddot(n, diffuz, 1, basis, 1);
         
         if (newtonLinearization == YES) {
             memset( *dVelodx, 0.0, (3*3)*sizeof(double) );
@@ -275,23 +256,21 @@
         // Additional forces due to gradient forces (electrokinetic flow) and viscous drag in porous media
         if (potentialForce == YES) {
             sum = 0.0;
-            sum1 = 0.0;
             for (i=0; i<n; i++) {
-                sum = sum + potentialCoefficient[i] * basis[i];
-                sum1 = sum1 + potentialField[i] * basisFirstDerivative[i][0];
+                sum = sum + potentialField[i] * basisFirstDerivative[i][0];
             }
-            force[0] = force[0] - sum * sum1;
-            sum1 = 0.0;
+            force[0] = force[0] - cblas_ddot(n, potentialCoefficient, 1, basis, 1) * sum;
+            sum = 0.0;
             for (i=0; i<n; i++) {
-                sum1 = sum1 + potentialField[i] * basisFirstDerivative[i][1];
+                sum = sum + potentialField[i] * basisFirstDerivative[i][1];
             }
-            force[1] = force[1] - sum * sum1 / x;
+            force[1] = force[1] - cblas_ddot(n, potentialCoefficient, 1, basis, 1) * sum / x;
             if (dim > 2 && coordinates != axis_symmetric) {
-                sum1 = 0.0;
+                sum = 0.0;
                 for (i=0; i<n; i++) {
-                    sum1 = sum1 + potentialField[i] * basisFirstDerivative[i][2];
+                    sum = sum + potentialField[i] * basisFirstDerivative[i][2];
                 }
-                force[2] = force[2] - sum * sum1;
+                force[2] = force[2] - cblas_ddot(n, potentialCoefficient, 1, basis, 1) * sum;
             }
         }
         
@@ -305,10 +284,7 @@
         }
         
         // Effective viscosity and derivatives at integration point
-        viscosity = 0.0;
-        for (i=0; i<n; i++) {
-            viscosity = viscosity + nodalViscosity[i] * basis[i];
-        }
+        viscosity = cblas_ddot(n, nodalViscosity, 1, basis, 1);
         viscosity = [materialModels effectiveViscosity:viscosity density:density velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration];
         
         // Stabilization parameters tau and delta
@@ -644,11 +620,9 @@
         // The righthand side
         if (convect == YES && newtonLinearization == YES) {
             memset(uVelo, 0.0, sizeof(uVelo) );
-            for (i=0; i<n; i++) {
-                uVelo[0] = uVelo[0] + basis[i] * ux[i];
-                uVelo[1] = uVelo[1] + basis[i] * uy[i];
-                if (dim > 2) uVelo[2] = uVelo[2] + basis[i] * uz[i];
-            }
+            uVelo[0] = cblas_ddot(n, ux, 1, basis, 1);
+            uVelo[1] = cblas_ddot(n, uy, 1, basis, 1);
+            if (dim > 2) uVelo[2] = cblas_ddot(n, uz, 1, basis, 1);
             
             for (i=0; i<dim; i++) {
                 for (j=0; j<dim; j++) {
@@ -783,14 +757,9 @@
         
         // Coordinate system dependent info
         if (coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + nodes->x[i] * basis[i];
-                y = y + nodes->y[i] * basis[i];
-                z = z + nodes->z[i] * basis[i];
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
         }
         
         [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
@@ -817,10 +786,7 @@
         // Add to load: given force in normal direction
         BOOL check = YES;
         [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalExtPressure[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalExtPressure, 1, basis, 1);
         if (normalTangential == YES) {
             force[0] = force[0] + alpha;
         } else {
@@ -829,10 +795,7 @@
             }
         }
         
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            alpha = alpha + nodalAlpha[i] * basis[i];
-        }
+        alpha = cblas_ddot(n, nodalAlpha, 1, basis, 1);
         
         switch (element->Type.dimension) {
             case 1:
