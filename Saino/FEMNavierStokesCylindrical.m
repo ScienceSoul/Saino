@@ -58,7 +58,7 @@
     
     int c, i, j, k, l, m, p, q, t, coordinates, dim, linearBasis, nBasis;
     int imap[3] = {0, 1, 3};
-    double baseP, compress, delta, density, detJ, gasConstant, hk, lambda=1.0, mk, pressure, re, s, sqrtMetric, sum, sum1, tau, temperature, x, u, v,
+    double baseP, compress, delta, density, detJ, gasConstant, hk, lambda=1.0, mk, pressure, re, s, sqrtMetric, sum, tau, temperature, x, u, v,
            vNorm, viscosity, y, w, z;
     double a[4][4], dDensitydx[3], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dSymb[3][3][3][3], dTemperaturedx[3], dVelodx[3][3], dViscositydx[3],
            force[4], gMeric[3][3], load[4], lrf[3], mass[4][4], metric[3], pBasis[n], pdBasisdx[n][3], su[n][4][4], sw[n][4][4], symb[3][3][3], uVelo[3],
