@@ -148,31 +148,17 @@
         
         // Coordinate system dependent info
         if (model.coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + nodes->x[i] * basis[i];
-                y = y + nodes->y[i] * basis[i];
-                z = z + nodes->z[i] * basis[i];
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
         }
         [coordinatesSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dsymb coordX:x coordY:y coordZ:z];
         s = sqrtMetric * detJ * IP->s[t];
         
         // Coefficient of the convection and time derivative terms at the integration point
-        c0 = 0.0;
-        for (i=0; i<n; i++) {
-            c0 = c0 + nodalC0[i] * basis[i];
-        }
-        c1 = 0.0;
-        for (i=0; i<n; i++) {
-            c1 = c1 + nodalC1[i] * basis[i];
-        }
-        ct = 0.0;
-        for (i=0; i<n; i++) {
-            ct = ct + nodalCT[i] * basis[i];
-        }
+        c0 = cblas_ddot(n, nodalC0, 1, basis, 1);
+        c1 = cblas_ddot(n, nodalC1, 1, basis, 1);
+        ct = cblas_ddot(n, nodalCT, 1, basis, 1);
         
         // Compute effective heat capacity, if modeling phase change, at the integration point
         // Note: this is for heat equation only, not generally for diff.conv.equ.
@@ -195,10 +181,7 @@
         }
         
         // Coefficient of the diffusion term & its derivatives at the integration point
-        density = 0.0;
-        for (i=0; i<n; i++) {
-            density = density + nodalDensity[i] * basis[i];
-        }
+        density = cblas_ddot(n, nodalDensity, 1, basis, 1);
         for (i=0; i<dim; i++) {
             for (j=0; j<dim; j++) {
                 sum = 0.0;
@@ -221,17 +204,18 @@
             if (phaseChange == YES) c1 = ct;
             // Velocity from previous iteration at the integration point
             memset( velo, 0.0, sizeof(velo) );
-            for (i=0; i<n; i++) {
-                velo[0] = velo[0] + (ux[i] - mux[i]) * basis[i];
-                velo[1] = velo[1] + (uy[i] - muy[i]) * basis[i];
-                if (dim > 2 && model.coordinates != axis_symmetric) velo[2] = velo[2] + (uz[i] - muz[i]) * basis[i];
-            }
+            double diffux[n];
+            double diffuy[n];
+            double diffuz[n];
+            vDSP_vsubD(mux, 1, ux, 1, diffux, 1, n);
+            vDSP_vsubD(muy, 1, uy, 1, diffuy, 1, n);
+            if (dim > 2 && model.coordinates != axis_symmetric) vDSP_vsubD(muz, 1, uz, 1, diffuz, 1, n);
+            velo[0] = cblas_ddot(n, diffux, 1, basis, 1);
+            velo[1] = cblas_ddot(n, diffuy, 1, basis, 1);
+            if (dim > 2 && model.coordinates != axis_symmetric) velo[2] = cblas_ddot(n, diffuz, 1, basis, 1);
             
             if (compressible == YES) {
-                pressure = 0.0;
-                for (i=0; i<n; i++) {
-                    pressure = pressure + nodalPressure[i] * basis[i];
-                }
+                pressure = cblas_ddot(n, nodalPressure, 1, basis, 1);
                 
                 memset( *dVelodx, 0.0, (3*3)*sizeof(double) );
                 for (i=0; i<3; i++) {
@@ -305,7 +289,7 @@
                     }
                     sw[p] = c0 * basis[p];
                     for (i=0; i<dim; i++) {
-                        sw[p] = sw[p] + c1 * basisFirstDerivative[p][i]*velo[i];
+                        sw[p] = sw[p] + c1 * basisFirstDerivative[p][i] * velo[i];
                         if (element->Type.BasisFunctionDegree <= 1) continue;
                         for (j=0; j<dim; j++) {
                             sw[p] = sw[p] - dc2dx[i][j][j] * basisFirstDerivative[p][i];
@@ -357,23 +341,12 @@
         }
         
         // Force at the integration point
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + loadVector[i] * basis[i];
-        }
-        force = sum + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model integration:integration listUtilities:listUtilities];
+        force = cblas_ddot(n, loadVector, 1, basis, 1) + [differentials jouleHeatElement:element nodes:nodes numberOfNodes:n integrationU:u integrationV:v integrationW:w mesh:mesh model:model integration:integration listUtilities:listUtilities];
         
         if (convection == YES) {
-            double pcoeff = 0.0;
-            for (i=0; i<n; i++) {
-                pcoeff = pcoeff + nodalPressureCoeff[i] * basis[i];
-            }
+            double pcoeff = cblas_ddot(n, nodalPressureCoeff, 1, basis, 1);
             if (pcoeff != 0.0) {
-                sum = 0.0;
-                for (i=0; i<n; i++) {
-                    sum = sum + nodalPressureDt[i] * basis[i];
-                }
-                force = force + pcoeff * sum;
+                force = force + pcoeff * cblas_ddot(n, nodalPressureDt, 1, basis, 1);
                 for (i=0; i<dim; i++) {
                     sum = 0.0;
                     for (j=0; j<n; j++) {
@@ -384,10 +357,7 @@
             }
             
             if (frictionHeat == YES) {
-                viscosity = 0.0;
-                for (i=0; i<n; i++) {
-                    viscosity = viscosity + nodalviscosity[i]*basis[i];
-                }
+                viscosity = cblas_ddot(n, nodalviscosity, 1, basis, 1);
                 viscosity = [materialModels effectiveViscosity:viscosity density:density velocityX:ux velocitY:uy velocityZ:uz element:element nodes:nodes numberOfNodes:n numberOfPoints:n integrationU:u integrationV:v integrationW:w muder:NULL mesh:mesh model:model integration:integration];
                 if (viscosity > 0.0) {
                     if (compressible == NO) {
@@ -432,7 +402,7 @@
 *********************************************************************************************************************************/
 -(void)diffuseConvectiveGeneralBoundaryMatrix:(double **)boundaryMatrix boundaryVector:(double *)boundaryVector dimensions:(Dimensions_t)dimensions loadVector:(double *)loadVector nodalAlpha:(double *)nodalAlpha element:(Element_t *)element numberOfNodes:(int)n nodes:(Nodes_t *)nodes model:(FEMModel *)model mesh:(FEMMesh *)mesh integration:(FEMNumericIntegration *)integration {
     
-    int i, p, q, t;
+    int p, q, t;
     double alpha, detJ, force, s, x, y, z;
     BOOL stat;
     FEMCoordinateSystems *coordinateSystem;
@@ -456,23 +426,14 @@
         
         // Coordinate system dependent info
         if (model.coordinates != cartesian) {
-            x = 0.0;
-            y = 0.0;
-            z = 0.0;
-            for (i=0; i<n; i++) {
-                x = x + (nodes->x[i] * basis[i]);
-                y = y + (nodes->y[i] * basis[i]);
-                z = z + (nodes->z[i] * basis[i]);
-            }
+            x = cblas_ddot(n, nodes->x, 1, basis, 1);
+            y = cblas_ddot(n, nodes->y, 1, basis, 1);
+            z = cblas_ddot(n, nodes->z, 1, basis, 1);
             s = s * [coordinateSystem coordinateSquareRootMetricModel:model coordX:x coordY:y coordZ:z];
         }
         
-        force = 0.0;
-        alpha = 0.0;
-        for (i=0; i<n; i++) {
-            force = force + (loadVector[i] * basis[i]);
-            alpha = alpha + (nodalAlpha[i] * basis[i]);
-        }
+        force = cblas_ddot(n, loadVector, 1, basis, 1);
+        alpha = cblas_ddot(n, nodalAlpha, 1, basis, 1);
 
         for (p=0; p<n; p++) {
             for (q=0; q<n; q++) {
