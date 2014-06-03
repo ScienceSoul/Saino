@@ -6,6 +6,8 @@
 //  Copyright (c) 2012 Institute of Low Temperature Science. All rights reserved.
 //
 
+#import <Accelerate/Accelerate.h>
+
 #import "FEMListUtilities.h"
 #import "FEMBodyForce.h"
 #import "FEMBoundaryCondition.h"
@@ -279,17 +281,21 @@
             found = YES;
             
             if (minv != NULL) {
-                if (min_array(result->vector, n) < *minv) {
+                double minVal;
+                vDSP_minvD(result->vector, 1, &minVal, n);
+                if (minVal < *minv) {
                     NSLog(@"FEMListUtilities:listGetReal: value smaller than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", min_array(result->vector, n), *minv, varName);
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", minVal, *minv, varName);
                     errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
                 }
             }
             
             if (maxv != NULL) {
-                if (max_array(result->vector, n) > *maxv) {
+                double maxValue;
+                vDSP_maxvD(result->vector, 1, &maxValue, n);
+                if (maxValue > *maxv) {
                     NSLog(@"FEMListUtilities:listGetReal: value greater than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", max_array(result->vector, n), *maxv, varName);
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", maxValue, *maxv, varName);
                     errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
                 }
             }

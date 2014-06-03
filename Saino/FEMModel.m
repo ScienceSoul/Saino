@@ -319,9 +319,12 @@
     // ....
     [core iterativeSolveMatrix:matrix result:h rhs:matrixContainers->RHS dimensions:NULL solution:solution];
     
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, min_array(h,sizeNodal));
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, max_array(h,sizeNodal));
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: element size ratio: %f %f\n", elemMax/elemMin, max_array(h,sizeNodal) / min_array(h,sizeNodal));
+    double maxValue, minValue;
+    vDSP_minvD(h, 1, &minValue, sizeNodal);
+    vDSP_maxvD(h, 1, &maxValue, sizeNodal);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, minValue);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, maxValue);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: element size ratio: %f %f\n", elemMax/elemMin, maxValue / minValue);
     
     self.solution = nil;
     solution.mesh.variables = nil;

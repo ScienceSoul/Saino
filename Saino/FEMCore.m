@@ -372,13 +372,15 @@ static const int PRECOND_VANKA     =  560;
     if (normDofs < dofs) {
         norm = 0.0;
         double buffer[nn];
+        double maxVal;
         memset( buffer, 0.0, sizeof(buffer) );
         switch (normDim) {
             case 0:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
                     vDSP_vabsD(x+j, dofs, buffer, 1, nn);
-                    norm = max(norm, max_array(buffer, nn));
+                    vDSP_maxvD(buffer, 1, &maxVal, nn);
+                    norm = max(norm, maxVal);
                 }
                 l = 2;
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
@@ -420,7 +422,7 @@ static const int PRECOND_VANKA     =  560;
         switch (normDim) {
             case 0:
                 vDSP_vabsD(x, 1, buffer, 1, nn);
-                norm = max_array(buffer, nn);
+                vDSP_maxvD(buffer, 1, &norm, nn);
                 l = 2;
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
                 break;

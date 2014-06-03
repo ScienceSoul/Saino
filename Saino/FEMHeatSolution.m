@@ -225,7 +225,10 @@ enum {
         // Check if local variation of temperature is large enough to actually use the
         // Spatial 2 model. Should perhaps be scaled to element size (or actually
         // compute the gradient, but this will do for now...)
-        _s = max_array(_localTemperature, n) - min_array(_localTemperature, n);
+        double maxVal, minVal;
+        vDSP_maxvD(_localTemperature, 1, &maxVal, n);
+        vDSP_minvD(_localTemperature, 1, &minVal, n);
+        _s = maxVal - minVal;
         if (_s < AEPS) {
             _phaseChangeModel = PHASE_SPATIAL_1;
         } else {

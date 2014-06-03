@@ -169,12 +169,12 @@
         if (rootQuadrant == NULL) {
             oldNodes = oldMesh.getNodes;
             
-            boundingBox[0] = min_array(oldNodes->x, oldMesh.numberOfNodes);
-            boundingBox[1] = min_array(oldNodes->y, oldMesh.numberOfNodes);
-            boundingBox[2] = min_array(oldNodes->z, oldMesh.numberOfNodes);
-            boundingBox[3] = max_array(oldNodes->x, oldMesh.numberOfNodes);
-            boundingBox[4] = max_array(oldNodes->y, oldMesh.numberOfNodes);
-            boundingBox[5] = max_array(oldNodes->z, oldMesh.numberOfNodes);
+            vDSP_minvD(oldNodes->x, 1, &boundingBox[0], oldMesh.numberOfNodes);
+            vDSP_minvD(oldNodes->y, 1, &boundingBox[1], oldMesh.numberOfNodes);
+            vDSP_minvD(oldNodes->z, 1, &boundingBox[2], oldMesh.numberOfNodes);
+            vDSP_maxvD(oldNodes->x, 1, &boundingBox[3], oldMesh.numberOfNodes);
+            vDSP_maxvD(oldNodes->y, 1, &boundingBox[4], oldMesh.numberOfNodes);
+            vDSP_maxvD(oldNodes->z, 1, &boundingBox[5], oldMesh.numberOfNodes);
             
             max = -HUGE_VAL;
             k = 3;
