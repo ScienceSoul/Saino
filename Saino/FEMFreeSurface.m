@@ -295,10 +295,7 @@
                 [elementDescription checkNormalDirectionInBDElement:boundary forNormals:nrm mesh:mesh x:x y:y z:z turn:&turned[k]];
                 
                 m = boundary->BoundaryInfo->Constraint;
-                sum = 0.0;
-                for (j=0; j<3; j++) {
-                    sum = sum + pow(nrm[j], 2.0);
-                }
+                vDSP_svesqD(nrm, 1, &sum, 3);
                 r = sqrt(sum);
                 for (j=0; j<3; j++) {
                     averagedNormals[m-1][j] = averagedNormals[m-1][j] + abs(nrm[j]) / r;
@@ -467,10 +464,7 @@
                             }
                         }
                     }
-                    sum = 0.0;
-                    for (j=0; j<3; j++) {
-                        sum = sum + pow(nrm[j], 2.0);
-                    }
+                    vDSP_svesqD(nrm, 1, &sum, 3);
                     s = s + pow(( (ux * nrm[0] + uy * nrm[1] + uz * nrm[2]) / sqrt(sum) ), 2.0);
                 }
             }

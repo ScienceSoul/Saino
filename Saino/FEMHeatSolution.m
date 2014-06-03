@@ -517,10 +517,7 @@ enum {
             found = [core getParentMaterialProperty:@"emissivity" forElement:element parentElement:parent model:model listUtilities:listUtilites buffer:&buffer];
             if (found == YES) memcpy(_nodalEmissivity, buffer.vector, n*sizeof(double));
         }
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + _nodalEmissivity[i];
-        }
+        vDSP_sveD(_nodalEmissivity, 1, &sum, n);
         _emissivity = sum / n;
         
         memset( _aText, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
@@ -1569,16 +1566,9 @@ enum {
                     
                     if (model.coordinates == axis_symmetric || model.coordinates == cylindric_symmetric) _s = 2.0 * M_PI * _s;
                     
-                    sum = 0.0;
-                    for (i=0; i<n; i++) {
-                        sum = sum + (_density[i] * _load[i]);
-                    }
-                    _heaterSource[bf_id-1] = _heaterSource[bf_id-1] + _s * sum / n;
+                    _heaterSource[bf_id-1] = _heaterSource[bf_id-1] + _s * cblas_ddot(n, _density, 1, _load, 1) / n;
                     _heaterArea[bf_id-1] = _heaterArea[bf_id-1] + _s;
-                    sum = 0.0;
-                    for (i=0; i<n; i++) {
-                        sum = sum + _density[i];
-                    }
+                    vDSP_sveD(_density, 1, &sum, n);
                     _heaterDensity[bf_id-1] = _heaterDensity[bf_id-1] + _s * sum / n;
                 }
                 i = 0;

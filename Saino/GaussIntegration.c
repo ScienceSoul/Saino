@@ -439,10 +439,7 @@ void GaussQuadraturePoints1D(int n) {
     
     
     // Make really sure the weights add up:
-    sum = 0.0;
-    for(i=0;i<n;i++) {
-        sum = sum + Weights[i];
-    }
+    vDSP_sveD(Weights, 1, &sum, n);
     for(i=0;i<n;i++) {
         Weights[i] = 2.0 * Weights[i] / sum;
     }

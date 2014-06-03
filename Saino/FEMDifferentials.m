@@ -204,7 +204,7 @@
 -(void)lorentzForceElement:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double *)lorentzForce mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration coordinateSystems:(FEMCoordinateSystems *)coordinateSystems listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
     
     int i, j, k;
-    double mu, sqrtElementMetric, sqrtMetric, sum, x, y, z;
+    double mu, sqrtElementMetric, sqrtMetric, x, y, z;
     double B[3], dHdx[3][3], dSymb[3][3][3][3], ExtMx[n], ExtMy[n], ExtMz[n], metric[3][3], symb[3][3][3];
     double *basis = NULL, **basisFirstDerivative = NULL;
     FEMVariable *mx, *my, *mz;
@@ -276,21 +276,9 @@
         B[2] = B[2] + basis[i]*mzContainers->Values[mzContainers->Perm[element->NodeIndexes[i]]];
     }
     
-    sum = 0.0;
-    for (i=0; i<n; i++) {
-        sum = sum + basis[i]*ExtMx[i];
-    }
-    B[0] = B[0] + sum;
-    sum = 0.0;
-    for (i=0; i<n; i++) {
-        sum = sum + basis[i]*ExtMy[i];
-    }
-    B[1] = B[1] + sum;
-    sum = 0.0;
-    for (i=0; i<n; i++) {
-        sum = sum + basis[i]*ExtMz[i];
-    }
-    B[2] = B[2] + sum;
+    B[0] = B[0] + cblas_ddot(n, ExtMx, 1, basis, 1);
+    B[1] = B[1] + cblas_ddot(n, ExtMy, 1, basis, 1);
+    B[2] = B[2] + cblas_ddot(n, ExtMz, 1, basis, 1);
     
     memset( *dHdx, 0.0, (3*3)*sizeof(double) );
     for (i=0; i<3; i++) {
@@ -302,14 +290,9 @@
     }
     
     // Get coordinate system info
-    x = 0.0;
-    y = 0.0;
-    z = 0.0;
-    for (i=0; i<n; i++) {
-        x = x + nodes->x[i]*basis[i];
-        y = y + nodes->y[i]*basis[i];
-        z = z + nodes->z[i]*basis[i];
-    }
+    x = cblas_ddot(n, nodes->x, 1, basis, 1);
+    y = cblas_ddot(n, nodes->y, 1, basis, 1);
+    z = cblas_ddot(n, nodes->z, 1, basis, 1);
     [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
     if (model.coordinates != cartesian) {
         FEMLinearAlgebra *linearAlgebra = [[FEMLinearAlgebra alloc] init];
@@ -320,10 +303,7 @@
         free_dmatrix(matrix, 0, 2, 0, 2);
     }
     
-    mu = 0.0;
-    for (i=0; i<n; i++) {
-        mu = mu + permeability.vector[i]*basis[i];
-    }
+    mu = cblas_ddot(n, permeability.vector, 1, basis, 1);
     [self FEMDifferentials_computeLorentzMagnetic:B dhdx:dHdx permeability:mu sqrtMetric:sqrtMetric metric:metric symbols:symb lorentzForce:lorentzForce model:model];
     
     if (permeability.vector != NULL) {
@@ -434,14 +414,9 @@
     sqrtElementMetric = integration.metricDeterminant;
     
     if (model.coordinates != cartesian) {
-        x = 0.0;
-        y = 0.0;
-        z = 0.0;
-        for (i=0; i<n; i++) {
-            x = x + nodes->x[i]*integration.basis[i];
-            y = y + nodes->y[i]*integration.basis[i];
-            z = z + nodes->z[i]*integration.basis[i];
-        }
+        x = cblas_ddot(n, nodes->x, 1, integration.basis, 1);
+        y = cblas_ddot(n, nodes->y, 1, integration.basis, 1);
+        z = cblas_ddot(n, nodes->z, 1, integration.basis, 1);
         FEMCoordinateSystems *coordinateSystems = [[FEMCoordinateSystems alloc] init];
         [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
         FEMLinearAlgebra *linearAlgebra = [[FEMLinearAlgebra alloc] init];
@@ -464,9 +439,7 @@
     }
     elcond = 0.0;
     if (found == YES) {
-        for (i=0; i<n; i++) {
-            elcond = elcond + buffer.vector[i]*integration.basis[i];
-        }
+        elcond = cblas_ddot(n, buffer.vector, 1, integration.basis, 1);
     }
     
     // Joule heating takes place only when there is ohmic resistance
@@ -515,42 +488,22 @@
             b[2] = b[2] + integration.basis[i]*mzContainers->Values[mzContainers->Perm[element->NodeIndexes[i]]];
         }
         
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + integration.basis[i]*extmx.vector[i];
-        }
-        b[0] = b[0] + sum;
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + integration.basis[i]*extmy.vector[i];
-        }
-        b[1] = b[1] + sum;
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + integration.basis[i]*extmz.vector[i];
-        }
-        b[2] = b[2] + sum;
+        b[0] = b[0] + cblas_ddot(n, extmx.vector, 1, integration.basis, 1);
+        b[1] = b[1] + cblas_ddot(n, extmy.vector, 1, integration.basis, 1);
+        b[2] = b[2] + cblas_ddot(n, extmz.vector, 1, integration.basis, 1);
         
-        double mu = 0.0;
-        for (i=0; i<n; i++) {
-            mu = mu + integration.basis[i]*permeability.vector[i];
-        }
+        double mu = cblas_ddot(n, permeability.vector, 1, integration.basis, 1);
+        memset( *dhdx, 0.0, (3*3)*sizeof(double) );
         for (i=0; i<3; i++) {
-            sum = 0.0;
             for (j=0; j<n; j++) {
-                sum = sum + (integration.basisFirstDerivative[j][i] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
+                dhdx[0][i] = dhdx[0][i] + (integration.basisFirstDerivative[j][i] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
             }
-            dhdx[0][i] = sum;
-            sum = 0.0;
             for (j=0; j<n; j++) {
-                sum = sum + (integration.basisFirstDerivative[j][i] * myContainers->Values[myContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
+                dhdx[1][i] = dhdx[1][i] + (integration.basisFirstDerivative[j][i] * myContainers->Values[myContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
             }
-            dhdx[1][i] = sum;
-            sum = 0.0;
             for (j=0; j<n; j++) {
-                sum = sum + (integration.basisFirstDerivative[j][i] * mzContainers->Values[mzContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
+                dhdx[2][i] = dhdx[2][i] + (integration.basisFirstDerivative[j][i] * mzContainers->Values[mzContainers->Perm[element->NodeIndexes[j]]]/permeability.vector[j]);
             }
-            dhdx[2][i] = sum;
         }
         
         jouleheat = [self FEMDifferentials_computeMagneticHeat:b dhdx:dhdx permeability:mu sqrtMetric:sqrtMetric metric:metric symbols:symb model:model] / elcond;
@@ -577,7 +530,7 @@
     if (jouleNode == 2) {
         sum = 0.0;
         for (i=0; i<n; i++) {
-            sum = sum + integration.basis[i]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
+            sum = sum + integration.basis[i] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
         }
         jouleheat = elcond * sum;
     }
@@ -589,15 +542,11 @@
         b[1] = 0.0;
         b[2] = 0.0;
         for (i=0; i<n; i++) {
-            b[0] = b[0] + integration.basisFirstDerivative[i][0]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
-            b[1] = b[1] + integration.basisFirstDerivative[i][1]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
-            b[2] = b[2] + integration.basisFirstDerivative[i][2]*mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
+            b[0] = b[0] + integration.basisFirstDerivative[i][0] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
+            b[1] = b[1] + integration.basisFirstDerivative[i][1] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
+            b[2] = b[2] + integration.basisFirstDerivative[i][2] * mxContainers->Values[mxContainers->Perm[element->NodeIndexes[i]]];
         }
-        sum = 0.0;
-        for (i=0; i<3; i++) {
-            sum = sum + b[i]*b[i];
-        }
-        jouleheat = elcond * sum;
+        jouleheat = elcond * cblas_ddot(3, b, 1, b, 1);
     }
     
     if (buffer.vector != NULL) {

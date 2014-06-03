@@ -302,7 +302,7 @@ static const int PRECOND_VANKA     =  560;
     int normDim, normDofs, dofs, i, j, k, l, nn, permStart, totn;
     int *iPerm;
     double norm, nscale, sum;
-    double *x = NULL, *buffer, *y;
+    double *x = NULL, *y;
     FEMParallelMPI *parallelUtil;
     variableArraysContainer *varContainers = NULL;
     listBuffer normComponents = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -371,30 +371,23 @@ static const int PRECOND_VANKA     =  560;
     
     if (normDofs < dofs) {
         norm = 0.0;
+        double buffer[nn];
+        memset( buffer, 0.0, sizeof(buffer) );
         switch (normDim) {
             case 0:
-                buffer = doublevec(0, nn-1);
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    memset( buffer, 0.0, nn*sizeof(int) );
-                    l = 0;
-                    for (k=j; k<nn; k+=dofs) {
-                        buffer[l] = fabs(x[k]);
-                        l++;
-                    }
+                    vDSP_vabsD(x+j, dofs, buffer, 1, nn);
                     norm = max(norm, max_array(buffer, nn));
                 }
                 l = 2;
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
-                free_dvector(buffer, 0, nn-1);
                 break;
             case 1:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    sum = 0;
-                    for (k=j; k<nn; k+=dofs) {
-                        sum = sum + fabs(x[k]);
-                    }
+                    vDSP_vabsD(x+j, dofs, buffer, 1, nn);
+                    vDSP_sveD(buffer, 1, &sum, nn);
                     norm = norm + sum;
                 }
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale;
@@ -402,10 +395,7 @@ static const int PRECOND_VANKA     =  560;
             case 2:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    sum = 0;
-                    for (k=j; k<nn; k+=dofs) {
-                        sum = sum + pow(x[k], 2.0);
-                    }
+                    vDSP_svesqD(x+j, dofs, &sum, nn);
                     norm = norm + sum;
                 }
                 norm = sqrt([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale);
@@ -413,47 +403,41 @@ static const int PRECOND_VANKA     =  560;
             default:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    sum = 0;
+                    l = 0.0;
                     for (k=j; k<nn; k+=dofs) {
-                        sum = sum + pow(x[k], normDim);
+                        buffer[l] = pow(x[k], normDim);
+                        l++;
                     }
+                    vDSP_sveD(buffer, 1, &sum, nn);
                     norm = norm + sum;
                 }
                 norm = pow( ([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale), (1.0/normDim) );
                 break;
         }
     } else {
+        double buffer[nn];
+        memset( buffer, 0.0, sizeof(buffer) );
         switch (normDim) {
             case 0:
-                buffer = doublevec(0, nn-1);
-                memset( buffer, 0.0, nn*sizeof(int) );
-                for (i=0; i<n; i++) {
-                    buffer[i] = fabs(x[i]);
-                }
+                vDSP_vabsD(x, 1, buffer, 1, nn);
                 norm = max_array(buffer, nn);
                 l = 2;
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:&l];
-                free_dvector(buffer, 0, nn-1);
                 break;
             case 1:
-                sum = 0.0;
-                for (i=0; i<nn; i++) {
-                    sum = sum + fabs(x[i]);
-                }
+                vDSP_vabsD(x, 1, buffer, 1, nn);
+                vDSP_sveD(buffer, 1, &sum, nn);
                 norm = [parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale;
                 break;
             case 2:
-                sum = 0.0;
-                for (i=0; i<nn; i++) {
-                    sum = sum + pow(x[i], 2.0);
-                }
+                vDSP_svesqD(x, 1, &sum, nn);
                 norm = sqrt([parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale);
                 break;
             default:
-                sum = 0.0;
                 for (i=0; i<nn; i++) {
-                    sum = sum + pow(x[i], normDim);
+                    buffer[i] = pow(x[i], normDim);
                 }
+                vDSP_sveD(buffer, 1, &sum, nn);
                 norm = pow( ([parallelUtil parallelReductionOfValue:sum operArg:NULL] / nscale), (1.0/normDim));
                 break;
         }
@@ -539,10 +523,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     if ( !(harmonicAnalysis || eigenAnalysis || applyLimiter || skipZeroRhs)) {
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + pow(b[i], 2.0);
-        }
+        vDSP_svesqD(b, 1, &sum, n);
         bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
         if (bnorm <= DBL_MIN) {
             NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: solution trivially zero.\n");
@@ -569,10 +550,7 @@ static const int PRECOND_VANKA     =  560;
     
     // If whether b=0 sice then equation Ax=b has only the trivial solution, x=0.
     // In case of a limiter one still may need to check the limiter for contact
-    sum = 0.0;
-    for (i=0; i<n; i++) {
-        sum = sum + pow(b[i], 2.0);
-    }
+    vDSP_svesqD(b, 1, &sum, n);
     bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
     if (bnorm <= DBL_MIN && skipZeroRhs == NO) {
         NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: solution trivially zero.\n");
@@ -4266,19 +4244,16 @@ static const int PRECOND_VANKA     =  560;
     g[0] = pNodes->x[kk] - pNodes->x[jj];
     g[1] = pNodes->y[kk] - pNodes->y[jj];
     g[2] = pNodes->z[kk] - pNodes->z[jj];
-    sum = 0.0;
-    for (i=0; i<3; i++) {
-        sum = sum + pow(g[i], 2.0);
-    }
-    for (i=0; i<3; i++) {
-        g[i] = g[i] / sqrt(sum);
-    }
+    vDSP_svesqD(g, 1, &sum, 3);
+    sum = sqrt(sum);
+    vDSP_vsdivD(g, 1, &sum, g, 1, 3);
     
     savedType = element->Type;
     if ([self getElementFamily:element] == 1) element->Type = *[elementDescription getElementType:202 inMesh:solution.mesh stabilization:NULL];
     
     *integral = 0.0;
     IP = GaussQuadrature(element, NULL, NULL);
+    double buff[3];
     for (t=0; t<IP->n; t++) {
         stat = [numericIntegration setMetricDeterminantForElement:element 
                                                      elementNodes:nodes 
@@ -4296,17 +4271,12 @@ static const int PRECOND_VANKA     =  560;
                                  thirdEvaluationPoint:IP->w[t]
                                           withBubbles:NO 
                                           basisDegree:NULL];
-        sum = 0.0;
-        for (i=0; i<nd; i++) {
-            sum = sum + load.vector[i]*numericIntegration.basis[i];
-        }
+        sum = cblas_ddot(nd, load.vector, 1, numericIntegration.basis, 1);
         l = sum;
         cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, nd, 1.0, *vLoad, np, numericIntegration.basis, 1, 0.0, vl, 1);
-        sum = 0.0;
-        for (i=0; i<3; i++) {
-            sum = sum + vl[i] * g[i];
-        }
-        *integral = *integral + s * (l+sum);
+        vDSP_vmulD(vl, 1, g, 1, buff, 1, 3);
+        vDSP_sveD(buff, 1, &sum, 3);
+        *integral = *integral + s * ( l + sum);
     }
     element->Type = savedType;
     
@@ -5322,10 +5292,7 @@ static const int PRECOND_VANKA     =  560;
         if (rhsScaling != NULL) doRHS = *rhsScaling;
         if (doRHS == YES) {
             parallelUtil = [[FEMParallelMPI alloc] init];
-            sum = 0.0;
-            for (i=0; i<n; i++) {
-                sum = sum + pow(b[i], 2.0);
-            }
+            vDSP_svesqD(b, 1, &sum, n);
             bnorm = [parallelUtil parallelReductionOfValue:sqrt(sum) operArg:NULL];
         } else {
             bnorm = 1.0;
@@ -7609,21 +7576,14 @@ static const int PRECOND_VANKA     =  560;
                 NSLog(@"FEMCore:computeChange: field and weight mismatch: %@\n", str);
                 errorfunct("FEMCore:computeChange", "Program terminating now");
             }
-            double sum1 = 0.0;
-            for (i=0; i<weightVarContainers->sizeValues; i++) {
-                sum1 = sum1 + weightVarContainers->Values[i] * x[i];
-            }
-            double sum2 = 0.0;
-            for (i=0; i<weightVarContainers->sizeValues; i++) {
-                sum2 = sum2 + weightVarContainers->Values[i];
-            }
-            cTarget = cTarget - sum1 / sum2;
+    
+            double sum;
+            vDSP_sveD(weightVarContainers->Values, 1, &sum, weightVarContainers->sizeValues);
+            cTarget = cTarget - cblas_ddot(weightVarContainers->sizeValues, weightVarContainers->Values, 1, x, 1) / sum;
         } else {
-            double sum1 = 0.0;
-            for (i=0; i<n; i++) {
-                sum1 = sum1 + x[i];
-            }
-            cTarget = cTarget - sum1 / n;
+            double sum;
+            vDSP_sveD(x, 1, &sum, n);
+            cTarget = cTarget - sum / n;
         }
         for (i=0; i<n; i++) {
             x[i] = x[i] + cTarget;
@@ -8258,7 +8218,7 @@ static const int PRECOND_VANKA     =  560;
 *********************************************************************************/
 -(double)stopc:(FEMMatrix *)matrix multiplyVector:(double *)x righHandSide:(double *)b ipar:(int *)ipar {
 
-    int i, n;
+    int n;
     double err, *res;
     double sum1, sum2, sum3, sum4;
     FEMMatrixCRS *crsMatrix;
@@ -8272,27 +8232,12 @@ static const int PRECOND_VANKA     =  560;
     
     matContainers = matrix.getContainers;
     
-    for (i=0; i<ipar[2]; i++) {
-        res[i] = res[i] - b[i];
-    }
+    vDSP_vsubD(b, 1, res, 1, res, 1, ipar[2]);
     
-    sum1 = 0.0;
-    sum2 = 0.0;
-    sum3 = 0.0;
-    sum4 = 0.0;
-    
-    for (i=0; i<n; i++) {
-        sum1 = sum1 + pow(res[i], 2.0);
-    }
-    for (i=0; i<n; i++) {
-        sum2 = sum2 + pow(matContainers->Values[i], 2.0);
-    }
-    for (i=0; i<n; i++) {
-        sum3 = sum3 + pow(x[i], 2.0);
-    }
-    for (i=0; i<n; i++) {
-        sum4 = sum4 + pow(b[i], 2.0);
-    }
+    vDSP_svesqD(res, 1, &sum1, n);
+    vDSP_svesqD(matContainers->Values, 1, &sum2, n);
+    vDSP_svesqD(x, 1, &sum3, n);
+    vDSP_svesqD(b, 1, &sum4, n);
     err = sqrt(sum1) / ( sqrt(sum2) * sqrt(sum3) + sqrt(sum4) );
     
     free_dvector(res, 0, ipar[2]-1);

@@ -1453,12 +1453,8 @@
                    ddp[i] = ddp[i] + sum1;
                    ddq[i] = ddq[i] + sum2;
                }
-                sum1 = 0.0;
-                sum2 = 0.0;
-               for (i=0; i<3; i++) {
-                   sum1 = sum1 + ddp[i];
-                   sum2 = sum2 + ddq[i];
-               }
+                vDSP_sveD(ddp, 1, &sum1, 3);
+                vDSP_sveD(ddq, 1, &sum2, 3);
                 l[p-1][q-1] = l[p-1][q-1] + s * sum1 * sum2; 
             }
         }
@@ -1966,17 +1962,13 @@
 **********************************************************************************************/
 -(double)interpolateInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double *)basis {
     
-    int i, n;
-    double value, sum;
+    int n;
+    double value;
     
     if (basis != NULL) {
         // Basis function values given, just sum the result
         n = element->Type.NumberOfNodes;
-        sum = 0.0;
-        for (i=0; i<n; i++) {
-            sum = sum + (x[i]*basis[i]);
-        }
-        return value = sum;
+        return value = cblas_ddot(n, x, 1, basis, 1);
     } else {
         // Otherwise compute from the definition
         switch (element->Type.dimension) {
@@ -2263,6 +2255,7 @@
         memcpy(prevdelta, delta, sizeof(delta));
         memset( delta, 0.0, sizeof(delta) );
         
+        double buffer[3];
         switch (element->Type.dimension) {
             case 1:
                 J[0][0] = [self firstDerivative1DInElement:element nodalValues:nodes->x evalutationPoint:*u];
@@ -2340,10 +2333,10 @@
         // If some values is suggested over and over again, then exit.
         // This may be a sign that the node is off-plane and can not
         // be described within the element.
-        sum = 0.0;
-        for (j=0; j<3; j++) {
-            sum = sum + fabs(delta[i]-prevdelta[j]);
-        }
+        memset(buffer, 0.0, sizeof(buffer));
+        vDSP_vsubD(prevdelta, 1, delta, 1, buffer, 1, 3);
+        vDSP_vabsD(buffer, 1, buffer, 1, 3);
+        vDSP_sveD(buffer, 1, &sum, 3);
         if (sum < DBL_MIN) break;
     }
     

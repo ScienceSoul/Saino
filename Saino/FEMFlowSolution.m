@@ -662,10 +662,7 @@
         for (i=_nsdofs-1; i<flowContainers->sizeValues; i+=_nsdofs) {
             _pseudoPressure[i] = flowContainers->Values[i];
         }
-        sum = 0.0;
-        for (i=0; i<_sizePseudoPressure; i++) {
-            sum = sum + _pseudoPressure[i];
-        }
+        vDSP_sveD(_pseudoPressure, 1, &sum, _sizePseudoPressure);
         NSLog(@"FEMFlowSolution:solutionComputer: pseudoPressure mean: %f\n", sum/_sizePseudoPressure);
         
         pseudoCompressibilityScale = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"artificial compressibility scaling" info:&found minValue:NULL maxValue:NULL];

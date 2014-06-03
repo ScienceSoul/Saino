@@ -480,7 +480,7 @@
     
     n = solution.matrix.numberOfRows;
     
-    //TODO: Can we optimize the loop below
+    //TODO: Can we optimize the loop below?
     for (i=0; i<n; i++) {
         rsum = 0.0;
         for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {

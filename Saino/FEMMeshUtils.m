@@ -1134,7 +1134,7 @@
     
     int i, j, k, n, n1, n2, k1, k2, constraint, dim, numbBothActive, count;
     int *perm1, *perm2, *invPerm1, *invPerm2;
-    double dot1min, dot2min, sum, alpha, s1, s2;
+    double dot1min, dot2min, alpha, s1, s2;
     double normals[3], normals1[3], normals2[3], x1Min[3], x1Max[3], x2Min[3], x2Max[3], x2rMin[3], x2rMax[3], x[4], identity[4][4], rotMatrix[4][4],
            trsMatrix[4][4], sclMatrix[4][4], trfMatrix[4][4], angles[3], normals2r[3], scl[3];
     listBuffer pArray = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -1243,11 +1243,7 @@
             if (n1 == 0) {
                 memcpy(normals1, normals, sizeof(normals1));
             } else {
-                sum = 0.0;
-                for (j=0; j<3; j++) {
-                    sum = sum + normals[j]*normals1[j];
-                }
-                dot1min = min(dot1min, sum);
+                dot1min = min(dot1min, cblas_ddot(3, normals, 1, normals1, 1));
             }
             
             bmesh1.maxElementNodes = max(bmesh1.maxElementNodes, n);
@@ -1267,11 +1263,7 @@
             if (n2 == 0) {
                 memcpy(normals2, normals, sizeof(normals2));
             } else {
-                sum = 0.0;
-                for (j=0; j<3; j++) {
-                    sum = sum + normals[j]*normals2[j];
-                }
-                dot2min = min(dot2min, sum);
+                dot2min = min(dot2min, cblas_ddot(3, normals, 1, normals2, 1));
             }
             
             bmesh2.maxElementNodes = max(bmesh2.maxElementNodes, n);
@@ -1295,11 +1287,7 @@
     constantNormals = ( (1.0 - dot1min < 1.0e-6) && (1.0 - dot2min < 1.0e-6) ) ? YES : NO;
     if (constantNormals == YES) {
         // The full angle between the two normals
-        sum = 0.0;
-        for (i = 0; i<3; i++) {
-            sum = sum + normals1[i] * normals2[i];
-        }
-        alpha = acos(sum) * 180 / M_PI;
+        alpha = acos(cblas_ddot(3, normals1, 1, normals2, 1)) * 180 / M_PI;
         NSLog(@"FEMMeshUtils:periodicProjectorInModel: suggested angle between two normals in degrees: %e\n", alpha);
     }
     
@@ -1490,18 +1478,10 @@
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: master normal: %f %f %f\n", normals1[0], normals1[1], normals1[2]);
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: initial target normal: %f %f %f\n", normals2[0], normals2[1], normals2[2]);
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotated target normal: %f %f %f\n", normals2r[0], normals2r[1], normals2r[2]);
-            sum = 0.0;
-            for (i=0; i<3; i++) {
-                sum = sum + normals1[i] * normals2[i];
-            }
-            alpha = acos(sum) * 180.0 / M_PI;
+            alpha = acos(cblas_ddot(3, normals1, 1, normals2, 1)) * 180.0 / M_PI;
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and initial target: %e\n", alpha);
             
-            sum = 0.0;
-            for (i=0; i<3; i++) {
-                sum = sum + normals1[i] * normals2r[i];
-            }
-            alpha = acos(sum) * 180.0 / M_PI;
+            alpha = acos(cblas_ddot(3, normals1, 1, normals2r, 1)) * 180.0 / M_PI;
             NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and rotated target: %e\n", alpha);
             
             if (fabs(alpha) > 1.0e-2 && fabs(alpha - 180.0) > 1.0e-2) {
@@ -1612,17 +1592,15 @@
             // This assumes isotropic scaling since the previous was prone
             // to errors when the surfaces were almost but not quite aligned
             // with some coordinate direction.
-            sum = 0.0;
-            for (i=0; i<3; i++) {
-                sum = sum + pow((x1Max[i]-x1Min[i]), 2.0);
-            }
-            s1 = sum;
+            double buffer[3];
+            memset(buffer, 0.0, sizeof(buffer));
+            vDSP_vsubD(x1Min, 1, x1Max, 1, buffer, 1, 3);
+            vDSP_svesqD(buffer, 1, &s1, 3);
             
-            sum = 0.0;
-            for (i=0; i<3; i++) {
-                sum = sum + pow((x2rMax[i]-x2rMin[i]), 2.0);
-            }
-            s2 = sum;
+            memset(buffer, 0.0, sizeof(buffer));
+            vDSP_vsubD(x2rMin, 1, x2rMax, 1, buffer, 1, 3);
+            vDSP_svesqD(buffer, 1, &s2, 3);
+            
             if (s2 > DBL_EPSILON) {
                 for (i=0; i<3; i++) {
                     scl[i] = sqrt(s1/s2);

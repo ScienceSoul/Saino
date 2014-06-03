@@ -6,8 +6,9 @@
 //  Copyright (c) 2013 Institute of Low Temperature Science. All rights reserved.
 //
 
-#import "FEMRadiation.h"
+#import <Accelerate/Accelerate.h>
 
+#import "FEMRadiation.h"
 #import "FEMCore.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
@@ -57,17 +58,12 @@
         
         boundaryConditionAtID = (model.boundaryConditions)[currentElement[cols[i]].BoundaryInfo->Constraint-1];
         found = [listUtilities listGetReal:model inArray:boundaryConditionAtID.valuesList forVariable:@"emissivity" numberOfNodes:n indexes:currentElement[cols[i]].NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
-        sum = 0.0;
         if (found == YES) {
-            for (j=0; j<buffer.m; j++) {
-                sum = sum + buffer.vector[j];
-            }
+            vDSP_sveD(buffer.vector, 1, &sum, buffer.m);
             emissivity1 = sum / n;
         } else {
             found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElement[cols[i]] parentElement:parent model:model listUtilities:listUtilities buffer:&buffer];
-            for (j=0; j<buffer.m; j++) {
-                sum = sum + buffer.vector[j];
-            }
+            vDSP_sveD(buffer.vector, 1, &sum, buffer.m);
             emissivity1 = sum / n;
         }
         
@@ -97,7 +93,7 @@
 
 -(double)computeRadiationCoeffModel:(FEMModel *)model mesh:(FEMMesh *)mesh element:(Element_t *)element index:(int)k {
     
-    int i, n;
+    int n;
     double area, emissivity, sum, t;
     BOOL found;
     FEMCore *core;
@@ -115,17 +111,12 @@
     
     boundaryConditionAtID = (model.boundaryConditions)[currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].BoundaryInfo->Constraint-1];
     found = [listUtilities listGetReal:model inArray:boundaryConditionAtID.valuesList forVariable:@"emissivity" numberOfNodes:n indexes:currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
-    sum = 0.0;
     if (found == YES) {
-        for (i=0; i<buffer.m; i++) {
-            sum = sum + buffer.vector[i];
-        }
+        vDSP_sveD( buffer.vector, 1, &sum, buffer.m);
         emissivity = sum / n;
     } else {
         found = [core getParentMaterialProperty:@"emissivity" forElement:&currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]] parentElement:parent model:model listUtilities:listUtilities buffer:&buffer];
-        for (i=0; i<buffer.m; i++) {
-            sum = sum + buffer.vector[i];
-        }
+        vDSP_sveD(buffer.vector, 1, &sum, buffer.m);
         emissivity = sum / n;
     }
     

@@ -689,10 +689,7 @@
         tangent1[2] = 0.0;
     }
     
-    sum = 0.0;
-    for (i=0; i<3; i++) {
-        sum = sum + pow(tangent1[i], 2.0);
-    }
+    vDSP_svesqD(tangent1, 1, &sum, 3);
     for (i=0; i<3; i++) {
         tangent1[i] = tangent1[i] / sqrt(sum);
     }
@@ -701,10 +698,7 @@
     tangent2[1] = normal[2]*tangent1[0] - normal[0]*tangent1[2];
     tangent2[2] = normal[0]*tangent1[1] - normal[1]*tangent1[0];
     
-    sum = 0.0;
-    for (i=0; i<3; i++) {
-        sum = sum + pow(tangent2[i], 2.0);
-    }
+    vDSP_svesqD(tangent2, 1, &sum, 3);
     for (i=0; i<3; i++) {
         tangent2[i] = tangent2[i] / sqrt(sum);
     }
