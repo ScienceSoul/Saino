@@ -1421,18 +1421,14 @@
         memset(tangentialVelocity, 0.0, sizeof(tangentialVelocity) );
         tangentialVelocity[0] = cblas_ddot(dim, velo, 1, tangents, 1);
         if (tangentialVelocity[0] < 0) {
-            for (i=0; i<3; i++) {
-                tangents[i] = -tangents[i];
-            }
+            vDSP_vnegD(tangents, 1, tangents, 1, 3);
             tangentialVelocity[0] = -tangentialVelocity[0];
         }
         
         if (dim == 3) {
             tangentialVelocity[1] = cblas_ddot(dim, velo, 1, tangents2, 1);
             if (tangentialVelocity[1] < 0) {
-                for (i=0; i<3; i++) {
-                    tangents2[i] = -tangents2[i];
-                }
+                vDSP_vnegD(tangents2, 1, tangents2, 1, 3);
                 tangentialVelocity[1] = -tangentialVelocity[1];
             }
         }

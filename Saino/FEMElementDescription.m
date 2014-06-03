@@ -2096,15 +2096,11 @@
     if (turn != NULL) *turn = NO;
     if (x1*normals[0] + y1*normals[1] + z1*normals[2] > 0) {
         if (element->BodyID != k) {
-            for (i=0; i<3; i++) {
-                normals[i] = -normals[i];
-            }
+            vDSP_vnegD(normals, 1, normals, 1, 3);
             if (turn != NULL) *turn = YES;
         }
     } else if (element->BodyID == k) {
-        for (i=0; i<3; i++) {
-            normals[i] = -normals[i];
-        }
+        vDSP_vnegD(normals, 1, normals, 1, 3);
         if (turn != NULL) *turn = YES;
     }
     
