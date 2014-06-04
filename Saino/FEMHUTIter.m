@@ -232,10 +232,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        r[i] = b[i] - r[i];
-        rtld[i] = r[i];
-    }
+    // r = b - r
+    vDSP_vsubD(r, 1, b, 1, r, 1, ndim);
+    memcpy(rtld, r, ndim*sizeof(double));
     
     memset( p, 0.0, ndim*sizeof(double) );
     memset( v, 0.0, ndim*sizeof(double) );
@@ -245,6 +244,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     alpha = 0;
     
     // This is where the loop starts
+    double buffer[ndim];
     while (1) {
         
         rho = cblas_ddot(HUTI_NDIM, rtld, 1, r, 1);
@@ -254,9 +254,12 @@ static double UPPERB_TOL_RATIO  =  10.0;
         }
         
         beta = ( rho * alpha) / ( oldrho * omega );
-        for (i=0; i<ndim; i++) {
-            p[i] = r[i] + beta * (p[i] - omega * v[i]);
-        }
+        
+        //p[i] = r[i] + beta * (p[i] - omega * v[i])
+        vDSP_vsmulD(v, 1, &omega, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, p, 1, buffer, 1, ndim);
+        vDSP_vsmulD(buffer, 1, &beta, buffer, 1, ndim);
+        vDSP_vaddD(r, 1, buffer, 1, p, 1, ndim);
         
         [pcondlInvocation setArgument:&matrix atIndex:2];
         [pcondlInvocation setArgument:&v atIndex:3];
@@ -277,17 +280,17 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [matvecInvocation invoke];
         
         alpha = rho / cblas_ddot(HUTI_NDIM, rtld, 1, v, 1);
-        for (i=0; i<ndim; i++) {
-            s[i] = r[i] - alpha * v[i];
-        }
+        // s[i] = r[i] - alpha * v[i]
+        vDSP_vsmulD(v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, s, 1, ndim);
         
         residual = cblas_dnrm2(HUTI_NDIM, s, 1);
         if (residual < HUTI_EPSILON) {
-            for (i=0; i<ndim; i++) {
-                x[i] = x[i] + alpha * t1v[i];
-                HUTI_INFO = HUTI_BICGSTAB_SNORM;
-                break;
-            }
+            // x[i] = x[i] + alpha * t1v[i]
+            vDSP_vsmulD(t1v, 1, &alpha, buffer, 1, ndim);
+            vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
+            HUTI_INFO = HUTI_BICGSTAB_SNORM;
+            break;
         }
         
         [pcondlInvocation setArgument:&matrix atIndex:2];
@@ -311,8 +314,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
         omega = ( cblas_ddot(HUTI_NDIM, t, 1, s, 1) ) / ( cblas_ddot(HUTI_NDIM, t, 1, t, 1) );
         for (i=0; i<ndim; i++) {
             x[i] = x[i] + alpha * t1v[i] + omega * t2v[i];
-            r[i] = s[i] - omega * t[i];
         }
+        // r[i] = s[i] - omega * t[i]
+        vDSP_vsmulD(t, 1, &omega, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, s, 1, r, 1, ndim);
         
         // Check the convergence against selected stopping criterion
         switch (HUTI_STOPC) {
@@ -322,9 +327,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t2v[i] - b[i];
-                }
+                // t1v[i] = t2v[i] - b[i]
+                vDSP_vsubD(b, 1, t2v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
             case HUTI_TRESID_SCALED_BYB:
@@ -333,9 +337,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t2v[i] - b[i];
-                }
+                // t1v[i] = t2v[i] - b[i]
+                vDSP_vsubD(b, 1, t2v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / rhsnorm;
                 break;
             case HUTI_PSEUDORESIDUAL:
@@ -368,9 +371,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t2v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t2v[i] - b[i];
-                }
+                // t1v[i] = t2v[i] - b[i]
+                vDSP_vsubD(b, 1, t2v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
         }
@@ -529,9 +531,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        u[i] = b[i] - r[i];
-    }
+    // u[i] = b[i] - r[i]
+    vDSP_vsubD(r, 1, b, 1, u, 1, ndim);
     
     [pcondlInvocation setArgument:&matrix atIndex:2];
     [pcondlInvocation setArgument:&r atIndex:3];
@@ -539,15 +540,15 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        rtld[i] = r[i];
-    }
+    memcpy(rtld, r, ndim*sizeof(double));
+
     memset( u, 0.0, ndim*sizeof(double) );
     oldrho = 1;
     omega2 = 1;
     alpha = 0;
     
     // This is where the loop starts
+    double buffer[ndim];
     while (1) {
         
         oldrho = -omega2 * oldrho;
@@ -561,9 +562,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         beta = ( rho * alpha ) / oldrho;
         oldrho = rho;
-        for (i=0; i<ndim; i++) {
-            u[i] = r[i] - beta * u[i];
-        }
+        // u[i] = r[i] - beta * u[i]
+        vDSP_vsmulD(u, 1, &beta, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, u, 1, ndim);
         
         [pcondrInvocation setArgument:&matrix atIndex:2];
         [pcondrInvocation setArgument:&v atIndex:3];
@@ -584,9 +585,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
 
         alpha = oldrho / cblas_ddot(HUTI_NDIM, rtld, 1, v, 1);
-        for (i=0; i<ndim; i++) {
-            r[i] = r[i] - alpha * v[i];
-        }
+        // r[i] = r[i] - alpha * v[i]
+        vDSP_vsmulD(v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, r, 1, ndim);
         
         [pcondrInvocation setArgument:&matrix atIndex:2];
         [pcondrInvocation setArgument:&s atIndex:3];
@@ -606,9 +607,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation setArgument:&ipar atIndex:5];
         [pcondlInvocation invoke];
         
-        for (i=0; i<ndim; i++) {
-            x[i] = x[i] + alpha * u[i];
-        }
+        // x[i] = x[i] + alpha * u[i]
+        vDSP_vsmulD(u, 1, &alpha, buffer, 1, ndim);
+        vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
         
         // This is the odd BI-CG step
         rho = cblas_ddot(HUTI_NDIM, rtld, 1, s, 1);
@@ -619,9 +620,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
         beta = ( rho * alpha ) / oldrho;
         oldrho = rho;
-        for (i=0; i<ndim; i++) {
-            v[i] = s[i] - beta * v[i];
-        }
+        vDSP_vsmulD(v, 1, &beta, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, s, 1, v, 1, ndim);
         
         [pcondrInvocation setArgument:&matrix atIndex:2];
         [pcondrInvocation setArgument:&w atIndex:3];
@@ -642,11 +642,17 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation invoke];
         
         alpha = oldrho / cblas_ddot(HUTI_NDIM, rtld, 1, w, 1);
-        for (i=0; i<ndim; i++) {
-            u[i] = r[i] - beta * u[i];
-            r[i] = r[i] - alpha * v[i];
-            s[i] = s[i] - alpha * w[i];
-        }
+        // u[i] = r[i] - beta * u[i]
+        vDSP_vsmulD(u, 1, &beta, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, u, 1, ndim);
+        
+        // r[i] = r[i] - alpha * v[i]
+        vDSP_vsmulD(v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, r, 1, ndim);
+        
+        // s[i] = s[i] - alpha * w[i]
+        vDSP_vsmulD(w, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, s, 1, s, 1, ndim);
         
         [pcondrInvocation setArgument:&matrix atIndex:2];
         [pcondrInvocation setArgument:&t atIndex:3];
@@ -696,9 +702,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&s atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -718,9 +723,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&s atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -764,9 +768,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&s atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -930,9 +933,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        d[i] = b[i] - r[i];
-    }
+    // d[i] = b[i] - r[i]
+    vDSP_vsubD(r, 1, b, 1, d, 1, ndim);
     
     [pcondlInvocation setArgument:&matrix atIndex:2];
     [pcondlInvocation setArgument:&r atIndex:3];
@@ -940,10 +942,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
     [pcondlInvocation setArgument:&ipar atIndex:5];
     [pcondlInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        y[i] = r[i];
-        w[i] = r[i];
-    }
+    memcpy(y, r, ndim*sizeof(double));
+    memcpy(w, r, ndim*sizeof(double));
+    
     [pcondrInvocation setArgument:&matrix atIndex:2];
     [pcondrInvocation setArgument:&v atIndex:3];
     [pcondrInvocation setArgument:&y atIndex:4];
@@ -971,9 +972,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
     gamma = 0;
     eta = 0;
     
-    for (i=0; i<ndim; i++) {
-        rtld[i] = r[i];
-    }
+    memcpy(rtld, r, ndim*sizeof(double));
+    
+    double buffer[ndim];
     
     oldrho = cblas_ddot(HUTI_NDIM, rtld, 1, r, 1);
     if (oldrho == 0.0) {
@@ -998,9 +999,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // First the 2n-1
         // Note: We have already MATRIX * Y in t2v
         
-        for (i=0; i<ndim; i++) {
-            w[i] = w[i] - alpha * t2v[i];
-        }
+        // w[i] = w[i] - alpha * t2v[i];
+        vDSP_vsmulD(t2v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, w, 1, w, 1, ndim);
+
         gamma = ( cblas_dnrm2(HUTI_NDIM, w, 1) ) / tau;
         c = 1 / sqrt( 1 + gamma * gamma );
         tau = tau * gamma * c;
@@ -1009,9 +1011,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
             d[i] = y[i] + ( ( oldgamma * oldgamma * eta ) / alpha ) * d[i];
         }
         eta = c * c * alpha;
-        for (i=0; i<ndim; i++) {
-            x[i] = x[i] + eta * d[i];
-        }
+        // x[i] = x[i] + eta * d[i]
+        vDSP_vsmulD(d, 1, &eta, buffer, 1, ndim);
+        vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
         
         oldgamma = gamma;
         
@@ -1029,9 +1031,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1051,9 +1052,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1067,9 +1067,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1083,9 +1082,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1099,9 +1097,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1110,9 +1107,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, trv, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ndim; i++) {
-                    r[i] = eta * d[i];
-                }
+                // r[i] = eta * d[i]
+                vDSP_vsmulD(d, 1, &eta, r, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1);
                 break;
             case HUTI_UPPERB_STOPC:
@@ -1129,9 +1125,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                     [matvecInvocation setArgument:&r atIndex:4];
                     [matvecInvocation setArgument:&ipar atIndex:5];
                     [matvecInvocation invoke];
-                    for (i=0; i<ndim; i++) {
-                        trv[i] = r[i] - b[i];
-                    }
+                    // trv[i] = r[i] - b[i]
+                    vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                     [pcondlInvocation setArgument:&matrix atIndex:2];
                     [pcondlInvocation setArgument:&r atIndex:3];
                     [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1163,9 +1158,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1201,9 +1195,10 @@ static double UPPERB_TOL_RATIO  =  10.0;
         [pcondlInvocation setArgument:&ipar atIndex:5];
         [pcondlInvocation invoke];
         
-        for (i=0; i<ndim; i++) {
-            w[i] = w[i] - alpha * t1v[i];
-        }
+        // w[i] = w[i] - alpha * t1v[i]
+        vDSP_vsmulD(t1v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, w, 1, w, 1, ndim);
+
         gamma = ( cblas_dnrm2(HUTI_NDIM, w, 1) ) / tau;
         c = 1 / sqrt( 1 + gamma * gamma );
         tau = tau * gamma * c;
@@ -1212,9 +1207,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
             d[i] = ynew[i] + ( ( oldgamma * oldgamma * eta ) / alpha ) * d[i];
         }
         eta = c * c * alpha;
-        for (i=0; i<ndim; i++) {
-            x[i] = x[i] + eta * d[i];
-        }
+        // x[i] = x[i] + eta * d[i]
+        vDSP_vsmulD(d, 1, &eta, buffer, 1, ndim);
+        vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
         
         oldgamma = gamma;
         
@@ -1232,9 +1227,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1254,9 +1248,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1270,9 +1263,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1286,9 +1278,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1302,9 +1293,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&trv atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -1313,9 +1303,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 residual = cblas_dnrm2(HUTI_NDIM, trv, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ndim; i++) {
-                    r[i] = eta * d[i];
-                }
+                // r[i] = eta * d[i]
+                vDSP_vsmulD(d, 1, &eta, r, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1);
                 break;
             case HUTI_UPPERB_STOPC:
@@ -1332,9 +1321,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                     [matvecInvocation setArgument:&r atIndex:4];
                     [matvecInvocation setArgument:&ipar atIndex:5];
                     [matvecInvocation invoke];
-                    for (i=0; i<ndim; i++) {
-                        trv[i] = r[i] - b[i];
-                    }
+                    // trv[i] = r[i] - b[i]
+                    vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                     [pcondlInvocation setArgument:&matrix atIndex:2];
                     [pcondlInvocation setArgument:&r atIndex:3];
                     [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1366,9 +1354,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    trv[i] = r[i] - b[i];
-                }
+                // trv[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, trv, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&trv atIndex:4];
@@ -1398,9 +1385,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         rho = cblas_ddot(HUTI_NDIM, rtld, 1, w, 1);
         beta = rho / oldrho;
-        for (i=0; i<ndim; i++) {
-            ynew[i] = w[i] + beta * ynew[i];
-        }
+        // ynew[i] = w[i] + beta * ynew[i]
+        vDSP_vsmulD(ynew, 1, &beta, buffer, 1, ndim);
+        vDSP_vaddD(w, 1, buffer, 1, ynew, 1, ndim);
         
         [pcondrInvocation setArgument:&matrix atIndex:2];
         [pcondrInvocation setArgument:&t2v atIndex:3];
@@ -1424,8 +1411,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
         
         for (i=0; i<ndim; i++) {
             v[i] = t2v[i] + beta * t1v[i] + beta * beta * v[i];
-            y[i] = ynew[i];
         }
+        memcpy(y, ynew, ndim*sizeof(double));
         
         oldrho = rho;
         
@@ -1447,9 +1434,7 @@ jump:
     [pcondrInvocation setArgument:&x atIndex:4];
     [pcondrInvocation setArgument:&ipar atIndex:5];
     [pcondrInvocation invoke];
-    for (i=0; i<ndim; i++) {
-        x[i] = trv[i];
-    }
+    memcpy(x, trv, ndim*sizeof(double));
     
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
         if (HUTI_STOPC == HUTI_UPPERB_STOPC) {
@@ -1571,11 +1556,11 @@ jump:
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        r[i] = b[i] - r[i];
-    }
+    // r[i] = b[i] - r[i]
+    vDSP_vsubD(r, 1, b, 1, r, 1, ndim);
     
     // This is where the loop starts
+    double buffer[ndim];
     while (1) {
         
         [pcondlInvocation setArgument:&matrix atIndex:2];
@@ -1597,14 +1582,12 @@ jump:
         }
         
         if (iter_count == 1) {
-            for (i=0; i<ndim; i++) {
-                p[i] = z[i];
-            }
+            memcpy(p, z, ndim*sizeof(double));
         } else {
             beta = rho / oldrho;
-            for (i=0; i<ndim; i++) {
-                p[i] = z[i] + beta * p[i];
-            }
+            // p[i] = z[i] + beta * p[i]
+            vDSP_vsmulD(p, 1, &beta, buffer, 1, ndim);
+            vDSP_vaddD(z, 1, buffer, 1, p, 1, ndim);
         }
         
         [matvecInvocation setArgument:&matrix atIndex:2];
@@ -1615,10 +1598,12 @@ jump:
         
         alpha = rho / cblas_ddot(HUTI_NDIM, p, 1, q, 1);
         
-        for (i=0; i<ndim; i++) {
-            x[i] = x[i] + alpha * p[i];
-            r[i] = r[i] - alpha * q[i];
-        }
+        // x[i] = x[i] + alpha * p[i]
+        vDSP_vsmulD(p, 1, &alpha, buffer, 1, ndim);
+        vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
+        // r[i] = r[i] - alpha * q[i]
+        vDSP_vsmulD(q, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, r, 1, ndim);
         
         // Check the convergence against selected stopping criterion
         switch (HUTI_STOPC) {
@@ -1628,9 +1613,8 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    z[i] = z[i] - b[i];
-                }
+                // z[i] = z[i] - b[i]
+                vDSP_vsubD(b, 1, z, 1, z, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
                 break;
             case HUTI_TRESID_SCALED_BYB:
@@ -1639,9 +1623,8 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    z[i] = z[i] - b[i];
-                }
+                // z[i] = z[i] - b[i]
+                vDSP_vsubD(b, 1, z, 1, z, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1) / rhsnorm;
                 break;
             case HUTI_PSEUDORESIDUAL:
@@ -1654,9 +1637,8 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ndim; i++) {
-                    z[i] = alpha * p[i];
-                }
+                // z[i] = alpha * p[i]
+                vDSP_vsmulD(p, 1, &alpha, z, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
                 break;
             case HUTI_USUPPLIED_STOPC:
@@ -1674,9 +1656,8 @@ jump:
                 [matvecInvocation setArgument:&z atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    z[i] = z[i] - b[i];
-                }
+                // z[i] = z[i] - b[i]
+                vDSP_vsubD(b, 1, z, 1, z, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, z, 1);
                 break;
         }
@@ -1819,12 +1800,12 @@ jump:
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<ndim; i++) {
-        r[i] = b[i] - r[i];
-        rtld[i] = r[i];
-    }
+    // r[i] = b[i] - r[i]
+    vDSP_vsubD(r, 1, b, 1, r, 1, ndim);
+    memcpy(rtld, r, ndim*sizeof(double));
     
     // This is where the loop starts
+    double buffer[ndim];
     while (1) {
         
         rho = cblas_ddot(HUTI_NDIM, rtld, 1, r, 1);
@@ -1834,14 +1815,14 @@ jump:
         }
         
         if (iter_count == 1) {
-            for (i=0; i<ndim; i++) {
-                u[i] = r[i];
-                p[i] = u[i];
-            }
+            memcpy(u, r, ndim*sizeof(double));
+            memcpy(p, u, ndim*sizeof(double));
         } else {
             beta = rho / oldrho;
+            // u[i] = r[i] + beta * q[i]
+            vDSP_vsmulD(q, 1, &beta, buffer, 1, ndim);
+            vDSP_vaddD(r, 1, buffer, 1, u, 1, ndim);
             for (i=0; i<ndim; i++) {
-                u[i] = r[i] + beta * q[i];
                 p[i] = u[i] + beta * q[i] + beta * beta * p[i];
             }
         }
@@ -1865,12 +1846,11 @@ jump:
         [matvecInvocation invoke];
 
         alpha = rho / cblas_ddot(HUTI_NDIM, rtld, 1, t2v, 1);
-        for (i=0; i<ndim; i++) {
-            q[i] = u[i] - alpha * t2v[i];
-        }
-        for (i=0; i<ndim; i++) {
-            t2v[i] = u[i] + q[i];
-        }
+        // q[i] = u[i] - alpha * t2v[i]
+        vDSP_vsmulD(t2v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, u, 1, q, 1, ndim);
+        // t2v[i] = u[i] + q[i]
+        vDSP_vaddD(u, 1, q, 1, t2v, 1, ndim);
         
         [pcondlInvocation setArgument:&matrix atIndex:2];
         [pcondlInvocation setArgument:&u atIndex:3];
@@ -1883,18 +1863,18 @@ jump:
         [pcondrInvocation setArgument:&u atIndex:4];
         [pcondrInvocation setArgument:&ipar atIndex:5];
         [pcondrInvocation invoke];
-        for (i=0; i<ndim; i++) {
-            x[i] = x[i] + alpha * t1v[i];
-        }
+        // x[i] = x[i] + alpha * t1v[i]
+        vDSP_vsmulD(t1v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vaddD(x, 1, buffer, 1, x, 1, ndim);
         
         [matvecInvocation setArgument:&matrix atIndex:2];
         [matvecInvocation setArgument:&t1v atIndex:3];
         [matvecInvocation setArgument:&t2v atIndex:4];
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
-        for (i=0; i<ndim; i++) {
-            r[i] = r[i] - alpha * t2v[i];
-        }
+        // r[i] = r[i] - alpha * t2v[i]
+        vDSP_vsmulD(t2v, 1, &alpha, buffer, 1, ndim);
+        vDSP_vsubD(buffer, 1, r, 1, r, 1, ndim);
         
         // Check the convergence against selected stopping criterion
         switch (HUTI_STOPC) {
@@ -1904,9 +1884,8 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
             case HUTI_TRESID_SCALED_BYB:
@@ -1915,9 +1894,8 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1) / rhsnorm;
                 break;
             case HUTI_PSEUDORESIDUAL:
@@ -1930,9 +1908,8 @@ jump:
                 residual = cblas_dnrm2(HUTI_NDIM, r, 1) / precrhsnorm;
                 break;
             case HUTI_XDIFF_NORM:
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = alpha * t1v[i];
-                }
+                // t1v[i] = alpha * t1v[i]
+                vDSP_vsmulD(t1v, 1, &alpha, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
             case HUTI_USUPPLIED_STOPC:
@@ -1950,9 +1927,8 @@ jump:
                 [matvecInvocation setArgument:&t1v atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = t1v[i] - b[i];
-                }
+                // t1v[i] = t1v[i] - b[i]
+                vDSP_vsubD(b, 1, t1v, 1, t1v, 1, ndim);
                 residual = cblas_dnrm2(HUTI_NDIM, t1v, 1);
                 break;
         }
@@ -2114,9 +2090,8 @@ jump:
     [matvecInvocation setArgument:&r atIndex:4];
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
-    for (i=0; i<ndim; i++) {
-        t1v[i] = b[i] - r[i];
-    }
+    // t1v[i] = b[i] - r[i]
+    vDSP_vsubD(r, 1, b, 1, t1v, 1, ndim);
     [pcondlInvocation setArgument:&matrix atIndex:2];
     [pcondlInvocation setArgument:&r atIndex:3];
     [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -2152,9 +2127,8 @@ jump:
         [matvecInvocation setArgument:&r atIndex:4];
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
-        for (i=0; i<ndim; i++) {
-            t1v[i] = b[i] - r[i];
-        }
+        // t1v[i] = b[i] - r[i]
+        vDSP_vsubD(r, 1, b, 1, t1v, 1, ndim);
         [pcondlInvocation setArgument:&matrix atIndex:2];
         [pcondlInvocation setArgument:&r atIndex:3];
         [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -2286,9 +2260,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = b[i] - r[i];
-                }
+                // t1v[i] = b[i] - r[i]
+                vDSP_vsubD(r, 1, b, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -2308,9 +2281,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = b[i] - r[i];
-                }
+                // t1v[i] = b[i] - r[i]
+                vDSP_vsubD(r, 1, b, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
@@ -2324,9 +2296,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&t1v atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -2340,9 +2311,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&t1v atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -2356,9 +2326,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    r[i] = r[i] - b[i];
-                }
+                // r[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, r, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&t1v atIndex:3];
                 [pcondlInvocation setArgument:&r atIndex:4];
@@ -2392,9 +2361,8 @@ jump:
                 [matvecInvocation setArgument:&r atIndex:4];
                 [matvecInvocation setArgument:&ipar atIndex:5];
                 [matvecInvocation invoke];
-                for (i=0; i<ndim; i++) {
-                    t1v[i] = r[i] - b[i];
-                }
+                // t1v[i] = r[i] - b[i]
+                vDSP_vsubD(b, 1, r, 1, t1v, 1, ndim);
                 [pcondlInvocation setArgument:&matrix atIndex:2];
                 [pcondlInvocation setArgument:&r atIndex:3];
                 [pcondlInvocation setArgument:&t1v atIndex:4];
