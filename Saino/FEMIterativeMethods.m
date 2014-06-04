@@ -267,11 +267,7 @@
     [pcondlInvocation setTarget:preconditioning];
     [matvecInvocation setTarget:preconditioning];
     
-    if (all(xvec, '=', 0.0, n) == true) {
-        for (i=0; i<n; i++) {
-            xvec[i] = rhsvec[i];
-        }
-    }
+    if (all(xvec, '=', 0.0, n) == true) memcpy(xvec, rhsvec, n*sizeof(double));
     
     zero = 0.0;
     one = 1.0;
@@ -658,9 +654,7 @@
     
     // We have solved z = P*x, with P the preconditioner, so finally
     // solve the true unknown x
-    for (i=0; i<n; i++) {
-        t[i] = xvec[i];
-    }
+    memcpy(t, xvec, n*sizeof(double));
     [pcondlInvocation setArgument:&matrix atIndex:2];
     [pcondlInvocation setArgument:&xvec atIndex:3];
     [pcondlInvocation setArgument:&t atIndex:4];
@@ -793,16 +787,18 @@
         alpha = cblas_dnrm2(n, t2, 1);
         for (i=0; i<n; i++) {
             t1[i] = 1.0 / alpha * t1[i];
-            t2[i] = 1.0 / alpha *t2[i];
+            t2[i] = 1.0 / alpha * t2[i];
         }
         
         // The update of the solution and savethe search data
         
         beta = cblas_ddot(n, t2, 1, r, 1);
-        for (i=0; i<n; i++) {
-            xvec[i] = xvec[i] + beta * t1[i];
-            r[i] = r[i] - beta * t2[i];
-        }
+        // xvec[i] = xvec[i] + beta * t1[i]
+        vDSP_vsmulD(t1, 1, &beta, buffer, 1, n);
+        vDSP_vaddD(xvec, 1, buffer, 1, xvec, 1, n);
+        // r[i] = r[i] - beta * t2[i]
+        vDSP_vsmulD(t2, 1, &beta, buffer, 1, n);
+        vDSP_vsubD(buffer, 1, r, 1, r, 1, n);
         if (j != m) {
             for (i=0; i<n; i++) {
                 s[i][j-1] = t1[i];
@@ -873,9 +869,8 @@
     [matvecInvocation setArgument:&ipar atIndex:5];
     [matvecInvocation invoke];
     
-    for (i=0; i<n; i++) {
-        r[i] = rhsvec[i] - r[i];
-    }
+    // r[i] = rhsvec[i] - r[i]
+    vDSP_vsubD(r, 1, rhsvec, 1, r, 1, n);
     
     bnorm = cblas_dnrm2(n, rhsvec, 1);
     rnorm = cblas_dnrm2(n, r, 1);
@@ -899,13 +894,15 @@
         m[i] = s;
     }
     
+    double buffer[n];
     for (k=1; k<=rounds; k++) {
-        for (i=0; i<n; i++) {
-            if (k == 1) {
-                xvec[i] = rhsvec[i] / m[i];
-            } else {
-                xvec[i] = xvec[i] + r[i] / m[i];
-            }
+        if (k == 1) {
+            // xvec[i] = rhsvec[i] / m[i]
+            vDSP_vdivD(rhsvec, 1, m, 1, xvec, 1, n);
+        } else {
+            // xvec[i] = xvec[i] + r[i] / m[i]
+            vDSP_vdivD(r, 1, m, 1, buffer, 1, n);
+            vDSP_vaddD(xvec, 1, buffer, 1, xvec, 1, n);
         }
         
         [matvecInvocation setArgument:&matrix atIndex:2];
@@ -914,9 +911,8 @@
         [matvecInvocation setArgument:&ipar atIndex:5];
         [matvecInvocation invoke];
         
-        for (i=0; i<n; i++) {
-            r[i] = rhsvec[i] - r[i];
-        }
+        // r[i] = rhsvec[i] - r[i]
+        vDSP_vsubD(r, 1, rhsvec, 1, r, 1, n);
         rnorm = cblas_dnrm2(n, r, 1);
         
         *residual = rnorm / bnorm;
@@ -1015,15 +1011,11 @@
         nc = matrix.constraint.numberOfRows;
         xx = doublevec(0, (ndim+nc)-1);
         bb = doublevec(0, (ndim+nc)-1);
-        for (int i=0; i<ndim; i++) {
-            xx[i] = x[i];
-        }
+        memcpy(xx, x, ndim*sizeof(double));
         for (int i=ndim; i<ndim+nc; i++) {
             xx[i] = 0.0;
         }
-        for (int i=0; i<ndim; i++) {
-            bb[i] = b[i];
-        }
+        memcpy(bb, b, ndim*sizeof(double));
         for (int i=ndim; i<ndim+nc; i++) {
             bb[i] = matContainers->RHS[i];
         }
@@ -1042,10 +1034,8 @@
     }
     
     if (constrained) {
-        for (int i=0; i<ndim; i++) {
-            x[i] = xx[i];
-            b[i] = bb[i];
-        }
+        memcpy(x, xx, ndim*sizeof(double));
+        memcpy(b, bb, ndim*sizeof(double));
         free_dvector(xx, 0, (ndim+nc)-1);
         free_dvector(bb, 0, (ndim+nc)-1);
     }
