@@ -434,7 +434,7 @@ void GaussQuadraturePoints1D(int n) {
     for(i=0;i<n;i++) {
         
         s = EvalPoly(n-1, Q, Points[i]);
-        Weights[i] = 2.0 / ((1.0-pow(Points[i], 2.0))*pow(s,2.0));
+        Weights[i] = 2.0 / ((1.0 - pow(Points[i], 2.0)) * pow(s,2.0));
     }
     
     
@@ -647,7 +647,7 @@ GaussIntegrationPoints* GaussQuadratureTriangle(int np) {
             pt = GaussQuadratureQuad(np);
             for(i=0;i<pt->n;i++) {
                 pt->v[i] = (pt->v[i] + 1.0)/2.0;
-                pt->u[i] = (pt->u[i] + 1.0) / 2.0 * (1.0-pt->v[i]);
+                pt->u[i] = (pt->u[i] + 1.0) / 2.0 * (1.0 - pt->v[i]);
                 pt->s[i] = pt->s[i] * ( 1.0 - pt->v[i] );
             }
             buffer = 0;
@@ -785,9 +785,9 @@ GaussIntegrationPoints* GaussQuadraturePyramid(int np) {
     
     for(t=0;t<pt->n;t++) {
         pt->w[t] = (pt->w[t] + 1.0) / 2.0;
-        pt->u[t] = pt->u[t] * (1.0-pt->w[t]);
-        pt->v[t] = pt->v[t] * (1.0-pt->w[t]);
-        pt->s[t] = pt->s[t] * pow((1.0-pt->w[t]), 2.0) / 2.0;
+        pt->u[t] = pt->u[t] * (1.0 - pt->w[t]);
+        pt->v[t] = pt->v[t] * (1.0 - pt->w[t]);
+        pt->s[t] = pt->s[t] * pow((1.0 - pt->w[t]), 2.0) / 2.0;
     }
     
     return pt;
@@ -826,7 +826,7 @@ GaussIntegrationPoints* GaussQuadratureWedge(int np) {
     for(i=0;i<pt->n;i++) {
         pt->v[i] = ( pt->v[i] + 1.0 )/2.0;
         pt->u[i] = ( pt->u[i] + 1.0 )/2.0 * (1.0-pt->v[i]);
-        pt->s[i] = pt->s[i] * (1.0-pt->v[i])/4.0;
+        pt->s[i] = pt->s[i] * (1.0 - pt->v[i])/4.0;
     }
     
     return pt;

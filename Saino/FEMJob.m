@@ -1619,7 +1619,7 @@ jump:
             
             // TODO: Add support for reloading MDF if we really need that
             // For now, we always get out of the loop
-            if(YES) break;
+            if(/* DISABLES CODE */ (YES)) break;
             
             for (FEMMesh *mesh in self.model.meshes) {
                 mesh.savesDone = 0;

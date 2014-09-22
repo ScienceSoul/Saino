@@ -1577,7 +1577,7 @@
         }
     } else {
         // Define scaling from the bounding boxes
-        if (NO) {
+        if (/* DISABLES CODE */ (NO)) {
             // This makes scaling component wise, currently disabled
             for (i=0; i<3; i++) {
                 scl[i] = x2rMax[i] -  x2rMin[i];

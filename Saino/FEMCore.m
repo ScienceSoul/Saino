@@ -5484,31 +5484,33 @@ static const int PRECOND_VANKA     =  560;
             }
             
             if (primVar.dofs > 1) {
-                if (NO && [primVar.name isEqualToString:@"flow solution"] == YES) {
-                    var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 1" onlySearch:&onlySearch maskName:NULL info:&found];
-                    if (var1 != nil) {
-                        var1.valid = NO;
-                        var1.primaryMesh = primaryMesh;
-                    }
-                    var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 2" onlySearch:&onlySearch maskName:NULL info:&found];
-                    if (var != nil) {
-                        var1.valid = NO;
-                        var1.primaryMesh = primaryMesh;
-                    }
-                    var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 3" onlySearch:&onlySearch maskName:NULL info:&found];
-                    if (var != nil) {
-                        var1.valid = NO;
-                        var1.primaryMesh = primaryMesh;
-                    }
-                    var1 = [utilities getVariableFrom:mesh.variables model:model name:@"pressure" onlySearch:&onlySearch maskName:NULL info:&found];
-                    if (var1 != nil) {
-                        var1.valid = NO;
-                        var1.primaryMesh = primaryMesh;
-                    }
-                    var1 = [utilities getVariableFrom:mesh.variables model:model name:@"surface" onlySearch:&onlySearch maskName:NULL info:&found];
-                    if (var1 != nil) {
-                        var1.valid = NO;
-                        var1.primaryMesh = primaryMesh;
+                if (/* DISABLES CODE */ (NO)) {
+                    if ([primVar.name isEqualToString:@"flow solution"] == YES) {
+                        var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 1" onlySearch:&onlySearch maskName:NULL info:&found];
+                        if (var1 != nil) {
+                            var1.valid = NO;
+                            var1.primaryMesh = primaryMesh;
+                        }
+                        var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 2" onlySearch:&onlySearch maskName:NULL info:&found];
+                        if (var != nil) {
+                            var1.valid = NO;
+                            var1.primaryMesh = primaryMesh;
+                        }
+                        var1 = [utilities getVariableFrom:mesh.variables model:model name:@"velocity 3" onlySearch:&onlySearch maskName:NULL info:&found];
+                        if (var != nil) {
+                            var1.valid = NO;
+                            var1.primaryMesh = primaryMesh;
+                        }
+                        var1 = [utilities getVariableFrom:mesh.variables model:model name:@"pressure" onlySearch:&onlySearch maskName:NULL info:&found];
+                        if (var1 != nil) {
+                            var1.valid = NO;
+                            var1.primaryMesh = primaryMesh;
+                        }
+                        var1 = [utilities getVariableFrom:mesh.variables model:model name:@"surface" onlySearch:&onlySearch maskName:NULL info:&found];
+                        if (var1 != nil) {
+                            var1.valid = NO;
+                            var1.primaryMesh = primaryMesh;
+                        }
                     }
                 } else {
                     for (i=1; i<=primVar.dofs; i++) {
@@ -5526,17 +5528,19 @@ static const int PRECOND_VANKA     =  560;
     
     primVar.valuesChanged = YES;
     if (primVar.dofs > 1) {
-        if (NO && [primVar.name isEqualToString:@"flow solution"] == YES) {
-            var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"surface" onlySearch:&onlySearch maskName:NULL info:&found];
-            if (var != nil) var.valuesChanged = YES;
-            var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"pressure" onlySearch:&onlySearch maskName:NULL info:&found];
-            if (var != nil) var.valuesChanged = YES;
-            var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 1" onlySearch:&onlySearch maskName:NULL info:&found];
-            if (var != nil) var.valuesChanged = YES;
-            var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 2" onlySearch:&onlySearch maskName:NULL info:&found];
-            if (var != nil) var.valuesChanged = YES;
-            var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 3" onlySearch:&onlySearch maskName:NULL info:&found];
-            if (var != nil) var.valuesChanged = YES;
+        if (/* DISABLES CODE */ (NO)) {
+            if ([primVar.name isEqualToString:@"flow solution"] == YES) {
+                var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"surface" onlySearch:&onlySearch maskName:NULL info:&found];
+                if (var != nil) var.valuesChanged = YES;
+                var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"pressure" onlySearch:&onlySearch maskName:NULL info:&found];
+                if (var != nil) var.valuesChanged = YES;
+                var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 1" onlySearch:&onlySearch maskName:NULL info:&found];
+                if (var != nil) var.valuesChanged = YES;
+                var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 2" onlySearch:&onlySearch maskName:NULL info:&found];
+                if (var != nil) var.valuesChanged = YES;
+                var = [utilities getVariableFrom:primaryMesh.variables model:model name:@"velocity 3" onlySearch:&onlySearch maskName:NULL info:&found];
+                if (var != nil) var.valuesChanged = YES;
+            }
         } else {
             for (i=1; i<=primVar.dofs; i++) {
                 tmpName = [utilities appendNameFromString:name component:&i];

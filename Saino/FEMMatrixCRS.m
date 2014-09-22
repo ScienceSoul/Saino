@@ -598,7 +598,7 @@
                 dij = min(-aij, -aji, 0.0);
             }
             
-            if (NO) {
+            if (/* DISABLES CODE */ (NO)) {
                 NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
                 NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
                 NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f\n", aij, aji, aii, dij);
