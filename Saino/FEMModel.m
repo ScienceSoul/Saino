@@ -26,7 +26,8 @@
 -(void)FEMModel_localMatrix:(double **)stiff force:(double*)force mesh:(FEMMesh *)mesh element:(Element_t *)element numberOfNodes:(int)numberOfNodes power:(double)power noWeight:(BOOL)noWeight elemMin:(double *)elemMin elemMax:(double *)elemMax;
 -(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal;
 -(void)FEMModel_initializeOutputLevel;
--(void)FEMModel_setTestModel;
+-(void)FEMModel_testHeatSolver;
+-(void)FEMModel_testStokesSolver;
 @end
 
 @implementation FEMModel {
@@ -383,7 +384,7 @@
     This method is temporary and it's used to set a test model for testing our code.
     This test solves a simple heat conduction problem
 *************************************************************************************/
--(void)FEMModel_setTestModel{
+-(void)FEMModel_testHeatSolver {
     
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     
@@ -481,6 +482,10 @@
     
     _meshDir = [NSMutableString stringWithString:@"."];
     _meshName = [NSMutableString stringWithString:@"Mesh"];
+}
+
+-(void)FEMModel_testStokesSolver {
+    
 }
 
 #pragma mark Public methods
@@ -615,7 +620,7 @@
     
     //TODO: Here comes the Model Description File (MDF) parser
     // For now we are just testing and we set manually a model
-    [self FEMModel_setTestModel];
+    [self FEMModel_testHeatSolver];
     
     [self FEMModel_initializeOutputLevel];
     
