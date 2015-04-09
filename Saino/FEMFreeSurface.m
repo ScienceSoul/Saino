@@ -298,7 +298,7 @@
                 vDSP_svesqD(nrm, 1, &sum, 3);
                 r = sqrt(sum);
                 for (j=0; j<3; j++) {
-                    averagedNormals[m-1][j] = averagedNormals[m-1][j] + abs(nrm[j]) / r;
+                    averagedNormals[m-1][j] = averagedNormals[m-1][j] + fabs(nrm[j]) / r;
                 }
             }
         }
@@ -418,7 +418,7 @@
                         // 2D case, move the nodes...
                         r = ux * nrm[0] + uy * nrm[1];
                         if (which == 2) {
-                            if (abs(ux) > AEPS) {
+                            if (fabs(ux) > AEPS) {
                                 if (turned[k] == YES) {
                                     nodes->y[k] = nodes->y[k] - r / (ux * dLBasisdx[i][0]);
                                 } else {
@@ -427,7 +427,7 @@
                                 yMoved = YES;
                             }
                         } else {
-                            if (abs(uy) > AEPS) {
+                            if (fabs(uy) > AEPS) {
                                 if (turned[k] == YES) {
                                     nodes->x[k] = nodes->x[k] + r /(uy * dLBasisdx[i][0]);
                                 } else {
@@ -445,19 +445,19 @@
                         
                         r = ux * nrm[0] + uy * nrm[1] + uz * nrm[2];
                         if (which == 1) {
-                            if (abs(uy) > AEPS || abs(uz) > AEPS) {
+                            if (fabs(uy) > AEPS || fabs(uz) > AEPS) {
                                 nodes->x[k] = nodes->x[k] + r / ( (dzdu * dLBasisdx[i][1] - dzdv * dLBasisdx[i][0]) * uy +
                                               (dydv * dLBasisdx[i][0] - dydu * dLBasisdx[i][1]) * uz );
                                 xMoved = YES;
                             }
                         } else if (which == 2) {
-                            if (abs(ux) > AEPS || abs(uz) > AEPS) {
+                            if (fabs(ux) > AEPS || fabs(uz) > AEPS) {
                                 nodes->y[k] = nodes->y[k] + r / ( (dzdv * dLBasisdx[i][0] - dzdu * dLBasisdx[i][1]) * ux +
                                               (dxdu * dLBasisdx[i][1] - dxdv * dLBasisdx[i][0]) * uz );
                                 yMoved = YES;
                             }
                         } else {
-                            if (abs(ux) > AEPS || abs(uy) > AEPS) {
+                            if (fabs(ux) > AEPS || fabs(uy) > AEPS) {
                                 nodes->z[k] = nodes->z[k] + r / ( (dydu * dLBasisdx[i][1] - dydv * dLBasisdx[i][0]) * ux +
                                               (dxdv * dLBasisdx[i][0] - dxdu * dLBasisdx[i][1]) * uy );
                                 zMoved = YES;

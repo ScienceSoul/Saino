@@ -437,7 +437,7 @@
         // --------------------------------------------------
         for (k=rowMin; k<=i-1; k++) {
             if (C[k] == true) {
-                if (fabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
+                if (cabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
                 
                 for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
                     j = matContainers->ILUCols[l];
@@ -461,7 +461,7 @@
         j = matContainers->ILURows[i]-1;
         for (k=rowMin; k<=rowMax; k++) {
             if (C[k] == true) {
-                if (fabs(S[k]) >= tol*norma || k == i) {
+                if (cabs(S[k]) >= tol*norma || k == i) {
                     j = j + 1;
                     matContainers->ILUCols[j] = k;
                     matContainers->CILUValues[j] = S[k];
@@ -486,7 +486,7 @@
     // Prescale the diagonal for the LU solver
     for (i=0; i<n; i++) {
         
-        if (fabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+        if (cabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
             matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0;
         } else {
             matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->CILUValues[matContainers->ILUDiag[i]];
@@ -1207,7 +1207,7 @@
             for (int m=matContainers->ILURows[i]; m<=matContainers->ILUDiag[i]-1; m++) {
                 k = matContainers->ILUCols[m];
                 if (S[k] == 0.0) continue;
-                if (fabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
+                if (cabs(matContainers->CILUValues[matContainers->ILUDiag[k]]) > AEPS) S[k] = S[k] / matContainers->CILUValues[matContainers->ILUDiag[k]];
                 
                 for (l=matContainers->ILUDiag[k]+1; l<=matContainers->ILURows[k+1]-1; l++) {
                     j = matContainers->ILUCols[l];
@@ -1226,7 +1226,7 @@
         
         // Prescale the diagonal for the LU solver
         for (i=0; i<n/2; i++) {
-            if (fabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
+            if (cabs(matContainers->CILUValues[matContainers->ILUDiag[i]]) < AEPS) {
                 matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0;
             } else {
                 matContainers->CILUValues[matContainers->ILUDiag[i]] = 1.0 / matContainers->CILUValues[matContainers->ILUDiag[i]];

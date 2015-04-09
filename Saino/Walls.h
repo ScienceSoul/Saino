@@ -89,10 +89,10 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
         if (*dfx == 0.0) errorfunct("solve_ufric", "dfx = 0");
         *ufric = *ufric - fx / *dfx;
         yplus = densit * *ufric * dist / viscos;
-        if (abs(fx) <= tol) break;
+        if (fabs(fx) <= tol) break;
     }
     
-    if (abs(fx) > 1.0e-09) {
+    if (fabs(fx) > 1.0e-09) {
         printf("fx: %f\n", fx);
         warnfunct("solve_ufric", "problems in value of fx");
     }
