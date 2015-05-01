@@ -17,7 +17,6 @@
     FEMEquation *equation;
 }
 
-
 @end
 
 @implementation testListUtilities
@@ -61,7 +60,8 @@
 - (void)testListGetInteger
 {
     BOOL found;
-    [listUtilities addIntegerInClassList:equation theVariable:@"test integer" withValue:1];
+    int value = 1;
+    [listUtilities addIntegerInClassList:equation theVariable:@"test integer" withValue:&value orUsingBlock:nil];
     int integerTest = [listUtilities listGetInteger:nil inArray:equation.valuesList forVariable:@"test integer" info:&found minValue:NULL maxValue:NULL];
     XCTAssertTrue(integerTest == 1, @"Method listGetInteger:inArray:forVariable:info:minValue:maxValue: failed to retrieve correct value.");
 }
@@ -69,8 +69,8 @@
 - (void)testListGetConstReal
 {
     BOOL found;
-    [listUtilities addIntegerInClassList:equation theVariable:@"test integer" withValue:1];
-    [listUtilities addConstRealInClassList:equation theVariable:@"test real" withValue:1.0 string:nil];
+    double value = 1.0;
+    [listUtilities  addConstRealInClassList:equation theVariable:@"test real" withValue:&value orUsingBlock:nil string:nil];
     int realTest = [listUtilities listGetConstReal:nil inArray:equation.valuesList forVariable:@"test real" info:&found minValue:NULL maxValue:NULL];
     XCTAssertTrue(realTest == 1.0, @"Method listGetConstReal:inArray:forVariable:info:minValue:maxValue: failed to retrieve correct value.");
 }
@@ -82,7 +82,7 @@
     
     int *vector = intvec(0, 5);
     vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; vector[4] = 5; vector[5] = 6;
-    [listUtilities addIntegerArrayInClassList:equation theVariable:@"test integer array" withValues:vector size:6];
+    [listUtilities addIntegerArrayInClassList:equation theVariable:@"test integer array" withValues:vector size:6 orUsingBlock:nil];
     free_ivector(vector, 0, 5);
     
     found = [listUtilities listGetIntegerArray:nil inArray:equation.valuesList forVariable:@"test integer array" buffer:&result];
@@ -102,7 +102,7 @@
             matrix[i][j] = 1.0;
         }
     }
-    [listUtilities addConstRealArrayInClassList:equation theVariable:@"test const real array" withValues:matrix size1:3 size2:3 string:nil];
+    [listUtilities addConstRealArrayInClassList:equation theVariable:@"test const real array" withValues:matrix size1:3 size2:3 orUsingBlock:nil string:nil];
     free_dmatrix(matrix, 0, 2, 0, 2);
     
     found = [listUtilities listGetConstRealArray:nil inArray:equation.valuesList forVariable:@"test const real array" buffer:&result];
@@ -126,7 +126,7 @@
             matrix[i][j] = 1.0;
         }
     }
-    [listUtilities addConstRealArrayInClassList:equation theVariable:@"test real array" withValues:matrix size1:3 size2:3 string:nil];
+    [listUtilities addConstRealArrayInClassList:equation theVariable:@"test real array" withValues:matrix size1:3 size2:3 orUsingBlock:nil string:nil];
     free_dmatrix(matrix, 0, 2, 0, 2);
 
     found = [listUtilities listGetRealArray:nil inArray:equation.valuesList forVariable:@"test real array" numberOfNodes:3 indexes:NULL buffer:&result];

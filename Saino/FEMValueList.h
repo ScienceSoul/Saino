@@ -10,30 +10,33 @@
 
 #import "Constructors.h"
 
+typedef double (^inputBlock) (double *variablesValues);
+
 @interface FEMValueList : NSObject {
     
     int _model;
     int _type;
     int _nameLength;
-    int _depNameLength;
-    BOOL _method;
+    int _numberOfDependencies;
     BOOL _lValue;
     NSString *_name;
-    NSString *_dependName;
     NSString *_cValue;
+    NSArray *_dependencies;       // Store the names of the variable to whhich there is/are a
+                                  // dependency(ies) in the exection of the block
     
     valueListArraysContainer *_containers;
+    inputBlock _block;
 }
 
 @property(nonatomic, assign) int model;
 @property(nonatomic, assign) int type;
 @property(nonatomic, assign) int nameLength;
-@property(nonatomic, assign) int depNameLength;
-@property(nonatomic, assign, getter = isMethod) BOOL method;
+@property(nonatomic, assign) int numberOfDependencies;
 @property(nonatomic, assign, getter = isLvalue) BOOL lValue;
 @property(nonatomic, strong) NSString *name;
-@property(nonatomic, strong) NSString *dependName;
 @property(nonatomic, strong) NSString *cValue;
+@property(nonatomic, strong) NSArray *dependencies;
+@property(copy) inputBlock block;
 
 -(void)deallocation;
 -(valueListArraysContainer *)getContainers;

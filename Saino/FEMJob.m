@@ -1676,14 +1676,14 @@ jump:
             _timeIntervals = _sizeTimeSteps;
             
             minVal = 1;
-            _coupledMaxIter = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state max iterations" info:&found minValue:&minVal maxValue:NULL];
+            _coupledMaxIter = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state maximum iterations" info:&found minValue:&minVal maxValue:NULL];
             if (found == NO) _coupledMaxIter = 1;
         } else { // Steady state
             _timeSteps = intvec(0, 0);
             _sizeTimeSteps = 1;
             
             minVal = 1;
-            _timeSteps[0] = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state max iterations" info:&found minValue:&minVal maxValue:NULL];
+            _timeSteps[0] = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"steady state maximum iterations" info:&found minValue:&minVal maxValue:NULL];
             if (found == NO) _timeSteps[0] = 1;
             
             _timeStepSizes = doublematrix(0, 0, 0, 0);

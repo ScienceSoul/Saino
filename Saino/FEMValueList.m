@@ -14,12 +14,12 @@
 @synthesize model = _model;
 @synthesize type = _type;
 @synthesize nameLength = _nameLength;
-@synthesize depNameLength = _depNameLength;
-@synthesize method = _method;
+@synthesize numberOfDependencies = _numberOfDependencies;
 @synthesize lValue = _lValue;
 @synthesize name = _name;
-@synthesize dependName = _dependName;
 @synthesize cValue = _cValue;
+@synthesize dependencies = _dependencies;
+@synthesize block = _block;
 
 - (id)init
 {
@@ -29,6 +29,7 @@
         _containers->tValues = NULL;
         _containers->iValues = NULL;
         _containers->fValues = NULL;
+        self.block = nil;
     }
     
     return self;

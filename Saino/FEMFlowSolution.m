@@ -1399,15 +1399,17 @@
         for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
             if (listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, boundaryCondition.valuesList, @"no-slip wall bc", &found) == YES) {
                 if ([varName isEqualToString:@"flow solution"] == YES) {
-                    [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 1" withValue:0.0 string:nil];
-                    [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 2" withValue:0.0 string:nil];
-                    if (_nsdofs > 3) [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 3" withValue:0.0 string:nil];
+                    double value = 0.0;
+                    [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
+                    [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
+                    if (_nsdofs > 3) [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:@"velocity 3" withValue:&value orUsingBlock:nil string:nil];
                 } else {
+                    double value = 0.0;
                     for (j=1; j<=_nsdofs-1; j++) {
                         NSMutableString *string = [NSMutableString stringWithString:solution.variable.name];
                         [string appendString:@" "];
                         [string appendString:[NSString stringWithFormat:@"%d",j]];
-                        [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:string withValue:0.0 string:nil];
+                        [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:string withValue:&value orUsingBlock:nil string:nil];
                     }
                 }
             }

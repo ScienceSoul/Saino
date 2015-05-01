@@ -13,7 +13,7 @@
 
 @interface FEMListUtilities : NSObject
 
--(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count allGlobal:(BOOL *)allGlobal;
+-(void)listParseDependencies:(NSArray *)dependencies index:(int)ind name:(NSString *)name toValues:(double *)t count:(int *)count model:(FEMModel *)model allGlobal:(BOOL *)allGlobal;
 
 -(void)listSetNameSpace:(NSString *)str;
 -(char *)listGetNameSpaceForVariable:(char *)varName;
@@ -35,10 +35,11 @@
 
 -(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value;
 -(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value;
--(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value;
--(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n;
--(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str;
--(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n string:(NSString *)str;
+-(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int *)value orUsingBlock:(double (^)())block;
+-(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n orUsingBlock:(double (^)())block;
+-(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double *)value orUsingBlock:(double (^)())block string:(NSString *)str;
+-(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^)())block string:(NSString *)str;
+-(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block;
 
 -(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation;
 

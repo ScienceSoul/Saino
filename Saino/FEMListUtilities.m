@@ -38,51 +38,32 @@
     return self;
 }
 
--(void)listParseStrToValues:(FEMModel *)model string:(NSString *)str index:(int)ind name:(NSString *)name values:(double *)t count:(int *)count allGlobal:(BOOL *)allGlobal {
+-(void)listParseDependencies:(NSArray *)dependencies index:(int)ind name:(NSString *)name toValues:(double *)t count:(int *)count model:(FEMModel *)model allGlobal:(BOOL *)allGlobal {
 
-    int i, l, k1, l0, l1, n;
-    NSRange range;
-    NSString *string;
+    int k1, n;
     FEMVariable *variable = nil, *cVar = nil;
     variableArraysContainer *varContainers = NULL, *cvarContainers = NULL;
-    FEMUtilities *utilities;
     Element_t *element;
     BOOL found;
     
-    if (str == nil) return;
+    if (dependencies == nil) return;
     
-    utilities = [[FEMUtilities alloc] init];
-    
-    //TODO: This method only support one string passed at a time, not several strings separeted by a comma. 
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
     
     *allGlobal = YES;
-    count = 0;
-    l0 = 0;
+    *count = 0;
     
-    string = [NSString stringWithString:str];
-    while (1) {
-        while ([string characterAtIndex:l0] == ' ') {
-            l0++;
-        }
-        if (l0 >= [string length]) break;
-        
-        range = [string rangeOfString:@","];
-        if (range.location != NSNotFound) {
-            l1 = (int)range.location;
-        } else {
-            l1 = (int)[string length];
-        }
-        
-        if ([[[string substringFromIndex:l0] substringToIndex:l1-l0] isEqualToString:@"coordinate"] == NO) {
-            variable = [utilities getVariableFrom:model.variables model:model name:[[string substringFromIndex:l0] substringToIndex:l1-l0] onlySearch:NULL maskName:NULL info:&found];
+    for (NSString *variableName in dependencies) {
+        if ([variableName isEqualToString:@"coordinate"] == NO) {
+            variable = [utilities getVariableFrom:model.variables model:model name:variableName onlySearch:NULL maskName:NULL info:&found];
             if (variable == nil) {
-                NSLog(@"FEMListUtilities:listParseStrToValues: can't find indpendent variable: %@ for dependent variable %@\n", str, name);
+                NSLog(@"FEMListUtilities:listParseStrToValues: can't find indpendent variable: %@ for dependent variable %@\n", variableName, name);
                 errorfunct("FEMListUtilities:listParseStrToValues", "Abort...");
             }
             varContainers = variable.getContainers;
-            if (varContainers->sizeValues > 1) *allGlobal = NO;
+            if (varContainers->sizeValues > 1) allGlobal = NO;
         } else {
-            *allGlobal = NO;
+            allGlobal = NO;
             variable = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
             varContainers = variable.getContainers;
         }
@@ -94,9 +75,10 @@
                 if (element->DGIndexes != NULL) {
                     n = element->Type.NumberOfNodes;
                     if (element->sizeDGIndexes == n) {
-                        for (i=0; i<n; i++) {
+                        for (int i=0; i<n; i++) {
                             if (element->NodeIndexes[i] == ind) {
                                 k1 = element->DGIndexes[i];
+                                break;
                             }
                         }
                     }
@@ -105,31 +87,30 @@
         }
         if (varContainers->Perm != NULL) k1 = varContainers->Perm[k1];
         
-        if (k1 > 0 && k1 <= varContainers->sizeValues) {
-            if ([str isEqualToString:@"coordinate"] == YES) {
+        if (k1 >= 0 && k1 < varContainers->sizeValues) {
+            if ([variableName isEqualToString:@"coordinate"] == YES) {
                 cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
-                count++;
+                *count = *count + 1;
                 cvarContainers = cVar.getContainers;
                 t[0] = cvarContainers->Values[k1];
                 
                 cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 2" onlySearch:NULL maskName:NULL info:&found];
-                count++;
+                *count = *count + 1;
                 cvarContainers = cVar.getContainers;
                 t[1] = cvarContainers->Values[k1];
                 
                 cVar = [utilities getVariableFrom:model.variables model:model name:@"coordinate 3" onlySearch:NULL maskName:NULL info:&found];
-                count++;
+                *count = *count + 1;
                 cvarContainers = cVar.getContainers;
                 t[2] = cvarContainers->Values[k1];
-            }
-            else {
+            } else {
                 if (variable.dofs == 1) {
                     t[*count] = varContainers->Values[k1];
-                    count++;
+                    *count = *count + 1;
                 } else {
-                    for (l=0; l<variable.dofs; l++) {
-                        t[*count] = varContainers->Values[variable.dofs*(k1-1)+l];
-                        count++;
+                    for (int i=0; i<variable.dofs; i++) {
+                        t[*count] = varContainers->Values[variable.dofs*k1+i];
+                        *count = *count + 1;
                     }
                 }
             }
@@ -139,12 +120,8 @@
             } else {
                 t[*count] = varContainers->Values[0];
             }
-            count++;
+            *count = *count + 1;
         }
-        
-        string = [NSString stringWithString:[string substringFromIndex:l1+1]];
-        if ([string isEqualToString:@""] == YES) break;
-        l0 = 0;
     }
 }
 
@@ -209,7 +186,6 @@
     double t[32];
     BOOL allGlobal, found;
     char *nameStr = NULL;
-    FEMUtilities *utilities;
     valueListArraysContainer *containers = NULL;
     
     found = NO;
@@ -236,11 +212,7 @@
                 NSLog(@"FEMListUtilities:listGetReal: fValues not allocated in list: %@\n", varName);
                 errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
             }
-            
-            if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
-                
-                // TODO: implement the call of a user provided method if required
-                 
+            else if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
                 memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     result->vector[i] = containers->fValues[0][0][0];
@@ -250,36 +222,44 @@
                     NSLog(@"FEMListUtilities:listGetReal: tValues not allocated in list: %@\n", varName);
                     errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
                 }
-                utilities = [[FEMUtilities alloc] init];
-                buffer = doublevec(0, containers->sizeTValues-1);
+                FEMUtilities *utilities = [[FEMUtilities alloc] init];
+                buffer = doublevec(0, containers->sizeFValues3-1);
                 for (i=0; i<n; i++) {
                     buffer[i] = containers->fValues[0][0][i];
                 }
                 memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
-                    [self listParseStrToValues:model string:list.dependName index:k name:list.name values:t count:&j allGlobal:&allGlobal];
+                    [self listParseDependencies:list.dependencies index:k name:list.name toValues:t count:&j model:model allGlobal:&allGlobal];
                     
                     if (any(t, '=', HUGE_VAL, j) == false) {
                         
-                        // TODO: implement the call of a user provided method if required
+                        // TODO: implement the call of a user function if given
                         result->vector[i] = [utilities interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
                     }
                     if (allGlobal == YES) {
-                        for (i=1; i<n; i++) {
-                            result->vector[i] = result->vector[0];
+                        for (j=1; j<n; j++) {
+                            result->vector[j] = result->vector[0];
                         }
                     }
                 }
-                free_dvector(buffer, 0, containers->sizeTValues-1);
-            } else if (list.type == LIST_TYPE_CONSTANT_SCALAR_STR) {
-                 // TODO: implement this case
-            } else if (list.type == LIST_TYPE_VARIABLE_SCALAR_STR) {
-                 // TODO: implement this case
+                free_dvector(buffer, 0, containers->sizeFValues3-1);
+            } else if (list.type == List_TYPE_BLOCK) {
+                for (i=0; i<n; i++) {
+                    k = nodeIndexes[i];
+                    [self listParseDependencies:list.dependencies index:k name:list.name toValues:t count:&j model:model allGlobal:&allGlobal];
+                    if (any(t, '=', HUGE_VAL, j) == false) {
+                        result->vector[i] = list.block(t);
+                    }
+                    if (allGlobal == YES) {
+                         for (j=1; j<n; j++) {
+                             result->vector[j] = result->vector[0];
+                         }
+                    }
+              
+                }
             }
-            
             found = YES;
-            
             if (minv != NULL) {
                 double minVal;
                 vDSP_minvD(result->vector, 1, &minVal, n);
@@ -306,10 +286,14 @@
     return found;
 }
 
+/**********************************************************************************
+    Gets a real array from the list by its name
+**********************************************************************************/
 -(BOOL)listGetRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result {
 
     int i, j, k, n1, n2;
-    BOOL found;
+    double t[32];
+    BOOL allGlobal, found;
     char *nameStr = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     valueListArraysContainer *containers = NULL;
@@ -352,13 +336,43 @@
                         }
                     }
                 }
-                
-                // TODO: implement the call of a user provided method if required
-            
-            } else if (list.type == LIST_TYPE_VARIABLE_TENSOR || list.type == LIST_TYPE_VARIABLE_TENSOR_STR){
-                
-                // TODO: implement this case
-                
+            } else if (list.type == List_TYPE_BLOCK || list.type == LIST_TYPE_VARIABLE_TENSOR_STR){
+                memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
+                for (i=0; i<n; i++) {
+                    k = nodeIndexes[i];
+                    [self listParseDependencies:list.dependencies index:k name:list.name toValues:t count:&j model:model allGlobal:&allGlobal];
+                    if (any(t, '=', HUGE_VAL, j) == true) continue;
+
+                    if (list.type == List_TYPE_BLOCK) {
+                        for (j=0; j<n1; j++) {
+                            for (k=0; k<n2; k++) {
+                                result->tensor[j][k][i] = list.block(t);
+                            }
+                        }
+                    } else {
+                        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+                        double *buffer = doublevec(0, containers->sizeFValues3-1);
+                        for (j=0; j<n1; j++) {
+                            for (k=0; k<n2; k++) {
+                                for (int l=0; l<n; l++) {
+                                    buffer[l] = containers->fValues[j][k][l];
+                                }
+                                result->tensor[j][k][i] =  [utilities interpolateCurveTvalues:containers->tValues fValues:buffer value:t[0] sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
+                            }
+                        }
+                        free_dvector(buffer, 0, containers->sizeFValues3-1);
+                    }
+                    if (allGlobal == YES) break;
+                }
+                if (allGlobal == YES) {
+                    for (i=1; i<n; i++) {
+                        for (j=0; j<n1; j++) {
+                            for (k=0; k<n2; k++) {
+                                result->tensor[j][k][i] = result->tensor[j][k][0];
+                            }
+                        }
+                    }
+                }
             } else {
                 memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
                 found = [self listGetReal:model inArray:array forVariable:varName numberOfNodes:n indexes:nodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
@@ -367,7 +381,6 @@
                         result->tensor[i][0][k] = buffer.vector[k];
                     }
                 }
-                
                 free_dvector(buffer.vector, 0, buffer.m-1);
             }
             
@@ -379,7 +392,9 @@
     return found;
 }
 
-
+/**********************************************************************************
+    Gets a constant real from the list by its name
+**********************************************************************************/
 -(double)listGetConstReal:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
 
     double f = 0.0;
@@ -403,19 +418,10 @@
                 errorfunct("FEMListUtilities:listGetConstReal", "Program terminating now...");
             }
             
-            if (list.type >= 8) {
-                
-                // TODO: unimplemented case where type is greater than 8
-                // In Elmer this calls matc. Figure out later what we do in Saino
-                
-            } else if (list.method == YES) {
-                
-                // TODO: implement the call of a user provided method
-                
-            } else {
-                
-                f = containers->fValues[0][0][0];
-            }
+            // In contrary to Elmer, we don't call any function or use MATC because even if we
+            // use a block for evaluation, this is done when this variable is created since the
+            // values are node-wise constant.
+            f = containers->fValues[0][0][0];
             *found = YES;
             
             if (minv != NULL) {
@@ -440,6 +446,9 @@
     return f;
 }
 
+/**********************************************************************************
+    Gets a constant real array from the list by its name
+**********************************************************************************/
 -(BOOL)listGetConstRealArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName buffer:(listBuffer *)result {
 
     int i, j, n1, n2;
@@ -481,8 +490,6 @@
                 }
             }
             
-            // TODO: implement the call of a user provided method
-            
             found = YES;
             break;
         }
@@ -491,6 +498,9 @@
     return found;
 }
 
+/**********************************************************************************
+    Gets an integer array from the list by its name
+**********************************************************************************/
 -(BOOL)listGetIntegerArray:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName buffer:(listBuffer *)result {
     
     int i, n;
@@ -528,8 +538,6 @@
                 result->ivector[i] = containers->iValues[i];
             }
             
-           // TODO: implement the call of a user provided method if required 
-            
             found = YES;
             break;
         }
@@ -560,8 +568,6 @@
                 NSLog(@"FEMListUtilities:listGetInteger: iValues not allocated in list: %@\n", varName);
                 errorfunct("FEMListUtilities:listGetInteger", "Program terminating now...");
             }
-            // TODO: implement the call of a user provided method if required
-            
             l = containers->iValues[0];
             *found = YES;
             
@@ -673,26 +679,28 @@
                      NSLog(@"FEMListUtilities:listGetDerivativeValue: tValues not allocated in list: %@\n", varName);
                      errorfunct("FEMListUtilities:listGetDerivativeValue", "Program terminating now...");
                  }
-                 utilities = [[FEMUtilities alloc] init];
-                 variable = [utilities getVariableFrom:model.variables model:model name:list.dependName onlySearch:NULL maskName:nil info:&stat];
-                 varContainers = variable.getContainers;
-                 memset( result->vector, 0.0, n*sizeof(double) );
-                 buffer = doublevec(0, containers->sizeTValues-1);
-                 for (i=0; i<n; i++) {
-                     buffer[i] = containers->fValues[0][0][i];
-                 }
-                 for (i=0; i<n; i++) {
-                     k = nodeIndexes[i];
-                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
-                     if (k >= 0) {
-                         t = varContainers->Values[k];
-                         result->vector[i] = [utilities derivateCurveTvalues:containers->tValues fValues:buffer value:t sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
-                     }
-                 }
-                 free_dvector(buffer, 0, containers->sizeTValues-1);
-             } else {
-                 NSLog(@"FEMListUtilities:listGetDerivativeValue: no automated derivation possible for %@\n", varName);
-             }
+                utilities = [[FEMUtilities alloc] init];
+                // Apparently this routine assumes that there is only one associated dependency
+                NSString *dependent = list.dependencies[0];
+                variable = [utilities getVariableFrom:model.variables model:model name:dependent onlySearch:NULL maskName:nil info:&stat];
+                varContainers = variable.getContainers;
+                memset( result->vector, 0.0, n*sizeof(double) );
+                buffer = doublevec(0, containers->sizeTValues-1);
+                for (i=0; i<n; i++) {
+                    buffer[i] = containers->fValues[0][0][i];
+                }
+                for (i=0; i<n; i++) {
+                    k = nodeIndexes[i];
+                    if (varContainers->Perm != NULL) k = varContainers->Perm[k];
+                    if (k >= 0) {
+                        t = varContainers->Values[k];
+                        result->vector[i] = [utilities derivateCurveTvalues:containers->tValues fValues:buffer value:t sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
+                    }
+                }
+                free_dvector(buffer, 0, containers->sizeTValues-1);
+            } else {
+                NSLog(@"FEMListUtilities:listGetDerivativeValue: no automated derivation possible for %@\n", varName);
+            }
             
             found = YES;
             break;
@@ -851,7 +859,7 @@
 /**********************************************************************************
  Adds an integer to a given class list of values
  **********************************************************************************/
--(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int)value {
+-(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int *)value orUsingBlock:(double (^)())block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -905,7 +913,21 @@
     containers = newValueList.getContainers;
     containers->iValues = intvec(0, 0);
     containers->sizeIValues = 1;
-    containers->iValues[0] = value;
+    
+    if (value == NULL && block == nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        
+    }
+    if (value != NULL && block != nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+    }
+    if (value != NULL) {
+        containers->iValues[0] = *value;
+    } else if (block != nil) {
+        containers->iValues[0] = block();
+    }
     
     newValueList.name = varName;
     [valuesArray addObject:newValueList];
@@ -915,7 +937,7 @@
 /**********************************************************************************
     Adds an integer array to a given class list of values
 **********************************************************************************/
--(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n {
+-(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n orUsingBlock:(double (^)())block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -969,7 +991,22 @@
     containers = newValueList.getContainers;
     containers->iValues = intvec(0, n-1);
     containers->sizeIValues = n;
-    memcpy(containers->iValues, values, n*sizeof(int));
+    if (values == NULL && block == nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        
+    }
+    if (values != NULL && block != nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+    }
+    if (values != NULL) {
+        memcpy(containers->iValues, values, n*sizeof(int));
+    } else if (block != nil) {
+        for (int i=0; i<n; i++) {
+            containers->iValues[i] = block();
+        }
+    }
     
     newValueList.name = varName;
     [valuesArray addObject:newValueList];
@@ -978,7 +1015,7 @@
 /**********************************************************************************
  Adds an constant real value to a given class list of values
  **********************************************************************************/
--(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double)value string:(NSString *)str {
+-(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double *)value orUsingBlock:(double (^)())block string:(NSString *)str {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1035,7 +1072,21 @@
     containers->sizeFValues1 = 1;
     containers->sizeFValues2 = 1;
     containers->sizeFValues3 = 1;
-    containers->fValues[0][0][0] = value;
+    
+    if (value == NULL && block == nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+
+    }
+    if (value != NULL && block != nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+    }
+    if (value != NULL) {
+        containers->fValues[0][0][0] = *value;
+    } else if (block != nil) {
+        containers->fValues[0][0][0] = block();
+    }
     
     if (str != nil) {
         newValueList.cValue = [NSString stringWithString:str];
@@ -1046,7 +1097,7 @@
     [valuesArray addObject:newValueList];
 }
 
--(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n string:(NSString *)str {
+-(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^)())block string:(NSString *)str {
     
     int i, j;
     FEMBoundaryCondition *boundary;
@@ -1103,16 +1154,90 @@
     containers->sizeFValues1 = m;
     containers->sizeFValues2 = n;
     containers->sizeFValues3 = 1;
-    for (i=0; i<m; i++) {
-        for (j=0; j<n; j++) {
-            containers->fValues[i][j][0] = fvalues[i][j];
+    
+    if (fvalues == NULL && block == nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        
+    }
+    if (fvalues != NULL && block != nil) {
+        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+    }
+    if (fvalues != NULL) {
+        for (i=0; i<m; i++) {
+            for (j=0; j<n; j++) {
+                containers->fValues[i][j][0] = fvalues[i][j];
+            }
+        }
+    } else if (block != nil) {
+        for (i=0; i<m; i++) {
+            for (j=0; j<n; j++) {
+                containers->fValues[i][j][0] = block();
+            }
         }
     }
-    
+
     if (str != nil) {
         newValueList.cValue = [NSString stringWithString:str];
         newValueList.type = LIST_TYPE_CONSTANT_TENSIOR_STR;
     }
+    
+    newValueList.name = varName;
+    [valuesArray addObject:newValueList];
+}
+
+-(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block {
+    
+    FEMBoundaryCondition *boundary;
+    FEMBodyForce *bodyForce;
+    FEMSimulation *simulation;
+    FEMConstants *constants;
+    FEMEquation *equation;
+    FEMMaterial *material;
+    FEMValueList *newValueList;
+    NSMutableArray *valuesArray;
+    BOOL found;
+    
+    found = NO;
+    
+    if ([className isKindOfClass:[FEMBodyForce class]]) {
+        bodyForce = className;
+        valuesArray = bodyForce.valuesList;
+    } else if ([className isKindOfClass:[FEMBoundaryCondition class]]) {
+        boundary = className;
+        valuesArray = boundary.valuesList;
+    } else if ([className isKindOfClass:[FEMSimulation class]]) {
+        simulation = className;
+        valuesArray = simulation.valuesList;
+    } else if ([className isKindOfClass:[FEMConstants class]]) {
+        constants = className;
+        valuesArray = constants.valuesList;
+    } else if ([className isKindOfClass:[FEMEquation class]]) {
+        equation = className;
+        valuesArray = equation.valuesList;
+    } else if ([className isKindOfClass:[FEMMaterial class]]) {
+        material = className;
+        valuesArray = material.valuesList;
+    }
+    
+    for (FEMValueList *list in valuesArray) {
+        if ([varName isEqualToString:list.name] == YES) {
+            newValueList = list;
+            found = YES;
+            break;
+        }
+    }
+    
+    if (found == YES) { // if object exists, remove it and we will create one new
+        [newValueList deallocation];
+        [valuesArray removeObject:newValueList];
+    }
+    
+    newValueList = [[FEMValueList alloc] init];
+    newValueList.type = List_TYPE_BLOCK;
+    
+    newValueList.block = block;
     
     newValueList.name = varName;
     [valuesArray addObject:newValueList];

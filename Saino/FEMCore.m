@@ -646,7 +646,7 @@ static const int PRECOND_VANKA     =  560;
             [name appendString:solution.variable.name];
             [name appendString:@" energy norm"];
             listUtilities = [[FEMListUtilities alloc] init];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:energy string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:&energy orUsingBlock:nil string:nil];
             
             NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: energy norm: %f\n", energy);
         }
@@ -1029,12 +1029,14 @@ static const int PRECOND_VANKA     =  560;
                 
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
-                if (found == YES && rot.vector != NULL) {
+                if (found == YES && rot.matrix != NULL) {
                     any = NO;
                     for (i=0; i<rot.m; i++) {
-                        if (rot.vector[i] != 0.0) {
-                            any = YES;
-                            break;
+                        for (j=0; j<rot.n; j++) {
+                            if (rot.matrix[i][j] != 0.0) {
+                                any = YES;
+                                break;
+                            }
                         }
                     }
                     if (any == YES) {
@@ -1081,12 +1083,14 @@ static const int PRECOND_VANKA     =  560;
                 
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
-                if (found == YES && rot.vector != NULL) {
+                if (found == YES && rot.matrix != NULL) {
                     any = NO;
                     for (i=0; i<rot.m; i++) {
-                        if (rot.vector[i] != 0.0) {
-                            any = YES;
-                            break;
+                        for (j=0; j<rot.n; j++) {
+                            if (rot.matrix[i][j] != 0.0) {
+                                any = YES;
+                                break;
+                            }
                         }
                     }
                     if (any == YES) continue;
@@ -4668,7 +4672,7 @@ static const int PRECOND_VANKA     =  560;
                         }
                     }
                     // Add the found nodes to the list values
-                    [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:noNodes];
+                    [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:noNodes orUsingBlock:nil];
                     free_ivector(inNodes, 0, noNodes-1);
                     nodesFound = YES;
                 }
@@ -5085,12 +5089,12 @@ static const int PRECOND_VANKA     =  560;
                     
                     // In the first time add the found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:numberOfNodesFound];
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:numberOfNodesFound orUsingBlock:nil];
                         nodesFound = YES;
                     } else {
                         // If no nodes found, add still an empty list and make sure the negative value is not
                         // treated later one. Otherwise this search would be retreated each time
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:1];
+                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:1 orUsingBlock:nil];
                     }
                 }
             }
@@ -8165,8 +8169,8 @@ static const int PRECOND_VANKA     =  560;
             rst = realtime() - rt0;
             
             FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:solution.variable.name] withValue:st string:nil];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:solution.variable.name] withValue:rst string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:solution.variable.name] withValue:&st orUsingBlock:nil string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:solution.variable.name] withValue:&rst orUsingBlock:nil string:nil];
             
             NSLog(@"FEMCore:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
             
@@ -8175,8 +8179,8 @@ static const int PRECOND_VANKA     =  560;
                 st = st + ct;
                 ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] info:&found minValue:NULL maxValue:NULL];
                 rst = rst + ct;
-                 [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] withValue:st string:nil];
-                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] withValue:rst string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] withValue:&st orUsingBlock:nil string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] withValue:&rst orUsingBlock:nil string:nil];
             }
         }
     }
@@ -8389,8 +8393,8 @@ static const int PRECOND_VANKA     =  560;
         st = cputime() - t0;
         rst = realtime() - rt0;
         NSString *str = (solution.solutionInfo)[@"equation"];
-        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution cpu time " stringByAppendingString:str] withValue:st string:nil];
-        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution real time " stringByAppendingString:str] withValue:rst string:nil];
+        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution cpu time " stringByAppendingString:str] withValue:&st orUsingBlock:nil string:nil];
+        [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution real time " stringByAppendingString:str] withValue:&rst orUsingBlock:nil string:nil];
         
         NSLog(@"FEMCore:solveSystemMatrix: solution time (CPU, REAL) for %@: %lf %lf (s)\n", str, st, rst);
         
@@ -8399,8 +8403,8 @@ static const int PRECOND_VANKA     =  560;
             st = st + ct;
             ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum solution real time " stringByAppendingString:str] info:&found minValue:NULL maxValue:NULL];
             rst = rst + ct;
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution cpu time " stringByAppendingString:str] withValue:st string:nil];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution real time " stringByAppendingString:str] withValue:rst string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution cpu time " stringByAppendingString:str] withValue:&st orUsingBlock:nil string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum solution real time " stringByAppendingString:str] withValue:&rst orUsingBlock:nil string:nil];
         }
     }
 }

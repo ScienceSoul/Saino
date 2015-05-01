@@ -2080,7 +2080,7 @@ enum {
                     }
                     xave = xave / j;
                     yave = yave / j;
-                    [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: smart heater temperature" withValue:yave string:nil];
+                    [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: smart heater temperature" withValue:&yave orUsingBlock:nil string:nil];
                 }
                 
                 if (transientHeaterControl == NO) {
@@ -2106,7 +2106,7 @@ enum {
             }
             
             if (smartHeaterControl == YES || integralHeaterControl == YES) {
-                [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:_powerScaling string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:&_powerScaling orUsingBlock:nil string:nil];
                 NSLog(@"FEMHeatSolution:solutionComputer: heater control information\n");
                 for (i=0; i<model.numberOfBodyForces; i++) {
                     if (!(_smarterHeaters[i] || _integralHeaters[i])) continue;
@@ -2122,7 +2122,10 @@ enum {
                     NSLog(@"FEMHeatSolution:solutionComputer: heater scaling: %f\n", _heaterScaling[i]);
                     NSLog(@"FEMHeatSolution:solutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
                     
-                    if (_smarterHeaters[i]) [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power density" withValue:s/(_heaterDensity[i]*_heaterArea[i]) string:nil];
+                    if (_smarterHeaters[i]) {
+                        double value = s/(_heaterDensity[i]*_heaterArea[i]);
+                        [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power density" withValue:&value orUsingBlock:nil string:nil];
+                    }
                 }
             }
             
