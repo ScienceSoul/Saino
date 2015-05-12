@@ -1086,7 +1086,7 @@
 
 -(int **)getEdgeMap:(int)elementFamily {
     
-    int **edgeMag;
+    int **edgeMag = NULL;
     
     switch (elementFamily) {
         case 1:
@@ -1275,7 +1275,7 @@
     int i, j, k, family;
     double x0, y0, z0, hk, a, s, cx, cy, cz;
     double j11, j12, j13, j21, j22, j23, g11, g12, g22;
-    int **edgeMap = NULL, size;
+    int **edgeMap = NULL, size=0;
     
     family = element->Type.ElementCode / 100;
     
@@ -1963,7 +1963,7 @@
 -(double)interpolateInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double *)basis {
     
     int n;
-    double value;
+    double value=0.0;
     
     if (basis != NULL) {
         // Basis function values given, just sum the result
@@ -2118,7 +2118,7 @@
 ***************************************************************************************/
 -(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals {
     
-    double u, v, auu, auv, avv, detA, x, y, z;
+    double u, v, auu, auv, avv, detA, x=0.0, y=0.0, z=0.0;
     double dxdu, dxdv, dydu, dydv, dzdu, dzdv;
     BOOL doCheck;
     
@@ -2218,7 +2218,7 @@
     
     int i, j, n;
     int const maxIter = 50;
-    double r, s, t, delta[3], prevdelta[3], **J, bf[3], det, acc, err, sum;
+    double r=0.0, s=0.0, t=0.0, delta[3], prevdelta[3], **J, bf[3], det, acc, err=0.0, sum;
     BOOL converged;
     FEMUtilities *utilities;
 

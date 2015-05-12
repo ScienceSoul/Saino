@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMMatrix.h"
-#import "FEMVariable.h"
 #import "FEMSolution.h"
 
 @interface FEMUtilities : NSObject {

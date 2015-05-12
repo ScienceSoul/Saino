@@ -74,7 +74,7 @@ inline double d_wall_law(double ufric, double ut, double densit, double viscos, 
 inline void solve_ufric(double densit, double viscos, double dist, double rough, double ut, double *ufric, double *dfx) {
     
     int iter, maxiter = 100;
-    double fx, tauw, yplus;
+    double fx=0.0, tauw, yplus;
     double tol = 1.0e-14;
     
     // Default value

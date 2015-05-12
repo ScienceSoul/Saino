@@ -17,7 +17,7 @@
 -(void)fractionalStepInSolution:(FEMSolution *)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double **)massMatrix stiffMatrix:(double **)stiffMatrix force:(double *)force prevSolution:(double *)prevSolution rows:(int *)rows {
     
     int i, j, nb;
-    double s, fsStep, fsTheta, fsdTheta, fsAlpha, fsBeta, massCoeff, forceCoeff;
+    double s, fsStep, fsTheta, fsdTheta, fsAlpha, fsBeta, massCoeff=0.0, forceCoeff=0.0;
 
     if (rows != NULL) {
         nb = *rows;

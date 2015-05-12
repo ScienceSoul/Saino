@@ -575,6 +575,7 @@
             if (i >= j) continue;
             
             // First find entry (j,i)
+            found = NO;
             for (k2=matContainers->Rows[j]; k2<=matContainers->Rows[j+1]-1; k2++) {
                 if (matContainers->Cols[k2] == i) {
                     found = YES;

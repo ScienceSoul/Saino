@@ -27,7 +27,7 @@
 
 -(void)FEMMeshUtils_assignConstraints:(FEMMesh *)mesh {
     
-    int i, j, k, l, n, nfound, count;
+    int i, j, k, l, n, nfound, count=0;
     int *faceIndexes;
     Element_t *elements, *element, *boundary, *faces, *face;
     
@@ -177,8 +177,8 @@
 ************************************************************************/
 -(void)findEdges2DInMesh:(FEMMesh *)mesh {
     
-    int i, j, k, n, numbOfEdges;
-    int node1, node2, edge, swap, degree;
+    int i, j, k, n=0, numbOfEdges;
+    int node1, node2, edge=-1, swap, degree;
     HashTable_t *hashTable;
     HashEntry_t *hashPtr, *hashPtr1;
     Element_t *elements, *element, *edges;
@@ -337,10 +337,10 @@
 ************************************************************************/
 -(void)findEdges3DInMesh:(FEMMesh *)mesh {
     
-    int i, ii, jj, k, n, numbOfEdges;
+    int i, ii, jj, k, n=0, numbOfEdges;
     int n1, n2;
-    int node1, node2, edge, degree;
-    int **edgeMap, **faceEdgeMap;
+    int node1, node2, edge=-1, degree;
+    int **edgeMap = NULL, **faceEdgeMap = NULL;
     int **tetraEdgeMap, **tetraFaceMap, **brickEdgeMap, **wedgeEdgeMap, **pyramidEdgeMap;
     int **tetraFaceEdgeMap, **brickFaceEdgeMap, **wedgeFaceEdgeMap, **pyramidFaceEdgeMap;
     HashTable_t *hashTable;
@@ -653,9 +653,9 @@
 -(void)findFaces3DInMesh:(FEMMesh *)mesh {
     
     int i, j, k, n, numbOfFaces;
-    int n1, n2;
-    int node1, node2, node3, face, degree;
-    int **faceMap;
+    int n1 = 0, n2;
+    int node1, node2, node3, face=-1, degree;
+    int **faceMap = NULL;
     int **tetraFaceMap, **brickFaceMap, **wedgeFaceNap, **pyramidFaceMap;
     int *nf;
     HashTable_t *hashTable;
@@ -1134,7 +1134,7 @@
     
     int i, j, k, n, n1, n2, k1, k2, constraint, dim, numbBothActive, count;
     int *perm1, *perm2, *invPerm1, *invPerm2;
-    double dot1min, dot2min, alpha, s1, s2;
+    double dot1min, dot2min, alpha=0.0, s1, s2;
     double normals[3], normals1[3], normals2[3], x1Min[3], x1Max[3], x2Min[3], x2Max[3], x2rMin[3], x2rMax[3], x[4], identity[4][4], rotMatrix[4][4],
            trsMatrix[4][4], sclMatrix[4][4], trfMatrix[4][4], angles[3], normals2r[3], scl[3];
     listBuffer pArray = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -1750,14 +1750,14 @@
 ********************************************************************************************/
 -(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal {
     
-    int i, j, k, l, n, newElCnt, nodeCnt, edgeCnt, node, parentID, diag, minVal, maxVal;
+    int i, j=0, k, l, n, newElCnt, nodeCnt, edgeCnt, node, parentID, diag, minVal, maxVal;
     int faceNumber, edge1, edge2, edge3, edge4, node12, node23, node34, node41, node31;
-    int n1, n2, n3, *eoldNodes, *faceNodes, *edgeNodes;        // Only linear so far
+    int n1, n2, n3=0, *eoldNodes, *faceNodes, *edgeNodes;        // Only linear so far
     int **child;
     double *nodals, *xh = NULL;
     double dxyz[3][3], dist[3], r, s, t, h1, h2, sum;
     BOOL found;
-    Element_t *elements, *newElements, *faces, *edges, *eptr, *eParent;
+    Element_t *elements, *newElements, *faces, *edges, *eptr=NULL, *eParent;
     Nodes_t *nodes, *newNodes;
     FEMMesh *newMesh;
     FEMBoundaryCondition *boundaryConditionAtId;

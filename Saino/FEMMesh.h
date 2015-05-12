@@ -9,8 +9,6 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMModel.h"
-#import "FEMVariable.h"
-#import "SIOMeshIO.h"
 #import "Constructors.h"
 
 @interface FEMMesh : NSObject {

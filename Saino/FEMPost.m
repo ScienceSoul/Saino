@@ -75,7 +75,7 @@
 *********************************************************/
 -(void)writeElmerPostFile:(NSString *)postFile resultFile:(NSString *)resultFile model:(FEMModel *)model timeCount:(int)timeCount append:(BOOL *)append {
     
-    int i, ii, j, jj, k, l, n, q, numberOfNodes, numberOfElements, *maskOrder, dofs, nDofs, meshDim, index, savedCount, timeStep, node, iDummy, nZeros;
+    int i, ii, j, jj, k, l, n, q, numberOfNodes, numberOfElements, *maskOrder = NULL, dofs, nDofs, meshDim, index, savedCount, timeStep, node, iDummy, nZeros;
     double meshScale, coord[3], time, dummy;
     BOOL found, freeSurfaceFlag, moveBoundary, maskExists=NO, all, onlySearch;
     NSRange ind, ind1;

@@ -16,11 +16,6 @@ int main(int argc, char *argv[])
 {
     int initialize = 0;
     double cp, rt;
-        
-    //@autoreleasepool {
-        
-        //return NSApplicationMain(argc, (const char **)argv);
-    //}
     
     FEMJob *job = [[FEMJob alloc] init];
     
@@ -35,6 +30,13 @@ int main(int argc, char *argv[])
     
     NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
     NSLog(@"SAINO JOB FINISHED AT: %@\n", dateString);
+    
+#ifdef TEST // This is a TEMPORALLY hack so that an application test works.
+    @autoreleasepool {
+        
+        return NSApplicationMain(argc, (const char **)argv);
+    }
+#endif
     
     return 0;
 }

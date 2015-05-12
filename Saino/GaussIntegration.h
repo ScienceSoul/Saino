@@ -75,8 +75,8 @@ GaussIntegrationPoints* GaussQuadratureBrick(int np);
 
 inline GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrder) {
     
-    int n, eldim, p1d;
-    GaussIntegrationPoints *IntegPoint;
+    int n=0, eldim, p1d;
+    GaussIntegrationPoints *IntegPoint = NULL;
     bool pElement;
     
     pElement = (element->Pdefs != NULL) ? true : false;

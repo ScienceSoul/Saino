@@ -683,7 +683,7 @@
     int i, j, k, l;
     double bnorm, rnorm;
     double alpha, beta;
-    double *r, **s, **v, *t1, *t2;
+    double *r, **s = NULL, **v = NULL, *t1, *t2;
     double *buffer;
     
     NSMethodSignature *pCondlSignature, *matvecSignature;
@@ -1001,7 +1001,7 @@
     
     int nc = 0, rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
-    double *xx, *bb;
+    double *xx = NULL, *bb = NULL;
     BOOL converged = NO, diverged = NO;
     BOOL constrained;
     

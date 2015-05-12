@@ -24,7 +24,7 @@
     int i, k;
     double bbox[6], eps3, *valuesPtr, maxVal;
     double const eps2 = 0.0;
-    Quadrant_t *childQuadrant;
+    Quadrant_t *childQuadrant = NULL;
     BOOL found;
     
     // Loop over child quadrants

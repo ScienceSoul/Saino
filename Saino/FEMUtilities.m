@@ -104,13 +104,13 @@
 -(void)FEMUtils_interpolateQMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh oldVariables:(NSMutableArray *)oldVar newVariables:(NSMutableArray *)newVar model:(FEMModel *)aModel quadrantTree:(BOOL *)useQuandrant withProjector:(BOOL)withProj projector:(FEMProjector *)projector mask:(NSString *)maskName nodesPresent:(BOOL *)foundNodes {
     
     int dim, epsTries;
-    int i, j, k, l, n, bfId, qTreeFails, totFails;
+    int i, j, k, l=-1, n, bfId, qTreeFails, totFails;
     Nodes_t *elementNodes;
     double point[3], localCoordinates[3];
     FEMVariable *oldSol, *newSol;
     double *newValues, *elementValues;
     Element_t *element, *oldElements;
-    Nodes_t *oldNodes, *newNodes;
+    Nodes_t *oldNodes= NULL, *newNodes;
     Quadrant_t *leafQuadrant, *rootQuadrant, *oldMeshQuadrant;
     double *basis;
     double boundingBox[6], *valuesPtr, u, v, w;
@@ -119,7 +119,7 @@
     int *rInd;
     BOOL maskExists, all;
     double eps1 = 0.1, eps2, epsGlobal, epsLocal, max, numericEps = 1.0e-12;
-    double *values, *localU, *localV, *localW;
+    double *values, *localU = NULL, *localV = NULL, *localW = NULL;
     FEMListUtilities *listUtilities;
     FEMInterpolation *interpolation;
     FEMElementDescription *elementDescription;
@@ -129,7 +129,7 @@
     typedef struct Epntr_t {
         Element_t *element;
     } Epntr_t;
-    Epntr_t *elementPointers;
+    Epntr_t *elementPointers = NULL;
     
     listUtilities = [[FEMListUtilities alloc] init];
     interpolation = [[FEMInterpolation alloc] init];

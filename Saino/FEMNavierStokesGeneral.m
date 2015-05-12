@@ -34,7 +34,7 @@
     
     int c, i, j, k, l, m, p, q, t, coordinates, dim;
     int imap[3] = {0, 1, 3};
-    double delta, density, detJ, hk, lambda=1.0, mk, re, s, sqrtMetric, sum, tau, u, v, viscosity, vNorm, x, y, w, z;
+    double delta=0.0, density, detJ, hk=0.0, lambda=1.0, mk=0.0, re, s, sqrtMetric, sum, tau=0.0, u, v, viscosity, vNorm, x, y, w, z;
     double a[4][4], dSymb[3][3][3][3], dVelodx[3][3], dViscositydx[3], force[4], load[4], lrf[3], mass[4][4], metric[3][3], symb[3][3][3], velo[3],
            uVelo[3], su[n][4][4], sw[n][4][4];
     double *basis = NULL, **basisFirstDerivative = NULL, ***basisSecondDerivative = NULL;
@@ -76,6 +76,9 @@
         detJ = integration.metricDeterminant;
         
         // Coordinate system dependent info
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
         if (coordinates != cartesian) {
             x = cblas_ddot(n, nodes->x, 1, basis, 1);
             y = cblas_ddot(n, nodes->y, 1, basis, 1);
@@ -464,6 +467,9 @@
         detJ = integration.metricDeterminant;
         
         // Coordinate system dependent info
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
         if (coordinates != cartesian) {
             x = cblas_ddot(n, nodes->x, 1, basis, 1);
             y = cblas_ddot(n, nodes->y, 1, basis, 1);

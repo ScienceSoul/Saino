@@ -454,6 +454,7 @@ enum {
         nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
     } else nonLinearIter = 1;
     
+    nonLinearTol = 0.0;
     if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
         nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
     }
@@ -469,6 +470,7 @@ enum {
     
     _transientAssembly = transient;
     found = NO;
+    dt0 = 0.0;
     if ((solution.solutionInfo)[@"steady state transition time step"] != nil) {
         dt0 = [(solution.solutionInfo)[@"steady state transition time step"] doubleValue];
         found = YES;

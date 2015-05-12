@@ -56,8 +56,8 @@
     
     int i, j, k, l, p, q, t, dim, body_id, mat_id, nBasis;
     static int prevElementBodyID = -1;
-    double a, c0, c1, ct, dEnth, dTemp, force, hk, mk, dc2dx[3][3][3], density, detJ, divVelo, dNodalBasisdx[n][n][3], dsymb[3][3][3][3],
-           dVelodx[3][3], load, m, metric[3][3], pe, pressure, s, su[n], symb[3][3][3], sw[n], tau, sqrtMetric, sum, u, v, velo[3], viscosity,
+    double a, c0, c1, ct, dEnth, dTemp, force, hk=0.0, mk=0.0, dc2dx[3][3][3], density, detJ, divVelo, dNodalBasisdx[n][n][3], dsymb[3][3][3][3],
+           dVelodx[3][3], load, m, metric[3][3], pe, pressure, s, su[n], symb[3][3][3], sw[n], tau=0.0, sqrtMetric, sum, u, v, velo[3], viscosity,
            vnorm, x, y, z, w;
     double *basis = NULL, **basisFirstDerivative = NULL;
     BOOL any, bubbles, convection, convectiveAndStabilize, cylindrincSymmetry, found, frictionHeat, stat;
@@ -147,6 +147,9 @@
         s = detJ * IP->s[t];
         
         // Coordinate system dependent info
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
         if (model.coordinates != cartesian) {
             x = cblas_ddot(n, nodes->x, 1, basis, 1);
             y = cblas_ddot(n, nodes->y, 1, basis, 1);

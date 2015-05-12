@@ -469,7 +469,7 @@ static const int PRECOND_VANKA     =  560;
     FEMUtilities *utilities;
     FEMListUtilities *listUtilities;
     FEMParallelMPI *parallelUtil;
-    BOOL scaleSystem, eigenAnalysis, harmonicAnalysis, backRotation, applyLimiter, skipZeroRhs, applyRowEquilibration, parallel,
+    BOOL scaleSystem, eigenAnalysis, harmonicAnalysis, backRotation, applyLimiter, skipZeroRhs, applyRowEquilibration=NO, parallel,
          rhsScaling, found;
     
     parallelUtil = [[FEMParallelMPI alloc] init];
@@ -3539,7 +3539,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)getScalarLocalField:(double *)field sizeField:(int)sizeField name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep {
     
     int i, j, n;
-    double *values;
+    double *values = NULL;
     BOOL found, needsDeallocation=NO;
     FEMVariable *variable = nil;
     FEMSolution *varSolution;
@@ -3598,7 +3598,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)getVectorLocalField:(double **)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString *)name element:(Element_t *)element solution:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int *)tStep {
     
     int i, j, k, n;
-    double *values;
+    double *values = NULL;
     BOOL found, needsDeallocation=NO;
     FEMVariable *variable = nil;
     FEMSolution *varSolution;
@@ -3664,7 +3664,7 @@ static const int PRECOND_VANKA     =  560;
 ****************************************************/
 -(int **)getEdgeMap:(int)elementFamily mapSize:(int *)mapSize {
     
-    int **edgeMap;
+    int **edgeMap = NULL;
     
     switch (elementFamily) {
         case 2:
@@ -4171,7 +4171,7 @@ static const int PRECOND_VANKA     =  560;
 ***************************************************************************************************************/
 -(void)localBoundaryIntegral:(FEMModel *)model inSolution:(FEMSolution *)solution atBoundary:(NSArray *)bc forElement:(Element_t *)element withNumberOfNodes:(int)nd andParent:(Element_t *)parent withNumberOfNodes:(int)np boundaryName:(NSString *)name functionIntegral:(double *)integral {
     
-    int i, n, jj, kk, t, size;
+    int i, n, jj=-1, kk=-1, t, size;
     int **edgeMap = NULL;
     double s, l, sum;
     double **vLoad, g[3], *vl;
@@ -5557,7 +5557,7 @@ static const int PRECOND_VANKA     =  560;
 
 -(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel *)model mesh:(FEMMesh *)mesh solution:(FEMSolution *)solution {
     
-    int i, n, cnt, ind, sz;
+    int i, n=0, cnt, ind, sz;
     int *arr;
     BOOL findEdges, L1, L2;
     FEMMeshUtils *meshUtils;
@@ -6445,7 +6445,7 @@ static const int PRECOND_VANKA     =  560;
     
     int i, j, k, n, order;
     double force[1], dts[16];
-    BOOL constantDt, found, hasMass;
+    BOOL constantDt=YES, found, hasMass;
     NSString *method;
     FEMVariable *dtVar;
     variableArraysContainer *varContainers = NULL, *dtVarContainers = NULL;
@@ -6481,7 +6481,6 @@ static const int PRECOND_VANKA     =  560;
     method = (solution.solutionInfo)[@"time stepping method"];
     if ([method isEqualToString:@"bdf"] == YES) {
         dts[0] = solution.dt;
-        constantDt = YES;
         if (order > 1) {
             dtVar = [utilities getVariableFrom:solution.mesh.variables model:model name:@"time step size" onlySearch:NULL maskName:NULL info:&found];
             dtVarContainers = dtVar.getContainers;
@@ -7272,9 +7271,9 @@ static const int PRECOND_VANKA     =  560;
     
     NSString *convergenceType, *solverName;
     int i, n, n0, relaxAfter, iterNo;
-    double norm, prevNorm, bNorm, change, relaxation, maxNorm, dt, tolerance, eps;
+    double norm, prevNorm, bNorm, change, relaxation=1.0, maxNorm, dt, tolerance, eps;
     double *x = NULL, *r, *x0 = NULL;
-    BOOL skip, convergenceAbsolute, relax, relaxBefore, stat, doIt;
+    BOOL skip, convergenceAbsolute, relax, relaxBefore=NO, stat, doIt;
     FEMVariable *iterV, *timeStepVar, *veloVar;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL, *itervContainers = NULL;
@@ -7673,9 +7672,9 @@ static const int PRECOND_VANKA     =  560;
 -(void)iterativeSolveMatrix:(FEMMatrix *)matrix result:(double *)x rhs:(double *)b dimensions:(int *)ndim solution:(FEMSolution *)solution {
     
     NSString *str;
-    int i, n, iterType, pCondType=0, *ipar, wsize, ilun;
+    int i, n, iterType, pCondType=0, *ipar, wsize, ilun=0;
     double *dpar, **work = NULL;
-    double ilut_tol;
+    double ilut_tol = 0.0;
     BOOL abortNotConverged, condition, internal, precondRecompute, refactorize;
     SEL pcondSelector=0, pcondrSelector=0, mvSelector=0;
     matrixArraysContainer *matContainers = NULL;
@@ -8086,7 +8085,7 @@ static const int PRECOND_VANKA     =  560;
     
     int n, i;
     double relaxation, beta, gamma;
-    double t0, rt0, st, rst;
+    double t0=0.0, rt0=0.0, st, rst;
     BOOL constrainedSolve, needPrevSol, found;
     NSString *method;
     variableArraysContainer *varContainers = NULL;
@@ -8189,7 +8188,7 @@ static const int PRECOND_VANKA     =  560;
 -(double)findSolution:(FEMSolution *)solution model:(FEMModel *)model backRorateNT:(BOOL *)backRorateNT {
     
     double norm;
-    BOOL backBot;
+    BOOL backBot=NO;
     variableArraysContainer *varContainers = NULL;
     matrixArraysContainer *matContainers = NULL;
     
@@ -8264,7 +8263,7 @@ static const int PRECOND_VANKA     =  560;
     
     int j, timei, timestep, passiveBCId;
     double st, dtScale = 1.0;
-    double rst, rt0, tCond, t0;
+    double rst, rt0=0.0, tCond, t0=0.0;
     BOOL found, timing, timeDerivativeActive, isPassiveBC;
     NSString *str;
     listBuffer execIntervals = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -8412,8 +8411,8 @@ static const int PRECOND_VANKA     =  560;
 // Solve the equations one-by-one
 -(void)solveEquationsModel:(FEMModel *)model timeStep:(double *)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL *)steadyStateReached realTimeStep:(int *)realTimeStep {
     
-    int i, j, n, rgOrder=0;
-    double *steadyIt, prevDt=0.0;
+    int i, j, n=0, rgOrder=0;
+    double *steadyIt = NULL, prevDt=0.0;
     BOOL found, scanning, *doneThis, *afterConverged, rungeKutta;
     NSString *when;
     RungeKutta_t *rgCoeff = NULL;

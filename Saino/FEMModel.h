@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 #import "Constructors.h"
-#import "FEMVariable.h"
 #import "FEMSimulation.h"
 #import "FEMConstants.h"
 #import "FileReader.h"

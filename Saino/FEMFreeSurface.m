@@ -143,7 +143,7 @@
 -(void)moveBoundaryModel:(FEMModel *)model integration:(FEMNumericIntegration *)integration relax:(double)relax {
     
     int i, ii, j, k, m, n, t, fiter, which;
-    double dxdu, dydu, dzdu, dxdv, dydv, dzdv, feps, r, s, sum, u, v, ux, uy, uz, x, x1, y1, y, z;
+    double dxdu=0.0, dydu=0.0, dzdu=0.0, dxdv=0.0, dydv=0.0, dzdv=0.0, feps, r, s, sum, u, v, ux, uy, uz, x, x1, y1, y, z;
     double **averagedNormals, dLBasisdx[16][2], *nodalBasis, nrm[3], *xCoord, *yCoord, *zCoord;
     BOOL found, *visited, *turned, xMoved, yMoved, zMoved;
     NSArray *bc = nil;

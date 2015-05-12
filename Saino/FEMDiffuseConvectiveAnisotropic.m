@@ -59,9 +59,9 @@
     
     int i, j, k, l, p, q, t, dim, body_id, mat_id, nBasis, order, tStep;
     static int prevElementBodyID = -1;
-    double a, c0, c1, ct, dEnth, dTemp, expc, force, hk, mk, dc2dx[3][3][3], detJ, divVelo, dNodalBasisdx[n][n][3], dt=0.0, gmat[3][3], grad[3][3],
-           gradNodal[n][3][3], gradP[n], grav[3], gvec[3], lc[3][n], lc1, load, m, mu, **nodalPVelo, **nodalVelo, pe, pressure, reft, rho, rm[n], s,
-           su[n], sw[n], tau, tau_m, temperature, sum, sum2, u, v, velo[3], vnorm, vrm[3], y[3], w;
+    double a, c0, c1, ct, dEnth, dTemp, expc=0.0, force, hk, mk, dc2dx[3][3][3], detJ, divVelo, dNodalBasisdx[n][n][3], dt=0.0, gmat[3][3], grad[3][3],
+           gradNodal[n][3][3], gradP[n], grav[3], gvec[3], lc[3][n], lc1=0.0, load, m, mu, **nodalPVelo = NULL, **nodalVelo = NULL, pe, pressure, reft=0.0, rho, rm[n], s,
+           su[n], sw[n], tau=0.0, tau_m=0.0, temperature, sum, sum2, u, v, velo[3], vnorm, vrm[3], y[3], w;
     double *basis = NULL, **basisFirstDerivative = NULL;
     NSString *stabilizationFlag;
     static NSString *conductivityFlag;
@@ -218,7 +218,6 @@
             gwrk.matrix = NULL;
         }
         free_dmatrix(nodalVelo, 0, 3, 0, n-1);
-        free_dmatrix(nodalPVelo, 0, 3, 0, n-1);
     } else if (stabilize == YES && convection == YES) {
         convectiveAndStabilize = YES;
         hk = element->hK;
@@ -436,6 +435,7 @@
                     vrm[i] = vrm[i] + gradP[i];
                     vrm[i] = vrm[i] + grav[i] * expc * (temperature - reft);
                 }
+                free_dmatrix(nodalPVelo, 0, 3, 0, n-1);
             } else if (stabilize == YES) {
                 // Stabilization parameter tau
                 vDSP_svesqD(velo, 1, &sum, dim);

@@ -287,7 +287,7 @@
     memset( *stiff, 0.0, (solution.mesh.maxElementNodes*solution.mesh.maxElementNodes)*sizeof(double) );
     
     elemMin = HUGE_VALL;
-    elemMin = -HUGE_VALL;
+    elemMax = -HUGE_VALL;
     
     // Initialize the system and do the assembly
     power = 1.0 / expo;

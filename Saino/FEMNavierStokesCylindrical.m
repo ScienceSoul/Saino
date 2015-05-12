@@ -58,7 +58,7 @@
     
     int c, i, j, k, l, m, p, q, t, coordinates, dim, linearBasis, nBasis;
     int imap[3] = {0, 1, 3};
-    double baseP, compress, delta, density, detJ, gasConstant, hk, lambda=1.0, mk, pressure, re, s, sqrtMetric, sum, tau, temperature, x, u, v,
+    double baseP, compress=0.0, delta=0.0, density, detJ, gasConstant, hk=0.0, lambda=1.0, mk=0.0, pressure=0.0, re, s, sqrtMetric, sum, tau=0.0, temperature=0.0, x, u, v,
            vNorm, viscosity, y, w, z;
     double a[4][4], dDensitydx[3], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dSymb[3][3][3][3], dTemperaturedx[3], dVelodx[3][3], dViscositydx[3],
            force[4], gMeric[3][3], load[4], lrf[3], mass[4][4], metric[3], pBasis[n], pdBasisdx[n][3], su[n][4][4], sw[n][4][4], symb[3][3][3], uVelo[3],
@@ -156,6 +156,9 @@
         detJ = integration.metricDeterminant;
         
         // Coordinate system dependent info
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
         if (coordinates != cartesian) {
             x = cblas_ddot(n, nodes->x, 1, basis, 1);;
             y = cblas_ddot(n, nodes->y, 1, basis, 1);
@@ -756,6 +759,9 @@
         detJ = integration.metricDeterminant;
         
         // Coordinate system dependent info
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
         if (coordinates != cartesian) {
             x = cblas_ddot(n, nodes->x, 1, basis, 1);
             y = cblas_ddot(n, nodes->y, 1, basis, 1);

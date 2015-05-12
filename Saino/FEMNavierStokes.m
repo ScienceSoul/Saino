@@ -61,15 +61,15 @@
 *********************************************************************************************************************/
 -(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature isConvect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel isPseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant isPorous:(BOOL)porous nodalDrag:(double **)nodalDrag isPotentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient isMagneticForce:(BOOL)magneticForce isRotating:(BOOL)rotating omega:(double *)omega isDivDiscretization:(BOOL)divDiscretization isGradPDriscretization:(BOOL)gradPDriscretization isNewtonLinearization:(BOOL)newtonLinearization isTransient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels *)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
     
-    int c, i, j, k, l, p, q, t, dim, linearBasis, nBasis, order, tStep;
-    double baseP, c1, compress, delta, detJ, drhodp, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu, muder, muder0, pressure, re, rho, s, sum, sum1,
-           tau, tau_c, tau_m, temperature, u, v, viscConstantCondition, vnorm, w;
+    int c, i, j, k, l, p, q, t, dim, linearBasis, nBasis, order=0, tStep;
+    double baseP, c1, compress=0.0, delta=0.0, detJ, drhodp=0.0, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu=0.0, muder, muder0=0.0, pressure=0.0, re, rho, s, sum, sum1,
+           tau=0.0, tau_c=0.0, tau_m=0.0, temperature=0.0, u, v, viscConstantCondition, vnorm, w;
     double b[6][3], coord[3], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dRhodx[3], dTemperaturedx[3], dmudx[3], force[4], g[3][6], gmat[3][3],
            gvec[3], grad[3][3], gradNodal[n][4][3], gradP[n], gradT[3][3], lc[3][n], lrf[3], jacM[8*n][8*n], pBasis[n], pdBasisdx[n][3], prm[4], pVelo[3],
            rm[n][4][4], strain[3][3], su[n][4][4], sw[n][4][4], vc[6][6], velo[3], uVelo[3];
     double **nodalVelo = NULL, **nodalPVelo = NULL;
     double *basis = NULL, **basisFirstDerivative = NULL;
-    BOOL bubbles, compressible, found, isotropic, laplaceDiscretization, pBubbles, p2p1, stat, stabilize, viscNewtonLin, viscNonnewtonian, vms;
+    BOOL bubbles, compressible, found, isotropic, laplaceDiscretization, pBubbles, p2p1, stat, stabilize, viscNewtonLin=NO, viscNonnewtonian, vms;
     ElementType_t *linearType = NULL, *saveType = NULL;
     GaussIntegrationPoints *IP = NULL;
     listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -179,23 +179,23 @@
             u = element->Type.NodeU[p];
             v = element->Type.NodeV[p];
             w = element->Type.NodeW[p];
-        }
-        stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
-        for (i=0; i<n; i++) {
-            for (j=0; j<3; j++) {
-                dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
+            stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+            for (i=0; i<n; i++) {
+                for (j=0; j<3; j++) {
+                    dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
+                }
             }
-        }
-        memset( *c1, 0.0, (dim*dim)*sizeof(double) );
-        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c1, dim);
-        for (i=0; i<dim; i++) {
-            for (j=0; j<dim; j++) {
-                gradNodal[p][i][j] = c1[i][j];
+            memset( *c1, 0.0, (dim*dim)*sizeof(double) );
+            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c1, dim);
+            for (i=0; i<dim; i++) {
+                for (j=0; j<dim; j++) {
+                    gradNodal[p][i][j] = c1[i][j];
+                }
             }
-        }
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
-        for (i=0; i<dim; i++) {
-            gradNodal[p][dim][i] = yy[i];
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
+            for (i=0; i<dim; i++) {
+                gradNodal[p][dim][i] = yy[i];
+            }
         }
         
         memset( *nodalPVelo, 0.0, (4*n)*sizeof(double) );
@@ -649,7 +649,7 @@
                     for (l=jj; l<=jj+c; l++) {
                         m[kk][ll] = massMatrix[k][l];
                         a[kk][ll] = stiffMatrix[k][l];
-                        if (viscNewtonLin) jac[kk][ll] = jacM[k][l];
+                        if (viscNewtonLin == YES) jac[kk][ll] = jacM[k][l];
                         ll++;
                     }
                     kk++;

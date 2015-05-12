@@ -436,9 +436,9 @@
 ******************************************/
 -(void)FEMJob_setInitialConditionsModel:(FEMModel *)model {
     
-    int i, j, k, l, m, n, t, dim, vectDof, realDof;
+    int i, j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
     double udot, parU, parV, *nrm, *t1, *t2, *vec, *tmp;
-    BOOL found, ntBoundary, pointed, check;
+    BOOL found, ntBoundary, pointed=NO, check;
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     NSArray *bc;
@@ -1527,7 +1527,7 @@ jump:
 
 -(void)runWithInitialize:(int)initialize {
     
-    int i, j, interval, minVal, timeStep;
+    int i, j, interval, minVal, timeStep=0;
     NSString *eq, *when;
     BOOL found, execThis;
     FEMListUtilities *listUtilities;

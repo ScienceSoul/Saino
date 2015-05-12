@@ -760,6 +760,7 @@ enum {
         phaseModel = [listUtilities listGetString:model inArray:equationAtID.valuesList forVariable:@"phase change model" info:&found];
         
         phaseChange = (found == YES && [phaseModel isEqualToString:@"none"] == NO) ? YES : NO;
+        checkLatentHeatRelease = NO;
         if (phaseChange == YES) {
             checkLatentHeatRelease = [listUtilities listGetLogical:model inArray:equationAtID.valuesList forVariable:@"check latent heat release" info:&found];
         }
@@ -903,13 +904,13 @@ enum {
 
 -(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, l, n, nb, nd, t, bf_id, body_id, cols, compressibilityModel, eq_id, iter, mat_id, nsdofs, nonLinearIter, newtonIter, rows, smartHeaterNode, smartHeaterBC;
-    int *indexes = NULL, *flowPerm;
-    double at, at0, C1, dist, dt0, jx, jy, jz, cumulativeTime, newtonTol, meltPoint, minDist, nonLinearTol, norm, powerRelax, powerSensitivity, powerTimeScale,
-           prevNorm, referencePressure, relax, relativeChange, s, saveRelax, smartTol, specificHeatRatio, st, sum, totat, totst, xave, yave;
-    double controlPoint[3], *forceVector, *flowSolution;
+    int i, j, k, l, n, nb=0, nd, t, bf_id, body_id, cols, compressibilityModel=-1, eq_id, iter, mat_id, nsdofs=0, nonLinearIter, newtonIter, rows, smartHeaterNode=-1, smartHeaterBC=-1;
+    int *indexes = NULL, *flowPerm = NULL;
+    double at=0.0, at0, C1, dist, dt0, jx, jy, jz, cumulativeTime, newtonTol, meltPoint=0.0, minDist, nonLinearTol, norm, powerRelax, powerSensitivity, powerTimeScale=0.0,
+           prevNorm, referencePressure=0.0, relax, relativeChange, s, saveRelax, smartTol=0.0, specificHeatRatio, st, sum, totat, totst, xave=0.0, yave=0.0;
+    double controlPoint[3], *forceVector, *flowSolution = NULL;
     BOOL all, bubbles, checkLatentHeatRelease=NO, found, heatFluxBC, gotIt, isRadiation, firstTime, gotMeltPoint,
-         integralHeaterControl, heaterControlLocal, phaseChange=NO, smartHeaterControl, smartHeaterAverage, smartTolReached, stabilize = YES, transientHeaterControl, useBubbles;
+         integralHeaterControl, heaterControlLocal = NO, phaseChange=NO, smartHeaterControl, smartHeaterAverage, smartTolReached=NO, stabilize = YES, transientHeaterControl, useBubbles;
     NSString *convectionField, *stabilizeFlag, *convectionFlag, *compressibilityFlag;
     NSArray *bc;
     Element_t *elements = NULL, *element = NULL, *parent = NULL;
@@ -1295,6 +1296,7 @@ enum {
         nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
     } else nonLinearIter = 1;
     
+    nonLinearTol = 0.0;
     if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
         nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
     }
@@ -1319,6 +1321,7 @@ enum {
     
     _transientAssembly = transient;
     found = NO;
+    dt0 = 0.0;
     if ((solution.solutionInfo)[@"steady state transition time step"] != nil) {
         dt0 = [(solution.solutionInfo)[@"steady state transition time step"] doubleValue];
         found = YES;
@@ -1331,6 +1334,7 @@ enum {
     if (found == YES && _dt > dt0) _transientAssembly = NO;
     
     transientHeaterControl = NO;
+    smartHeaterAverage = NO;
     if (smartHeaterControl == YES) {
         
         // Mark the smart heaters
@@ -1350,7 +1354,6 @@ enum {
         bodyForceAtID = (model.bodyForces)[bf_id];
         meltPoint = [listUtilities listGetConstReal:model inArray:bodyForceAtID.valuesList forVariable:@"smart heater temperature" info:&gotMeltPoint minValue:NULL maxValue:NULL];
         
-        smartHeaterAverage = NO;
         minDist = 0.0;
         smartHeaterNode = -1;
         smartHeaterNode = [listUtilities listGetInteger:model inArray:bodyForceAtID.valuesList forVariable:@"smart heater control node" info:&found minValue:NULL maxValue:NULL];
@@ -1430,6 +1433,7 @@ enum {
             }
             if (smartHeaterAverage == NO) {
                 jx = -DBL_MAX;
+                j = -1;
                 for (k=mesh.numberOfBulkElements; k<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; k++) {
                     if (elements[k].BoundaryInfo->Constraint == smartHeaterBC+1) {
                         for (l=0; l<elements[k].Type.NumberOfNodes; l++) {
@@ -1542,7 +1546,6 @@ enum {
                 memset( _heaterSource, 0.0, model.numberOfBodyForces*sizeof(double) );
                 memset( _heaterScaling, 0.0, model.numberOfBodyForces*sizeof(double) );
                 memset( _heaterTarget, 0.0, model.numberOfBodyForces*sizeof(double) );
-                heaterControlLocal = NO;
                 
                 for (t=0; t<solution.numberOfActiveElements; t++) {
                     element = [core getActiveElement:t solution:solution model:model];
@@ -2032,6 +2035,8 @@ enum {
             
             prevNorm = norm;
             
+            xave = 0.0;
+            yave = 0.0;
             if (smartHeaterControl == YES && _newtonLinearization == YES && smartTolReached == YES) {
                 if (transientHeaterControl == NO) {
                     
@@ -2059,8 +2064,6 @@ enum {
                     xave = _xx[_tempPerm[smartHeaterNode]];
                     yave = _yy[_tempPerm[smartHeaterNode]];
                 } else {
-                    xave = 0.0;
-                    yave = 0.0;
                     j = 0;
                     double sum1 = 0.0;
                     

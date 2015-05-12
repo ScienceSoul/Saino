@@ -333,7 +333,7 @@
  
     int i, j, k, bf_id, jouleNode;
     static int prevElementBodyID = -1;
-    double b[3], dhdx[3][3], dSymb[3][3][3][3], elcond, jouleheat, metric[3][3], sqrtElementMetric, sqrtMetric, sum, symb[3][3][3], x, y, z;
+    double b[3], dhdx[3][3], dSymb[3][3][3][3], elcond, jouleheat, metric[3][3], sqrtElementMetric, sqrtMetric=0.0, sum, symb[3][3][3], x, y, z;
     BOOL all, found, stat;
     static BOOL jouleHeat = NO;
     FEMBodyForce *bodyForceAtID;

@@ -149,7 +149,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega;
     double *rtld, *p, *t1v, *v, *s, *t2v, *t, *r;
-    double residual, rhsnorm, precrhsnorm;
+    double residual=0.0, rhsnorm=0.0, precrhsnorm=0.0;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -441,7 +441,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     double rho, oldrho, alpha, beta, omega1, omega2;
     double tau, delta, myy;
     double *rtld, *u, *t1v, *v, *s, *w, *t, *r;
-    double residual, rhsnorm, precrhsnorm;
+    double residual=0.0, rhsnorm=0.0, precrhsnorm=0.0;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -839,7 +839,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     int i, iter_count;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
     double *v, *y, *ynew, *rtld, *t1v, *t2v, *w, *d, *r, *trv;
-    double residual, upperb, rhsnorm, precrhsnorm;
+    double residual=0.0, upperb=0.0, rhsnorm=0.0, precrhsnorm=0.0;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1474,9 +1474,9 @@ jump:
 -(void)dcgSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
-    double rho, oldrho, alpha, beta;
+    double rho, oldrho=0.0, alpha, beta;
     double *z, *p, *q, *r;
-    double residual, rhsnorm, precrhsnorm;
+    double residual=0.0, rhsnorm=0.0, precrhsnorm=0.0;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1715,9 +1715,9 @@ jump:
 -(void)dcgsSolveInSolution:(FEMSolution *)solution matrix:(FEMMatrix *)matrix ndim:(int)ndim result:(double *)x rhs:(double *)b ipar:(int *)ipar dpar:(double *)dpar pcondlMethod:(SEL)pcondlMethod pcondrMethod:(SEL)pcondrMethod matvecMethod:(SEL)matvecMethod mstopMethod:(SEL)mstopMethod {
     
     int i, iter_count;
-    double rho, oldrho, alpha, beta;
+    double rho, oldrho=0.0, alpha, beta;
     double *rtld, *p, *q, *u, *t1v, *t2v, *r;
-    double residual, rhsnorm, precrhsnorm;
+    double residual=0.0, rhsnorm=0.0, precrhsnorm=0.0;
         
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;
@@ -1991,10 +1991,10 @@ jump:
     int i, j, k, iter_count, m;
     int s_ind, vtmp_ind, v_ind;
     double bnrm, alpha, beta;
-    double temp, temp2, error;
+    double temp, temp2, error=0.0;
     double *w, *r, *s, *t1v, *v, *buffer;
     double **h, *cs, *sn, *y; 
-    double residual, rhsnorm, precrhsnorm;
+    double residual=0.0, rhsnorm=0.0, precrhsnorm=0.0;
     
     NSMethodSignature *pCondlSignature, *pCondrSignature, *matvecSignature, *mstopSignature;
     NSInvocation *pcondlInvocation, *pcondrInvocation, *matvecInvocation, *mstopInvocation;

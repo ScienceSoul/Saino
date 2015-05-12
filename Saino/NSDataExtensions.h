@@ -12,6 +12,8 @@
 // NSData additions.
 // -----------------------------------------------------------------------------
 
+#import <Foundation/Foundation.h>
+
 @interface NSData (Additions)
 
 - (NSRange)rangeOfData:(NSData*)dataToFind;

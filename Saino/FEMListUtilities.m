@@ -293,7 +293,7 @@
 
     int i, j, k, n1, n2;
     double t[32];
-    BOOL allGlobal, found;
+    BOOL allGlobal=NO, found;
     char *nameStr = NULL;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     valueListArraysContainer *containers = NULL;

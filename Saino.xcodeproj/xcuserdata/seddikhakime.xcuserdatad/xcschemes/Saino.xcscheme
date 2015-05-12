@@ -20,6 +20,20 @@
                ReferencedContainer = "container:Saino.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "73A006501B004C270017013B"
+               BuildableName = "Saino Test Classes.xctest"
+               BlueprintName = "Saino Test Classes"
+               ReferencedContainer = "container:Saino.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -32,21 +46,22 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7315513D13583FFD004CCD09"
-               BuildableName = "SainoTests.xctest"
-               BlueprintName = "SainoTests"
+               BlueprintIdentifier = "73A006501B004C270017013B"
+               BuildableName = "Saino Test Classes.xctest"
+               BlueprintName = "Saino Test Classes"
                ReferencedContainer = "container:Saino.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "SainoTests">
-               </Test>
-               <Test
-                  Identifier = "SainoTests/testExample">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "7315511C13583FFD004CCD09"
+            BuildableName = "Saino.app"
+            BlueprintName = "Saino"
+            ReferencedContainer = "container:Saino.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </TestAction>
    <LaunchAction
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"

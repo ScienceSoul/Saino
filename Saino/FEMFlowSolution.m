@@ -151,7 +151,7 @@
         y0 = [listUtilities listGetConstReal:model inArray:boundaryCondition.valuesList forVariable:@"circle y" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) y0 = 0.0;
         
-        r = [listUtilities listGetConstReal:model inArray:boundaryCondition.value forVariable:@"circle r" info:&found minValue:NULL maxValue:NULL];
+        r = [listUtilities listGetConstReal:model inArray:boundaryCondition.valuesList forVariable:@"circle r" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) r = 0.0;
         
         for (int i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
@@ -201,13 +201,13 @@
 
 -(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, n, nb, nd, t, bf_id, body_id, cols, eq_id, mat_id, compressibilityModel, dim, freeSIter, iter, modelCoords, modelDim, newtonIter, nonLinearIter, rows;
+    int i, j, k, n, nb, nd, t, bf_id, body_id, cols=0, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords, modelDim, newtonIter, nonLinearIter, rows=0;
     static int dt, saveTimeStep=-1;
     int *tempPerm = NULL, *meshVeloPerm = NULL;
     double *forceVector = NULL, *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;
     double angularVelocity[3], at, at0, at1, freeSTol, gravity[3], nonLinearRelax, nonLinearTol, newtonTol, pseudoCompressibilityScale, referencePressure, relativeChange, relaxation, specificHeatRatio, st, sum, tDiff, totat, totst, uNorm;
     NSString *compressibilitFlag, *flowModel, *localCoords, *stabilizeFlag, *varName;
-    BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, hydrostatic = NO, ifTransient, magneticForce = NO, mbFlag, newtonLinearization = NO, normalTangential, porous, potentialForce, pseudoCompressible, pseudoPressureExists, pseudoPressureUpdate, relaxBefore, rotating, stabilize, useLocalCoords = NO;
+    BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, hydrostatic = NO, ifTransient, magneticForce = NO, mbFlag, newtonLinearization = NO, normalTangential, porous, potentialForce, pseudoCompressible, pseudoPressureExists=NO, pseudoPressureUpdate=NO, relaxBefore, rotating, stabilize, useLocalCoords = NO;
     NSArray *bc = nil;
     Element_t * element = NULL, *parent = NULL;
     matrixArraysContainer *matContainers = NULL;
@@ -546,7 +546,6 @@
         
         memset(*_drag, 0.0, (3*n)*sizeof(double) );
         
-        pseudoPressureExists = NO;
         for (FEMMaterial *material in model.materials) {
             compressibilitFlag = [listUtilities listGetString:model inArray:material.valuesList forVariable:@"compressibility model" info:&found];
             if (found == YES && [compressibilitFlag isEqualToString:@"artificial compressible"] == YES) pseudoPressureExists = YES;
@@ -658,7 +657,7 @@
     totst = 0.0;
     
     // Initialize the pressure to be used in artificial compressibility
-    if (pseudoPressureExists) {
+    if (pseudoPressureExists == YES) {
         for (i=_nsdofs-1; i<flowContainers->sizeValues; i+=_nsdofs) {
             _pseudoPressure[i] = flowContainers->Values[i];
         }
@@ -709,6 +708,8 @@
             advanceOutput(t, solution.numberOfActiveElements, NULL, NULL);
             
             element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+            pseudoCompressible = NO;
+            rotating = NO;
             if (element->BodyID != body_id) {
                 body_id = element->BodyID;
                 
@@ -728,7 +729,6 @@
                 
                 compressibilitFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, materialAtID.valuesList, @"compressibility model", &found);
                 if (found == NO) compressibilitFlag = incompressible;
-                pseudoCompressible = NO;
                 
                 if ([compressibilitFlag isEqualToString:@"incompressible"] == YES) {
                     compressibilityModel = incompressible;
@@ -761,7 +761,6 @@
                     hydrostatic = listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, equationAtID.valuesList, @"hydrostatic pressure", &found);
                 }
                 
-                rotating = NO;
                 if (bf_id > 0) {
                     found = listGetConstRealArrayIMP(listUtilities, @selector(listGetConstRealArray:inArray:forVariable:buffer:), model, bodyForceAtID.valuesList, @"angular velocity", &matrix);
                     if (found == YES) {
@@ -1060,6 +1059,7 @@
             // Set body forces if any
             memset(*_loadVector, 0.0, (4*solution.mesh.maxElementDofs)*sizeof(double) );
             
+            potentialForce = NO;
             if (bf_id > 0) {
                 memset(_heatExpansionCoeff, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
                 memset(_referenceTemperature, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
@@ -1124,7 +1124,6 @@
             }
             
             // Note: LaoadVector is multiplied by density inside *Navier* routines
-            
             if (ifTransient == YES) {
                 switch (compressibilityModel) {
                     case perfect_gas1:
@@ -1438,7 +1437,7 @@
         
         // This hack is needed because of the fluctuating pressure levels
         if (nonLinearRelax != 1.0) {
-            double s;
+            double s = 0.0;
             if (compressibilityModel == incompressible) {
                 s = _flowSolution[_nsdofs-1];
                 for (i=_nsdofs-1; i<n; i+=_nsdofs) {
@@ -1458,6 +1457,7 @@
             }
             
             found = NO;
+            relaxBefore = NO;
             if ((solution.solutionInfo)[@"nonlinear system relaxation before"] != nil) {
                 relaxBefore = [(solution.solutionInfo)[@"nonlinear system relaxation before"] boolValue];
                 found = YES;
@@ -1486,6 +1486,7 @@
                     relaxation = 1.0;
                 }
                 found = NO;
+                mbFlag = NO;
                 if ((solution.solutionInfo)[@"internal move boundary"] != nil) {
                     mbFlag = [(solution.solutionInfo)[@"internal move boundary"] boolValue];
                     found = YES;

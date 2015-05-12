@@ -15,6 +15,7 @@
 #import "FEMBoundaryCondition.h"
 #import "FEMProjector.h"
 #import "FEMEquation.h"
+#import "SIOMeshIO.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 
@@ -85,7 +86,7 @@
         defDofs[3] = max(defDofs[3], l);
     } else {
         if ([[solution.solutionInfo objectForKey:@"discountinuous galerkin"] boolValue] == YES) {
-            solContainers->defDofs[bodyID][3] = l;
+            solContainers->defDofs[bodyID][3] = 0;
             defDofs[3] = max(defDofs[3], 0);
         }
     }
@@ -1398,10 +1399,10 @@
     int i, j, k, l;
     int m, n, o, p;
     double minx, maxx, miny, maxy, incri, incrj;
-    double meshsize1, meshsize2;
+    double meshsize1=0.0, meshsize2=0.0;
     int domainShape;
-    int **side1, **side2, **side3, **side4;
-    BOOL ct;
+    int **side1 = NULL, **side2 = NULL, **side3 = NULL, **side4 = NULL;
+    BOOL ct=NO;
     
     minx = borders[0];
     maxx = borders[1];
