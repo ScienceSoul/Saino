@@ -22,7 +22,7 @@ typedef double (^inputBlock) (double *variablesValues);
     NSString *_name;
     NSString *_cValue;
     NSArray *_dependencies;       // Store the names of the variable to whhich there is/are a
-                                  // dependency(ies) in the exection of the block
+                                  // dependency(ies) in the execution of the block
     
     valueListArraysContainer *_containers;
     inputBlock _block;

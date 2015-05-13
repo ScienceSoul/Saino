@@ -208,11 +208,14 @@
             }
             
             containers = list.getContainers;
-            if (containers->fValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetReal: fValues not allocated in list: %@\n", varName);
-                errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
+            if (list.type == LIST_TYPE_CONSTANT_SCALAR || list.type == LIST_TYPE_VARIABLE_SCALAR) {
+                if (containers->fValues == NULL) {
+                    NSLog(@"FEMListUtilities:listGetReal: fValues not allocated in list: %@\n", varName);
+                    errorfunct("FEMListUtilities:listGetReal", "Program terminating now...");
+                }
             }
-            else if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
+            
+            if (list.type == LIST_TYPE_CONSTANT_SCALAR) {
                 memset( result->vector, 0.0, n*sizeof(double) );
                 for (i=0; i<n; i++) {
                     result->vector[i] = containers->fValues[0][0][0];
@@ -310,10 +313,14 @@
         nameStr = (char *)[list.name UTF8String];
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
-            if (containers->fValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetRealArray: fValues not allocated in list: %@\n", varName);
-                errorfunct("FEMListUtilities:listGetRealArray", "Program terminating now...");
+            
+            if (list.type == LIST_TYPE_CONSTANT_TENSOR || list.type == LIST_TYPE_VARIABLE_TENSOR) {
+                if (containers->fValues == NULL) {
+                    NSLog(@"FEMListUtilities:listGetRealArray: fValues not allocated in list: %@\n", varName);
+                    errorfunct("FEMListUtilities:listGetRealArray", "Program terminating now...");
+                }
             }
+            
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
             
@@ -336,7 +343,7 @@
                         }
                     }
                 }
-            } else if (list.type == List_TYPE_BLOCK || list.type == LIST_TYPE_VARIABLE_TENSOR_STR){
+            } else if (list.type == List_TYPE_BLOCK || list.type == LIST_TYPE_VARIABLE_TENSOR){
                 memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
@@ -1187,7 +1194,7 @@
     [valuesArray addObject:newValueList];
 }
 
--(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block {
+-(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block dependencies:(NSArray *)dependencies {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1238,6 +1245,10 @@
     newValueList.type = List_TYPE_BLOCK;
     
     newValueList.block = block;
+    
+    if (dependencies != nil) {
+        newValueList.dependencies = [[NSArray alloc] initWithArray:dependencies];
+    }
     
     newValueList.name = varName;
     [valuesArray addObject:newValueList];

@@ -10,6 +10,7 @@
 #import <XCTest/XCTest.h>
 
 #import "FEMListUtilities.h"
+#import "FEMUtilities.h"
 #import "FEMEquation.h"
 #import "memory.h"
 
@@ -18,6 +19,8 @@
 }
 @property (nonatomic) FEMListUtilities *listUtilities;
 @property (nonatomic) FEMEquation *equation;
+@property (nonatomic) FEMModel *model;
+@property (nonatomic) FEMUtilities *utilities;
 
 @end
 
@@ -28,9 +31,13 @@
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     self.listUtilities = [[FEMListUtilities alloc] init];
-    XCTAssertNotNil(self.listUtilities, @"FEMListUtilitiesTests: Could not create a list utilities object.");
+    XCTAssertNotNil(self.listUtilities, @"FEMListUtilitiesTests: Could not create a FEMListUtilities utilities object.");
     self.equation = [[FEMEquation alloc] init];
-    XCTAssertNotNil(self.equation, @"FEMListUtilitiesTests: Could not create an equation object.");
+    XCTAssertNotNil(self.equation, @"FEMListUtilitiesTests: Could not create a FEMEquation object.");
+    self.model = [[FEMModel alloc] init];
+    XCTAssertNotNil(self.model, @"FEMListUtilitiesTests: Could not create a FEMModel object.");
+    self.utilities = [[FEMUtilities alloc] init];
+    XCTAssertNotNil(self.utilities, @"FEMListUtilitiesTests: Could not create a FEMUtilities object.");
 }
 
 - (void)tearDown
@@ -159,7 +166,7 @@
     double (^block) (double *) = ^(double *t){
         return t[0] * t[1];
     };
-    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block];
+    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block dependencies:nil];
     
     char *nameStr = NULL;
     char *varStr = (char *)[@"test block" UTF8String];
@@ -178,6 +185,75 @@
     t[1] = 2.0;
     double realTest = valuesList.block(t);
     XCTAssertTrue(realTest == 4.0, @"FEMListUtilitiesTests: Executing a block from a list failed to produce correct result.");
+}
+
+-(void)testListGetRealBlock
+{
+    listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL found;
+    
+    int *nodeIndexes = intvec(0, 0);
+    nodeIndexes[0] = 0;
+    
+    variableArraysContainer *varContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+    varContainers->Perm = intvec(0, 0);
+    varContainers->Perm[0] = 0;
+    varContainers->sizePerm = 1;
+    varContainers->Values = doublevec(0, 0);
+    varContainers->Values[0] = 2.0;
+    varContainers->sizeValues = 1;
+    
+    // Test with one dependency
+    [self.utilities addVariableTo:self.model.variables mesh:NULL solution:NULL name:@"dummy1" dofs:1 container:varContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    NSArray *dependencies = @[@"dummy1"];
+    double (^block1) (double *) = ^(double *t){
+        return t[0];
+    };
+    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block1 dependencies:dependencies];
+    
+    found = [self.listUtilities listGetReal:self.model inArray:self.equation.valuesList forVariable:@"test block" numberOfNodes:1 indexes:nodeIndexes buffer:&result minValue:NULL maxValue:NULL];
+    XCTAssertTrue(result.vector != NULL, @"FEMListUtilitiesTests: Result vector in method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: is null. It should have been allocated.");
+    XCTAssertTrue((result.vector[0] == 2.0), @"FEMListUtilitiesTests: Method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: failed to retrieve correct value with one dependency.");
+    
+    // Test with two depencencies
+    [self.utilities addVariableTo:self.model.variables mesh:NULL solution:NULL name:@"dummy2" dofs:1 container:varContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    dependencies = @[@"dummy1", @"dummy2"];
+    double (^block2) (double *) = ^(double *t){
+        return t[0] * t[1];
+    };
+    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block2 dependencies:dependencies];
+    
+    found = [self.listUtilities listGetReal:self.model inArray:self.equation.valuesList forVariable:@"test block" numberOfNodes:1 indexes:nodeIndexes buffer:&result minValue:NULL maxValue:NULL];
+    XCTAssertTrue((result.vector[0] == 4.0), @"FEMListUtilitiesTests: Method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: failed to retrieve correct value with two dependencies");
+    
+    // Test with three dependencies
+    [self.utilities addVariableTo:self.model.variables mesh:NULL solution:NULL name:@"dummy3" dofs:1 container:varContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    dependencies = @[@"dummy1", @"dummy2", @"dummy3"];
+    double (^block3) (double *) = ^(double *t){
+        return t[0] * t[1] * t[2];
+    };
+    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block3 dependencies:dependencies];
+    
+    found = [self.listUtilities listGetReal:self.model inArray:self.equation.valuesList forVariable:@"test block" numberOfNodes:1 indexes:nodeIndexes buffer:&result minValue:NULL maxValue:NULL];
+    XCTAssertTrue((result.vector[0] == 8.0), @"FEMListUtilitiesTests: Method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: failed to retrieve correct value with three dependencies");
+    
+    // Test with three dependencies
+    [self.utilities addVariableTo:self.model.variables mesh:NULL solution:NULL name:@"dummy4" dofs:1 container:varContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    dependencies = @[@"dummy1", @"dummy2", @"dummy3", @"dummy4"];
+    double (^block4) (double *) = ^(double *t){
+        return t[0] * t[1] * t[2] * t[3];
+    };
+    [self.listUtilities addBlockInClassList:self.equation theVariable:@"test block" usingBlock:block4 dependencies:dependencies];
+    
+    found = [self.listUtilities listGetReal:self.model inArray:self.equation.valuesList forVariable:@"test block" numberOfNodes:1 indexes:nodeIndexes buffer:&result minValue:NULL maxValue:NULL];
+    XCTAssertTrue((result.vector[0] == 16.0), @"FEMListUtilitiesTests: Method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: failed to retrieve correct value with four dependencies");
+
+    free_ivector(nodeIndexes, 0, 0);
+    free_ivector(varContainers->Perm, 0, 0);
+    free_dvector(varContainers->Values, 0, 0);
+    free(varContainers);
+    
+    free_dvector(result.vector, 0, result.m-1);
 }
 
 @end

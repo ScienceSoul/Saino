@@ -39,7 +39,7 @@
 -(void)addIntegerArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(int *)values size:(int)n orUsingBlock:(double (^)())block;
 -(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double *)value orUsingBlock:(double (^)())block string:(NSString *)str;
 -(void)addConstRealArrayInClassList:(id)className theVariable:(NSString *)varName withValues:(double **)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^)())block string:(NSString *)str;
--(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block;
+-(void)addBlockInClassList:(id)className theVariable:(NSString *)varName usingBlock:(double (^)(double *variablesValues))block dependencies:(NSArray *)dependencies;
 
 -(BOOL)checkElementEquation:(FEMModel *)model forElement:(Element_t *)element andEquation:(NSString *)equation;
 
