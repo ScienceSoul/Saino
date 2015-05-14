@@ -587,8 +587,14 @@
     vector[0] = 1;
     [listUtilities addIntegerArrayInClassList:boundaryCondition1 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
+    
+    NSArray *dependencies = @[@"Coordinate 2"];
+    double (^block) (double *) = ^(double *t){
+        return (2.0-t[0]) * (t[0]-1.0);
+    };
+    [listUtilities addBlockInClassList:boundaryCondition1 theVariable:@"velocity 1" usingBlock:block dependencies:dependencies];
+    
     value = 0.0;
-    [listUtilities addConstRealInClassList:boundaryCondition1 theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
     [listUtilities addConstRealInClassList:boundaryCondition1 theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
     
     FEMBoundaryCondition *boundaryCondition2 = [[FEMBoundaryCondition alloc] init];
