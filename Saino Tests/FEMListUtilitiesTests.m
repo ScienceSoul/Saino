@@ -187,7 +187,7 @@
     XCTAssertTrue(realTest == 4.0, @"FEMListUtilitiesTests: Executing a block from a list failed to produce correct result.");
 }
 
--(void)testListGetRealBlock
+-(void)testListGetRealFromBlock
 {
     listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL found;
