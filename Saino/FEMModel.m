@@ -619,7 +619,7 @@
     self.numberOfBoundaryConditions = 3;
     
     _meshDir = [NSMutableString stringWithString:@"."];
-    _meshDir = [NSMutableString stringWithString:@"Step"];
+    _meshName = [NSMutableString stringWithString:@"Step"];
 }
 
 #pragma mark Public methods
@@ -754,7 +754,8 @@
     
     //TODO: Here comes the Model Description File (MDF) parser
     // For now we are just testing and we set manually a model
-    [self FEMModel_testHeatSolver];
+    //[self FEMModel_testHeatSolver];
+    [self FEMModel_testStokesSolver];
     
     [self FEMModel_initializeOutputLevel];
     

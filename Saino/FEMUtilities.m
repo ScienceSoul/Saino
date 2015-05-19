@@ -998,7 +998,7 @@
             } else {
                 varContainers->ComponentValues = malloc ( (varContainers->sizeValues/ndofs) * sizeof ( double * ));
                 k = 0;
-                for (j=(i-1); i<varContainers->sizeValues; j+=ndofs) {
+                for (j=(i-1); j<varContainers->sizeValues; j+=ndofs) {
                     varContainers->ComponentValues[k] = &varContainers->Values[j];
                     k++;
                 }
@@ -2014,7 +2014,7 @@
                 }
             }
             if (found == NO) {
-                NSLog(@"FEMUtilities:addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation\n", varName);
+                NSLog(@"FEMUtilities:addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation.\n", varName);
                 errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
             }
             
@@ -2112,7 +2112,7 @@
                         tmpName = [self appendNameFromString:varName component:&i];
                         bufferContainers->ComponentValues = malloc ( (nrows/dofs) * sizeof ( double * ));
                         k = 0;
-                        for (j=(i-1); i<=nrows-dofs+(i-1); j+=dofs) {
+                        for (j=(i-1); j<=nrows-dofs+(i-1); j+=dofs) {
                             bufferContainers->ComponentValues[k] = &bufferContainers->Values[j];
                             k++;
                         }
@@ -2242,7 +2242,7 @@
                     tmpName = [self appendNameFromString:varName component:&i];
                     bufferContainers->ComponentValues = malloc ( (nsize/dofs) * sizeof ( double * ));
                     k = 0;
-                    for (j=(i-1); i<=nsize-dofs+(i-1); j+=dofs) {
+                    for (j=(i-1); j<=nsize-dofs+(i-1); j+=dofs) {
                         bufferContainers->ComponentValues[k] = & bufferContainers->Values[j];
                         k++;
                     }
@@ -2377,7 +2377,7 @@
                     tmpName = [self appendNameFromString:varName component:&i];
                     bufferContainers->ComponentValues = malloc ( (variableContainers->sizeValues/dofs) * sizeof ( double * ));
                     k = 0;
-                    for (j=(i-1); i<=nrows-dofs+(i-1); j+=dofs) {
+                    for (j=(i-1); j<=nrows-dofs+(i-1); j+=dofs) {
                         bufferContainers->ComponentValues[k] = &sol[j];
                         k++;
                     }

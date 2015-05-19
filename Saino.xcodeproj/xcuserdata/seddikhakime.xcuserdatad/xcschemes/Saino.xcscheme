@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "73A006501B004C270017013B"
-               BuildableName = "Saino Test Classes.xctest"
-               BlueprintName = "Saino Test Classes"
+               BuildableName = "Saino Logic Tests.xctest"
+               BlueprintName = "Saino Logic Tests"
                ReferencedContainer = "container:Saino.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,8 +47,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "73A006501B004C270017013B"
-               BuildableName = "Saino Test Classes.xctest"
-               BlueprintName = "Saino Test Classes"
+               BuildableName = "Saino Logic Tests.xctest"
+               BlueprintName = "Saino Logic Tests"
                ReferencedContainer = "container:Saino.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -87,7 +87,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "a.sif"
+            argument = "Step.sif"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -114,10 +114,10 @@
     matrix.numberOfRows = rows;
     matContainers->Rows[0] = 0;
     for (i=1; i<rows; i++) {
-        j = matContainers->Diag[(i-2)/degreesFreedom+1];
+        j = matContainers->Diag[(i-1)/degreesFreedom];
         matContainers->Rows[i] = matContainers->Rows[i-1] + degreesFreedom*rowNonZeros[j];
     }
-    j = matContainers->Diag[(rows-2)/degreesFreedom+1];
+    j = matContainers->Diag[(rows-1)/degreesFreedom];
     matContainers->Rows[rows] = matContainers->Rows[rows-1] + degreesFreedom*rowNonZeros[j];
     
     // Because those arrays contains indexes ranging from 0 to n, we initialize them at -1

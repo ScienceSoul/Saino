@@ -130,6 +130,7 @@
 		73ACFF5C1B0085F700BFE68F /* Walls.c in Sources */ = {isa = PBXBuildFile; fileRef = 73C494FC192EED3200F36146 /* Walls.c */; };
 		73ACFF5D1B0085F700BFE68F /* SainoAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315513413583FFD004CCD09 /* SainoAppDelegate.m */; };
 		73ACFF5E1B0085F700BFE68F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7315512E13583FFD004CCD09 /* main.m */; };
+		73ACFF601B09F42600BFE68F /* FEMUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */; };
 		73ADFABE1592D52F009A83C6 /* SIOMeshAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */; };
 		73ADFACE1594525A009A83C6 /* FileReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFACD1594525A009A83C6 /* FileReader.m */; };
 		73ADFAD115945343009A83C6 /* NSDataExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 73ADFAD015945343009A83C6 /* NSDataExtensions.m */; };
@@ -271,7 +272,7 @@
 		739A5683157DE092003E549C /* FEMElementsDefinition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMElementsDefinition.m; sourceTree = "<group>"; };
 		739B4140189F7DF700F3F266 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		73A0061D1B004A3F0017013B /* FEMListUtilitiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FEMListUtilitiesTests.m; path = "Saino Tests/FEMListUtilitiesTests.m"; sourceTree = SOURCE_ROOT; };
-		73A006511B004C270017013B /* Saino Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Saino Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		73A006511B004C270017013B /* Saino Logic Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Saino Logic Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		73A006541B004C270017013B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		73A06CC515919DC5009FC87E /* SIOModelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOModelManager.h; sourceTree = "<group>"; };
 		73A06CC615919DC5009FC87E /* SIOModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOModelManager.m; sourceTree = "<group>"; };
@@ -279,6 +280,7 @@
 		73A4696B15076F9200BDDEA6 /* Lists.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lists.h; sourceTree = "<group>"; };
 		73A56C4115D3D27D00227A1D /* FEMProjector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMProjector.h; sourceTree = "<group>"; };
 		73A56C4215D3D27D00227A1D /* FEMProjector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMProjector.m; sourceTree = "<group>"; };
+		73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilitiesTests.m; sourceTree = "<group>"; };
 		73ADFABC1592D52F009A83C6 /* SIOMeshAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshAgent.h; sourceTree = "<group>"; };
 		73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshAgent.m; sourceTree = "<group>"; };
 		73ADFAC01592FEA1009A83C6 /* sio_config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sio_config.h; sourceTree = "<group>"; };
@@ -399,7 +401,7 @@
 			isa = PBXGroup;
 			children = (
 				7315511D13583FFD004CCD09 /* Saino.app */,
-				73A006511B004C270017013B /* Saino Tests.xctest */,
+				73A006511B004C270017013B /* Saino Logic Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -558,6 +560,7 @@
 			isa = PBXGroup;
 			children = (
 				73A0061D1B004A3F0017013B /* FEMListUtilitiesTests.m */,
+				73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */,
 				73A006531B004C270017013B /* Supporting Files */,
 			);
 			name = "Saino Test Classes";
@@ -718,9 +721,9 @@
 			productReference = 7315511D13583FFD004CCD09 /* Saino.app */;
 			productType = "com.apple.product-type.application";
 		};
-		73A006501B004C270017013B /* Saino Test Classes */ = {
+		73A006501B004C270017013B /* Saino Logic Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 73A006591B004C270017013B /* Build configuration list for PBXNativeTarget "Saino Test Classes" */;
+			buildConfigurationList = 73A006591B004C270017013B /* Build configuration list for PBXNativeTarget "Saino Logic Tests" */;
 			buildPhases = (
 				73A0064D1B004C270017013B /* Sources */,
 				73A0064E1B004C270017013B /* Frameworks */,
@@ -731,9 +734,9 @@
 			dependencies = (
 				73A006581B004C270017013B /* PBXTargetDependency */,
 			);
-			name = "Saino Test Classes";
+			name = "Saino Logic Tests";
 			productName = "Saino Tests";
-			productReference = 73A006511B004C270017013B /* Saino Tests.xctest */;
+			productReference = 73A006511B004C270017013B /* Saino Logic Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -764,7 +767,7 @@
 			projectRoot = "";
 			targets = (
 				7315511C13583FFD004CCD09 /* Saino */,
-				73A006501B004C270017013B /* Saino Test Classes */,
+				73A006501B004C270017013B /* Saino Logic Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -934,6 +937,7 @@
 				73ACFF4E1B0085F700BFE68F /* FEMMagneticInductionSolution.m in Sources */,
 				73ACFF4F1B0085F700BFE68F /* FEMStressAnalysisSolution.m in Sources */,
 				73ACFF501B0085F700BFE68F /* FEMMeshUpdateSolution.m in Sources */,
+				73ACFF601B09F42600BFE68F /* FEMUtilitiesTests.m in Sources */,
 				73ACFF511B0085F700BFE68F /* FEMHeatSolution.m in Sources */,
 				73ACFF521B0085F700BFE68F /* FEMHeatSolution_OpenCL.m in Sources */,
 				73ACFF531B0085F700BFE68F /* Constructors.c in Sources */,
@@ -1178,7 +1182,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		73A006591B004C270017013B /* Build configuration list for PBXNativeTarget "Saino Test Classes" */ = {
+		73A006591B004C270017013B /* Build configuration list for PBXNativeTarget "Saino Logic Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				73A0065A1B004C270017013B /* Debug */,

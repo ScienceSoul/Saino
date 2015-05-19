@@ -29,7 +29,7 @@
 #pragma mark Private methods
 
 /************************************************************************************************************************
-    Create a list a matrix given the mesh, the active domains and the element type related to the solver. The list
+    Create a list matrix given the mesh, the active domains and the element type related to the solver. The list
     matrix is flexible since it can account for any entries. Also constraints and periodic BCs may give rise to 
     entries in the list matrix topology.
 ************************************************************************************************************************/
@@ -308,27 +308,32 @@
     int i, j, k, l, m, k1, k2;
     ListMatrixEntry_t *cList;
     FEMMatrixCRS *crsMatrix;
-    
+    matrixArraysContainer *matrixContainers = NULL;
+
     crsMatrix = [[FEMMatrixCRS alloc] init];
+    matrixContainers = matrix.getContainers;
     
     for (i=0; i<n; i++) {
-        cList = list[i].Head;
-        j = reorder[invInitialReorder[i]];
-        while (cList != NULL) {
-            k = reorder[invInitialReorder[cList->Index]];
-            for (l=0; l<dofs; l++) {
-                for (m=0; m<dofs; m++) {
-                    k1 = dofs * j + l;
-                    k2 = dofs * k + m;
-                    [crsMatrix makeMatrixIndex:matrix row:k1 col:k2];
+        for (l=0; l<dofs; l++) {
+            cList = list[i].Head;
+            j = reorder[invInitialReorder[i]];
+            k1 = dofs * j + l;
+            k2 = matrixContainers->Rows[k1] - 1;
+            while (cList != NULL) {
+                k = reorder[invInitialReorder[cList->Index]];
+                k = dofs * k;
+                for (m=k; m<k+dofs; m++) {
+                    k2 = k2 + 1;
+                    matrixContainers->Cols[k2] = m;
                 }
+                cList = cList->Next;
             }
-            cList = cList->Next;
         }
     }
     
     if (matrix.format == MATRIX_CRS) [crsMatrix sortMatrix:matrix alsoValues:NULL];
 }
+
 
 #pragma mark Public methods
 

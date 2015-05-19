@@ -7,6 +7,7 @@
 //
 
 #import "SIOMeshIO.h"
+#import "memory.h"
 
 @implementation SIOMeshIO
 
@@ -57,6 +58,10 @@
 
 -(void)openMeshAtPath:(NSString *)directory {
     
+    if (directory == nil) {
+        NSLog(@"SIOMeshIO:openMeshAtPath: no assignment to directory name (empty object pointer).\n");
+        errorfunct("SIOMeshIO:openMeshAtPath", "Program terminating now...");
+    }
     _meshAgent = [[SIOMeshAgent alloc] initWithManager:self.modelManager split:self.parallelState.numProc part:self.parallelState.myProc];
     
     if (self.meshAgent != nil) {

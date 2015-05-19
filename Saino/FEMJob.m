@@ -149,7 +149,7 @@
                 if (found == YES) {
                     for (j=0; j<activeSolvers.m; j++) {
                         if (activeSolvers.ivector[j] == i) {
-                            [listUtilities addLogicalInClassList:equation.valuesList theVariable:eq withValue:YES];
+                            [listUtilities addLogicalInClassList:equation theVariable:eq withValue:YES];
                             break;
                         }
                     }
