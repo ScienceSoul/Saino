@@ -14,9 +14,8 @@
 #import "FEMEquation.h"
 #import "memory.h"
 
-@interface FEMListUtilitiesTests : XCTestCase {
-    
-}
+@interface FEMListUtilitiesTests : XCTestCase
+
 @property (nonatomic) FEMListUtilities *listUtilities;
 @property (nonatomic) FEMEquation *equation;
 @property (nonatomic) FEMModel *model;
@@ -26,12 +25,11 @@
 
 @implementation FEMListUtilitiesTests
 
-- (void)setUp
-{
+- (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     self.listUtilities = [[FEMListUtilities alloc] init];
-    XCTAssertNotNil(self.listUtilities, @"FEMListUtilitiesTests: Could not create a FEMListUtilities utilities object.");
+    XCTAssertNotNil(self.listUtilities, @"FEMListUtilitiesTests: Could not create a FEMListUtilities object.");
     self.equation = [[FEMEquation alloc] init];
     XCTAssertNotNil(self.equation, @"FEMListUtilitiesTests: Could not create a FEMEquation object.");
     self.model = [[FEMModel alloc] init];
@@ -40,8 +38,7 @@
     XCTAssertNotNil(self.utilities, @"FEMListUtilitiesTests: Could not create a FEMUtilities object.");
 }
 
-- (void)tearDown
-{
+- (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     for (FEMValueList *valueList in self.equation.valuesList) {
         [valueList deallocation];
@@ -49,8 +46,7 @@
     [super tearDown];
 }
 
-- (void)testListGetString
-{
+- (void)testListGetString {
     BOOL found;
     [self.listUtilities addStringInClassList:self.equation theVariable:@"test string" withValue:@"string"];
     NSString *stringTest = [self.listUtilities listGetString:nil inArray:self.equation.valuesList forVariable:@"test string" info:&found];
@@ -58,16 +54,14 @@
     //XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
 }
 
-- (void)testListGetLogical
-{
+- (void)testListGetLogical {
     BOOL found;
     [self.listUtilities addLogicalInClassList:self.equation theVariable:@"test logical" withValue:YES];
     BOOL logicalTest = [self.listUtilities listGetLogical:nil inArray:self.equation.valuesList forVariable:@"test logical" info:&found];
     XCTAssertTrue(logicalTest == YES, @"FEMListUtilitiesTests: Method listUtilities listGetLogical:inArray:forVariable:info: failed to retrieve correct value.");
 }
 
-- (void)testListGetInteger
-{
+- (void)testListGetInteger {
     BOOL found;
     int value = 1;
     [self.listUtilities addIntegerInClassList:self.equation theVariable:@"test integer" withValue:&value orUsingBlock:nil];
@@ -75,8 +69,7 @@
     XCTAssertTrue(integerTest == 1, @"FEMListUtilitiesTests: Method listGetInteger:inArray:forVariable:info:minValue:maxValue: failed to retrieve correct value.");
 }
 
-- (void)testListGetConstReal
-{
+- (void)testListGetConstReal {
     BOOL found;
     double value = 1.0;
     [self.listUtilities addConstRealInClassList:self.equation theVariable:@"test real" withValue:&value orUsingBlock:nil string:nil];
@@ -84,8 +77,7 @@
     XCTAssertTrue(realTest == 1.0, @"FEMListUtilitiesTests: Method listGetConstReal:inArray:forVariable:info:minValue:maxValue: failed to retrieve correct value.");
 }
 
-- (void)testListGetIntegerArray
-{
+- (void)testListGetIntegerArray {
     BOOL found;
     listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
@@ -100,8 +92,7 @@
     free_ivector(result.ivector, 0, result.m-1);
 }
 
-- (void)testListGetConstRealArray
-{
+- (void)testListGetConstRealArray {
     BOOL found;
     listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
@@ -124,8 +115,7 @@
     free_dmatrix(result.matrix, 0, result.m-1, 0, result.n);
 }
 
-- (void)testListGetRealArray // Test only for type=LIST_TYPE_CONSTANT_TENSOR
-{
+- (void)testListGetRealArray { // Test only for type=LIST_TYPE_CONSTANT_TENSOR
     BOOL found;
     listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
@@ -150,8 +140,7 @@
     free_d3tensor(result.tensor, 0, result.m-1, 0, result.n-1, 0, result.p-1);
 }
 
-- (void)testListGetConstRealFromBlock
-{
+- (void)testListGetConstRealFromBlock {
     BOOL found;
     double (^block) (void) = ^{
         return 1.0;
@@ -161,8 +150,7 @@
     XCTAssertTrue(realTest == 1.0, @"FEMListUtilitiesTests: Method listGetConstReal:inArray:forVariable:info:minValue:maxValue: failed to retrieve correct value.");
 }
 
--(void)testListBlock
-{
+-(void)testListBlock {
     double (^block) (double *) = ^(double *t){
         return t[0] * t[1];
     };
@@ -187,8 +175,7 @@
     XCTAssertTrue(realTest == 4.0, @"FEMListUtilitiesTests: Executing a block from a list failed to produce correct result.");
 }
 
--(void)testListGetRealFromBlock
-{
+-(void)testListGetRealFromBlock {
     listBuffer result = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL found;
     

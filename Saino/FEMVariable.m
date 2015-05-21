@@ -26,7 +26,9 @@
 @synthesize valid = _valid;
 @synthesize output = _output;
 @synthesize valuesChanged = _valuesChanged;
+@synthesize componentVariable = _componentVariable;
 @synthesize secondary = _secondary;
+@synthesize componentSecondaryVariable = _componentSecondaryVariable;
 
 - (id)init
 {
@@ -86,42 +88,46 @@
 }
 
 -(void)deallocation {
-    //TODO: Deallocation of containers members
     int i;
     
-    if (_containers->ComponentValues != NULL) {
-        free(_containers->ComponentValues);
-        _containers->ComponentValues = NULL;
-    }
-
-    if (_containers->ComponentPrevValues != NULL) {
-        for (i=0; _containers->size1ComponentPrevValues; i++) {
-            free(_containers->ComponentPrevValues[i]);
+    // When a variable is a component variable, a secondary or a component secondary variable, its dealocation
+    // was not totally completed during the deallocation of the mesh variables. Finish up here.
+    
+    if (self.componentVariable == YES || self.secondary == YES || self.componentSecondaryVariable == YES) {
+        
+        if (_containers->ComponentValues != NULL) {
+            free(_containers->ComponentValues);
+            _containers->ComponentValues = NULL;
         }
-        free(_containers->ComponentPrevValues);
-        _containers->ComponentPrevValues = NULL;
-    }
-    
-    if (_containers->SecondaryToValues != NULL) {
-        free(_containers->SecondaryToValues);
-        _containers->SecondaryToValues = NULL;
-    }
-    
-    if (_containers->ComponentSecondaryToValues != NULL) {
-        free(_containers->ComponentSecondaryToValues);
-        _containers->ComponentSecondaryToValues = NULL;
-    }
-    
-    if (_containers->ComponentEigenVectors != NULL) {
-        for (i=0; _containers->size1ComponentEigenVectors; i++) {
-            free(_containers->ComponentEigenVectors[i]);
+        
+        if (_containers->ComponentPrevValues != NULL) {
+            for (i=0; _containers->size1ComponentPrevValues; i++) {
+                free(_containers->ComponentPrevValues[i]);
+            }
+            free(_containers->ComponentPrevValues);
+            _containers->ComponentPrevValues = NULL;
         }
-        free(_containers->ComponentEigenVectors);
-        _containers->ComponentEigenVectors = NULL;
+        
+        if (_containers->SecondaryToValues != NULL) {
+            free(_containers->SecondaryToValues);
+            _containers->SecondaryToValues = NULL;
+        }
+        
+        if (_containers->ComponentSecondaryToValues != NULL) {
+            free(_containers->ComponentSecondaryToValues);
+            _containers->ComponentSecondaryToValues = NULL;
+        }
+        
+        if (_containers->ComponentEigenVectors != NULL) {
+            for (i=0; _containers->size1ComponentEigenVectors; i++) {
+                free(_containers->ComponentEigenVectors[i]);
+            }
+            free(_containers->ComponentEigenVectors);
+            _containers->ComponentEigenVectors = NULL;
+        }
+        free(_containers);
+        _containers = NULL;
     }
-    
-    free(_containers);
-    _containers = NULL;
 }
 
 -(variableArraysContainer*)getContainers {

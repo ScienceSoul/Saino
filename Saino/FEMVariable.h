@@ -28,7 +28,9 @@
     BOOL _valid;
     BOOL _output;
     BOOL _valuesChanged;
+    BOOL _componentVariable;
     BOOL _secondary;
+    BOOL _componentSecondaryVariable;
     
     variableArraysContainer *_containers;
 }
@@ -49,7 +51,9 @@
 @property(nonatomic, assign, getter = isValid) BOOL valid;
 @property(nonatomic, assign, getter = isOutput) BOOL output;
 @property(nonatomic, assign, getter = isValuesChanged) BOOL valuesChanged;
+@property(nonatomic, assign, getter = isComponentVariable) BOOL componentVariable;
 @property(nonatomic, assign, getter =  isSecondary) BOOL secondary;
+@property(nonatomic, assign, getter = isComponentSecondaryVariable) BOOL componentSecondaryVariable;
 
 -(void)deallocation;
 -(variableArraysContainer *)getContainers;

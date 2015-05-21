@@ -581,10 +581,7 @@
                                             m = l + realDof - (--vectDof);
                                             tmp[l] = vectVarContainers->Values[vectVariable.dofs*k+m];
                                         }
-                                        udot = 0.0;
-                                        for (i=0; i<dim; i++) {
-                                            udot = udot + (vec[i]*tmp[i]);
-                                        }
+                                        udot = cblas_ddot(dim, vec, 1, tmp, 1);
                                         for (i=0; i<dim; i++) {
                                             tmp[i] = tmp[i]+(vector.vector[j]-udot)*vec[i];
                                         }
@@ -593,7 +590,11 @@
                                             vectVarContainers->Values[vectVariable.dofs*k+m] = tmp[l];
                                         }
                                     } else {
-                                        variableContainers->Values[k] = vector.vector[j];
+                                        if (variable.isComponentVariable == YES) {
+                                            *(variableContainers->ComponentValues[k]) = vector.vector[j];
+                                        } else {
+                                            variableContainers->Values[k] = vector.vector[j];
+                                        }
                                     }
                                 }
                             }

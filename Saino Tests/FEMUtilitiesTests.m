@@ -9,7 +9,11 @@
 #import <Cocoa/Cocoa.h>
 #import <XCTest/XCTest.h>
 
+#import "FEMUtilities.h"
+
 @interface FEMUtilitiesTests : XCTestCase
+
+@property(nonatomic) FEMUtilities *utilities;
 
 @end
 
@@ -18,6 +22,8 @@
 - (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
+    self.utilities = [[FEMUtilities alloc] init];
+    XCTAssertNotNil(self.utilities, @"FEMUtilitiesTests Could not create a FEMUtilities object.");
 }
 
 - (void)tearDown {
@@ -25,16 +31,37 @@
     [super tearDown];
 }
 
-- (void)testExample {
-    // This is an example of a functional test case.
-    XCTAssert(YES, @"Pass");
-}
-
-- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    [self measureBlock:^{
-        // Put the code you want to measure the time of here.
-    }];
+-(void)testAppendNameFromString
+{
+    NSString *testString2D = @"flow solution[velocity:2 pressure:1]";
+    int dofs = 3;
+    for (int i=1; i<=dofs; i++) {
+        NSString *varName = [self.utilities appendNameFromString:testString2D component:&i];
+        NSLog(@"%@\n", varName);
+        if (i == 1) {
+            XCTAssertTrue([varName isEqualToString:@"velocity 1"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 2D. Should give 'velocity 1'");
+        } else if (i == 2) {
+            XCTAssertTrue([varName isEqualToString:@"velocity 2"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 2D. Should give 'velocity 2'");
+        } else if (i == 3) {
+            XCTAssertTrue([varName isEqualToString:@"pressure"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 2D. Should give 'pressure'");
+        }
+    }
+    
+    NSString *testString3D = @"flow solution[velocity:3 pressure:1]";
+    dofs = 4;
+    for (int i=1; i<=dofs; i++) {
+        NSString *varName = [self.utilities appendNameFromString:testString3D component:&i];
+        NSLog(@"%@\n", varName);
+        if (i == 1) {
+            XCTAssertTrue([varName isEqualToString:@"velocity 1"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'velocity 1'");
+        } else if (i == 2) {
+            XCTAssertTrue([varName isEqualToString:@"velocity 2"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'velocity 2'");
+        } else if (i == 3) {
+            XCTAssertTrue([varName isEqualToString:@"velocity 3"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'velocity 3'");
+        } else if (i == 4) {
+            XCTAssertTrue([varName isEqualToString:@"pressure"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'pressure'");
+        }
+    }
 }
 
 @end

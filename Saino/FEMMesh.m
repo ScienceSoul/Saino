@@ -1178,6 +1178,10 @@
 
 -(void)deallocationMeshVariables {
     
+    // Mesh variables containers are entirelly deallocated here unless they are a component variable,
+    // a secondary or a component secondary variable. In that case they are deallocated inside
+    // the solution.
+    
     variableArraysContainer *varContainers = NULL;
     
     for (FEMVariable *variable in self.variables) {
@@ -1189,12 +1193,12 @@
         if ([variable.name isEqualToString:@"coordinate 1"] || [variable.name isEqualToString:@"coordinate 2"] ||
                 [variable.name isEqualToString:@"coordinate 3"]) continue;
         
-        if (variable.secondary == YES) continue;
-        
         if (varContainers->Perm != NULL) {
             free_ivector(varContainers->Perm, 0, varContainers->sizePerm-1);
             varContainers->Perm = NULL;
         }
+        
+        if (variable.isComponentVariable == YES || variable.isSecondary == YES || variable.isComponentSecondaryVariable == YES) continue;
         
         if (varContainers->Values != NULL) {
             free_dvector(varContainers->Values, 0, varContainers->sizeValues-1);
@@ -1225,8 +1229,9 @@
             free_dvector(varContainers->NonLinValues, 0, varContainers->sizeNonLinValues-1);
             varContainers->NonLinValues = NULL;
         }
+        free(varContainers);
+        varContainers = NULL;
     }
-    free(varContainers);
     self.variables = nil;
 }
 

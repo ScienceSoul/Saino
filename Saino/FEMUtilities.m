@@ -48,7 +48,7 @@
         varContainers = variable.getContainers;
         
         if (varContainers->sizeValues == variable.dofs) continue;
-        if (variable.secondary == YES) continue;
+        if (variable.isSecondary == YES) continue;
         
         if (variable.dofs == 1 && [variable.name isEqualToString:@"coordinate"] == YES) {
             only = YES;
@@ -327,7 +327,7 @@
             varContainers = variable.getContainers;
             if (varContainers->sizeValues == variable.dofs) continue;
             
-            if (variable.secondary == YES) continue;
+            if (variable.isSecondary == YES) continue;
             
             newSol = nil;
             oldSol = nil;
@@ -872,6 +872,10 @@
     newVariable.norm = 0.0;
     newVariable.prevNorm = 0.0;
     
+    newVariable.componentVariable = NO;
+    newVariable.secondary = NO;
+    newVariable.componentSecondaryVariable = NO;
+    
     if (component == YES) {
         // If component is true, then we are adding a variable which is itself
         // a component of another variable with dof > 1. In this case, we set
@@ -881,9 +885,11 @@
         if (aContainer->ComponentValues != NULL) {
             varContainers->ComponentValues = aContainer->ComponentValues;
             varContainers->sizeComponentValues = aContainer->sizeComponentValues;
+            newVariable.componentVariable = YES;
         } else if (*secondary == YES && aContainer->ComponentSecondaryToValues != NULL) {
             varContainers->ComponentSecondaryToValues = aContainer->ComponentSecondaryToValues;
             varContainers->sizeComponentSecondaryToValues = aContainer->sizeComponentSecondaryToValues;
+            newVariable.componentSecondaryVariable = YES;
         }
     } else {
         if (aContainer->Values != NULL) {
@@ -893,6 +899,7 @@
             if (*secondary == YES && aContainer->SecondaryToValues != NULL) {
                 varContainers->SecondaryToValues = aContainer->SecondaryToValues;
                 varContainers->sizeSecondaryToValues = aContainer->sizeSecondaryToValues;
+                newVariable.secondary = YES;
             }
         }
     }
@@ -906,7 +913,6 @@
     
     newVariable.valid = YES;
     newVariable.output = YES;
-    newVariable.secondary = NO;
     newVariable.valuesChanged = YES;
     
     // Converged information undefined = -1 not 0, yes = 1
@@ -950,8 +956,8 @@
         // another variable PrevValues. This happens when the options "calculate velocity" or "calculate acceleration"
         // are given to a solution and when the solution time order >= 2. In this case, the solution variable creates
         // the variables:
-        //   "solution variable" velocity
-        //   "solution variable" acceleration
+        //   [solution.variable.name appendString:@"velocity"]
+        //   [solution.variable.name appendString:@"acceleration"]
         // which values point to PrevValues columns.
         varContainers->SecondaryToValues = aContainer->SecondaryToValues;
         varContainers->sizeSecondaryToValues = aContainer->sizeSecondaryToValues;
@@ -990,7 +996,7 @@
             if (*secondary == YES && aContainer->SecondaryToValues != NULL) {
                 varContainers->ComponentSecondaryToValues = malloc ( (aContainer->sizeSecondaryToValues/ndofs) * sizeof ( double * ));
                 k = 0;
-                 for (j=(i-1); i<aContainer->sizeSecondaryToValues; j+=ndofs) {
+                 for (j=(i-1); j<aContainer->sizeSecondaryToValues; j+=ndofs) {
                      varContainers->ComponentSecondaryToValues[k] = aContainer->SecondaryToValues[j];
                      k++;
                  }
@@ -1611,7 +1617,7 @@
         str = [str substringFromIndex:ind.location+1];
         ind1 =  [str rangeOfString:@":"];
         str = [str substringToIndex:ind1.location];
-        if (dofs > 0) {
+        if (dofs > 1) {
             dofs = *component - dofsTot + dofs;
             str1 = [NSMutableString stringWithString:str];
             [str1 appendString:@" "];
@@ -2554,23 +2560,9 @@
                 for (i=0; i<variableContainers->size1PrevValues; i++) {
                     bufferContainers->SecondaryToValues[i] = &variableContainers->PrevValues[i][1];
                 }
+                dofs = solution.variable.dofs;
                 secondary = YES;
-                [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:str dofs:solution.variable.dofs container:bufferContainers component:NO ifOutput:NULL ifSecondary:&secondary type:NULL];
-                
-                for (i=1; i<=solution.variable.dofs; i++) {
-                    str = [NSMutableString stringWithString:solution.variable.name];
-                    [str appendString:@" acceleration"];
-                    [str appendString:@" "];
-                    [str appendString:[NSString stringWithFormat:@"%d",i]];
-                    varContainers->ComponentSecondaryToValues = malloc ( (variableContainers->size1PrevValues/solution.variable.dofs) * sizeof ( double * ));
-                    k = 0;
-                    for (j=(i-1); i<variableContainers->size1PrevValues; j+=solution.variable.dofs) {
-                         bufferContainers->ComponentSecondaryToValues[k] =  &variableContainers->PrevValues[j][1];
-                        k++;
-                    }
-                    [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:str dofs:1 container:bufferContainers component:YES ifOutput:NULL ifSecondary:&secondary type:NULL];
-                    
-                }
+                [self addVectorTo:solution.mesh.variables mesh:solution.mesh solution:solution name:str dofs:&dofs container:bufferContainers ifOutput:NULL ifSecondary:&secondary global:NULL initValue:NULL];
                 free(bufferContainers);
             }
         }
