@@ -123,9 +123,11 @@
     _v = NULL;
     _viscosity = NULL;
     _w = NULL;
-    _elementNodes->x = NULL;
-    _elementNodes->y = NULL;
-    _elementNodes->z = NULL;
+    if (_elementNodes != NULL) {
+        _elementNodes->x = NULL;
+        _elementNodes->y = NULL;
+        _elementNodes->z = NULL;
+    }
     _elementNodes = NULL;
 }
 
@@ -185,6 +187,7 @@
         
         _flowPerm = NULL;
         _flowSolution = NULL;
+        
         [self FEMFlowSolution_nullify];
         
         _pseudoPressure = NULL;
@@ -197,6 +200,55 @@
 
 -(void)deallocation:(FEMSolution *)solution {
     
+    int n = solution.mesh.maxElementDofs;
+    variableArraysContainer *flowContainers = solution.variable.getContainers;
+    
+    if (_u != NULL) free_dvector(_u, 0, n-1);
+    if (_v != NULL) free_dvector(_v, 0, n-1);
+    if (_w != NULL) free_dvector(_w, 0, n-1);
+    if (_mu != NULL) free_dvector(_mu, 0, n-1);
+    if (_mv != NULL) free_dvector(_mv, 0, n-1);
+    if (_mw != NULL) free_dvector(_mw, 0, n-1);
+    if (_indexes != NULL) free_ivector(_indexes, 0, n-1);
+    if (_pressure != NULL) free_dvector(_pressure, 0, n-1);
+    if (_prevPressure != NULL) free_dvector(_prevPressure, 0, n-1);
+    if (_pseudoCompressibility != NULL) free_dvector(_pseudoCompressibility, 0, n-1);
+    if (_prevDensity != NULL) free_dvector(_prevDensity, 0, n-1);
+    if (_density != NULL) free_dvector(_density, 0, n-1);
+    if (_layerThickness != NULL) free_dvector(_layerThickness, 0, n-1);
+    if (_surfaceRoughness != NULL) free_dvector(_surfaceRoughness, 0, n-1);
+    if (_permeability != NULL) free_dvector(_permeability, 0, n-1);
+    if (_mx != NULL) free_dvector(_mx, 0, n-1);
+    if (_my != NULL) free_dvector(_my, 0, n-1);
+    if (_mz != NULL) free_dvector(_mz, 0, n-1);
+    if (_slipCoeff != NULL) free_dmatrix(_slipCoeff, 0, 2, 0, n-1);
+    if (_drag != NULL) free_dmatrix(_drag, 0, 2, 0, n-1);
+    if (_timeForce != NULL) free_dvector(_timeForce, 0, (2*_nsdofs*n)-1);
+    if (_force != NULL) free_dvector(_force, 0, (2*_nsdofs*n)-1);
+    if (_viscosity != NULL) free_dvector(_viscosity, 0, n-1);
+    if (_mass != NULL) free_dmatrix(_mass, 0, (2*_nsdofs*n)-1, 0, (2*_nsdofs*n)-1);
+    if (_stiff != NULL) free_dmatrix(_stiff, 0, (2*_nsdofs*n)-1, 0, (2*_nsdofs*n)-1);
+    if (_heatExpansionCoeff != NULL) free_dvector(_heatExpansionCoeff, 0, n-1);
+    if (_gasConstant != NULL) free_dvector(_gasConstant, 0, n-1);
+    if (_heatCapacity != NULL) free_dvector(_heatCapacity, 0, n-1);
+    if (_referenceTemperature != NULL) free_dvector(_referenceTemperature, 0, n-1);
+    if (_localTempPrev != NULL) free_dvector(_localTempPrev, 0, n-1);
+    if (_localTemperature != NULL) free_dvector(_localTemperature, 0, n-1);
+    if (_pSolution != NULL) free_dvector(_pSolution, 0, flowContainers->sizeValues-1);
+    if (_potentialField != NULL) free_dvector(_potentialField, 0, n-1);
+    if (_potentialCoefficient != NULL) free_dvector(_potentialCoefficient, 0, n-1);
+    if (_loadVector != NULL) free_dmatrix(_loadVector, 0, 3, 0, n-1);
+    if (_alpha != NULL) free_dvector(_alpha, 0, n-1);
+    if (_beta != NULL) free_dvector(_beta, 0, n-1);
+    if (_extPressure != NULL) free_dvector(_extPressure, 0, n-1);
+    if (_elementNodes->x != NULL) free_dvector(_elementNodes->x, 0, n-1);
+    if (_elementNodes->y != NULL) free_dvector(_elementNodes->y, 0, n-1);
+    if (_elementNodes->z != NULL) free_dvector(_elementNodes->z, 0, n-1);
+    if (_elementNodes != NULL) free(_elementNodes);
+    
+    if (_pseudoPressure != NULL) free_dvector(_pseudoPressure, 0, _sizePseudoPressure-1);
+    if (_pDensity0 != NULL) free_dvector(_pDensity0, 0, _sizePDensity0);
+    if (_pDensity1 != NULL) free_dvector(_pDensity1, 0, _sizePDensity1);
 }
 
 -(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
@@ -553,7 +605,7 @@
         
         if (pseudoPressureExists == YES) {
             if (_allocationDone == YES) {
-                free_dvector(_pseudoCompressibility, 0, _sizePseudoPressure-1);
+                free_dvector(_pseudoPressure, 0, _sizePseudoPressure-1);
             }
             _sizePseudoPressure = flowContainers->sizeValues / _nsdofs;
             _pseudoPressure = doublevec(0, _sizePseudoPressure-1);

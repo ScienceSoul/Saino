@@ -835,15 +835,9 @@ enum {
     int n = solution.mesh.maxElementDofs;
     variableArraysContainer *tempContainers = solution.variable.getContainers;
     
-    if (stiff != NULL) {
-        free_dmatrix(stiff, 0, 0, 0, n1-1);
-    }
-    if (mass != NULL) {
-        free_dmatrix(mass, 0, 0, 0, n1-1);
-    }
-    if (x != NULL) {
-        free_dmatrix(x, 0, n1-1, 0, k1-1);
-    }
+    if (stiff != NULL) free_dmatrix(stiff, 0, 0, 0, n1-1);
+    if (mass != NULL) free_dmatrix(mass, 0, 0, 0, n1-1);
+    if (x != NULL) free_dmatrix(x, 0, n1-1, 0, k1-1);
     
     if (_indexes != NULL) free_ivector(_indexes, 0, n-1);
     if (_saveIndexes != NULL) free_ivector(_saveIndexes, 0, n-1);
