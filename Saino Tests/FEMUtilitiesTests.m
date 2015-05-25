@@ -31,8 +31,7 @@
     [super tearDown];
 }
 
--(void)testAppendNameFromString
-{
+-(void)testAppendNameFromString {
     NSString *testString2D = @"flow solution[velocity:2 pressure:1]";
     int dofs = 3;
     for (int i=1; i<=dofs; i++) {
@@ -62,6 +61,39 @@
             XCTAssertTrue([varName isEqualToString:@"pressure"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'pressure'");
         }
     }
+}
+
+-(void)testAddVariableTo {
+    
+    NSMutableArray *storage = [[NSMutableArray alloc] init];
+    variableArraysContainer *varContainer = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
+    
+    NSString *name1 = @"dummy";
+    NSString *name2 = @"dummy big dof[dummy1:2 dummy2:1]";
+    [self.utilities addVariableTo:storage mesh:nil solution:nil name:name1 dofs:1 container:varContainer component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    [self.utilities addVariableTo:storage mesh:nil solution:nil name:name2 dofs:3 container:varContainer component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+    
+    BOOL found = NO;
+    for (FEMVariable *variable in storage) {
+        if ([variable.name isEqualToString:@"dummy"] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    XCTAssertTrue(found, @"FEMUtilitiesTests: addVariableTo: failed to properlly add the variable 'dummy'.");
+    
+    found = NO;
+    for (FEMVariable *variable in storage) {
+        if ([variable.name isEqualToString:@"dummy big dof"] == YES) {
+            found = YES;
+            break;
+        }
+    }
+    XCTAssertTrue(found, @"FEMUtilitiesTests: addVariableTo: failed to properlly add variable 'dummy big dof'.");
+    
+     for (FEMVariable *variable in storage) {
+         NSLog(@"%@\n", variable.name);
+     }
 }
 
 @end

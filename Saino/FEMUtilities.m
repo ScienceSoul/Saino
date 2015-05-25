@@ -851,9 +851,23 @@
     
     FEMVariable *newVariable;
     variableArraysContainer *varContainers = NULL;
+    NSString *addedName;
+    NSRange ind;
+    
+    if (aContainer == NULL) {
+        NSLog(@"FEMUtilities:addVariableTo: container argument is not allocated.\n");
+        errorfunct("FEMUtilities:addVariableTo:", "Program terminating now...");
+    }
+    
+    ind = [name rangeOfString:@"["];
+    if (ind.location != NSNotFound) {
+        addedName = [name substringToIndex:ind.location];
+    } else {
+        addedName = [NSString stringWithString:name];
+    }
     
     for (FEMVariable *variable in anArray) {
-        if ([variable.name isEqualToString:name] == YES) {
+        if ([variable.name isEqualToString:addedName] == YES) {
             return; // Variable alreadt exists, don't do anything;
         }
     }
@@ -861,7 +875,7 @@
     newVariable = [[FEMVariable alloc] init];
     varContainers = newVariable.getContainers;
     
-    newVariable.name = name;
+    newVariable.name = addedName;
     
     newVariable.dofs = dofs;
     if (aContainer->Perm != NULL) {
@@ -908,8 +922,8 @@
     newVariable.steadyChange = 0.0;
     newVariable.nonLinIter = 0;
     
-    newVariable.solution = aSolution;
-    newVariable.primaryMesh = aMesh;
+    if (aSolution != nil) newVariable.solution = aSolution;
+    if (aMesh != nil) newVariable.primaryMesh = aMesh;
     
     newVariable.valid = YES;
     newVariable.output = YES;
@@ -920,7 +934,7 @@
     newVariable.steadyConverged = -1;
     
     if (secondary != NULL) {
-        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", name);
+        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", addedName);
         newVariable.secondary = *secondary;
     }
     if (aType != NULL) {
@@ -2111,7 +2125,12 @@
                 bufferContainers->Perm = perm;
                 bufferContainers->sizePerm = ndeg;
                 [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:&variableOutput ifSecondary:NULL type:NULL];
-                solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+                NSRange ind = [varName rangeOfString:@"["];
+                if (ind.location != NSNotFound) {
+                    solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:[varName substringToIndex:ind.location] onlySearch:NULL maskName:NULL info:&found];
+                } else {
+                    solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
+                }
                                 
                 if (dofs > 1) {
                     for (i=1; i<=dofs; i++) {
