@@ -1644,7 +1644,7 @@
     double *coeff;
     
     y = 0.0;
-    for (n=0; element->Type.NumberOfNodes; n++) {
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
         if (x[n] != 0.0) {
             p = element->Type.BasisFunctions[n].p;
             q = element->Type.BasisFunctions[n].q;
@@ -1684,7 +1684,7 @@
     double *coeff;
     
     y = 0.0;
-    for (n=0; element->Type.NumberOfNodes; n++) {
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
         if (x[n] != 0.0) {
             p = element->Type.BasisFunctions[n].p;
             q = element->Type.BasisFunctions[n].q;
@@ -1762,7 +1762,7 @@
     }
     
     y = 0.0;
-    for (n=0; element->Type.NumberOfNodes; n++) {
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
         if (x[n] != 0.0) {
             p = element->Type.BasisFunctions[n].p;
             q = element->Type.BasisFunctions[n].q;
@@ -1841,7 +1841,7 @@
     }
     
     y = 0.0;
-    for (n=0; element->Type.NumberOfNodes; n++) {
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
         if (x[n] != 0.0) {
             p = element->Type.BasisFunctions[n].p;
             q = element->Type.BasisFunctions[n].q;
@@ -1924,7 +1924,7 @@
     }
     
     y = 0.0;
-    for (n=0; element->Type.NumberOfNodes; n++) {
+    for (n=0; n<element->Type.NumberOfNodes; n++) {
         if (x[n] != 0.0) {
             p = element->Type.BasisFunctions[n].p;
             q = element->Type.BasisFunctions[n].q;
@@ -2145,6 +2145,7 @@
             normals[0] = -dydu * detA;
             normals[1] = dxdu * detA;
             normals[2] = 0.0;
+            break;
         case 2:
             if (u0 != NULL) {
                 u = *u0;
@@ -2176,7 +2177,7 @@
             normals[0] = (dydu * dzdv - dydv * dzdu) * detA;
             normals[1] = (dxdv * dzdu - dxdu * dzdv) * detA;
             normals[2] = (dxdu * dydv - dxdv * dydu) * detA;
-            
+            break;
         default:
             errorfunct("FEMElementDescription:nomalVectorForBDElement", "Invalid dimension for determining normal!");
             break;
@@ -2189,7 +2190,7 @@
         switch (boundary->Type.ElementCode / 100) {
             case 1:
                 x = nodes->x[0];
-                y = nodes->x[0]; // TODO: Elmer does that but is that really correct, isn't y = nodes->y[0]?
+                y = nodes->x[0];
                 z = nodes->z[0];
                 break;
             case 2:
