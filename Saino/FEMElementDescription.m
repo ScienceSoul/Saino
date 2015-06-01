@@ -1309,6 +1309,7 @@
             cx = pow((nodes->x[1]-nodes->x[0]), 2.0) + pow((nodes->y[1]-nodes->y[0]), 2.0) + pow((nodes->z[1]-nodes->z[0]), 2.0);
             cy = pow((nodes->x[3]-nodes->x[0]), 2.0) + pow((nodes->y[3]-nodes->y[0]), 2.0) + pow((nodes->z[3]-nodes->z[0]), 2.0);
             hk = 2.0 * cx * cy / (cx + cy);
+            break;
         default:
             edgeMap = [self getEdgeMap:family];
             hk = HUGE_VAL;

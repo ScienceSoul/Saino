@@ -868,7 +868,11 @@
                                 [self FEMPost_writeDouble:cimag(*(varContainers->CValues[k])) toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             } else {
-                                [self FEMPost_writeDouble:varContainers->Values[k] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                if (variable.isComponentVariable == YES) {
+                                    [self FEMPost_writeDouble:*(varContainers->ComponentValues[k]) toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                } else {
+                                     [self FEMPost_writeDouble:varContainers->Values[k] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                }
                             }
                         } else {
                             [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];

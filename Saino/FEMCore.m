@@ -371,15 +371,15 @@ static const int PRECOND_VANKA     =  560;
     
     if (normDofs < dofs) {
         norm = 0.0;
-        double buffer[nn];
         double maxVal;
-        memset( buffer, 0.0, sizeof(buffer) );
+        double buffer[nn/dofs];
         switch (normDim) {
             case 0:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    vDSP_vabsD(x+j, dofs, buffer, 1, nn);
-                    vDSP_maxvD(buffer, 1, &maxVal, nn);
+                    memset( buffer, 0.0, sizeof(buffer) );
+                    vDSP_vabsD(x+j, dofs, buffer, 1, nn/dofs);
+                    vDSP_maxvD(buffer, 1, &maxVal, nn/dofs);
                     norm = max(norm, maxVal);
                 }
                 l = 2;
@@ -388,8 +388,9 @@ static const int PRECOND_VANKA     =  560;
             case 1:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    vDSP_vabsD(x+j, dofs, buffer, 1, nn);
-                    vDSP_sveD(buffer, 1, &sum, nn);
+                    memset( buffer, 0.0, sizeof(buffer) );
+                    vDSP_vabsD(x+j, dofs, buffer, 1, nn/dofs);
+                    vDSP_sveD(buffer, 1, &sum, nn/dofs);
                     norm = norm + sum;
                 }
                 norm = [parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale;
@@ -397,7 +398,7 @@ static const int PRECOND_VANKA     =  560;
             case 2:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
-                    vDSP_svesqD(x+j, dofs, &sum, nn);
+                    vDSP_svesqD(x+j, dofs, &sum, nn/dofs);
                     norm = norm + sum;
                 }
                 norm = sqrt([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale);
@@ -405,12 +406,13 @@ static const int PRECOND_VANKA     =  560;
             default:
                 for (i=0; i<normDofs; i++) {
                     j = normComponents.ivector[i];
+                    memset( buffer, 0.0, sizeof(buffer) );
                     l = 0.0;
                     for (k=j; k<nn; k+=dofs) {
                         buffer[l] = pow(x[k], normDim);
                         l++;
                     }
-                    vDSP_sveD(buffer, 1, &sum, nn);
+                    vDSP_sveD(buffer, 1, &sum, nn/dofs);
                     norm = norm + sum;
                 }
                 norm = pow( ([parallelUtil parallelReductionOfValue:norm operArg:NULL] / nscale), (1.0/normDim) );

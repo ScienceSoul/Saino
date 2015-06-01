@@ -90,10 +90,12 @@
 -(void)deallocation {
     int i;
     
-    // When a variable is a component variable, a secondary or a component secondary variable, its dealocation
-    // was not totally completed during the deallocation of the mesh variables. Finish up here.
+    // When a variable is a component variable, a secondary or a component secondary variable, its containers dealocation
+    // was not done during the deallocation of the mesh variables. Do it here.
     
     if (self.componentVariable == YES || self.secondary == YES || self.componentSecondaryVariable == YES) {
+        
+        _containers->Perm = NULL;
         
         if (_containers->ComponentValues != NULL) {
             free(_containers->ComponentValues);

@@ -62,9 +62,9 @@
 -(void)navierStokesComposeMassMatrix:(double **) massMatrix stiffMatrix:(double **)stiffMatrix forceVector:(double *)forceVector loadVector:(double **)loadVector nodalViscosity:(double *)nodalViscosity nodalDensity:(double *)nodalDensity velocityX:(double *)ux velocityY:(double *)uy velocityZ:(double *)uz meshVelocityX:(double *)mux meshVelocityY:(double *)muy meshVelocityZ:(double *)muz nodalPressure:(double *)nodalPressure nodalTemperature:(double *)nodalTemperature isConvect:(BOOL)convect stabilizeFlag:(NSString *)stabilizeFlag compressibilityModel:(int)compressibilityModel isPseudoCompressible:(BOOL)pseudoCompressible nodalCompressibility:(double *)nodalCompressibility nodalGasConstant:(double *)nodalGasConstant isPorous:(BOOL)porous nodalDrag:(double **)nodalDrag isPotentialForce:(BOOL)potentialForce potentialField:(double *)potentialField potentialCoefficient:(double *)potentialCoefficient isMagneticForce:(BOOL)magneticForce isRotating:(BOOL)rotating omega:(double *)omega isDivDiscretization:(BOOL)divDiscretization isGradPDriscretization:(BOOL)gradPDriscretization isNewtonLinearization:(BOOL)newtonLinearization isTransient:(BOOL)transient element:(Element_t *)element numberOfNodes:(int)n rows:(int)rows cols:(int)cols nodes:(Nodes_t *)nodes solution:(FEMSolution *)solution core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration material:(FEMMaterial *)material elementDescription:(FEMElementDescription *)elementDescription coordinateSystems:(FEMCoordinateSystems *)coordinateSystems materialModels:(FEMMaterialModels *)materialModels differentials:(FEMDifferentials *)differentials listUtilities:(FEMListUtilities *)listUtilities utilities:(FEMUtilities *)utilities {
     
     int c, i, j, k, l, p, q, t, dim, linearBasis, nBasis, order=0, tStep;
-    double baseP, c1, compress=0.0, delta=0.0, detJ, drhodp=0.0, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu=0.0, muder, muder0=0.0, pressure=0.0, re, rho, s, sum, sum1,
+    double baseP, c1=0.0, compress=0.0, delta=0.0, detJ, drhodp=0.0, dt=0.0, gasC, hk, hScale, lambda=1.0, massCoeff, mk, mu=0.0, muder, muder0=0.0, pressure=0.0, re, rho, s, sum, sum1,
            tau=0.0, tau_c=0.0, tau_m=0.0, temperature=0.0, u, v, viscConstantCondition, vnorm, w;
-    double b[6][3], coord[3], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dRhodx[3], dTemperaturedx[3], dmudx[3], force[4], g[3][6], gmat[3][3],
+    double b[6][3], coord[3], diffux[n], diffuy[n], diffuz[n], dNodalBasisdx[n][n][3], dPressuredx[3], drag[3], dRhodx[3], dTemperaturedx[3], dmudx[3], force[4], g[3][6], gmat[3][3],
            gvec[3], grad[3][3], gradNodal[n][4][3], gradP[n], gradT[3][3], lc[3][n], lrf[3], jacM[8*n][8*n], pBasis[n], pdBasisdx[n][3], prm[4], pVelo[3],
            rm[n][4][4], strain[3][3], su[n][4][4], sw[n][4][4], vc[6][6], velo[3], uVelo[3];
     double **nodalVelo = NULL, **nodalPVelo = NULL;
@@ -173,7 +173,7 @@
         
         memset( **dNodalBasisdx, 0.0, (n*n*3)*sizeof(double) );
         memset( **gradNodal, 0.0, (n*4*3)*sizeof(double) );
-        double c1[dim][dim];
+        double c[dim][dim];
         double yy[dim];
         for (p=0; p<n; p++) {
             u = element->Type.NodeU[p];
@@ -185,11 +185,11 @@
                     dNodalBasisdx[i][p][j] = basisFirstDerivative[i][j];
                 }
             }
-            memset( *c1, 0.0, (dim*dim)*sizeof(double) );
-            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c1, dim);
+            memset( *c, 0.0, (dim*dim)*sizeof(double) );
+            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dim, dim, n, 1.0, *nodalVelo, n, *basisFirstDerivative, 3, 0.0, (double *)c, dim);
             for (i=0; i<dim; i++) {
                 for (j=0; j<dim; j++) {
-                    gradNodal[p][i][j] = c1[i][j];
+                    gradNodal[p][i][j] = c[i][j];
                 }
             }
             cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
@@ -221,33 +221,50 @@
                 free_dmatrix(work, 0, 2, 0, n-1);
             }
         }
-    }
-    
-    c1 = 2.0 / mk;
-    for (i=0; i<n; i++) {
-        lc[0][i] = element->Type.NodeU[i];
-        lc[1][i] = element->Type.NodeV[i];
-        lc[2][i] = element->Type.NodeW[i];
-    }
-    
-    double maxv = -HUGE_VAL;
-    double minv = HUGE_VAL;
-    for (i=0; i<element->Type.dimension; i++) {
-        for (j=0; j<n; j++) {
-            if (lc[i][j] > maxv) {
-                maxv = lc[i][j];
+        
+        c1 = 2.0 / mk;
+        for (i=0; i<n; i++) {
+            lc[0][i] = element->Type.NodeU[i];
+            lc[1][i] = element->Type.NodeV[i];
+            lc[2][i] = element->Type.NodeW[i];
+        }
+        
+        double maxv = -HUGE_VAL;
+        double minv = HUGE_VAL;
+        for (i=0; i<element->Type.dimension; i++) {
+            for (j=0; j<n; j++) {
+                if (lc[i][j] > maxv) {
+                    maxv = lc[i][j];
+                }
+            }
+            for (j=0; j<n; j++) {
+                if (lc[i][j] < minv) {
+                    minv = lc[i][j];
+                }
+            }
+            for (j=0; j<n; j++) {
+                lc[i][j] = 2.0 * (lc[i][j] - minv) / (maxv - minv) - 1.0;
             }
         }
-        for (j=0; j<n; j++) {
-            if (lc[i][j] < minv) {
-                minv = lc[i][j];
-            }
-        }
-        for (j=0; j<n; j++) {
-            lc[i][j] = 2.0 * (lc[i][j] - minv) / (maxv - minv) - 1.0;
-        }
     }
-    
+    // Arrays of pointers to matrices elements
+    double ***m, ***a, ***jac;
+    m =  malloc ( (c+1) * sizeof ( double ** ));
+    for (i=0; i<(c+1); i++) {
+        m[i] = malloc ( (c+1) * sizeof ( double * ));
+    }
+    a =  malloc ( (c+1) * sizeof ( double ** ));
+    for (i=0; i<(c+1); i++) {
+        a[i] = malloc ( (c+1) * sizeof ( double * ));
+    }
+    jac =  malloc ( (c+1) * sizeof ( double ** ));
+    for (i=0; i<(c+1); i++) {
+        jac[i] = malloc ( (c+1) * sizeof ( double * ));
+    }
+    // Array of pointers to vector elements
+    double **load;
+    load = malloc ( (c+1) * sizeof ( double * ));
+
     // Now we start integrating
     for (t=0; t<IP->n; t++) {
         
@@ -260,12 +277,8 @@
             element->Type = *linearType;
             stat = [integration setBasisForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
             stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:bubbles basisDegree:NULL];
-            for (i=0; i<n; i++) {
-                pBasis[i] = basis[i];
-                for (j=0; j<3; j++) {
-                    pdBasisdx[i][j] = basisFirstDerivative[i][j];
-                }
-            }
+            memcpy(pBasis, basis, n*sizeof(double));
+            memcpy(*pdBasisdx, *basisFirstDerivative, (n*3)*sizeof(double));
             element->Type = *saveType;
         }
         
@@ -334,9 +347,9 @@
         // Velocity from previous iteration (relative to mesh veclocity) at the
         // integration point
         memset(velo, 0.0, sizeof(velo) );
-        double diffux[n];
-        double diffuy[n];
-        double diffuz[n];
+        memset(diffux, 0.0, sizeof(diffux));
+        memset(diffuy, 0.0, sizeof(diffuy));
+        memset(diffuz, 0.0, sizeof(diffuz));
         vDSP_vsubD(mux, 1, ux, 1, diffux, 1, n);
         vDSP_vsubD(muy, 1, uy, 1, diffuy, 1, n);
         if (dim > 2) vDSP_vsubD(muz, 1, uz, 1, diffuz, 1, n);
@@ -639,17 +652,13 @@
             for (q=0; q<nBasis; q++) {
                 int ii = (c+1) * p;
                 int jj = (c+1) * q;
-                double m[c+1][c+1];
-                double a[c+1][c+1];
-                double jac[c+1][c+1];
                 int kk = 0;
-                int ll = 0;
-                // Copy subsets
                 for (k=ii; k<=ii+c; k++) {
+                    int ll = 0;
                     for (l=jj; l<=jj+c; l++) {
-                        m[kk][ll] = massMatrix[k][l];
-                        a[kk][ll] = stiffMatrix[k][l];
-                        if (viscNewtonLin == YES) jac[kk][ll] = jacM[k][l];
+                        m[kk][ll] = &massMatrix[k][l];
+                        a[kk][ll] = &stiffMatrix[k][l];
+                        if (viscNewtonLin == YES) jac[kk][ll] = &jacM[k][l];
                         ll++;
                     }
                     kk++;
@@ -666,34 +675,34 @@
                 // Mass matrix
                 // Momentum equations
                 for (i=0; i<dim; i++) {
-                    m[i][i] = m[i][i] + s * rho * basis[q] * basis[p];
+                    *(m[i][i]) = *(m[i][i]) + s * rho * basis[q] * basis[p];
                 }
                 
                 // Mass for the continuity equation (in terms of pressure)
                 if (compressibilityModel == perfect_gas1) {
-                    m[c][c] = m[c][c] + s * (rho / pressure) * basis[q] * baseP;
+                    *(m[c][c]) = *(m[c][c]) + s * (rho / pressure) * basis[q] * baseP;
                 } else if (compressibilityModel == user_defined2) {
-                    m[c][c] = m[c][c] + s * drhodp * basis[q] * baseP;
+                    *(m[c][c]) = *(m[c][c]) + s * drhodp * basis[q] * baseP;
                 }
                 
                 // Stiffness matrix
                 // Rotating coordinates
                 if (rotating == YES) {
                     massCoeff = 2.0 * s * rho *basis[q] * basis[p];
-                    a[0][1] = a[0][1] - massCoeff * omega[2];
-                    a[1][0] = a[1][0] + massCoeff * omega[2];
+                    *(a[0][1]) = *(a[0][1]) - massCoeff * omega[2];
+                    *(a[1][0]) = *(a[1][0]) + massCoeff * omega[2];
                     if (dim == 3) {
-                        a[0][2] = a[0][2] + massCoeff * omega[1];
-                        a[1][2] = a[1][2] - massCoeff * omega[0];
-                        a[2][1] = a[2][1] + massCoeff * omega[0];
-                        a[2][0] = a[2][0] - massCoeff * omega[1];
+                        *(a[0][2]) = *(a[0][2]) + massCoeff * omega[1];
+                        *(a[1][2]) = *(a[1][2]) - massCoeff * omega[0];
+                        *(a[2][1]) = *(a[2][1]) + massCoeff * omega[0];
+                        *(a[2][0]) = *(a[2][0]) - massCoeff * omega[1];
                     }
                 }
                 
                 // Possible Porous media effects
                 if (porous == YES) {
                     for (i=0; i<dim; i++) {
-                        a[i][i] = a[i][i] + s * mu * drag[i] * basis[q] * basis[p];
+                        *(a[i][i]) = *(a[i][i]) + s * mu * drag[i] * basis[q] * basis[p];
                     }
                 }
                 
@@ -715,7 +724,7 @@
                     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 3, 3, 6, 1.0, (double *)g, 6, (double *)b, 3, 0.0, (double *)c, 3);
                     for (i=0; i<3; i++) {
                         for (j=0; j<3; j++) {
-                            a[i][j] = a[i][j] + s * c[i][j];
+                            *(a[i][j]) = *(a[i][j]) + s * c[i][j];
                         }
                     }
                 }
@@ -732,7 +741,7 @@
                             for (k=0; k<3; k++) {
                                 sum = sum + strain[j][k] * basisFirstDerivative[p][k];
                             }
-                            jac[j][i] = jac[j][i] + s * 2.0 * muder * sum;
+                            *(jac[j][i]) = *(jac[j][i]) + s * 2.0 * muder * sum;
                         }
                     }
                 }
@@ -740,53 +749,53 @@
                 for (i=0; i<dim; i++) {
                     for (j=0; j<dim; j++) {
                         if (isotropic == YES) {
-                            a[i][i] = a[i][i] + s * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][j];
+                            *(a[i][i]) = *(a[i][i]) + s * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][j];
                             if (divDiscretization == YES) {
-                                a[i][j] = a[i][j] + s * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][i];
+                                *(a[i][j]) = *(a[i][j]) + s * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][i];
                             } else if (laplaceDiscretization == NO) {
-                                a[i][j] = a[i][j] + s * mu * basisFirstDerivative[q][i] * basisFirstDerivative[p][j];
+                                *(a[i][j]) = *(a[i][j]) + s * mu * basisFirstDerivative[q][i] * basisFirstDerivative[p][j];
                             }
                             
                             // For compressible flow add grad((2/3) \mu div(u))
                             if (compressible == YES) {
-                                a[i][j] = a[i][j] - s * (2.0 / 3.0) * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][i];
+                                *(a[i][j]) = *(a[i][j]) - s * (2.0 / 3.0) * mu * basisFirstDerivative[q][j] * basisFirstDerivative[p][i];
                             }
                         }
                         
                         if (convect == YES) {
-                            a[i][i] = a[i][i] + s * rho * basisFirstDerivative[q][j] * velo[j] * basis[p];
+                            *(a[i][i]) = *(a[i][i]) + s * rho * basisFirstDerivative[q][j] * velo[j] * basis[p];
                         }
                     }
                     // Pressure terms
                     if (gradPDriscretization == YES) {
-                        a[i][c] = a[i][c] + s * basisFirstDerivative[q][i] * basis[p];
+                        *(a[i][c]) = *(a[i][c]) + s * basisFirstDerivative[q][i] * basis[p];
                     } else {
-                        a[i][c] = a[i][c] - s * basis[q] * basisFirstDerivative[p][i];
+                        *(a[i][c]) = *(a[i][c]) - s * basis[q] * basisFirstDerivative[p][i];
                     }
                     
                     // Continuity equation
                     if (gradPDriscretization == YES) {
-                        a[c][i] = a[c][i] - s * rho * basis[q] * basisFirstDerivative[p][i];
+                        *(a[c][i]) = *(a[c][i]) - s * rho * basis[q] * basisFirstDerivative[p][i];
                     } else {
                         if (compressible == YES || convect == YES) {
-                            a[c][i] = a[c][i] + s * rho * basisFirstDerivative[q][i] * baseP;
+                            *(a[c][i]) = *(a[c][i]) + s * rho * basisFirstDerivative[q][i] * baseP;
                         } else {
-                            a[c][i] = a[c][i] + s * basisFirstDerivative[q][i] * baseP;
+                            *(a[c][i]) = *(a[c][i]) + s * basisFirstDerivative[q][i] * baseP;
                         }
                         
                         switch (compressibilityModel) {
                             case perfect_gas1:
-                                a[c][i] = a[c][i] + s * (rho / pressure) * basis[q] * dPressuredx[i] * baseP / 2.0;
-                                a[c][c] = a[c][c] + s * (rho / pressure) * velo[i] * basisFirstDerivative[q][i] * baseP / 2.0;
-                                a[c][c] = a[c][c] - s * (rho / (temperature * pressure) ) * dTemperaturedx[i] * basis[q] * baseP;
+                                *(a[c][i]) = *(a[c][i]) + s * (rho / pressure) * basis[q] * dPressuredx[i] * baseP / 2.0;
+                                *(a[c][c]) = *(a[c][c]) + s * (rho / pressure) * velo[i] * basisFirstDerivative[q][i] * baseP / 2.0;
+                                *(a[c][c]) = *(a[c][c]) - s * (rho / (temperature * pressure) ) * dTemperaturedx[i] * basis[q] * baseP;
                                 break;
                             case user_defined1:
                             case thermal:
-                                a[c][i] = a[c][i] + s * dRhodx[i] * basis[q] * baseP;
+                                *(a[c][i]) = *(a[c][i]) + s * dRhodx[i] * basis[q] * baseP;
                                 break;
                             case user_defined2:
-                                a[c][c] = a[c][c] + s * drhodp * basisFirstDerivative[q][i] * velo[i] * baseP / 2.0;
-                                a[c][i] = a[c][i] + s * drhodp * dPressuredx[i] * basis[q] * baseP / 2.0;
+                                *(a[c][c]) = *(a[c][c]) + s * drhodp * basisFirstDerivative[q][i] * velo[i] * baseP / 2.0;
+                                *(a[c][i]) = *(a[c][i]) + s * drhodp * dPressuredx[i] * basis[q] * baseP / 2.0;
                                 break;
                         }
                     }
@@ -794,14 +803,14 @@
                 
                 // Artificial compressibility, affects only the continuity equation
                 if (pseudoCompressible == YES) {
-                    a[c][c] = a[c][c] + s * compress * basis[q] * baseP;
+                    *(a[c][c]) = *(a[c][c]) + s * compress * basis[q] * baseP;
                 }
                 
                 // Convection, Newton linearization
                 if (convect == YES && newtonLinearization == YES) {
                     for (i=0; i<dim; i++) {
                         for (j=0; j<dim; j++) {
-                            a[i][j] = a[i][j] + s * rho * grad[i][j] * basis[q] * basis[p];
+                            *(a[i][j]) = *(a[i][j]) + s * rho * grad[i][j] * basis[q] * basis[p];
                         }
                     }
                 }
@@ -810,10 +819,10 @@
                 if (stabilize == YES) {
                     for (i=0; i<dim; i++) {
                         for (j=0; j<c+1; j++) {
-                            m[j][i] = m[j][i] + s * tau * rho * basis[q] * sw[p][j][i];
+                            *(m[j][i]) = *(m[j][i]) + s * tau * rho * basis[q] * sw[p][j][i];
                         }
                         for (j=0; j<dim; j++) {
-                            a[j][i] = a[j][i] + s * delta * basisFirstDerivative[q][i] * basisFirstDerivative[p][j];
+                            *(a[j][i]) = *(a[j][i]) + s * delta * basisFirstDerivative[q][i] * basisFirstDerivative[p][j];
                         }
                     }
                     double aa[c+1][dim];
@@ -826,79 +835,66 @@
                     }
                     for (i=0; i<dim; i++) {
                         for (j=0; j<c+1; j++) {
-                            bb[i][j] = sw[q][i][j];
+                            bb[i][j] = su[q][i][j];
                         }
                     }
                     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, c+1, c+1, dim, 1.0, (double *)aa, dim, (double *)bb, c+1, 0.0, (double *)cc, c+1);
                     for (i=0; i<c+1; i++) {
                         for (j=0; j<c+1; j++) {
-                            a[i][j] = a[i][j] + s * tau * cc[i][j];
+                            *(a[i][j]) = *(a[i][j]) + s * tau * cc[i][j];
                         }
                     }
                 } else if (vms == YES) {
                     for (i=0; i<dim; i++) {
                         // (rho*u', grad(q))
-                        m[dim][i] = m[dim][i] + s * rho * tau_m * rho * basis[q] * basisFirstDerivative[p][i];
+                        *(m[dim][i]) = *(m[dim][i]) + s * rho * tau_m * rho * basis[q] * basisFirstDerivative[p][i];
                         for (k=0; k<dim+1; k++) {
-                            a[dim][k] = a[dim][k] + s * rho * tau_m * rm[q][i][k] * basisFirstDerivative[p][i];
+                            *(a[dim][k]) = *(a[dim][k]) + s * rho * tau_m * rm[q][i][k] * basisFirstDerivative[p][i];
                         }
                         
                         for (j=0; j<dim; j++) {
                             // -(rho*u'*grad(u), w)
-                            m[i][j] = m[i][j] - s * rho *tau_m * rho * basis[q] * grad[i][j] * basis[p];
+                            *(m[i][j]) = *(m[i][j]) - s * rho *tau_m * rho * basis[q] * grad[i][j] * basis[p];
                             for (k=0; k<dim+1; k++) {
-                                a[i][k] = a[i][k] - s * rho * tau_m * rm[q][j][k] * grad[i][j] * basis[p] / 2.0;
+                                *(a[i][k]) = *(a[i][k]) - s * rho * tau_m * rm[q][j][k] * grad[i][j] * basis[p] / 2.0;
                             }
-                            a[i][i] = a[i][i] - s * rho * tau_m * prm[j] * basisFirstDerivative[q][j] * basis[p] / 2.0;
-                            a[i][i] = a[i][i] + s * rho * tau_m * rho * force[j] * basisFirstDerivative[q][j] * basis[p];
+                            *(a[i][i]) = *(a[i][i]) - s * rho * tau_m * prm[j] * basisFirstDerivative[q][j] * basis[p] / 2.0;
+                            *(a[i][i]) = *(a[i][i]) + s * rho * tau_m * rho * force[j] * basisFirstDerivative[q][j] * basis[p];
                             
                             // (rho*u', u.grad(w))
-                            m[i][i] = m[i][i] + s * rho * tau_m * rho * basis[q] * velo[j] * basisFirstDerivative[p][j];
+                            *(m[i][i]) = *(m[i][i]) + s * rho * tau_m * rho * basis[q] * velo[j] * basisFirstDerivative[p][j];
                             for (k=0; k<dim+1; k++) {
-                                a[i][k] = a[i][k] + s * rho * tau_m * rm[q][i][k] * velo[j] * basisFirstDerivative[p][j] / 2.0;
+                                *(a[i][k]) = *(a[i][k]) + s * rho * tau_m * rm[q][i][k] * velo[j] * basisFirstDerivative[p][j] / 2.0;
                             }
-                            a[i][j] = a[i][j] + s * rho * tau_m * prm[i] * basis[q] * basisFirstDerivative[p][j] / 2.0;
-                            a[i][j] = a[i][j] - s * rho * tau_m * rho * force[i] * basis[q] * basisFirstDerivative[p][j];
+                            *(a[i][j]) = *(a[i][j]) + s * rho * tau_m * prm[i] * basis[q] * basisFirstDerivative[p][j] / 2.0;
+                            *(a[i][j]) = *(a[i][j]) - s * rho * tau_m * rho * force[i] * basis[q] * basisFirstDerivative[p][j];
                         }
                         
                         // (rho*div(u'), div(w))
                         for (j=0; j<dim; j++) {
-                            a[i][j] = a[i][j] + s * rho * tau_c * rm[q][dim][j] * basisFirstDerivative[p][i];
+                            *(a[i][j]) = *(a[i][j]) + s * rho * tau_c * rm[q][dim][j] * basisFirstDerivative[p][i];
                         }
                         
                         // -(rho*u'*u', grad(w))
                         for (j=0; j<dim; j++) {
                             for (k=0; k<dim+1; k++) {
-                                a[i][k] = a[i][k] - s * rho * pow(tau_m, 2.0) * rm[q][i][k] * prm[j] * basisFirstDerivative[p][j] / 2.0;
-                                a[i][k] = a[i][k] - s * rho * pow(tau_m, 2.0) * prm[i] * rm[q][j][k] * basisFirstDerivative[p][j] / 2.0;
+                                *(a[i][k]) = *(a[i][k]) - s * rho * pow(tau_m, 2.0) * rm[q][i][k] * prm[j] * basisFirstDerivative[p][j] / 2.0;
+                                *(a[i][k]) = *(a[i][k]) - s * rho * pow(tau_m, 2.0) * prm[i] * rm[q][j][k] * basisFirstDerivative[p][j] / 2.0;
                                 
-                                a[i][k] = a[i][k] + s * rho * pow(tau_m, 2.0) * rm[q][i][k] * rho * force[j] * basisFirstDerivative[p][j];
-                                a[i][k] = a[i][k] + s * rho * pow(tau_m, 2.0) * rho * force[i] * rm[q][j][k] * basisFirstDerivative[p][j];
+                                *(a[i][k]) = *(a[i][k]) + s * rho * pow(tau_m, 2.0) * rm[q][i][k] * rho * force[j] * basisFirstDerivative[p][j];
+                                *(a[i][k]) = *(a[i][k]) + s * rho * pow(tau_m, 2.0) * rho * force[i] * rm[q][j][k] * basisFirstDerivative[p][j];
                             }
                             
-                            m[i][i] = m[i][i] - s * rho * pow(tau_m, 2.0) * rho * basis[q] * prm[j] * basisFirstDerivative[p][j];
-                            m[i][j] = m[i][j] - s * rho * pow(tau_m, 2.0) * prm[i] * rho * basis[q] * basisFirstDerivative[p][j];
+                            *(m[i][i]) = *(m[i][i]) - s * rho * pow(tau_m, 2.0) * rho * basis[q] * prm[j] * basisFirstDerivative[p][j];
+                            *(m[i][j]) = *(m[i][j]) - s * rho * pow(tau_m, 2.0) * prm[i] * rho * basis[q] * basisFirstDerivative[p][j];
                             
-                            m[i][i] = m[i][i] + s * rho * pow(tau_m, 2.0) * rho * basis[q] * rho * force[j] * basisFirstDerivative[p][j];
-                            m[i][j] = m[i][j] + s * rho * pow(tau_m, 2.0) * rho * basis[q] * rho * force[i] * basisFirstDerivative[p][j];
+                            *(m[i][i]) = *(m[i][i]) + s * rho * pow(tau_m, 2.0) * rho * basis[q] * rho * force[j] * basisFirstDerivative[p][j];
+                            *(m[i][j]) = *(m[i][j]) + s * rho * pow(tau_m, 2.0) * rho * basis[q] * rho * force[i] * basisFirstDerivative[p][j];
                             
-                            m[i][i] = m[i][i] - s * rho * pow(tau_m, 2.0) * rho * basis[q] * pVelo[j] * basisFirstDerivative[p][j];
-                            m[i][j] = m[i][j] - s * rho * pow(tau_m, 2.0) * pVelo[i] * rho * basis[q] * basisFirstDerivative[p][j];
+                            *(m[i][i]) = *(m[i][i]) - s * rho * pow(tau_m, 2.0) * rho * basis[q] * pVelo[j] * basisFirstDerivative[p][j];
+                            *(m[i][j]) = *(m[i][j]) - s * rho * pow(tau_m, 2.0) * pVelo[i] * rho * basis[q] * basisFirstDerivative[p][j];
                         }
                     }
-                }
-                
-                // Copy back
-                kk = 0.0;
-                ll = 0.0;
-                for (k=ii; k<=ii+c; k++) {
-                    for (l=jj; l<=jj+c; l++) {
-                        massMatrix[k][l] = m[kk][ll];
-                        stiffMatrix[k][l] = a[kk][ll];
-                        if (viscNewtonLin) jacM[k][l] = jac[kk][ll];
-                        ll++;
-                    }
-                    kk++;
                 }
             }
         }
@@ -906,46 +902,41 @@
         // The right hand side...
         for (p=0; p<nBasis; p++) {
             int ii = (c+1) * p;
-            double load[c+1];
             int kk = 0.0;
-            // Copy subset
             for (k=ii; k<=ii+c; k++) {
-                load[kk] = forceVector[k];
+                load[kk] = &forceVector[k];
                 kk++;
             }
             
             for (i=0; i<c+1; i++) {
-                load[i] = load[i] + s * rho * force[i] * basis[p];
+                *(load[i]) = *(load[i]) + s * rho * force[i] * basis[p];
             }
-            if (compressibilityModel == perfect_gas1) load[c] = load[c] / temperature;
+            if (compressibilityModel == perfect_gas1) *(load[c]) = *(load[c]) / temperature;
             
             if (pseudoCompressible == YES) {
-                load[c] = load[c] + s * pressure * basis[p] * compress;
+                *(load[c]) = *(load[c]) + s * pressure * basis[p] * compress;
             }
             
             if (stabilize == YES) {
                 for (i=0; i<dim; i++) {
                     for (j=0; j<c+1; j++) {
-                        load[j] = load[j] + s * tau * rho * force[i] * sw[p][j][i];
+                        *(load[j]) = *(load[j]) + s * tau * rho * force[i] * sw[p][j][i];
                     }
                 }
             } else if (vms == YES) {
                 for (i=0; i<dim; i++) {
                     for (j=0; j<dim; j++) {
-                        load[i] = load[i] - s * rho * pow(tau_m, 2.0) * rho * force[i] * rho * force[j] * basisFirstDerivative[p][j];
+                        *(load[i]) = *(load[i]) - s * rho * pow(tau_m, 2.0) * rho * force[i] * rho * force[j] * basisFirstDerivative[p][j];
                     }
-                    load[dim] = load[dim] + s * rho * tau_m * rho * force[i] * basisFirstDerivative[p][i];
+                    *(load[dim]) = *(load[dim]) + s * rho * tau_m * rho * force[i] * basisFirstDerivative[p][i];
                 }
-            }
-            
-            // Copy back
-            kk = 0.0;
-            for (k=ii; k<=ii+c; k++) {
-                forceVector[k] = load[kk];
-                kk++;
             }
         }
     }
+    free(m);
+    free(a);
+    free(jac);
+    free(load);
     
     if (viscNewtonLin == YES) {
         double sol[8*n];

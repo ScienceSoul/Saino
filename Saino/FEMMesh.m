@@ -1180,7 +1180,7 @@
     
     // Mesh variables containers are entirelly deallocated here unless they are a component variable,
     // a secondary or a component secondary variable. In that case they are deallocated inside
-    // the solution.
+    // solution.variable.
     
     variableArraysContainer *varContainers = NULL;
     
@@ -1193,12 +1193,12 @@
         if ([variable.name isEqualToString:@"coordinate 1"] || [variable.name isEqualToString:@"coordinate 2"] ||
                 [variable.name isEqualToString:@"coordinate 3"]) continue;
         
+        if (variable.isComponentVariable == YES || variable.isSecondary == YES || variable.isComponentSecondaryVariable == YES) continue;
+        
         if (varContainers->Perm != NULL) {
             free_ivector(varContainers->Perm, 0, varContainers->sizePerm-1);
             varContainers->Perm = NULL;
         }
-        
-        if (variable.isComponentVariable == YES || variable.isSecondary == YES || variable.isComponentSecondaryVariable == YES) continue;
         
         if (varContainers->Values != NULL) {
             free_dvector(varContainers->Values, 0, varContainers->sizeValues-1);

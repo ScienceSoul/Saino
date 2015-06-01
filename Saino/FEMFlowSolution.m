@@ -1076,17 +1076,23 @@
                 found = listGetRealArrayIMP(listUtilities, @selector(listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer:), model, materialAtID.valuesList, @"porous resistivity", n, element->NodeIndexes, &pwrk);
                 if (found == NO) {
                     found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"porous resistivity 1", &vector, listUtilities);
-                    for (i=0; i<n; i++) {
-                        _drag[0][i] = vector.vector[i];
+                    if (found == YES) {
+                        for (i=0; i<n; i++) {
+                            _drag[0][i] = vector.vector[i];
+                        }
                     }
                     found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"porous resistivity 2", &vector, listUtilities);
-                    for (i=0; i<n; i++) {
-                        _drag[1][i] = vector.vector[i];
+                    if (found == YES) {
+                        for (i=0; i<n; i++) {
+                            _drag[1][i] = vector.vector[i];
+                        }
                     }
                     if (_nsdofs-1 > 2) {
                         found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, materialAtID.valuesList, @"porous resistivity 3", &vector, listUtilities);
-                        for (i=0; i<n; i++) {
-                            _drag[2][i] = vector.vector[i];
+                        if (found == YES) {
+                            for (i=0; i<n; i++) {
+                                _drag[2][i] = vector.vector[i];
+                            }
                         }
                     }
                 } else if (pwrk.m == 1) {
@@ -1151,17 +1157,23 @@
                 }
                 
                 found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"flow bodyforce 1", &vector, listUtilities);
-                for (i=0; i<n; i++) {
-                    _loadVector[0][i] = _loadVector[0][i] + vector.vector[i];
+                if (found == YES) {
+                    for (i=0; i<n; i++) {
+                        _loadVector[0][i] = _loadVector[0][i] + vector.vector[i];
+                    }
                 }
                 found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"flow bodyforce 2", &vector, listUtilities);
-                for (i=0; i<n; i++) {
-                    _loadVector[1][i] = _loadVector[1][i] + vector.vector[i];
+                if (found == YES) {
+                    for (i=0; i<n; i++) {
+                        _loadVector[1][i] = _loadVector[1][i] + vector.vector[i];
+                    }
                 }
                 if (_nsdofs > 3) {
                     found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"flow bodyforce 3", &vector, listUtilities);
-                    for (i=0; i<n; i++) {
-                        _loadVector[2][i] = _loadVector[2][i] + vector.vector[i];
+                    if (found == YES) {
+                        for (i=0; i<n; i++) {
+                            _loadVector[2][i] = _loadVector[2][i] + vector.vector[i];
+                        }
                     }
                 }
                 
@@ -1312,7 +1324,7 @@
                     if (found == YES) memcpy(_extPressure, vector.vector, n*sizeof(double));
                 }
                 
-                // Tangential force BS:
+                // Tangential force BC:
                 // \tau \cdot n = @\beta/@t (tangential derivative of something)
                 if (tempSol != nil) {
                     found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bc, @"surface tension expansion coefficient", &vector, listUtilities);
@@ -1323,8 +1335,10 @@
                             if (k >= 0) _beta[j] = 1.0 - _beta[j] * temperature[k];
                         }
                         found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bc, @"surface tension coefficient", &vector, listUtilities);
-                        for (j=0; j<n; j++) {
-                            _beta[j] = _beta[j] * vector.vector[j];
+                        if (found == YES) {
+                            for (j=0; j<n; j++) {
+                                _beta[j] = _beta[j] * vector.vector[j];
+                            }
                         }
                     } else {
                         found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bc, @"surface tension coefficient", &vector, listUtilities);
