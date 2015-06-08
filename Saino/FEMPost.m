@@ -259,33 +259,33 @@
         
         if (variable.type != VARIABLE_ON_NODES) continue;
         
-        if ([variable.name isEqualToString:@"mesh update"] == YES) {
+        if ([[variable canonicalizeName] isEqualToString:@"mesh update"] == YES) {
             found = NO;
             for (FEMVariable *var1 in model.variables) {
-                if ([var1.name isEqualToString:@"displacement"] == YES) {
+                if ([[var1 canonicalizeName] isEqualToString:@"displacement"] == YES) {
                     found = YES;
                     break;
                 }
             }
             if (found == NO) dofs = dofs + 3;
-        } else if ([variable.name isEqualToString:@"mesh update 1"] == YES || [variable.name isEqualToString:@"mesh update 2"] == YES ||
-                   [variable.name isEqualToString:@"mesh update 3"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"mesh update 1"] == YES || [[variable canonicalizeName] isEqualToString:@"mesh update 2"] == YES ||
+                   [[variable canonicalizeName] isEqualToString:@"mesh update 3"] == YES) {
             // No ops
-        } else if ([variable.name isEqualToString:@"displacement"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"displacement"] == YES) {
             dofs = dofs + 3;
             if (varContainers->CValues != NULL) dofs = dofs + 3;
-        } else if ([variable.name isEqualToString:@"displacement 1"] == YES || [variable.name isEqualToString:@"displacement 2"] == YES ||
-                   [variable.name isEqualToString:@"displacement 3"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"displacement 1"] == YES || [[variable canonicalizeName] isEqualToString:@"displacement 2"] == YES ||
+                   [[variable canonicalizeName] isEqualToString:@"displacement 3"] == YES) {
             // No ops
-        } else if ([variable.name isEqualToString:@"flow solution"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"flow solution"] == YES) {
             dofs = dofs + 4;
-        } else if ([variable.name isEqualToString:@"velocity 1"] == YES || [variable.name isEqualToString:@"velocity 2"] == YES ||
-                   [variable.name isEqualToString:@"velocity 3"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"velocity 1"] == YES || [[variable canonicalizeName] isEqualToString:@"velocity 2"] == YES ||
+                   [[variable canonicalizeName] isEqualToString:@"velocity 3"] == YES || [[variable canonicalizeName] isEqualToString:@"pressure"] == YES) {
             // No ops
-        } else if ([variable.name isEqualToString:@"magnetic field"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field"] == YES) {
             dofs = dofs + 3;
-        } else if ([variable.name isEqualToString:@"magnetic field 1"] == YES || [variable.name isEqualToString:@"magnetic field 2"] == YES ||
-                   [variable.name isEqualToString:@"magnetic field 3"] == YES) {
+        } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field 1"] == YES || [[variable canonicalizeName] isEqualToString:@"magnetic field 2"] == YES ||
+                   [[variable canonicalizeName] isEqualToString:@"magnetic field 3"] == YES) {
             // No ops
         } else {
             nDofs = 1;
@@ -317,11 +317,12 @@
                             i++;
                         }
                         k = [[[str substringFromIndex:ind1.location+1] substringToIndex:i-(ind1.location+1)] intValue];
-                        dofs = dofs + nDofs*k;
+                        dofs = dofs + nDofs * k;
                         if (k == 2) dofs = dofs + nDofs;
                         while ([str characterAtIndex:i] == ' ') {
                             i++;
                         }
+                        if ([str characterAtIndex:i] == ']') break;
                         j = i;
                     }
                 }
@@ -352,10 +353,10 @@
             
             if (variable.type != VARIABLE_ON_NODES) continue;
             
-            if ([variable.name isEqualToString:@"mesh update"] == YES) {
+            if ([[variable canonicalizeName] isEqualToString:@"mesh update"] == YES) {
                 found = NO;
                 for (FEMVariable *var1 in model.variables) {
-                    if ([var1.name isEqualToString:@"displacement"] == YES) {
+                    if ([[var1 canonicalizeName] isEqualToString:@"displacement"] == YES) {
                         found = YES;
                         break;
                     }
@@ -366,30 +367,30 @@
                 } else {
                     meshUpdate = variable;
                 }
-            } else if ([variable.name isEqualToString:@"mesh update 1"] == YES || [variable.name isEqualToString:@"mesh update 2"] == YES ||
-                       [variable.name isEqualToString:@"mesh update 3"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"mesh update 1"] == YES || [[variable canonicalizeName] isEqualToString:@"mesh update 2"] == YES ||
+                       [[variable canonicalizeName] isEqualToString:@"mesh update 3"] == YES) {
                 // No ops
-            } else if ([variable.name isEqualToString:@"displacement"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"displacement"] == YES) {
                 [self FEMPost_writeString:@" vector: Displacement" toFileHandle:postFileHandle];
                 if (varContainers->CValues != NULL) {
                     [self FEMPost_writeString:@" vector: Displacement.im" toFileHandle:postFileHandle];
                 }
                 displacement = variable;
-            } else if ([variable.name isEqualToString:@"displacement 1"] == YES || [variable.name isEqualToString:@"displacement 2"] == YES ||
-                       [variable.name isEqualToString:@"displacement 3"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"displacement 1"] == YES || [[variable canonicalizeName] isEqualToString:@"displacement 2"] == YES ||
+                       [[variable canonicalizeName] isEqualToString:@"displacement 3"] == YES) {
                 // No ops
-            } else if ([variable.name isEqualToString:@"flow solution"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"flow solution"] == YES) {
                 [self FEMPost_writeString:@" vector: Velocity scalar: Pressure" toFileHandle:postFileHandle];
-            } else if ([variable.name isEqualToString:@"velocity 1"] == YES || [variable.name isEqualToString:@"velocity 2"] == YES ||
-                       [variable.name isEqualToString:@"velocity 3"] == YES || [variable.name isEqualToString:@"pressure"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"velocity 1"] == YES || [[variable canonicalizeName] isEqualToString:@"velocity 2"] == YES ||
+                       [[variable canonicalizeName] isEqualToString:@"velocity 3"] == YES || [[variable canonicalizeName] isEqualToString:@"pressure"] == YES) {
                 // No ops
-            } else if ([variable.name isEqualToString:@"magnetic field"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field"] == YES) {
                 [self FEMPost_writeString:@" vector: Magfield" toFileHandle:postFileHandle];
-            } else if ([variable.name isEqualToString:@"magnetic field 1"] == YES || [variable.name isEqualToString:@"magnetic field 2"] == YES ||
-                       [variable.name isEqualToString:@"magnetic field 3"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field 1"] == YES || [[variable canonicalizeName] isEqualToString:@"magnetic field 2"] == YES ||
+                       [[variable canonicalizeName] isEqualToString:@"magnetic field 3"] == YES) {
                 // No ops
-            } else if ([variable.name isEqualToString:@"coordinate 1"] == YES || [variable.name isEqualToString:@"coordinate 2"] == YES ||
-                       [variable.name isEqualToString:@"coordinate 3"] == YES) {
+            } else if ([[variable canonicalizeName] isEqualToString:@"coordinate 1"] == YES || [[variable canonicalizeName] isEqualToString:@"coordinate 2"] == YES ||
+                       [[variable canonicalizeName] isEqualToString:@"coordinate 3"] == YES) {
                 // No ops
             } else {
                 if (variable.dofs == 1) {
@@ -464,6 +465,7 @@
                             while ([str characterAtIndex:i] == ' ') {
                                 i++;
                             }
+                            if ([str characterAtIndex:i] == ']') break;
                             j = i;
                         }
                     }
@@ -713,10 +715,10 @@
                 if (varContainers->sizeValues == variable.dofs) continue;
                 if (variable.type != VARIABLE_ON_NODES) continue;
                 
-                if ([variable.name isEqualToString:@"mesh update"] == YES) {
+                if ([[variable canonicalizeName] isEqualToString:@"mesh update"] == YES) {
                     found = NO;
                     for (FEMVariable *var1 in model.variables) {
-                        if ([var1 isEqualTo:@"displacement"] == YES) {
+                        if ([[var1 canonicalizeName] isEqualTo:@"displacement"] == YES) {
                             found = YES;
                             break;
                         }
@@ -739,10 +741,10 @@
                             [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
                     }
-                } else if ([variable.name isEqualToString:@"mesh update 1"] == YES || [variable.name isEqualToString:@"mesh update 2"] == YES ||
-                           [variable.name isEqualToString:@"mesh update 3"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"mesh update 1"] == YES || [[variable canonicalizeName] isEqualToString:@"mesh update 2"] == YES ||
+                           [[variable canonicalizeName] isEqualToString:@"mesh update 3"] == YES) {
                     // No ops
-                } else if ([variable.name isEqualToString:@"displacement"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"displacement"] == YES) {
                     k = i;
                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                     if (k >= 0) {
@@ -773,7 +775,7 @@
                     } else {
                         found = NO;
                         for (FEMVariable *var1 in model.variables) {
-                            if ([var1.name isEqualToString:@"mesh update"] == YES) {
+                            if ([[var1 canonicalizeName] isEqualToString:@"mesh update"] == YES) {
                                 var1Containers = var1.getContainers;
                                 k = i;
                                 if (var1Containers->Perm != NULL) k = var1Containers->Perm[k];
@@ -810,10 +812,10 @@
                         }
                     }
                 }
-                else if ([variable.name isEqualToString:@"displacement 1"] == YES || [variable.name isEqualToString:@"displacement 2"] ||
-                         [variable.name isEqualToString:@"displacement 3"] == YES) {
+                else if ([[variable canonicalizeName] isEqualToString:@"displacement 1"] == YES || [[variable canonicalizeName] isEqualToString:@"displacement 2"] ||
+                         [[variable canonicalizeName] isEqualToString:@"displacement 3"] == YES) {
                     // No ops
-                } else if ([variable.name isEqualToString:@"flow solution"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"flow solution"] == YES) {
                     k = i;
                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                     if (k >= 0) {
@@ -824,7 +826,7 @@
                         if (variable.dofs < 4) {
                             [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
-                        [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k] toFileHandle:postFileHandle];
+                        [self FEMPost_writeDouble:varContainers->Values[variable.dofs*(k+1)-1] toFileHandle:postFileHandle];
                         [postFileHandle writeData:spaceBuff];
                     } else {
                         [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
@@ -832,10 +834,10 @@
                         [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                     }
-                } else if ([variable.name isEqualToString:@"velocity 1"] == YES || [variable.name isEqualToString:@"velocity 2"] == YES ||
-                           [variable.name isEqualToString:@"velocity 3"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"velocity 1"] == YES || [[variable canonicalizeName] isEqualToString:@"velocity 2"] == YES ||
+                           [[variable canonicalizeName] isEqualToString:@"velocity 3"] == YES || [[variable canonicalizeName] isEqualToString:@"pressure"] == YES) {
                     // No ops
-                } else if ([variable.name isEqualToString:@"magnetic field"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field"] == YES) {
                     k = i;
                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                     if (k >= 0) {
@@ -851,11 +853,11 @@
                         [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                     }
-                } else if ([variable.name isEqualToString:@"magnetic field 1"] == YES || [variable.name isEqualToString:@"magnetic field 2"] == YES ||
-                           [variable.name isEqualToString:@"magnetic field 3"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field 1"] == YES || [[variable canonicalizeName] isEqualToString:@"magnetic field 2"] == YES ||
+                           [[variable canonicalizeName] isEqualToString:@"magnetic field 3"] == YES) {
                     // No ops
-                } else if ([variable.name isEqualToString:@"coordinate 1"] == YES || [variable.name isEqualToString:@"coordinate 2"] == YES ||
-                           [variable.name isEqualToString:@"coordinate 3"] == YES) {
+                } else if ([[variable canonicalizeName] isEqualToString:@"coordinate 1"] == YES || [[variable canonicalizeName] isEqualToString:@"coordinate 2"] == YES ||
+                           [[variable canonicalizeName] isEqualToString:@"coordinate 3"] == YES) {
                     // No ops
                 } else {
                     if (variable.dofs == 1) {
@@ -883,7 +885,6 @@
                             dofs = 0;
                             j = 0;
                             while (1) {
-                                str = [variable.name substringFromIndex:j];
                                 str = [variable.name substringFromIndex:j];
                                 if (j == 0) {
                                     ind = [variable.name rangeOfString:@"["];
@@ -956,9 +957,10 @@
                                     }
                                 }
                                 dofs = dofs + q;
-                                while ([str characterAtIndex:i] == ' ') {
+                                while ([str characterAtIndex:l] == ' ') {
                                     l++;
                                 }
+                                if ([str characterAtIndex:l] == ']') break;
                                 j = l;
                             }
                         }

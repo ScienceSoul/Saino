@@ -132,6 +132,22 @@
     }
 }
 
+/*
+    Canonicalize the variable name.
+    This means that it the variable name is of the form dummy[dummy1:n1 dummy2:n2] with n1 and n2 two integers,
+    this method will return dummy (that is the standard naming form used by a solution variable).
+    Otherwise it will return the name as it is.
+*/
+-(NSString *)canonicalizeName {
+    
+    NSRange ind = [self.name rangeOfString:@"["];
+    if (ind.location != NSNotFound) {
+        return [self.name substringToIndex:ind.location];
+    } else {
+        return self.name;
+    }
+}
+
 -(variableArraysContainer*)getContainers {
     
     return _containers;

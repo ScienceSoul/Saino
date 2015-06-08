@@ -479,6 +479,8 @@
     self.bodyForces = @[bodyForce];
     self.numberOfBodyForces = 1;
     
+    self.boundaryID = @[@1];
+    
     FEMBoundaryCondition *boundaryCondition = [[FEMBoundaryCondition alloc] init];
     [listUtilities addStringInClassList:boundaryCondition theVariable:@"name" withValue:@"constraint1"];
     vector = intvec(0, 5);
@@ -581,6 +583,8 @@
     self.materials = @[material];
     self.numberOfMaterials = 1;
     
+    self.boundaryID = @[@1, @2, @3];
+    
     FEMBoundaryCondition *boundaryCondition1 = [[FEMBoundaryCondition alloc] init];
     [listUtilities addStringInClassList:boundaryCondition1 theVariable:@"name" withValue:@"inflow"];
     vector = intvec(0, 0);
@@ -588,7 +592,7 @@
     [listUtilities addIntegerArrayInClassList:boundaryCondition1 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
     
-    NSArray *dependencies = @[@"Coordinate 2"];
+    NSArray *dependencies = @[@"coordinate 2"];
     double (^block) (double *) = ^(double *t){
         return (2.0-t[0]) * (t[0]-1.0);
     };
@@ -615,6 +619,9 @@
     [listUtilities addConstRealInClassList:boundaryCondition3 theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
     [listUtilities addConstRealInClassList:boundaryCondition3 theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
     
+    boundaryCondition1.tag = 1;
+    boundaryCondition2.tag = 2;
+    boundaryCondition3.tag = 3;
     self.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3];
     self.numberOfBoundaryConditions = 3;
     

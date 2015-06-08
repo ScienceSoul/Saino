@@ -56,6 +56,7 @@
 @property(nonatomic, assign, getter = isComponentSecondaryVariable) BOOL componentSecondaryVariable;
 
 -(void)deallocation;
+-(NSString *)canonicalizeName;
 -(variableArraysContainer *)getContainers;
           
 @end

@@ -61,9 +61,9 @@
                 errorfunct("FEMListUtilities:listParseStrToValues", "Abort...");
             }
             varContainers = variable.getContainers;
-            if (varContainers->sizeValues > 1) allGlobal = NO;
+            if (varContainers->sizeValues > 1) *allGlobal = NO;
         } else {
-            allGlobal = NO;
+            *allGlobal = NO;
             variable = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
             varContainers = variable.getContainers;
         }
@@ -628,6 +628,8 @@
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array {
     
     char *nameStr = NULL;
+    
+    if (varName == nil) return nil;
     
     if (_nameSpaceChanged == YES) {
         _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];

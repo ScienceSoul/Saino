@@ -69,9 +69,7 @@
     variableArraysContainer *varContainer = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
     
     NSString *name1 = @"dummy";
-    NSString *name2 = @"dummy big dof[dummy1:2 dummy2:1]";
     [self.utilities addVariableTo:storage mesh:nil solution:nil name:name1 dofs:1 container:varContainer component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
-    [self.utilities addVariableTo:storage mesh:nil solution:nil name:name2 dofs:3 container:varContainer component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
     
     BOOL found = NO;
     for (FEMVariable *variable in storage) {
@@ -81,19 +79,6 @@
         }
     }
     XCTAssertTrue(found, @"FEMUtilitiesTests: addVariableTo: failed to properlly add the variable 'dummy'.");
-    
-    found = NO;
-    for (FEMVariable *variable in storage) {
-        if ([variable.name isEqualToString:@"dummy big dof"] == YES) {
-            found = YES;
-            break;
-        }
-    }
-    XCTAssertTrue(found, @"FEMUtilitiesTests: addVariableTo: failed to properlly add variable 'dummy big dof'.");
-    
-     for (FEMVariable *variable in storage) {
-         NSLog(@"%@\n", variable.name);
-     }
 }
 
 @end

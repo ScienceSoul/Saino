@@ -851,23 +851,14 @@
     
     FEMVariable *newVariable;
     variableArraysContainer *varContainers = NULL;
-    NSString *addedName;
-    NSRange ind;
     
     if (aContainer == NULL) {
         NSLog(@"FEMUtilities:addVariableTo: container argument is not allocated.\n");
         errorfunct("FEMUtilities:addVariableTo:", "Program terminating now...");
     }
     
-    ind = [name rangeOfString:@"["];
-    if (ind.location != NSNotFound) {
-        addedName = [name substringToIndex:ind.location];
-    } else {
-        addedName = [NSString stringWithString:name];
-    }
-    
     for (FEMVariable *variable in anArray) {
-        if ([variable.name isEqualToString:addedName] == YES) {
+        if ([variable.name isEqualToString:name] == YES) {
             return; // Variable alreadt exists, don't do anything;
         }
     }
@@ -875,7 +866,7 @@
     newVariable = [[FEMVariable alloc] init];
     varContainers = newVariable.getContainers;
     
-    newVariable.name = addedName;
+    newVariable.name = name;
     
     newVariable.dofs = dofs;
     if (aContainer->Perm != NULL) {
@@ -934,7 +925,7 @@
     newVariable.steadyConverged = -1;
     
     if (secondary != NULL) {
-        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", addedName);
+        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", name);
         newVariable.secondary = *secondary;
     }
     if (aType != NULL) {
@@ -2125,12 +2116,7 @@
                 bufferContainers->Perm = perm;
                 bufferContainers->sizePerm = ndeg;
                 [self addVariableTo:solution.mesh.variables mesh:solution.mesh solution:solution name:varName dofs:dofs container:bufferContainers component:NO ifOutput:&variableOutput ifSecondary:NULL type:NULL];
-                NSRange ind = [varName rangeOfString:@"["];
-                if (ind.location != NSNotFound) {
-                    solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:[varName substringToIndex:ind.location] onlySearch:NULL maskName:NULL info:&found];
-                } else {
-                    solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
-                }
+                solution.variable = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
                                 
                 if (dofs > 1) {
                     for (i=1; i<=dofs; i++) {
@@ -2380,7 +2366,7 @@
     
     // Create the variable needed for this computation of nodal loads: r = b-Ax
     if ([(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) {
-        varName = [NSMutableString stringWithString:solution.variable.name];
+        varName = [NSMutableString stringWithString:[solution.variable canonicalizeName]];
         [varName appendString:@" loads"];
         var = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
         if (var == nil) {
@@ -2474,7 +2460,7 @@
             memset( *variableContainers->PrevValues, 0.0, (variableContainers->size1PrevValues*variableContainers->size2PrevValues)*sizeof(double) );
             
             if (solution.variable.dofs > 1) {
-                if ([solution.variable.name isEqualToString:@"flow solution"]) {
+                if ([[solution.variable canonicalizeName] isEqualToString:@"flow solution"]) {
                     onlySearch = YES;
                     for (k=1; k<=solution.variable.dofs-1; k++) {
                         str = [NSMutableString stringWithString:@"velocity "];

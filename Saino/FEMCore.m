@@ -619,7 +619,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     utilities = [[FEMUtilities alloc] init];
-    nodalLoads = [utilities getVariableFrom:solution.mesh.variables model:model name:[solution.variable.name stringByAppendingString:@" loads"] onlySearch:NULL maskName:NULL info:&found];
+    nodalLoads = [utilities getVariableFrom:solution.mesh.variables model:model name:[[solution.variable canonicalizeName] stringByAppendingString:@" loads"] onlySearch:NULL maskName:NULL info:&found];
     
     matrixAid = solution.matrix;
     // If bulkMatrix is given then it's not nil
@@ -645,7 +645,7 @@ static const int PRECOND_VANKA     =  560;
             energy = [parallelUtil parallelReductionOfValue:energy operArg:NULL];
             [solution.solutionInfo setObject:@(energy) forKey:@"energy norm"];
             name = [NSMutableString stringWithString:@"res: "];
-            [name appendString:solution.variable.name];
+            [name appendString:[solution.variable canonicalizeName]];
             [name appendString:@" energy norm"];
             listUtilities = [[FEMListUtilities alloc] init];
             [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:&energy orUsingBlock:nil string:nil];
@@ -712,11 +712,11 @@ static const int PRECOND_VANKA     =  560;
     }
     
     solution.variable.primaryMesh = solution.mesh;
-    [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:solution.variable.name model:model];
+    [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:[solution.variable canonicalizeName] model:model];
     
     if (nodalLoads != nil) {
         nodalLoads.primaryMesh = solution.mesh;
-        [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:nodalLoads.name model:model];
+        [self invalidateVariableInTopMesh:model.meshes primaryMesh:solution.mesh name:[nodalLoads canonicalizeName] model:model];
     }
     
     // In order to ba able to change the preconditioners or solutions, the old
@@ -779,7 +779,7 @@ static const int PRECOND_VANKA     =  560;
         bf_id = [(model.bodies)[body_id][@"body force"] intValue];
     }
     
-    passName = [NSMutableString stringWithString:solution.variable.name];
+    passName = [NSMutableString stringWithString:[solution.variable canonicalizeName]];
     str = @" passive";
     [passName appendString:str];
     
@@ -1546,7 +1546,7 @@ static const int PRECOND_VANKA     =  560;
                         }
                     } else {
                         for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
-                            k1 = offset + solution.variable.dofs*k + l;
+                            k1 = offset + solution.variable.dofs * k + l;
                             if (solution.matrix.format == MATRIX_SBAND) {
                                 bandMatrix = [[FEMMatrixBand alloc] init];
                                 [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
@@ -1967,7 +1967,7 @@ static const int PRECOND_VANKA     =  560;
     onlySearch = YES;
     loadVar = [utilities getVariableFrom:model.variables model:model name:name onlySearch:&onlySearch maskName:NULL info:&found];
     if (loadVar == nil) {
-        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: no loads associated wit variable %@\n", solution.variable.name);
+        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: no loads associated wit variable %@\n", [solution.variable canonicalizeName]);
         return;
     }
     
@@ -3033,11 +3033,11 @@ static const int PRECOND_VANKA     =  560;
     if (solution.variable.dofs <= 1) return;
     
     [self.normalTangentialName setString:@"normal-tangential"];
-    if ([solution.variable.name isEqualToString:@"flow solution"] == YES) {
+    if ([[solution.variable canonicalizeName] isEqualToString:@"flow solution"] == YES) {
         [self.normalTangentialName appendString:@" velocity"];
     } else {
         [self.normalTangentialName appendString:@" "];
-        [self.normalTangentialName appendString:solution.variable.name];
+        [self.normalTangentialName appendString:[solution.variable canonicalizeName]];
     }
     
     dim = model.dimension;
@@ -4570,7 +4570,10 @@ static const int PRECOND_VANKA     =  560;
 
         bc = 0;
         for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-            if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+            if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                bc++;
+                continue;
+            };
         
             for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
                 
@@ -4625,9 +4628,7 @@ static const int PRECOND_VANKA     =  560;
             
             if (activePart[bf_id] == YES) {
                 n = elements[t].Type.NumberOfNodes;
-                for (i=0; i<n; i++) {
-                    indexes[i] = elements[t].NodeIndexes[i];
-                }
+                memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
             } else {
                 n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
             }
@@ -4832,7 +4833,7 @@ static const int PRECOND_VANKA     =  560;
     orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
     
     bndry_start = model.numberOfBulkElements;
-    bndry_end = bndry_start + model.numberOfBoundaryElements - 1;
+    bndry_end = bndry_start + model.numberOfBoundaryElements;
     
     // Check and set some flags for nodes belonging to n-t boundaries getting set by other bcs
     if (self.normalTangentialNumberOfNodes > 0) {
@@ -4840,16 +4841,17 @@ static const int PRECOND_VANKA     =  560;
             bc = 0;
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
-                if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+                if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                    bc++;
+                    continue;
+                };
                 conditional = activeCond[bc];
                 
                 for (t=bndry_start; t<bndry_end; t++) {
                     if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
                     if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
-                        for (i=0; i<n; i++) {
-                            indexes[i] = elements[t].NodeIndexes[i];
-                        }
+                        memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
@@ -4861,16 +4863,20 @@ static const int PRECOND_VANKA     =  560;
              for (t=bndry_start; t<bndry_end; t++) {
                  bc = 0;
                  for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-                     if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+                     if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                         bc++;
+                         continue;
+                     };
                      conditional = activeCond[bc];
                      
-                     if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                     if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) {
+                         bc++;
+                         continue;
+                     };
                      
                      if (activePart[bc] == YES) {
                          n = elements[t].Type.NumberOfNodes;
-                         for (i=0; i<n; i++) {
-                             indexes[i] = elements[t].NodeIndexes[i];
-                         }
+                         memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
                      } else {
                          n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                      }
@@ -4910,16 +4916,17 @@ static const int PRECOND_VANKA     =  560;
             bc = 0;
             for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
                 
-                if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+                if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                    bc++;
+                    continue;
+                };
                 conditional = activeCond[bc];
                 
                 for (t=bndry_start; t<bndry_end; t++) {
                     if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
                     if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
-                        for (i=0; i<n; i++) {
-                            indexes[i] = elements[t].NodeIndexes[i];
-                        }
+                        memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
@@ -4931,16 +4938,20 @@ static const int PRECOND_VANKA     =  560;
             for (t=bndry_start; t<bndry_end; t++) {
                 bc = 0;
                 for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-                    if (activePart[bc] == NO && activePartAll[bc] == NO) continue;
+                    if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                        bc++;
+                        continue;
+                    };
                     conditional = activeCond[bc];
                     
-                    if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                    if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) {
+                        bc++;
+                        continue;
+                    };
                     
                     if (activePart[bc] == YES) {
                         n = elements[t].Type.NumberOfNodes;
-                        for (i=0; i<n; i++) {
-                            indexes[i] = elements[t].NodeIndexes[i];
-                        }
+                        memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
@@ -4960,9 +4971,9 @@ static const int PRECOND_VANKA     =  560;
     
     bf_id = 0;
     for (FEMBodyForce *bodyForce in model.bodyForces) {
-        activePart[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForce.valuesList ];
         activePartAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForce.valuesList];
         activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForce.valuesList];
+        activePart[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForce.valuesList ];
         passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForce.valuesList] == YES) ? YES : NO;
         bf_id++;
     }
@@ -4995,9 +5006,7 @@ static const int PRECOND_VANKA     =  560;
             
             if (activePart[bf_id] == YES) {
                 n = elements[t].Type.NumberOfNodes;
-                for (i=0; i<n; i++) {
-                    indexes[i] = elements[t].NodeIndexes[i];
-                }
+                memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
             } else {
                 n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
             }
@@ -5060,7 +5069,6 @@ static const int PRECOND_VANKA     =  560;
                             dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
                             if (noDims >= 2) dist = dist + pow((globalNodes->y[i]-coordNodes.matrix[j][1]), 2.0);
                             if (noDims == 3) dist = dist + pow((globalNodes->z[i]-coordNodes.matrix[j][2]), 2.0);
-                            
                             dist = sqrt(dist);
                             
                             if (dist < minDist[j] && dist <= eps) {
@@ -5653,9 +5661,9 @@ static const int PRECOND_VANKA     =  560;
     if (variableName != nil) {
         intVarName = variableName;
     } else if (weightBoundary == YES) {
-        intVarName = [solution.variable.name stringByAppendingString:@" boundary weights"];
+        intVarName = [[solution.variable canonicalizeName] stringByAppendingString:@" boundary weights"];
     } else {
-        intVarName = [solution.variable.name stringByAppendingString:@" weights"];
+        intVarName = [[solution.variable canonicalizeName] stringByAppendingString:@" weights"];
     }
     utilities = [[FEMUtilities alloc] init];
     weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
@@ -6872,11 +6880,9 @@ static const int PRECOND_VANKA     =  560;
     int i, j, k, kk, l, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
     double *diagScaling;
     Element_t *element, *parent, *edges, *faces;
-    NSNumber *appendDof;
-    NSMutableString *name, *componentName;
-    NSArray *bc;    
-    FEMMatrixCRS *crsMatrix;
-    FEMListUtilities *listUtil; 
+    NSMutableString *name;
+    NSString *componentName;
+    NSArray *bc;
     FEMValueList *list;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
@@ -6886,8 +6892,9 @@ static const int PRECOND_VANKA     =  560;
     edges = solution.mesh.getEdges;
     faces = solution.mesh.getFaces;
     
-    crsMatrix = [[FEMMatrixCRS alloc] init];
-    listUtil = [[FEMListUtilities alloc] init];
+    FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
+    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -6951,8 +6958,7 @@ static const int PRECOND_VANKA     =  560;
         _size_l_Ind = n;
     }
     
-    name = [NSMutableString stringWithString:solution.variable.name];
-        
+    name = [NSMutableString stringWithString:[solution.variable canonicalizeName]];
     if (solution.variable.dofs > 1) {
         [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-2 permutationOffset:NULL offDiaginalMatrix:NULL];
     }
@@ -6962,12 +6968,10 @@ static const int PRECOND_VANKA     =  560;
     // Set Dirichlet dofs for edges and faces
     for (dof=0; dof<solution.variable.dofs; dof++) {
         
-        componentName = [NSMutableString stringWithString:solution.variable.name];
         if (solution.variable.dofs > 1) {
-            appendDof = @(dof+1);
-            [componentName appendString:@" "];
-            [componentName appendString:[appendDof stringValue]];
-        }
+            int component = dof + 1;
+            componentName = [utilities appendNameFromString:solution.variable.name component:&component];
+        } else componentName = solution.variable.name;
         
         // Clean BC face and edge dofs
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
@@ -7016,16 +7020,14 @@ static const int PRECOND_VANKA     =  560;
     // Set Dirichlet dofs for edges and faces
     for (dof=0; dof<solution.variable.dofs; dof++) {
         
-        componentName = [NSMutableString stringWithString:solution.variable.name];
         if (solution.variable.dofs > 1) {
-            appendDof = @(dof+1);
-            [componentName appendString:@" "];
-            [componentName appendString:[appendDof stringValue]];
-        }
+            int component = dof + 1;
+            componentName = [utilities appendNameFromString:solution.variable.name component:&component];
+        } else componentName = solution.variable.name;
         
         [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
         
-        [self setDirichletBoundaries:model inSolution:solution variableName:componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix];
+        [self setDirichletBoundaries:model inSolution:solution variableName:(NSMutableString *)componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix];
         
         // Dirichlet BCs for face and edge dofs
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
@@ -7150,7 +7152,7 @@ static const int PRECOND_VANKA     =  560;
                     
                     // Get indexes for boundary and values dofs associated to them
                     [self getBoundaryIndexes:solution.mesh forBoundaryElement:element withParentElement:parent resultVector:_g_Ind sizeVector:_size_g_Ind indexSize:&numEdgeDofs];
-                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
+                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:(NSMutableString *)componentName resultMatrix:_kernStiff resultVector:_kernWork];
                     
                     if (solution.matrix.isSymmetric == YES) {
                         for (l=0; l<n; l++) {
@@ -7217,7 +7219,7 @@ static const int PRECOND_VANKA     =  560;
                     if (numEdgeDofs == n) continue;
                     
                     // Get local solution
-                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:componentName resultMatrix:_kernStiff resultVector:_kernWork];
+                    [self localBoundaryBDOFs:model inSolution:solution atBoundary:bc forElement:element withNumberOfNodes:numEdgeDofs boundaryName:(NSMutableString *)componentName resultMatrix:_kernStiff resultVector:_kernWork];
                     
                     n_start = 0;
                     if (solution.matrix.isSymmetric == YES) {
@@ -8170,18 +8172,18 @@ static const int PRECOND_VANKA     =  560;
             rst = realtime() - rt0;
             
             FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:solution.variable.name] withValue:&st orUsingBlock:nil string:nil];
-            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:solution.variable.name] withValue:&rst orUsingBlock:nil string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&st orUsingBlock:nil string:nil];
+            [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&rst orUsingBlock:nil string:nil];
             
-            NSLog(@"FEMCore:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s)\n", solution.variable.name, st, rst);
+            NSLog(@"FEMCore:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s)\n", [solution.variable canonicalizeName], st, rst);
             
             if ([(solution.solutionInfo)[@"linear system timing cumulative"] boolValue] == YES) {
-                double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] info:&found minValue:NULL maxValue:NULL];
+                double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] info:&found minValue:NULL maxValue:NULL];
                 st = st + ct;
-                ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] info:&found minValue:NULL maxValue:NULL];
+                ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys real time " stringByAppendingString:[solution.variable canonicalizeName]] info:&found minValue:NULL maxValue:NULL];
                 rst = rst + ct;
-                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys cpu time " stringByAppendingString:solution.variable.name] withValue:&st orUsingBlock:nil string:nil];
-                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys real time " stringByAppendingString:solution.variable.name] withValue:&rst orUsingBlock:nil string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&st orUsingBlock:nil string:nil];
+                [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: cum linsys real time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&rst orUsingBlock:nil string:nil];
             }
         }
     }

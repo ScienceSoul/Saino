@@ -460,7 +460,7 @@
     _flowPerm = flowContainers->Perm;
     _flowSolution = flowContainers->Values;
     _nsdofs = solution.variable.dofs;
-    varName = solution.variable.name;
+    varName = [solution.variable canonicalizeName];
     
     _localNodes = 0;
     for (i=0; i<flowContainers->sizePerm; i++) {
@@ -1210,9 +1210,9 @@
             }
             
             // Get element local stiffness and mass matrices
-            memset( *_stiff, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
-            memset( *_mass, 0.0, ((2*solution.mesh.maxElementDofs)*(2*solution.mesh.maxElementDofs))*sizeof(double) );
-            memset( _force, 0.0, (2*solution.mesh.maxElementDofs)*sizeof(double) );
+            memset( *_stiff, 0.0, ((2*_nsdofs*solution.mesh.maxElementDofs)*(2*_nsdofs*solution.mesh.maxElementDofs))*sizeof(double) );
+            memset( *_mass, 0.0, ((2*_nsdofs*solution.mesh.maxElementDofs)*(2*_nsdofs*solution.mesh.maxElementDofs))*sizeof(double) );
+            memset( _force, 0.0, (2*_nsdofs*solution.mesh.maxElementDofs)*sizeof(double) );
             double nodalPressure[n];
             switch (coordinatesSystems.coordinates) {
                 case cartesian:
@@ -1279,7 +1279,7 @@
         NSLog(@"FEMFlowSolution:solutionComputer: Assembly done\n");
         
         // Newmann and Newton boundary conditions
-        NSString *normalTangentialName = [@"normal-tangential " stringByAppendingString:solution.variable.name];
+        NSString *normalTangentialName = [@"normal-tangential " stringByAppendingString:[solution.variable canonicalizeName]];
         for (t=0; t<solution.mesh.numberOfBoundaryElements; t++) {
             element = [core getBoundaryElement:solution atIndex:t];
             if ([core isActiveBoundaryElement:element inSolution:solution model:model] == NO) continue;
@@ -1471,9 +1471,7 @@
                 } else {
                     double value = 0.0;
                     for (j=1; j<=_nsdofs-1; j++) {
-                        NSMutableString *string = [NSMutableString stringWithString:solution.variable.name];
-                        [string appendString:@" "];
-                        [string appendString:[NSString stringWithFormat:@"%d",j]];
+                        NSString *string = [utilities appendNameFromString:solution.variable.name component:&j];
                         [listUtilities addConstRealInClassList:boundaryCondition.valuesList theVariable:string withValue:&value orUsingBlock:nil string:nil];
                     }
                 }
