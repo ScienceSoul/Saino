@@ -23,10 +23,6 @@
 #import "Utils.h"
 #import "TimeProfile.h"
 
-#ifdef TEST
-    #import "FEMTest.h"
-#endif
-
 static int k1 = 0, n1 = 0;
 static double *saveValues = NULL;
 static double **stiff = NULL, **mass = NULL, **x = NULL;
@@ -2161,11 +2157,6 @@ enum {
             relativeChange = solution.variable.nonLinChange;
             NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e\n", norm);
             NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e\n", relativeChange);
-            
-#ifdef TEST
-            FEMTest *test = [FEMTest sharedTest];
-            test.norm = norm;
-#endif
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol && (smartHeaterControl == NO || smartTolReached == YES)) break;

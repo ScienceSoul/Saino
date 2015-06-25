@@ -36,6 +36,10 @@
 #import "GaussIntegration.h"
 #import "Utils.h"
 
+#ifdef TEST
+    #import "FEMTest.h"
+#endif
+
 static const int ITER_BICGSTAB     =  320;
 static const int ITER_TFQMR        =  330;
 static const int ITER_CG           =  340;
@@ -7560,6 +7564,11 @@ static dispatch_once_t onceToken;
     } else {
         NSLog(@"FEMCore:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e) :: %@\n", iterNo, norm, change, solverName);
     }
+    
+#ifdef TEST
+    FEMTest *test = [FEMTest sharedTest];
+    test.norm = norm;
+#endif
     
     // The update of exported variables may be done internally to allow some nonlinear features
     // or in steady state level to allow coupling to other solvers.
