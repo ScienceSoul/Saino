@@ -33,6 +33,8 @@
     
     id __weak _mesh;
     id __weak _solution;
+    NSMutableString *_meshDir;
+    NSMutableString *_meshName;
     NSMutableString *_outputPath;
     NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
     NSArray *_solutions;                            // Array of all solutions in the model
@@ -72,6 +74,8 @@
 @property(nonatomic, assign) int maxElementNodes;
 @property(nonatomic, weak) id mesh;
 @property(nonatomic, weak) id solution;
+@property(nonatomic, strong) NSMutableString *meshDir;
+@property(nonatomic, strong) NSMutableString *meshName;
 @property(nonatomic, strong) NSMutableString *outputPath;
 @property(nonatomic, strong) NSArray *boundaryID;
 @property(nonatomic, strong) NSArray *solutions;

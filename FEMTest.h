@@ -21,5 +21,7 @@
 +(void)selfDestruct;
 
 -(void)reset;
+-(void)setUpHeateqTest:(id)model;
+-(void)setUpStepStokesTest:(id)model;
 
 @end

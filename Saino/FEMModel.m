@@ -29,15 +29,9 @@
 -(void)FEMModel_localMatrix:(double **)stiff force:(double*)force mesh:(FEMMesh *)mesh element:(Element_t *)element numberOfNodes:(int)numberOfNodes power:(double)power noWeight:(BOOL)noWeight elemMin:(double *)elemMin elemMax:(double *)elemMax;
 -(void)FEMModel_getNodalElementSize:(double)expo weight:(BOOL)weight nodal:(double *)h sizeNodal:(int)sizeNodal;
 -(void)FEMModel_initializeOutputLevel;
--(void)FEMModel_testHeatSolver;
--(void)FEMModel_testStokesSolver;
 @end
 
-@implementation FEMModel {
-    
-    NSMutableString *_meshDir;
-    NSMutableString *_meshName;
-}
+@implementation FEMModel
 
 @synthesize dimension = _dimension;
 @synthesize numberOfNodes = _numberOfNodes;
@@ -56,6 +50,8 @@
 @synthesize maxElementNodes = _maxElementNodes;
 @synthesize mesh = _mesh;
 @synthesize solution = _solution;
+@synthesize meshDir = _meshDir;
+@synthesize meshName = _meshName;
 @synthesize outputPath = _outputPath;
 @synthesize boundaryID = _boundaryID;
 @synthesize solutions = _solutions;
@@ -382,256 +378,6 @@
     }
 }
 
-/*************************************************************************************
-    This method is temporary and it's used to set a test model for testing our code.
-    This test solves a simple heat conduction problem
-*************************************************************************************/
--(void)FEMModel_testHeatSolver {
-    
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"coordinate system" withValue:@"cartesian 2d"];
-    
-    int *vector = intvec(0, 2);
-    vector[0] = 1; vector[1] = 2; vector[2] = 3;
-    [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"coordinate mapping" withValues:vector size:3 orUsingBlock:nil];
-    free_ivector(vector, 0, 2);
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
-    //[listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"transient"];
-    [listUtilities addStringInClassList:self.simulation theVariable:@"time stepping method" withValue:@"bdf"];
-    
-    int ivalue = 1;
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"bdf order" withValue:&ivalue orUsingBlock:nil];
-    ivalue = 2;
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"time step intervals" withValue:&ivalue orUsingBlock:nil];
-    
-    double value = 1.0;
-    [listUtilities addConstRealInClassList:self.simulation theVariable:@"time step size" withValue:&value orUsingBlock:nil string:nil];
-    
-    ivalue = 1;
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state maximum iterations" withValue:&ivalue orUsingBlock:nil];
-    
-    int *intervals = intvec(0, 0);
-    intervals[0] = 1;
-    [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"output intervals" withValues:intervals size:1 orUsingBlock:nil];
-    free_ivector(intervals, 0, 0);
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"output file" withValue:@"TempDist.result"];
-    [listUtilities addStringInClassList:self.simulation theVariable:@"post file" withValue:@"TempDist.ep"];
-    
-    double **gravity = doublematrix(0, 3, 0, 0);
-    gravity[0][0] = 0.0;
-    gravity[1][0] = -1.0;
-    gravity[2][0] = 0.0;
-    gravity[3][0] = 9.82;
-    [listUtilities addConstRealArrayInClassList:self.constants theVariable:@"gravity" withValues:gravity size1:4 size2:1 orUsingBlock:nil string:nil];
-
-    free_dmatrix(gravity, 0, 3, 0, 0);
-    value = 5.67e-08;
-    [listUtilities addConstRealInClassList:self.constants theVariable:@"stefan boltzmann" withValue:&value orUsingBlock:nil string:nil];
-    
-    self.bodies = @[ @{ @"name" : @"body1",
-                         @"body force" : @1,
-                         @"equation" : @1,
-                         @"material" : @1 }];
-    self.numberOfBodies = 1;
-    
-    
-    FEMEquation *equation = [[FEMEquation alloc] init];
-    [listUtilities addStringInClassList:equation theVariable:@"name" withValue:@"equation1"];
-    [listUtilities addLogicalInClassList:equation theVariable:@"heat equation" withValue:YES];
-    self.equations = @[equation];
-    self.numberOfEquations = 1;
-    
-    FEMSolution *solution = [[FEMSolution alloc] init];
-    [solution.solutionInfo setObject:@"always" forKey:@"invoke solution computer"];
-    [solution.solutionInfo setObject:@"heat equation" forKey:@"equation"];
-    [solution.solutionInfo setObject:@"temperature" forKey:@"variable"];
-    [solution.solutionInfo setObject:@1 forKey:@"variable dofs"];
-    [solution.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
-    [solution.solutionInfo setObject:@"bi-cgstab" forKey:@"linear system iterative method"];
-    [solution.solutionInfo setObject:@1000 forKey:@"linear system maximum iterations"];
-    [solution.solutionInfo setObject:@1.0e-08 forKey:@"linear system convergence tolerance"];
-    [solution.solutionInfo setObject:@YES forKey:@"linear system abort not converged"];
-    [solution.solutionInfo setObject:@"ilu0" forKey:@"linear system preconditioning"];
-    [solution.solutionInfo setObject:@1 forKey:@"linear system residual output"];
-    [solution.solutionInfo setObject:@1.0e-05 forKey:@"steady state convergence tolerance"];
-    [solution.solutionInfo setObject:@YES forKey:@"stabilize"];
-    [solution.solutionInfo setObject:@1.0e-05 forKey:@"nonlinear system convergence tolerance"];
-    [solution.solutionInfo setObject:@1 forKey:@"nonlinear system maximum iterations"];
-    [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
-    [solution.solutionInfo setObject:@1.0e-02 forKey:@"nonlinear system newton after tolerance"];
-    [solution.solutionInfo setObject:@1.0 forKey:@"nonlinear system relaxation factor"];
-    [solution.solutionInfo setObject:@NO forKey:@"parallel assembly"];
-    self.solutions = @[solution];
-    self.numberOfSolutions = 1;
-    
-    FEMMaterial *material = [[FEMMaterial alloc] init];
-    [listUtilities addStringInClassList:material theVariable:@"name" withValue:@"material1"];
-    value = 1.0;
-    [listUtilities addConstRealInClassList:material theVariable:@"density" withValue:&value orUsingBlock:nil string:nil];
-    [listUtilities addConstRealInClassList:material theVariable:@"heat conductivity" withValue:&value orUsingBlock:nil string:nil];
-
-    self.materials = @[material];
-    self.numberOfMaterials = 1;
-    
-    FEMBodyForce *bodyForce = [[FEMBodyForce alloc] init];
-    [listUtilities addStringInClassList:bodyForce theVariable:@"name" withValue:@"bodyforce1"];
-    [listUtilities addConstRealInClassList:bodyForce theVariable:@"heat source" withValue:&value orUsingBlock:nil string:nil];
-    self.bodyForces = @[bodyForce];
-    self.numberOfBodyForces = 1;
-    
-    self.boundaryID = @[@1];
-    
-    FEMBoundaryCondition *boundaryCondition = [[FEMBoundaryCondition alloc] init];
-    [listUtilities addStringInClassList:boundaryCondition theVariable:@"name" withValue:@"constraint1"];
-    vector = intvec(0, 5);
-    vector[0] = 1; vector[1] = 2; vector[2] = 3; vector[3] = 4; vector[4] = 5; vector[5] = 6;
-    [listUtilities addIntegerArrayInClassList:boundaryCondition theVariable:@"target boundaries" withValues:vector size:6 orUsingBlock:nil];
-    free_ivector(vector, 0, 5);
-    value = 0.0;
-    [listUtilities addConstRealInClassList:boundaryCondition theVariable:@"temperature" withValue:&value orUsingBlock:nil string:nil];
-    
-    boundaryCondition.tag = 1;
-    self.boundaryConditions = @[boundaryCondition];
-    self.numberOfBoundaryConditions = 1;
-    
-    _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Mesh"];
-}
-
--(void)FEMModel_testStokesSolver {
-    
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"coordinate system" withValue:@"cartesian 2d"];
-    int ivalue = 9;
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"maximum output level" withValue:&ivalue orUsingBlock:nil];
-    
-    int *vector = intvec(0, 2);
-    vector[0] = 1; vector[1] = 2; vector[2] = 3;
-    [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"coordinate mapping" withValues:vector size:3 orUsingBlock:nil];
-    free_ivector(vector, 0, 2);
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"simulation type" withValue:@"steady state"];
-    ivalue = 1;
-    [listUtilities addIntegerInClassList:self.simulation theVariable:@"steady state maximum iterations" withValue:&ivalue orUsingBlock:nil];
-    
-    int *intervals = intvec(0, 0);
-    intervals[0] = 1;
-    [listUtilities addIntegerArrayInClassList:self.simulation theVariable:@"output intervals" withValues:intervals size:1 orUsingBlock:nil];
-    free_ivector(intervals, 0, 0);
-    
-    [listUtilities addStringInClassList:self.simulation theVariable:@"output file" withValue:@"Step.result"];
-    [listUtilities addStringInClassList:self.simulation theVariable:@"post file" withValue:@"Step.ep"];
-    
-    double **gravity = doublematrix(0, 3, 0, 0);
-    gravity[0][0] = 0.0;
-    gravity[1][0] = -1.0;
-    gravity[2][0] = 0.0;
-    gravity[3][0] = 9.82;
-    [listUtilities addConstRealArrayInClassList:self.constants theVariable:@"gravity" withValues:gravity size1:4 size2:1 orUsingBlock:nil string:nil];
-    free_dmatrix(gravity, 0, 3, 0, 0);
-    
-    double value = 5.67e-08;
-    [listUtilities addConstRealInClassList:self.constants theVariable:@"stefan boltzmann" withValue:&value orUsingBlock:nil string:nil];
-    
-    self.bodies = @[ @{@"name": @"body1",
-                       @"equation" : @1,
-                       @"material" : @1,
-                       @"initial condition" : @1}];
-    self.numberOfBodies = 1;
-    
-    FEMInitialConditions *initialConditions = [[FEMInitialConditions alloc] init];
-    value = 0.0;
-    [listUtilities addConstRealInClassList:initialConditions theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
-    [listUtilities addConstRealInClassList:initialConditions theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
-    self.initialConditions = @[initialConditions];
-    self.numberOfInitialConditions = 1;
-    
-    FEMEquation *equation = [[FEMEquation alloc] init];
-    [listUtilities addStringInClassList:equation theVariable:@"name" withValue:@"equation1"];
-    vector = intvec(0, 0);
-    vector[0] = 1;
-    [listUtilities addIntegerArrayInClassList:equation theVariable:@"active solvers" withValues:vector size:1 orUsingBlock:nil];
-    free_ivector(vector, 0, 0);
-    [listUtilities addLogicalInClassList:equation theVariable:@"ns convect" withValue:NO];
-    self.equations = @[equation];
-    self.numberOfEquations = 1;
-    
-    FEMSolution *solution = [[FEMSolution alloc] init];
-    [solution.solutionInfo setObject:@"navier-stokes" forKey:@"equation"];
-    [solution.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
-    [solution.solutionInfo setObject:@"bi-cgstab(l)" forKey:@"linear system iterative method"];
-    [solution.solutionInfo setObject:@500 forKey:@"linear system maximum iterations"];
-    [solution.solutionInfo setObject:@"stabilized" forKey:@"stabilization method"];
-    [solution.solutionInfo setObject:@1.0e-08 forKey:@"linear system convergence tolerance"];
-    [solution.solutionInfo setObject:@"ilu0" forKey:@"linear system preconditioning"];
-    [solution.solutionInfo setObject:@1 forKey:@"linear system residual output"];
-    [solution.solutionInfo setObject:@1.0e-05 forKey:@"steady state convergence tolerance"];
-    [solution.solutionInfo setObject:@1 forKey:@"nonlinear system maximum iterations"];
-    [solution.solutionInfo setObject:@1.0e-03 forKey:@"nonlinear system convergence tolerance"];
-    [solution.solutionInfo setObject:@1.0e-03 forKey:@"nonlinear system newton after tolerance"];
-    [solution.solutionInfo setObject:@3 forKey:@"nonlinear system newton after iterations"];
-    self.solutions = @[solution];
-    self.numberOfSolutions = 1;
-    
-    FEMMaterial *material = [[FEMMaterial alloc] init];
-    [listUtilities addStringInClassList:material theVariable:@"name" withValue:@"material1"];
-    value = 1.0;
-    [listUtilities addConstRealInClassList:material theVariable:@"density" withValue:&value orUsingBlock:nil string:nil];
-    value = 1.0e20;
-    [listUtilities addConstRealInClassList:material theVariable:@"viscosity" withValue:&value orUsingBlock:nil string:nil];
-    self.materials = @[material];
-    self.numberOfMaterials = 1;
-    
-    self.boundaryID = @[@1, @2, @3];
-    
-    FEMBoundaryCondition *boundaryCondition1 = [[FEMBoundaryCondition alloc] init];
-    [listUtilities addStringInClassList:boundaryCondition1 theVariable:@"name" withValue:@"inflow"];
-    vector = intvec(0, 0);
-    vector[0] = 1;
-    [listUtilities addIntegerArrayInClassList:boundaryCondition1 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
-    free_ivector(vector, 0, 0);
-    
-    NSArray *dependencies = @[@"coordinate 2"];
-    double (^block) (double *) = ^(double *t){
-        return (2.0-t[0]) * (t[0]-1.0);
-    };
-    [listUtilities addBlockInClassList:boundaryCondition1 theVariable:@"velocity 1" usingBlock:block dependencies:dependencies];
-    
-    value = 0.0;
-    [listUtilities addConstRealInClassList:boundaryCondition1 theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
-    
-    FEMBoundaryCondition *boundaryCondition2 = [[FEMBoundaryCondition alloc] init];
-    [listUtilities addStringInClassList:boundaryCondition2 theVariable:@"name" withValue:@"outflow"];
-    vector = intvec(0, 0);
-    vector[0] = 2;
-    [listUtilities addIntegerArrayInClassList:boundaryCondition2 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
-    free_ivector(vector, 0, 0);
-    [listUtilities addConstRealInClassList:boundaryCondition2 theVariable:@"pressure" withValue:&value orUsingBlock:nil string:nil];
-    [listUtilities addConstRealInClassList:boundaryCondition2 theVariable:@"velocity 2"  withValue:&value orUsingBlock:nil string:nil];
-    
-    FEMBoundaryCondition *boundaryCondition3 = [[FEMBoundaryCondition alloc] init];
-    [listUtilities addStringInClassList:boundaryCondition3 theVariable:@"name" withValue:@"wall"];
-    vector = intvec(0, 0);
-    vector[0] = 3;
-    [listUtilities addIntegerArrayInClassList:boundaryCondition3 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
-    free_ivector(vector, 0, 0);
-    [listUtilities addConstRealInClassList:boundaryCondition3 theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
-    [listUtilities addConstRealInClassList:boundaryCondition3 theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
-    
-    boundaryCondition1.tag = 1;
-    boundaryCondition2.tag = 2;
-    boundaryCondition3.tag = 3;
-    self.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3];
-    self.numberOfBoundaryConditions = 3;
-    
-    _meshDir = [NSMutableString stringWithString:@"."];
-    _meshName = [NSMutableString stringWithString:@"Step"];
-}
-
 #pragma mark Public methods
 
 - (id)init
@@ -767,13 +513,12 @@
 #ifdef TEST
     FEMTest *test = [FEMTest sharedTest];
     if (test.do_heatq == YES) {
-        [self FEMModel_testHeatSolver];
+        [test setUpHeateqTest:self];
     } else if (test.do_step_stokes == YES) {
-        [self FEMModel_testStokesSolver];
+        [test setUpStepStokesTest:self];
     }
-    //[self FEMModel_testHeatSolver];
-    //[self FEMModel_testStokesSolver];
 #endif
+    
     [self FEMModel_initializeOutputLevel];
     
     transient = ([[listUtils listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;
@@ -894,10 +639,10 @@
         substr1 = [meshString rangeOfString:@" "];
         if (substr1.location == NSNotFound) {
             substr1.location = [meshString length];
-            _meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+            self.meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
         } else {
-            _meshDir = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
-            _meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+            self.meshDir = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
+            self.meshName = [NSMutableString stringWithString:[meshString substringToIndex:substr1.location]];
         }
         
         loc = substr1.location;
@@ -906,19 +651,19 @@
         }
         
         if (loc < [meshString length]) {
-            [_meshName appendString:@"/"];
-            [_meshName appendString:[meshString substringFromIndex:loc]];
+            [self.meshName appendString:@"/"];
+            [self.meshName appendString:[meshString substringFromIndex:loc]];
         } else {
             oneMeshName = YES;
-            _meshDir = [NSMutableString stringWithString:@"."];
+            self.meshDir = [NSMutableString stringWithString:@"."];
         }
     }
     
     meshUtils = [[FEMMeshUtils alloc] init];
     
-    if ([_meshDir characterAtIndex:0] != ' ') {
+    if ([self.meshDir characterAtIndex:0] != ' ') {
         mesh = [[FEMMesh alloc] init];
-        [mesh loadMeshForModel:self meshDirectory:_meshDir meshName:_meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
+        [mesh loadMeshForModel:self meshDirectory:self.meshDir meshName:self.meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
         [self.meshes addObject:mesh];
         
         [self FEMModel_setCoordinateSystem];
@@ -963,15 +708,15 @@
         if (oneMeshName == YES) {
             i = 0;
         } else {
-            i = (int)[_meshName length]-1;
-            while (i >= 0 && [_meshName characterAtIndex:i] != '/') {
+            i = (int)[self.meshName length]-1;
+            while (i >= 0 && [self.meshName characterAtIndex:i] != '/') {
                 i--;
             }
             i++;
         }
         
         modelMesh = self.meshes[0];
-        modelMesh.name = [NSMutableString stringWithString:[_meshName substringFromIndex:i]];
+        modelMesh.name = [NSMutableString stringWithString:[self.meshName substringFromIndex:i]];
         
         for (FEMSolution *solution in self.solutions) {
             solution.mesh = self.meshes[0];
@@ -992,10 +737,10 @@
             substr1 = [aString rangeOfString:@" "];
             if (substr1.location == NSNotFound) {
                 substr1.location = [aString length];
-                _meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+                self.meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
             } else {
-                _meshDir = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
-                _meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+                self.meshDir = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
+                self.meshName = [NSMutableString stringWithString:[aString substringToIndex:substr1.location]];
             }
             
             loc = substr1.location;
@@ -1003,18 +748,18 @@
                 loc++;
             }
             if (loc < nlen) {
-                [_meshName appendString:@"/"];
-                [_meshName appendString:[aString substringFromIndex:loc]];
+                [self.meshName appendString:@"/"];
+                [self.meshName appendString:[aString substringFromIndex:loc]];
             } else {
                 oneMeshName = YES;
-                 _meshDir = [NSMutableString stringWithString:@"."];
+                 self.meshDir = [NSMutableString stringWithString:@"."];
             }
             
             if (oneMeshName == YES) {
                 i = 0;
             } else {
-                i = (int)[_meshName length]-1;
-                while (i >= 0 && [_meshName characterAtIndex:i] != '/') {
+                i = (int)[self.meshName length]-1;
+                while (i >= 0 && [self.meshName characterAtIndex:i] != '/') {
                     i--;
                 }
                 i++;
@@ -1023,8 +768,8 @@
             found = NO;
             for (FEMMesh *mesh in self.meshes) {
                 found = YES;
-                if ([mesh.name isEqualToString:[_meshName substringFromIndex:i]] != YES) found = NO;
-                if ([mesh.name length] != [[_meshName substringFromIndex:i] length]) found = NO;
+                if ([mesh.name isEqualToString:[self.meshName substringFromIndex:i]] != YES) found = NO;
+                if ([mesh.name length] != [[self.meshName substringFromIndex:i] length]) found = NO;
                 if (found == YES) {
                     solution.mesh = mesh;
                     break;
@@ -1049,12 +794,12 @@
                 numberPartitions = 1;
                 partitionID = 0;
                 solution.mesh = [[FEMMesh alloc] init];
-                [solution.mesh loadMeshForModel:self meshDirectory:_meshDir meshName:_meshName boundariesOnly:bd numberOfPartitions:&numberPartitions partitionID:&partitionID definitions:defDofs];
+                [solution.mesh loadMeshForModel:self meshDirectory:self.meshDir meshName:self.meshName boundariesOnly:bd numberOfPartitions:&numberPartitions partitionID:&partitionID definitions:defDofs];
             } else {
                 // TODO: add support for parallel run
                 // We are not supporting parallel runs yet, so we should never reach here
                 solution.mesh = [[FEMMesh alloc] init];
-                [solution.mesh loadMeshForModel:self meshDirectory:_meshDir meshName:_meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
+                [solution.mesh loadMeshForModel:self meshDirectory:self.meshDir meshName:self.meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
             }
             
             if ((solution.solutionInfo)[@"mesh levels"] != nil) {
@@ -1099,14 +844,14 @@
             if (oneMeshName == YES) {
                 i = 0;
             } else {
-                i = (int)[_meshName length]-1;
-                while (i >= 0 && [_meshName characterAtIndex:i] != '/') {
+                i = (int)[self.meshName length]-1;
+                while (i >= 0 && [self.meshName characterAtIndex:i] != '/') {
                     i--;
                 }
                 i++;
             }
             
-            solution.mesh.name = [NSMutableString stringWithString:[_meshName substringFromIndex:i]];
+            solution.mesh.name = [NSMutableString stringWithString:[self.meshName substringFromIndex:i]];
             
             // Just add this solver mesh to the global model meshes table
             [self.meshes addObject:solution.mesh];
@@ -1115,7 +860,7 @@
     
     [self FEMModel_setCoordinateSystem];
     
-    [self.outputPath setString:_meshDir];
+    [self.outputPath setString:self.meshDir];
 
     for (FEMMesh *mesh in self.meshes) {
         [meshUtils SetStabilizationParametersInMesh:mesh model:self];
