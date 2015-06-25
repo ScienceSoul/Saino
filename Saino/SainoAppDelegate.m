@@ -11,10 +11,12 @@
 @implementation SainoAppDelegate
 
 @synthesize window;
+@synthesize saino_view_controller;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     // Insert code here to initialize your application
+
 }
 
 @end

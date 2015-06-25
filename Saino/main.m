@@ -14,6 +14,16 @@
 
 int main(int argc, char *argv[])
 {
+    
+#ifdef TEST
+    
+    @autoreleasepool {
+        
+        return NSApplicationMain(argc, (const char **)argv);
+    }
+    
+#else
+    
     int initialize = 0;
     double cp, rt;
     
@@ -31,12 +41,7 @@ int main(int argc, char *argv[])
     NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
     NSLog(@"SAINO JOB FINISHED AT: %@\n", dateString);
     
-#ifdef TEST // This is a TEMPORALLY hack so that an application test works.
-    @autoreleasepool {
-        
-        return NSApplicationMain(argc, (const char **)argv);
-    }
-#endif
-    
     return 0;
+    
+#endif
 }

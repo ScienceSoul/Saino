@@ -19,14 +19,14 @@
 
 @implementation FEMUtilitiesTests
 
-- (void)setUp {
+-(void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     self.utilities = [[FEMUtilities alloc] init];
     XCTAssertNotNil(self.utilities, @"FEMUtilitiesTests Could not create a FEMUtilities object.");
 }
 
-- (void)tearDown {
+-(void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }

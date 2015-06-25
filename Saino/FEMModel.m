@@ -7,7 +7,6 @@
 //
 
 #import "FEMModel.h"
-
 #import "FEMCore.h"
 #import "FEMListUtilities.h"
 #import "FEMElementUtils.h"
@@ -20,6 +19,10 @@
 #import "FEMBodyForce.h"
 #import "FEMMaterial.h"
 #import "Utils.h"
+
+#ifdef TEST
+    #import "FEMTest.h"
+#endif
 
 @interface FEMModel ()
 -(void)FEMModel_setCoordinateSystem;
@@ -761,9 +764,16 @@
     
     // TODO: Here comes the Model Description File (MDF) parser
     // For now we are just testing and we set manually a model
+#ifdef TEST
+    FEMTest *test = [FEMTest sharedTest];
+    if (test.do_heatq == YES) {
+        [self FEMModel_testHeatSolver];
+    } else if (test.do_step_stokes == YES) {
+        [self FEMModel_testStokesSolver];
+    }
     //[self FEMModel_testHeatSolver];
-    [self FEMModel_testStokesSolver];
-    
+    //[self FEMModel_testStokesSolver];
+#endif
     [self FEMModel_initializeOutputLevel];
     
     transient = ([[listUtils listGetString:self inArray:self.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"]) ? YES : NO;

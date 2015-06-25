@@ -10,6 +10,9 @@
 		73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
 		73059E43186BD5F9008B5E44 /* Numerics.c in Sources */ = {isa = PBXBuildFile; fileRef = 73059E42186BD5F8008B5E44 /* Numerics.c */; };
 		730873901509F5BF001DE27F /* FEMParallelMPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 7308738F1509F5BF001DE27F /* FEMParallelMPI.m */; };
+		730C42DD1B26F499009411B7 /* FEMTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42DC1B26F499009411B7 /* FEMTest.m */; };
+		730C42E21B27EDF1009411B7 /* Saino_App_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42D01B2686E2009411B7 /* Saino_App_Tests.m */; };
+		730C42E61B3A895B009411B7 /* SainoViewControler.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42E51B3A895B009411B7 /* SainoViewControler.m */; };
 		7310B08A13B0BCD100F5E96B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7310B08913B0BCD100F5E96B /* Accelerate.framework */; };
 		7315512213583FFD004CCD09 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7315512113583FFD004CCD09 /* Cocoa.framework */; };
 		7315512C13583FFD004CCD09 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7315512A13583FFD004CCD09 /* InfoPlist.strings */; };
@@ -165,6 +168,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		730C42D21B2686E2009411B7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7315511C13583FFD004CCD09;
+			remoteInfo = Saino;
+		};
 		73A006571B004C270017013B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
@@ -180,6 +190,13 @@
 		73059E42186BD5F8008B5E44 /* Numerics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Numerics.c; sourceTree = "<group>"; };
 		7308738E1509F5BF001DE27F /* FEMParallelMPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMParallelMPI.h; sourceTree = "<group>"; };
 		7308738F1509F5BF001DE27F /* FEMParallelMPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMParallelMPI.m; sourceTree = "<group>"; };
+		730C42CC1B2686E2009411B7 /* Saino App Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Saino App Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		730C42CF1B2686E2009411B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		730C42D01B2686E2009411B7 /* Saino_App_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Saino_App_Tests.m; sourceTree = "<group>"; };
+		730C42DB1B26F499009411B7 /* FEMTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FEMTest.h; path = ../FEMTest.h; sourceTree = "<group>"; };
+		730C42DC1B26F499009411B7 /* FEMTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FEMTest.m; path = ../FEMTest.m; sourceTree = "<group>"; };
+		730C42E41B3A895B009411B7 /* SainoViewControler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SainoViewControler.h; sourceTree = "<group>"; };
+		730C42E51B3A895B009411B7 /* SainoViewControler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SainoViewControler.m; sourceTree = "<group>"; };
 		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		7315511D13583FFD004CCD09 /* Saino.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Saino.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7315512113583FFD004CCD09 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -346,6 +363,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		730C42C91B2686E2009411B7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7315511A13583FFD004CCD09 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -387,11 +411,29 @@
 			name = "OpenCL kernels";
 			sourceTree = "<group>";
 		};
+		730C42CD1B2686E2009411B7 /* Saino App Tests */ = {
+			isa = PBXGroup;
+			children = (
+				730C42D01B2686E2009411B7 /* Saino_App_Tests.m */,
+				730C42CE1B2686E2009411B7 /* Supporting Files */,
+			);
+			path = "Saino App Tests";
+			sourceTree = "<group>";
+		};
+		730C42CE1B2686E2009411B7 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				730C42CF1B2686E2009411B7 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		7315511213583FFD004CCD09 = {
 			isa = PBXGroup;
 			children = (
 				7315512713583FFD004CCD09 /* Saino */,
-				73A006521B004C270017013B /* Saino Test Classes */,
+				73A006521B004C270017013B /* Saino Logic Tests */,
+				730C42CD1B2686E2009411B7 /* Saino App Tests */,
 				7315512013583FFD004CCD09 /* Frameworks */,
 				7315511E13583FFD004CCD09 /* Products */,
 			);
@@ -402,6 +444,7 @@
 			children = (
 				7315511D13583FFD004CCD09 /* Saino.app */,
 				73A006511B004C270017013B /* Saino Logic Tests.xctest */,
+				730C42CC1B2686E2009411B7 /* Saino App Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -438,6 +481,8 @@
 				73155155135848B4004CCD09 /* Low level C routines */,
 				7315513313583FFD004CCD09 /* SainoAppDelegate.h */,
 				7315513413583FFD004CCD09 /* SainoAppDelegate.m */,
+				730C42E41B3A895B009411B7 /* SainoViewControler.h */,
+				730C42E51B3A895B009411B7 /* SainoViewControler.m */,
 				7315513613583FFD004CCD09 /* MainMenu.xib */,
 				7315512813583FFD004CCD09 /* Supporting Files */,
 			);
@@ -556,14 +601,14 @@
 			name = Docs;
 			sourceTree = "<group>";
 		};
-		73A006521B004C270017013B /* Saino Test Classes */ = {
+		73A006521B004C270017013B /* Saino Logic Tests */ = {
 			isa = PBXGroup;
 			children = (
 				73A0061D1B004A3F0017013B /* FEMListUtilitiesTests.m */,
 				73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */,
 				73A006531B004C270017013B /* Supporting Files */,
 			);
-			name = "Saino Test Classes";
+			name = "Saino Logic Tests";
 			path = "Saino Tests";
 			sourceTree = "<group>";
 		};
@@ -697,6 +742,8 @@
 				73167EFD177058D8003A1A20 /* FEMDifferentials.m */,
 				73C495051937135D00F36146 /* FEMFreeSurface.h */,
 				73C495061937135D00F36146 /* FEMFreeSurface.m */,
+				730C42DB1B26F499009411B7 /* FEMTest.h */,
+				730C42DC1B26F499009411B7 /* FEMTest.m */,
 			);
 			name = "Class utilities";
 			sourceTree = "<group>";
@@ -704,6 +751,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		730C42CB1B2686E2009411B7 /* Saino App Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 730C42D61B2686E2009411B7 /* Build configuration list for PBXNativeTarget "Saino App Tests" */;
+			buildPhases = (
+				730C42C81B2686E2009411B7 /* Sources */,
+				730C42C91B2686E2009411B7 /* Frameworks */,
+				730C42CA1B2686E2009411B7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				730C42D31B2686E2009411B7 /* PBXTargetDependency */,
+			);
+			name = "Saino App Tests";
+			productName = "Saino App Tests";
+			productReference = 730C42CC1B2686E2009411B7 /* Saino App Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		7315511C13583FFD004CCD09 /* Saino */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7315514F13583FFD004CCD09 /* Build configuration list for PBXNativeTarget "Saino" */;
@@ -748,6 +813,10 @@
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = "Institute of Low Temperature Science";
 				TargetAttributes = {
+					730C42CB1B2686E2009411B7 = {
+						CreatedOnToolsVersion = 6.3.2;
+						TestTargetID = 7315511C13583FFD004CCD09;
+					};
 					73A006501B004C270017013B = {
 						CreatedOnToolsVersion = 6.3.1;
 						TestTargetID = 7315511C13583FFD004CCD09;
@@ -768,11 +837,19 @@
 			targets = (
 				7315511C13583FFD004CCD09 /* Saino */,
 				73A006501B004C270017013B /* Saino Logic Tests */,
+				730C42CB1B2686E2009411B7 /* Saino App Tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		730C42CA1B2686E2009411B7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7315511B13583FFD004CCD09 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -793,6 +870,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		730C42C81B2686E2009411B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				730C42E21B27EDF1009411B7 /* Saino_App_Tests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7315511913583FFD004CCD09 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -821,6 +906,7 @@
 				73F70A6B1513247500A5B3B5 /* FEMBodyForce.m in Sources */,
 				73059E43186BD5F9008B5E44 /* Numerics.c in Sources */,
 				73F70A6E1513467C00A5B3B5 /* FEMUtilities.m in Sources */,
+				730C42E61B3A895B009411B7 /* SainoViewControler.m in Sources */,
 				73882CB3151C483600B11665 /* FEMMatrixCRS.m in Sources */,
 				73882CB7151C73F000B11665 /* FEMMatrixBand.m in Sources */,
 				73456A711521A137003054EB /* FEMBoundaryCondition.m in Sources */,
@@ -847,6 +933,7 @@
 				73702BEC15EC5E240056C80E /* FEMMeshUtils.m in Sources */,
 				7316B30316144DC900A8C23C /* FEMInterpolation.m in Sources */,
 				73C494FD192EED3200F36146 /* Walls.c in Sources */,
+				730C42DD1B26F499009411B7 /* FEMTest.m in Sources */,
 				737CCFCB1683F5EA00A94486 /* FEMBoundary.m in Sources */,
 				73206776168D7D9700BAE816 /* FEMElementUtils.m in Sources */,
 				73E6B57D181A55AE00D3AB31 /* OpenCLUtils.c in Sources */,
@@ -959,6 +1046,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		730C42D31B2686E2009411B7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7315511C13583FFD004CCD09 /* Saino */;
+			targetProxy = 730C42D21B2686E2009411B7 /* PBXContainerItemProxy */;
+		};
 		73A006581B004C270017013B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7315511C13583FFD004CCD09 /* Saino */;
@@ -994,6 +1086,64 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		730C42D41B2686E2009411B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				INFOPLIST_FILE = "Saino App Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
+			};
+			name = Debug;
+		};
+		730C42D51B2686E2009411B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				INFOPLIST_FILE = "Saino App Tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
+			};
+			name = Release;
+		};
 		7315514D13583FFD004CCD09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1061,7 +1211,10 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Saino/Saino-Prefix.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					DEBUG,
+					TEST,
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
@@ -1166,6 +1319,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		730C42D61B2686E2009411B7 /* Build configuration list for PBXNativeTarget "Saino App Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				730C42D41B2686E2009411B7 /* Debug */,
+				730C42D51B2686E2009411B7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		7315511713583FFD004CCD09 /* Build configuration list for PBXProject "Saino" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -79,6 +79,7 @@
 
 // This class method retuns an instance (singleton) of FEMCore
 +(id)sharedCore;
++(void)selfDestruct;
 
 -(void)deallocation;
 

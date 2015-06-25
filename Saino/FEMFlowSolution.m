@@ -23,6 +23,10 @@
 #import "Utils.h"
 #import "TimeProfile.h"
 
+#ifdef TEST
+    #import "FEMTest.h"
+#endif
+
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
 -(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel *)model;
@@ -1535,6 +1539,11 @@
         relativeChange = solution.variable.nonLinChange;
         NSLog(@"FEMFlowSolution:solutionComputer: result norm: %e\n", solution.variable.norm);
         NSLog(@"FEMFlowSolution:solutionComputer: relative change: %e\n", relativeChange);
+        
+#ifdef TEST
+        FEMTest *test = [FEMTest sharedTest];
+        test.norm = solution.variable.norm;
+#endif
         
         if (relativeChange < newtonTol || iter > newtonIter) newtonLinearization = YES;
         if (relativeChange < nonLinearTol && iter < nonLinearIter) break;

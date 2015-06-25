@@ -2756,14 +2756,21 @@ static const int PRECOND_VANKA     =  560;
 @synthesize outputPE = _outputPE;
 
 #pragma mark Singleton method
+
+static FEMCore *sharedCore = nil;
+static dispatch_once_t onceToken;
+
 +(id)sharedCore {
     
-    static FEMCore *sharedCore = nil;
-    static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedCore = [[self alloc] init];
     });
     return sharedCore;
+}
+
++(void) selfDestruct {
+    sharedCore = nil;
+    onceToken = 0;
 }
 
 - (id)init

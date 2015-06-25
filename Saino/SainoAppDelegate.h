@@ -8,11 +8,15 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "SainoViewControler.h"
+
 @interface SainoAppDelegate : NSObject <NSApplicationDelegate> {
 @private
     NSWindow *window;
+    SainoViewControler *saino_view_controller;
 }
 
 @property (strong) IBOutlet NSWindow *window;
+@property (nonatomic) SainoViewControler *saino_view_controller;
 
 @end

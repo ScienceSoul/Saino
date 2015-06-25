@@ -20,6 +20,10 @@
 #import "TimeProfile.h"
 #import "GaussIntegration.h"
 
+#ifdef TEST
+    #import "FEMTest.h"
+#endif
+
 @interface FEMJob ()
 -(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle;
 -(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle;
@@ -1478,7 +1482,11 @@ jump:
 -(void)deallocation {
     
     [_core deallocation];
+    [FEMCore selfDestruct];
+    
     [_elementDescription deallocation];
+    [FEMElementDescription selfDestruct];
+    
     [_model deallocation];
     
     if (_timeStepSizes != NULL) {
@@ -1831,6 +1839,15 @@ jump:
     
     // TODO: add support for parallel runs
     NSLog(@"JOB: The end.\n");
+    
+#ifdef TEST
+    FEMTest *test = [FEMTest sharedTest];
+    if (test.do_heatq == YES) {
+        test.heatq_allDone = YES;
+    } else if (test.do_step_stokes == YES) {
+        test.step_stokes_allDone = YES;
+    }
+#endif
 }
 
 @end

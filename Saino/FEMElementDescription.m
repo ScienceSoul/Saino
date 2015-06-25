@@ -664,14 +664,20 @@
 
 #pragma mark Singleton method
 
+static FEMElementDescription *sharedElementDescription = nil;
+static dispatch_once_t onceToken;
+
 +(id)sharedElementDescription {
     
-    static FEMElementDescription *sharedElementDescription = nil;
-    static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedElementDescription = [[self alloc] init];
     });
     return sharedElementDescription;
+}
+
++(void) selfDestruct {
+    sharedElementDescription = nil;
+    onceToken = 0;
 }
 
 #pragma mark Public methods...

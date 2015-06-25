@@ -16,6 +16,8 @@
 }
 
 +(id)sharedElementDescription;
++(void)selfDestruct;
+
 -(void)deallocation;
 -(void)addDescriptionOfElement:(ElementType_t *)element withBasisTerms:(int *)terms;
 -(void)initElementDescriptions;
