@@ -256,7 +256,7 @@
     int i, j, k, n, nb, nd, t, bf_id, body_id, cols=0, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords, modelDim, newtonIter, nonLinearIter, rows=0;
     static int dt, saveTimeStep=-1;
     int *tempPerm = NULL, *meshVeloPerm = NULL;
-    double *forceVector = NULL, *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;
+    double *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;
     double angularVelocity[3], at, at0, at1, freeSTol, gravity[3], nonLinearRelax, nonLinearTol, newtonTol, pseudoCompressibilityScale, referencePressure, relativeChange, relaxation, specificHeatRatio, st, sum, tDiff, totat, totst, uNorm;
     NSString *compressibilitFlag, *flowModel, *localCoords, *stabilizeFlag, *varName;
     BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, hydrostatic = NO, ifTransient, magneticForce = NO, mbFlag, newtonLinearization = NO, normalTangential, porous, potentialForce, pseudoCompressible, pseudoPressureExists=NO, pseudoPressureUpdate=NO, relaxBefore, rotating, stabilize, useLocalCoords = NO;
@@ -492,7 +492,6 @@
     if (densitySol != nil) densityContainers = densitySol.getContainers;
     
     matContainers = solution.matrix.getContainers;
-    forceVector = matContainers->RHS;
     uNorm = solution.variable.norm;
     
     // Allocate some permanent storage, this is done first time only
@@ -689,8 +688,8 @@
         nonLinearRelax = [solution.solutionInfo[@"nonlinear system relaxation factor"] doubleValue];
     } else {
         nonLinearRelax = 1.0;
-        [solution.solutionInfo setObject:@(nonLinearRelax) forKey:@"nonlinear system relaxation factor"];
     }
+    [solution.solutionInfo setObject:@1 forKey:@"nonlinear system relaxation factor"];
     
     if (nonLinearRelax != 1.0) {
         [solution.solutionInfo setObject:@YES forKey:@"skip compute nonlinear change"];
@@ -748,7 +747,7 @@
         NSLog(@"FEMFlowSolution:solutionComputer:\n");
         NSLog(@"FEMFlowSolution:solutionComputer: Starting Assembly...\n");
 
-        [core initializeToZeroMatrix:solution.matrix forceVector:forceVector sizeForceVector:matContainers->sizeRHS model:model solution:solution];
+        [core initializeToZeroMatrix:solution.matrix forceVector: matContainers->RHS sizeForceVector:matContainers->sizeRHS model:model solution:solution];
         
         bf_id = -1;
         body_id = -1;
@@ -1177,7 +1176,7 @@
                     }
                 }
                 
-                potentialForce =  listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, bodyForceAtID.valuesList, @"potential force", &found);
+                potentialForce = listGetLogicalIMP(listUtilities, @selector(listGetLogical:inArray:forVariable:info:), model, bodyForceAtID.valuesList, @"potential force", &found);
                 if (potentialForce == YES) {
                     found = getRealIMP(core, @selector(getReal:forElement:inArray:variableName:buffer:listUtilities:), model, element, bodyForceAtID.valuesList, @"potential field", &vector, listUtilities);
                     if (found == YES) memcpy(_potentialField, vector.vector, n*sizeof(double));
@@ -1501,17 +1500,18 @@
         
         // This hack is needed because of the fluctuating pressure levels
         if (nonLinearRelax != 1.0) {
-            double s = 0.0;
+            double s = 0.0, ps = 0.0;
             if (compressibilityModel == incompressible) {
                 s = _flowSolution[_nsdofs-1];
+                ps = _pSolution[_nsdofs-1];
                 for (i=_nsdofs-1; i<n; i+=_nsdofs) {
                     _flowSolution[i] = _flowSolution[i] - s;
-                    _pSolution[i] = _pSolution[i] - _pSolution[_nsdofs-1];
+                    _pSolution[i] = _pSolution[i] - ps;
                 }
             }
             
             for (i=0; i<n; i++) {
-                _flowSolution[i] = (1.0-nonLinearRelax)*_pSolution[i] + nonLinearRelax*_flowSolution[i];
+                _flowSolution[i] = (1.0-nonLinearRelax)*_pSolution[i] + nonLinearRelax * _flowSolution[i];
             }
             
             if (compressibilityModel == incompressible) {

@@ -516,6 +516,8 @@
         [test setUpHeateqTest:self];
     } else if (test.do_step_stokes == YES) {
         [test setUpStepStokesTest:self];
+    } else if (test.do_natural_convection == YES) {
+        [test setUpNaturalConvectionTest:self];
     }
 #endif
     

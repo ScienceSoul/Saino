@@ -101,4 +101,33 @@
     }
 }
 
+-(void)testStep_NatConvection {
+    int success;
+    double targetNorm = 0.275036673-03;
+    
+    [_saino_view_controller press:[_saino_view viewWithTag: 3]];  // Natural convection
+    
+    if (self.testApp.natural_convection_allDone == YES) {
+        if ( self.testApp.norm != -1 ) {
+            if ( _targetEps < 0 ) {
+                if ( targetNorm < self.testApp.norm )
+                    success = 0;
+                else
+                    success = -1;
+            } else  if ( 2.0 * fabs(self.testApp.norm - targetNorm) / (self.testApp.norm + targetNorm) < _targetEps ) success = 0;
+            else success = -1;
+        } else {
+            success = 0;
+        }
+        if (success != 0) {
+            NSLog(@"Computed norm: %e\n", self.testApp.norm);
+        } else {
+            NSLog(@"Natural convection:   [Passed].\n");
+        }
+        XCTAssertTrue(success == 0, @"Natural convection:   [FAILED].\n");
+    } else {
+        XCTAssertTrue(self.testApp.natural_convection_allDone == YES, @"Natural convection: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+    }
+}
+
 @end

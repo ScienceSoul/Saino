@@ -12,7 +12,6 @@
     
     int _tag;
     NSMutableArray *_valuesList;  // Array of FEMValueList objects
-
 }
 
 @property(nonatomic, assign) int tag;

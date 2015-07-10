@@ -35,6 +35,8 @@
             test.do_heatq = YES;
         } else if ([[sender title] isEqualToString:@"StepStokes"]) {
             test.do_step_stokes = YES;
+        } else if ([[sender title] isEqualToString:@"NatConvection"]) {
+            test.do_natural_convection = YES;
         }
         _job = [[FEMJob alloc] init];
         [_job runWithInitialize:initialize];

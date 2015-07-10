@@ -683,7 +683,6 @@ static const int PRECOND_VANKA     =  560;
                                 tempVector[k] = tempVector[k] + projectorContainers->Values[l]*tempVector[m];
                             }
                         }
-
                     }
                 }
             }
@@ -1261,21 +1260,19 @@ static const int PRECOND_VANKA     =  560;
     
     // Check if this element has been defined as passive
     if ([self FEMCore_checkPassiveElement:element model:model solution:solution] == YES) return;
-    
-    localStiffMatrix = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
-    
+        
     rotate = YES;
     if (rotateNT != NULL) rotate = *rotateNT;
     
     if (rotate == YES && _normalTangentialNumberOfNodes > 0) {
-        
+        localStiffMatrix = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
         dim = model.dimension;
         memset( indexes, -1, sizeof(indexes) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
         [self FEMCore_rotateMatrix:localStiffMatrix solution:solution vector:localForce size:n dimension:dim dofs:dofs nodeIndexes:indexes];
-    
+        free_dmatrix(localStiffMatrix, 0, (n*dofs)-1, 0, (n*dofs)-1);
     }
     
     for (i=0; i<n; i++) {
@@ -1287,8 +1284,6 @@ static const int PRECOND_VANKA     =  560;
         }
         
     }
-    
-    free_dmatrix(localStiffMatrix, 0, (n*dofs)-1, 0, (n*dofs)-1);
 }
 
 #pragma mark Update force
@@ -2381,6 +2376,7 @@ static const int PRECOND_VANKA     =  560;
                     || solution.solutionMode == SOLUTION_MODE_BLOCK)) {
                     NSLog(@"FEMCore:SolveEquations: no routine related to solution!\n");
                     doneThis[k] = YES;
+                    k++;
                     continue;
                 }
             }
@@ -2389,11 +2385,13 @@ static const int PRECOND_VANKA     =  560;
                 when = (solution.solutionInfo[@"invoke solution computer"]);
                 if ([when isEqualToString:@"always"] == NO) {
                     doneThis[k] = YES;
+                    k++;
                     continue;
                 }
             } else {
                 if (solution.solutionSolveWhen != SOLUTION_SOLVE_ALWAYS) {
                     doneThis[k] = YES;
+                    k++;
                     continue;
                 }
             }
@@ -2412,7 +2410,10 @@ static const int PRECOND_VANKA     =  560;
                     break;
                 }
             }
-            if (afterConverged[k] == YES && !(allAfterConverged == YES || allDoneThis == YES)) continue;
+            if (afterConverged[k] == YES && !(allAfterConverged == YES || allDoneThis == YES)) {
+                k++;
+                continue;
+            }
             
             n = 0;
             if (solution.variable != nil) {
@@ -5982,7 +5983,7 @@ static dispatch_once_t onceToken;
         }
         [timeIntegration fractionalStepInSolution:solution numberOfNodes:n*dofs dt:dt massMatrix:massMatrix stiffMatrix:stiffMatrix force:force prevSolution:buffer rows:rows];
     }
-    else if ([method isEqualToString:@"bfs"]) {
+    else if ([method isEqualToString:@"bdf"]) {
         dts[0] = dt;
         constantDt = YES;
         if (order > 1) {
@@ -6001,7 +6002,6 @@ static dispatch_once_t onceToken;
         }
     }
     else {
-        
         for (i=0; i<dofs*n; i++) {
             buffer[i] = prevSol[i][0];
         }
@@ -7037,7 +7037,6 @@ static dispatch_once_t onceToken;
         } else componentName = solution.variable.name;
         
         [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
-        
         [self setDirichletBoundaries:model inSolution:solution variableName:(NSMutableString *)componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix];
         
         // Dirichlet BCs for face and edge dofs
@@ -7084,7 +7083,7 @@ static dispatch_once_t onceToken;
                             for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                 nb = varContainers->Perm[_g_Ind[k]];
                                 if (nb < 0) continue;
-                                nb = u_offset + solution.variable.dofs*nb + dof;
+                                nb = u_offset + solution.variable.dofs * nb + dof;
                                 if (solution.matrix.isSymmetric == YES) {
                                     [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]/diagScaling[nb]];
                                 } else {
@@ -7117,7 +7116,7 @@ static dispatch_once_t onceToken;
                                 for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                     nb = varContainers->Perm[_g_Ind[k]];
                                     if (nb < 0) continue;
-                                    nb = u_offset + solution.variable.dofs*nb + dof;
+                                    nb = u_offset + solution.variable.dofs * nb + dof;
                                     if (solution.matrix.isSymmetric == YES) {
                                         [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:nb value:_kernWork[0]/diagScaling[nb]];
                                     } else {
@@ -7299,6 +7298,7 @@ static dispatch_once_t onceToken;
     utilities = [[FEMUtilities alloc] init];
     
     relax = NO;
+    relaxBefore = NO;
     
     if (steadyState == YES) {
         skip = [(solution.solutionInfo)[@"skip compute steady state change"] boolValue];
@@ -7341,7 +7341,6 @@ static dispatch_once_t onceToken;
             }
         }
     } else {
-        
         if ((solution.solutionInfo)[@"skip compute nonlinear change"] != nil) {
             skip  = [(solution.solutionInfo)[@"skip compute nonlinear change"] boolValue];
         } else {
@@ -7374,7 +7373,7 @@ static dispatch_once_t onceToken;
         }
         if (relax == YES) {
             if ((solution.solutionInfo)[@"nonlinear system relaxation after"] != nil) {
-                relaxAfter = [(solution.solutionInfo)[@"nonlinear system relaxation after"] boolValue];
+                relaxAfter = [(solution.solutionInfo)[@"nonlinear system relaxation after"] intValue];
                 if (relaxAfter >= solution.variable.nonLinIter) relax = NO;
             }
         }
@@ -7432,7 +7431,7 @@ static dispatch_once_t onceToken;
     
     if (relax == YES && relaxBefore == YES) {
         for (i=0; i<n; i++) {
-            x[i] = (1.0-relaxation) * x0[i] + relaxation*x[i];
+            x[i] = (1.0-relaxation) * x0[i] + relaxation * x[i];
         }
     }
     
@@ -8033,7 +8032,6 @@ static dispatch_once_t onceToken;
     
     // Get the selector for the preconditioning method we want to use
     if (pCondType == PRECOND_NONE) {
-        
         if (matrix.isComplexMatrix == NO) {
             pcondSelector = @selector(CRSPCondDummyMatrix:afterPrecondition:rightHandSide:info:);
         } else {
@@ -8056,12 +8054,10 @@ static dispatch_once_t onceToken;
     }
     
     if (matrix.isComplexMatrix == NO) {
-        
         if (internal == YES) {
             if (ipar[4] == 0) ipar[4] = HUGE_VAL;
         }
     } else {
-        
         ipar[2] = ipar[2] / 2;
         if (internal == YES) {
             if (ipar[4] == 0) ipar[4] = HUGE_VAL;
@@ -8079,7 +8075,7 @@ static dispatch_once_t onceToken;
         } else if (abortNotConverged == YES) {
             errorfunct("FEMCore:iterativeSolveMatrix", "Failed convergence tolerances.");
         } else {
-            errorfunct("FEMCore:iterativeSolveMatrix", "Failed convergence tolerances.");
+            NSLog(@"FEMCore:iterativeSolveMatrix: Failed convergence tolerances.");
         }
     }
     

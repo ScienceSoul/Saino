@@ -20,8 +20,8 @@
     int _tag;
     NSMutableArray *_valuesList;  // Array of FEMValueList objects
     FEMMatrix *_pMatrix;
-
 }
+
 @property(nonatomic, assign) int tag;
 @property(nonatomic, strong) NSMutableArray *valuesList;
 @property(nonatomic, strong) FEMMatrix *pMatrix;

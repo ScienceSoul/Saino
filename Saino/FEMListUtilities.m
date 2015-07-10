@@ -14,6 +14,7 @@
 #import "FEMSimulation.h"
 #import "FEMEquation.h"
 #import "FEMMaterial.h"
+#import "FEMInitialConditions.h"
 #import "FEMUtilities.h"
 #import "Utils.h"
 
@@ -749,6 +750,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -773,6 +775,9 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
     
     for (FEMValueList *list in valuesArray) {
@@ -813,6 +818,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -837,8 +843,11 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
-    
+
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
             newValueList = list;
@@ -876,6 +885,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -901,6 +911,9 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
     
     for (FEMValueList *list in valuesArray) {
@@ -924,13 +937,13 @@
     containers->sizeIValues = 1;
     
     if (value == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
-        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        NSLog(@"FEMListUtilities:addIntegerInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addIntegerInClassList", "Program terminating now...");
         
     }
     if (value != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
-        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        NSLog(@"FEMListUtilities:addIntegerInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addIntegerInClassList", "Program terminating now...");
     }
     if (value != NULL) {
         containers->iValues[0] = *value;
@@ -954,6 +967,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -979,8 +993,11 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
-    
+
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
             newValueList = list;
@@ -1001,13 +1018,13 @@
     containers->iValues = intvec(0, n-1);
     containers->sizeIValues = n;
     if (values == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@\n", varName);
-        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        NSLog(@"FEMListUtilities:addIntegerArrayInClassList: no valid (value or block) input for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addIntegerArrayInClassList", "Program terminating now...");
         
     }
     if (values != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@\n", varName);
-        errorfunct("FEMListUtilities:addConstRealInClassList", "Program terminating now...");
+        NSLog(@"FEMListUtilities:addIntegerArrayInClassList: value and block are both non-null for variable %@\n", varName);
+        errorfunct("FEMListUtilities:addIntegerArrayInClassList", "Program terminating now...");
     }
     if (values != NULL) {
         memcpy(containers->iValues, values, n*sizeof(int));
@@ -1032,6 +1049,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -1057,6 +1075,9 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
     
     for (FEMValueList *list in valuesArray) {
@@ -1115,6 +1136,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -1140,8 +1162,11 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
-    
+
     for (FEMValueList *list in valuesArray) {
         if ([varName isEqualToString:list.name] == YES) {
             newValueList = list;
@@ -1204,6 +1229,7 @@
     FEMConstants *constants;
     FEMEquation *equation;
     FEMMaterial *material;
+    FEMInitialConditions *initialCondition;
     FEMValueList *newValueList;
     NSMutableArray *valuesArray;
     BOOL found;
@@ -1228,6 +1254,9 @@
     } else if ([className isKindOfClass:[FEMMaterial class]]) {
         material = className;
         valuesArray = material.valuesList;
+    } else if ([className isKindOfClass:[FEMInitialConditions class]]) {
+        initialCondition = className;
+        valuesArray = initialCondition.valuesList;
     }
     
     for (FEMValueList *list in valuesArray) {

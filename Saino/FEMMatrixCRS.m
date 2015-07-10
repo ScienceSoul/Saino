@@ -422,7 +422,7 @@
         }
         
         k = k2 - k1 + 1;
-        if (k <= 30) {
+        if ((k+1) <= 30) {
             for (j=k1; j<=k2; j++) {
                 if (matContainers->Cols[j] == n) {
                     matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
@@ -435,14 +435,14 @@
                 }
             }
         } else {
-            int buffer[k2-k1+1];
+            int buffer[k];
             memset( buffer, 0, sizeof(buffer) );
             m = 0;
-            for (i=k1; i<=k2; i++) {
-                buffer[m] = matContainers->Cols[i];
+            for (int ii=k1; ii<=k2; ii++) {
+                buffer[m] = matContainers->Cols[ii];
                 m++;
             }
-            j = [self FEMMatrixCRS_SearchWithinLength:k1 inArray:buffer theValue:n];
+            j = [self FEMMatrixCRS_SearchWithinLength:k inArray:buffer theValue:n];
             if (j >= 0) {
                 j = j + k1;
                 matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;

@@ -314,8 +314,14 @@
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
                                         k1 = indexes[k];
-                                        if (variableContainers->Perm !=NULL) k1 = variableContainers->Perm[k1];
-                                        if (k1 >= 0) variableContainers->Values[k1] = vector.vector[k];
+                                        if (variableContainers->Perm != NULL) k1 = variableContainers->Perm[k1];
+                                        if (k1 >= 0) {
+                                             if (variable.isComponentVariable == YES) {
+                                                 *(variableContainers->ComponentValues[k1]) = vector.vector[k];
+                                             } else {
+                                                 variableContainers->Values[k1] = vector.vector[k];
+                                             }
+                                        }
                                     }
                                 }
                                 
@@ -359,8 +365,7 @@
                                         }
                                     }
                                 }
-                            }
-                            else {
+                            } else {
                                 found = [listUtilities listGetRealArray:model inArray:initialCondition.valuesList forVariable:variable.name numberOfNodes:n indexes:elements[t].NodeIndexes buffer:&tensor];
                                 if (found == YES) {
                                     for (k=0; k<n; k++) {
@@ -1846,6 +1851,8 @@ jump:
         test.heatq_allDone = YES;
     } else if (test.do_step_stokes == YES) {
         test.step_stokes_allDone = YES;
+    } else if (test.do_natural_convection == YES) {
+        test.natural_convection_allDone = YES;
     }
 #endif
 }

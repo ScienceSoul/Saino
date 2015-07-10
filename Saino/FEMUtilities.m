@@ -1032,13 +1032,20 @@
     FEMMesh *mesh, *currentMesh;
     FEMProjector *projector;
     variableArraysContainer *varContainers = NULL, *pvarContainers = NULL, *bufferContainers = NULL;
-    NSString *tmpname;
-    BOOL onlyThis, stat, globalBubbles, output;
+    NSString *searchedName, *tmpname;
+    BOOL onlyThis, stat, globalBubbles, output, canonicalize=YES;
+    
+    NSRange ind = [name rangeOfString:@"["];
+    if (ind.location != NSNotFound) canonicalize = NO;
     
     *found = NO;
     for (FEMVariable *variable in anArray) {
-     
-        if ([variable.name isEqualToString:name] == YES) {
+        if (canonicalize == YES) {
+            searchedName = [variable canonicalizeName];
+        } else {
+            searchedName = variable.name;
+        }
+        if ([searchedName isEqualToString:name] == YES) {
             if (variable.valid == YES) {
                 *found = YES;
                 var = variable;
@@ -1062,7 +1069,6 @@
                 }
             }
         }
-       
     }
     if (pVar == nil) return var;
     
@@ -1959,17 +1965,24 @@
             }
         }
         
-        if ([varName characterAtIndex:0] == '-') {
-            if ([[[varName substringFromIndex:0] substringToIndex:10] isEqualToString:@"-nooutput "] == YES) {
+        range = [varName rangeOfString:@"-"];
+        if (range.location != NSNotFound) {
+            if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+9)-range.location] isEqualToString:@"-nooutput"] == YES) {
                 variableOutput = NO;
-                varName = [varName substringFromIndex:10];
-            }
-            if ([[[varName substringFromIndex:0] substringToIndex:8] isEqualToString:@"-global "] == YES) {
+                i = (int)(range.location+9);
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                varName = [varName substringFromIndex:i];
+            } else if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+7)-range.location] isEqualToString:@"-global"] == YES) {
                 variableGlobal = YES;
-                varName = [varName substringFromIndex:8];
-            }
-            if ([[[varName substringFromIndex:0] substringToIndex:6] isEqualToString:@"-dofs "] == YES) {
-                i = 5;
+                i = (int)(range.location+7);
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                varName = [varName substringFromIndex:i];
+            } else if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+5)-range.location] isEqualToString:@"-dofs"] == YES) {
+                i = (int)(range.location+5);
                 while ([varName characterAtIndex:i] == ' ') {
                     i++;
                 }
@@ -1984,7 +1997,10 @@
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
-                varName = [varName substringFromIndex:j+1];
+                while ([varName characterAtIndex:j] == ' ') {
+                    j++;
+                }
+                varName = [varName substringFromIndex:j];
             }
         }
         if (dofs == 0) dofs = 1;
@@ -2188,17 +2204,24 @@
         variableOutput = YES;
         variableGlobal = NO;
         
-        if ([varName characterAtIndex:0] == '-') {
-            if ([[[varName substringFromIndex:0] substringToIndex:10] isEqualToString:@"-nooutput "] == YES) {
+        range = [varName rangeOfString:@"-"];
+        if (range.location != NSNotFound) {
+            if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+9)-range.location] isEqualToString:@"-nooutput"] == YES) {
                 variableOutput = NO;
-                varName = [varName substringFromIndex:10];
-            }
-            if ([[[varName substringFromIndex:0] substringToIndex:8] isEqualToString:@"-global "] == YES) {
+                i = (int)(range.location+9);
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                varName = [varName substringFromIndex:i];
+            } else if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+7)-range.location] isEqualToString:@"-global"] == YES) {
                 variableGlobal = YES;
-                varName = [varName substringFromIndex:8];
-            }
-            if ([[[varName substringFromIndex:0] substringToIndex:6] isEqualToString:@"-dofs "] == YES) {
-                i = 5;
+                i = (int)(range.location+7);
+                while ([varName characterAtIndex:i] == ' ') {
+                    i++;
+                }
+                varName = [varName substringFromIndex:i];
+            } else if ([[[varName substringFromIndex:range.location] substringToIndex:(range.location+5)-range.location] isEqualToString:@"-dofs"] == YES) {
+                i = (int)(range.location+5);
                 while ([varName characterAtIndex:i] == ' ') {
                     i++;
                 }
@@ -2213,7 +2236,10 @@
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
-                varName = [varName substringFromIndex:j+1];
+                while ([varName characterAtIndex:j] == ' ') {
+                    j++;
+                }
+                varName = [varName substringFromIndex:j];
             }
         }
         if (dofs == 0) dofs = 1;
