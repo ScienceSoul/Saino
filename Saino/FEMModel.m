@@ -425,10 +425,6 @@
 
 -(void)deallocation {
     
-    for (FEMMesh *mesh in self.meshes) {
-        [mesh deallocation];
-    }
-    
     for (FEMValueList *valueList in self.constants.valuesList) {
         [valueList deallocation];
     }
@@ -450,6 +446,10 @@
         [solution.matrix deallocation];
         [solution.variable deallocation];
         [solution deallocation];
+    }
+    
+    for (FEMMesh *mesh in self.meshes) {
+        [mesh deallocation];
     }
     
     for (FEMInitialConditions *initialCondition in self.initialConditions) {

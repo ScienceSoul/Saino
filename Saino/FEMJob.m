@@ -181,7 +181,7 @@
             }
         }
         
-        if ((solution.plugInPrincipalClassInstance == nil && solution.isBuiltInSolution == NO) || initSolution == YES) {
+        if ((solution.plugInPrincipalClassInstance == nil && solution.hasBuiltInSolution == NO) || initSolution == YES) {
             //TODO: Make sure that this is alsways correct. Here if the solution has no mesh
             // we assigned it to the first mesh listed in model.meshes
             if (solution.mesh == nil) solution.mesh = model.meshes[0];
@@ -674,7 +674,7 @@
     listUtilities = [[FEMListUtilities alloc] init];
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_ALL) {
             [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
         }
@@ -923,7 +923,7 @@
                 k = (timeStep-1) % outputIntervals[interval-1];
                 if (k == 0 || steadyStateReached == YES) {
                     for (FEMSolution *solution in model.solutions) {
-                        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+                        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                              _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -937,7 +937,7 @@
                     _lastSaved = YES;
                     
                     for (FEMSolution *solution in model.solutions) {
-                        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+                        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
                         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                             _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -968,7 +968,7 @@
     
 jump:
     for (FEMSolution *solution in model.solutions) {
-        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
             _when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([_when isEqualToString:@"after simulation"] == YES || [_when isEqualToString:@"after all"] == YES) {
@@ -985,7 +985,7 @@ jump:
     
     if (_lastSaved == NO) {
         for (FEMSolution *solution in model.solutions) {
-            if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+            if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
             execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
             if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                 _when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -1811,7 +1811,7 @@ jump:
         // Always save the last step to output
         if (_lastSaved == NO) {
             for (FEMSolution *solution in self.model.solutions) {
-                if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+                if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                 execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
                 if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                     when = (solution.solutionInfo)[@"invoke solution computer"];
@@ -1824,7 +1824,7 @@ jump:
             [self FEMJob_saveCurrent:self.model currentStep:timeStep];
             
             for (FEMSolution *solution in self.model.solutions) {
-                if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+                if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                  execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
                 if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
                     when = (solution.solutionInfo)[@"invoke solution computer"];

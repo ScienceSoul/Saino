@@ -2371,7 +2371,7 @@ static const int PRECOND_VANKA     =  560;
         // Go through number of solutions (heat, laminar or turbulent flow, etc...)
         k = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) {
+            if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) {
                 if (!(solution.solutionMode == SOLUTION_MODE_COUPLED || solution.solutionMode == SOLUTION_MODE_ASSEMBLY
                     || solution.solutionMode == SOLUTION_MODE_BLOCK)) {
                     NSLog(@"FEMCore:SolveEquations: no routine related to solution!\n");
@@ -2594,52 +2594,50 @@ static const int PRECOND_VANKA     =  560;
         // TODO: add support for parallel run
     }
     
-    if (solution.isBuiltInSolution == YES) {
+    if (solution.hasBuiltInSolution == YES) { // Call a built-in solution computer here after allocating it only once. It will be deallocated with its asssociated solution
         if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
-            
-            FEMFlowSolution *flowSolution = [[FEMFlowSolution alloc] init];
-            [flowSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-            [flowSolution deallocation:solution];
-            
-        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
-            
-            FEMMagneticInductionSolution *magneticInductionSolution = [[FEMMagneticInductionSolution alloc] init];
-            [magneticInductionSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-            [magneticInductionSolution deallocation:solution];
-
-        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
-            
-            FEMStressAnalysisSolution *stressAnalysisSolution = [[FEMStressAnalysisSolution alloc] init];
-            [stressAnalysisSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-            [stressAnalysisSolution deallocation:solution];
- 
-        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
-
-            FEMMeshUpdateSolution *meshUpdateSolution = [[FEMMeshUpdateSolution alloc] init];
-            [meshUpdateSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-            [meshUpdateSolution deallocation:solution];
-
-        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
-            
-            if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
-                FEMHeatSolution_OpenCL *heatSolution = [[FEMHeatSolution_OpenCL alloc] init];
-                [heatSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-                [heatSolution deallocation:solution];
-            } else {
-                FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
-                [heatSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-                [heatSolution deallocation:solution];
+            if (solution.builtInSolution == nil) {
+                FEMFlowSolution *flowSolution = [[FEMFlowSolution alloc] init];
+                solution.builtInSolution = flowSolution;
             }
+            [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"magnetic induction"] == YES) {
+            if (solution.builtInSolution == nil) {
+                FEMMagneticInductionSolution *magneticInductionSolution = [[FEMMagneticInductionSolution alloc] init];
+                solution.builtInSolution = magneticInductionSolution;
+            }
+            [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"stress analysis"] == YES) {
+            if (solution.builtInSolution == nil) {
+                FEMStressAnalysisSolution *stressAnalysisSolution = [[FEMStressAnalysisSolution alloc] init];
+                solution.builtInSolution = stressAnalysisSolution;
+            }
+            [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"mesh update"] == YES) {
+            if (solution.builtInSolution == nil) {
+                FEMMeshUpdateSolution *meshUpdateSolution = [[FEMMeshUpdateSolution alloc] init];
+                solution.builtInSolution = meshUpdateSolution;
+            }
+            [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
+        } else if ([(solution.solutionInfo)[@"equation"] isEqualToString:@"heat equation"] == YES) {
+            if (solution.builtInSolution == nil) {
+                if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+                     FEMHeatSolution_OpenCL *heatSolution = [[FEMHeatSolution_OpenCL alloc] init];
+                    solution.builtInSolution = heatSolution;
+                } else {
+                    FEMHeatSolution *heatSolution = [[FEMHeatSolution alloc] init];
+                    solution.builtInSolution = heatSolution;
+                }
+            }
+            [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         } else {
             NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
             errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
         }
 
-    } else if (solution.plugInPrincipalClassInstance != nil) {
+    } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be dallocated with its asssociated solution
         _instance = solution.plugInPrincipalClassInstance;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
-        [_instance deallocation:solution];
-        
     } else {
         NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
         errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
@@ -2836,6 +2834,7 @@ static dispatch_once_t onceToken;
         _stiff = NULL;
         _mass = NULL;
         _x = NULL;
+        _instance = nil;
     }
     
     return self;
@@ -8445,7 +8444,7 @@ static dispatch_once_t onceToken;
     
     if (transient) {
         for (FEMSolution *solution in model.solutions) {
-            if (solution.isBuiltInSolution != NO || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
+            if (solution.hasBuiltInSolution != NO || solution.plugInPrincipalClassInstance != nil) [self initializeTimeStepInSolution:solution model:model];
         }
     }
     
@@ -8457,7 +8456,7 @@ static dispatch_once_t onceToken;
     }
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];
             if ([when isEqualToString:@"before time step"] == YES) {
@@ -8484,7 +8483,7 @@ static dispatch_once_t onceToken;
     if (*realTimeStep > 2) {
         i = 0;
         for (FEMSolution *solution in model.solutions) {
-            if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+            if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
             
             rungeKutta = NO;
             if (transient == YES && solution.timeOrder == 1) {
@@ -8605,7 +8604,7 @@ static dispatch_once_t onceToken;
     prevDt = *dt;
     
     for (FEMSolution *solution in model.solutions) {
-        if (solution.isBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
+        if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
         
         if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
             when = (solution.solutionInfo)[@"invoke solution computer"];
