@@ -2635,7 +2635,7 @@ static const int PRECOND_VANKA     =  560;
             errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
         }
 
-    } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be dallocated with its asssociated solution
+    } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be deallocated with its asssociated solution
         _instance = solution.plugInPrincipalClassInstance;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
     } else {
