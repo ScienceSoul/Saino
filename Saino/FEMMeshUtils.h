@@ -23,5 +23,9 @@
 -(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model;
 -(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model;
 -(void)updateMesh:(FEMMesh *)mesh inSolution:(FEMSolution *)solution model:(FEMModel *)model;
+-(void)allocatePDefinitionsElement:(Element_t *)element;
+-(void)setEdgeFaceDofsMesh:(FEMMesh *)mesh edgeDofs:(int *)edgeDofs faceDofs:(int *)faceDofs;
+-(void)setMaximumDofsMesh:(FEMMesh *)mesh;
+-(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model;
 
 @end

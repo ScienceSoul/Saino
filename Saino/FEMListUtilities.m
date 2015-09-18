@@ -290,6 +290,76 @@
     return found;
 }
 
+/*************************************************************************
+    Gets a real valued parameter in one single point with value x.
+    Note that this uses same logical in MDF as ListGetReal
+    but the variable is just a dummy as the dependent function is
+    assumed to be set inside the code. This should be used with caution
+    is it sets some confusing limitations to the user.
+**************************************************************************/
+-(double)listGetValueParameter:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName value:(double)value info:(BOOL *)found minValue:(double *)minv maxValue:(double *)maxv {
+    
+    double f, t[1];
+    char *nameStr = NULL;
+    valueListArraysContainer *containers = NULL;
+    
+    *found = NO;
+    
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[varName UTF8String];
+    
+    f = 0.0;
+    for (FEMValueList *list in array) {
+        nameStr = (char *)[list.name UTF8String];
+        if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
+            containers = list.getContainers;
+            if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
+                
+                // TODO: implement the call of a user function if given
+                
+                if (containers->tValues == NULL) {
+                    NSLog(@"FEMListUtilities:listGetValueParameter: tValues not allocated in list: %@\n", varName);
+                    errorfunct("FEMListUtilities:listGetValueParameter", "Program terminating now...");
+                }
+                FEMUtilities *utilities = [[FEMUtilities alloc] init];
+                double *buffer = doublevec(0, containers->sizeFValues3-1);
+                for (int i=0; i<containers->sizeFValues3; i++) {
+                    buffer[i] = containers->fValues[0][0][i];
+                }
+                f = [utilities interpolateCurveTvalues:containers->tValues fValues:buffer value:value sizeOfTValues:containers->sizeTValues cubicCoefficient:containers->cubicCoeff];
+                free_dvector(buffer, 0, containers->sizeFValues3-1);
+            } else if (list.type == List_TYPE_BLOCK) {
+                t[0] = value;
+                f = list.block(t);
+            } else {
+                NSLog(@"FEMListUtilities:listGetValueParameter: list type not supported.\n");
+                errorfunct("FEMListUtilities:listGetValueParameter", "Program terminating now...");
+            }
+            *found = YES;
+            if (minv != NULL) {
+                if (f < *minv) {
+                    NSLog(@"FEMListUtilities:listGetValueParameter: value smaller than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *minv, varName);
+                    errorfunct("FEMListUtilities:listGetValueParameter", "Program terminating now...");
+                }
+            }
+            
+            if (maxv != NULL) {
+                if (f > *maxv) {
+                    NSLog(@"FEMListUtilities:listGetValueParameter: value greater than given value: \n");
+                    NSLog(@"Value: %f / Given value: %f / Property: %@\n", f, *maxv, varName);
+                    errorfunct("FEMListUtilities:listGetValueParameter", "Program terminating now...");
+                }
+            }
+            break;
+        }
+    }
+    return f;
+}
+
 /**********************************************************************************
     Gets a real array from the list by its name
 **********************************************************************************/

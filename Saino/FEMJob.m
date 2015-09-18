@@ -1541,7 +1541,7 @@ jump:
 
 -(void)runWithInitialize:(int)initialize {
     
-    int i, j, interval, minVal, timeStep=0;
+    int i, j, extrudeLevels, interval, minVal, timeStep=0;
     NSString *eq, *when;
     BOOL found, execThis;
     FEMListUtilities *listUtilities;
@@ -1617,7 +1617,12 @@ jump:
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
-            // TODO: Add support for 2D mesh extrusion to a 3D mesh
+            // Optionally perform simple extrusion to increase the dimension of the mesh
+            extrudeLevels = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"extruded mesh levels" info:&found minValue:NULL maxValue:NULL];
+            if (extrudeLevels > 1) {
+                
+            }
+            
             
             if (_silent == NO) {
                 NSLog(@"JOB: ---------------------------------------------------------------------\n");

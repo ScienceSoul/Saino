@@ -19,6 +19,7 @@
 -(void)FEMMeshUtils_assignConstraints:(FEMMesh *)mesh;
 -(void)FEMMeshUtils_fixFaceEdges:(FEMMesh *)mesh;
 -(Element_t *)FEMMeshUtils_getEntityForElement:(Element_t *)element edge:(int)number inMesh:(FEMMesh *)mesh;
+-(void)FEMMeshUtils_unitSegmentDivisionTable:(double *)w levels:(int)n model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
 @end
 
 @implementation FEMMeshUtils
@@ -157,14 +158,117 @@
     return entity;
 }
 
+/*************************************************************************************
+    Create node distribution for a unit segment x \in [0,1] with n elements
+    i.e. n+1 nodes. There are different options for the type of distribution.
+    1) Even distribution
+    2) Geometric distribution
+    3) Arbitrary distribution determined by a functional dependence
+    Note that the 3rd algorithm involves iterative solution of the nodal
+    positions and is therefore not bullet-proof.
+*************************************************************************************/
+-(void)FEMMeshUtils_unitSegmentDivisionTable:(double *)w levels:(int)n model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    BOOL found, gotRatio;
+    
+    // Linear distribution and initial guess for the generic case
+    
+    // Geometric division
+    double q = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"extruded mesh ratio" info:&gotRatio minValue:NULL maxValue:NULL];
+    if (gotRatio) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating geometric division.");
+        
+        double h1 = (1.0 - pow(q, (1.0/n))) / (1.0 - q);
+        w[0] = 0.0;
+        double hn = h1;
+        for (int i=1; i<=n-1; i++) {
+            w[i] = w[i-1] + hn;
+            hn = hn * pow(q, (1.0/n));
+        }
+        w[n] = 1.0;
+    }
+    // Generic division given by a function
+    else if ([listUtilities listCheckPresentVariable:@"extruded mesh density" inArray:model.simulation.valuesList] == YES) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating functional division.");
+        
+        // Initial guess is an even distribution
+        for (int i=0; i<=n; i++) {
+            w[i] = i / (1.0 * n);
+        }
+        double *wold = doublevec(0, n);
+        double *h = doublevec(0, n-1);
+        memcpy(wold, w, (n+1)*sizeof(double));
+        
+        // Parameters that determine the accuracy of the iteration
+        int maxiter = 10000;
+        double err_eps = 1.0e-6;
+        
+        // Iterate to have a density distribution
+        int iter;
+        double err, minhn, xn;
+        for (iter=1; iter<=maxiter; iter++) {
+            
+            minhn = HUGE_VAL;
+            memcpy(wold, w, (n+1)*sizeof(double));
+            
+            // Compute the point in the local mesh xn \in [0,1]
+            // and get the mesh parameter for that element from
+            // external function
+            for (int i=1; i<=n; i++) {
+                xn = (w[i] + w[i-1]) / 2.0;
+                minhn = min(minhn, w[i]-w[i-1]);
+                h[i-1] = [listUtilities listGetValueParameter:model inArray:model.simulation.valuesList forVariable:@"extruded mesh density" value:xn info:&found minValue:NULL maxValue:NULL];
+                if (h[i-1] < DBL_EPSILON) errorfunct("FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable", "Given value for h[i] was negative!");
+            }
+            
+            // Utilize symmetric Gaus-Seidel to compute the new positions w(i)
+            // from a weighted mean of the desired elemental densities h(i).
+            // Note that something more clever could be applied here.
+            // This is was just a first implementation....
+            for (int i=1; i<=n-1; i++) {
+                w[i] = (w[i-1]*h[i]+w[i+1]*h[i-1]) / (h[i-1]+h[i]);
+            }
+            for (int i=n-1; i>=1; i--) {
+                w[i] = (w[i-1]*h[i]+w[i+1]*h[i-1]) / (h[i-1]+h[i]);
+            }
+            
+            // If the maximum error is small compared to the minimum element size then exit
+            double max = -HUGE_VAL;
+            for (int i=0; i<=n; i++) {
+                if (fabs(w[i]-wold[i])>max) {
+                    max = fabs(w[i]-wold[i]);
+                }
+            }
+            err = max/minhn;
+            if (err < err_eps) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: convergence obtained in %d iterations.\n", iter);
+                break;
+            }
+        }
+        if (iter > maxiter) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: no convergence obtained for the unit mesh division!\n");
+        }
+        free_dvector(wold, 0, n);
+        free_dvector(h, 0, n-1);
+    } else {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating linear division.\n");
+        for (int i=0; i<=n; i++) {
+            w[i] = i/(1.0 * n);
+        }
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: mesh division ready.\n");
+        for (int i=0; i<=n; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: w(%d): %f\n", i, w[i]);
+        }
+    }
+}
+
 #pragma mark Public methods
 
 - (id)init
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
-        
+        //Initialize here
     }
     
     return self;
@@ -3257,6 +3361,422 @@
     
     solution.matrix = matrix;
     solution.mesh.changed = YES;
+}
+
+-(void)allocatePDefinitionsElement:(Element_t *)element {
+    
+    element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
+    if (element->Pdefs == NULL) errorfunct("FEMMeshUtils:allocatePDefinitionsElement", "Unable to allocate memory");
+    
+    // Initialize fields
+    element->Pdefs->p = 0;
+    element->Pdefs->TetraType = 0;
+    element->Pdefs->isEdge = false;
+    element->Pdefs->PyramidQuadEdge = false;
+    element->Pdefs->LocalNumber = 0;
+    element->Pdefs->GaussPoints = 0;
+}
+
+-(void)setEdgeFaceDofsMesh:(FEMMesh *)mesh edgeDofs:(int *)edgeDofs faceDofs:(int *)faceDofs {
+    
+    Element_t *elements = NULL, *edges = NULL, *faces = NULL;
+    
+    [self findEdgesForMesh:mesh findEdges:NULL];
+    
+    FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
+    
+    elements = mesh.getElements;
+    edges = mesh.getEdges;
+    faces = mesh.getFaces;
+    
+    // Set edge and face polynomial degree and degrees of freedom for
+    // all elements
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        // Iterate each edge of element
+        for (int j=0; j<elements[i].Type.NumberOfEdges; j++) {
+            // Set attributes of p element edges
+            if (elements[i].Pdefs != NULL) {
+                // Set edge polynomial degree and dofs
+                edges[elements[i].EdgeIndexes[j]].Pdefs->p = max(elements[i].Pdefs->p, edges[elements[i].EdgeIndexes[j]].Pdefs->p);
+                edges[elements[i].EdgeIndexes[j]].BDOFs = max(edges[elements[i].EdgeIndexes[j]].BDOFs, edges[elements[i].EdgeIndexes[j]].Pdefs->p-1);
+                edges[elements[i].EdgeIndexes[j]].Pdefs->isEdge = true;
+                // Get Gauss points for edge. If no dofs, two gauss points are
+                // still needed for integration of linear equation
+                edges[elements[i].EdgeIndexes[j]].Pdefs->GaussPoints = (int)pow((double)(edges[elements[i].EdgeIndexes[j]].BDOFs+2), (double)edges[elements[i].EdgeIndexes[j]].Type.dimension);
+                
+                if (edges[elements[i].EdgeIndexes[j]].BoundaryInfo->Left != NULL) {
+                    [self assignLocalNumberToEdgeElement:&edges[elements[i].EdgeIndexes[j]] fromElement:edges[elements[i].EdgeIndexes[j]].BoundaryInfo->Left inMesh:mesh];
+                } else {
+                    [self assignLocalNumberToEdgeElement:&edges[elements[i].EdgeIndexes[j]] fromElement:edges[elements[i].EdgeIndexes[j]].BoundaryInfo->Right inMesh:mesh];
+                }
+            }
+            // Other element types, which need edge dofs
+            else if (edgeDofs != NULL) {
+                edges[elements[i].EdgeIndexes[j]].BDOFs = max(edgeDofs[i], edges[elements[i].EdgeIndexes[j]].BDOFs);
+            }
+            
+            // Get maximum dof for edges
+            mesh.maxEdgeDofs = max(edges[elements[i].EdgeIndexes[j]].BDOFs, mesh.maxEdgeDofs);
+        }
+        
+        // Iterate each face of element
+        for (int j=0; j<elements[i].Type.NumberOfFaces; j++) {
+            // Set attributes of p element faces
+            if (elements[i].Pdefs != NULL) {
+                // Set face polynomial degree and dofs
+                faces[elements[i].FaceIndexes[j]].Pdefs->p = max(elements[i].Pdefs->p, faces[elements[i].FaceIndexes[j]].Pdefs->p);
+                // Get number of face dofs
+                faces[elements[i].FaceIndexes[j]].BDOFs = max(faces[elements[i].FaceIndexes[j]].BDOFs, [elementMaps getFaceDofsForElement:&elements[i] polyDegree:faces[elements[i].FaceIndexes[j]].Pdefs->p faceNumber:j]);
+                faces[elements[i].FaceIndexes[j]].Pdefs->isEdge = true;
+                faces[elements[i].FaceIndexes[j]].Pdefs->GaussPoints = [elementMaps getNumberOfGaussPointsForElement:&faces[elements[i].FaceIndexes[j]] inMesh:mesh];
+                if (faces[elements[i].FaceIndexes[j]].BoundaryInfo->Left != NULL) {
+                    [self assignLocalNumberToEdgeElement:&faces[elements[i].FaceIndexes[j]] fromElement:faces[elements[i].FaceIndexes[j]].BoundaryInfo->Left inMesh:mesh];
+                } else {
+                    [self assignLocalNumberToEdgeElement:&faces[elements[i].FaceIndexes[j]] fromElement:faces[elements[i].FaceIndexes[j]].BoundaryInfo->Right inMesh:mesh];
+                }
+            } else if (faceDofs != NULL) {
+                faces[elements[i].FaceIndexes[j]].BDOFs = max(faceDofs[i], faces[elements[i].FaceIndexes[j]].BDOFs);
+            }
+            
+            // Get maximum dof for faces
+            mesh.maxFaceDofs = max(faces[elements[i].FaceIndexes[j]].BDOFs, mesh.maxFaceDofs);
+        }
+    }
+    
+    // Set local edges for boundary elements
+    for (int i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
+        // Here set local number and copy attributes to this boundary element for left parent
+        if (elements[i].BoundaryInfo->Left != NULL) {
+            // Local edges are only assigned for p elements
+            if (elements[i].BoundaryInfo->Left->Pdefs != NULL) {
+                [self allocatePDefinitionsElement:&elements[i]];
+                elements[i].Pdefs->isEdge = true;
+                [self assignLocalNumberToEdgeElement:&elements[i] fromElement:elements[i].BoundaryInfo->Left inMesh:mesh];
+            }
+        }
+        
+        // Here set local number and copy attributes to this boundary element for right parent
+        if (elements[i].BoundaryInfo->Right != NULL) {
+            // Local edges are only assigned for pe elements
+            if (elements[i].BoundaryInfo->Right->Pdefs != NULL) {
+                [self allocatePDefinitionsElement:&elements[i]];
+                elements[i].Pdefs->isEdge = true;
+                [self assignLocalNumberToEdgeElement:&elements[i] fromElement:elements[i].BoundaryInfo->Right inMesh:mesh];
+            }
+        }
+    }
+    [elementMaps deallocation];
+}
+
+-(void)setMaximumDofsMesh:(FEMMesh *)mesh {
+    
+    Element_t *elements = mesh.getElements;
+    FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
+    
+    // Set Gauss points for each p element
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        if (elements[i].Pdefs != NULL) {
+            elements[i].Pdefs->GaussPoints = [elementMaps getNumberOfGaussPointsForElement:&elements[i] inMesh:mesh];
+        }
+        
+        // Set maximum element dofs here (because element size may have changed when
+        // edges and faces have been set). This is the absolute worst case.
+        // Element which has maxElementDofs may not even be present as a real element
+        mesh.maxElementDofs = max(mesh.maxElementDofs,
+                                  elements[i].Type.NumberOfNodes +
+                                  elements[i].Type.NumberOfEdges*mesh.maxEdgeDofs +
+                                  elements[i].Type.NumberOfFaces*mesh.maxFaceDofs +
+                                  elements[i].BDOFs, elements[i].DGDOFs);
+        mesh.maxBdofs = max(elements[i].BDOFs, mesh.maxBdofs);
+    }
+    
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        if (elements[i].BDOFs > 0) {
+            elements[i].BubbleIndexes = intvec(0, elements[i].BDOFs-1);
+            elements[i].sizeBubbleIndexes = elements[i].BDOFs;
+            for (int j=0; j<elements[i].BDOFs; j++) {
+                elements[i].BubbleIndexes[j] = mesh.maxBdofs*i+j;
+            }
+        }
+    }
+    [elementMaps deallocation];
+}
+
+/*************************************************************************
+ 
+    Given a 2D mesh, extrude it to 3D. The 3rd coordinate will always be
+    at the interval [0,1]. Therefore, the adaptation for different shapes
+    must be done with StructuredMeshMapper or some similar utility.
+    The top and bottom surface will be assigned Boundary Conditions tags
+    with indexes one larger than the maximum used on by the 2D mesh.
+
+*************************************************************************/
+-(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model {
+    
+    int j, k, l, n, bcid, cnt, extrudedCoord, ind[8], ln, max_bid, max_body, nnodes;
+    double currentCoord, w;
+    double *activeCoord = NULL, *wTable;
+    Element_t *elementsIn = NULL, *elementsOut = NULL;
+    ElementType_t *elmType;
+    Nodes_t *nodesIn = NULL, *nodesOut = NULL;
+    FEMBoundaryCondition *boundaryConditionAtId;
+    BOOL found, needEdges;
+    
+    FEMListUtilities * listUtilities = [[FEMListUtilities alloc] init];
+    FEMMesh *meshOut = [[FEMMesh alloc] init];
+    
+    // TODO: Add support for parallel run
+    
+    n = mesh.numberOfNodes;
+    nnodes = (inLevels + 2) * n;
+    
+    nodesIn = mesh.getNodes;
+    nodesOut = meshOut.getNodes;
+    
+    nodesOut->x = doublevec(0, nnodes-1);
+    nodesOut->y = doublevec(0, nnodes-1);
+    nodesOut->z = doublevec(0, nnodes-1);
+    nodesOut->numberOfNodes = nnodes;
+    
+    // TODO: Add support for parallel run
+    
+    // Create the division for the 1D unit mesh
+    wTable = doublevec(0, inLevels+1);
+    [self FEMMeshUtils_unitSegmentDivisionTable:wTable levels:inLevels+1 model:model listUtilities:listUtilities];
+    
+    int minv = 1;
+    int maxv = 3;
+    extrudedCoord = [listUtilities listGetInteger:model inArray:model.simulation.valuesList forVariable:@"extruded coordinate index" info:&found minValue:&minv maxValue:&maxv];
+    if (found == NO) extrudedCoord = 3;
+    
+    if (extrudedCoord == 1) {
+        activeCoord = nodesOut->x;
+    } else if (extrudedCoord == 2) {
+        activeCoord = nodesOut->y;
+    } else if (extrudedCoord == 3) {
+        activeCoord = nodesOut->z;
+    }
+    
+    double minCoord = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"extruded minimum coordinate" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) minCoord = 0.0;
+    
+    double maxCoord = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"extruded maximum coordinate" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) maxCoord = 1.0;
+    
+    cnt = 0;
+    for (int i=0; i<=inLevels+1; i++) {
+        w = wTable[i];
+        currentCoord = w * maxCoord + (1.0 - w) * minCoord;
+        for (j=0; j<mesh.numberOfNodes; j++) {
+            nodesOut->x[cnt] = nodesIn->x[j];
+            nodesOut->y[cnt] = nodesIn->y[j];
+            nodesOut->z[cnt] = nodesIn->z[j];
+            
+            // Override the coordinate in the extruded direction by the value on the layer
+            activeCoord[cnt] = currentCoord;
+            
+            // TODO: Add support for parallel run
+            
+            cnt++;
+        }
+    }
+    meshOut.numberOfNodes = cnt;
+    
+    n = mesh.numberOfElements;
+    elementsOut = meshOut.getElements;
+    elementsOut = (Element_t*) malloc( sizeof(Element_t) * (n*(inLevels+3)) );
+    
+    // Generate volume bulk elements
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    elementsIn = mesh.getElements;
+    meshOut.maxElementNodes = 0;
+    cnt = 0;
+    needEdges = NO;
+    n = mesh.numberOfNodes;
+    for (int i=0; i<=inLevels; i++) {
+        for (j=0; j<mesh.numberOfBulkElements; j++) {
+            elementsOut[cnt] = elementsIn[j];
+            
+            ln = 0;
+            for (k=0; k<elementsIn[j].Type.NumberOfNodes; k++) {
+                ind[ln] = elementsIn[j].NodeIndexes[k]+i*n;
+                ln++;
+            }
+            for (k=0; k<elementsIn[j].Type.NumberOfNodes; k++) {
+                ind[ln] = elementsIn[j].NodeIndexes[k]+(i+1)*n;
+                ln++;
+            }
+            elementsOut[cnt].NDOFs = ln;
+            meshOut.maxElementNodes = max(meshOut.maxElementNodes, ln);
+            
+            switch (ln) {
+                case 6:
+                    elmType = NULL;
+                    elmType = [elementDescription getElementType:706 inMesh:meshOut stabilization:NULL];
+                    elementsOut[cnt].Type = *elmType;
+                    break;
+                case 8:
+                    elmType = NULL;
+                    elmType = [elementDescription getElementType:808 inMesh:meshOut stabilization:NULL];
+                    elementsOut[cnt].Type = *elmType;
+                    break;
+            }
+            
+            elementsOut[cnt].ElementIndex = cnt;
+            elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
+            elementsOut[cnt].sizeNodeIndexes = ln;
+            memcpy(elementsOut[cnt].NodeIndexes, ind, ln*sizeof(int));
+            elementsOut[cnt].EdgeIndexes = NULL;
+            elementsOut[cnt].FaceIndexes = NULL;
+            elementsOut[cnt].BubbleIndexes = NULL;
+            if (elementsIn[j].Pdefs != NULL) {
+                needEdges = YES;
+                elementsOut[cnt].Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
+                elementsOut[cnt].Pdefs = elementsIn[j].Pdefs;
+            }
+            cnt++;
+        }
+    }
+    meshOut.numberOfBulkElements = cnt;
+    
+    // Add side boundaries with the bottom mesh boundary id's
+    max_bid = 0;
+    for (int i=0; i<=inLevels; i++) {
+        for (j=0; j<mesh.numberOfBoundaryElements; j++) {
+            k = j + mesh.numberOfBulkElements;
+            elementsOut[cnt] = elementsIn[k];
+            elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            
+            max_bid = max(max_bid, elementsIn[k].BoundaryInfo->Constraint);
+            
+            if (elementsIn[k].BoundaryInfo->Left != NULL) {
+                l = elementsIn[k].BoundaryInfo->Left->ElementIndex-1;
+                elementsOut[cnt].BoundaryInfo->Left = &elementsOut[mesh.numberOfBulkElements*i+l];
+            }
+            if (elementsIn[k].BoundaryInfo->Right != NULL) {
+                l = elementsIn[k].BoundaryInfo->Right->ElementIndex-1;
+                elementsOut[cnt].BoundaryInfo->Right = &elementsOut[mesh.numberOfBulkElements*i+l];
+            }
+            
+            if (elementsIn[k].Type.ElementCode >= 200) {
+                elementsOut[cnt].NDOFs = 4;
+                elementsOut[cnt].NodeIndexes = intvec(0, 4-1);
+                elementsOut[cnt].sizeNodeIndexes = 4;
+                
+                ind[0] = elementsIn[k].NodeIndexes[0]+i*n;
+                ind[1] = elementsIn[k].NodeIndexes[1]+i*n;
+                ind[2] = elementsIn[k].NodeIndexes[1]+(i+1)*n;
+                ind[3] = elementsIn[k].NodeIndexes[0]+(i+1)*n;
+                memcpy(elementsOut[cnt].NodeIndexes, ind, 4*sizeof(int));
+                elmType = NULL;
+                elmType = [elementDescription getElementType:404 inMesh:meshOut stabilization:NULL];
+                elementsOut[cnt].Type = *elmType;
+            } else {
+                elementsOut[cnt].NDOFs = 1;
+                elementsOut[cnt].NodeIndexes = intvec(0, elementsIn[k].sizeNodeIndexes-1);
+                elementsOut[cnt].sizeNodeIndexes = elementsIn[k].sizeNodeIndexes;
+                for (int l=0; l<elementsIn[k].sizeNodeIndexes; l++) {
+                    elementsOut[cnt].NodeIndexes[l] = elementsIn[k].NodeIndexes[l]+i*n;
+                }
+                elementsOut[cnt].Type = elementsIn[k].Type;
+            }
+            elementsOut[cnt].ElementIndex = (cnt+1) + meshOut.numberOfBulkElements;
+            elementsOut[cnt].Pdefs = NULL;
+            elementsOut[cnt].EdgeIndexes = NULL;
+            elementsOut[cnt].FaceIndexes = NULL;
+            elementsOut[cnt].BubbleIndexes = NULL;
+            cnt++;
+        }
+    }
+    
+    // TODO: Add support for parallel run
+    
+    NSLog(@"FEMMeshUtils:extrudeMesh: first extruded BC set to: %d\n", max_bid+1);
+    
+    max_body = 0;
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        max_body = max(max_body, elementsIn[i].BodyID);
+    }
+    // TODO: Add support for parallel run
+    
+    // Add bottom boundary
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        elementsOut[cnt] = elementsIn[i];
+        
+        ln = elementsIn[i].Type.NumberOfNodes;
+        elementsOut[cnt].NDOFs = ln;
+        
+        elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+        elementsOut[cnt].BoundaryInfo->Left = &elementsOut[i];
+        elementsOut[cnt].BoundaryInfo->Right = NULL;
+        
+        bcid = max_bid + elementsOut[cnt].BodyID;
+        elementsOut[cnt].BoundaryInfo->Constraint = bcid;
+        
+        if (bcid <= model.numberOfBoundaryElements) {
+            boundaryConditionAtId = (model.boundaryConditions)[bcid-1];
+            j = [listUtilities listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"body id" info:&found minValue:NULL maxValue:NULL];
+            if (found == YES) elementsOut[cnt].BodyID = j;
+        }
+        
+        elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
+        elementsOut[cnt].sizeNodeIndexes = ln;
+        memcpy(elementsOut[cnt].NodeIndexes, elementsIn[i].NodeIndexes, ln*sizeof(int));
+        elementsOut[cnt].ElementIndex = cnt+1;
+        elementsOut[cnt].Type = elementsIn[i].Type;
+        elementsOut[cnt].Pdefs = NULL;
+        elementsOut[cnt].EdgeIndexes = NULL;
+        elementsOut[cnt].FaceIndexes = NULL;
+        elementsOut[cnt].BubbleIndexes = NULL;
+        cnt++;
+    }
+    
+    // Add top boundary
+    for (int i=0; i<mesh.numberOfBulkElements; i++) {
+        elementsOut[cnt] = elementsIn[i];
+        
+        ln = elementsIn[i].Type.NumberOfNodes;
+        elementsOut[cnt].NDOFs = ln;
+        
+        elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+        elementsOut[cnt].BoundaryInfo->Left = &elementsOut[inLevels*mesh.numberOfBulkElements+i];
+        elementsOut[cnt].BoundaryInfo->Right = NULL;
+        
+        bcid = max_bid + elementsOut[cnt].BodyID + max_body;
+        elementsOut[cnt].BoundaryInfo->Constraint = bcid;
+        
+        if (bcid <= model.numberOfBoundaryConditions) {
+            boundaryConditionAtId = (model.boundaryConditions)[bcid-1];
+            j = [listUtilities listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"body id" info:&found minValue:NULL maxValue:NULL];
+            if (found == YES) elementsOut[cnt].BodyID = j;
+        }
+        
+        elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
+        elementsOut[cnt].sizeNodeIndexes = ln;
+        for (j=0; j<ln; j++) {
+            elementsOut[cnt].NodeIndexes[j] = elementsIn[i].NodeIndexes[j] + (inLevels+1)*n;
+        }
+        elementsOut[cnt].ElementIndex = cnt+1;
+        elementsOut[cnt].Type = elementsIn[i].Type;
+        elementsOut[cnt].Pdefs = NULL;
+        elementsOut[cnt].EdgeIndexes = NULL;
+        elementsOut[cnt].FaceIndexes = NULL;
+        elementsOut[cnt].BubbleIndexes = NULL;
+        cnt++;
+    }
+    
+    meshOut.numberOfBoundaryElements = cnt - meshOut.numberOfBulkElements;
+    meshOut.name = mesh.name;
+    meshOut.maxElementDofs = meshOut.maxElementNodes;
+    meshOut.dimension = 3;
+    model.dimension = 3;
+    
+    if (needEdges == YES) [self setEdgeFaceDofsMesh:meshOut edgeDofs:NULL faceDofs:NULL];
+    [self setMaximumDofsMesh:meshOut];
+    
+    free_dvector(wTable, 0, inLevels+1);
+    return meshOut;
 }
 
 @end
