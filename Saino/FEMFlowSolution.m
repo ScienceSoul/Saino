@@ -253,7 +253,7 @@
 
 -(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, n, nb, nd, t, bf_id, body_id, cols=0, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords, modelDim, newtonIter, nonLinearIter, rows=0;
+    int i, j, k, n, nb, nd, t, bf_id, body_id, cols=0, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords=0, modelDim=0, newtonIter, nonLinearIter, rows=0;
     static int dt, saveTimeStep=-1;
     int *tempPerm = NULL, *meshVeloPerm = NULL;
     double *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;

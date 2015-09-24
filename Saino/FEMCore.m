@@ -7519,6 +7519,8 @@ static dispatch_once_t onceToken;
     }
     else {
         NSLog(@"FEMCore:computeChange: unknown convergence measure: %@\n", convergenceType);
+        NSLog(@"FEMCore:computeChange: convergence will probably fail!!\n");
+        change = 1.0e6;
     }
     
     // Check for convergence: 0/1

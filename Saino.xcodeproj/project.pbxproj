@@ -810,7 +810,7 @@
 		7315511413583FFD004CCD09 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Institute of Low Temperature Science";
 				TargetAttributes = {
 					730C42CB1B2686E2009411B7 = {
@@ -1112,6 +1112,7 @@
 				INFOPLIST_FILE = "Saino App Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
 			};
@@ -1139,6 +1140,7 @@
 				INFOPLIST_FILE = "Saino App Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
 			};
@@ -1156,6 +1158,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1224,6 +1227,7 @@
 				OPENCL_AUTO_VECTORIZE_ENABLE = YES;
 				OPENCL_COMPILER_VERSION = CL1.1;
 				OPENCL_DOUBLE_AS_SINGLE = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -1250,6 +1254,7 @@
 				OPENCL_AUTO_VECTORIZE_ENABLE = YES;
 				OPENCL_COMPILER_VERSION = CL1.1;
 				OPENCL_DOUBLE_AS_SINGLE = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -1283,6 +1288,7 @@
 				INFOPLIST_FILE = "Saino Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "";
 			};
@@ -1311,6 +1317,7 @@
 				INFOPLIST_FILE = "Saino Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "ScienceSoul.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Saino.app/Contents/MacOS/Saino";
 			};
@@ -1326,6 +1333,7 @@
 				730C42D51B2686E2009411B7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		7315511713583FFD004CCD09 /* Build configuration list for PBXProject "Saino" */ = {
 			isa = XCConfigurationList;
