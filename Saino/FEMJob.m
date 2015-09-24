@@ -182,7 +182,7 @@
         }
         
         if ((solution.plugInPrincipalClassInstance == nil && solution.hasBuiltInSolution == NO) || initSolution == YES) {
-            //TODO: Make sure that this is alsways correct. Here if the solution has no mesh
+            //TODO: Make sure that this is always correct. Here if the solution has no mesh
             // we assigned it to the first mesh listed in model.meshes
             if (solution.mesh == nil) solution.mesh = model.meshes[0];
             model.solution = solution;
@@ -1545,6 +1545,7 @@ jump:
     NSString *eq, *when;
     BOOL found, execThis;
     FEMListUtilities *listUtilities;
+    FEMMesh *extrudedMesh;
     listBuffer listBuffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     listUtilities = [[FEMListUtilities alloc] init];
@@ -1620,10 +1621,15 @@ jump:
             // Optionally perform simple extrusion to increase the dimension of the mesh
             extrudeLevels = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"extruded mesh levels" info:&found minValue:NULL maxValue:NULL];
             if (extrudeLevels > 1) {
-                
+                FEMMeshUtils *meshUtils = [[FEMMeshUtils alloc] init];
+                extrudedMesh = [meshUtils extrudeMesh:self.model.meshes[0] inLevels:extrudeLevels-2 model:self.model];
+                for (FEMSolution *solution in self.model.solutions) {
+                    if (solution.mesh == self.model.meshes[0]) {
+                        solution.mesh = extrudedMesh;
+                    }
+                }
+                [self.model.meshes addObject:extrudedMesh];
             }
-            
-            
             if (_silent == NO) {
                 NSLog(@"JOB: ---------------------------------------------------------------------\n");
             }
