@@ -2953,7 +2953,6 @@
         }
         if (found == YES) break;
     }
-    
     return currentBundle;
 }
 
@@ -2964,7 +2963,6 @@
             return YES;
         }
     }
-    
     return NO;
 }
 

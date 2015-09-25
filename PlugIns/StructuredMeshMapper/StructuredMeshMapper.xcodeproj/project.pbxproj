@@ -1,0 +1,276 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		739B525B1BB4DFCE00E55A15 /* FEMStructuredMeshMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 739B525A1BB4DFCE00E55A15 /* FEMStructuredMeshMapper.m */; settings = {ASSET_TAGS = (); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		739B52511BB4DA7900E55A15 /* StructuredMeshMapper.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StructuredMeshMapper.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		739B52541BB4DA7900E55A15 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		739B525A1BB4DFCE00E55A15 /* FEMStructuredMeshMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMStructuredMeshMapper.m; sourceTree = "<group>"; };
+		739B525D1BB4E70D00E55A15 /* FEMStructuredMeshMapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FEMStructuredMeshMapper.h; sourceTree = "<group>"; };
+		739B525F1BB4E7FD00E55A15 /* FEMModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMModel.h; sourceTree = "<group>"; };
+		739B52601BB4E7FD00E55A15 /* FEMSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSolution.h; sourceTree = "<group>"; };
+		739B52611BB4E9C900E55A15 /* Constructors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constructors.h; sourceTree = "<group>"; };
+		739B52621BB4E9C900E55A15 /* FEMConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMConstants.h; sourceTree = "<group>"; };
+		739B52631BB4E9C900E55A15 /* FEMSimulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSimulation.h; sourceTree = "<group>"; };
+		739B52641BB4E9C900E55A15 /* FileReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileReader.h; sourceTree = "<group>"; };
+		739B52651BB4EA3C00E55A15 /* FEMMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrix.h; sourceTree = "<group>"; };
+		739B52661BB4EA3C00E55A15 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMesh.h; sourceTree = "<group>"; };
+		739B52671BB4EA3C00E55A15 /* FEMVariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMVariable.h; sourceTree = "<group>"; };
+		739B52681BB4EACA00E55A15 /* SainoSolutionsComputer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SainoSolutionsComputer.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		739B524E1BB4DA7900E55A15 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		739B52481BB4DA7900E55A15 = {
+			isa = PBXGroup;
+			children = (
+				739B52531BB4DA7900E55A15 /* StructuredMeshMapper */,
+				739B52521BB4DA7900E55A15 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		739B52521BB4DA7900E55A15 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				739B52511BB4DA7900E55A15 /* StructuredMeshMapper.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		739B52531BB4DA7900E55A15 /* StructuredMeshMapper */ = {
+			isa = PBXGroup;
+			children = (
+				739B52541BB4DA7900E55A15 /* Info.plist */,
+				739B525A1BB4DFCE00E55A15 /* FEMStructuredMeshMapper.m */,
+				739B525D1BB4E70D00E55A15 /* FEMStructuredMeshMapper.h */,
+				739B525F1BB4E7FD00E55A15 /* FEMModel.h */,
+				739B52601BB4E7FD00E55A15 /* FEMSolution.h */,
+				739B52621BB4E9C900E55A15 /* FEMConstants.h */,
+				739B52631BB4E9C900E55A15 /* FEMSimulation.h */,
+				739B52651BB4EA3C00E55A15 /* FEMMatrix.h */,
+				739B52661BB4EA3C00E55A15 /* FEMMesh.h */,
+				739B52671BB4EA3C00E55A15 /* FEMVariable.h */,
+				739B52641BB4E9C900E55A15 /* FileReader.h */,
+				739B52611BB4E9C900E55A15 /* Constructors.h */,
+				739B52681BB4EACA00E55A15 /* SainoSolutionsComputer.h */,
+			);
+			path = StructuredMeshMapper;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		739B52501BB4DA7900E55A15 /* StructuredMeshMapper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 739B52571BB4DA7900E55A15 /* Build configuration list for PBXNativeTarget "StructuredMeshMapper" */;
+			buildPhases = (
+				739B524D1BB4DA7900E55A15 /* Sources */,
+				739B524E1BB4DA7900E55A15 /* Frameworks */,
+				739B524F1BB4DA7900E55A15 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StructuredMeshMapper;
+			productName = StructuredMeshMapper;
+			productReference = 739B52511BB4DA7900E55A15 /* StructuredMeshMapper.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		739B52491BB4DA7900E55A15 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0700;
+				ORGANIZATIONNAME = ScienceSoul;
+				TargetAttributes = {
+					739B52501BB4DA7900E55A15 = {
+						CreatedOnToolsVersion = 7.0;
+					};
+				};
+			};
+			buildConfigurationList = 739B524C1BB4DA7900E55A15 /* Build configuration list for PBXProject "StructuredMeshMapper" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 739B52481BB4DA7900E55A15;
+			productRefGroup = 739B52521BB4DA7900E55A15 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				739B52501BB4DA7900E55A15 /* StructuredMeshMapper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		739B524F1BB4DA7900E55A15 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		739B524D1BB4DA7900E55A15 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				739B525B1BB4DFCE00E55A15 /* FEMStructuredMeshMapper.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		739B52551BB4DA7900E55A15 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		739B52561BB4DA7900E55A15 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		739B52581BB4DA7900E55A15 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = StructuredMeshMapper/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_BUNDLE_IDENTIFIER = ScienceSoul.StructuredMeshMapper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		739B52591BB4DA7900E55A15 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = StructuredMeshMapper/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_BUNDLE_IDENTIFIER = ScienceSoul.StructuredMeshMapper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		739B524C1BB4DA7900E55A15 /* Build configuration list for PBXProject "StructuredMeshMapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				739B52551BB4DA7900E55A15 /* Debug */,
+				739B52561BB4DA7900E55A15 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		739B52571BB4DA7900E55A15 /* Build configuration list for PBXNativeTarget "StructuredMeshMapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				739B52581BB4DA7900E55A15 /* Debug */,
+				739B52591BB4DA7900E55A15 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 739B52491BB4DA7900E55A15 /* Project object */;
+}

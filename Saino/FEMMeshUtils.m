@@ -7,19 +7,21 @@
 //
 
 #import "FEMMeshUtils.h"
-#import "Utils.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMPElementMaps.h"
 #import "FEMElementDescription.h"
 #import "FEMUtilities.h"
+#import "Utils.h"
+#import "TimeProfile.h"
 
 @interface FEMMeshUtils ()
 -(void)FEMMeshUtils_assignConstraints:(FEMMesh *)mesh;
 -(void)FEMMeshUtils_fixFaceEdges:(FEMMesh *)mesh;
 -(Element_t *)FEMMeshUtils_getEntityForElement:(Element_t *)element edge:(int)number inMesh:(FEMMesh *)mesh;
 -(void)FEMMeshUtils_unitSegmentDivisionTable:(double *)w levels:(int)n model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString *)type vector:(double *)vector solution:(FEMSolution *)solution;
 @end
 
 @implementation FEMMeshUtils
@@ -260,6 +262,35 @@
             NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: w(%d): %f\n", i, w[i]);
         }
     }
+}
+
+-(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString *)type vector:(double *)vector solution:(FEMSolution *)solution {
+    
+    double coeff=0.0, rtmp[3];
+    static BOOL visited = NO;
+    
+    if (visited == NO) {
+        if ([(solution.solutionInfo)[@"angles in degrees"] boolValue] == YES) {
+            coeff = 180.0 / M_PI;
+        } else {
+            coeff = 1.0;
+        }
+        visited = YES;
+    }
+    
+    if ([type isEqualToString:@"cartesian to cylindrical"] == YES) {
+        rtmp[0] = sqrt(pow(vector[0], 2.0) + pow(vector[1], 2.0));
+        rtmp[1] = coeff * atan2(vector[1], vector[0]);
+        rtmp[2] = vector[2];
+    } else if ([type isEqualToString:@"cylindrical to cartesiean"] == YES) {
+        rtmp[0] = cos(vector[1] / coeff) * vector[0];
+        rtmp[1] = sin(vector[1] / coeff) * vector[0];
+        rtmp[2] = vector[2];
+    } else {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType: unknown transformation: %@\n", type);
+        errorfunct("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Program terminating now...");
+    }
+    memcpy(vector, rtmp, sizeof(rtmp));
 }
 
 #pragma mark Public methods
@@ -3777,6 +3808,376 @@
     
     free_dvector(wTable, 0, inLevels+1);
     return meshOut;
+}
+
+/*********************************************************************************************************************************
+ 
+    This method finds the structure of an extruded mesh even though it is given in an unstructured format. It may be used by some 
+    special solutions that employ the special character of the mesh. The extrusion is found for a given direction and for each 
+    node the corresponding up and down, and thereafter top and bottom node is computed.
+ 
+    Returns the integer number of elements in the pointer structures
+
+*********************************************************************************************************************************/
+-(int)detectExtrudedStructureMesh:(FEMMesh *)mesh solution:(FEMSolution *)solution model:(FEMModel *)model externVariable:(FEMVariable *)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int *)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int *)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int *)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int *)downNodePointer numberOfLayers:(int *)numberOfLayers nodeLayer:(int *)nodeLayer {
+    
+    int activeDirection, dim, ii, jj, nsize;
+    int *bottomPointer = NULL, *downPointer = NULL, *layer = NULL, *topPointer = NULL, *upPointer = NULL;
+    double at0, at1, dotProduct, elemVector[3], eps, length, unitVector[3], *values = NULL, vector[3], vector2[3];
+    NSString *coordTransform, *varName;
+    FEMVariable *variable;
+    variableArraysContainer *varContainers = NULL;
+    
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determining extruded structure.\n");
+    at0 = cputime();
+    
+    dim = mesh.dimension;
+    if ((solution.solutionInfo)[@"active coordinate"] != nil) {
+        activeDirection = [(solution.solutionInfo)[@"active coordinate"] intValue];
+    }
+    if (activeDirection < 1 || activeDirection > 3) {
+        errorfunct("FEMMeshUtils:detectExtrudedStructureMesh", "Invalid value for active coordinate");
+    }
+    memset( unitVector, 0.0, sizeof(unitVector) );
+    unitVector[activeDirection-1] = 1.0;
+    
+    if ((solution.solutionInfo)[@"project to bottom"] != nil) {
+        if ([(solution.solutionInfo)[@"project to bottom"] boolValue] == YES) {
+            for (int i=0; i<3; i++) {
+                unitVector[i] = -1.0 * unitVector[i];
+            }
+        }
+    }
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: unit vector of direction: %f\n", unitVector[i]);
+    }
+    
+    // Set the dot product tolerance
+    if ((solution.solutionInfo)[@"dot product tolerance"] != nil) {
+        eps = [(solution.solutionInfo)[@"dot product tolerance"] doubleValue];
+    } else eps = 1.0e-4;
+    
+    BOOL found, maskExists = NO;
+    if ((solution.solutionInfo)[@"mapping mask variable"] != nil) {
+        varName = (solution.solutionInfo)[@"mapping mask variable"];
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        FEMVariable *var = [utilities getVariableFrom:mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
+        if (found == YES) {
+            varContainers = var.getContainers;
+            if (varContainers != NULL) {
+                if (varContainers->Perm != NULL) maskExists = YES;
+            }
+        }
+    }
+    
+    if (maskExists == YES) {
+        nsize = varContainers->sizePerm;
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: applying mask of size: %d\n", nsize);
+    } else {
+        nsize = mesh.numberOfNodes;
+    }
+    
+    BOOL doCoordTransform = NO;
+    if ((solution.solutionInfo)[@"mapping coordinate transformation"] != nil || maskExists == YES) {
+        doCoordTransform = YES;
+        coordTransform = (solution.solutionInfo)[@"mapping coordinate transformation"];
+        values = doublevec(0, nsize-1);
+        memset( values, 0.0, nsize*sizeof(double) );
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        variableArraysContainer *addContainers = allocateVariableContainer();
+        addContainers->Values = values;
+         addContainers->sizeValues = nsize;
+        if (maskExists == YES) {
+            addContainers->Perm = varContainers->Perm;
+            addContainers->sizePerm = nsize;
+            [utilities addVariableTo:mesh.variables mesh:mesh solution:solution name:@"extruded coordinate" dofs:1 container:addContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+        } else {
+            [utilities addVariableTo:mesh.variables mesh:mesh solution:solution name:@"extruded coordinate" dofs:1 container:addContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
+        }
+        variable = [utilities getVariableFrom:mesh.variables model:model name:@"extruded coordinate" onlySearch:NULL maskName:nil info:&found];
+    } else if (activeDirection == 1) {
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        variable = [utilities getVariableFrom:mesh.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:nil info:&found];
+    } else if (activeDirection == 2) {
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        variable = [utilities getVariableFrom:mesh.variables model:model name:@"coordinate 2" onlySearch:NULL maskName:nil info:&found];
+    } else if (activeDirection == 3) {
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        variable = [utilities getVariableFrom:mesh.variables model:model name:@"coordinate 3" onlySearch:NULL maskName:nil info:&found];
+    }
+    
+    if (maskExists == YES || doCoordTransform == YES) {
+        int j;
+        Nodes_t *nodes = mesh.getNodes;
+        for (int i=0; i<mesh.numberOfNodes; i++) {
+            j = i;
+            if (maskExists == YES) j = varContainers->Perm[i];
+            vector[0] = nodes->x[i];
+            vector[1] = nodes->y[i];
+            vector[2] = nodes->z[i];
+            if (doCoordTransform == YES) {
+                [self FEMMeshUtils_coordinateTransformationNodalType:coordTransform vector:vector solution:solution];
+            }
+            values[j] = vector[activeDirection-1];
+        }
+    }
+    if (needExternVariable == YES) externVariable = variable;
+    
+    // Check which direction is active
+    BOOL upActive = NO, downActive = NO;
+    upActive = (isUpActive == YES || isTopActive == YES) ? YES : NO;
+    downActive = (isDownActive == YES || isBottomActive == YES) ? YES : NO;
+    
+    if (numberOfLayers != NULL || nodeLayer != NULL) {
+        upActive = YES;
+        downActive = YES;
+    }
+    
+    if (!(upActive == YES || downActive == YES)) {
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: either up or down direction should be active.\n");
+        return 0;
+    }
+    
+    // Allocate pointers to top and bottom, and temporary pointers up and down
+    if (upActive == YES) {
+        topPointer = intvec(0, nsize-1);
+        upPointer = intvec(0, nsize-1);
+        for (int i=0; i<nsize; i++) {
+            topPointer[i] = i;
+            upPointer[i] = i;
+        }
+    }
+    if (downActive == YES) {
+        bottomPointer = intvec(0, nsize-1);
+        downPointer = intvec(0, nsize-1);
+        for (int i=0; i<nsize; i++) {
+            bottomPointer[i] = i;
+            downPointer[i] = i;
+        }
+    }
+    
+    // Determine the up and down pointers using dot product as criterian
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine the up and down pointers.\n");
+    int n = mesh.maxElementNodes;
+    Nodes_t *nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(nodes);
+    nodes->x = doublevec(0, n-1);
+    nodes->y = doublevec(0, n-1);
+    nodes->z = doublevec(0, n-1);
+    Element_t *meshElements = mesh.getElements;
+    Nodes_t *meshNodes = mesh.getNodes;
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        n = meshElements[t].Type.NumberOfNodes;
+        
+        for (int i=0; i<n; i++) {
+            nodes->x[i] = meshNodes->x[meshElements[t].NodeIndexes[i]];
+            nodes->y[i] = meshNodes->y[meshElements[t].NodeIndexes[i]];
+            nodes->z[i] = meshNodes->z[meshElements[t].NodeIndexes[i]];
+        }
+        
+        // TODO: add support for parrallel run
+        
+        if (maskExists == YES) {
+            BOOL any = NO;
+            for (int i=0; i<n; i++) {
+                if (varContainers->Perm[meshElements[t].NodeIndexes[i]] < 0) {
+                    any = YES;
+                    break;
+                }
+            }
+            if (any == YES) continue;
+        }
+        
+        for (int i=0; i<n; i++) {
+            ii = meshElements[t].NodeIndexes[i];
+            vector[0] = nodes->x[i];
+            vector[1] = nodes->y[i];
+            vector[2] = nodes->z[i];
+            if (doCoordTransform == YES) {
+                [self FEMMeshUtils_coordinateTransformationNodalType:coordTransform vector:vector solution:solution];
+            }
+            for (int j=i+1; j<n; j++) {
+                jj = meshElements[t].NodeIndexes[j];
+                vector2[0] = nodes->x[j];
+                vector2[1] = nodes->y[j];
+                vector2[2] = nodes->z[j];
+                if (doCoordTransform == YES) {
+                    [self FEMMeshUtils_coordinateTransformationNodalType:coordTransform vector:vector2 solution:solution];
+                }
+                for (int k=0; k<3; k++) {
+                    elemVector[k] = vector2[k] - vector[k];
+                }
+                length = sqrt(cblas_ddot(3, elemVector, 1, elemVector, 1));
+                dotProduct = cblas_ddot(3, elemVector, 1, unitVector, 1) / length;
+                
+                if (dotProduct > 1.0 - eps) {
+                    if (upActive == YES) upPointer[ii] = jj;
+                    if (downActive == YES) downPointer[jj] = ii;
+                } else if (dotProduct < eps - 1.0) {
+                    if (downActive == YES) downPointer[ii] = jj;
+                    if (upActive == YES) upPointer[jj] = ii;
+                }
+            }
+        }
+    }
+    free_dvector(nodes->x, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
+    free(nodes);
+    
+    // Pointer to top and bottom are found recursively using up and down
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine top and bottom pointers.\n");
+    int j, downHit, rounds, upHit;
+    for (rounds=1; rounds<=nsize; rounds++) {
+        downHit = 0;
+        upHit = 0;
+        for (int i=0; i<nsize; i++) {
+            if (maskExists == YES) {
+                if (varContainers->Perm[i] < 0) continue;
+            }
+            if (upActive == YES) {
+                j = upPointer[i];
+                if (topPointer[i] != topPointer[j]) {
+                    upHit++;
+                    topPointer[i] = topPointer[j];
+                }
+            }
+            if (downActive == YES) {
+                j = downPointer[i];
+                if (bottomPointer[i] != bottomPointer[j]) {
+                    downHit++;
+                    bottomPointer[i] = bottomPointer[j];
+                }
+            }
+        }
+        if (upHit == 0 && downHit == 0) break;
+    }
+    // The last round is always a check
+    rounds--;
+    
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layered structure detected in %d cycles.\n", rounds);
+    if (rounds == 0) {
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: try to increase value for > dot product tolerance <.\n");
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: zero rounds implies unsuccessfull operations.\n");
+        errorfunct("FEMMeshUtils:detectExtrudedStructureMesh", "Program terminating now...");
+    }
+    
+    // Compute the number of layers. The rounds above may in some cases
+    // be too small. Here just one layer is used to determine the number
+    // of layers to save time.
+    if (numberOfLayers != NULL) {
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: compute the number of layers.\n");
+        int i, k;
+        for (i=0; i<nsize; i++) {
+            if (maskExists == YES) {
+                if (varContainers->Perm[i] < 0) continue;
+            }
+            break;
+        }
+        
+        j = bottomPointer[i];
+        *numberOfLayers = 0;
+        while (1) {
+            k = upPointer[j];
+            if (k == j) {
+                break;
+            } else {
+                *numberOfLayers = *numberOfLayers + 1;
+                j = k;
+            }
+        }
+        
+        if (*numberOfLayers < rounds) {
+            NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: there seems to be varying number of layers: %d vs. %d.\n", *numberOfLayers, rounds);
+            *numberOfLayers = rounds;
+        }
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: extruded structure layers: %d.\n", *numberOfLayers);
+    }
+    
+    // Create layer index if requested
+    if (nodeLayer != NULL) {
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: creating layer index.\n");
+        int k;
+        layer = intvec(0, nsize-1);
+        memset( layer, 1, nsize*sizeof(int) );
+        if (maskExists == YES) {
+            for (int i=0; i<nsize; i++) {
+                if (varContainers->Perm[i] < 0) layer[i] = 0;
+            }
+        }
+        
+        for (int i=0; i<nsize; i++) {
+            if (maskExists == YES) {
+                if (varContainers->Perm[i] < 0) continue;
+            }
+            rounds = 1;
+            j = bottomPointer[i];
+            layer[j] = rounds;
+            while (1) {
+                k = upPointer[j];
+                if (k == j) break;
+                rounds++;
+                j = k;
+                layer[j] = rounds;
+            }
+        }
+        
+        nodeLayer = layer;
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layer range: ['%d', '%d'].\n", min_array(layer, nsize), max_array(layer, nsize));
+    }
+    
+    // Count the numer of top and bottom nodes, for information only
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: counting top and bottom nodes.\n");
+    int topNodes = 0, bottomNodes = 0;
+    if (upActive == YES) {
+        for (int i=0; i<nsize; i++) {
+            if (topPointer[i] == i) topNodes++;
+        }
+    }
+    if (downActive == YES) {
+        for (int i=0; i<nsize; i++) {
+            if (bottomPointer[i] == i) bottomNodes++;
+        }
+    }
+    
+    // Return the requested pointer structures, otherwise deallocate
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: setting pointer structures.\n");
+    if (upActive == YES) {
+        if (isTopActive == YES) {
+            topNodePointer = topPointer;
+            topPointer = NULL;
+        } else {
+            free_ivector(topPointer, 0, nsize-1);
+        }
+        if (isUpActive == YES) {
+            upNodePointer = upPointer;
+            upPointer = NULL;
+        } else {
+            free_ivector(upPointer, 0, nsize-1);
+        }
+    }
+    if (downActive == YES) {
+        if (isBottomActive == YES) {
+            bottomNodePointer = bottomPointer;
+            bottomPointer = NULL;
+        } else {
+            free_ivector(bottomPointer, 0, nsize-1);
+        }
+        if (isDownActive == YES) {
+            downNodePointer = downPointer;
+            downPointer = NULL;
+        } else {
+            free_ivector(downPointer, 0, nsize-1);
+        }
+    }
+    
+    at1 = cputime();
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init time: %f\n.", at1-at0);
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init rounds: %d", rounds);
+    if (upActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the top: %d\n.", topNodes);
+    if (downActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d\n.", bottomNodes);
+        
+    return nsize;
 }
 
 @end

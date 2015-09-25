@@ -27,5 +27,5 @@
 -(void)setEdgeFaceDofsMesh:(FEMMesh *)mesh edgeDofs:(int *)edgeDofs faceDofs:(int *)faceDofs;
 -(void)setMaximumDofsMesh:(FEMMesh *)mesh;
 -(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model;
-
+-(int)detectExtrudedStructureMesh:(FEMMesh *)mesh solution:(FEMSolution *)solution model:(FEMModel *)model externVariable:(FEMVariable *)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int *)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int *)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int *)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int *)downNodePointer numberOfLayers:(int *)numberOfLayers nodeLayer:(int *)nodeLayer;
 @end
