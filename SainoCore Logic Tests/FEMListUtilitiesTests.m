@@ -1,18 +1,15 @@
 //
-//  FEMListUtilitiesTests.m
-//  Saino
+//  SainoCore_Logic_Tests.m
+//  SainoCore Logic Tests
 //
-//  Created by Seddik hakime on 11/05/2015.
-//  Copyright (c) 2015 Institute of Low Temperature Science. All rights reserved.
+//  Created by Seddik hakime on 13/10/2015.
+//  Copyright © 2015 Institute of Low Temperature Science. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
 #import <XCTest/XCTest.h>
 
-#import "FEMListUtilities.h"
-#import "FEMUtilities.h"
-#import "FEMEquation.h"
-#import "memory.h"
+#import <SainoCore/SainoCore.h>
 
 @interface FEMListUtilitiesTests : XCTestCase
 
@@ -234,7 +231,7 @@
     
     found = [self.listUtilities listGetReal:self.model inArray:self.equation.valuesList forVariable:@"test block" numberOfNodes:1 indexes:nodeIndexes buffer:&result minValue:NULL maxValue:NULL];
     XCTAssertTrue((result.vector[0] == 16.0), @"FEMListUtilitiesTests: Method listGetReal:inArray:forVariable:numberOfNodes:indexes:buffer:minValue:maxValue: failed to retrieve correct value with four dependencies");
-
+    
     free_ivector(nodeIndexes, 0, 0);
     free_ivector(varContainers->Perm, 0, 0);
     free_dvector(varContainers->Values, 0, 0);
@@ -244,4 +241,3 @@
 }
 
 @end
-

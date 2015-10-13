@@ -170,7 +170,7 @@
 		738ABA881BC7CEE30038AAEF /* Walls.h in Headers */ = {isa = PBXBuildFile; fileRef = 73C494FE192EED4900F36146 /* Walls.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		738ABA891BC7CFF30038AAEF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 739B4140189F7DF700F3F266 /* Accelerate.framework */; };
 		738ABA8A1BC7CFF30038AAEF /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
-		738DA0771BCCB63C000CCE84 /* SainoCore_Logic_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 738DA0761BCCB63C000CCE84 /* SainoCore_Logic_Tests.m */; };
+		738DA0771BCCB63C000CCE84 /* FEMListUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 738DA0761BCCB63C000CCE84 /* FEMListUtilitiesTests.m */; };
 		738DA0791BCCB63C000CCE84 /* SainoCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AB9EA1BC7C9220038AAEF /* SainoCore.framework */; settings = {ASSET_TAGS = (); }; };
 		738DA0801BCCB8A8000CCE84 /* FEMUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 738DA07F1BCCB8A8000CCE84 /* FEMUtilitiesTests.m */; settings = {ASSET_TAGS = (); }; };
 		738DA0821BCCEB10000CCE84 /* FEMSolutionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 738DA0811BCCEB10000CCE84 /* FEMSolutionTests.m */; settings = {ASSET_TAGS = (); }; };
@@ -260,7 +260,6 @@
 		73167EFD177058D8003A1A20 /* FEMDifferentials.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDifferentials.m; sourceTree = "<group>"; };
 		7316B30116144DC800A8C23C /* FEMInterpolation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInterpolation.h; sourceTree = "<group>"; };
 		7316B30216144DC800A8C23C /* FEMInterpolation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInterpolation.m; sourceTree = "<group>"; };
-		731F85671BC2512700C3ECA7 /* FEMSolutionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolutionTests.m; sourceTree = "<group>"; };
 		73206774168D7D9700BAE816 /* FEMElementUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementUtils.h; sourceTree = "<group>"; };
 		73206775168D7D9700BAE816 /* FEMElementUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMElementUtils.m; sourceTree = "<group>"; };
 		73206778169A6EA800BAE816 /* FEMListMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMListMatrix.h; sourceTree = "<group>"; };
@@ -333,7 +332,7 @@
 		738CA3CE17699396007F9ADB /* FEMMaterialModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMaterialModels.h; sourceTree = "<group>"; };
 		738CA3CF17699396007F9ADB /* FEMMaterialModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMaterialModels.m; sourceTree = "<group>"; };
 		738DA0741BCCB63C000CCE84 /* SainoCore Logic Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SainoCore Logic Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		738DA0761BCCB63C000CCE84 /* SainoCore_Logic_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoCore_Logic_Tests.m; sourceTree = "<group>"; };
+		738DA0761BCCB63C000CCE84 /* FEMListUtilitiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FEMListUtilitiesTests.m; sourceTree = "<group>"; };
 		738DA0781BCCB63C000CCE84 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		738DA07F1BCCB8A8000CCE84 /* FEMUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilitiesTests.m; sourceTree = "<group>"; };
 		738DA0811BCCEB10000CCE84 /* FEMSolutionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolutionTests.m; sourceTree = "<group>"; };
@@ -342,15 +341,12 @@
 		739A5682157DE092003E549C /* FEMElementsDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementsDefinition.h; sourceTree = "<group>"; };
 		739A5683157DE092003E549C /* FEMElementsDefinition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMElementsDefinition.m; sourceTree = "<group>"; };
 		739B4140189F7DF700F3F266 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		73A0061D1B004A3F0017013B /* FEMListUtilitiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FEMListUtilitiesTests.m; path = "Saino Tests/FEMListUtilitiesTests.m"; sourceTree = SOURCE_ROOT; };
-		73A006541B004C270017013B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		73A06CC515919DC5009FC87E /* SIOModelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOModelManager.h; sourceTree = "<group>"; };
 		73A06CC615919DC5009FC87E /* SIOModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOModelManager.m; sourceTree = "<group>"; };
 		73A4696815076F8500BDDEA6 /* Lists.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Lists.c; sourceTree = "<group>"; };
 		73A4696B15076F9200BDDEA6 /* Lists.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lists.h; sourceTree = "<group>"; };
 		73A56C4115D3D27D00227A1D /* FEMProjector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMProjector.h; sourceTree = "<group>"; };
 		73A56C4215D3D27D00227A1D /* FEMProjector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMProjector.m; sourceTree = "<group>"; };
-		73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilitiesTests.m; sourceTree = "<group>"; };
 		73ADFABC1592D52F009A83C6 /* SIOMeshAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshAgent.h; sourceTree = "<group>"; };
 		73ADFABD1592D52F009A83C6 /* SIOMeshAgent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshAgent.m; sourceTree = "<group>"; };
 		73ADFAC01592FEA1009A83C6 /* sio_config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sio_config.h; sourceTree = "<group>"; };
@@ -507,7 +503,6 @@
 			children = (
 				738AB9E31BC7C51C0038AAEF /* SainoCore */,
 				7315512713583FFD004CCD09 /* Saino */,
-				73A006521B004C270017013B /* Saino Logic Tests */,
 				730C42CD1B2686E2009411B7 /* Saino App Tests */,
 				738DA0751BCCB63C000CCE84 /* SainoCore Logic Tests */,
 				738AB9E41BC7C73C0038AAEF /* Bundles */,
@@ -725,30 +720,10 @@
 			children = (
 				738DA0811BCCEB10000CCE84 /* FEMSolutionTests.m */,
 				738DA07F1BCCB8A8000CCE84 /* FEMUtilitiesTests.m */,
-				738DA0761BCCB63C000CCE84 /* SainoCore_Logic_Tests.m */,
+				738DA0761BCCB63C000CCE84 /* FEMListUtilitiesTests.m */,
 				738DA0781BCCB63C000CCE84 /* Info.plist */,
 			);
 			path = "SainoCore Logic Tests";
-			sourceTree = "<group>";
-		};
-		73A006521B004C270017013B /* Saino Logic Tests */ = {
-			isa = PBXGroup;
-			children = (
-				731F85671BC2512700C3ECA7 /* FEMSolutionTests.m */,
-				73A0061D1B004A3F0017013B /* FEMListUtilitiesTests.m */,
-				73ACFF5F1B09F42600BFE68F /* FEMUtilitiesTests.m */,
-				73A006531B004C270017013B /* Supporting Files */,
-			);
-			name = "Saino Logic Tests";
-			path = "Saino Tests";
-			sourceTree = "<group>";
-		};
-		73A006531B004C270017013B /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				73A006541B004C270017013B /* Info.plist */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		73A06CC31591826B009FC87E /* SIO */ = {
@@ -1253,7 +1228,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				738DA0771BCCB63C000CCE84 /* SainoCore_Logic_Tests.m in Sources */,
+				738DA0771BCCB63C000CCE84 /* FEMListUtilitiesTests.m in Sources */,
 				738DA0821BCCEB10000CCE84 /* FEMSolutionTests.m in Sources */,
 				738DA0801BCCB8A8000CCE84 /* FEMUtilitiesTests.m in Sources */,
 			);
