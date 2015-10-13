@@ -9,8 +9,8 @@
 #import <XCTest/XCTest.h>
 #import <Cocoa/Cocoa.h>
 
+#import <SainoCore/FEMTest.h>
 #import "SainoViewControler.h"
-#import "FEMTest.h"
 
 @interface Saino_App_Tests : XCTestCase {
     SainoViewControler  *_saino_view_controller;

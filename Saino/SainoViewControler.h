@@ -8,7 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "FEMJob.h"
+#import <SainoCore/FEMJob.h>
 
 @interface SainoViewControler : NSViewController {
     FEMJob *_job;

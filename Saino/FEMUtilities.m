@@ -2929,6 +2929,10 @@
     NSArray *librarySearchPaths;
     NSMutableArray *bundleSearchPaths = [NSMutableArray array];
     
+    // NSSearchPathForDirectoriesInDomains will return:
+    //      /Users/seddikhakime/Library
+    //      /Library
+    //      /Network/Library
     librarySearchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSAllDomainsMask - NSSystemDomainMask, YES);
     for (NSString *currPath in librarySearchPaths) {
         [bundleSearchPaths addObject:[currPath stringByAppendingPathComponent:self.appSupportSubpath]];
@@ -2945,7 +2949,7 @@
         if (bundleEnum) {
             for (NSString *currBundlePath in bundleEnum) {
                 if ([currBundlePath isEqualToString:searchedSolutionBundle] == YES) {
-                    currentBundle = [NSBundle bundleWithPath:currBundlePath];
+                    currentBundle = [NSBundle bundleWithPath:[currPath stringByAppendingPathComponent:currBundlePath]];
                     found = YES;
                     break;
                 }
@@ -2959,7 +2963,8 @@
 -(BOOL)plugInClassIsValid:(Class)plugInClass {
     
     if ([plugInClass conformsToProtocol:@protocol(SainoSolutionsComputer)] == YES) {
-        if ([plugInClass instancesRespondToSelector:@selector(solutionComputer:model:timeStep:transientSimulation:)] == YES) {
+        if ([plugInClass instancesRespondToSelector:@selector(solutionComputer:model:timeStep:transientSimulation:)] == YES &&
+                [plugInClass instancesRespondToSelector:@selector(deallocation:)] == YES) {
             return YES;
         }
     }

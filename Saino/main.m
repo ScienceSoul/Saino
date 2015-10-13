@@ -8,9 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "FEMJob.h"
-#import "Utils.h"
-#import "TimeProfile.h"
+#import <SainoCore/SainoCore.h>
 
 int main(int argc, char *argv[])
 {
