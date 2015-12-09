@@ -59,7 +59,7 @@ Method corresponds to Elmer from git on October 27 2015
     }
     
     if ( i >= (int)pow(2.0, dim)) {
-        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants!\n");
+        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants.\n");
         mother = NULL;
         return;
     }

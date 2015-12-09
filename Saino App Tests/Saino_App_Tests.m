@@ -61,7 +61,7 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e\n", self.testApp.norm);
+            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
         } else {
             NSLog(@"heateq:   [Passed].\n");
         }
@@ -91,7 +91,7 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e\n", self.testApp.norm);
+            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
         } else {
             NSLog(@"Step_Stokes:   [Passed].\n");
         }
@@ -120,7 +120,7 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e\n", self.testApp.norm);
+            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
         } else {
             NSLog(@"Natural convection:   [Passed].\n");
         }

@@ -153,7 +153,7 @@
     
     // Check if we can proceed any further
     if (tetra->Type.ElementCode != 504 || tetra->Pdefs == NULL) {
-        NSLog(@"FEMMesh:FEMMesh_convertToACTetra: element to convert not a tetrahedron!\n");
+        NSLog(@"FEMMesh:FEMMesh_convertToACTetra: element to convert not a tetrahedron.\n");
         return;
     }
     
@@ -259,7 +259,7 @@
 
     FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
     if (!reader) {
-        NSLog(@"FEMMesh:FEMMesh_readColoredMesh: File color not found in mesh directory\n");
+        NSLog(@"FEMMesh:FEMMesh_readColoredMesh: File color not found in mesh directory.\n");
     }
     
     // Used to separate strings and filter them from white spaces
@@ -270,7 +270,7 @@
     j = 0;
     while ((line = [reader readLine])) {
         lineCount++;
-        NSLog(@"FEMMEsh:FEMMesh_readColoredMesh: %3.d: %@", lineCount, line);
+        NSLog(@"FEMMEsh:FEMMesh_readColoredMesh: %3.d: %@.\n", lineCount, line);
         // Parse the line
         NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
         NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
@@ -453,13 +453,13 @@
     // Mesh
     [meshIO openMeshAtPath:name];
     if (meshIO.info != 0) {
-        NSLog(@"FEMMesh:loadMeshForModel: unable to load mesh: %@\n", name);
+        NSLog(@"FEMMesh:loadMeshForModel: unable to load mesh: %@.\n", name);
         errorfunct("FEMMesh:loadMeshForModel", "Program terminating now...");
     }
     
     [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
-        NSLog(@"FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %@\n", name);
+        NSLog(@"FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %@.\n", name);
         errorfunct("FEMMesh:loadMeshForModel", "Program terminating now...");
     }
     
@@ -589,7 +589,7 @@
             j = min(i, wrk.n);
             coordScale[i] = wrk.matrix[0][j];
         }
-        NSLog(@"FEMMesh:loadMeshForModel: scaling coordinates: %f %f %f\n", coordScale[0], coordScale[1], coordScale[2]);
+        NSLog(@"FEMMesh:loadMeshForModel: scaling coordinates: %f %f %f.\n", coordScale[0], coordScale[1], coordScale[2]);
         for (i=0; i<self.numberOfNodes; i++) {
             _globalNodes->x[i] = coordScale[0] * _globalNodes->x[i];
             if (meshDim > 1) _globalNodes->y[i] = coordScale[1] * _globalNodes->y[i];
@@ -792,14 +792,14 @@
         if (left >= minEIndex && left <= maxEIndex) {
             left = localEPerm[left - minEIndex];
         } else if (left > 0) {
-            NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d\n", *partID, tag, left);
+            NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d.\n", *partID, tag, left);
             left = -1;
         } else if (left == 0) left = -1; // No left parent element
         
         if (right >= minEIndex && right <= maxEIndex) {
             right = localEPerm[right - minEIndex];
         } else if (right > 0) {
-            NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d\n", *partID, tag, right);
+            NSLog(@"FEMMesh:loadMeshForModel: %d boundary parent out of range: %d %d.\n", *partID, tag, right);
             right = -1;
         } else if (right == 0) right = -1; // No right parent element
 

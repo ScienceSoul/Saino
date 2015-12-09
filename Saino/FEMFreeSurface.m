@@ -471,7 +471,7 @@
         }
         
         s = sqrt(s);
-        NSLog(@"FEMFreeSurface:moveBoundaryModel: iter: %d, free surface residual: %f\n", ii, s);
+        NSLog(@"FEMFreeSurface:moveBoundaryModel: iter: %d, free surface residual: %f.\n", ii, s);
         if (s < feps) break;
     }
     

@@ -1504,7 +1504,7 @@ static dispatch_once_t onceToken;
     lwork = 12*n;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
-        NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d\n", info);
+        NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d.\n", info);
         errorfunct("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
     }
     *mk = eigr[n-2];
@@ -1558,7 +1558,7 @@ static dispatch_once_t onceToken;
     }
         
     if (element == NULL) {
-        NSLog(@"FEMElementDescription:getElementType: element type code not found: %d\n", code);
+        NSLog(@"FEMElementDescription:getElementType: element type code not found: %d.\n", code);
         NSLog(@"FEMElementDescription:getElementType: ignoring element.\n");
         return NULL;
     }
@@ -2347,7 +2347,7 @@ static dispatch_once_t onceToken;
     if (converged == NO) {
         if (err > sqrt(acc)) {
             if (i >= maxIter) {
-                NSLog(@"FEMElementDescription:globalToLocalFromElement: did not converge\n");
+                NSLog(@"FEMElementDescription:globalToLocalFromElement: did not converge.\n");
                 NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
                 NSLog(@"err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
                 NSLog(@"delta, %f %f %f\n", delta[0], delta[1], delta[2]);

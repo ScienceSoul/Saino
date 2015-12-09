@@ -1378,8 +1378,8 @@ enum {
                     }
                 }
             }
-            NSLog(@"FEMHeatSolution:solutionComputer: found control point at distance: %f\n", sqrt(minDist));
-            NSLog(@"FEMHeatSolution:solutionComputer: control point index: %d\n", smartHeaterNode);
+            NSLog(@"FEMHeatSolution:solutionComputer: found control point at distance: %f.\n", sqrt(minDist));
+            NSLog(@"FEMHeatSolution:solutionComputer: control point index: %d.\n", smartHeaterNode);
             if (realWork.matrix != NULL) {
                 free_dmatrix(realWork.matrix, 0, realWork.m-1, 0, realWork.n-1);
                 realWork.matrix = NULL;
@@ -1473,7 +1473,7 @@ enum {
     }
     
     if (integralHeaterControl == YES) {
-        NSLog(@"FEMHeatSolution:solutionComputer: using integral heater control");
+        NSLog(@"FEMHeatSolution:solutionComputer: using integral heater control.\n");
         memset( _integralHeaters, false, model.numberOfBodyForces*sizeof(bool) );
         i = 0;
         for (FEMBodyForce *bodyForce in model.bodyForces) {
@@ -1525,7 +1525,7 @@ enum {
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d\n", iter);
+            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d.\n", iter);
             NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer: Starting Assembly...\n");
@@ -1815,7 +1815,7 @@ enum {
                         }
                     }
                 } else if ([convectionFlag isEqualToString:@"computed"] == YES) {
-                    NSLog(@"FEMHeatSolution:solutionComputer: convection model specified but no accociated flow field present?\n");
+                    NSLog(@"FEMHeatSolution:solutionComputer: convection model specified but no accociated flow field present.\n");
                 } else {
                     all = YES;
                     for (i=0; i<3; i++) {
@@ -2024,7 +2024,7 @@ enum {
             if (transient == YES && _constantBulk == YES) [self FEMHeatSolution_addGlobalTimeSolution:solution];
             
             [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
-            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done.\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
@@ -2108,20 +2108,20 @@ enum {
             
             if (smartHeaterControl == YES || integralHeaterControl == YES) {
                 [listUtilities addConstRealInClassList:model.simulation theVariable:@"res: heater power scaling" withValue:&_powerScaling orUsingBlock:nil string:nil];
-                NSLog(@"FEMHeatSolution:solutionComputer: heater control information\n");
+                NSLog(@"FEMHeatSolution:solutionComputer: heater control information.\n");
                 for (i=0; i<model.numberOfBodyForces; i++) {
                     if (!(_smarterHeaters[i] || _integralHeaters[i])) continue;
                     if (_smarterHeaters[i]) _heaterScaling[i] = _powerScaling;
-                    NSLog(@"FEMHeatSolution:solutionComputer: heater for body %d\n", i+1);
-                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: smart heater\n");
-                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: integral heater\n");
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater for body %d.\n", i+1);
+                    if (_smarterHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: smart heater.\n");
+                    if (_integralHeaters[i]) NSLog(@"FEMHeatSolution:solutionComputer: heater type: integral heater.\n");
                     
-                    NSLog(@"FEMHeatSolution:solutionComputer: heater volutme (m^3): %f\n", _heaterArea[i]);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater volutme (m^3): %f.\n", _heaterArea[i]);
                     s = _heaterSource[i] * _heaterScaling[i];
-                    NSLog(@"FEMHeatSolution:solutionComputer: heater power (W): %f\n", s);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater power (W): %f.\n", s);
                     
-                    NSLog(@"FEMHeatSolution:solutionComputer: heater scaling: %f\n", _heaterScaling[i]);
-                    NSLog(@"FEMHeatSolution:solutionComputer: heater power density (W/kg): %e\n", s/(_heaterDensity[i]*_heaterArea[i]));
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater scaling: %f.\n", _heaterScaling[i]);
+                    NSLog(@"FEMHeatSolution:solutionComputer: heater power density (W/kg): %e.\n", s/(_heaterDensity[i]*_heaterArea[i]));
                     
                     if (_smarterHeaters[i]) {
                         double value = s/(_heaterDensity[i]*_heaterArea[i]);
@@ -2133,8 +2133,8 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
-            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (s): %f %f.\n", iter, at, totat);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f.\n", iter, st, totst);
             
             // If modeling phase change (and if requested by the user), check if any
             // node has jumped over the phase interval, and if so, reduce time step
@@ -2147,11 +2147,11 @@ enum {
                     if (transient == YES) {
                         _dt = _dt / 2;
                         solution.dt = _dt;
-                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing time step to: %f\n", _dt);
+                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing time step to: %f.\n", _dt);
                     } else {
                         relax = relax / 2;
                         [solution.solutionInfo setValue:@(relax) forKey:@"nonlinear system relaxation factor"];
-                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing relaxation to: %f\n", relax);
+                        NSLog(@"FEMHeatSolution:solutionComputer: latent heat release check: reducing relaxation to: %f.\n", relax);
                     }
                     continue;
                 }
@@ -2159,8 +2159,8 @@ enum {
             }
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e\n", norm);
-            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e\n", relativeChange);
+            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e.\n", norm);
+            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e.\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol && (smartHeaterControl == NO || smartTolReached == YES)) break;

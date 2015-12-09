@@ -138,7 +138,7 @@
     
     halfBandwidth = [self computeBandWidthInListMatrix:listMatrix size:localNodes reorder:NULL invInitialReorder:NULL] + 1;
     NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: done.\n");
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth without optimization: %d\n", halfBandwidth);
+    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth without optimization: %d.\n", halfBandwidth);
     if (optimize == NO) {
         NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
         return halfBandwidth;
@@ -232,7 +232,7 @@
 
     halfBandwidthAfter = [self computeBandWidthInListMatrix:listMatrix size:localNodes reorder:perm invInitialReorder:invInitialReorder] + 1;
     NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: ...done.\n");
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth after optimization: %d\n", halfBandwidthAfter);
+    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth after optimization: %d.\n", halfBandwidthAfter);
     halfBandwidth = halfBandwidthAfter;
     if (halfBandwidthBefore < halfBandwidth && useOptimized == NO) {
         NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: optimization rejected, using original ordering.");

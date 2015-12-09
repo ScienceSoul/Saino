@@ -726,14 +726,14 @@
             NSLog(@"JOB: ----------------------------------------------------------------------\n");
             
             if (transient == YES || scanning == YES) {
-                NSLog(@"JOB: Time: %d / %d %f\n", cumTimeStep, stepCount, _sTime[0]);
+                NSLog(@"JOB: Time: %d / %d %f.\n", cumTimeStep, stepCount, _sTime[0]);
                 
                 newTime = realtime();
                 
                 if (cumTimeStep > 1) {
                     maxTime = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"real time max" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) {
-                        NSLog(@"JOB: Fraction of real time left: %f\n", 1.0-realtime()/maxTime);
+                        NSLog(@"JOB: Fraction of real time left: %f.\n", 1.0-realtime()/maxTime);
                     } else {
                         timeLeft = round((stepCount-(cumTimeStep-1))*(newTime-prevTime)/60.0);
                         if (timeLeft > 120) {
@@ -749,7 +749,7 @@
                 }
                 prevTime = newTime;
             } else {
-                NSLog(@"JOB: Steady state iteration: %d\n", cumTimeStep);
+                NSLog(@"JOB: Steady state iteration: %d.\n", cumTimeStep);
             }
             
             NSLog(@"JOB: ----------------------------------------------------------------------\n");
@@ -900,7 +900,7 @@
                         ddt = ddt / 2.0;
                         stepControl = -1;
                     }
-                    NSLog(@"FEMJob:FEMJob_runSimulation: adaptive(cum, ddt, err): %f, %f, %f\n", cumTime, ddt, maxErr);
+                    NSLog(@"FEMJob:FEMJob_runSimulation: adaptive(cum, ddt, err): %f, %f, %f.\n", cumTime, ddt, maxErr);
                 }
                 
                 _sSize[0] = dt;
@@ -1564,7 +1564,7 @@ jump:
         if (_silent == NO) {
             NSLog(@"JOB: \n");
             NSLog(@"JOB: =====================================================================\n");
-            NSLog(@"JOB: Saino finite element software, Welcome!\n");
+            NSLog(@"JOB: Saino finite element software, Welcome.\n");
             NSLog(@"JOB: Saino is an object oriented, GPU based implementation of ElmerSolver.\n");
             NSLog(@"JOB: This program is free software under (L)GPL.\n");
             NSLog(@"JOB: Copyright 15 April 2011 - ScienceSoul Hakime Seddik.\n");
@@ -1607,13 +1607,13 @@ jump:
                 NSLog(@"JOB: \n");
                 NSLog(@"JOB: \n");
                 NSLog(@"JOB: ---------------------------------------------------------------------\n");
-                NSLog(@"JOB: Reading model: %@\n", self.modelName);
+                NSLog(@"JOB: Reading model: %@.\n", self.modelName);
             }
             
             self.model = [[FEMModel alloc] init];
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
-                NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@\n ']", self.modelName);
+                NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@ '].\n", self.modelName);
                 errorfunct("FEMJob:runWithInitialize","Program terminating now...");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];

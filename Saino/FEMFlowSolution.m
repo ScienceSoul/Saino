@@ -177,7 +177,7 @@
     }
     
     if (l > 0) {
-        NSLog(@"FEMFlowSolution:FEMFlowSolution_checkCircleBoundaryModel: number of elements on circle: %d\n", l);
+        NSLog(@"FEMFlowSolution:FEMFlowSolution_checkCircleBoundaryModel: number of elements on circle: %d.\n", l);
     }
 }
 
@@ -717,7 +717,7 @@
             _pseudoPressure[i] = flowContainers->Values[i];
         }
         vDSP_sveD(_pseudoPressure, 1, &sum, _sizePseudoPressure);
-        NSLog(@"FEMFlowSolution:solutionComputer: pseudoPressure mean: %f\n", sum/_sizePseudoPressure);
+        NSLog(@"FEMFlowSolution:solutionComputer: pseudoPressure mean: %f.\n", sum/_sizePseudoPressure);
         
         pseudoCompressibilityScale = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"artificial compressibility scaling" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) pseudoCompressibilityScale = 1.0;
@@ -746,7 +746,7 @@
         NSLog(@"FEMFlowSolution:solutionComputer:\n");
         NSLog(@"FEMFlowSolution:solutionComputer:\n");
         NSLog(@"FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
-        NSLog(@"FEMFlowSolution:solutionComputer: NAVIER-STOKES ITERATION %d\n", iter);
+        NSLog(@"FEMFlowSolution:solutionComputer: NAVIER-STOKES ITERATION %d.\n", iter);
         NSLog(@"FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
         NSLog(@"FEMFlowSolution:solutionComputer:\n");
         NSLog(@"FEMFlowSolution:solutionComputer: Starting Assembly...\n");
@@ -1279,7 +1279,7 @@
         }
         
         [core defaultFinishBulkAssemblySolution:solution bulkUpdate:NULL];
-        NSLog(@"FEMFlowSolution:solutionComputer: Assembly done\n");
+        NSLog(@"FEMFlowSolution:solutionComputer: Assembly done.\n");
         
         // Newmann and Newton boundary conditions
         NSString *normalTangentialName = [@"normal-tangential " stringByAppendingString:[solution.variable canonicalizeName]];
@@ -1497,8 +1497,8 @@
         st = cputime() -  st;
         totat = totat + at;
         totst = totst + st;
-        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Assembly (s): %f %f\n", iter, at, totat);
-        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Assembly (s): %f %f.\n", iter, at, totat);
+        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Solve (s): %f %f.\n", iter, st, totst);
         
         n = _nsdofs * _localNodes;
         
@@ -1537,8 +1537,8 @@
         }
         
         relativeChange = solution.variable.nonLinChange;
-        NSLog(@"FEMFlowSolution:solutionComputer: result norm: %e\n", solution.variable.norm);
-        NSLog(@"FEMFlowSolution:solutionComputer: relative change: %e\n", relativeChange);
+        NSLog(@"FEMFlowSolution:solutionComputer: result norm: %e.\n", solution.variable.norm);
+        NSLog(@"FEMFlowSolution:solutionComputer: relative change: %e.\n", relativeChange);
         
         if (relativeChange < newtonTol || iter > newtonIter) newtonLinearization = YES;
         if (relativeChange < nonLinearTol && iter < nonLinearIter) break;

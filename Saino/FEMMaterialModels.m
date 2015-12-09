@@ -171,7 +171,7 @@
                         temp = temp + integration.basis[i] * tempContainers->Values[tempContainers->Perm[element->NodeIndexes[i]]];
                     }
                 } else {
-                    NSLog(@"FEMMaterialModels:effectiveViscosity: can't find variable %@ to inquire temperature field for Glen\n", temperatureName);
+                    NSLog(@"FEMMaterialModels:effectiveViscosity: can't find variable %@ to inquire temperature field for Glen.\n", temperatureName);
                     errorfunct("FEMMaterialModels:effectiveViscosity", "Program terminating now...");
                 }
             } else {
@@ -619,7 +619,7 @@
     } else if ([conductivityFlag isEqualToString:@"user function"] == YES) {
         // TODO: implement this later if we need it
     } else {
-        NSLog(@"FEMMaterialModels:effectiveConductivity: unknown material model\n");
+        NSLog(@"FEMMaterialModels:effectiveConductivity: unknown material model.\n");
     }
     
     return pCond;

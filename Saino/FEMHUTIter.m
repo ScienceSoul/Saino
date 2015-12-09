@@ -51,7 +51,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
             
             // Check for small pivot
             if ( fabs(lumat[k][k]) < 1.0e-16 ) {
-                NSLog(@"FEMHUTIter:HUTI_dLuSolveAt: HUTI GMRES: small pivot %lf\n", lumat[k][k]);
+                NSLog(@"FEMHUTIter:HUTI_dLuSolveAt: HUTI GMRES: small pivot %lf.\n", lumat[k][k]);
             }
             
             // Compute a_ik = a_ik / a_kk
@@ -122,7 +122,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     else
         if ((huti_num_of_procs = atoi(evname)) == 0) {
             
-            NSLog(@"FEMHUTIter:hutiInit: environment variable NUMBER_OF_PROCESSORS has an illegal value: %s\n", evname);
+            NSLog(@"FEMHUTIter:hutiInit: environment variable NUMBER_OF_PROCESSORS has an illegal value: %s.\n", evname);
         }
     
     huti_init_done = YES;
@@ -380,7 +380,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e.\n", iter_count, residual);
             }
         }
         
@@ -407,7 +407,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dbicgstabSolveInSolution: %d %11.4e.\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -782,7 +782,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e.\n", iter_count, residual);
             }
         }
         
@@ -806,7 +806,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dbicgstab2SolveInSolution: %d %11.4e.\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -1374,9 +1374,9 @@ static double UPPERB_TOL_RATIO  =  10.0;
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
                 if (HUTI_STOPC == HUTI_UPPERB_STOPC) {
-                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e\n", iter_count, residual, upperb);
+                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e.\n", iter_count, residual, upperb);
                 } else {
-                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e\n", iter_count, residual);
+                    NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e.\n", iter_count, residual);
                 }
             }
         }
@@ -1438,9 +1438,9 @@ jump:
     
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
         if (HUTI_STOPC == HUTI_UPPERB_STOPC) {
-            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e\n", iter_count, residual, upperb);
+            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e %11.4e.\n", iter_count, residual, upperb);
         } else {
-            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e\n", iter_count, residual);
+            NSLog(@"FEMHUTIter:dtfqmrSolveInSolution: %d %11.4e.\n", iter_count, residual);
         }
     }
     
@@ -1665,7 +1665,7 @@ jump:
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %11.4e\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dcgSolveInSolution: %d %11.4e.\n", iter_count, residual);
             }
         }
         
@@ -1936,7 +1936,7 @@ jump:
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e.\n", iter_count, residual);
             }
         }
         
@@ -1958,7 +1958,7 @@ jump:
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dcgsSolveInSolution: %d %11.4e.\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;
@@ -2377,7 +2377,7 @@ jump:
         // Print debugging info if required
         if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
             if ( (iter_count % HUTI_DBUGLVL) == 0 ) {
-                NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e\n", iter_count, residual);
+                NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e.\n", iter_count, residual);
             }
         }
         
@@ -2399,7 +2399,7 @@ jump:
     
     // We have exited the loop after enough iterations or broke down
     if (HUTI_DBUGLVL != HUTI_NO_DEBUG) {
-        NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e\n", iter_count, residual);
+        NSLog(@"FEMHUTIter:dgmresSolveInSolution: %d %11.4e.\n", iter_count, residual);
     }
     
     HUTI_ITERS = iter_count;

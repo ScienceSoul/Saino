@@ -105,7 +105,7 @@
         
         *residual = rnorm / bnorm;
         if ( (k % outputInterval) == 0) {
-            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_sgsNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_sgsNumberOfDimension: %d %11.4e %11.4e.\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -183,7 +183,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_jacobiNumberOfDimension: %d %11.4e %11.4e\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_jacobiNumberOfDimension: %d %11.4e %11.4e.\n", k, rnorm, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES : NO;
@@ -639,7 +639,7 @@
         
         errorind = rnrm / bnrm;
         if (round % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e.\n", round, rnrm, errorind);
         }
         
         *converged = (errorind < minTolerance) ? YES: NO;
@@ -649,7 +649,7 @@
     } // end of rounds
     
     if (outputInterval != HUGE_VAL) {
-        NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e\n", round, rnrm, errorind);
+        NSLog(@"FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension: %d %11.4e %11.4e.\n", round, rnrm, errorind);
     }
     
     // We have solved z = P*x, with P the preconditioner, so finally
@@ -812,7 +812,7 @@
         *residual = rnorm / bnorm;
         
         if (k % outputInterval == 0) {
-            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_gcrNumberOfDimension: %d %11.4e\n", k, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_gcrNumberOfDimension: %d %11.4e.\n", k, *residual);
         }
         
         *converged = (*residual < minTolerance) ? YES: NO;
@@ -917,7 +917,7 @@
         
         *residual = rnorm / bnorm;
         if ( (k % outputInterval) == 0) {
-            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_richardsonNumberOfDimensions: %d %11.4e %11.4e\n", k, rnorm, *residual);
+            NSLog(@"FEMIterativeMethods:FEMIterativeMethods_richardsonNumberOfDimensions: %d %11.4e %11.4e.\n", k, rnorm, *residual);
         }
 
         *converged = (*residual < minTolerance) ? YES : NO;

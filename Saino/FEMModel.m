@@ -158,7 +158,7 @@
         self.dimension = 3;
         self.coordinates = polar;
     } else {
-        NSLog(@"FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %@\n", csys);
+        NSLog(@"FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %@.\n", csys);
         errorfunct("FEMModel:FEMModel_setCoordinateSystem", "Program terminating now...");
     }
 }
@@ -321,9 +321,9 @@
     double maxValue, minValue;
     vDSP_minvD(h, 1, &minValue, sizeNodal);
     vDSP_maxvD(h, 1, &maxValue, sizeNodal);
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f\n", elemMin, minValue);
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f\n", elemMax, maxValue);
-    NSLog(@"FEMModel:FEMModel_getNodalElementSize: element size ratio: %f %f\n", elemMax/elemMin, maxValue / minValue);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: minimum element size: %f %f.\n", elemMin, minValue);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: maximum element size: %f %f.\n", elemMax, maxValue);
+    NSLog(@"FEMModel:FEMModel_getNodalElementSize: element size ratio: %f %f.\n", elemMax/elemMin, maxValue / minValue);
     
     self.solution = nil;
     solution.mesh.variables = nil;

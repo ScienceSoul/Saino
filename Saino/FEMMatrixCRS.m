@@ -264,7 +264,7 @@
         }
         k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0) {
-            NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f\n", i, j, value);
+            NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
         }
         k = k + matContainers->Rows[i];
@@ -299,7 +299,7 @@
             l++;
         }
         k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
-        if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f\n", i, j, value);
+        if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f.\n", i, j, value);
         if (k < 0) return;
         k = k + matContainers->Rows[i];
     } else {
@@ -541,11 +541,11 @@
     matrixArraysContainer *matContainers = NULL;
     
     if (solution == nil && matrix == nil) {
-        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least one the method argumens should be non-nil\n");
+        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least one the method argumens should be non-nil.\n");
         return;
     }
     
-    NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: making low order FCT correction to matrix\n");
+    NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: making low order FCT correction to matrix.\n");
     
     if (solution != nil) {
         matContainers = solution.matrix.getContainers;
@@ -584,7 +584,7 @@
             }
             
             if (found == NO) {
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: entry not found, matrix might not be symmetric\n");
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: entry not found, matrix might not be symmetric.\n");
                 continue;
             }
             
@@ -600,9 +600,9 @@
             }
             
             if (/* DISABLES CODE */ (NO)) {
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f\n", aij, aji, aii, dij);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d.\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d.\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
+                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f.\n", aij, aji, aii, dij);
             }
             
             // Equation (32) in Kuzmin's paper
@@ -722,7 +722,7 @@
     }
     
     if (aContainers->Cols[n] >= 0) {
-        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d\n", n, aContainers->Cols[n]);
+        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, aContainers->Cols[n]);
         errorfunct("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
     
@@ -864,7 +864,7 @@
         }
         k = [self FEMMatrixCRS_SearchWithinLength:aContainers->Rows[i+1]-aContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0) {
-            NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f\n", i, j, value);
+            NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
         }
         k = k + aContainers->Rows[i];

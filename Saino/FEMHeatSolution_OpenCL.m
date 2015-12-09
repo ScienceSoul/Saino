@@ -502,7 +502,7 @@ enum {
     
     returnValue = LoadFileIntoString("/Users/seddikhakime/Documents/Saino/Saino/heatSolutiomAssemblyKernel.cl", &program_source, &src_len);
 	if (returnValue) {
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Error: Can't load kernel source\n");
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Error: Can't load kernel source.\n");
         exit(-1);
 	}
     
@@ -514,7 +514,7 @@ enum {
     // Create the program .cl file
 	cl_program program = clCreateProgramWithSource(context, 1, (const char**)&program_source, NULL, &err);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't create program. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't create program. Error was: %d.\n", err);
 		exit(-1);
 	}
     
@@ -523,15 +523,15 @@ enum {
 	char build[2048];
 	clGetProgramBuildInfo(program, devices, CL_PROGRAM_BUILD_LOG, 2048, build, NULL);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't build program. Error was: %d\n", err);
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Build Log:\n%s\n", build);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Can't build program. Error was: %d.\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer: Build Log:\n%s.\n", build);
 		exit(-1);
 	}
 
     // Create the kernel
 	cl_kernel CLkernel = clCreateKernel(program, "heatSolutionAssembly", &err);
 	if (err) {
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Can't create kernel. Error was: %d\n", err);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Can't create kernel. Error was: %d.\n", err);
 		exit(-1);
 	}
     
@@ -539,7 +539,7 @@ enum {
 	clGetKernelWorkGroupInfo(CLkernel, devices, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &thread_size, NULL);
     
     if (firstTimeCL == 0) {
-        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Recommended Work Group Size: %lu\n", thread_size);
+        NSLog(@"FEMHeatSolution_OpenCL:solutionComputer:heatAssembly: Recommended Work Group Size: %lu.\n", thread_size);
 	}
     
     // Allocate memory and queue it to be written to the device
@@ -564,9 +564,9 @@ enum {
                           + sizeof(cl_int)*(tempContainers->sizePerm)
                           + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes) + sizeof(cl_double)*(mesh.numberOfNodes);
     
-    NSLog(@"FEMHeatSolution:solutionComputer: Allocation for the CRS matrix (MB): %f\n",
+    NSLog(@"FEMHeatSolution:solutionComputer: Allocation for the CRS matrix (MB): %f.\n",
           (sizeof(cl_double)*matContainers->sizeValues+sizeof(cl_double)*matContainers->sizeRHS+sizeof(cl_int)*matContainers->sizeCols+sizeof(cl_int)*matContainers->sizeRows+sizeof(cl_int)*matContainers->sizeDiag)/(1024.0*1024.0));
-    NSLog(@"FEMHeatSolution:solutionComputer: Total allocation to the device (MB): %f\n", allocationSize/(1024.0*1024.0));
+    NSLog(@"FEMHeatSolution:solutionComputer: Total allocation to the device (MB): %f.\n", allocationSize/(1024.0*1024.0));
 
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...
@@ -596,7 +596,7 @@ enum {
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
-            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d\n", iter);
+            NSLog(@"FEMHeatSolution:solutionComputer: TEMPERATURE ITERATION %d.\n", iter);
             NSLog(@"FEMHeatSolution:solutionComputer: -----------------------------------------------------------\n");
             NSLog(@"FEMHeatSolution:solutionComputer:\n");
             NSLog(@"FEMHeatSolution:solutionComputer: Starting Assembly...\n");
@@ -702,7 +702,7 @@ enum {
             } // Neumann & Newton BCs
             
             [core defaultFinishAssemblySolution:solution model:model timeIntegration:timeIntegration utilities:utilities];
-            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done\n");
+            NSLog(@"FEMHeatSolution:solutionComputer: Assembly done.\n");
             
             [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
             
@@ -715,12 +715,12 @@ enum {
             st = cputime() - st;
             totat = totat + at;
             totst = totst + st;
-            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (compute, mem up, mem down, all, tot) (s): %f %f %f %f %f\n", iter, ct, mt, mmt, at, totat);
-            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f\n", iter, st, totst);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Assembly (compute, mem up, mem down, all, tot) (s): %f %f %f %f %f.\n", iter, ct, mt, mmt, at, totat);
+            NSLog(@"FEMHeatSolution:solutionComputer: iter: %d, Solve (s): %f %f.\n", iter, st, totst);
             
             relativeChange = solution.variable.nonLinChange;
-            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e\n", norm);
-            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e\n", relativeChange);
+            NSLog(@"FEMHeatSolution:solutionComputer: result norm: %e.\n", norm);
+            NSLog(@"FEMHeatSolution:solutionComputer: relative change: %e.\n", relativeChange);
             
             if (relativeChange < newtonTol || iter >= newtonIter) _newtonLinearization = YES;
             if (relativeChange < nonLinearTol) break;

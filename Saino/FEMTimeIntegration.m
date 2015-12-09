@@ -22,7 +22,7 @@
     if (rows != NULL) {
         nb = *rows;
     } else {
-        NSLog(@"fractionalStepInSolution: dimension(s) missing!");
+        NSLog(@"fractionalStepInSolution: dimension(s) missing.");
         return;
     }
     
@@ -88,7 +88,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"bdfLocalInSolution: dimension(s) missing!");
+        NSLog(@"bdfLocalInSolution: dimension(s) missing.");
         return;
     }
     
@@ -176,7 +176,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"vbdfLocalInSolution: dimension(s) missing!");
+        NSLog(@"vbdfLocalInSolution: dimension(s) missing.");
         return;
     }
 
@@ -227,7 +227,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"newMarkBetaInSolution: dimension(s) missing!");
+        NSLog(@"newMarkBetaInSolution: dimension(s) missing.");
         return;
     }
 
@@ -255,7 +255,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"bossakSecondOrder: dimension(s) missing!");
+        NSLog(@"bossakSecondOrder: dimension(s) missing.");
         return;
     }
     

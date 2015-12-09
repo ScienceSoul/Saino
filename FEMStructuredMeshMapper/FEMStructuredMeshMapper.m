@@ -298,9 +298,9 @@
         
         if (topVal - bottomVal < heps) {
             Nodes_t *nodes = solution.mesh.getNodes;
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f\n", i, _coord[i], wTop);
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: position %f %f %f\n", nodes->x[i], nodes->y[i], nodes->z[i]);
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal %f, botVal %f, dVal %f\n", topVal, bottomVal, topVal-bottomVal);
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f.\n", i, _coord[i], wTop);
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: position %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal %f, botVal %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: top and bottom get tangled: %f %f.\n", topVal, bottomVal);
             errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
         }

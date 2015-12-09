@@ -441,7 +441,7 @@
     newVariable.steadyConverged = -1;
     
     if (secondary != NULL) {
-        NSLog(@"FEMUtilities:addVariableTo: secondary: %@", name);
+        NSLog(@"FEMUtilities:addVariableTo: secondary: %@.", name);
         newVariable.secondary = *secondary;
     }
     if (aType != NULL) {
@@ -1240,7 +1240,7 @@
                 }
             } else {
                 //TODO: add support for parallel run since then it should be mumps by default.
-                NSLog(@"FEMUtilities:checkOptionsInSolution: setting the linear system direct method to %@\n", str);
+                NSLog(@"FEMUtilities:checkOptionsInSolution: setting the linear system direct method to %@.\n", str);
                 [solution.solutionInfo setObject:@"umfpack" forKey:@"linear system direct method"];
             }
         }
@@ -1349,7 +1349,7 @@
                 if (found == NO) solution.order = 2;
             }
         } else {
-            NSLog(@"FEMUtilities:addEquationBasicsToSolution: time stepping method set by default to implicit Euler\n");
+            NSLog(@"FEMUtilities:addEquationBasicsToSolution: time stepping method set by default to implicit Euler.\n");
             [solution.solutionInfo setObject:@"implicit euler" forKey:@"time stepping method"];
         }
     }
@@ -1476,7 +1476,7 @@
                 // If we get 0 then we are dealing with an invalid dof number
                 if (k == 0) {
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n",
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@.\n",
                           [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
                 }
                 dofs = dofs + k;
@@ -1514,7 +1514,7 @@
                 // If we get 0 then we are dealing with an invalid dof number
                 if (dofs == 0) {
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@.\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
                 while ([varName characterAtIndex:j] == ' ') {
                     j++;
@@ -1712,7 +1712,7 @@
                 // If we get 0 then we are dealing with an invalid dof number
                 if (k == 0) {
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n",
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@.\n",
                           [[str substringFromIndex:range.location+1] substringToIndex:i-(range.location+1)]);
                 }
                 dofs = dofs + k;
@@ -1753,7 +1753,7 @@
                 // If we get 0 then we are dealing with an invalid dof number
                 if (dofs == 0) {
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@.\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
                 while ([varName characterAtIndex:j] == ' ') {
                     j++;
@@ -2068,7 +2068,7 @@
         
         if ([(solution.solutionInfo)[@"calculate velocity"] boolValue] == YES || [(solution.solutionInfo)[@"nonlinear calculate velocity"] boolValue] == YES) {
             if (solution.timeOrder < 1) {
-                NSLog(@"FEMUtilities:addEquationToSolution: velocity computation implemented only for time-dependent equations\n");
+                NSLog(@"FEMUtilities:addEquationToSolution: velocity computation implemented only for time-dependent equations.\n");
             } else if (solution.timeOrder == 1) {
                 str = [NSMutableString stringWithString:solution.variable.name];
                 [str appendString:@" velocity"];

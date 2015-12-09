@@ -355,7 +355,7 @@
         if (found == NO) {
             element = NULL;
             if (parallel == NO) {
-                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: point %d was not found in any of the elements!\n", i);
+                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: point %d was not found in any of the elements.\n", i);
                 totFails++;
             }
             continue;
@@ -433,15 +433,15 @@
     
     if (parallel == NO) {
         if (qTreeFails > 0) {
-            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found in quadtree: %d", qTreeFails);
+            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found in quadtree: %d.", qTreeFails);
             if (totFails == 0) {
-                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: all nodes still found by N^2 dummy search\n");
+                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: all nodes still found by N^2 dummy search.\n");
             }
         }
         if (totFails == 0) {
             NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: found all nodes in the target nesh.\n");
         } else {
-            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found: %d\n", totFails);
+            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found: %d.\n", totFails);
         }
     }
     

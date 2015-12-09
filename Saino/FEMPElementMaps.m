@@ -410,7 +410,7 @@
     int n;
     
     if ([self isPElement:element] == NO) {
-        NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: element given not a p element!\n");
+        NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: element given not a p element.\n");
         return;
     }
     
@@ -809,7 +809,7 @@
     Element_t *edges;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getEdgePForElement: element not p element");
+        NSLog(@"FEMPElementMaps:getEdgePForElement: element not p element.\n");
         return edgep = 0;
     }
     
@@ -835,7 +835,7 @@
     Element_t *faces;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"getEdgePForElement: element not p element");
+        NSLog(@"getEdgePForElement: element not p element.\n");
         return facep = 0;
     }
     
@@ -870,7 +870,7 @@
     int bubbleDofs;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element");
+        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element.\n");
         return bubbleDofs = 0;
     }
     
@@ -898,7 +898,7 @@
             if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
             break;
         default:
-            NSLog(@"getBubbleDofsForElement: unsupported p element type");
+            NSLog(@"getBubbleDofsForElement: unsupported p element type.\n");
             bubbleDofs = p;
             break;
     }
@@ -911,7 +911,7 @@
     int edgep, facep, bubblep, nb, maxp;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getNumberOfGaussPointsForElement: element not p element.");
+        NSLog(@"FEMPElementMaps:getNumberOfGaussPointsForElement: element not p element.\n");
         return 0;
     }
     

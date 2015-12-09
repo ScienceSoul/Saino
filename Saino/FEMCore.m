@@ -654,7 +654,7 @@ static const int PRECOND_VANKA     =  560;
             listUtilities = [[FEMListUtilities alloc] init];
             [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:&energy orUsingBlock:nil string:nil];
             
-            NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: energy norm: %f\n", energy);
+            NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: energy norm: %f.\n", energy);
         }
         
         matAidContainers->Values = saveValues;
@@ -1966,7 +1966,7 @@ static const int PRECOND_VANKA     =  560;
     onlySearch = YES;
     loadVar = [utilities getVariableFrom:model.variables model:model name:name onlySearch:&onlySearch maskName:NULL info:&found];
     if (loadVar == nil) {
-        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: no loads associated wit variable %@\n", [solution.variable canonicalizeName]);
+        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: no loads associated wit variable %@.\n", [solution.variable canonicalizeName]);
         return;
     }
     
@@ -2137,21 +2137,21 @@ static const int PRECOND_VANKA     =  560;
         
         // Output some information before exiting
         if (upper == 0) {
-            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: determined lower soft limit set");
+            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: determined lower soft limit set.");
         } else {
-            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: determined upper soft limit set");
+            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: determined upper soft limit set.");
         }
         count = 0;
         for (i=0; i<totSize; i++) {
             if (limitActive[i] == YES) count++;
         }
-        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: number of dofs in set is %d\n", count);
+        NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: number of dofs in set is %d.\n", count);
         
         if (added > 0) {
-            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: added %d dofs to the set\n", added);
+            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: added %d dofs to the set.\n", added);
         }
         if (removed > 0) {
-            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: removed %d dofs to the set\n", removed);
+            NSLog(@"FEMCore:FEMCore_determineSoftLimiterInSolution: removed %d dofs to the set.\n", removed);
         }
     }
     
@@ -2304,7 +2304,7 @@ static const int PRECOND_VANKA     =  560;
         f[i] = matContainers->DiagScaling[i] * f[i];
     }
     
-    NSLog(@"FEMCore:FEMCore_rowEquilibrationMatrix: unscaled matrix norm: %f\n", norm);
+    NSLog(@"FEMCore:FEMCore_rowEquilibrationMatrix: unscaled matrix norm: %f.\n", norm);
 }
 
 /****************************************************************************************
@@ -2354,7 +2354,7 @@ static const int PRECOND_VANKA     =  560;
         if (transient == YES || scanning == YES) {
             if (coupleMaxIter > 1) {
                 NSLog(@"FEMCore:FEMCore_solveCoupledModel: --------------------------------------------------------------------\n");
-                NSLog(@"FEMCore:FEMCore_solveCoupledModel: coupled system iteration: %d\n", i);
+                NSLog(@"FEMCore:FEMCore_solveCoupledModel: coupled system iteration: %d.\n", i);
                 NSLog(@"FEMCore:FEMCore_solveCoupledModel: --------------------------------------------------------------------\n");
             }
             *steadyIt = (double)i;
@@ -2374,7 +2374,7 @@ static const int PRECOND_VANKA     =  560;
             if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) {
                 if (!(solution.solutionMode == SOLUTION_MODE_COUPLED || solution.solutionMode == SOLUTION_MODE_ASSEMBLY
                     || solution.solutionMode == SOLUTION_MODE_BLOCK)) {
-                    NSLog(@"FEMCore:SolveEquations: no routine related to solution!\n");
+                    NSLog(@"FEMCore:SolveEquations: no routine related to solution.\n");
                     doneThis[k] = YES;
                     k++;
                     continue;
@@ -2536,7 +2536,7 @@ static const int PRECOND_VANKA     =  560;
         listUtilities = [[FEMListUtilities alloc] init];
         if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"coupled system abort not converged" info:&found] == YES) {
             NSLog(@"FEMCore:SolveEquations: \n");
-            NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d\n", i);
+            NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d.\n", i);
             NSLog(@"FEMCore:SolveEquations: \n");
             errorfunct("FEMCore:SolveEquations", "Program terminating now...");
         }
@@ -2631,7 +2631,7 @@ static const int PRECOND_VANKA     =  560;
             }
             [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         } else {
-            NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %@\n", (solution.solutionInfo)[@"equation"]);
+            NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %@.\n", (solution.solutionInfo)[@"equation"]);
             errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
         }
 
@@ -2639,7 +2639,7 @@ static const int PRECOND_VANKA     =  560;
         _instance = solution.plugInPrincipalClassInstance;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
     } else {
-        NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@\n", (solution.solutionInfo)[@"equation"]);
+        NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@.\n", (solution.solutionInfo)[@"equation"]);
         errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
     }
 }
@@ -2691,7 +2691,7 @@ static const int PRECOND_VANKA     =  560;
                 // If we get 0 then we are dealing with an invalid dof number
                 if (dofs == 0) {
                     NSLog(@"FEMUtilities:addEquationBasicsToSolution: invalid dof in variable definiton.\n");
-                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
+                    NSLog(@"FEMUtilities:addEquationBasicsToSolution: the incorrect value was: %@.\n", [[varName substringFromIndex:i] substringToIndex:j-i]);
                 }
                 varName = [varName substringFromIndex:j+1];
             }
@@ -2700,7 +2700,7 @@ static const int PRECOND_VANKA     =  560;
         expVariable = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
         if (expVariable == nil) continue;
         
-        NSLog(@"FEMCore:FEMCore_updateExportedVariablesSolution: trying to set values for variable: %@\n", varName);
+        NSLog(@"FEMCore:FEMCore_updateExportedVariablesSolution: trying to set values for variable: %@.\n", varName);
         
         if (allocationdDone == NO) {
             m = model.numberOfBodyForces;
@@ -2936,14 +2936,14 @@ static dispatch_once_t onceToken;
             }
             
             if (solution.beta < 0 || solution.beta > 1) {
-                NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: invalid value of beta: %f\n", solution.beta);
+                NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: invalid value of beta: %f.\n", solution.beta);
             }
         } else if ([method isEqualToString:@"bdf"] == YES) {
             if (solution.order < 1 || solution.order > 5) {
-                NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: invalid BDF order: %d\n", solution.order);
+                NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: invalid BDF order: %d.\n", solution.order);
             }
         } else {
-            NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: unknown time stepping method: %@\n", method);
+            NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: unknown time stepping method: %@.\n", method);
             errorfunct("FEMCore:FEMCore_initializeTimeStepInSolution", "Program terminating now...");
         }
     }
@@ -3549,7 +3549,7 @@ static dispatch_once_t onceToken;
     elements = solution.mesh.getElements;
     
     if (index < 0 || index > solution.mesh.numberOfBoundaryElements-1) {
-        NSLog(@"FEMCore:getBoundaryElement: invalid element number requested at index: %d\n", index);
+        NSLog(@"FEMCore:getBoundaryElement: invalid element number requested at index: %d.\n", index);
     }
     
     return &elements[solution.mesh.numberOfBulkElements+index];
@@ -4436,7 +4436,7 @@ static dispatch_once_t onceToken;
     if (n <= 0) return;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
-        NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d\n", info);
+        NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d.\n", info);
         errorfunct("FEMCore:solveWithLapackMatrix", "Program terminating now...");
     }
     
@@ -4444,7 +4444,7 @@ static dispatch_once_t onceToken;
     nhrs = 1;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
-        NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d\n", info);
+        NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d.\n", info);
         errorfunct("FEMCore:solveWithLapackMatrix", "Program terminating now...");
     }
     
@@ -4537,7 +4537,7 @@ static dispatch_once_t onceToken;
     loadName = [NSMutableString stringWithString:name];
     [loadName appendString:@" load"];
     
-    NSLog(@"setNodalLoads: checking load for: %@\n", name);
+    NSLog(@"setNodalLoads: checking load for: %@.\n", name);
     
     n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
     activePart = (BOOL*)malloc(sizeof(BOOL) * n );
@@ -4581,7 +4581,7 @@ static dispatch_once_t onceToken;
     }
     
     if (anyActive == YES) {
-        NSLog(@"setNodalLoads: settings nodals on boundaries: %@\n", name);
+        NSLog(@"setNodalLoads: settings nodals on boundaries: %@.\n", name);
         doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
         memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
 
@@ -4632,7 +4632,7 @@ static dispatch_once_t onceToken;
     }
     
     if (anyActive == YES) {
-        NSLog(@"setNodalLoads: settings nodals on bulk: %@\n", name);
+        NSLog(@"setNodalLoads: settings nodals on bulk: %@.\n", name);
         if (doneLoad == NULL) doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
         memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
         for (t=0; t<model.numberOfBulkElements; t++) {
@@ -4704,7 +4704,7 @@ static dispatch_once_t onceToken;
         }
         
         if (nodesFound == YES) {
-            NSLog(@"setNodalLoads: settings nodal nodals on target nodes: %@\n", name);
+            NSLog(@"setNodalLoads: settings nodal nodals on target nodes: %@.\n", name);
             [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
             n = nodeIndexes.m;
             [self FEMCore_setPointLoadsModel:model solution:solution element:elements values:boundaryCondition.valuesList name:loadName indexes:nodeIndexes.ivector size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
@@ -5715,7 +5715,7 @@ static dispatch_once_t onceToken;
             sol = NULL;
             free(bufferContainers);
         } else {
-            NSLog(@"FEMCore:computeNodalWeightsInSolution: permutation vector not present!\n");
+            NSLog(@"FEMCore:computeNodalWeightsInSolution: permutation vector not present.\n");
             return;
         }
         weightsVar = [utilities getVariableFrom:solution.mesh.variables model:model name:intVarName onlySearch:NULL maskName:NULL info:&found];
@@ -5723,11 +5723,11 @@ static dispatch_once_t onceToken;
     
     weightsVarContainers = weightsVar.getContainers;
     if (weightsVarContainers->Values == NULL) {
-        NSLog(@"FEMCore:computeNodalWeightsInSolution: solution vector not present!\n");
+        NSLog(@"FEMCore:computeNodalWeightsInSolution: solution vector not present.\n");
         return;
     }
     
-    NSLog(@"FEMCore:computeNodalWeightsInSolution: computing weights for solution to variable %@\n", intVarName);
+    NSLog(@"FEMCore:computeNodalWeightsInSolution: computing weights for solution to variable %@.\n", intVarName);
     m = solution.mesh.maxElementNodes;
     elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(elementNodes);
@@ -5784,7 +5784,7 @@ static dispatch_once_t onceToken;
     free(elementNodes);
     free_ivector(localIndexes, 0, m-1);
     
-    NSLog(@"FEMCore:computeNodalWeightsInSolution: all done");
+    NSLog(@"FEMCore:computeNodalWeightsInSolution: all done.");
 }
 
 // Eliminates bubble degrees of freedom from a local linear system
@@ -6820,7 +6820,7 @@ static dispatch_once_t onceToken;
     
     if (bUpd == YES) {
         NSString *str = (solution.solutionInfo)[@"equation"];
-        NSLog(@"FEMCore:defaultFinishBulkAssemblySolution: saving bulk values for: %@\n", str);
+        NSLog(@"FEMCore:defaultFinishBulkAssemblySolution: saving bulk values for: %@.\n", str);
         
         matContainers = solution.matrix.getContainers;
         
@@ -7277,7 +7277,7 @@ static dispatch_once_t onceToken;
         free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
     }
     
-    NSLog(@"dirichletBoundaryConditions: dirichlet boundary conditions set\n");
+    NSLog(@"dirichletBoundaryConditions: dirichlet boundary conditions set.\n");
 }
 
 #pragma mark Solve
@@ -7432,7 +7432,7 @@ static dispatch_once_t onceToken;
         }
     }
     
-    if (stat == YES && n0 != n) NSLog(@"FEMCore:computeChange: possible mismatch in length of vectors\n");
+    if (stat == YES && n0 != n) NSLog(@"FEMCore:computeChange: possible mismatch in length of vectors.\n");
     
     if (relax == YES && relaxBefore == YES) {
         for (i=0; i<n; i++) {
@@ -7458,7 +7458,7 @@ static dispatch_once_t onceToken;
     }
     
     if (isnan(norm) != 0 || norm > maxNorm) {
-        NSLog(@"FEMCore:computeChange: computed norm: %lf\n", norm);
+        NSLog(@"FEMCore:computeChange: computed norm: %lf.\n", norm);
         errorfunct("FEMCore:computeChange", "Norm of solution has crossed given bounds.");
     }
     
@@ -7524,8 +7524,8 @@ static dispatch_once_t onceToken;
         }
     }
     else {
-        NSLog(@"FEMCore:computeChange: unknown convergence measure: %@\n", convergenceType);
-        NSLog(@"FEMCore:computeChange: convergence will probably fail!!\n");
+        NSLog(@"FEMCore:computeChange: unknown convergence measure: %@.\n", convergenceType);
+        NSLog(@"FEMCore:computeChange: convergence will probably fail.\n");
         change = 1.0e6;
     }
     
@@ -7566,9 +7566,9 @@ static dispatch_once_t onceToken;
     }
     
     if (steadyState == YES) {
-        NSLog(@"FEMCore:computeChange: SS (Iter=%d) (NRM,RELC): (%e %e) :: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMCore:computeChange: SS (Iter=%d) (NRM,RELC): (%e %e) :: %@.\n", iterNo, norm, change, solverName);
     } else {
-        NSLog(@"FEMCore:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e) :: %@\n", iterNo, norm, change, solverName);
+        NSLog(@"FEMCore:computeChange: NS (Iter=%d) (NRM,RELC): (%e %e) :: %@.\n", iterNo, norm, change, solverName);
     }
     
 #ifdef TEST
@@ -7603,12 +7603,12 @@ static dispatch_once_t onceToken;
         if (str != nil) {
             FEMVariable *weightVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str onlySearch:NULL maskName:NULL info:&stat];
             if (weightVar == nil) {
-                NSLog(@"FEMCore:computeChange: average solution weight missing: %@\n", str);
+                NSLog(@"FEMCore:computeChange: average solution weight missing: %@.\n", str);
                 errorfunct("FEMCore:computeChange", "Program terminating now");
             }
             variableArraysContainer *weightVarContainers = weightVar.getContainers;
             if (n != weightVarContainers->sizeValues) {
-                NSLog(@"FEMCore:computeChange: field and weight mismatch: %@\n", str);
+                NSLog(@"FEMCore:computeChange: field and weight mismatch: %@.\n", str);
                 errorfunct("FEMCore:computeChange", "Program terminating now");
             }
     
@@ -7676,7 +7676,7 @@ static dispatch_once_t onceToken;
                 NSString *str1 = [solution.variable.name stringByAppendingString:@" derivative"];
                 veloVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str1 onlySearch:NULL maskName:NULL info:&stat];
                 if (veloVar != nil) {
-                    NSLog(@"FEMCore:computeChange: computing variable: %@\n", str1);
+                    NSLog(@"FEMCore:computeChange: computing variable: %@.\n", str1);
                     variableArraysContainer *containers = veloVar.getContainers;
                     for (i=0; i<containers->sizeValues; i++) {
                         containers->Values[i] = (x[i] - x0[i]) / eps;
@@ -7719,9 +7719,9 @@ static dispatch_once_t onceToken;
     
     if ((solution.solutionInfo)[@"linear system iterative method"] != nil) {
         str = (solution.solutionInfo)[@"linear system iterative method"];
-        NSLog(@"FEMCore:iterativeSolveMatrix: using iterative method: %@\n", str);
+        NSLog(@"FEMCore:iterativeSolveMatrix: using iterative method: %@.\n", str);
     } else {
-        NSLog(@"FEMCore:iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab\n");
+        NSLog(@"FEMCore:iterativeSolveMatrix: linear system iterative method not found, using BI-CGstab.\n");
         str = @"bi-cgstab";
     }
     
@@ -8194,7 +8194,7 @@ static dispatch_once_t onceToken;
             [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&st orUsingBlock:nil string:nil];
             [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&rst orUsingBlock:nil string:nil];
             
-            NSLog(@"FEMCore:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s)\n", [solution.variable canonicalizeName], st, rst);
+            NSLog(@"FEMCore:solveSystemMatrix: linear system time (CPU, REAL) for %@: %lf %lf (s).\n", [solution.variable canonicalizeName], st, rst);
             
             if ([(solution.solutionInfo)[@"linear system timing cumulative"] boolValue] == YES) {
                 double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] info:&found minValue:NULL maxValue:NULL];
@@ -8418,7 +8418,7 @@ static dispatch_once_t onceToken;
         [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution cpu time " stringByAppendingString:str] withValue:&st orUsingBlock:nil string:nil];
         [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: solution real time " stringByAppendingString:str] withValue:&rst orUsingBlock:nil string:nil];
         
-        NSLog(@"FEMCore:solveSystemMatrix: solution time (CPU, REAL) for %@: %lf %lf (s)\n", str, st, rst);
+        NSLog(@"FEMCore:solveSystemMatrix: solution time (CPU, REAL) for %@: %lf %lf (s).\n", str, st, rst);
         
         if ([(solution.solutionInfo)[@"solution timing cumulative"] boolValue] == YES) {
             double ct = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:[@"res: cum solution cpu time " stringByAppendingString:str] info:&found minValue:NULL maxValue:NULL];
@@ -8693,29 +8693,29 @@ static dispatch_once_t onceToken;
 	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(maxWorkItemDims), &maxWorkItemDims, NULL);
 	error |= clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(maxWorkItemSizes), &maxWorkItemSizes, NULL);
     
-    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Device Name: %s\n", name);
-    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Vendor: %s\n", vendor);
-    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Driver: %s\n", driver);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Profile: %s\n", profile);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Supported Extensions: %s\n", extensions);
+    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Device Name: %s.\n", name);
+    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Vendor: %s.\n", vendor);
+    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Driver: %s.\n", driver);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Profile: %s.\n", profile);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Supported Extensions: %s.\n", extensions);
 	
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Local Mem Type (Local=1, Global=2): %i\n", (int)localMemType);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Global Mem Size (MB): %i\n", (int)globalMemSize/(1024*1024));
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Global Mem Cache Size (Bytes): %i\n", (int)globalMemCacheSize);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Local Mem Size (Bytes): %i\n", (int)localMemSize);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Mem Alloc Size (MB): %ld\n", (long int)maxMemAllocSize/(1024*1024));
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Local Mem Type (Local=1, Global=2): %i.\n", (int)localMemType);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Global Mem Size (MB): %i.\n", (int)globalMemSize/(1024*1024));
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Global Mem Cache Size (Bytes): %i.\n", (int)globalMemCacheSize);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Local Mem Size (Bytes): %i.\n", (int)localMemSize);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Mem Alloc Size (MB): %ld.\n", (long int)maxMemAllocSize/(1024*1024));
 	
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Clock Frequency (MHz): %i\n", clockFrequency);
-    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Compute Units: %i\n", maxComputeUnits);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Clock Frequency (MHz): %i.\n", clockFrequency);
+    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Compute Units: %i.\n", maxComputeUnits);
 	
 	for(int i=0;i<6;i++) {
 		error |= clGetDeviceInfo(device, vectorTypes[i], sizeof(vectorWidth), &vectorWidth, NULL);
-		NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Vector type width for: %s = %i\n", vectorTypeNames[i], vectorWidth);
+		NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Vector type width for: %s = %i.\n", vectorTypeNames[i], vectorWidth);
 	}
 	
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Group Size: %lu\n", maxWorkGroupSize);
-	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Item Dimensions: %i\n", (int)maxWorkItemDims);
-    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Item Sizes: %i %i %i\n", (int)maxWorkItemSizes[0], (int)maxWorkItemSizes[1], (int)maxWorkItemSizes[2]);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Group Size: %lu.\n", maxWorkGroupSize);
+	NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Item Dimensions: %i.\n", (int)maxWorkItemDims);
+    NSLog(@"FEMCore:getDispatchQueueAndInfoForDeviceType: Max Work Item Sizes: %i %i %i.\n", (int)maxWorkItemSizes[0], (int)maxWorkItemSizes[1], (int)maxWorkItemSizes[2]);
 
     return queue;
 }

@@ -133,7 +133,7 @@ static char *_parallel_extensions[] = {
     if (self.parallel) {
         cacheNode *retval = [self SIOMeshAgent_searchNode:address];
         if (retval == NULL) {
-            NSLog(@"SIOMeshAgent:SIOMeshAgent_copyCoords: partition error: something is going totally wrong. Address: %d\n", address);
+            NSLog(@"SIOMeshAgent:SIOMeshAgent_copyCoords: partition error: something is going totally wrong. Address: %d.\n", address);
             found = 0;
         } else {
             target[0] = retval->x;
@@ -559,7 +559,7 @@ static char *_parallel_extensions[] = {
     
     cacheNode *retval = [self SIOMeshAgent_searchNode:*tag];
     if (retval == NULL) {
-        NSLog(@"SIOMeshAgent:readSharedNode: partition error: something is going totally wrong. Address: %d\n", *tag);
+        NSLog(@"SIOMeshAgent:readSharedNode: partition error: something is going totally wrong. Address: %d.\n", *tag);
         exit(23);
     } else {
         *constraint = retval->constraint;
