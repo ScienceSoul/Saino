@@ -40,6 +40,17 @@ inline void invertMatrix3x3(double *GI, double *covariantMetricTensor, double de
     GI[8] =  s * ( covariantMetricTensor[0]*covariantMetricTensor[4] - covariantMetricTensor[3]*covariantMetricTensor[1] );
 }
 
+inline double det3x3(double **a) {
+    
+    double val;
+    
+    val = a[0][0] * ( a[1][1] * a[2][2] - a[1][2] * a[2][1] ) -
+          a[0][1] * ( a[1][0] * a[2][2] - a[1][2] * a[2][0] ) +
+          a[0][2] * ( a[1][0] * a[2][1] - a[1][1] * a[2][0] );
+    
+    return val;
+}
+
 /***********************************************************************************
     Partial derivatives of global coordinates with respect to local coordinates
  

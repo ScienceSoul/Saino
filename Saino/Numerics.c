@@ -9,6 +9,7 @@
 #include "Numerics.h"
 
 extern inline void invertMatrix3x3(double *GI, double *covariantMetricTensor, double detG);
+extern inline double det3x3(double **a);
 extern inline void derivatives(double *dx, Element_t *element, int nDOFs, Nodes_t *nodes, double *dLBasisdx);
 extern inline void covariantMetric(double *covariantMetricTensor, double *dx, Element_t *element, int nDOFs, Nodes_t *nodes, int meshDimension, double *dLBasisdx);
 extern inline double detJ(double *covariantMetricTensor, double *dx, Element_t *element, Nodes_t *nodes, int meshDimension, double u, double v, double w, double *dLBasisdx);

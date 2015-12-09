@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMMatrix.h"
 #import "Constructors.h"
 
 @interface FEMListMatrix : NSObject {
@@ -21,5 +22,7 @@
 -(void)freeMatrix:(ListMatrix_t *)list size:(int)n;
 -(ListMatrix_t *)enlargeMatrix:(ListMatrix_t *)matrix toSize:(int)n;
 -(ListMatrixEntry_t *)getMatrixIndexInListMatrix:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2;
+-(void)addToMatrixElement:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL *)setValue;
+-(void)convertToCRSMatrix:(FEMMatrix *)matrix;
 
 @end

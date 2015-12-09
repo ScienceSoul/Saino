@@ -88,10 +88,10 @@
 -(void)defaultInitializeSolution:(FEMSolution *)solution model:(FEMModel *)model;
 -(BOOL)getReal:(FEMModel *)model forElement:(Element_t *)element inArray:(NSArray *)array variableName:(NSString *)name buffer:(listBuffer *)result listUtilities:(FEMListUtilities *)listUtil;
 -(int)isPElement:(Element_t *)element;
--(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd;
+-(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd mesh:(FEMMesh *)mesh;
 -(BOOL)isFluxElement:(Element_t *)element mesh:(FEMMesh *)mesh;
 -(int)getElementFamily:(Element_t *)element;
--(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes;
+-(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes disableDiscontinuousGalerkin:(BOOL *)disableDiscontinuousGalerkin;
 -(int)sgetElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes;
 -(int)getNumberOfBubbleDofsElement:(Element_t *)element solution:(FEMSolution *)solution;
 -(Element_t *)getActiveElement:(int) t solution:(FEMSolution *)solution model:(FEMModel *)model;

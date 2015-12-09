@@ -291,9 +291,9 @@
                         for (FEMVariable *variable in mesh.variables) {
                             variableContainers = variable.getContainers;
                             if (variable.solution != nil) {
-                                dofs = [self.core getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.core getElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes disableDiscontinuousGalerkin:NULL];
                             } else {
-                                dofs = [self.core getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes];
+                                dofs = [self.core getElementDofsSolution:nil model:model forElement:&elements[t] atIndexes:indexes disableDiscontinuousGalerkin:NULL];
                             }
                             
                             solution = (FEMSolution *)variable.solution;
@@ -546,7 +546,7 @@
                                     if (ntBoundary == YES) {
                                         nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
                                         initNodes(nodes);
-                                        [self.core getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL];
+                                        [self.core getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL mesh:nil];
                                         parU = 0.0;
                                         parV = 0.0;
                                         check = YES;
@@ -1541,7 +1541,7 @@ jump:
 
 -(void)runWithInitialize:(int)initialize {
     
-    int i, j, extrudeLevels, interval, minVal, timeStep=0;
+    int i, j, k, extrudeLevels, interval, minVal, timeStep=0;
     NSString *eq, *when;
     BOOL found, execThis;
     FEMListUtilities *listUtilities;
@@ -1629,6 +1629,19 @@ jump:
                     }
                 }
                 [self.model.meshes addObject:extrudedMesh];
+                
+                // If periodic BC given, compute the boundary mesh projector
+                i = 0;
+                for (FEMBoundaryCondition *boundary in self.model.boundaryConditions) {
+                    if (boundary.pMatrix != nil) [boundary.pMatrix deallocation];
+                    boundary.pMatrix = nil;
+                    k = [listUtilities listGetInteger:self.model inArray:boundary.valuesList forVariable:@"periodic bc" info:&found minValue:NULL maxValue:NULL];
+                    if (found == YES) {
+                        boundary.pMatrix = [meshUtils periodicProjectorInModel:self.model forMesh:extrudedMesh masterBoundary:i targetBoundary:k-1 galerking:NULL];
+                    }
+                    i++;
+                }
+                
             }
             if (_silent == NO) {
                 NSLog(@"JOB: ---------------------------------------------------------------------\n");

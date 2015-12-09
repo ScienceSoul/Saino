@@ -300,7 +300,7 @@
         }
     }
     
-    // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:
+    // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:
     _elementNodeIndexesStore = intvec(0, (self.numberOfBulkElements*self.maxElementDofs)-1);
     indx = 0;
     for (int t=0; t<self.numberOfBulkElements; t++) {
@@ -333,6 +333,7 @@
 @synthesize adaptiveMesh = _adaptiveMesh;
 @synthesize changed = _changed;
 @synthesize stabilize = _stabilize;
+@synthesize discontinuousMesh = _discontinuousMesh;
 @synthesize name = _name;
 @synthesize variables = _variables;
 @synthesize projectors = _projectors;
@@ -350,6 +351,7 @@
         _adaptiveMesh = NO;
         _changed = NO;
         _stabilize = NO;
+        _discontinuousMesh = NO;
         
         _dimension = 0;
         _numberOfEdges = 0;
@@ -383,6 +385,7 @@
         
         _colorMapping = NULL;
         _elementNodeIndexesStore = NULL;
+        _discontinousPerm = NULL;
     }
     
     return self;
@@ -985,9 +988,11 @@
         addr1 = 1;
         addr2 = model.numberOfBoundaryConditions;
         k = [listUtil listGetInteger:model inArray:boundary.valuesList forVariable:@"periodic bc" info:&gotIt minValue:&addr1 maxValue:&addr2];
-        projector = [meshUtils periodicProjectorInModel:model forMesh:self boundary:i target:k-1];
-        if (projector != nil) boundary.pMatrix = projector;
-        projector = nil;
+        if (gotIt == YES) {
+            projector = [meshUtils periodicProjectorInModel:model forMesh:self masterBoundary:i targetBoundary:k-1 galerking:NULL];
+            if (projector != nil) boundary.pMatrix = projector;
+            projector = nil;
+        }
         i++;
     }
     
@@ -1049,6 +1054,18 @@
 -(int *)getElementNodeIndexesStore {
     
     return _elementNodeIndexesStore;
+}
+
+#pragma mark Discontinous permutation getter
+-(int *)getDiscontinousPerm {
+    
+    return _discontinousPerm;
+}
+
+#pragma mark Inverse permutation getter
+-(int *)getInvPerm {
+    
+    return _invPerm;
 }
 
 #pragma mark Test associativity
@@ -1293,6 +1310,16 @@
     if (_elementNodeIndexesStore != NULL) {
         free_ivector(_elementNodeIndexesStore, 0, (self.numberOfBulkElements*self.maxElementDofs)-1);
         _elementNodeIndexesStore = NULL;
+    }
+    
+    if (_discontinousPerm != NULL) {
+        free_ivector(_discontinousPerm, 0, self.numberOfNodes-1);
+        _discontinousPerm = NULL;
+    }
+    
+    if (_invPerm != NULL) {
+        free_ivector(_invPerm, 0, self.numberOfNodes-1);
+        _invPerm = NULL;
     }
 }
 

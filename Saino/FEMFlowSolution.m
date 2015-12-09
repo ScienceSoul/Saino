@@ -296,8 +296,8 @@
     static NSString* (*listGetStringIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
     static BOOL (*listGetConstRealArrayIMP)(id, SEL, FEMModel*, NSArray*, NSString*, listBuffer*) = nil;
     static int (*getNumberOfBubbleDofsElementIMP)(id, SEL, Element_t*, FEMSolution*) = nil;
-    static int (*getElementDofsSolutionIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*) = nil;
-    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*) = nil;
+    static int (*getElementDofsSolutionIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*) = nil;
+    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*) = nil;
     static BOOL (*getRealIMP)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*) = nil;
     static double (*listGetConstRealIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*) = nil;
     static BOOL (*listGetRealArrayIMP)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*) = nil;
@@ -346,12 +346,12 @@
             [core methodForSelector: @selector(getNumberOfBubbleDofsElement:solution:)];
         }
         if (!getElementDofsSolutionIMP) {
-            getElementDofsSolutionIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*))
-            [core methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:)];
+            getElementDofsSolutionIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))
+            [core methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:)];
         }
         if (!getNodesIMP) {
-            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*))
-            [core methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:)];
+            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))
+            [core methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:mesh:)];
         }
         if (!getRealIMP) {
             getRealIMP = (BOOL (*)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))
@@ -829,9 +829,9 @@
             
             n = element->Type.NumberOfNodes;
             nb = getNumberOfBubbleDofsElementIMP(core, @selector(getNumberOfBubbleDofsElement:solution:), element, solution);
-            nd = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, _indexes);
+            nd = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, _indexes, NULL);
             
-            getNodesIMP(core, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:), solution, model, element, _elementNodes, NULL);
+            getNodesIMP(core, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:mesh:), solution, model, element, _elementNodes, NULL, nil);
             
             switch (_nsdofs) {
                 case 3:
@@ -1289,7 +1289,7 @@
             // to set Dirichlet BCs, so skip them at this stage
             if ([core isFluxElement:element mesh:mesh] == NO) continue;
             
-            [core getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL];
+            [core getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL mesh:nil];
             
             bc = [core getBoundaryCondition:model forElement:element];
             if (bc == nil) continue;

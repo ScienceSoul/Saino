@@ -17,13 +17,18 @@
 #import "FEMInitialConditions.h"
 #import "FEMUtilities.h"
 #import "Utils.h"
+#import "TimeProfile.h"
 
 @implementation FEMListUtilities {
     
     char *_nameSpace;
     char *_nameSpaceStr;
     BOOL _nameSpaceChanged;
+    BOOL _timerPassive;
+    BOOL _timerResults;
 }
+
+@synthesize timers = _timers;
 
 - (id)init
 {
@@ -34,6 +39,9 @@
         _nameSpace = &emptyStr;
         _nameSpaceStr = NULL;
         _nameSpaceChanged = YES;
+        _timerPassive = NO;
+        _timerResults = NO;
+        _timers = [[NSMutableDictionary alloc] init];
     }
     
     return self;
@@ -718,6 +726,78 @@
     return nil;
 }
 
+/*******************************************************************************
+    Finds an entry in the list by its name and returns a handle to it.
+    This one just finds a keyword with the same start as specified by 'prefix'.
+    
+    Method corresponds to Elmer from git on October 27 2015
+*******************************************************************************/
+-(FEMValueList *)listFindPrefix:(NSString *)prefix inArray:(NSArray *)array info:(BOOL *)found {
+    
+    int k, n;
+    char *nameStr = NULL;
+    FEMValueList *valueList;
+    
+    *found = NO;
+    
+    if (prefix == nil) return nil;
+    
+    if (_nameSpaceChanged == YES) {
+        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[prefix UTF8String]];
+        _nameSpaceChanged = NO;
+    }
+    char *varStr = (char *)[prefix UTF8String];
+    
+    if (_nameSpaceStr != NULL) {
+        k = (int)strlen(_nameSpaceStr);
+        for (FEMValueList *list in array) {
+            nameStr = (char *)[list.name UTF8String];
+            n = (int)[list.name length];
+            if (n >= k) {
+                if (strncmp(_nameSpaceStr, nameStr, k) == 0) {
+                    valueList = list;
+                    break;
+                }
+            }
+        }
+    } else {
+        k = (int)strlen(varStr);
+        for (FEMValueList *list in array) {
+            nameStr = (char *)[list.name UTF8String];
+            n = (int)[list.name length];
+             if (n >= k) {
+                 if (strncmp(varStr, nameStr, k) == 0) {
+                     valueList = list;
+                     break;
+                 }
+             }
+        }
+    }
+    
+    if (valueList != nil) {
+        *found = YES;
+    } else {
+        NSLog(@"FEMListUtilities:listFindPrefix: requested prefix [%@] not found.\n", prefix);
+    }
+
+    return valueList;
+}
+
+/************************************************************
+    Just checks if a prefix is present in the list.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+************************************************************/
+
+-(BOOL)listCheckPrefix:(NSString *)prefix inArray:(NSArray *)array {
+    
+    FEMValueList *valueList;
+    BOOL found;
+    
+    valueList = [self listFindPrefix:prefix inArray:array info:&found];
+    return found;
+}
+
 -(BOOL)listGetDerivativeValue:(FEMModel *)model inArray:(NSArray *)array forVariable:(NSString *)varName numberOfNodes:(int)n indexes:(int *)nodeIndexes buffer:(listBuffer *)result {
     
     int i, k;
@@ -810,8 +890,8 @@
 }
 
 /**********************************************************************************
- Adds a string to a given class list of values
- **********************************************************************************/
+    Adds a string to a given class list of values
+**********************************************************************************/
 -(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value {
     
     FEMBoundaryCondition *boundary;
@@ -878,8 +958,8 @@
 }
 
 /**********************************************************************************
- Adds a logical entry to a given class list of values
- **********************************************************************************/
+    Adds a logical entry to a given class list of values
+**********************************************************************************/
 -(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value {
     
     FEMBoundaryCondition *boundary;
@@ -945,8 +1025,8 @@
 }
 
 /**********************************************************************************
- Adds an integer to a given class list of values
- **********************************************************************************/
+    Adds an integer to a given class list of values
+**********************************************************************************/
 -(void)addIntegerInClassList:(id)className theVariable:(NSString *)varName withValue:(int *)value orUsingBlock:(double (^)())block {
     
     FEMBoundaryCondition *boundary;
@@ -1109,8 +1189,8 @@
 }
 
 /**********************************************************************************
- Adds an constant real value to a given class list of values
- **********************************************************************************/
+    Adds an constant real value to a given class list of values
+**********************************************************************************/
 -(void)addConstRealInClassList:(id)className theVariable:(NSString *)varName withValue:(double *)value orUsingBlock:(double (^)())block string:(NSString *)str {
     
     FEMBoundaryCondition *boundary;
@@ -1394,7 +1474,7 @@
 }
 
 /*****************************************************************************
- Check if the keyword is present in any body force
+    Check if the keyword is present in any body force
 *****************************************************************************/
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name {
     
@@ -1408,5 +1488,91 @@
     
     return found;
 }
+
+/************************************************************
+    Check current time of the timer
+    
+    Method corresponds to Elmer from git on October 27 2015
+************************************************************/
+-(void)checkTimer:(NSString *)timerName deleteTimer:(BOOL *)deleteTimer resetTimer:(BOOL *)resetTimer model:(FEMModel *)model {
+    
+    if (_timerPassive == YES) return;
+    
+    double ct = 0.0;
+    double rt = 0.0;
+    
+    NSString *name = [timerName stringByAppendingString:@" cpu time"];
+    if ((self.timers)[name] != nil) {
+        double ct0 = [(self.timers)[name] doubleValue];
+        NSString *name = [timerName stringByAppendingString:@" real time"];
+        double rt0 = [(self.timers)[name] doubleValue];
+        ct = cputime() - ct0;
+        rt = realtime() - rt0;
+        
+        NSLog(@"FEMListUtilities:checkTimer: elapsed time (CPU, REAL): %f %f\n", ct, rt);
+        if (_timerResults == YES) {
+            NSString *string = [timerName stringByAppendingString:@" cpu time"];
+            [self addConstRealInClassList:model.simulation theVariable:[@"res: " stringByAppendingString:string] withValue:&ct orUsingBlock:nil string:nil];
+            string = [timerName stringByAppendingString:@" real time"];
+            [self addConstRealInClassList:model.simulation theVariable:[@"res: " stringByAppendingString:string] withValue:&rt orUsingBlock:nil string:nil];
+        }
+    } else {
+        NSLog(@"FEMListUtilities:checkTimer: requesting time from non-existing timer: %@\n", timerName);
+    }
+    
+    if (resetTimer != NULL) {
+        if (*resetTimer == YES) {
+            [self.timers setObject:@(ct) forKey:[timerName stringByAppendingString:@" cpu time"]];
+            [self.timers setObject:@(rt) forKey:[timerName stringByAppendingString:@" real time"]];
+        }
+    }
+    
+    if (deleteTimer != NULL) {
+        if (*deleteTimer == YES) [self deletTimer:timerName];
+    }
+}
+
+/******************************************************************************
+    A timer that uses a list structure to store the times making in
+    generally applicable without any upper limit on the number of timers.
+    This resets the timer.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+******************************************************************************/
+-(void)resetTimer:(NSString *)timerName model:(FEMModel *)model {
+    
+    double ct, rt;
+    static BOOL firstTime = YES;
+    BOOL found;
+    
+    if (firstTime == YES) {
+        firstTime = NO;
+        _timerPassive = [self listGetLogical:model inArray:model.simulation.valuesList forVariable:@"timer passive" info:&found];
+        _timerResults = [self listGetLogical:model inArray:model.simulation.valuesList forVariable:@"timer results" info:&found];
+    }
+    
+    if (_timerPassive == YES) return;
+    
+    ct = cputime();
+    rt = realtime();
+    
+    [self.timers setObject:@(ct) forKey:[timerName stringByAppendingString:@" cpu time"]];
+    [self.timers setObject:@(rt) forKey:[timerName stringByAppendingString:@" real time"]];
+}
+
+/*************************************************************
+    Delete an existing timer
+ 
+    Method corresponds to Elmer from git on October 27 2015
+*************************************************************/
+-(void)deletTimer:(NSString *)timerName {
+    
+    if (_timerPassive == YES) return;
+    
+    [self.timers removeObjectForKey:[timerName stringByAppendingString:@" cpu time"]];
+    [self.timers removeObjectForKey:[timerName stringByAppendingString:@" real time"]];
+}
+
+
 
 @end

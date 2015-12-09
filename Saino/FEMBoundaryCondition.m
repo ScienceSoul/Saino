@@ -19,6 +19,7 @@
     self = [super init];
     if (self) {
         _valuesList = [[NSMutableArray alloc] init];
+        _pMatrix = nil;
     }
     
     return self;

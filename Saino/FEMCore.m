@@ -3102,14 +3102,15 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd {
+-(void)getNodes:(FEMSolution *)solution model:(FEMModel *)model inElement:(Element_t *)element resultNodes:(Nodes_t *)nodes numberOfNodes:(int *)nd mesh:(FEMMesh *)mesh {
     
     int i, n, nb, sz, sz1;
-    Nodes_t *globalNodes = NULL;
     
-    globalNodes = solution.mesh.getNodes;
+    FEMMesh *msh = solution.mesh;
+    if (mesh != nil) msh = mesh;
+    n = max(msh.maxElementNodes, msh.maxElementDofs);
     
-    n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
+    Nodes_t *meshNodes = msh.getNodes;
     
     if (nodes->x == NULL) {
         nodes->x = doublevec(0, n-1);
@@ -3128,9 +3129,9 @@ static dispatch_once_t onceToken;
     
     n = element->Type.NumberOfNodes;
     for (i=0; i<n; i++) {
-        nodes->x[i] = globalNodes->x[element->NodeIndexes[i]];
-        nodes->y[i] = globalNodes->y[element->NodeIndexes[i]];
-        nodes->z[i] = globalNodes->z[element->NodeIndexes[i]];
+        nodes->x[i] = meshNodes->x[element->NodeIndexes[i]];
+        nodes->y[i] = meshNodes->y[element->NodeIndexes[i]];
+        nodes->z[i] = meshNodes->z[element->NodeIndexes[i]];
     }
     
     sz = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs); 
@@ -3142,15 +3143,15 @@ static dispatch_once_t onceToken;
         }
     }
     
-    sz1 = globalNodes->numberOfNodes;
+    sz1 = meshNodes->numberOfNodes;
     if (sz1 > solution.mesh.numberOfNodes) {
         memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-        nb = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+        nb = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
         for (i=n; i<nb; i++) {
             if (self.indexStore[i] >= 0 && self.indexStore[i] < sz1) {
-                nodes->x[i] = globalNodes->x[self.indexStore[i]];
-                nodes->y[i] = globalNodes->y[self.indexStore[i]];
-                nodes->z[i] = globalNodes->z[self.indexStore[i]];
+                nodes->x[i] = meshNodes->x[self.indexStore[i]];
+                nodes->y[i] = meshNodes->y[self.indexStore[i]];
+                nodes->z[i] = meshNodes->z[self.indexStore[i]];
             }
         }
     }
@@ -3179,7 +3180,10 @@ static dispatch_once_t onceToken;
     return element->Type.ElementCode / 100;
 }
 
--(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes {
+/************************************************************
+    Method corresponds to Elmer from git on October 27 2015
+************************************************************/
+-(int)getElementDofsSolution:(FEMSolution *)uSolution model:(FEMModel *)model forElement:(Element_t *)element atIndexes:(int *)indexes disableDiscontinuousGalerkin:(BOOL *)disableDiscontinuousGalerkin {
     
     int nb, i, j, k, bid, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
@@ -3190,7 +3194,7 @@ static dispatch_once_t onceToken;
     if (uSolution != nil) {
         solution = uSolution;
     } else {
-        solution = model.solution;
+        solution = (FEMSolution *)model.solution;
     }
     
     edges = solution.mesh.getEdges;
@@ -3198,7 +3202,9 @@ static dispatch_once_t onceToken;
     
     nb = 0;
     
-    if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
+    BOOL disableDG = NO;
+    if (disableDiscontinuousGalerkin != NULL) disableDG = *disableDiscontinuousGalerkin;
+    if (!disableDG && (solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
         if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
             
             for (i=0; i<element->DGDOFs; i++) {
@@ -3356,7 +3362,7 @@ static dispatch_once_t onceToken;
     if (uSolution != nil) {
         solution = uSolution;
     } else {
-        solution = model.solution;
+        solution = (FEMSolution *)model.solution;
     }
     
     edges = solution.mesh.getEdges;
@@ -3571,9 +3577,9 @@ static dispatch_once_t onceToken;
     memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
     varSolution = (FEMSolution *)variable.solution;
     if (varSolution != nil) {
-        n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore];
+        n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
     } else {
-        n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+        n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
     }
     n = min(n, sizeField);
     
@@ -3631,9 +3637,9 @@ static dispatch_once_t onceToken;
         memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
         varSolution = (FEMSolution *)variable.solution;
         if (varSolution != nil) {
-            n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore];
+            n = [self getElementDofsSolution:varSolution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
         } else {
-            n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+            n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
         }
         n = min(n, (size1Field*size2Field));
         
@@ -4042,7 +4048,7 @@ static dispatch_once_t onceToken;
     variableArraysContainer *varContainers = NULL;
     
     memset( self.indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
     if ([self isPElement:element] == YES) n = [self getNumberOfNodesForElement:element];
     varContainers = solution.variable.getContainers;
     
@@ -4215,8 +4221,8 @@ static dispatch_once_t onceToken;
     pNodes->y = doublevec(0, n-1);
     pNodes->z = doublevec(0, n-1);
     
-    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n];
-    [self getNodes:solution model:model inElement:parent resultNodes:pNodes numberOfNodes:&n];
+    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n mesh:nil];
+    [self getNodes:solution model:model inElement:parent resultNodes:pNodes numberOfNodes:&n mesh:nil];
     
     vLoad = doublematrix(0, 2, 0, np-1);
     memset( *vLoad, 0.0, (3*np)*sizeof(double) );
@@ -4364,7 +4370,7 @@ static dispatch_once_t onceToken;
     nodes->y = doublevec(0, n-1);
     nodes->z = doublevec(0, n-1);
     
-    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n];
+    [self getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:&n mesh:nil];
     IP = GaussQuadrature(element, NULL, NULL);
     
     memset( force, 0.0, nd*sizeof(double) );
@@ -6156,7 +6162,7 @@ static dispatch_once_t onceToken;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     
     // TODO: Add support for parallel run
     
@@ -6185,7 +6191,7 @@ static dispatch_once_t onceToken;
     
     dofs = solution.variable.dofs;
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
@@ -6224,7 +6230,7 @@ static dispatch_once_t onceToken;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:self.indexStore disableDiscontinuousGalerkin:NULL];
     
     // TODO: Add support for parallel run
     
@@ -6256,7 +6262,7 @@ static dispatch_once_t onceToken;
     
     dofs = solution.variable.dofs;
     memset( _indexStore, -1, self.sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     
     // TODO: Add support for parallel run
     
@@ -6303,7 +6309,7 @@ static dispatch_once_t onceToken;
     
     dt = solution.dt;
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     varContainers = solution.variable.getContainers;
     
     int perm[n];
@@ -6329,7 +6335,7 @@ static dispatch_once_t onceToken;
     dt = solution.dt;
     dofs = solution.variable.dofs;
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -6385,7 +6391,7 @@ static dispatch_once_t onceToken;
     
     dt = solution.dt;
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     varContainers = solution.variable.getContainers;
     
     int perm[n];
@@ -6412,7 +6418,7 @@ static dispatch_once_t onceToken;
     dt = solution.dt;
     dofs = solution.variable.dofs;
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     varContainers = solution.variable.getContainers;
     
     mass = doublematrix(0, (n*dofs)-1, 0, (n*dofs)-1);
@@ -6723,7 +6729,7 @@ static dispatch_once_t onceToken;
     // TODO: add support for parallel runs
     
     static void (*updateGlobalEquationIMP)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, double*, int, int, int *, int*, int*, BOOL*, FEMMatrixCRS*, FEMMatrixBand*) = nil;
-    static int (*getElementDofsIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*) = nil;
+    static int (*getElementDofsIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*) = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         if (!updateGlobalEquationIMP) {
@@ -6731,13 +6737,13 @@ static dispatch_once_t onceToken;
             [self methodForSelector: @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:)];
         }
         if (!getElementDofsIMP) {
-            getElementDofsIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*))
-            [self methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:)];
+            getElementDofsIMP = (int (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))
+            [self methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:)];
         }
     });
     
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:), solution, model, element, _indexStore);
+    n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, _indexStore, NULL);
     
     varContainers = solution.variable.getContainers;
     int perm[n];
@@ -6760,7 +6766,7 @@ static dispatch_once_t onceToken;
     variableArraysContainer *varContainers = NULL;
     
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
-    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore];
+    n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_indexStore disableDiscontinuousGalerkin:NULL];
     
     varContainers = solution.variable.getContainers;
     perm = intvec(0, n-1);
@@ -7078,7 +7084,7 @@ static dispatch_once_t onceToken;
                             n = edges[parent->EdgeIndexes[j]].Type.NumberOfNodes;
                             [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[parent->EdgeIndexes[j]] withNumberOfNodes:n andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:&_kernWork[0]];
                             
-                            n = [self getElementDofsSolution:solution model:model forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind];
+                            n = [self getElementDofsSolution:solution model:model forElement:&edges[parent->EdgeIndexes[j]] atIndexes:_g_Ind disableDiscontinuousGalerkin:NULL];
                             for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[parent->EdgeIndexes[j]].NDOFs; k<n; k++) {
                                 nb = varContainers->Perm[_g_Ind[k]];
                                 if (nb < 0) continue;
@@ -7111,7 +7117,7 @@ static dispatch_once_t onceToken;
                                 n = parent->Type.NumberOfNodes;
                                 [self localBoundaryIntegral:model inSolution:solution atBoundary:bc forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] withNumberOfNodes:nb andParent:parent withNumberOfNodes:nb boundaryName:str1 functionIntegral:&_kernWork[0]];
                                 
-                                n = [self getElementDofsSolution:solution model:model forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind];
+                                n = [self getElementDofsSolution:solution model:model forElement:&edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]] atIndexes:_g_Ind disableDiscontinuousGalerkin:NULL];
                                 for (k=solContainers->defDofs[parent->BodyID-1][0]*edges[faces[parent->FaceIndexes[j]].EdgeIndexes[j]].NDOFs; k<n; k++) {
                                     nb = varContainers->Perm[_g_Ind[k]];
                                     if (nb < 0) continue;
@@ -7129,7 +7135,7 @@ static dispatch_once_t onceToken;
                 } // end associated edges
             } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
                 n = element->Type.NumberOfNodes;
-                n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_g_Ind];
+                n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_g_Ind disableDiscontinuousGalerkin:NULL];
                 for (k=0; k<n; k++) {
                     nb = varContainers->Perm[_g_Ind[k]];
                     if (nb < 0) continue;

@@ -87,6 +87,12 @@ enum {
     SOLUTION_MODE_MATRIXFREE    // Normal field, no matrix
 };
 
+enum {
+    PROJECTOR_TYPE_DEFAULT = 0, // Unspecified constraint matrix
+    PROJECTOR_TYPE_NODAL,       // Nodal projector
+    PROJECTOR_TYPE_GALERKIN     // Galerkin projector
+};
+
 typedef struct {
     
     int numberOfNodes;

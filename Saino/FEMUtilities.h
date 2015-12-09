@@ -29,7 +29,7 @@
 -(double)derivateCurveTvalues:(double *)tValues fValues:(double *)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double *)cubicCoeff;
 -(void)solveLinearSystem2x2:(double **)a afterSolve:(double *)x rightHandSide:(double *)b;
 -(void)solveLinearSystem3x3:(double **)a afterSolve:(double *)x rightHandSide:(double *)b;
--(FEMMatrix *)meshProjector:(FEMMesh *)mesh1 secondmesh:(FEMMesh *)mesh2 model:(FEMModel *)aModel useQuadrantTree:(BOOL *)quadrantTree transpose:(BOOL *)trans;
+-(FEMMatrix *)meshProjectorMesh1:(FEMMesh *)mesh1 mesh2:(FEMMesh *)mesh2 model:(FEMModel *)model useQuadrantTree:(BOOL *)quadrantTree transpose:(BOOL *)trans;
 -(double)cublicSplineX:(double *)x Y:(double *)y R:(double *)r T:(double)t;
 
 // Following two methods correspond to ComponentName routines in Elmer

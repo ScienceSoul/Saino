@@ -29,10 +29,11 @@
     int _numberOfPassiveBCs;
     int _savesDone;
     int _numberOfColors;
-    BOOL _outputActive;
     BOOL _adaptiveMesh;
     BOOL _changed;
+    BOOL _discontinuousMesh;
     BOOL _stabilize;
+    BOOL _outputActive;
     
     Element_t *_elements;
     Element_t *_edges;
@@ -52,6 +53,8 @@
     
     int *_colorMapping;
     int *_elementNodeIndexesStore;
+    int *_discontinousPerm;
+    int *_invPerm;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -74,6 +77,7 @@
 @property(nonatomic, assign, getter = isAdaptiveMesh) BOOL adaptiveMesh;
 @property(nonatomic, assign, getter = isChanged) BOOL changed;
 @property(nonatomic, assign, getter = isStabilize) BOOL stabilize;
+@property(nonatomic, assign, getter = isDiscontinuousMesh) BOOL discontinuousMesh;
 @property(nonatomic, strong) NSMutableString *name;
 @property(nonatomic, strong) NSMutableArray *variables;
 @property(nonatomic, strong) NSMutableArray *projectors;
@@ -107,6 +111,12 @@
 
 // Element permutation store getter
 -(int *)getElementNodeIndexesStore;
+
+// Discontinous permutation getter
+-(int *)getDiscontinousPerm;
+
+// Inverse permutation getter
+-(int *)getInvPerm;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;

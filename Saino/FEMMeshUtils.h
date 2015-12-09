@@ -18,7 +18,7 @@
 -(void)findFaces3DInMesh:(FEMMesh *)mesh;
 -(void)findEdgesForMesh:(FEMMesh *)mesh findEdges:(BOOL *)edges;
 -(void)assignLocalNumberToEdgeElement:(Element_t *)edge fromElement:(Element_t *)element inMesh:(FEMMesh *)mesh;
--(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh boundary:(int)this target:(int)trgt;
+-(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL *)galerkin;
 -(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal;
 -(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model;
 -(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model;
@@ -28,4 +28,7 @@
 -(void)setMaximumDofsMesh:(FEMMesh *)mesh;
 -(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model;
 -(int)detectExtrudedStructureMesh:(FEMMesh *)mesh solution:(FEMSolution *)solution model:(FEMModel *)model externVariable:(FEMVariable *)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int *)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int *)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int *)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int *)downNodePointer numberOfLayers:(int *)numberOfLayers nodeLayer:(int *)nodeLayer;
+-(void)preRotationalProjectorMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode;
+-(void)postRotationalProjector:(FEMMatrix *)projector mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode;
+-(void)saveProjector:(FEMMatrix *)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString *)prefix invPerm:(int *)invPerm;
 @end

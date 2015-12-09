@@ -7,14 +7,23 @@
 //
 
 #import "FEMMeshUtils.h"
+#import "FEMCore.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
 #import "FEMBoundaryCondition.h"
 #import "FEMPElementMaps.h"
 #import "FEMElementDescription.h"
 #import "FEMUtilities.h"
+#import "FEMNumericIntegration.h"
+#import "FEMInterpolation.h"
+#import "FEMListMatrix.h"
+#import "FEMMatrixCRS.h"
+#import "FEMElementUtils.h"
+#import "FEMLinearAlgebra.h"
+#import "FEMInterpolateMeshToMesh.h"
 #import "Utils.h"
 #import "TimeProfile.h"
+#import "GaussIntegration.h"
 
 @interface FEMMeshUtils ()
 -(void)FEMMeshUtils_assignConstraints:(FEMMesh *)mesh;
@@ -22,6 +31,21 @@
 -(Element_t *)FEMMeshUtils_getEntityForElement:(Element_t *)element edge:(int)number inMesh:(FEMMesh *)mesh;
 -(void)FEMMeshUtils_unitSegmentDivisionTable:(double *)w levels:(int)n model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
 -(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString *)type vector:(double *)vector solution:(FEMSolution *)solution;
+-(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh *)mesh haloNodes:(BOOL *)haloNodes sizeHaloNodes:(int *)size;
+-(Element_t *)FEMMeshUtils_findFaceParent:(Element_t *)parent element:(Element_t *)element model:(FEMModel *)model;
+-(FEMMatrix *)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh *)mesh model:(FEMModel *)model boundary:(int)bc listUtilities:(FEMListUtilities *)listUtilities;
+-(FEMMatrix *)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh *)mesh model:(FEMModel *)model boundary:(int)bc listUtilities:(FEMListUtilities *)listUtilities;
+-(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel *)model mesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh *)bMesh1 bMesh2:(FEMMesh *)bMesh2;
+-(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 BCParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh *)pMesh pParams:(FEMBoundaryCondition *)pParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL *)fullCircle model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 angles:(double *)angles gotAngles:(BOOL *)gotAngles;
+-(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities;
+-(FEMMatrix *)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh *)bMesh2 mesh1:(FEMMesh *)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel *)model;
+-(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix *)projector;
 @end
 
 @implementation FEMMeshUtils
@@ -161,6 +185,7 @@
 }
 
 /*************************************************************************************
+ 
     Create node distribution for a unit segment x \in [0,1] with n elements
     i.e. n+1 nodes. There are different options for the type of distribution.
     1) Even distribution
@@ -168,6 +193,7 @@
     3) Arbitrary distribution determined by a functional dependence
     Note that the 3rd algorithm involves iterative solution of the nodal
     positions and is therefore not bullet-proof.
+ 
 *************************************************************************************/
 -(void)FEMMeshUtils_unitSegmentDivisionTable:(double *)w levels:(int)n model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
     
@@ -291,6 +317,2532 @@
         errorfunct("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Program terminating now...");
     }
     memcpy(vector, rtmp, sizeof(rtmp));
+}
+
+/************************************************************
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+************************************************************/
+-(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh *)mesh haloNodes:(BOOL *)haloNodes sizeHaloNodes:(int *)size {
+    
+    BOOL foundHaloNodes;
+    
+    // Check whether we need to skip some elements and nodes on the halo boundary.
+    // We don't want to create additional nodes on the nodes that are on the halo only
+    // since they would just create further need for new halo...
+    foundHaloNodes = NO;
+    
+    //TODO: add support for parallem run.
+    // The rest of the method implementation is only needed for parrallel runs
+}
+
+/************************************************************
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+************************************************************/
+-(Element_t *)FEMMeshUtils_findFaceParent:(Element_t *)parent element:(Element_t *)element model:(FEMModel *)model {
+    
+    int n;
+    Element_t *ptr = NULL;
+    
+    FEMMesh *mesh = (FEMMesh *)model.mesh;
+    Element_t *faces = mesh.getFaces;
+    for (int i=0; i<parent->Type.NumberOfFaces; i++) {
+        ptr = &faces[parent->FaceIndexes[i]];
+        n = 0;
+        for (int j=0; j<ptr->Type.NumberOfNodes; j++) {
+            for (int k=0; k<element->Type.NumberOfNodes; k++) {
+                if (ptr->NodeIndexes[j] == element->NodeIndexes[k]) n++;
+            }
+        }
+        if (n == ptr->Type.NumberOfNodes) break;
+    }
+    
+    return ptr;
+}
+
+/**********************************************************************************************
+ 
+    Create a Galerkin projector related to discontinous interface. This uses the information 
+    stored when the discontinuous interface was first coined. This enables simple one-to-one 
+    mapping. Integration weight is used for the nodel projector to allow physical jump 
+    conditions. For the edge dofs there is no such jumps and hence the projector uses
+    weights of one.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+
+**********************************************************************************************/
+-(FEMMatrix *)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh *)mesh model:(FEMModel *)model boundary:(int)bc listUtilities:(FEMListUtilities *)listUtilities {
+    
+    int actSides, e1, e2, e12, indp=0, i1, i2, j1, j2, n, nn, **newMap, **oldMap, parentFound, parentMissing, posSides;
+    double coeff, detJ, x, u, v, val, w, weight;
+    double *basis = NULL, **basisFirstDerivative = NULL;
+    FEMMatrix *projector;
+    FEMBoundaryCondition *bcParams;
+    FEMSolution *solution;
+    bool *edgeDone = NULL, *haloNodes = NULL;
+    BOOL all, allLeft, allRight, axisSym, checkHaloNodes=NO, doEdges, doNodes, found, localConstraints=NO, nodalJump=NO, noHalo=NO, setDiag,
+         setDiagEdges, stat;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: creating projector for discontinous boundary %d.\n", bc);
+    
+    if (mesh.isDiscontinuousMesh == NO) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: discontinuous mesh not created!\n");
+        return nil;
+    }
+    
+    int j = 0;
+    for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
+        if ([listUtilities listGetLogical:model inArray:boundary.valuesList forVariable:@"discontinuous boundary" info:&found] == YES) j++;
+    }
+    if (j > 1) NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: only one BC (not %d) for discontinuous boundary!\n", j);
+    
+    bcParams = (model.boundaryConditions)[bc];
+    double scale = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"mortar bc scaling" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) scale = -1.0;
+    
+    nodalJump = [listUtilities listCheckPrefix:@"mortar bc coefficient" inArray:bcParams.valuesList];
+    if (nodalJump == NO) [listUtilities listCheckPrefix:@"mortar bc resistivity" inArray:bcParams.valuesList];
+    
+    // Take the full weight when creating the constraints since the value will
+    // not be communicated
+    if (model.solution != nil) solution = (FEMSolution *)model.solution;
+    if (solution != nil) {
+        if ((solution.solutionInfo)[@"partition local projector"] != nil) {
+            localConstraints = [(solution.solutionInfo)[@"partition local projector"] boolValue];
+        } else {
+            if ((solution.solutionInfo)[@"partition local constraints"] != nil) {
+                localConstraints = [(solution.solutionInfo)[@"partition local constraints"] boolValue];
+            }
+        }
+    }
+    
+    // Don't consider halo when creating discontinuity
+    if (solution != nil) {
+        if((solution.solutionInfo)[@"projector no halo"] != nil) {
+            noHalo = [(solution.solutionInfo)[@"projector no halo"] boolValue];
+        }
+    }
+    
+    // Don't consider single halo nodes when creating discontinuity
+    if (solution != nil) {
+        if ((solution.solutionInfo)[@"projector no halo nodes"] != nil) {
+            checkHaloNodes = [(solution.solutionInfo)[@"projector no halo nodes"] boolValue];
+        }
+    }
+    if (checkHaloNodes == YES) {
+        // TODO: add the call to FEMMeshUtils_markHaloNodesMesh:haloNodes:sizeHaloNodes: for parallel run
+    }
+    
+    doEdges = NO;
+    if (solution != nil) {
+        if([(solution.solutionInfo)[@"projector skip edges"] boolValue] == YES) {
+            doEdges = NO;
+        }
+    } else if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"projector skip edges" info:&found] == YES) {
+        doEdges = NO;
+    } else {
+        doEdges = (mesh.numberOfEdges > 0) ? YES : NO;
+    }
+    if (doEdges == YES && mesh.numberOfEdges == 0) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: edge basis requested but mesh has no edges!\n");
+        doEdges = NO;
+    }
+    
+    doNodes = NO;
+    if (solution != nil) {
+        if ([(solution.solutionInfo)[@"projector skip nodes"] boolValue] == YES) {
+            doNodes = NO;
+        }
+    } else if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"projector skip nodes" info:&found] == YES) {
+        doNodes = NO;
+    } else {
+        doNodes = (mesh.numberOfNodes > 0) ? YES : NO;
+    }
+    
+    // Should the projector be diagonal or mass matrix type
+    setDiag = [listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"mortar bc diag" info:&found];
+    if (found == NO) setDiag = [listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"use biorthogonal basis" info:&found];
+    
+    // If we want to eliminate the constraints, we have to hava a biorthogonal basis
+    if (found == NO) {
+        if (solution != nil) {
+            if ((solution.solutionInfo)[@"eliminate linear constraints"] != nil) {
+                setDiag = [(solution.solutionInfo)[@"eliminate linear constraints"] boolValue];
+            }
+        }
+        if (setDiag == YES) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: setting > use biorthogonal basis < to YES to enable elimination.\n");
+        }
+    }
+    
+    setDiagEdges = [listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"mortar bc diag edges" info:&found];
+    if (found == NO) setDiagEdges = setDiag;
+    
+    // Integration weights should follow the metrics if we want physical nodal jumps
+    axisSym = NO;
+    if (model.coordinates == axis_symmetric || model.coordinates == cylindric_symmetric) {
+        if (nodalJump == YES) {
+            axisSym = YES;
+        } else if (solution != nil) {
+            if ((solution.solutionInfo)[@"projector metrics"] != nil) {
+                axisSym = [(solution.solutionInfo)[@"projector metrics"] boolValue];
+            }
+        }
+        if (axisSym == YES) NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: projector will be weighted for axi-symmetry.\n");
+    }
+    
+    Nodes_t *elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    elementNodes->x = doublevec(0, mesh.maxElementDofs-1);
+    elementNodes->y = doublevec(0, mesh.maxElementDofs-1);
+    elementNodes->z = doublevec(0, mesh.maxElementDofs-1);
+    
+    int *indexes = intvec(0, mesh.maxElementDofs-1);
+    int *disContIndexes = intvec(0, mesh.maxElementDofs-1);
+    
+    double **wBasis = doublematrix(0, mesh.maxElementDofs-1, 0, 2);
+    double **wBasis2 = doublematrix(0, mesh.maxElementDofs-1, 0, 2);
+    double **rotWBasis = doublematrix(0, mesh.maxElementDofs-1, 0, 2);
+    
+    memset(indexes, -1, mesh.maxElementDofs*sizeof(int) );
+    memset(disContIndexes, -1, mesh.maxElementDofs*sizeof(int) );
+    
+    int *nodePerm = mesh.getDiscontinousPerm;
+    int noOrigNodes = mesh.numberOfNodes;
+    int noDiscontNodes = 0;
+    for (int i=0; i<noOrigNodes; i++) {
+        if (nodePerm[i] >= 0) noDiscontNodes++;
+    }
+    
+    int indpoffset;
+    if (doNodes == YES) {
+        indpoffset = noDiscontNodes;
+    } else {
+        indpoffset = 0;
+    }
+    int *invPerm = NULL;
+    int invPermSize = indpoffset;
+    
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    
+    // Compute the number of potential edges. This mimics the loop that really creates the
+    // projector below
+    Element_t *elements = mesh.getElements, *left = NULL, *newFace = NULL, *oldFace = NULL, *swap = NULL, *right = NULL;
+    if (doEdges == YES) {
+        edgeDone = boolvec(0, mesh.numberOfEdges-1);
+        memset(edgeDone, 0, n*sizeof(bool));
+        indp = indpoffset;
+        
+        for (int t=0; t<mesh.numberOfBoundaryElements; t++) {
+            
+            if (elements[mesh.numberOfBulkElements+t].BoundaryInfo->Constraint != bcParams.tag) continue;
+            left = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Left;
+            right = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Right;
+            
+            if (left == NULL || right == NULL) continue;
+            
+            actSides = 0;
+            if (left != NULL) {
+                // TODO: add support for parallel run
+            }
+            if (right != NULL) {
+                // TODO: add support for parallel run
+            }
+            if (noHalo == YES && actSides == 0) continue;
+            
+            // Consistently choose the face with the old edges
+            allLeft = YES;
+            for (int i=0; i<left->Type.NumberOfNodes; i++) {
+                if (left->NodeIndexes[i] >= noOrigNodes) {
+                    allLeft = NO;
+                    break;
+                }
+            }
+            allRight = YES;
+            for (int i=0; i<right->Type.NumberOfNodes; i++) {
+                if (right->NodeIndexes[i] >= noOrigNodes) {
+                    allRight = NO;
+                    break;
+                }
+            }
+            if (allLeft == YES) {
+                oldFace = left;
+            } else if (allRight == YES) {
+                oldFace = right;
+            } else {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: neither face is purely old!\n");
+                continue;
+            }
+            
+            oldMap = [elementDescription getEdgeMap:oldFace->Type.ElementCode/100];
+            for (int i=0; i<oldFace->Type.NumberOfEdges; i++) {
+                e1 = oldFace->EdgeIndexes[i];
+                if (edgeDone[e1] == true) continue;
+                
+                i1 = oldFace->NodeIndexes[oldMap[i][0]];
+                i2 = oldFace->NodeIndexes[oldMap[i][1]];
+                
+                // i1 and i2 were already checked to be "old" nodes
+                if (nodePerm[i1] < 0) continue;
+                if (nodePerm[i2] < 0) continue;
+                
+                indp++;
+                edgeDone[e1] = true;
+            }
+        }
+        invPermSize = indp;
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: size of invPerm estimated to be %d.\n", invPermSize);
+        free_bvector(edgeDone, 0, mesh.numberOfEdges-1);
+    }
+    
+    GaussIntegrationPoints *IP = NULL;
+    
+    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
+    if ([integration allocation:mesh] == NO) errorfunct("FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh", "Allocation error in FEMNumericIntegration!");
+    
+    FEMListMatrix *listmatrix = [[FEMListMatrix alloc] init];
+    
+    basis = integration.basis;
+    basisFirstDerivative = integration.basisFirstDerivative;
+    
+    Nodes_t *nodes = mesh.getNodes;
+
+    // Ok, nothing to do just go and tidy things up
+    if (invPermSize == 0) goto jump;
+    
+    // Create a list of matrix that allows for unspecified entries in the matrix
+    // structure to be introduced
+    projector = [[FEMMatrix alloc] init];
+    projector.format = MATRIX_LIST;
+    projector.projectorType = PROJECTOR_TYPE_GALERKIN;
+    projector.projectorBC = bc;
+    
+    // Create the inverse permutation needed when the projector matrix is added
+    // to the global matrix
+    matrixArraysContainer *matrixContainers = projector.getContainers;
+    matrixContainers->InvPerm = intvec(0, invPermSize-1);
+    matrixContainers->sizeInvPerm = invPermSize;
+    memset(matrixContainers->InvPerm, -1, invPermSize*sizeof(int) );
+    
+    // Projector for the nodal dofs
+    if (doNodes == YES) {
+        parentMissing = 0;
+        parentFound = 0;
+        for (int t=0; t<mesh.numberOfBoundaryElements; t++) {
+            n = elements[mesh.numberOfBulkElements+t].Type.NumberOfNodes;
+            memcpy(indexes, elements[mesh.numberOfBulkElements+t].NodeIndexes, n*sizeof(int));
+            
+            if (elements[mesh.numberOfBulkElements+t].BoundaryInfo->Constraint != bcParams.tag) continue;
+            
+            left = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Left;
+            right = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Right;
+            
+            posSides = 0;
+            actSides = 0;
+            if (left != NULL) {
+                posSides++;
+                // TODO: add support for parallel run
+            }
+            if (right != NULL) {
+                posSides++;
+                // TODO: add support for parallel run
+            }
+            
+            if (noHalo == YES && actSides == 0) continue;
+            
+            if (localConstraints == YES) {
+                coeff = 1.0;
+            } else {
+                coeff = (1.0 * actSides) / posSides;
+            }
+            if (fabs(coeff) < DBL_MIN) continue;
+            
+            parentFound++;
+            
+            for (int i=0; i<n; i++) {
+                elementNodes->x[i] = nodes->x[indexes[i]];
+                elementNodes->y[i] = nodes->y[indexes[i]];
+                elementNodes->z[i] = nodes->z[indexes[i]];
+            }
+            
+            all = YES;
+            for (int i=0; i<n; i++) {
+                if (nodePerm[indexes[i]] >= 0) {
+                    all = NO;
+                    break;
+                }
+            }
+            if (all == YES) continue;
+            
+            if (checkHaloNodes == YES) {
+                all = YES;
+                for (int i=0; i<n; i++) {
+                    if (haloNodes[indexes[i]] != true) {
+                        all = NO;
+                    }
+                }
+                if (all == YES) continue;
+            }
+            
+            // Get the indexes on the other side of the discontinuous boundary
+            for (int i=0; i<n; i++) {
+                j = nodePerm[indexes[i]];
+                if (j < 0) {
+                    disContIndexes[i] = indexes[i];
+                } else {
+                    disContIndexes[i] = j + noOrigNodes;
+                }
+            }
+            
+            IP = GaussQuadrature(&elements[mesh.numberOfBulkElements+t], NULL, NULL);
+            for (j=0; j<IP->n; j++) {
+                u = IP->u[j];
+                v = IP->v[j];
+                w = IP->w[j];
+                
+                stat = [integration setBasisForElement:&elements[mesh.numberOfBulkElements+t] elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+                stat = [integration setMetricDeterminantForElement:&elements[mesh.numberOfBulkElements+t] elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+                detJ = integration.metricDeterminant;
+                
+                weight = coeff * detJ * IP->s[j];
+                if (axisSym == YES) {
+                    x = cblas_ddot(n, integration.basis, 1, elementNodes->x, 1);
+                    weight = weight * x;
+                }
+                for (int p=0; p<n; p++) {
+                    indp = nodePerm[indexes[p]];
+                    if (indp < 0) continue;
+                    if (checkHaloNodes == YES) {
+                        if (haloNodes[indexes[p]] == true) continue;
+                    }
+                    val = weight * basis[p];
+                    
+                    // Only set for the nodes are really used
+                    invPerm[indp] = indexes[p];
+                    
+                    if (setDiag == YES) {
+                        [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:indp andIndex:indexes[p] value:val setValue:NULL];
+                        [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:indp andIndex:disContIndexes[p] value:scale*val setValue:NULL];
+                    } else {
+                        for (int q=0; q<n; q++) {
+                            indp = nodePerm[indexes[p]];
+                            if (indp < 0) continue;
+                            
+                            if (checkHaloNodes == YES) {
+                                if (haloNodes[indexes[p]] == true) continue;
+                            }
+                            [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:indp andIndex:indexes[q] value:basis[q]*val setValue:NULL];
+                            [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:indp andIndex:disContIndexes[q] value:scale*basis[q]*val setValue:NULL];
+                        }
+                    }
+                }
+            }
+        }
+        if (parentMissing > 0) {
+            //TODO: add support for parallel run
+        }
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous nodes.\n", noDiscontNodes);
+    }
+    
+    // Create the projector also for edge dofs if they exist and are
+    // requested
+    if (doEdges == YES) {
+        parentMissing = 0;
+        parentFound = 0;
+        n = mesh.numberOfNodes;
+        
+        val = 1.0;
+        scale = 1.0;
+        
+        indp = indpoffset;
+        int *eqInd = intvec(0, mesh.numberOfEdges-1);
+        memset(eqInd, -1, mesh.numberOfEdges*sizeof(int));
+        
+        FEMInterpolation *interpolation = [[FEMInterpolation alloc] init];
+        double point[3], sum, uvw[3];
+        
+        for (int t=0; t<mesh.numberOfBoundaryElements; t++) {
+            
+            if (elements[mesh.numberOfBulkElements+t].BoundaryInfo->Constraint != bcParams.tag) continue;
+            
+            left = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Left;
+            right = elements[mesh.numberOfBulkElements+t].BoundaryInfo->Right;
+            
+            // Here we really need both sides to be able to continue
+            if (left == NULL || right == NULL) {
+                parentMissing++;
+                continue;
+            }
+            
+            posSides = 0;
+            actSides = 0;
+            if (left != NULL) {
+                posSides++;
+                // TODO: add support for parallel run
+            }
+            if (right != NULL) {
+                posSides++;
+                // TODO: add support for parallel run
+            }
+            if (noHalo == YES && actSides == 0) continue;
+            
+            if (localConstraints == YES) {
+                coeff = 1.0;
+            } else {
+                coeff = (1.0 * actSides) / (1.0 * posSides);
+            }
+            
+            // Consistently choose the face with the old edges
+            allLeft = YES;
+            for (int i=0; i<left->Type.NumberOfNodes; i++) {
+                if (left->NodeIndexes[i] >= noOrigNodes) {
+                    allLeft = NO;
+                    break;
+                }
+            }
+            allRight = YES;
+            for (int i=0; i<right->Type.NumberOfNodes; i++) {
+                if (right->NodeIndexes[i] >= noOrigNodes) {
+                    allRight = NO;
+                    break;
+                }
+            }
+            if (allLeft == YES) {
+                // No ops!
+            } else if (allRight == YES) {
+                swap = left;
+                left = right;
+                right = swap;
+            } else {
+                // We already complained once
+                continue;
+            }
+
+            oldFace = [self FEMMeshUtils_findFaceParent:left element:&elements[mesh.numberOfBulkElements+t] model:model];
+            nn = elements[mesh.numberOfBulkElements+t].sizeNodeIndexes;
+            memcpy(indexes, elements[mesh.numberOfBulkElements+t].NodeIndexes, nn*sizeof(int));
+            for (int i=0; i<nn; i++) {
+                elements[mesh.numberOfBulkElements+t].NodeIndexes[i] = nodePerm[indexes[i]] + noOrigNodes;
+            }
+            newFace = [self FEMMeshUtils_findFaceParent:right element:&elements[mesh.numberOfBulkElements+t] model:model];
+            memcpy(elements[mesh.numberOfBulkElements+t].NodeIndexes, indexes, nn*sizeof(int));
+
+            parentFound++;
+            oldMap = [elementDescription getEdgeMap:oldFace->Type.ElementCode/100];
+            newMap = [elementDescription getEdgeMap:newFace->Type.ElementCode/100];
+            
+            IP = GaussQuadrature(oldFace, NULL, NULL);
+            for (int it=0; it<IP->n; it++) {
+                u = IP->u[it];
+                v = IP->v[it];
+                w = IP->w[it];
+                
+                nn = oldFace->Type.NumberOfNodes;
+                for (int i=0; i<nn; i++) {
+                    elementNodes->x[i] = nodes->x[oldFace->NodeIndexes[i]];
+                    elementNodes->y[i] = nodes->y[oldFace->NodeIndexes[i]];
+                    elementNodes->z[i] = nodes->z[oldFace->NodeIndexes[i]];
+                }
+                stat = [integration setBasisForElement:oldFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+                stat = [integration setBasisFirstDerivativeForElement:oldFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+                stat = [integration setMetricDeterminantForElement:oldFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+                
+                [elementDescription getEdgeBasisElement:oldFace wBasis:wBasis rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative model:model];
+                
+                point[0] = cblas_ddot(nn, integration.basis, 1, elementNodes->x, 1);
+                point[1] = cblas_ddot(nn, integration.basis, 1, elementNodes->y, 1);
+                point[2] = cblas_ddot(nn, integration.basis, 1, elementNodes->z, 1);
+                
+                nn = newFace->Type.NumberOfNodes;
+                for (int i=0; i<nn; i++) {
+                    elementNodes->x[i] = nodes->x[newFace->NodeIndexes[i]];
+                    elementNodes->y[i] = nodes->y[newFace->NodeIndexes[i]];
+                    elementNodes->z[i] = nodes->z[newFace->NodeIndexes[i]];
+                }
+                
+                found = [interpolation isPointInElement:newFace elementNodes:elementNodes point:point localCoordinates:uvw globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:model edgeBasis:NULL];
+                u = uvw[0]; v = uvw[1]; w = uvw[2];
+                stat = [integration setBasisForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+                stat = [integration setBasisFirstDerivativeForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
+                stat = [integration setMetricDeterminantForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
+                detJ = integration.metricDeterminant;
+                
+                [elementDescription getEdgeBasisElement:newFace wBasis:wBasis2 rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative model:model];
+                
+                weight = detJ * IP->s[it] * coeff;
+                
+                // Go through combinations of edges and find the edges for which the
+                // indexes are th same
+                for (int i=0; i<oldFace->Type.NumberOfEdges; i++) {
+                    e1 = oldFace->EdgeIndexes[i];
+                    
+                    if (eqInd[e1] < 0) {
+                        eqInd[e1] = indp;
+                        invPerm[indp] = n + e1;
+                        indp++;
+                    }
+                    
+                    if (setDiagEdges == YES) {
+                        i1 = oldFace->NodeIndexes[oldMap[i][0]];
+                        i1 = noOrigNodes + nodePerm[i1];
+                        i2 = oldFace->NodeIndexes[oldMap[i][1]];
+                        i2 = noOrigNodes + nodePerm[i2];
+                        
+                        for (j=0; j<newFace->Type.NumberOfEdges; j++) {
+                            j1 = newFace->NodeIndexes[newMap[j][0]];
+                            j2 = newFace->NodeIndexes[newMap[j][1]];
+                            if ((i1 == j1 && i2 == j2) || (i1 == j2 && i2 == j1)) break;
+                        }
+                        sum = 0.0;
+                        for (int k=0; k<3; k++) {
+                            sum = sum + wBasis[i][k] * wBasis[i][k];
+                        }
+                        val = weight * sum;
+                        if (fabs(val) >= 10.0*AEPS) [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:eqInd[e1] andIndex:n+e1 value:val setValue:NULL];
+                        
+                        e2 = newFace->EdgeIndexes[j];
+                        sum = 0.0;
+                        for (int k=0; k<3; k++) {
+                            sum = sum + wBasis[i][k] * wBasis2[j][k];
+                        }
+                        val = weight * sum;
+                        if (fabs(val) >= 10.0*AEPS) [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:eqInd[e1] andIndex:n+e2 value:-val setValue:NULL];
+                    } else {
+                        for (int j=0; j<newFace->Type.NumberOfEdges; j++) {
+                            e2 = newFace->EdgeIndexes[j];
+                            e12 = oldFace->EdgeIndexes[j];
+                            
+                            sum = 0.0;
+                            for (int k=0; k<3; k++) {
+                                sum = sum + wBasis[i][k] * wBasis[j][k];
+                            }
+                            val = weight * sum;
+                            if (fabs(val) >= 10.0*AEPS) [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:eqInd[e1] andIndex:n+e12 value:val setValue:NULL];
+                            
+                            sum = 0.0;
+                            for (int k=0; k<3; k++) {
+                                sum = sum + wBasis[i][k] * wBasis2[j][k];
+                            }
+                            val = weight * sum;
+                            if (fabs(val) >= 10.0*AEPS) [listmatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:eqInd[e1] andIndex:n+e2 value:-val setValue:NULL];
+                        }
+                    }
+                }
+            }
+        }
+        
+        free_ivector(eqInd, 0, mesh.numberOfEdges-1);
+        if (doNodes == NO && parentMissing > 0) {
+            //TODO: add support for parallel run
+        }
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous edges.\n", indp-noDiscontNodes);
+    }
+    
+    // Convert from list matrix to CRS matrix format
+    [listmatrix convertToCRSMatrix:projector];
+    
+    if (projector.numberOfRows > 0) {
+        FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
+        BOOL sortValues = YES;
+        [crsMatrix sortMatrix:projector alsoValues:&sortValues];
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: number of entries in projector matrix: %d.\n", matrixContainers->sizeCols);
+    } else {
+        [projector deallocation];
+        projector = nil;
+    }
+    
+jump:
+    
+    free_dvector(elementNodes->x, 0, mesh.maxElementDofs-1);
+    free_dvector(elementNodes->y, 0, mesh.maxElementDofs-1);
+    free_dvector(elementNodes->z, 0, mesh.maxElementDofs-1);
+    free(elementNodes);
+    
+    free_ivector(indexes, 0, mesh.maxElementDofs-1);
+    free_ivector(disContIndexes, 0, mesh.maxElementDofs-1);
+    
+    free_dmatrix(wBasis, 0, mesh.maxElementDofs-1, 0, 2);
+    free_dmatrix(wBasis2, 0, mesh.maxElementDofs-1, 0, 2);
+    free_dmatrix(rotWBasis, 0, mesh.maxElementDofs-1, 0, 2);
+    
+    [integration deallocation:mesh];
+    
+    return projector;
+}
+
+/*************************************************************************
+ 
+    Create a nodal projector related to discontinuous interface
+
+    Method corresponds to Elmer from git on October 27 2015
+
+*************************************************************************/
+-(FEMMatrix *)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh *)mesh model:(FEMModel *)model boundary:(int)bc listUtilities:(FEMListUtilities *)listUtilities {
+    
+    BOOL found;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: creating nodal projector for discontinous boudnary.\n");
+    
+    if (mesh.discontinuousMesh == YES) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: discontinous mesh not created.\n");
+        return nil;
+    }
+    
+    int j = 0;
+    for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
+        if ([listUtilities listGetLogical:model inArray:boundary.valuesList forVariable:@"discontinuous boundary" info:&found] == YES) j++;
+    }
+    // This is a temporal limitation
+    if (j > 1) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: only one BC (not %d) for discontinuous boundary!\n", j);
+    }
+    
+    int *nodePerm = mesh.getDiscontinousPerm;
+    int n = mesh.numberOfNodes;
+    int m = 0;
+    for (int i=0; i<n; i++) {
+        if (nodePerm[i] >= 0) m++;
+    }
+    
+    FEMMatrix *projector = [[FEMMatrix alloc] init];
+    projector.projectorType = PROJECTOR_TYPE_NODAL;
+    projector.projectorBC = bc;
+    
+    matrixArraysContainer *matrixContainers = projector.getContainers;
+    matrixContainers->Cols = intvec(0, m-1);
+    matrixContainers->sizeCols = m;
+    matrixContainers->Values = doublevec(0, m-1);
+    matrixContainers->sizeValues = m;
+    matrixContainers->Rows = intvec(0, (m+1)-1);
+    matrixContainers->sizeRows = m + 1;
+    matrixContainers->InvPerm = intvec(0, m-1);
+    matrixContainers->sizeInvPerm = m;
+    projector.numberOfRows = m;
+    
+    memset(matrixContainers->Values, 0.0, m*sizeof(double) );
+    for (int i=0; i<m+1; i++) {
+        matrixContainers->Rows[i] = i;
+    }
+    for (int i=0; i<n; i++) {
+        j = nodePerm[i];
+        if (j < 0) continue;
+        matrixContainers->Cols[j] = n + j;
+        matrixContainers->InvPerm[j] = i;
+    }
+    return projector;
+}
+
+/**************************************************************************************************************
+ 
+    Create master and slave mesh for the interface in order to at a later stage create projector
+    matrix to implement periodicity or mortar elements. The idea is to use a reduced set of elements 
+    and thereby speed up the mapping process. Also this gives more flexibility in transformation
+    operations since the nodes may be ereased after use. Interface meshes consist of boundary elements only.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+
+**************************************************************************************************************/
+-(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel *)model mesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh *)bMesh1 bMesh2:(FEMMesh *)bMesh2 {
+    
+    int k1, k2, n, constraint, en, haloCount, ind;
+    int *pPerm;
+    FEMMesh *pMesh;
+    Element_t *bMesh1Elements = NULL, *bMesh2Elements = NULL, *elements = NULL, *face = NULL, *left = NULL, *parent = NULL,
+              *pMeshElements = NULL, *right = NULL;
+    bool *activeNodes = NULL;
+    BOOL any, checkForHalo, narrowHalo, noHalo, onTheFlyBC, success, targetActive, thisActive;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: making a list of elements at interface.\n");
+    
+    // BCs index should start from 0
+    if (mbd < 0 || trgt < 0) {
+        errorfunct("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Invalid target boundaries");
+    }
+    
+    // If the target is larger than number of given boundaries given then
+    // it has probably been created on-the-fly from a discontinuous boundary
+    onTheFlyBC = ((trgt+1) > model.numberOfBoundaryConditions) ? YES : NO;
+    
+    // If parallel we may have some excess halo elements.
+    // To eliminate them, mark the nodes that are associated to elements truly owned
+    narrowHalo = NO;
+    noHalo = NO;
+    
+    // TODO: add support for parallel run
+    
+    // This is just temporily set to false always until the logic has been tested
+    checkForHalo = (narrowHalo == YES || noHalo == YES) ? YES : NO;
+    
+    elements = mesh.getElements;
+    
+    if (checkForHalo == YES) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: checking for halo elements.\n");
+        activeNodes = boolvec(0, mesh.numberOfNodes-1);
+        haloCount = 0;
+        memset(activeNodes, 0, mesh.numberOfNodes*sizeof(bool));
+        for (int i=0; i<mesh.numberOfBoundaryElements; i++) {
+            if (elements[mesh.numberOfBulkElements+i].Type.ElementCode <= 200) continue;
+            
+            left = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Left;
+            if (left != NULL) {
+                // TODO: add support for parallel run
+            }
+            right = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Right;
+            if (right != NULL) {
+                // TODO: add support for parallel run
+            }
+        }
+        // No halo element found on the boundary so no need to check them later
+        if (haloCount == 0) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: found no halo elements to eliminate.\n");
+            free_bvector(activeNodes, 0, mesh.numberOfNodes-1);
+            checkForHalo = NO;
+        } else {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo to eliminate: %d.\n", haloCount);
+        }
+    }
+    
+    // Search elements in this boundary and its periodic
+    // conterpart
+    int n1 = 0;
+    int n2 = 0;
+    haloCount = 0;
+    FEMBoundaryCondition *bcParamsMaster = (model.boundaryConditions)[mbd];
+    FEMBoundaryCondition *bcParamsTarget = (model.boundaryConditions)[trgt];
+    for (int i=0; i<mesh.numberOfBoundaryElements; i++) {
+        if (elements[mesh.numberOfBulkElements+i].Type.ElementCode <= 200) continue;
+        
+        constraint = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Constraint;
+        if (bcParamsMaster.tag == constraint) {
+            if (checkForHalo == YES) {
+                if (narrowHalo == YES) {
+                    any = NO;
+                    for (int j=0; j<elements[mesh.numberOfBulkElements+i].Type.NumberOfNodes; j++) {
+                        if (activeNodes[elements[mesh.numberOfBulkElements+i].NodeIndexes[j]] == true) {
+                            any = YES;
+                            break;
+                        }
+                    }
+                    if (any == YES) {
+                        n1++;
+                    } else {
+                        haloCount++;
+                    }
+                } else if (noHalo == YES) {
+                    thisActive = noHalo;
+                    left = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Left;
+                    if (left != NULL) {
+                        // TODO: add support for parallel run
+                    }
+                    right = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Right;
+                    if (right != NULL) {
+                        // TODO: add support for parallel run
+                    }
+                    if (thisActive == YES) {
+                        n1++;
+                    } else {
+                        haloCount++;
+                    }
+                }
+            } else {
+                n1++;
+            }
+        }
+        
+        if (onTheFlyBC == YES) {
+            if ((trgt+1) == constraint) n2++;
+        } else {
+            if (bcParamsTarget.tag == constraint) n2++;
+        }
+    }
+    
+    if (checkForHalo == YES) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo elements eliminated: %d.\n", haloCount);
+    }
+    
+    if (n1 <= 0 || n2 <= 0) {
+        return success = NO;
+    }
+    
+    // Intialize mesh structures for boundaries, this is
+    // for getting the mesh projector
+    bMesh1.parent = mesh;
+    bMesh2.parent = mesh;
+    
+    bMesh1Elements = bMesh1.getElements;
+    bMesh2Elements = bMesh2.getElements;
+    bMesh1Elements = (Element_t*) malloc( sizeof(Element_t) * n1 );
+    bMesh2Elements = (Element_t*) malloc( sizeof(Element_t) * n2 );
+    
+    int *perm1 = intvec(0, mesh.numberOfNodes-1);
+    int *perm2 = intvec(0, mesh.numberOfNodes-1);
+    
+    // Fill in the mesh element structures with the boundary elements
+    n1 = 0;
+    n2 = 0;
+    memset(perm1, -1, mesh.numberOfNodes*sizeof(int));
+    memset(perm2, -1, mesh.numberOfNodes*sizeof(int));
+    bMesh1.maxElementNodes = 0;
+    bMesh2.maxElementNodes = 0;
+    
+    for (int i=0; i<mesh.numberOfBoundaryElements; i++) {
+        
+        constraint = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Constraint;
+        thisActive = (bcParamsMaster.tag == constraint) ? YES : NO;
+        if (thisActive == YES && checkForHalo == YES) {
+            if (narrowHalo == YES) {
+                any = NO;
+                for (int j=0; j<elements[mesh.numberOfBulkElements+i].Type.NumberOfNodes; j++) {
+                    if (activeNodes[elements[mesh.numberOfBulkElements+i].NodeIndexes[j]] == false) {
+                        any = YES;
+                        break;
+                    }
+                }
+                if (any == YES) thisActive = NO;
+            } else if (noHalo == YES) {
+                thisActive = NO;
+                left = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Left;
+                if (left != NULL) {
+                    // TODO: add support for parallel run
+                }
+                right = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Right;
+                if (right != NULL) {
+                    // TODO: add support for parallel run
+                }
+            }
+        }
+        
+        if (onTheFlyBC == YES) {
+            targetActive = ((trgt+1) == constraint) ? YES : NO;
+        } else {
+            targetActive = (bcParamsTarget.tag == constraint) ? YES : NO;
+        }
+        
+        if (!(thisActive || targetActive)) continue;
+        
+        //Set the pointer accordingly so we need to code the complex stuff only once
+        if (thisActive == YES) {
+            ind = n1;
+            pMesh = bMesh1;
+            pMeshElements = bMesh1Elements;
+            pPerm = perm1;
+            n1++;
+        } else {
+            ind = n2;
+            pMesh = bMesh2;
+            pMeshElements = bMesh2Elements;
+            pPerm = perm2;
+            n2++;
+        }
+        
+        n = elements[mesh.numberOfBulkElements+i].Type.NumberOfNodes;
+        pMesh.maxElementNodes = max(pMesh.maxElementNodes, n);
+        pMeshElements[ind] = elements[mesh.numberOfBulkElements+i];
+        
+        pMeshElements[ind].NodeIndexes = intvec(0, n-1);
+        pMeshElements[ind].sizeNodeIndexes = n;
+        
+        if (mesh.numberOfFaces == 0 || mesh.numberOfEdges == 0) {
+            memcpy(pMeshElements[ind].NodeIndexes, elements[mesh.numberOfBulkElements+i].NodeIndexes, n*sizeof(int));
+        } else {
+            // If we have edge dofs, we want the face element be associated with the
+            // face list since that only has properlly defined edge indexes
+            parent = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Left;
+            if (parent == NULL) {
+                parent = elements[mesh.numberOfBulkElements+i].BoundaryInfo->Right;
+            }
+            face = [self FEMMeshUtils_findFaceParent:parent element:&elements[mesh.numberOfBulkElements+i] model:model];
+            memcpy(pMeshElements[ind].NodeIndexes, face->NodeIndexes, n*sizeof(int));
+            
+            // Set the element index to be face index as it may be needed
+            // for the edge elements
+            pMeshElements[ind].ElementIndex = face->ElementIndex;
+            
+            if (face->Pdefs != NULL) {
+                pMeshElements[ind].Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
+                pMeshElements[ind].Pdefs = face->Pdefs;
+            }
+            
+            en = face->Type.NumberOfEdges;
+            pMeshElements[ind].EdgeIndexes = intvec(0, en-1);
+            pMeshElements[ind].sizeEdgeIndexes = en;
+            memcpy(pMeshElements[ind].EdgeIndexes, face->EdgeIndexes, en*sizeof(int));
+        }
+        
+        for (int j=0; j<n; j++) {
+            pPerm[elements[mesh.numberOfBulkElements+i].NodeIndexes[j]] = 0;
+        }
+    }
+    
+    // Fill in the mesh node structures with the boundary nodes
+    bMesh1.numberOfBulkElements = n1;
+    bMesh2.numberOfBulkElements = n2;
+    
+    bMesh1.numberOfNodes = 0;
+    for (int i=0; i<mesh.numberOfNodes; i++) {
+        if (perm1[i] >= 0) bMesh1.numberOfNodes++;
+    }
+    bMesh2.numberOfNodes = 0;
+    for (int i=0; i<mesh.numberOfNodes; i++) {
+        if (perm2[i] >= 0) bMesh2.numberOfNodes++;
+    }
+    
+    // As there were some active boundary elements, this consition should
+    // really never be possible
+    if (bMesh1.numberOfNodes == 0 || bMesh2.numberOfNodes == 0) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: no active nodes on periodic boundary!\n");
+        errorfunct("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Program terminating now...");
+    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
+    
+    Nodes_t *meshNodes = mesh.getNodes;
+    Nodes_t *mesh1Nodes = bMesh1.getNodes;
+    Nodes_t *mesh2Nodes = bMesh2.getNodes;
+    
+    mesh1Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    mesh1Nodes->x = doublevec(0, bMesh1.numberOfNodes-1);
+    mesh1Nodes->y = doublevec(0, bMesh1.numberOfNodes-1);
+    mesh1Nodes->z = doublevec(0, bMesh1.numberOfNodes-1);
+    
+    mesh2Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    mesh2Nodes->x = doublevec(0, bMesh2.numberOfNodes-1);
+    mesh2Nodes->y = doublevec(0, bMesh2.numberOfNodes-1);
+    mesh2Nodes->z = doublevec(0, bMesh2.numberOfNodes-1);
+    
+    int *invPermMesh1 = bMesh1.getInvPerm;
+    int *invPermMesh2 = bMesh2.getInvPerm;
+    invPermMesh1 = intvec(0, bMesh1.numberOfNodes-1);
+    invPermMesh2 = intvec(0, bMesh2.numberOfNodes-1);
+    
+    // Now create the master and target meshes that only include the active elements
+    k1 = 0; k2 = 0;
+    for (int i=0; i<mesh.numberOfNodes; i++) {
+        
+        if (perm1[i] >= 0) {
+            perm1[i] = k1;
+            invPermMesh1[k1] = i;
+            
+            mesh1Nodes->x[k1] = meshNodes->x[i];
+            mesh1Nodes->y[k1] = meshNodes->y[i];
+            mesh1Nodes->z[k1] = meshNodes->z[i];
+            k1++;
+        }
+        
+        if (perm2[i] >= 0) {
+            perm2[i] = k2;
+            invPermMesh2[k2] = i;
+            
+            mesh2Nodes->x[k2] = meshNodes->x[i];
+            mesh2Nodes->y[k2] = meshNodes->y[i];
+            mesh2Nodes->z[k2] = meshNodes->z[i];
+            k2++;
+        }
+    }
+    
+    // Finally, renumber the element node pointers to use
+    // only boundary nodes
+    for (int i=0; i<n1; i++) {
+        for (int j=0; j<bMesh1Elements[i].Type.NumberOfNodes; j++) {
+            bMesh1Elements[i].NodeIndexes[j] = perm1[bMesh1Elements[i].NodeIndexes[j]];
+        }
+    }
+    for (int i=0; i<n2; i++) {
+        for (int j=0; j<bMesh2Elements[i].Type.NumberOfNodes; j++) {
+            bMesh2Elements[i].NodeIndexes[j] = perm2[bMesh2Elements[i].NodeIndexes[j]];
+        }
+    }
+    
+    free_ivector(perm1, 0, mesh.numberOfNodes-1);
+    free_ivector(perm2, 0, mesh.numberOfNodes-1);
+    
+    if (checkForHalo == YES) free_bvector(activeNodes, 0, mesh.numberOfNodes-1);
+    
+    return success = YES;
+}
+
+/***************************************************************************
+ 
+    Given a permutation map the (x,y,z) such that the projector can better 
+    be applied. E.g. if boundary has constant x, take that as the last 
+    coordinate.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+***************************************************************************/
+-(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 BCParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    double *nodesX = NULL, *nodesY = NULL, *nodesZ = NULL;
+    Nodes_t *bMeshNodes = NULL;
+    listBuffer coordMap = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL all1, all2, all3, found;
+    
+    // Perform coordinate mapping
+    found = [listUtilities listGetIntegerArray:model inArray:bcParams.valuesList forVariable:@"projector coordinate mapping" buffer:&coordMap];
+    if (found == NO) return;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: performing coordinate mapping.\n");
+    
+    // Check if all values are different than 1
+    all1 = YES;
+    for (int i=0; i<3; i++) {
+        if (coordMap.ivector[i] == 1) {
+            all1 = NO;
+            break;
+        }
+    }
+    // Check if all values are different than 2
+    all2 = YES;
+    for (int i=0; i<3; i++) {
+        if (coordMap.ivector[i] == 2) {
+            all2 = NO;
+            break;
+        }
+    }
+    // Check if all values are different than 3
+    all3 = YES;
+    for (int i=0; i<3; i++) {
+        if (coordMap.ivector[i] == 3) {
+            all3 = NO;
+            break;
+        }
+    }
+    
+    if (coordMap.m != 3 || (all1 == YES || all2 == YES || all3 == YES)) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: inconsistent coordinate mapping: \n");
+        for (int i=0; i<coordMap.m; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: %d\n", coordMap.ivector[i]);
+        }
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: coordinate mapping should be a permutation of 1, 2 and 3.\n");
+        errorfunct("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Program terminating now");
+    }
+    
+    for (int meshNo=1; meshNo<=2; meshNo++) {
+        if (meshNo == 1) {
+            bMeshNodes = bMesh1.getNodes;
+        } else {
+            bMeshNodes = bMesh2.getNodes;
+        }
+        
+        if (coordMap.ivector[0] == 1) {
+            nodesX = bMeshNodes->x;
+        } else if (coordMap.ivector[0] == 2) {
+             nodesX = bMeshNodes->y;
+        } else {
+             nodesX = bMeshNodes->z;
+        }
+        
+        if (coordMap.ivector[1] == 1) {
+            nodesY = bMeshNodes->x;
+        } else if (coordMap.ivector[1] == 2) {
+            nodesY = bMeshNodes->y;
+        } else {
+            nodesY = bMeshNodes->z;
+        }
+        
+        if (coordMap.ivector[2] == 1) {
+            nodesZ = bMeshNodes->x;
+        } else if (coordMap.ivector[2] == 2) {
+            nodesZ = bMeshNodes->y;
+        } else {
+            nodesZ = bMeshNodes->z;
+        }
+        
+        bMeshNodes->x = nodesX;
+        bMeshNodes->y = nodesY;
+        bMeshNodes->z = nodesZ;
+    }
+    
+    if (coordMap.ivector != NULL) {
+        free_ivector(coordMap.ivector, 0, coordMap.m-1);
+    }
+}
+
+/***********************************************************************************
+ 
+    Simply fitting of cylinder into a point cloud. This is done in two phases.
+    1) The axis of the cylinder is found by minimizing the \sum((n_i*t)^2)
+      for each component of of t where n_i:s are the surface normals.
+      This is fully generic and assumes no positions.
+    2) The radius and center point of the cylinder are found by fitting a circle
+      in the chosen plane to three representative points. Currently the fitting
+      can only be done in x-y plane.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+***********************************************************************************/
+-(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh *)pMesh pParams:(FEMBoundaryCondition *)pParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    int i, n, axisI, circleInd[3];
+    double **a, axisNormal[3], coord[3], dist, d1, d2, circleCoord[3][3], ninj[3][3], maxDist, minDist, normals[3], sum, tangent1[3], tangent2[3];
+    BOOL check;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: trying to fit a cylinder to the surface patch.\n");
+    
+    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    FEMLinearAlgebra *linearAlgebra = [[FEMLinearAlgebra alloc] init];
+    
+    Element_t *elements = pMesh.getElements;
+    Nodes_t *meshNodes = pMesh.getNodes;
+    
+    memset(*ninj, 0.0, (3*3)*sizeof(double));
+    
+    Nodes_t *nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    nodes->x = doublevec(0, pMesh.maxElementNodes-1);
+    nodes->y = doublevec(0, pMesh.maxElementNodes-1);
+    nodes->z = doublevec(0, pMesh.maxElementNodes-1);
+    
+    a = doublematrix(0, 2, 0, 2);
+    
+    // If the initial mesh is in 2D, there is really no need to figure out the
+    // direction of the rotational axis. It can only be aligned with the z-axis
+    FEMMesh *mesh = (FEMMesh *)model.mesh;
+    if (mesh.dimension == 2) {
+        memset(axisNormal, 0.0, sizeof(axisNormal));
+        axisNormal[2] = 1.0;
+        goto jump;
+    }
+    
+    // Compute the inner product of <N*N> for the elements
+    check = NO;
+    for (int t=0; t<pMesh.numberOfBulkElements; t++) {
+        n = elements[t].Type.NumberOfNodes;
+        for (i=0; i<n; i++) {
+            nodes->x[i] = meshNodes->x[elements[t].NodeIndexes[i]];
+            nodes->y[i] = meshNodes->y[elements[t].NodeIndexes[i]];
+            nodes->z[i] = meshNodes->z[elements[t].NodeIndexes[i]];
+        }
+        
+        [elementDescription normalVectorForBDElement:&elements[t] boundaryNodes:nodes mesh:pMesh paraU:NULL paraV:NULL check:&check normals:normals];
+        for (i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                ninj[i][j] = ninj[i][j] + normals[i] * normals[j];
+            }
+        }
+    }
+        
+    // Normalize by the number of bulk elements
+    for (i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            ninj[i][j] = ninj[i][i] / pMesh.numberOfBulkElements;
+        }
+    }
+    
+    // The potential direction for the cylinder axis is the direction with least hits for the normal
+    axisI = 0;
+    for (i=1; i<3; i++) {
+        if (ninj[i][i < ninj[axisI][axisI]]) axisI = i;
+    }
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: axis coordinate set to be: %d\n", axisI);
+    
+    // Keep the dominating direction fixed and iteratively solve the two other directories
+    memset(axisNormal, 0.0, sizeof(axisNormal));
+    axisNormal[axisI] = 1.0;
+    
+    // Basically we could solve from equation Ax=0 the tangent but only up to a constant.
+    // Thus we enforce the axis direction to one by manipulation by the manipulation of
+    // the matix equation, thereby can get a unique solution
+    memcpy(*a, *ninj, (3*3)*sizeof(double));
+    for (i=0; i<3; i++) {
+        a[axisI][i] = 0.0;
+    }
+    a[axisI][axisI] = 1.0;
+    [linearAlgebra invertMatrix:a ofSize:3];
+    for (i=0; i<3; i++) {
+        axisNormal[i] = a[i][axisI];
+    }
+    
+    // Normalize the axis normal length to one
+    sum = 0.0;
+    for (i=0; i<3; i++) {
+        sum = sum + pow(axisNormal[i], 2.0);
+    }
+    for (i=0; i<3; i++) {
+        axisNormal[i] = axisNormal[i] /  sqrt(sum);
+    }
+    if (1.0 - fabs(axisNormal[2]) > 1.0e-5) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: the cylinder axis is not aligned with z-axis.\n");
+    }
+    
+jump:
+    
+    [elementUtils tangentDirectionsForNormal:axisNormal tangent1:tangent1 tangent2:tangent2];
+    
+    // Finding three points with maximum distance in the tangent directions
+    
+    // First, find the single extremum point in the first tangent direction
+    // Save the local coordinates in the N-T system of the cylinder
+    minDist = HUGE_VAL;
+    for (i=0; i<pMesh.numberOfNodes; i++) {
+        coord[0] = meshNodes->x[i];
+        coord[1] = meshNodes->y[i];
+        coord[2] = meshNodes->z[i];
+        
+        d1 = 0.0;
+        for (int j=0; j<3; j++) {
+            d1 = d1 + tangent1[j] * coord[j];
+        }
+        if (d1 < minDist) {
+            minDist = d1;
+            circleInd[0] = i;
+        }
+    }
+    
+    i = circleInd[0];
+    coord[0] = meshNodes->x[i];
+    coord[1] = meshNodes->y[i];
+    coord[2] = meshNodes->z[i];
+    
+    circleCoord[0][0] = 0.0;
+    for (int i=0; i<3; i++) {
+        circleCoord[0][0] = circleCoord[0][0] + tangent1[i] * coord[i];
+    }
+    
+    circleCoord[0][1] = 0.0;
+    for (int i=0; i<3; i++) {
+        circleCoord[0][1] = circleCoord[0][1] + tangent2[i] * coord[i];
+    }
+    
+    circleCoord[0][2] = 0.0;
+    for (int i=0; i<3; i++) {
+        circleCoord[0][2] = circleCoord[0][2] + axisNormal[i] * coord[i];
+    }
+    
+    // Find two more points such that their minimum distance to the previous point(s)
+    // is maximized. This takes some time but the further the nodes are apart the more
+    // accurate it will be to fit the circle to the points. Also if there is just
+    // a symmetric section of the cylinder it is important to find the points rigorously.
+    for (int j=2; j<=3; j++) {
+        // The maximum minimum distance of any node from the previously defined nodes
+        maxDist = 0;
+        for (i=0; i<pMesh.numberOfNodes; i++) {
+            coord[0] = meshNodes->x[i];
+            coord[1] = meshNodes->y[i];
+            coord[2] = meshNodes->z[i];
+            
+            // Minimum distance from the previously defined nodes
+            minDist = HUGE_VAL;
+            for (int k=0; k<j-1; k++) {
+                d1 = 0.0;
+                for (int l=0; l<3; l++) {
+                    d1 = d1 + tangent1[l] * coord[l];
+                }
+                d2 = 0.0;
+                for (int l=0; l<3; l++) {
+                    d2 = d2 + tangent2[l] * coord[l];
+                }
+                dist = pow((d1 - circleCoord[k][0]), 2.0) + pow((d2 - circleCoord[k][1]), 2.0);
+                minDist = min(dist, minDist);
+            }
+            
+            // If the minimum distance is greater than in any other node, choose this
+            if (maxDist < minDist) {
+                maxDist = minDist;
+                circleInd[j-1] = i;
+            }
+        }
+        
+        // Ok, we have found the point, now set the circle coordinates
+        i = circleInd[j-1];
+        coord[0] = meshNodes->x[i];
+        coord[1] = meshNodes->y[i];
+        coord[2] = meshNodes->z[i];
+        
+        circleCoord[j-1][0] = 0.0;
+        for (int i=0; i<3; i++) {
+            circleCoord[j-1][0] = circleCoord[j-1][0] + tangent1[i] * coord[i];
+        }
+
+        circleCoord[j-1][1] = 0.0;
+        for (int i=0; i<3; i++) {
+            circleCoord[j-1][1] = circleCoord[j-1][1] + tangent2[i] * coord[i];
+        }
+
+        circleCoord[j-1][2] = 0.0;
+        for (int i=0; i<3; i++) {
+            circleCoord[j-1][2] = circleCoord[j-1][2] + axisNormal[i] * coord[i];
+        }
+    }
+    
+    // Given three nodes it is possible to analytically compute the center point and
+    // radius of the cylinder from a 4x4 determinant equation. The matrices values
+    // m1i are the determinants of the comatrices.
+    for (int i=0; i<3; i++) {
+        a[i][0] = circleCoord[i][0]; // x
+        a[i][1] = circleCoord[i][1]; // y
+        a[i][2] = 1.0;
+    }
+    double m11 = det3x3(a);
+    
+    for (int i=0; i<3; i++) {
+        a[i][0] = pow(circleCoord[i][0], 2.0) + pow(circleCoord[i][1], 2.0); // x^2+y^2
+        a[i][1] = circleCoord[i][1]; // y
+        a[i][2] = 1.0;
+    }
+    double m12 = det3x3(a);
+    
+    for (int i=0; i<3; i++) {
+        a[i][0] = pow(circleCoord[i][0], 2.0) + pow(circleCoord[i][1], 2.0); // x^2+y^2
+        a[i][1] = circleCoord[i][0]; // x
+        a[i][2] = 1.0;
+    }
+    double m13 = det3x3(a);
+    
+    for (int i=0; i<3; i++) {
+        a[i][0] = pow(circleCoord[i][0], 2.0) + pow(circleCoord[i][1], 2.0); // x^2+y^2
+        a[i][1] = circleCoord[i][0]; // x
+        a[i][2] = circleCoord[i][1]; // y
+    }
+    //double m14 = det3x3(a);
+    
+    if (fabs(m11) < DBL_EPSILON) {
+        errorfunct("FEMMeshUtils:FEMMeshUtils_cylinderFitMesh", "Points can not be a circle");
+    }
+    
+    double x0 = 0.5 * m12 / m11;
+    double y0 = -0.5 * m13 / m11;
+    //double rad = sqrt(pow(x0, 2.0) + pow(y0, 2.0) + m14 / m11);
+    
+    for (int i=0; i<3; i++) {
+        coord[i] = x0 * tangent1[i] + y0 * tangent2[i];
+    }
+    
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector center x" withValue:&coord[0] orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector center y" withValue:&coord[1] orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector center z" withValue:&coord[2] orUsingBlock:nil string:nil];
+    
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector normal x" withValue:&axisNormal[0] orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector normal y" withValue:&axisNormal[1] orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:pParams theVariable:@"rotational projector normal z" withValue:&axisNormal[2] orUsingBlock:nil string:nil];
+    
+    free_dmatrix(a, 0, 2, 0, 2);
+    free_dvector(nodes->x, 0, pMesh.maxElementNodes-1);
+    free_dvector(nodes->y, 0, pMesh.maxElementNodes-1);
+    free_dvector(nodes->z, 0, pMesh.maxElementNodes-1);
+    free(nodes);
+}
+
+/****************************************************************************************
+
+    Given two interface meshes for nonconforming rotating boundaries, make a coordinate
+    transformation to (phi,z) level where the interpolation accuracy is not limited by 
+    the curvilinear coordinates. Also ensure that the master nodes are manipulated so 
+    that they for sure hit the target nodes.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+****************************************************************************************/
+-(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL *)fullCircle model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities{
+    
+    int n;
+    double alpha, dfii1, dfii2, degOffset=0.0, eps_rad, err1, err2, fii, fii0=0.0, fmin, fmax, nSymmetry, normals[3], rad, tangent1[3], tangent2[3], x[3],
+           xtmp[3], x0[3], x1_min[3], x1_max[3], x1r_min[3], x1r_max[3], x2_min[3], x2_max[3], x2r_min[3], x2r_max[3];
+    FEMMesh *pMesh;
+    Element_t *pMeshElements = NULL;
+    Nodes_t *pMeshNodes = NULL;
+    BOOL found, gotCenter, gotNormal, hit0, hit90, hit180, hit270, moveAngle = NO, setDegOffset;
+    
+    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
+    
+    // We choose degrees as they are more intuitive
+    double rad2Deg = 180.0 / M_PI;
+    int maxElementNodes = bMesh2.maxElementNodes;
+    double *angles = doublevec(0, maxElementNodes-1);
+    
+    *fullCircle = NO;
+    
+    // Cylindrical projector is fitted always and rotational only when requested
+    if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"rotational projector center fit" info:&found] == YES ||
+        cylindrical == YES) {
+        if ([listUtilities listCheckPresentVariable:@"rotational projector center x" inArray:bcParams.valuesList] == NO) {
+            [self FEMMeshUtils_cylinderFitMesh:bMesh1 pParams:bcParams model:model listUtilities:listUtilities];
+        }
+    }
+    
+    x0[0] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector center x" info:&gotCenter minValue:NULL maxValue:NULL];
+    x0[1] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector center y" info:&found minValue:NULL maxValue:NULL];
+    gotCenter = (gotCenter == YES || found == YES) ? YES : NO;
+    x0[2] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector center z" info:&found minValue:NULL maxValue:NULL];
+    gotCenter = (gotCenter == YES || found == YES) ? YES : NO;
+    
+    normals[0] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector normal x" info:&gotNormal minValue:NULL maxValue:NULL];
+    normals[1] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector normal y" info:&found minValue:NULL maxValue:NULL];
+    gotNormal = (gotNormal == YES || found == YES) ? YES : NO;
+    normals[2] = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector normal z" info:&found minValue:NULL maxValue:NULL];
+    gotNormal = (gotNormal == YES || found == YES) ? YES : NO;
+    
+    if (gotNormal == YES) [elementUtils tangentDirectionsForNormal:normals tangent1:tangent1 tangent2:tangent2];
+    
+    // Go through master (k=1) and target mesh (k=2)
+    for (int k=1; k<=2; k++) {
+        
+        // Potentially the projector may be set to rotate by just adding an offset
+        // to the angle. This may depends on time
+        if (k == 1) {
+            degOffset = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"rotational projector angle offset" info:&setDegOffset minValue:NULL maxValue:NULL];
+        } else {
+            setDegOffset = NO;
+        }
+        
+        if (k == 1) {
+            pMesh = bMesh1;
+        } else {
+            pMesh = bMesh2;
+        }
+        
+        pMeshElements = pMesh.getElements;
+        pMeshNodes = pMesh.getNodes;
+        // Check the initial boundary boxes
+        vDSP_minvD(pMeshNodes->x, 1, &x2_min[0], pMesh.numberOfNodes);
+        vDSP_minvD(pMeshNodes->y, 1, &x2_min[1], pMesh.numberOfNodes);
+        vDSP_minvD(pMeshNodes->z, 1, &x2_min[2], pMesh.numberOfNodes);
+        
+        vDSP_maxvD(pMeshNodes->x, 1, &x2_max[0], pMesh.numberOfNodes);
+        vDSP_maxvD(pMeshNodes->y, 1, &x2_max[1], pMesh.numberOfNodes);
+        vDSP_maxvD(pMeshNodes->z, 1, &x2_max[2], pMesh.numberOfNodes);
+        
+        if (k == 1) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for this bondary (x, ,y ,z).\n");
+        } else if (k == 2) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for target bondary (x, ,y ,z).\n");
+        }
+        for (int i=0; i<3; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
+        }
+        
+        // Memorize the bounding box of the master mesh
+        if (k == 1) {
+            memcpy(x1_min, x2_min, sizeof(x2_min));
+            memcpy(x1_max, x2_max, sizeof(x2_max));
+        }
+        
+        // Do the actual coordinate transformation
+        n = pMesh.numberOfNodes;
+        for (int i=0; i<n; i++) {
+            x[0] = pMeshNodes->x[i];
+            x[1] = pMeshNodes->y[i];
+            x[2] = pMeshNodes->z[i];
+            
+            // Substract the center of axis
+            if (gotCenter == YES) {
+                for (int j=0; j<3; j++) {
+                    x[j] = x[j] - x0[j];
+                }
+            }
+            
+            if (gotNormal == YES) {
+                memcpy(xtmp, x, sizeof(x));
+                x[0] = cblas_ddot(3, tangent1, 1, xtmp, 1);
+                x[1] = cblas_ddot(3, tangent2, 1, xtmp, 1);
+                x[2] = cblas_ddot(3, normals, 1, xtmp, 1);
+            }
+            
+            // Set the angle to be the first coordinate as it may sometimes be the
+            // only nonzero coordinate. z-coordinate is always unchanged
+            alpha = rad2Deg * atan2(x[1], x[0]);
+            rad = sqrt(pow(x[0], 2.0) + pow(x[1], 2.0));
+            
+            // Set the offset and revert then the angle to range [-180,180]
+            if (setDegOffset == YES) {
+                alpha = fmod((alpha + degOffset), 360.0);
+                if (alpha > 180.0) alpha = alpha - 360.0;
+            }
+            
+            pMeshNodes->x[i] = alpha;
+            pMeshNodes->y[i] = x[2];
+            pMeshNodes->z[i] = rad;
+        }
+        
+        // For cyclindrical projector, follow exactly the same logic salve and master
+        if (cylindrical == YES && k == 2) {
+            if (moveAngle == YES) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving the second discontinuity to same angle.\n");
+                for (int i=0; i<pMesh.numberOfNodes; i++) {
+                    if (pMeshNodes->x[i] < fii0) pMeshNodes->x[i] = pMeshNodes->x[i] + 360.0;
+                }
+            }
+        } else {
+            // Let's see if we have a full angle to operate or not.
+            // If not, then make the interval continuous.
+            // Here we check only four critical angles: (0, 90. 180, 270) degs
+            hit0 = NO; hit90 = NO; hit180 = NO; hit270 = NO;
+            moveAngle = NO; fii = 0.0; fii0 = 0.0;
+            
+            for (int i=0; i<pMesh.numberOfBulkElements; i++) {
+                n = pMeshElements[i].Type.NumberOfNodes;
+                for (int j=0; j<n; j++) {
+                    angles[j] = pMeshNodes->x[pMeshElements->NodeIndexes[j]];
+                }
+                vDSP_minvD(angles, 1, &fmin, n);
+                vDSP_maxvD(angles, 1, &fmax, n);
+                
+                if (fmax - fmin > 180.0) {
+                    hit180 = YES;
+                } else {
+                    if (fmax >= 0.0 && fmin <= 0.0) hit0 = YES;
+                    if (fmax >= 90.0 && fmin <= 90.0) hit90 = YES;
+                    if(fmax >= -90.0 && fmin <= -90.0) hit270 = YES;
+                }
+            }
+            *fullCircle = (hit0 == YES && hit90 == YES && hit180 == YES && hit270 == YES) ? YES : NO;
+            
+            // Elininate the problematic discontinuity in case we have no full circle
+            // The discontinuity will be moved to some of angles (-90, 0, 90)
+            if (*fullCircle ==YES) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: cylindrical interface seems to be a full circle.\n");
+            } else if (hit180 == YES) {
+                moveAngle = YES;
+                if (hit0 == NO) {
+                    fii = 0.0;
+                } else if (hit270 == NO) {
+                    fii = -90.0;
+                } else if (hit90 == NO) {
+                    fii = 90.0;
+                }
+                for (int i=0; i<pMesh.numberOfNodes; i++) {
+                    if (pMeshNodes->x[i] < fii) pMeshNodes->x[i] = pMeshNodes->x[i] + 360.0;
+                }
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving discontinuity of angle to: %f.\n", fii);
+                fii0 = fii;
+            }
+        }
+        
+        // Check the transformed bounding boxes
+        vDSP_minvD(pMeshNodes->x, 1, &x2r_min[0], pMesh.numberOfNodes);
+        vDSP_minvD(pMeshNodes->y, 1, &x2r_min[1], pMesh.numberOfNodes);
+        vDSP_minvD(pMeshNodes->z, 1, &x2r_min[2], pMesh.numberOfNodes);
+        
+        vDSP_maxvD(pMeshNodes->x, 1, &x2r_max[0], pMesh.numberOfNodes);
+        vDSP_maxvD(pMeshNodes->y, 1, &x2r_max[1], pMesh.numberOfNodes);
+        vDSP_maxvD(pMeshNodes->z, 1, &x2r_max[2], pMesh.numberOfNodes);
+        
+        if (k == 1) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for this boundary (phi, z, r).\n");
+        } else if (k == 2) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for target boundary (phi, z, r).\n");
+        }
+        for (int i=0; i<3; i++) {
+             NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2r_min[i], x2r_max[i]);
+        }
+        
+        if (x2r_min[2] < DBL_EPSILON) {
+            errorfunct("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Radius cannot be almost zero");
+        }
+        
+        // Memorize the bounding box for the 1st mesh
+        if (k == 1) {
+            memcpy(x1r_min, x2r_min, sizeof(x2r_min));
+            memcpy(x1r_max, x2r_max, sizeof(x2r_max));
+        }
+    }
+    
+    eps_rad = 1.0e-3;
+    
+    // Choose radius to be max radius of thi boundary
+    radius = x1r_max[2];
+    
+    err1 = (x1r_max[2] - x1r_min[2]) / radius;
+    err2 = (x2r_max[2] - x2r_min[2]) / radius;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err1);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err2);
+    if (err1 > eps_rad || err2 > eps_rad) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius is rather large!\n");
+    }
+    
+    // Ok, so we have concluded that the interface has constant radius
+    // therefore the constant radius may be removed from the mesh description.
+    // Or perhaps we don't remove to allow more intelligent projector building
+    // for contact mechanics.
+    
+    // Check whether the z-coordinate is constant or not.
+    // Constant z-coordinate implies 1D system, otherwise 2D system.
+    err1 = (x1r_max[1] - x1r_min[1]) / radius;
+    err2 = (x2r_max[1] - x2r_min[1]) / radius;
+    
+    if (err1 < eps_rad || err2 < eps_rad) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 1D.\n");
+        Nodes_t *bMesh1Nodes = bMesh1.getNodes;
+        Nodes_t *bMesh2Nodes = bMesh2.getNodes;
+        memset(bMesh1Nodes->y, 0.0, bMesh1.numberOfNodes*sizeof(double) );
+        memset(bMesh2Nodes->y, 0.0, bMesh2.numberOfNodes*sizeof(double) );
+    } else {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 2D.\n");
+    }
+    
+    // Some pieces of the code can not ork with 1D meshes, this choice is ok for all steps
+    bMesh1.dimension = 2;
+    bMesh2.dimension = 2;
+    
+    // Cylindrical interfaces does not have symmetry as does the rotational
+    if (cylindrical == YES || *fullCircle == YES) {
+        free_dvector(angles, 0, maxElementNodes-1);
+        return;
+    };
+    
+    // If we are studying a symmeric segment, then analyze further the angle
+    dfii1 = x1r_max[0] - x1r_min[0];
+    dfii2 = x2r_max[0] - x2r_min[0];
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f\n", dfii1);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f\n", dfii2);
+    
+    err1 = 2.0 * fabs(dfii1 - dfii2) / (dfii1 + dfii2);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in dfii: %f.\n", err1);
+    
+    int i = [listUtilities listGetInteger:model inArray:bcParams.valuesList forVariable:@"rotational projector periods" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) {
+        nSymmetry = 360.0 / dfii2;
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested sections in target: %f.\n", nSymmetry);
+        if (fabs(nSymmetry - round(nSymmetry)) > 0.01) {
+            if (dfii1 < dfii2) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: you might try to switch master and target!\n");
+            }
+            errorfunct("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Check your settings, this can not be periodic!\n");
+        }
+        int value = round(nSymmetry);
+        [listUtilities addIntegerInClassList:bcParams.valuesList theVariable:@"rotational projector periods" withValue:&value orUsingBlock:NULL];
+    } else {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: using enforced number of periods: %d.\n", i);
+        nSymmetry = 360.0 / dfii2;
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested number of periods: %f.\n", nSymmetry);
+    }
+    
+    free_dvector(angles, 0, maxElementNodes-1);
+}
+
+/*********************************************************************************
+ 
+    Given two interface meshes for nonconforming radial boundaries, make
+    a coordinate transformation to (r,z) level. This is always a symmetry 
+    condition and can not be a contact condition.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+*********************************************************************************/
+-(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    double phi, phierr, r, x[3], x1_min[3], x1_max[3], x2_min[3], x2_max[3], z;
+    FEMMesh *pMesh;
+    Nodes_t *pMeshNodes = NULL;
+    
+    // We choose degrees a they are more intuitive
+    double rad2Deg = 180.0 / M_PI;
+    
+    // Go through master (k=1) and target (k=2)
+    for (int k=1; k<=2; k++) {
+        
+        if (k == 1) {
+            pMesh = bMesh1;
+        } else {
+            pMesh = bMesh2;
+        }
+        pMeshNodes = pMesh.getNodes;
+        
+        for (int i=0; i<3; i++) {
+            x2_min[i] = HUGE_VAL;
+            x2_max[i] = -HUGE_VAL;
+        }
+        
+        // Loop over all nodes
+        for (int i=0; i<pMesh.numberOfNodes; i++) {
+            x[0] = pMeshNodes->x[i];
+            x[1] = pMeshNodes->y[i];
+            x[2] = pMeshNodes->z[i];
+            
+            // Do the actual coordinate transformation
+            r = sqrt(pow(x[0], 2.0) + pow(x[1], 2.0));
+            phi = rad2Deg * atan2(x[1], x[0]);
+            z = x[2];
+            
+            pMeshNodes->x[i] = r;
+            pMeshNodes->y[i] = z;
+            pMeshNodes->z[i] = 0.0;
+            
+            // This is just to cjeck a posteriori that the ranges are ok
+            x2_min[0] = min(r, x2_min[0]);
+            if (r > DBL_EPSILON) {
+                x2_min[1] = min(phi, x2_min[1]);
+            }
+            x2_min[2] = min(z, x2_min[2]);
+            
+            x2_max[0] = max(r, x2_max[0]);
+            if (r > DBL_EPSILON) {
+                x2_max[1] = max(phi, x2_max[1]);
+            }
+            x2_max[2] = max(z, x2_max[2]);
+        }
+        
+        // Memorize the bounding box of the master mesh
+        if (k == 1) {
+            memcpy(x1_min, x2_min, sizeof(x2_min));
+            memcpy(x1_max, x2_max, sizeof(x2_max));
+        }
+        
+        if (k == 1) {
+            NSLog(@"EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for this boundary (phi,r,z).\n");
+        } else if (k == 2) {
+            NSLog(@"EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for target boundary (phi,r,z).\n");
+        }
+        for (int i=0; i<3; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
+        }
+        
+        phierr = x2_max[1] - x2_min[1];
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant angle (degs): %f.\n", phierr);
+    }
+    
+    // Error in radius
+    // Choose radius to be max radius of either boundary
+    double rad = max(x1_max[0], x2_max[0]);
+    double err1 = fabs(x1_max[0] - x2_max[0]) / rad;
+    double err2 = fabs(x1_min[0] - x2_min[0]) / rad;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in maximum radius: %f.\n", err1);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in minimum radius: %f.\n", err2);
+    
+    double eps_rad = 1.0e-3;
+    if (err1 > eps_rad || err2 > eps_rad) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius may be too large!\n");
+    }
+    
+    // Some pieces of the code can not work with 1D meshes, this choice is ok for all steps
+    bMesh1.dimension = 2;
+    bMesh2.dimension = 2;
+}
+
+/***************************************************************
+ 
+    Given two interface meshes flatten them to (x,y) plane.
+
+    Method corresponds to Elmer from git on October 27 2015
+ 
+***************************************************************/
+-(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    int minDiffI=0;
+    double *coord = NULL, diff, maxDiff, minDiff, relDiff, relDiff1=0;
+    FEMMesh *bMesh;
+    Nodes_t *bMeshNodes = NULL;
+    
+    BOOL found;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flattening interface meshes to 2D.\n");
+    
+    int meshDim = model.dimension;
+    int flatDim = [listUtilities listGetInteger:model inArray:bcParams.valuesList forVariable:@"flat projector coordinate" info:&found minValue:NULL maxValue:NULL];
+    BOOL reduceDim = [listUtilities listGetInteger:model inArray:bcParams.valuesList forVariable:@"flat projector reduce dimension" info:&found minValue:NULL maxValue:NULL];
+    
+    if (found == NO) {
+        double minVal, maxVal;
+        for (int j=1; j<=2; j++) {
+            
+            if (j == 1) {
+                bMesh = bMesh1;
+            } else {
+                bMesh = bMesh2;
+            }
+            bMeshNodes =  bMesh.getNodes;
+            
+            maxDiff = 0.0;
+            minDiff = HUGE_VAL;
+            
+            for (int i=1; i<=meshDim; i++) {
+                if (i == 1) {
+                    coord = bMeshNodes->x;
+                } else if (i == 2) {
+                    coord = bMeshNodes->y;
+                } else {
+                    coord = bMeshNodes->z;
+                }
+                vDSP_minvD(coord, 1, &minVal, bMesh.numberOfNodes);
+                vDSP_maxvD(coord, 1, &maxVal, bMesh.numberOfNodes);
+                diff = maxVal - minVal;
+                maxDiff = max(diff, maxDiff);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    minDiffI = i;
+                }
+            }
+            
+            relDiff = minDiff / maxDiff;
+            if (j == 1) {
+                flatDim = minDiffI;
+                relDiff1 = relDiff;
+            } else if (j == 2) {
+                if (relDiff < relDiff1) flatDim = minDiffI;
+            }
+        }
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flat projector coordinate set to: %d.\n", flatDim);
+        [listUtilities addIntegerInClassList:bcParams theVariable:@"flat projector coordinate" withValue:&flatDim orUsingBlock:nil];
+    }
+    
+    for (int j=1; j<=2; j++) {
+        
+        if (j == 1) {
+            bMesh = bMesh1;
+        } else {
+            bMesh = bMesh2;
+        }
+        bMeshNodes =  bMesh.getNodes;
+
+        // Set the 3rd component to be the distance in the flat interface
+        if (flatDim == 3) {
+            continue;
+        } else if (flatDim == 2) {
+            coord = bMeshNodes->y;
+            coord = bMeshNodes->y = bMeshNodes->z;
+            coord = bMeshNodes->z = coord;
+            if (meshDim == 2) memset( bMeshNodes->y, 0.0, bMesh.numberOfNodes*sizeof(double) );
+        } else if (flatDim == 1) {
+            coord = bMeshNodes->x;
+            bMeshNodes->x = bMeshNodes->y;
+            bMeshNodes->y =  bMeshNodes->z;
+            bMeshNodes->z = coord;
+            if (meshDim == 2) memset( bMeshNodes->y, 0.0, bMesh.numberOfNodes*sizeof(double) );
+        }
+        if (reduceDim == YES) memset( bMeshNodes->z, 0.0, bMesh.numberOfNodes*sizeof(double) );
+        
+        // Some pieces of the code can not work with 1D meshes, this choice is ok for ll steps
+        bMesh.dimension = 2;
+    }
+}
+
+/*******************************************************************
+ 
+    Given two interface meshes flatten them into the plane that
+    best fits either of the meshes.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+*******************************************************************/
+-(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    int n;
+    double coord[3], detJ, length, normals[3], normals0[3], normalSum[3], planeLess=0, planeLess1=0, **planeNormal, **planeNormal1, refSum, sum,
+           tangent[3], tangent2[3];
+    FEMMesh *bMesh;
+    FEMNumericIntegration *integration;
+    Element_t *bMeshElements = NULL;
+    Nodes_t *bMeshNodes = NULL;
+    listBuffer pNormals = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    GaussIntegrationPoints *IP = NULL;
+    BOOL found, normal0Set, stat;
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: flattening interface meshes to a place.\n");
+    
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
+    
+    int meshDim = model.dimension;
+    found = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"plane projector normal" buffer:&pNormals];
+    
+    // If the projector normal is not given, determine it first
+    if (found == NO) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: could not find place projector normal, so determining it.\n");
+        Nodes_t *elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+        elementNodes->x = doublevec(0, MAX_ELEMENT_NODES-1);
+        elementNodes->y = doublevec(0, MAX_ELEMENT_NODES-1);
+        elementNodes->z = doublevec(0, MAX_ELEMENT_NODES-1);
+        memset(elementNodes->x, 0.0, MAX_ELEMENT_NODES*sizeof(double) );
+        memset(elementNodes->y, 0.0, MAX_ELEMENT_NODES*sizeof(double) );
+        memset(elementNodes->z, 0.0, MAX_ELEMENT_NODES*sizeof(double) );
+        
+        planeNormal = doublematrix(0, 2, 0, 0);
+        planeNormal1 = doublematrix(0, 2, 0, 0);
+        
+        BOOL check = NO;
+        // Fit a plane to both datasets
+        for (int j=1; j<=2; j++) {
+            if (j == 1) {
+                bMesh = bMesh1;
+            } else {
+                bMesh = bMesh2;
+            }
+            bMeshElements = bMesh.getElements;
+            bMeshNodes = bMesh.getNodes;
+            
+            integration = [[FEMNumericIntegration alloc] init];
+            if ([integration allocation:bMesh] == NO) errorfunct("FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1", "Allocation error in FEMNumericIntegration!");
+            
+            memset(normalSum, 0.0, sizeof(normalSum) );
+            refSum = 0.0;
+            normal0Set = NO;
+            
+            // We use the dot2Min and normal2 temporarily also for first mesh, with k=1
+            for (int i=0; i<bMesh.numberOfBulkElements; i++) {
+                n = bMeshElements[i].Type.NumberOfNodes;
+                IP = GaussQuadrature(&bMeshElements[i], NULL, NULL);
+                
+                for (int k=0; k<n; k++) {
+                    elementNodes->x[k] = bMeshNodes->x[bMeshElements[i].NodeIndexes[k]];
+                    elementNodes->y[k] = bMeshNodes->y[bMeshElements[i].NodeIndexes[k]];
+                    elementNodes->z[k] = bMeshNodes->z[bMeshElements[i].NodeIndexes[k]];
+                }
+                for (int nip=0; nip<IP->n; nip++) {
+                    stat = [integration setBasisForElement:&bMeshElements[i] elementNodes:elementNodes inMesh:bMesh firstEvaluationPoint:IP->u[nip] secondEvaluationPoint:IP->v[nip] thirdEvaluationPoint:IP->w[nip] withBubbles:NO basisDegree:NULL];
+                    stat = [integration setMetricDeterminantForElement:&bMeshElements[i] elementNodes:elementNodes inMesh:bMesh firstEvaluationPoint:IP->u[nip] secondEvaluationPoint:IP->v[nip] thirdEvaluationPoint:IP->w[nip]];
+                    detJ = integration.metricDeterminant;
+                    
+                    [elementDescription normalVectorForBDElement:&bMeshElements[i] boundaryNodes:elementNodes mesh:bMesh paraU:&IP->u[nip] paraV:&IP->v[nip] check:&check normals:normals];
+                    if (normal0Set == NO) {
+                        memcpy(normals0, normals, sizeof(normals));
+                        normal0Set = YES;
+                    }
+                    if (cblas_ddot(3, normals, 1, normals0, 1) < 0.0) {
+                        for (int k=0; k<3; k++) {
+                            normals[k] = -normals[k];
+                        }
+                    }
+                    for (int k=0; k<3; k++) {
+                        normalSum[k] = normalSum[k] + IP->s[nip] * detJ * normals[k];
+                    }
+                    refSum = refSum + IP->s[nip] * detJ;
+                }
+            }
+            
+            // Normalize the normal to unity length
+            sum = 0.0;
+            for (int k=0; k<3; k++) {
+                sum = sum + pow(normalSum[k], 2.0);
+            }
+            length = sqrt(sum);
+            for (int k=0; k<3; k++) {
+                planeNormal[k][0] = normalSum[k] / length;
+            }
+            
+            // Planeless is one if all the normals have the same direction
+            planeLess = length / refSum;
+            
+            // Save the key parameters of the fist mesh
+            if (j == 1) {
+                memcpy(*planeNormal1, *planeNormal, (3*1)*sizeof(double));
+                planeLess1 = planeLess;
+            }
+            
+            [integration deallocation:bMesh];
+        }
+        
+        // Choose the mesh for which is close to a plane
+        if (planeLess1 > planeLess) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting slave normal.\n");
+            memcpy(*planeNormal, *planeNormal1, (3*1)*sizeof(double));
+        } else {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting master normal.\n");
+            for (int i=0; i<3; i++) {
+               planeNormal[i][0] = -planeNormal[i][0];
+            }
+        }
+        for (int i=0; i<3; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: plane normal selected: %f.\n", planeNormal[i][0]);
+        }
+        [listUtilities addConstRealArrayInClassList:bcParams theVariable:@"plane projector normal" withValues:planeNormal size1:3 size2:1 orUsingBlock:nil string:nil];
+        
+        free_dmatrix(planeNormal, 0, 2, 0, 0);
+        free_dmatrix(planeNormal1, 0, 2, 0, 0);
+        
+        free_dvector(elementNodes->x, 0, MAX_ELEMENT_NODES-1);
+        free_dvector(elementNodes->y, 0, MAX_ELEMENT_NODES-1);
+        free_dvector(elementNodes->z, 0, MAX_ELEMENT_NODES-1);
+        free(elementNodes);
+        
+        found = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"plane projector normal" buffer:&pNormals];
+    }
+    
+    for (int i=0; i<3; i++) {
+        normals[i] = pNormals.matrix[i][0];
+    }
+    [elementUtils tangentDirectionsForNormal:normals tangent1:tangent tangent2:tangent2];
+    
+    double minVal, maxVal;
+    for (int j=1; j<=2; j++) {
+        if (j == 1) {
+            bMesh = bMesh1;
+        } else {
+            bMesh = bMesh2;
+        }
+        bMeshElements = bMesh.getElements;
+        bMeshNodes = bMesh.getNodes;
+        
+        for (int i=0; i<bMesh.numberOfNodes; i++) {
+            coord[0] = bMeshNodes->x[i];
+            coord[1] = bMeshNodes->y[i];
+            coord[2] = bMeshNodes->z[i];
+            
+            bMeshNodes->x[i] = cblas_ddot(3, coord, 1, tangent, 1);
+            if (meshDim == 3) {
+                bMeshNodes->y[i] = cblas_ddot(3, coord, 1, tangent2, 1);
+            } else {
+                bMeshNodes->y[i] = 0.0;
+            }
+            bMeshNodes->z[i] = cblas_ddot(3, coord, 1, normals, 1);
+        }
+        
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: range for mesh: %d\n", j);
+        vDSP_minvD(bMeshNodes->x, 1, &minVal, bMesh.numberOfNodes);
+        vDSP_maxvD(bMeshNodes->x, 1, &maxVal, bMesh.numberOfNodes);
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: x: %f %f\n", minVal, maxVal);
+        vDSP_minvD(bMeshNodes->y, 1, &minVal, bMesh.numberOfNodes);
+        vDSP_maxvD(bMeshNodes->y, 1, &maxVal, bMesh.numberOfNodes);
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: y: %f %f\n", minVal, maxVal);
+        vDSP_minvD(bMeshNodes->z, 1, &minVal, bMesh.numberOfNodes);
+        vDSP_maxvD(bMeshNodes->z, 1, &maxVal, bMesh.numberOfNodes);
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: z: %f %f\n", minVal, maxVal);
+        
+        bMesh.dimension = 2;
+    }
+    
+    if (pNormals.matrix != NULL) {
+        free_dmatrix(pNormals.matrix, 0, pNormals.m-1, 0, pNormals.n-1);
+    }
+}
+
+/*****************************************************************************************
+ 
+    Given two interface meshes, check the angle between them using the normal
+    vectors of the first element. Also check that all other elements are
+    aligned with the first one. Only then is it possible to determine the angle.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+*****************************************************************************************/
+-(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 angles:(double *)angles gotAngles:(BOOL *)gotAngles {
+    
+    int n;
+    double alpha=0.0, dot1Min=0.0, dot2Min=0.0, normals[3], normal1[3], normal2[3];
+    FEMMesh *pMesh;
+    Element_t *pMeshElements = NULL;
+    Nodes_t *pMeshNodes = NULL;
+    
+    FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
+    
+    // Currently check of the normal direction is not enforced since at this stage
+    // the model nodes holding structure may not exist!
+    // This means that there may be a 180 error in the directions.
+    // Therefore an angle smaller than 180 is always chosen
+    Nodes_t *elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    elementNodes->x = doublevec(0, max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    elementNodes->y = doublevec(0, max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    elementNodes->z = doublevec(0, max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    
+    BOOL check = NO;
+    for (int k=1; k<=2; k++) {
+        if (k == 1) {
+            pMesh = bMesh1;
+        } else {
+            pMesh = bMesh2;
+        }
+        pMeshElements = pMesh.getElements;
+        pMeshNodes = pMesh.getNodes;
+        
+        // We use the dot2Min and normal2 temporarily also for first mesh, with k=1
+        for (int i=0; i<pMesh.numberOfBoundaryElements; i++) {
+            n = pMeshElements[i].Type.NumberOfNodes;
+            for (int j=0; j<n; j++) {
+                elementNodes->x[j] = pMeshNodes->x[pMeshElements[i].NodeIndexes[j]];
+                elementNodes->y[j] = pMeshNodes->y[pMeshElements[i].NodeIndexes[j]];
+                elementNodes->z[j] = pMeshNodes->z[pMeshElements[i].NodeIndexes[j]];
+            }
+            [elementDescription normalVectorForBDElement:&pMeshElements[i] boundaryNodes:elementNodes mesh:pMesh paraU:NULL paraV:NULL check:&check normals:normals];
+            
+            if (i == 0) {
+                memcpy(normal2, normals, sizeof(normals));
+                dot2Min = 1.0;
+            } else {
+                dot2Min = min(dot2Min, cblas_ddot(3, normals, 1, normal2, 1));
+            }
+        }
+        
+        if (k == 1) {
+            memcpy(normal1, normal2, sizeof(normal2));
+            dot1Min = dot2Min;
+        }
+    }
+    
+    BOOL constantNormals = ((1.0 - dot1Min < 1.0e-6) && (1.0 - dot2Min < 1.0e-6)) ? YES : NO;
+    if (constantNormals == YES) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: master normal: \n");
+        for (int i=0; i<3; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: %f\n", normal1[i]);
+        }
+        
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: initial target normal: \n");
+        for (int i=0; i<3; i++) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: %f\n", normal2[i]);
+        }
+        
+        // The full angle between the two normals
+        alpha = acos(cblas_ddot(3, normal1, 1, normal2, 1)) * 180.0 / M_PI;
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: suggested angle between two normals in degs (+/- 180): %f.\n", alpha);
+    } else {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not suggest angle.\n");
+    }
+    
+    *gotAngles = NO;
+    if (constantNormals == NO) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: normals are not constant, can not test for rotation!\n");
+    } else if (alpha > DBL_EPSILON) {
+        for (int i=0; i<3; i++) {
+            if (fabs(normal1[i] - normal2[i]) < DBL_EPSILON) {
+                *gotAngles = YES;
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: rotation around axis %i in degs: %f.\n", i+1, alpha);
+                angles[i] = alpha;
+                break;
+            }
+        }
+        if (*gotAngles == NO) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not define axis, improve algorithm!\n");
+        }
+    }
+    
+    free_dvector(elementNodes->x, 0,  max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    free_dvector(elementNodes->y, 0,  max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    free_dvector(elementNodes->z, 0,  max(bMesh1.maxElementNodes, bMesh2.maxElementNodes)-1);
+    free(elementNodes);
+}
+
+/******************************************************************
+ 
+    Given two meshes that should occupy the same domain in space,
+    use rotation, scaling and translation to achive this goal.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+******************************************************************/
+-(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 bcParams:(FEMBoundaryCondition *)bcParams model:(FEMModel *)model listUtilities:(FEMListUtilities *)listUtilities {
+    
+    double alpha, angles[3], scl[3], x[4], x1_min[3], x1_max[3], x2_min[3], x2_max[3], x2r_min[3], x2r_max[3];
+    Nodes_t *bMesh1Nodes = NULL, *bMesh2Nodes = NULL;
+    listBuffer pArray = { NULL, NULL, NULL, NULL, 0, 0, 0};
+    BOOL found;
+    
+    bMesh1Nodes = bMesh1.getNodes;
+    bMesh2Nodes = bMesh2.getNodes;
+    
+    // First check the bounding boxes
+    vDSP_minvD(bMesh1Nodes->x, 1, &x1_min[0], bMesh1.numberOfNodes);
+    vDSP_minvD(bMesh1Nodes->y, 1, &x1_min[1], bMesh1.numberOfNodes);
+    vDSP_minvD(bMesh1Nodes->z, 1, &x1_min[2], bMesh1.numberOfNodes);
+    
+    vDSP_maxvD(bMesh1Nodes->x, 1, &x1_max[0], bMesh1.numberOfNodes);
+    vDSP_maxvD(bMesh1Nodes->y, 1, &x1_max[1], bMesh1.numberOfNodes);
+    vDSP_maxvD(bMesh1Nodes->z, 1, &x1_max[2], bMesh1.numberOfNodes);
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for this periodic BC: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x1_min[i]);
+    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for this periodic BC: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x1_max[i]);
+    }
+    
+    vDSP_minvD(bMesh2Nodes->x, 1, &x2_min[0], bMesh2.numberOfNodes);
+    vDSP_minvD(bMesh2Nodes->y, 1, &x2_min[1], bMesh2.numberOfNodes);
+    vDSP_minvD(bMesh2Nodes->z, 1, &x2_min[2], bMesh2.numberOfNodes);
+
+    vDSP_maxvD(bMesh2Nodes->x, 1, &x2_max[0], bMesh2.numberOfNodes);
+    vDSP_maxvD(bMesh2Nodes->y, 1, &x2_max[1], bMesh2.numberOfNodes);
+    vDSP_maxvD(bMesh2Nodes->z, 1, &x2_max[2], bMesh2.numberOfNodes);
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for taget periodic BC: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2_min[i]);
+    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for target periodic BC: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2_max[i]);
+    }
+    
+    double **trfMatrix = doublematrix(0, 3, 0, 3);
+    
+    // If whole transformation matrix given, it will be used directly
+    found = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"periodic bc matrix" buffer:&pArray];
+    if (found == YES) {
+        for (int i=0; i<pArray.m; i++) {
+            for (int j=0; j<pArray.n; j++) {
+                trfMatrix[i][j] = pArray.matrix[j][i];
+            }
+        }
+    } else {
+        // Otherwise check for rotation, scaling and translation
+        
+        // Initialize the mapping matrices
+        double **identity = doublematrix(0, 3, 0, 3);
+        double **trsMatrix = doublematrix(0, 3, 0, 3);
+        double **rotMatrix = doublematrix(0, 3, 0, 3);
+        double **sclMatrix = doublematrix(0, 3, 0, 3);
+        
+        memset( *identity, 0.0, (4*4)*sizeof(double) );
+        for (int i=0; i<4; i++) {
+            identity[i][i] = 1.0;
+        }
+        memcpy(*trsMatrix, *identity, (4*4)*sizeof(double));
+        memcpy(*rotMatrix, *identity, (4*4)*sizeof(double));
+        memcpy(*sclMatrix, *identity, (4*4)*sizeof(double));
+        
+        // Rotations:
+        // These are called first since they are not accounted for in
+        // the automatic scaling and translation
+        memset(angles, 0.0, sizeof(angles) );
+        BOOL gotRotate = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"periodic bc rotate" buffer:&pArray];
+        if (gotRotate == YES) {
+            for (int i=0; i<3; i++) {
+                angles[i] = pArray.matrix[i][0];
+            }
+        } else {
+            if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"periodic bc rotate automatic" info:&found] == YES) {
+                [self FEMMeshUtils_checkInterfaceAngleMesh1:bMesh1 mesh2:bMesh2 angles:angles gotAngles:&gotRotate];
+            }
+        }
+        
+        if (gotRotate == YES) {
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: rotating target with: \n");
+            for (int i=0; i<3; i++) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", angles[i]);
+            }
+            for (int i=0; i<3; i++) {
+                alpha = angles[i] * M_PI / 180.0;
+                if (fabs(alpha) < DBL_MIN) continue;
+                memcpy(*trfMatrix, *identity, (4*4)*sizeof(double));
+                switch (i) {
+                    case 0:
+                        trfMatrix[1][1] = cos(alpha);
+                        trfMatrix[1][2] = -sin(alpha);
+                        trfMatrix[2][1] = sin(alpha);
+                        trfMatrix[2][2] = cos(alpha);
+                        break;
+                    case 1:
+                        trfMatrix[0][0] = cos(alpha);
+                        trfMatrix[0][2] = -sin(alpha);
+                        trfMatrix[2][0] = sin(alpha);
+                        trfMatrix[2][2] = cos(alpha);
+                        break;
+                    case 2:
+                        trfMatrix[0][0] = cos(alpha);
+                        trfMatrix[0][1] = -sin(alpha);
+                        trfMatrix[1][0] = sin(alpha);
+                        trfMatrix[1][1] = cos(alpha);
+                        break;
+                }
+                cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *rotMatrix, 4, *trfMatrix, 4, 0.0, *rotMatrix, 4);
+            }
+            for (int i=0; i<bMesh2.numberOfNodes; i++) {
+                x[0] = bMesh2Nodes->x[i];
+                x[1] = bMesh2Nodes->y[i];
+                x[2] = bMesh2Nodes->z[i];
+                x[3] = 1.0;
+                cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, *rotMatrix, 4, x, 1, 0.0, x, 1);
+                bMesh2Nodes->x[i] = x[0];
+                bMesh2Nodes->y[i] = x[1];
+                bMesh2Nodes->z[i] = x[2];
+            }
+            vDSP_minvD(bMesh2Nodes->x, 1, &x2r_min[0], bMesh2.numberOfNodes);
+            vDSP_minvD(bMesh2Nodes->y, 1, &x2r_min[1], bMesh2.numberOfNodes);
+            vDSP_minvD(bMesh2Nodes->z, 1, &x2r_min[2], bMesh2.numberOfNodes);
+
+            vDSP_maxvD(bMesh2Nodes->x, 1, &x2r_max[0], bMesh2.numberOfNodes);
+            vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
+            vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
+            
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for rotated target: \n");
+            for (int i=0; i<3; i++) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_min[i]);
+            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for rotated target: \n");
+            for (int i=0; i<3; i++) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_max[i]);
+            }
+        } else {
+            memcpy(x2r_min, x2_min, sizeof(x2_min));
+            memcpy(x2r_max, x2_max, sizeof(x2_max));
+        }
+        
+        // Scaling:
+        // This is either given or enforced by requiring bounding boxes to be of the same size
+        found = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"periodic bc scale" buffer:&pArray];
+        if (found == YES) {
+            for (int i=0; i<pArray.m; i++) {
+                sclMatrix[i][i] = pArray.matrix[i][0];
+            }
+        } else {
+            // Define scaling from the bounding boxes.
+            // This assumes isotropic scaling since component-wise scaling
+            // was prone to errors
+            double s1 = 0.0;
+            double s2 = 0.0;
+            for (int i=0; i<3; i++) {
+                s1 = s1 + pow(x1_max[i] - x1_min[i], 2.0);
+            }
+            for (int i=0; i<3; i++) {
+                s2 = s2 + pow(x2r_max[i] - x2r_min[i], 2.0);
+            }
+            if (s2 > DBL_EPSILON) {
+                for (int i=0; i<3; i++) {
+                    scl[i] = sqrt(s1 / s2);
+                }
+            } else {
+                for (int i=0; i<3; i++) {
+                    scl[i] = 1.0;
+                }
+            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: scaling with: \n");
+            for (int i=0; i<3; i++) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", scl[i]);
+            }
+            for (int i=0; i<3; i++) {
+                sclMatrix[i][i] = scl[i];
+            }
+        }
+        
+        // Translations:
+        // And finally define translations
+        found = [listUtilities listGetConstRealArray:model inArray:bcParams.valuesList forVariable:@"periodic bc translate" buffer:&pArray];
+        if (found == YES) {
+            for (int i=0; i<pArray.m; i++) {
+                trsMatrix[3][i] = pArray.matrix[i][0];
+            }
+        } else {
+            // Define translations so that the lower left corner is the same
+            for (int i=0; i<3; i++) {
+                trsMatrix[3][i] = x1_min[i] - sclMatrix[i][i] * x2r_min[i];
+            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: translation: \n");
+            for (int i=0; i<3; i++) {
+                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", trsMatrix[3][i]);
+            }
+        }
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *sclMatrix, 4, *trsMatrix, 4, 0.0, *trfMatrix, 4);
+        
+        free_dmatrix(identity, 0, 3, 0, 3);
+        free_dmatrix(trsMatrix, 0, 3, 0, 3);
+        free_dmatrix(rotMatrix, 0, 3, 0, 3);
+        free_dmatrix(sclMatrix, 0, 3, 0, 3);
+    }
+    
+    //Now transform the coordinates
+    for (int i=0; i<bMesh2.numberOfNodes; i++) {
+        x[0] = bMesh2Nodes->x[i];
+        x[1] = bMesh2Nodes->y[i];
+        x[2] = bMesh2Nodes->z[i];
+        x[3] = 1.0;
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, *trfMatrix, 4, x, 1, 0.0, x, 1);
+        bMesh2Nodes->x[i] = x[0] / x[3];
+        bMesh2Nodes->y[i] = x[1] / x[3];
+        bMesh2Nodes->z[i] = x[2] / x[3];
+    }
+    
+    vDSP_minvD(bMesh2Nodes->x, 1, &x2r_min[0], bMesh2.numberOfNodes);
+    vDSP_minvD(bMesh2Nodes->y, 1, &x2r_min[1], bMesh2.numberOfNodes);
+    vDSP_minvD(bMesh2Nodes->z, 1, &x2r_min[2], bMesh2.numberOfNodes);
+
+    vDSP_maxvD(bMesh2Nodes->x, 1, &x2r_max[0], bMesh2.numberOfNodes);
+    vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
+    vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
+    
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for transformed target: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_min[i]);
+    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for transformed target: \n");
+    for (int i=0; i<3; i++) {
+        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_max[i]);
+    }
+
+    free_dmatrix(trfMatrix, 0, 3, 0, 3);
+    
+    if (pArray.matrix != NULL) {
+        free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
+    }
+}
+
+/**************************************************************************************
+ 
+    Create a projector for mapping between interfaces using the Galerkin method
+    A temporal mesh structure with a node for each Gaussian integration point is
+    created. Then this projector matrix is transferred to a projector on the nodal
+    coordinates.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+**************************************************************************************/
+-(FEMMatrix *)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh *)bMesh2 mesh1:(FEMMesh *)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel *)model {
+    
+    FEMMatrix *projector;
+    
+    int *invPerm1 = bMesh1.getInvPerm;
+    int *invPerm2 = bMesh2.getInvPerm;
+    
+    // Set the nodes of mesh1 to be the interval defined by mesh2
+    BOOL *mirrorNode = NULL;
+    if (repeating == YES) {
+        if (antiRepeating == YES) {
+            mirrorNode = (BOOL*)malloc(sizeof(BOOL) * bMesh1.numberOfNodes );
+            memset(mirrorNode, 0, bMesh1.numberOfNodes*sizeof(BOOL) );
+        }
+        int size = bMesh1.numberOfNodes;
+        [self preRotationalProjectorMesh1:bMesh1 mesh2:bMesh2 mirrorNode:mirrorNode sizeMirrorNode:&size];
+    }
+    
+    // Create the projector usig the nodal points
+    // This corresponds to numerical integration of the collocation method
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    projector = [utilities meshProjectorMesh1:bMesh2 mesh2:bMesh1 model:model useQuadrantTree:&useQuadrantTree transpose:NULL];
+    projector.projectorType = PROJECTOR_TYPE_NODAL;
+    
+    matrixArraysContainer *projectorContainers = projector.getContainers;
+    int *cols = projectorContainers->Cols;
+    int *rows = projectorContainers->Rows;
+    
+    // One needs to change the sign of the projector for the mirror nodes
+    if (antiRepeating == YES) {
+        int size =  bMesh1.numberOfNodes;
+        [self postRotationalProjector:projector mirrorNode:mirrorNode sizeMirrorNode:&size];
+        if (mirrorNode != NULL) free(mirrorNode);
+    }
+    
+    // Now return from the indexes of the interfaces mesh system to the
+    // original mesh system
+    projectorContainers->InvPerm = intvec(0, bMesh1.numberOfNodes-1);
+    projectorContainers->sizeInvPerm = bMesh1.numberOfNodes;
+    memcpy(projectorContainers->InvPerm, invPerm1, bMesh1.numberOfNodes*sizeof(int));
+    
+    int k;
+    for (int i=0; i<projector.numberOfRows; i++) {
+        for (int j=rows[i]; j<=rows[i+1]-1; j++) {
+            k = cols[j];
+            if (k >= 0) cols[j] = invPerm2[k];
+        }
+    }
+    
+    return projector;
+}
+
+/*************************************************************
+ 
+    Set projector abs(rowsum) to unity
+ 
+    Method corresponds to Elmer from git on October 27 2015
+
+*************************************************************/
+ -(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix *)projector {
+     
+     double rowsum;
+    
+     matrixArraysContainer *projectorContainers = projector.getContainers;
+     
+     for (int i=0; i<projector.numberOfRows; i++) {
+         rowsum = 0.0;
+         for (int j=projectorContainers->Rows[i]; j<=projectorContainers->Rows[i+1]-1; j++) {
+             rowsum = rowsum + fabs(projectorContainers->Values[j]);
+         }
+         for (int j=projectorContainers->Rows[i]; j<=projectorContainers->Rows[i+1]-1; j++) {
+             projectorContainers->Values[j] = projectorContainers->Values[j] / rowsum;
+         }
+     }
 }
 
 #pragma mark Public methods
@@ -1265,620 +3817,270 @@
     NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: unable to find local edge.");
 }
 
--(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh boundary:(int)this target:(int)trgt {
+/************************************************************************************************************
+ 
+    Create a projector between Master and Target boundaries. The projector may be a nodal projector x=Px or 
+    a weigted Galerking projector such that Qx=Px. In the first case the projector will be P and in the 
+    second case [Q-P].
+ 
+    Method corresponds to Elmer from git on October 27 2015
+
+************************************************************************************************************/
+-(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL *)galerkin {
     
-    int i, j, k, n, n1, n2, k1, k2, constraint, dim, numbBothActive, count;
-    int *perm1, *perm2, *invPerm1, *invPerm2;
-    double dot1min, dot2min, alpha=0.0, s1, s2;
-    double normals[3], normals1[3], normals2[3], x1Min[3], x1Max[3], x2Min[3], x2Max[3], x2rMin[3], x2rMax[3], x[4], identity[4][4], rotMatrix[4][4],
-           trsMatrix[4][4], sclMatrix[4][4], trfMatrix[4][4], angles[3], normals2r[3], scl[3];
-    listBuffer pArray = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    FEMMesh *bmesh1, *bmesh2;
+    int dim;
     FEMMatrix *projector;
-    FEMBoundaryCondition *boundaryConditionAtId;
-    FEMElementDescription *elementDescription;
-    FEMListUtilities *listUtil;
-    FEMUtilities *utilities;
-    Element_t *elements, *mesh1elements, *mesh2elements;
-    Nodes_t *nodes, *elementNodes, *mesh1nodes, *mesh2nodes;
-    matrixArraysContainer *projectorContainers = NULL;
-    BOOL thisActive, targetActive, constantNormals, check, gotRotate, useQuadrantTree, found;
+    FEMMesh *bMesh1, *bMesh2;
+    BOOL antiradial, antirotational, antisliding, cylindrical, doEdges, doNodes, flat, found, intGalerkin, levelProj, plane, radial, rotational,
+         sliding, success, useExtProjector;
+    
+    if (mbd < 0) return nil;
+    
+    FEMCore *core = [FEMCore sharedCore];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMSolution *solution = (FEMSolution *)model.solution;
     
     dim = model.dimension;
     
-    if (this < 0 || trgt < 0) return nil;
+    [listUtilities resetTimer:@"periodicProjector" model:model];
     
-    elementDescription = [FEMElementDescription sharedElementDescription];
-    listUtil = [[FEMListUtilities alloc] init];
-    utilities = [[FEMUtilities alloc] init];
+    FEMBoundaryCondition *boundaryConditionAtId = (model.boundaryConditions)[mbd];
+    FEMMesh *pMesh = mesh;
     
-    elements = mesh.getElements;
-    nodes = mesh.getNodes;
-    
-    // Search elements in this boundary and its periodic counterpart:
-    n1 = 0;
-    n2 = 0;
-    for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
-        constraint = elements[i].BoundaryInfo->Constraint;
-        boundaryConditionAtId = (model.boundaryConditions)[this];
-        if (boundaryConditionAtId.tag == constraint) n1++;
-        
-        boundaryConditionAtId = (model.boundaryConditions)[trgt];
-        if (boundaryConditionAtId.tag == constraint) n2++;
-    }
-    
-    if (n1 <= 0 || n2 <= 0) return nil;
-    NSLog(@"FEMMeshUtils:FEMMesh_periodicProjector: Starting to build...");
-    
-    // Initialize mesh structures for boundaries, this is
-    // for getting the mesh projector
-    bmesh1 = [[FEMMesh alloc] init];
-    bmesh2 = [[FEMMesh alloc] init];
-    
-    mesh1elements = bmesh1.getElements;
-    mesh2elements = bmesh2.getElements;
-    
-    mesh1elements = (Element_t*) malloc( sizeof(Element_t) * n1 );
-    initElements(mesh1elements, n1);
-    mesh2elements = (Element_t*) malloc( sizeof(Element_t) * n2 );
-    initElements(mesh2elements, n2);
-    
-    perm1 = intvec(0, mesh.numberOfNodes-1);
-    perm2 = intvec(0, mesh.numberOfNodes-1);
-    
-    n = mesh.maxElementNodes;
-    
-    elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
-    initNodes(elementNodes);
-    elementNodes->x = doublevec(0, n-1);
-    elementNodes->y = doublevec(0, n-1);
-    elementNodes->z = doublevec(0, n-1);
-    
-    // Fill in the mesh element structures with the boundary elements
-    n1 = 0;
-    n2 = 0;
-    memset( perm1, 0, mesh.numberOfNodes*sizeof(int) );
-    memset( perm2, 0, mesh.numberOfNodes*sizeof(int) );
-    bmesh1.maxElementNodes = 0;
-    bmesh2.maxElementNodes = 0;
-    dot1min = HUGE_VAL;
-    dot2min = HUGE_VAL;
-    numbBothActive = 0;
-    
-    for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
-        
-        if (dim > 1 && elements[i].Type.ElementCode < 200) continue;
-        
-        constraint = elements[i].BoundaryInfo->Constraint;
-        
-        boundaryConditionAtId = (model.boundaryConditions)[this];
-        thisActive = (boundaryConditionAtId.tag == constraint) ? YES : NO;
-        
-        boundaryConditionAtId = (model.boundaryConditions)[trgt];
-        targetActive = (boundaryConditionAtId.tag == constraint) ? YES : NO;
-        
-        if (thisActive == YES || targetActive == YES) {
-            n = elements[i].Type.NumberOfNodes;
-            for (j=0; j<n; j++) {
-                elementNodes->x[j] = nodes->x[elements[i].NodeIndexes[j]];
-                elementNodes->y[j] = nodes->y[elements[i].NodeIndexes[j]];
-                elementNodes->z[j] = nodes->z[elements[i].NodeIndexes[j]];
-            }
-            
-            // Angle smaller than 180 is always chosen
-            check = NO;
-            [elementDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals];
-            
-            if (thisActive == YES && targetActive == YES) {
-                numbBothActive++;
-            }
-        }
-        
-        if (thisActive == YES) {
-            if (n1 == 0) {
-                memcpy(normals1, normals, sizeof(normals1));
-            } else {
-                dot1min = min(dot1min, cblas_ddot(3, normals, 1, normals1, 1));
-            }
-            
-            bmesh1.maxElementNodes = max(bmesh1.maxElementNodes, n);
-            mesh1elements[n1] = elements[i];
-            mesh1elements[n1].NodeIndexes = intvec(0, n-1);
-            mesh1elements[n1].sizeNodeIndexes = n;
-            mesh1elements[n1].NodeIndexes = elements[i].NodeIndexes;
-            mesh1elements[n1].EdgeIndexes = NULL;
-            mesh1elements[n1].FaceIndexes = NULL;
-            for (j=0; j<n; j++) {
-                perm1[elements[i].NodeIndexes[j]] = 1;
-            }
-            n1++;
-        }
-        
-        if (targetActive == YES) {
-            if (n2 == 0) {
-                memcpy(normals2, normals, sizeof(normals2));
-            } else {
-                dot2min = min(dot2min, cblas_ddot(3, normals, 1, normals2, 1));
-            }
-            
-            bmesh2.maxElementNodes = max(bmesh2.maxElementNodes, n);
-            mesh2elements[n2] = elements[i];
-            mesh2elements[n2].NodeIndexes = intvec(0, n-1);
-            mesh2elements[n2].sizeNodeIndexes = n;
-            mesh2elements[n2].NodeIndexes = elements[i].NodeIndexes;
-            mesh2elements[n2].EdgeIndexes = NULL;
-            mesh2elements[n2].FaceIndexes = NULL;
-            for (j=0; j<n; j++) {
-                perm2[elements[i].NodeIndexes[j]] = 1;
-            }
-            n2++;
-        }
-    }
-    
-    if (numbBothActive > 0) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: nodes belonging to both master and target: %d\n", numbBothActive);
-    }
-    
-    constantNormals = ( (1.0 - dot1min < 1.0e-6) && (1.0 - dot2min < 1.0e-6) ) ? YES : NO;
-    if (constantNormals == YES) {
-        // The full angle between the two normals
-        alpha = acos(cblas_ddot(3, normals1, 1, normals2, 1)) * 180 / M_PI;
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: suggested angle between two normals in degrees: %e\n", alpha);
-    }
-    
-    bmesh1.numberOfBulkElements = n1;
-    bmesh2.numberOfBulkElements = n2;
-    
-    // Fill in the mesh node structures with the boundary nodes
-    count = 0;
-    for (i=0; i<mesh.numberOfNodes; i++) {
-        if (perm2[i] == 1) count++;
-    }
-    bmesh2.numberOfNodes = count;
-    
-    count = 0;
-    for (i=0; i<mesh.numberOfNodes; i++) {
-        if (perm1[i] == 1) count++;
-    }
-    bmesh1.numberOfNodes = count;
-    
-    if (bmesh1.numberOfNodes == 0 || bmesh2.numberOfNodes == 0) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: no active nodes on periodic boundary!");
-        
-        for (i=0; i<bmesh1.numberOfBulkElements; i++) {
-            free_ivector(mesh1elements[i].NodeIndexes, 0, mesh1elements[i].sizeNodeIndexes-1);
-        }
-        for (i=0; i<bmesh2.numberOfBulkElements; i++) {
-            free_ivector(mesh2elements[i].NodeIndexes, 0, mesh1elements[i].sizeNodeIndexes-1);
-        }
-        
-        free(mesh1elements);
-        free(mesh2elements);
-        free_ivector(perm1, 0, mesh.numberOfNodes-1);
-        free_ivector(perm2, 0, mesh.numberOfNodes-1);
-        perm1 = NULL; perm2 = NULL;
-        bmesh1 = nil;
-        bmesh2 = nil;
+    // Whether to choose nodal or Galerkin projector is determined by an optional
+    // flag. The default is the nodal projector
+    if (galerkin != NULL) {
+        intGalerkin = *galerkin;
     } else {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: number of periodic nodes: %d %d\n", bmesh1.numberOfNodes, bmesh2.numberOfNodes);
+        intGalerkin = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"galerkin projector" info:&found];
     }
     
-    mesh1nodes = bmesh1.getNodes;
-    mesh2nodes = bmesh2.getNodes;
-    
-    mesh1nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
-    initNodes(mesh1nodes);
-    mesh1nodes->x = doublevec(0, bmesh1.numberOfNodes-1);
-    mesh1nodes->y = doublevec(0, bmesh1.numberOfNodes-1);
-    mesh1nodes->z = doublevec(0, bmesh1.numberOfNodes-1);
-    
-    mesh2nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
-    initNodes(mesh2nodes);
-    mesh2nodes->x = doublevec(0, bmesh2.numberOfNodes-1);
-    mesh2nodes->y = doublevec(0, bmesh2.numberOfNodes-1);
-    mesh2nodes->z = doublevec(0, bmesh2.numberOfNodes-1);
-    
-    invPerm1 = intvec(0, bmesh1.numberOfNodes-1);
-    invPerm2 = intvec(0, bmesh2.numberOfNodes-1);
-    
-    for (i=0; i<3; i++) {
-        x1Min[i] = HUGE_VAL;
-        x1Max[i] = HUGE_VAL;
-        x2Min[i] = HUGE_VAL;
-        x2Max[i] = HUGE_VAL;
-        x2rMin[i] = HUGE_VAL;
-        x2rMax[i] = HUGE_VAL;
+    // If the boundary is discontinous, then we have the luxury of creating the projector
+    // very cheeply using the permutation vector. This does not need the target as the
+    // boundary is self-contained.
+    if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"discontinuous boundary" info:&found] == YES && mesh.isDiscontinuousMesh == YES) {
+        if (intGalerkin == YES) {
+            projector = [self FEMMeshUtils_weightedProjectorDiscontinousMesh:pMesh model:model boundary:mbd listUtilities:listUtilities];
+        } else {
+            projector = [self FEMMeshUtils_nodalProjectorDiscontinuousMesh:pMesh model:model boundary:mbd listUtilities:listUtilities];
+        }
+        
+        if (projector == nil) return nil;
+        goto jump;
     }
     
-    // Initialize the mapping matrices
-    memset( x, 0.0, sizeof(x) );
-    memset( identity, 0.0, sizeof(identity) );
-    for (i=0; i<4; i++) {
-        identity[i][i] = 1.0;
+    // BCs index should start from 0
+    if (mbd < 0) return nil;
+    
+    // Create the mesh projector, and if needed also eliminate the ghost nodes.
+    // There are two choices of projector: a nodal P in x = PX, and a Galerkin projector
+    // [Q-P] in Qx = Px. The projector is assumed to be either a rotational projector with no
+    // translation and roration, or a generic one with possible cooridinate mapping
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: creating projector between BCs %d and %d.\n", mbd+1, trgt+1);
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
+    
+    // Create temporal mesh structures that are utilized when making the
+    // projector between the two boundaries
+    bMesh1 = [[FEMMesh alloc] init];
+    bMesh2 = [[FEMMesh alloc] init];
+    
+    success = [self FEMMeshUtils_createInterfaceMeshesModel:model mesh:mesh masterBoundary:mbd targetBoundary:trgt bMesh1:bMesh1 bMesh2:bMesh2];
+    if (success == NO) {
+        [bMesh1 deallocation];
+        [bMesh2 deallocation];
+        return nil;
     }
-    for (i=0; i<4; i++) {
-        for (j=0; j<4; j++) {
-            trsMatrix[i][j] = identity[i][j];
-            rotMatrix[i][j] = identity[i][j];
-            sclMatrix[i][j] = identity[i][j];
+    
+    // Do we have external method to take care of the projection matrix creation
+    useExtProjector = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"external projector" info:&found];
+    
+    // If requested, map the interface coordinate from (x,y,z) to any permutation of these
+    [self FEMMeshUtils_mapInterfaceCoordinateMesh1:bMesh1 mesh2:bMesh2 BCParams:boundaryConditionAtId model:model listUtilities:listUtilities];
+    
+    Element_t *elements = mesh.getElements;
+    Nodes_t *bMesh1Nodes = bMesh1.getNodes;
+    Nodes_t *bMesh2Nodes = bMesh2.getNodes;
+    
+    // Check whether to use (anti) rotational projector.
+    // We don't really know on which side the projector was called so
+    // let's check both sides
+    rotational = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"rotational projector" info:&found];
+    antirotational = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"anti rotational projector" info:&found];
+    if (antirotational == YES) rotational = YES;
+    
+    cylindrical = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"cylindrical projector" info:&found];
+    
+    radial = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"radial projector" info:&found];
+    antiradial = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"anti radial projector" info:&found];
+    if (antiradial == YES) radial = YES;
+    
+    sliding = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"sliding projector" info:&found];
+    antisliding = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"anti sliding projector" info:&found];
+    if (antisliding == YES) sliding = YES;
+    
+    flat = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"flat projector" info:&found];
+    plane = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"plane projector" info:&found];
+    
+    if (radial == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcig radial projector.\n");
+    if (sliding == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing sliding projector.\n");
+    if (cylindrical == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing cyclindrical projector.\n");
+    if (rotational == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing rotational projector.\n");
+    if (flat == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing flat projector.\n");
+    if (plane == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing plane projector.\n");
+    
+    double nodeScale = [listUtilities listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"mortar bc scaling" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) {
+        if (antiradial == YES) {
+            nodeScale = -1.0;
+        } else {
+            nodeScale = 1.0;
         }
     }
     
-    // Rotations:
-    // These are called first since they are not accounted for in the
-    // automatic scaling and translation.
-    boundaryConditionAtId = (model.boundaryConditions)[this];
-    gotRotate = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc rotate" buffer:&pArray];
-    if (gotRotate == YES) {
-        for (i=0; i<3; i++) {
-            angles[i] = pArray.matrix[i][0];
+    BOOL nodalJump = [listUtilities listCheckPrefix:@"mortar bc coefficient" inArray:boundaryConditionAtId.valuesList];
+    if (nodalJump == NO) {
+        nodalJump = [listUtilities listCheckPrefix:@"mortar bc resistivity" inArray:boundaryConditionAtId.valuesList];
+    }
+    
+    // There are tailored projectors for simplified interfaces
+    
+    // Stride projector is obsolite and has been eliminated
+    if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"stride projector" info:&found] == YES) {
+        [listUtilities addLogicalInClassList:boundaryConditionAtId theVariable:@"level projector" withValue:YES];
+        [listUtilities addLogicalInClassList:boundaryConditionAtId theVariable:@"level projector strong" withValue:YES];
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing level projector instead of old stride projector.\n");
+    }
+    
+    levelProj = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"level projector" info:&found];
+    if (rotational == YES || cylindrical == YES || radial == YES || flat == YES || plane == YES ) {
+        if (found == NO) {
+            NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing level projector to YES with dimensional reduction.\n");
+            levelProj = YES;
+        } else if (levelProj == NO) {
+            // If we have dimensionally reduced projector but don't use level projector to
+            // integrate over it, then ensure that the third coordinate is set to zero
+            memset(bMesh1Nodes->z, 0.0, bMesh1.numberOfNodes*sizeof(double) );
+            memset(bMesh2Nodes->z, 0.0, bMesh2.numberOfNodes*sizeof(double) );
         }
-    } else {
-        memset( angles, 0.0, sizeof(angles) );
-        if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc rotate automatic" info:&found] == YES) {
-            
-            if (constantNormals == NO) {
-                errorfunct("FEMMeshUtils:periodicProjectorInModel", "Normals are not constant, can not test for rotation!");
-            } else if (alpha > DBL_EPSILON) {
-                // Rotation should be performed
-                for (i=0; i<3; i++) {
-                    if (fabs(normals1[i] - normals2[i]) < DBL_EPSILON) {
-                        gotRotate = YES;
-                        NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotation around axis %d in degrees %f.\n", i, alpha);
-                        angles[i] = alpha;
-                        break;
+    }
+    
+    if (levelProj == YES) {
+        if ((solution.solutionInfo)[@"projector skip nodes"] != nil) {
+            if ([(solution.solutionInfo)[@"projector skip nodes"] boolValue] == YES) doNodes = NO;
+        } else {
+            if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector skip nodes" info:&found] == YES) {
+                doNodes = NO;
+            } else {
+                doNodes = (mesh.numberOfNodes > 0) ? YES : NO;
+            }
+        }
+        
+        if ((solution.solutionInfo)[@"projector skip edges"] != nil) {
+            if ([(solution.solutionInfo)[@"projector skip edges"] boolValue] == YES) doEdges = NO;
+        } else {
+            if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector skip edges" info:&found] == YES) {
+                doEdges = NO;
+            } else {
+                // We are conservative here since there may be edges in 2D which
+                // still can not be used for creating the projector
+                doEdges = (mesh.numberOfNodes > 0 && mesh.dimension == 3 && dim == 3) ? YES :NO;
+                
+                // Ensure that there is no p-elements that made us think that we have edges.
+                // Here we assume that if there is any p-elements, then also the first element is such
+                if (doEdges == YES) {
+                    if ([core isPElement:&elements[0]] == YES) {
+                        doEdges = NO;
+                        NSLog(@"FEMMeshUtils:periodicProjectorInModel: edge projector will not be created for p-element mesh.\n");
                     }
                 }
-                if (gotRotate == NO) {
-                    errorfunct("FEMMeshUtils:periodicProjectorInModel", "could not define rotation axis, improve algorithm.");
-                }
             }
         }
     }
     
-    if (gotRotate == YES) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
-        
-
-        
-        for (i=0; i<pArray.m; i++) {
-            alpha = angles[i] * M_PI / 180;
-            if (fabs(alpha) < DBL_MIN) continue;
-            
-            memcpy(trfMatrix, identity, sizeof(identity));
-            switch (i) {
-                case 0:
-                    trfMatrix[1][1] = cos(alpha);
-                    trfMatrix[1][2] = -sin(alpha);
-                    trfMatrix[2][1] = sin(alpha);
-                    trfMatrix[2][2] = cos(alpha);
-                    break;
-                case 1:
-                    trfMatrix[0][0] = cos(alpha);
-                    trfMatrix[0][2] = -sin(alpha);
-                    trfMatrix[2][0] = sin(alpha);
-                    trfMatrix[2][2] = cos(alpha);
-                    break;
-                case 2:
-                    trfMatrix[0][0] = cos(alpha);
-                    trfMatrix[0][1] = -sin(alpha);
-                    trfMatrix[1][0] = sin(alpha);
-                    trfMatrix[1][1] = cos(alpha);
-                    break;
-            }
-            
-            cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, (double *)rotMatrix, 4, (double *)trfMatrix, 4, 0.0, (double *)rotMatrix, 4);
-        }
-        
-        // Check the rotated normal vector of the first target element.
-        // This is maily done for debugging purposes
-        
-        if (constantNormals == YES) {
-            for (i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
-                if (dim > 1 && elements[i].Type.ElementCode < 200) continue;
-                
-                constraint = elements[i].BoundaryInfo->Constraint;
-                
-                boundaryConditionAtId = (model.boundaryConditions)[trgt];
-                if (boundaryConditionAtId.tag != constraint) continue;
-                
-                n = elements[i].Type.NumberOfNodes;
-                
-                for (j=0; j<n; j++) {
-                    elementNodes->x[j] = nodes->x[elements[i].NodeIndexes[j]];
-                    elementNodes->y[j] = nodes->y[elements[i].NodeIndexes[j]];
-                    elementNodes->z[j] = nodes->z[elements[i].NodeIndexes[j]];
-                }
-                
-                for (j=0; j<n; j++) {
-                    k = elements[i].NodeIndexes[j];
-                    x[0] = nodes->x[k];
-                    x[1] = nodes->y[k];
-                    x[2] = nodes->z[k];
-                    x[3] = 1.0;
-                    
-                    cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, (double *)rotMatrix, 4, x, 1, 0.0, x, 1);
-                    
-                    elementNodes->x[j] = x[0];
-                    elementNodes->y[j] = x[1];
-                    elementNodes->z[j] = x[2];
-                    
-                }
-                
-                check = NO;
-                [elementDescription normalVectorForBDElement:&elements[i] boundaryNodes:elementNodes mesh:mesh paraU:NULL paraV:NULL check:&check normals:normals2r];
-                break;
-            }
-            
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: master normal: %f %f %f\n", normals1[0], normals1[1], normals1[2]);
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: initial target normal: %f %f %f\n", normals2[0], normals2[1], normals2[2]);
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotated target normal: %f %f %f\n", normals2r[0], normals2r[1], normals2r[2]);
-            alpha = acos(cblas_ddot(3, normals1, 1, normals2, 1)) * 180.0 / M_PI;
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and initial target: %e\n", alpha);
-            
-            alpha = acos(cblas_ddot(3, normals1, 1, normals2r, 1)) * 180.0 / M_PI;
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: angle between master and rotated target: %e\n", alpha);
-            
-            if (fabs(alpha) > 1.0e-2 && fabs(alpha - 180.0) > 1.0e-2) {
-                NSLog(@"FEMMeshUtils:periodicProjectorInModel: rotation may be incorrect!");
-            }
-        }
+    // If the interface is rotational, move to (phi, z) plane and alter the phi coordinates
+    // so that the meshes coincide.
+    // Otherwise make the two meshes to coinside using rotation, translation and scaling
+    double radius = 1.0;
+    BOOL fullCircle = NO;
+    if (rotational == YES || cylindrical == YES) {
+        [self FEMMeshUtils_rotationInterfaceMesh1:bMesh1 mesh2:bMesh2 bcParams:boundaryConditionAtId cylindrical:cylindrical radius:radius fullCircle:&fullCircle model:model listUtilities:listUtilities];
+    } else if (radial == YES) {
+        [self FEMMeshUtils_radiusInterfaceMesh1:bMesh1 mesh2:bMesh2 bcParams:boundaryConditionAtId model:model listUtilities:listUtilities];
+    } else if (flat == YES) {
+        [self FEMMeshUtils_flatInterfaceMesh1:bMesh1 mesh2:bMesh2 bcParams:boundaryConditionAtId model:model listUtilities:listUtilities];
+    } else if (plane == YES) {
+        [self FEMMeshUtils_planeInterfaceMesh1:bMesh1 mesh2:bMesh2 bcParams:boundaryConditionAtId model:model listUtilities:listUtilities];
+    } else if (sliding == NO) {
+        [self FEMMeshUtils_overlayInterfaceMesh1:bMesh1 mesh2:bMesh2 bcParams:boundaryConditionAtId model:model listUtilities:listUtilities];
     }
     
-    // Create the master and target meshes that only include the active elements
-    k1 = 0; k2 = 0;
-    for (i=0; i<mesh.numberOfNodes; i++) {
-        if (perm1[i] > 0) {
-            perm1[i] = k1;
-            invPerm1[k1] = i;
-            
-            mesh1nodes->x[k1] = nodes->x[i];
-            mesh1nodes->y[k1] = nodes->y[i];
-            mesh1nodes->z[k1] = nodes->z[i];
-            
-            x[0] = nodes->x[i];
-            x[1] = nodes->y[i];
-            x[2] = nodes->z[i];
-            
-            for (j=0; j<3; j++) {
-                x1Min[j] = min(x1Min[j], x[j]);
-                x1Max[j] = max(x1Max[j], x[j]);
-            }
-            k1++;
-        }
-        
-        if (perm2[i] > 0) {
-            perm2[i] = k2;
-            invPerm1[k2] = i;
-            
-            x[0] = nodes->x[i];
-            x[1] = nodes->y[i];
-            x[2] = nodes->z[i];
-            
-            for (j=0; j<3; j++) {
-                x2Min[j] = min(x2Min[j], x[j]);
-                x2Max[j] = max(x2Max[j], x[j]);
-            }
-            
-            if (gotRotate == YES) {
-                x[3] = 1.0;
-                cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, (double *)rotMatrix, 4, x, 1, 0.0, x, 1);
-                for (j=0; j<3; j++) {
-                    x2rMin[j] = min(x2rMin[j], x[j]);
-                    x2rMax[j] = max(x2rMax[j], x[j]);
-                }
-            }
-            
-            mesh2nodes->x[k2] = x[0];
-            mesh2nodes->y[k2] = x[1];
-            mesh2nodes->z[k2] = x[2];
-            k2++;
-        }
-    }
+    BOOL repeating = ((rotational == YES  && fullCircle == NO) || sliding == YES) ? YES : NO;
+    BOOL antiRepeating = ((antirotational == YES && fullCircle == NO) || antisliding == YES) ? YES : NO;
     
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for this periodic BC: %f %f %f\n", x1Min[0], x1Min[1], x1Min[2]);
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for target periodic BC: %f %f %f\n", x2Min[0], x2Min[1], x2Min[2]);
-    if (gotRotate == YES) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: minimum values for rotated target: %f %f %f\n", x2rMin[0], x2rMin[1], x2rMin[2]);
-    }
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for this periodic BC: %f %f %f\n", x1Max[0], x1Max[1], x1Max[2]);
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for target periodic BC: %f %f %f\n", x2Max[0], x2Max[1], x2Max[2]);
-    if (gotRotate == YES) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: maximum values for rotated target: %f %f %f\n", x2rMax[0], x2rMax[1], x2rMax[2]);
-    }
-    
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for this periodic BC: %f %f %f\n", x1Max[0]-x1Min[0], x1Max[1]-x1Min[1], x1Max[2]-x1Min[2]);
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for target periodic BC: %f %f %f\n", x2Max[0]-x2Min[0], x2Max[1]-x2Min[1], x2Max[2]-x2Min[2]);
-    if (gotRotate == YES) {
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: bounding box for rotated target: %f %f %f\n", x2rMax[0]-x2rMin[0], x2rMax[1]-x2rMin[1], x2rMax[2]-x2rMin[2]);
-    }
-    
-    if (gotRotate == NO) {
-        memcpy(x2rMin, x2Min, sizeof(x2Min));
-        memcpy(x2rMax, x2Max, sizeof(x2Max));
-    }
-    
-    // Scales
-    if (pArray.matrix != NULL) {
-        free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
-        pArray.matrix = NULL;
-    }
-    boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc scale" buffer:&pArray];
-
-    if (found == YES) {
-        for (i=0; i<pArray.m; i++) {
-            sclMatrix[i][i] = pArray.matrix[i][0];
-        }
+    if (useExtProjector == YES) {
+        // TODO: Implement this case
+    } else if (levelProj == YES) {
+        // TODO: Implement this case
     } else {
-        // Define scaling from the bounding boxes
-        if (/* DISABLES CODE */ (NO)) {
-            // This makes scaling component wise, currently disabled
-            for (i=0; i<3; i++) {
-                scl[i] = x2rMax[i] -  x2rMin[i];
-                
-                if (fabs(scl[i]) > AEPS) {
-                    scl[i] = ( x1Max[i] - x1Min[i] ) / scl[i];
-                } else {
-                    scl[i] = 1.0;
-                }
-            }
+        if (fullCircle == YES) {
+            errorfunct("FEMMeshUtils:periodicProjectorInModel", "A full circle can not be dealt with the generic projector");
+        }
+        BOOL useQuandrantTree = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"use quadrant tree" info:&found];
+        if (found == NO) useQuandrantTree = YES;
+        if (intGalerkin == YES) {
+            int *invPerm1 = bMesh1.getInvPerm;
+            int *invPerm2 = bMesh2.getInvPerm;
+            FEMInterpolateMeshToMesh *interpolationMeshToMesh = [[FEMInterpolateMeshToMesh alloc] init];
+            projector = [interpolationMeshToMesh weightedProjectorMesh2:bMesh2 mesh1:bMesh1 inversePermutation2:invPerm2 sizeInversePermutation2:bMesh2.numberOfNodes inversePermutation1:invPerm1 sizeInversePermutation1:bMesh1.numberOfNodes useQuadrantTree:useQuandrantTree repeating:repeating antiRepeating:antiRepeating periodicScale:nodeScale nodalJump:nodalJump model:model];
         } else {
-            // This assumes isotropic scaling since the previous was prone
-            // to errors when the surfaces were almost but not quite aligned
-            // with some coordinate direction.
-            double buffer[3];
-            memset(buffer, 0.0, sizeof(buffer));
-            vDSP_vsubD(x1Min, 1, x1Max, 1, buffer, 1, 3);
-            vDSP_svesqD(buffer, 1, &s1, 3);
-            
-            memset(buffer, 0.0, sizeof(buffer));
-            vDSP_vsubD(x2rMin, 1, x2rMax, 1, buffer, 1, 3);
-            vDSP_svesqD(buffer, 1, &s2, 3);
-            
-            if (s2 > DBL_EPSILON) {
-                for (i=0; i<3; i++) {
-                    scl[i] = sqrt(s1/s2);
-                }
-            } else {
-                for (i=0; i<3; i++) {
-                    scl[i] = 1.0;
-                }
-            }
-        }
-        
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: scaling with: %f %f %f\n", scl[0], scl[1], scl[2]);
-        for (i=0; i<3; i++) {
-            sclMatrix[i][i] = scl[i];
+            projector = [self FEMMeshUtils_nodalProjectorMesh2:bMesh2 mesh1:bMesh1 useQuadrantTree:useQuandrantTree repeating:repeating antiRepeating:antiRepeating model:model];
         }
     }
     
-    // Transform the target boundary on top of this boundary
-    // Translations:
-    if (pArray.matrix != NULL) {
-        free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
-        pArray.matrix = NULL;
-    }
-    boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc translate" buffer:&pArray];
-    // Define translations so that the lower left corner is the same
-    if (found == NO) {
-        for (i=0; i<3; i++) {
-            trsMatrix[3][i] = x1Min[i] - sclMatrix[i][i] * x2rMin[i];
-        }
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: translation: %f %f %f\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
-    } else {
-        for (i=0; i<pArray.m; i++) {
-            trsMatrix[3][i] = pArray.matrix[i][0];
-        }
+    // Deallocate meshes
+    [bMesh1 deallocation];
+    [bMesh2 deallocation];
+    
+jump:
+    projector.projectorBC = mbd;
+    matrixArraysContainer *projectorContainers = projector.getContainers;
+    
+    if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector set rowsum" info:&found] == YES) {
+        [self FEMMeshUtils_setProjectorRowSum:projector];
     }
     
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, (double *)sclMatrix, 4, (double *)trsMatrix, 4, 0.0, (double *)trfMatrix, 4);
-    
-    // If whole transf. matrix given, it will override all the other settings
-    if (pArray.matrix != NULL) {
-        free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
-        pArray.matrix = NULL;
-    }
-    boundaryConditionAtId = (model.boundaryConditions)[this];
-    found = [listUtil listGetConstRealArray:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc matrix" buffer:&pArray];
+    double coeff = [listUtilities listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector multiplier" info:&found minValue:NULL maxValue:NULL];
+    if (found == NO) [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"projector multiplier" info:&found minValue:NULL maxValue:NULL];
     if (found == YES) {
-        for (i=0; i<pArray.m; i++) {
-            for (j=0; j<pArray.n; j++) {
-                trfMatrix[i][j] = pArray.matrix[j][i];
-                
-            }
+        for (int i=0; i<projectorContainers->sizeValues; i++) {
+            projectorContainers->Values[i] = coeff * projectorContainers->Values[i];
         }
     }
     
-    if (pArray.matrix != NULL) {
-        free_dmatrix(pArray.matrix, 0, pArray.m-1, 0, pArray.n-1);
-        pArray.matrix = NULL;
-    }
-    
-    // Re-number the element node pointers to use only boundary nodes
-    for (i=0; i<n1; i++) {
-        for (j=0; j<mesh1elements[i].sizeNodeIndexes; j++) {
-            mesh1elements[i].NodeIndexes[j] = perm1[mesh1elements[i].NodeIndexes[j]];
+    if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"save projector" info:&found] == YES) {
+        [self saveProjector:projector saveRowSum:YES prefix:[@"p" stringByAppendingString:[NSString stringWithFormat:@"%d",mbd+1]] invPerm:NULL];
+        // Dual projector if it exists
+        if (projector.ematrix != nil) {
+            [self saveProjector:projector.ematrix saveRowSum:YES prefix:[@"pd" stringByAppendingString:[NSString stringWithFormat:@"%d",mbd+1]] invPerm:projectorContainers->InvPerm];
+        }
+        // Biorthogonal projector if it exists
+        if (projector.child != nil) {
+            [self saveProjector:projector.child saveRowSum:YES prefix:[@"pb" stringByAppendingString:[NSString stringWithFormat:@"%d",mbd+1]] invPerm:projectorContainers->InvPerm];
         }
     }
     
-    for (i=0; i<n2; i++) {
-        for (j=0; j<mesh2elements[i].sizeNodeIndexes; j++) {
-            mesh2elements[i].NodeIndexes[j] = perm2[mesh2elements[i].NodeIndexes[j]];
-        }
-    }
-    
-    // Now transform the coordinates
-    for (i=0; i<bmesh2.numberOfNodes; i++) {
-        x[0] = mesh2nodes->x[i];
-        x[1] = mesh2nodes->y[i];
-        x[2] = mesh2nodes->z[i];
-        x[3] = 1.0;
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, (double *)trfMatrix, 4, x, 1, 0.0, x, 1);
-        mesh2nodes->x[i] = x[0] / x[3];
-        mesh2nodes->y[i] = x[1] / x[3];
-        mesh2nodes->z[i] = x[2] / x[3];
-    }
-    
-    // Get the mesh projector which now contains weights between the boundary nodes
-    useQuadrantTree = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"use quadrant tree" info:&found];
-    if (found == NO) useQuadrantTree = YES;
-    
-    projector = [utilities meshProjector:bmesh2 secondmesh:bmesh1 model:model useQuadrantTree:&useQuadrantTree transpose:NULL];
-    projectorContainers = projector.getContainers;
-    projectorContainers->InvPerm = invPerm1;
-    for (i=0; i<projector.numberOfRows; i++) {
-        for (j=projectorContainers->Rows[i]; j<=projectorContainers->Rows[i+1]-1; j++) {
-            k = projectorContainers->Cols[j];
-            if (k >= 0) projectorContainers->Cols[j] = invPerm2[k];
-        }
-    }
-    
-    // Deallocate mesh structures
-    free_dvector(elementNodes->x, 0, mesh.maxElementNodes-1);
-    free_dvector(elementNodes->y, 0, mesh.maxElementNodes-1);
-    free_dvector(elementNodes->z, 0, mesh.maxElementNodes-1);
-    free(elementNodes);
-    
-    for (i=0; i<bmesh1.numberOfBulkElements; i++) {
-        free_ivector(mesh1elements[i].NodeIndexes, 0, mesh1elements[i].sizeNodeIndexes-1);
-    }
-    [bmesh1 deallocateQuadrantTree];
-    
-    for (i=0; i<bmesh2.numberOfBulkElements; i++) {
-        free_ivector(mesh2elements[i].NodeIndexes, 0, mesh2elements[i].sizeNodeIndexes-1);
-    }
-    [bmesh2 deallocateQuadrantTree];
-    
-    free_dvector(mesh1nodes->x, 0, bmesh1.numberOfNodes-1);
-    free_dvector(mesh1nodes->y, 0, bmesh1.numberOfNodes-1);
-    free_dvector(mesh1nodes->z, 0, bmesh1.numberOfNodes-1);
-    free(mesh1nodes);
-    
-    free_dvector(mesh2nodes->x, 0, bmesh2.numberOfNodes-1);
-    free_dvector(mesh2nodes->y, 0, bmesh2.numberOfNodes-1);
-    free_dvector(mesh2nodes->z, 0, bmesh2.numberOfNodes-1);
-    free(mesh2nodes);
-    
-    if (perm1 != NULL) {
-        free_ivector(perm1, 0, mesh.numberOfNodes-1);
-    }
-    if (perm2 != NULL) {
-        free_ivector(perm2, 0, mesh.numberOfNodes-1);
-    }
-    invPerm1 = NULL;
-    free_ivector(invPerm2, 0, bmesh2.numberOfNodes-1);
-    bmesh1 = nil;
-    bmesh2 = nil;
+    BOOL deleteTimer = YES;
+    [listUtilities checkTimer:@"periodicProjector" deleteTimer:&deleteTimer resetTimer:NULL model:model];
+    NSLog(@"FEMMeshUtils:periodicProjectorInModel: projector created, now exiting...\n");
     
     return projector;
 }
 
 /********************************************************************************************
  
-    Split a mesh equally to smaller pieces by performing a uniform split. Also know as 
-    mesh mulyiplication. A 2D element splits into 4 elemenrs of same form and a #d element 
+    Split a mesh equally to smaller pieces by performing a uniform split. Also known as
+    mesh multiplication. A 2D element splits into 4 elemenrs of same form and a #d element
     into 8 elements.
     Currently works only for linear elements
  
@@ -3205,7 +5407,7 @@
         minVal = 1;
         maxVal = model.numberOfBoundaryConditions;
         k = [listUtil listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"periodic bc" info:&found minValue:&minVal maxValue:&maxVal];
-        boundaryConditionAtId.pMatrix = [self periodicProjectorInModel:model forMesh:mesh boundary:i target:k-1];
+        boundaryConditionAtId.pMatrix = [self periodicProjectorInModel:model forMesh:mesh masterBoundary:i targetBoundary:k-1 galerking:NULL];
     }
     
     free_imatrix(child, 0, mesh.numberOfBulkElements-1, 0, 7);
@@ -3799,6 +6001,7 @@
     
     meshOut.numberOfBoundaryElements = cnt - meshOut.numberOfBulkElements;
     meshOut.name = mesh.name;
+    meshOut.discontinuousMesh = mesh.discontinuousMesh;
     meshOut.maxElementDofs = meshOut.maxElementNodes;
     meshOut.dimension = 3;
     model.dimension = 3;
@@ -4178,6 +6381,166 @@
     if (downActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d\n.", bottomNodes);
         
     return nsize;
+}
+
+/***************************************************************************************
+ 
+    Given two interface meshes for nonconforming rotating boundaries, make
+    a coordinate transformation to each node of the slave boundary (BMesh1) so that
+    they hit the master boundary (BMesh2). In case of anti-periodic projector
+    mark the nodes that need an odd number of periods.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+***************************************************************************************/
+-(void)preRotationalProjectorMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode {
+    
+    int nFii;
+    double fii;
+    
+    BOOL antiPeriodic = (mirrorNode != NULL) ? YES : NO;
+    
+    Nodes_t *bMesh1Nodes = bMesh1.getNodes;
+    Nodes_t *bMesh2Nodes = bMesh2.getNodes;
+    
+    double f2Min, f2Max;
+    vDSP_minvD(bMesh2Nodes->x, 1, &f2Min, bMesh2.numberOfNodes);
+    vDSP_maxvD(bMesh2Nodes->x, 1, &f2Max, bMesh2.numberOfNodes);
+    
+    double dFii2 = f2Max - f2Min;
+    int sectorMax = ceil(360.0 / dFii2);
+    
+    NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: maximum number of sectors: %d.\n", sectorMax);
+    
+    int *sectorCount = intvec(-sectorMax, sectorMax);
+    for (int i=-sectorMax; i<=sectorMax; i++) {
+        sectorCount[i] = 0;
+    }
+    
+    for (int i=0; i<bMesh1.numberOfNodes; i++) {
+        fii = bMesh1Nodes->x[i];
+        nFii = floor((fii - f2Min) / dFii2);
+        bMesh1Nodes->x[i] = bMesh1Nodes->x[i] - nFii * dFii2;
+        sectorCount[nFii] = sectorCount[nFii] + 1;
+        if (antiPeriodic == YES) {
+            if (nFii % 2 != 0) {
+                mirrorNode[i] = YES;
+            }
+        }
+    }
+    
+    if (sectorCount[0] < bMesh1.numberOfNodes) {
+        NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: number of nodes by sectors: \n");
+        for (int i=-sectorMax; i<=sectorMax; i++) {
+            if (sectorCount[i] > 0) {
+                NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: sector: %d, nodes: %d.\n", i, sectorCount[i]);
+            }
+        }
+        if (antiPeriodic == YES) {
+            int count = 0;
+            for (int i=0; i<*sizeMirrorNode; i++) {
+                if (mirrorNode[i] == YES) count++;
+            }
+            NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: number of mirror nodes: %d.\n", count);
+        }
+    } else {
+        NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: no nodes needed mapping.\n");
+    }
+    free_ivector(sectorCount, -sectorMax, sectorMax);
+}
+
+/****************************************************************************
+ 
+    Postprocess projector so that it changes the sign of the anti-periodic
+    entries as assigned by the MirrorNode flag.
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+****************************************************************************/
+-(void)postRotationalProjector:(FEMMatrix *)projector mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode {
+    
+    if (mirrorNode == NULL) return;
+    
+    int count = 0;
+    for (int i=0; i<*sizeMirrorNode; i++) {
+        if (mirrorNode[i] == YES) count++;
+    }
+    if (count == 0) return;
+    
+    int n = projector.numberOfRows;
+    matrixArraysContainer *matrixContainers = projector.getContainers;
+    int *rows = matrixContainers->Rows;
+    double *values = matrixContainers->Values;
+    
+    for (int i=0; i<n; i++) {
+        if (mirrorNode[i] == YES) {
+            for (int j=rows[i]; j<=rows[i+1]-1; j++) {
+                values[j] = -values[j];
+            }
+        }
+    }
+}
+
+/**************************************************************************
+
+    Save projector, mainly a utility for debugging purposes
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+**************************************************************************/
+-(void)saveProjector:(FEMMatrix *)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString *)prefix invPerm:(int *)invPerm {
+    
+    double dia, rowsum;
+    
+    if (projector == nil) return;
+    
+    matrixArraysContainer *projectorContainers = projector.getContainers;
+    
+    int *intInvPerm = NULL;
+    if (invPerm != NULL) {
+        intInvPerm = invPerm;
+    } else {
+        intInvPerm = projectorContainers->InvPerm;
+    }
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *fileName = [[fileManager currentDirectoryPath] stringByAppendingPathComponent:[prefix stringByAppendingPathExtension:@"dat"]];
+    // TODO: Add support for parallel run
+    
+    FILE *f1 = fopen([fileName UTF8String], "w");
+    for (int i=0; i<projector.numberOfRows; i++) {
+        if (intInvPerm[i] < 0) continue;
+        rowsum = 0.0;
+        for (int j=projectorContainers->Rows[i]; j<=projectorContainers->Rows[i+1]-1; j++) {
+            fprintf(f1, "%d %d %lf\n", intInvPerm[i], projectorContainers->Cols[j], projectorContainers->Values[j]);
+            if (intInvPerm[i] == projectorContainers->Cols[j]) {
+                dia = projectorContainers->Values[j];
+            } else {
+                rowsum = rowsum + projectorContainers->Values[j];
+            }
+        }
+    }
+    fclose(f1);
+    
+    if (saveRowSum == YES) {
+        NSString *fileName = [[fileManager currentDirectoryPath] stringByAppendingPathComponent:[prefix stringByAppendingString:@"_rsum.dat"]];
+        // TODO: Add support for parallel run
+        f1 = fopen([fileName UTF8String], "w");
+        for (int i=0; i<projector.numberOfRows; i++) {
+            if (intInvPerm[i] < 0) continue;
+            rowsum = 0.0;
+            dia = 0.0;
+            for (int j=projectorContainers->Rows[i]; j<=projectorContainers->Rows[i+1]-1; j++) {
+                if (intInvPerm[i] == projectorContainers->Cols[j]) {
+                    dia = projectorContainers->Values[j];
+                }
+                rowsum = rowsum + projectorContainers->Values[j];
+            }
+            
+            fprintf(f1, "%d %d %lf %lf\n", intInvPerm[i], projectorContainers->Rows[i+1]-projectorContainers->Rows[i], dia, rowsum);
+        }
+        fclose(f1);
+    }
 }
 
 @end

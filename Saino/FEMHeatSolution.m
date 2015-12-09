@@ -504,7 +504,7 @@ enum {
     FEMMaterial *materialAtID = nil;
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    [core getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL];
+    [core getNodes:solution model:model inElement:element resultNodes:_elementNodes numberOfNodes:NULL mesh:nil];
     
     memset( _heatTransferCoeff, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
     memset( _load, 0.0, solution.mesh.maxElementDofs*sizeof(double) );
@@ -938,7 +938,7 @@ enum {
     static NSString* (*listGetStringIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
     static int (*getMaterialIDForElementIMP)(id, SEL, Element_t*, FEMModel*) = nil;
     static BOOL (*listGetLogicalIMP)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*) = nil;
-    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*) = nil;
+    static void (*getNodesIMP)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*) = nil;
     static void (*getScalarLocalFieldIMP)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*) = nil;
     static BOOL (*getRealIMP)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*) = nil;
     static BOOL (*listGetRealArrayIMP)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*) = nil;
@@ -978,8 +978,8 @@ enum {
             [listUtilities methodForSelector: @selector(listGetLogical:inArray:forVariable:info:)];
         }
         if (!getNodesIMP) {
-            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*))
-            [core methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:)];
+            getNodesIMP = (void (*)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))
+            [core methodForSelector: @selector(getNodes:model:inElement:resultNodes:numberOfNodes:mesh:)];
         }
         if (!getScalarLocalFieldIMP) {
             getScalarLocalFieldIMP = (void (*)(id, SEL, double*, int, NSString*, Element_t*, FEMSolution*, FEMModel*, int*))
@@ -1633,7 +1633,7 @@ enum {
                 }
                 
                 n = element->Type.NumberOfNodes;
-                getNodesIMP(core, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:), solution, model, element, _elementNodes, NULL);
+                getNodesIMP(core, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:mesh:), solution, model, element, _elementNodes, NULL, nil);
                 getScalarLocalFieldIMP(core, @selector(getScalarLocalField:sizeField:name:element:solution:model:timeStep:), _localTemperature, solution.mesh.maxElementDofs, nil, element, solution, model, NULL);
                 
                 // Get element material parameters
@@ -1995,7 +1995,7 @@ enum {
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
                     if ([listUtilities listCheckPresentVariable:solution.variable.name inArray:bc] == YES) {
                         memset( core.indexStore, -1, core.sizeIndexStore*sizeof(int) );
-                        nd = [core getElementDofsSolution:solution model:model forElement:element atIndexes:core.indexStore];
+                        nd = [core getElementDofsSolution:solution model:model forElement:element atIndexes:core.indexStore disableDiscontinuousGalerkin:NULL];
                         for (i=0; i<nd; i++) {
                             _forceHeater[_tempPerm[core.indexStore[i]]] = 0.0;
                         }

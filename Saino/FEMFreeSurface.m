@@ -214,7 +214,7 @@
         if ([listUtilities listGetLogical:model inArray:bc forVariable:@"free surface" info:&found] == NO) continue;
         
         n = boundary->Type.NumberOfNodes;
-        [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL];
+        [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL mesh:nil];
         
         // Go through boundary element nodes
         for (i=0; i<n; i++) {
@@ -332,7 +332,7 @@
             }
             
             n = boundary->Type.NumberOfNodes;
-            [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL];
+            [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL mesh:nil];
             
             for (i=0; i<n; i++) {
                 k = boundary->NodeIndexes[i];

@@ -14,9 +14,9 @@
 #include <float.h>
 #include <math.h>
 
+#include "memory.h"
 #include "Numerics.h"
 #include "Constructors.h"
-#include "memory.h"
 
 #define MAXN 13
 #define MAX_INTEGRATION_POINTS MAXN*MAXN*MAXN

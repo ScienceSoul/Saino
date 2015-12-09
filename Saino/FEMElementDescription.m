@@ -2488,4 +2488,464 @@ static dispatch_once_t onceToken;
     return y;
 }
 
+/************************************************************
+ 
+    Method corresponds to Elmer from git on October 27 2015
+
+************************************************************/
+-(void)invertMatrix3x3:(double[][3])G inverted:(double[][3])GI detG:(double)detG {
+    
+    double s = 1.0 / detG;
+    
+    GI[0][0] = s * ( G[1][1]*G[2][2] - G[2][1]*G[1][2] );
+    GI[1][0] = -s * ( G[1][0]*G[2][2] - G[2][0]*G[1][2] );
+    GI[2][0] = s * ( G[1][0]*G[2][1] - G[2][0]*G[1][1] );
+    
+    GI[0][1] = -s * ( G[0][1]*G[2][2] - G[2][1]*G[0][2] );
+    GI[1][1] = s * ( G[0][0]*G[2][2] - G[2][0]*G[0][2] );
+    GI[2][1] = -s * ( G[0][0]*G[2][1] - G[2][0]*G[0][1] );
+    
+    GI[0][2] = s * ( G[0][1]*G[1][2] - G[1][1]*G[0][2] );
+    GI[1][2] = -s * ( G[0][0]*G[1][2] - G[1][0]*G[0][2] );
+    GI[2][2] = s * ( G[0][0]*G[1][1] - G[1][0]*G[0][1] );
+}
+
+/****************************************************************************************************************
+ 
+    This subroutine contains an older design for providing edge element basis functions of the lowest-degree. 
+    Obtaining optimal accuracy with these elements may require that the element map is affine, while the edge 
+    basis functions given by the newer design (the function EdgeElementInfo) should also work on general meshes.
+ 
+     Method corresponds to Elmer from git on October 27 2015
+ 
+****************************************************************************************************************/
+-(void)getEdgeBasisElement:(Element_t *)element wBasis:(double **)wBasis rotWBasis:(double **)rotWBasis basis:(double *)basis dBasisdx:(double **)dBasisdx model:(FEMModel *)model {
+ 
+    int j, k, n=0, nk, nj, **edgeMap, size=0;
+    double base=0, curlBasis[8][3], dBase[3], dTriBase[3][3], detF=0, detG, du[3], dudx[3][3], dudx1[3], dudx2[3], dudx3[3], edgeBasis[8][3], f[3][3], g[3][3], g1[3], g2[3], g3[3], rBase[3], sum, tbase[3], triBase[3], u=0, v=0, w=0;
+    
+    //TODO: add support for parallel run
+    
+    if (element->Type.BasisFunctionDegree > 1) {
+        NSLog(@"FEMElementDescription:getEdgeBasisElement: can only handle linear elements, sorry.\n");
+        errorfunct("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+    }
+    
+    switch (element->Type.ElementCode/100) {
+        case 4:
+        case 7:
+        case 8:
+            n = element->Type.NumberOfNodes;
+            u = cblas_ddot(n, basis, 1, element->Type.NodeU, 1);
+            v = cblas_ddot(n, basis, 1, element->Type.NodeV, 1);
+            w = cblas_ddot(n, basis, 1, element->Type.NodeW, 1);
+            
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeU, 1, 0.0, dudx1, 1);
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeV, 1, 0.0, dudx2, 1);
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeW, 1, 0.0, dudx3, 1);
+            
+            triBase[0] = 1.0 - u - v;
+            triBase[1] = u;
+            triBase[2] = v;
+            
+            for (int i=0; i<3; i++) {
+                dudx[0][i] = dudx1[i];
+                dudx[1][i] = dudx2[i];
+                dudx[2][i] = dudx3[i];
+            }
+
+            for (int i=0; i<3; i++) {
+                dTriBase[0][i] = -dudx[0][i] - dudx[1][i];
+                dTriBase[1][i] = dudx[0][i];
+                dTriBase[2][i] = dudx[1][i];
+            }
+            break;
+            
+        case 6:
+            n = element->Type.NumberOfNodes;
+            u = cblas_ddot(n, basis, 1, element->Type.NodeU, 1);
+            v = cblas_ddot(n, basis, 1, element->Type.NodeV, 1);
+            w = cblas_ddot(n, basis, 1, element->Type.NodeW, 1);
+            
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeU, 1, 0.0, g1, 1);
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeV, 1, 0.0, g2, 1);
+            cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, *dBasisdx, 3, element->Type.NodeW, 1, 0.0, g3, 1);
+            
+            for (int i=0; i<3; i++) {
+                g[0][i] = g1[i];
+                g[1][i] = g2[i];
+                g[2][i] = g3[i];
+            }
+            detG = g[0][0] * ( g[1][1]*g[2][2] - g[1][2]*g[2][1]) + g[0][1] * ( g[1][2]*g[2][0] - g[1][0]*g[2][2] ) +
+                   g[0][2] * ( g[1][0]*g[2][1] - g[1][1]*g[2][0]);
+            detF = 1.0 / detG;
+            [self invertMatrix3x3:g inverted:f detG:detG];
+            
+            // The basis functions spanning the reference element space
+            // and their curl with respect to the local coordinates
+            edgeBasis[0][0] = (1.0 - v - w) / 4.0;
+            edgeBasis[0][1] = 0.0;
+            edgeBasis[0][2] = (u * (-1.0 + v + w)) / (4.0 * (-1.0 + w));
+            curlBasis[0][0] = u / (4.0 * (-1.0 + w));
+            curlBasis[0][1] = -(-2.0 + v + 2.0 * w) / (4.0 * (-1.0 + w));
+            curlBasis[0][2] = 0.25;
+            
+            edgeBasis[1][0] = 0.0;
+            edgeBasis[1][1] = (1.0 + u - w) /4.0;
+            edgeBasis[1][2] = (v * (1.0 + u - w)) / (4.0 - 4.0 * w);
+            curlBasis[1][0] = (2.0 + u - 2.0 * w) / (4.0 - 4.0 * w);
+            curlBasis[1][1] = v / (4.0 * (-1.0 + w));
+            curlBasis[1][2] = 0.25;
+            
+            edgeBasis[2][0] = (1.0 + v - w) / 4.0;
+            edgeBasis[2][1] = 0.0;
+            edgeBasis[2][2] = (u * (1.0 + v - w)) / (4.0 - 4.0 * w);
+            curlBasis[2][0] = u / (4.0 - 4.0 * w);
+            curlBasis[2][1] = (2.0 + v - 2.0 * w) / (4.0 * (-1.0 + w));
+            curlBasis[2][2] = -0.25;
+            
+            edgeBasis[3][0] = 0.0;
+            edgeBasis[3][1] = (1.0 - u - w) / 4.0;
+            edgeBasis[3][2] = (v * (-1.0 + u + w)) / (4.0 * (-1.0 + w));
+            curlBasis[3][0] = (-2.0 + u + 2.0 * w) / (4.0 * (-1.0 + w));
+            curlBasis[3][1] = v / (4.0 - 4.0 * w);
+            curlBasis[3][2] = -0.25;
+            
+            edgeBasis[4][0] = (w * (-1.0 + v + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[4][1] = (w * (-1.0 + u + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[4][2] = ( -((1.0 + v)*pow((-1.0 + w), 2.0)) + u * (v - pow((-1.0 + w), 2.0) - 2.0 * v * w) ) /
+                              (4.0 * pow((-1.0 + w), 2.0));
+            curlBasis[4][0] = -(-1.0 + u + w) / (2.0 * (-1.0 + w));
+            curlBasis[4][1] = (-1.0 + v + w) / (2.0 * (-1.0 + w));
+            curlBasis[4][2] = 0.0;
+            
+            edgeBasis[5][0] = -(w * (-1.0 + v + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[5][1] = (w * (-1.0 - u + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[5][2] = ( -((-1.0 + v)*pow((-1.0 + w), 2.0)) + u * (pow((-1.0 + w), 2.0) + v * (-1.0 + 2.0 * w)) ) /
+                              (4.0 * pow((-1.0 + w), 2.0));
+            curlBasis[5][0] = (1.0 + u - w) / (2.0 * (-1.0 + w));
+            curlBasis[5][1] = -(-1.0 + v + w) / (2.0 * (-1.0 + w));
+            curlBasis[5][2] = 0.0;
+            
+            edgeBasis[6][0] = ((1.0 + v - w) * w) / (4.0 * (-1.0 + w));
+            edgeBasis[6][1] = ((1.0 + u - w) * w) / (4.0 * (-1.0 + w));
+            edgeBasis[6][2] = ( (1.0 + v)*pow((-1.0 + w), 2.0) + u * (v + pow((-1.0 + w), 2.0) - 2.0 * v * w) ) /
+                              (4.0 * pow((-1.0 + w), 2.0));
+            curlBasis[6][0] = (1.0 + u - w) / (2.0 - 2.0 * w);
+            curlBasis[6][1] = (1.0 + v - w) / (2.0 * (-1.0 + w));
+            curlBasis[6][2] = 0.0;
+            
+            edgeBasis[7][0] = (w * (-1.0 - v + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[7][1] = -(w * (-1.0 + u + w)) / (4.0 * (-1.0 + w));
+            edgeBasis[7][2] = ( (1.0 + v)*pow((-1.0 + w), 2.0) - u * (v + pow((-1.0 + w), 2.0) -2.0 * v * w) ) /
+                              (4.0 * pow((-1.0 + w), 2.0));
+            curlBasis[7][0] = (-1.0 + u + w) / (2.0 * (-1.0 + w));
+            curlBasis[7][1] = (1.0 + v - w) / (2.0 - 2.0 * w);
+            curlBasis[7][2] = 0.0;
+            break;
+    }
+    
+    edgeMap = [self getEdgeMap:element->Type.ElementCode/100];
+    switch (element->Type.ElementCode/100) {
+        case 2:
+            size = 1;
+            break;
+        case 3:
+            size = 3;
+            break;
+        case 4:
+            size = 4;
+            break;
+        case 5:
+            size = 6;
+            break;
+        case 6:
+            size = 8;
+            break;
+        case 7:
+            size = 9;
+            break;
+        case 8:
+            size = 12;
+            break;
+    }
+    for (int i=0; i<size; i++) {
+        j = edgeMap[i][0]; k = edgeMap[i][1];
+        
+        nj = element->NodeIndexes[j];
+        //TODO: add support for parallel run
+        nk = element->NodeIndexes[k];
+        //TODO: add support for parallel run
+        
+        switch (element->Type.ElementCode/100) {
+            case 3:
+            case 5:
+                for (int l=0; l<3; l++) {
+                    wBasis[i][l] = basis[j]*dBasisdx[k][l] - basis[k]*dBasisdx[j][l];
+                }
+                rotWBasis[i][0] = 2.0 * ( dBasisdx[j][1] * dBasisdx[k][2] - dBasisdx[j][2] * dBasisdx[k][1] );
+                rotWBasis[i][1] = 2.0 * ( dBasisdx[j][2] * dBasisdx[k][0] - dBasisdx[j][0] * dBasisdx[k][2] );
+                rotWBasis[i][2] = 2.0 * ( dBasisdx[j][0] * dBasisdx[k][1] - dBasisdx[j][1] * dBasisdx[k][0] );
+                break;
+                
+            case 6:
+                // Create the referential description of basis functions and their
+                // spatial curl on the physical element via applying the Piola transform
+                for (k=0; k<3; k++) {
+                    sum = 0.0;
+                    for (int l=0; l<3; l++) {
+                        sum = sum + g[l][k] * edgeBasis[i][l];
+                    }
+                    wBasis[i][k] = sum;
+                }
+                for (k=0; k<3; k++) {
+                    sum = 0.0;
+                    for (int l=0; l<3; l++) {
+                        sum = sum + f[k][l] * curlBasis[i][l];
+                    }
+                    rotWBasis[i][k] = 1.0 / detF * sum;
+                }
+                break;
+                
+            case 7:
+                switch (i) {
+                    case 0:
+                        j = 0; k = 1;
+                        base = (1.0 - w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = -dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 1:
+                        j = 1; k = 2;
+                        base = (1.0 - w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = -dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 2:
+                        j = 2; k = 0;
+                        base = (1.0 - w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = -dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 3:
+                        j = 0; k = 1;
+                        base = (1.0 + w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 4:
+                        j = 1; k = 2;
+                        base = (1.0 + w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 5:
+                        j = 2; k = 0;
+                        base = (1.0 + w) / 2.0;
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 6:
+                        base = triBase[0];
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dTriBase[0][l];
+                            du[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 7:
+                        base = triBase[1];
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dTriBase[1][l];
+                            du[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                    case 8:
+                        base = triBase[2];
+                        for (int l=0; l<3; l++) {
+                            dBase[l] = dTriBase[2][l];
+                            du[l] = dudx[2][l] / 2.0;
+                        }
+                        break;
+                }
+                
+                if (i<=5) {
+                    for (int l=0; l<3; l++) {
+                        tbase[l] = triBase[j]*dTriBase[k][l] - triBase[k]*dTriBase[j][l];
+                    }
+                    rBase[0] = 2.0 * base * (dTriBase[j][1]*dTriBase[k][2] - dTriBase[k][1]*dTriBase[j][2]) +
+                               dBase[1]*tbase[2] - dBase[2]*tbase[1];
+                    rBase[1] = 2.0 * base * (dTriBase[j][2]*dTriBase[k][0] - dTriBase[k][2]*dTriBase[j][0]) +
+                               dBase[2]*tbase[0] - dBase[0]*tbase[2];
+                    rBase[2] = 2.0 * base * (dTriBase[j][0]*dTriBase[k][1] - dTriBase[k][0]*dTriBase[j][1]) +
+                               dBase[0]*tbase[1] - dBase[1]*tbase[0];
+                    
+                    for (int l=0; l<3; l++) {
+                        rotWBasis[i][l] = rBase[l];
+                        wBasis[i][l] = tbase[l] * base;
+                    }
+                } else {
+                    for (int l=0; l<3; l++) {
+                        wBasis[i][l] = base * du[l];
+                    }
+                    rotWBasis[i][0] = (dBase[1]*du[2] - dBase[2]*du[1]);
+                    rotWBasis[i][1] = (dBase[2]*du[0] - dBase[0]*du[2]);
+                    rotWBasis[i][2] = (dBase[0]*du[1] - dBase[1]*du[0]);
+                }
+                break;
+                
+            case 4:
+                switch (i) {
+                    case 0:
+                         for (int l=0; l<3; l++) {
+                             du[l] = dudx[0][l];
+                             dBase[l] = -dudx[1][l]*(1.0 - w) - (1.0 - v)*dudx[2][l];
+                         }
+                        base = (1.0 - v) * (1.0 - w);
+                        break;
+                    case 1:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[1][l];
+                            dBase[l] = dudx[0][l]*(1.0 - w) - (1.0 + u)*dudx[2][l];
+                        }
+                        base = (1.0 + u) * (1.0 - w);
+                        break;
+                    case 2:
+                        for (int l=0; l<3; l++) {
+                            du[l] = -dudx[0][l];
+                            dBase[l] = dudx[1][l]*(1.0 - w) - (1.0 + v)*dudx[2][l];
+                        }
+                        base = (1.0 + v) * (1.0 - w);
+                        break;
+                    case 3:
+                        for (int l=0; l<3; l++) {
+                            du[l] = -dudx[1][l];
+                            dBase[l] = -dudx[0][l]*(1.0 - w) - (1.0 - u)*dudx[2][l];
+                        }
+                        base = (1.0 - u) * (1.0 - w);
+                        break;
+                }
+                for (int l=0; l<3; l++) {
+                    wBasis[i][l] = base * du[l] / n;
+                }
+                rotWBasis[i][0] = (dBase[1]*du[2] - dBase[2]*du[1]) / n;
+                rotWBasis[i][1] = (dBase[2]*du[0] - dBase[0]*du[2]) / n;
+                rotWBasis[i][2] = (dBase[0]*du[1] - dBase[1]*du[0]) / n;
+                break;
+                
+            case 8:
+                switch (i) {
+                    case 0:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[0][l];
+                            dBase[l] = -dudx[1][l]*(1.0 - w) - (1.0 - v)*dudx[2][l];
+                        }
+                        base = (1.0 - v) * (1.0 - w);
+                        break;
+                    case 1:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[1][l];
+                            dBase[l] = dudx[0][l]*(1.0 - w) - (1.0 + u)*dudx[2][l];
+                        }
+                        base = (1.0 + u) * (1.0 - w);
+                        break;
+                    case 2:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[0][l];
+                            dBase[l] = dudx[1][l]*(1.0 - w) - (1.0 + v)*dudx[2][l];
+                        }
+                        base = (1.0 + v) * (1.0 - w);
+                        break;
+                    case 3:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[1][l];
+                            dBase[l] = -dudx[0][l]*(1.0 - w) - (1.0 - u)*dudx[2][l];
+                        }
+                        base = (1.0 - u) * (1.0 - w);
+                        break;
+                    case 4:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[0][l];
+                            dBase[l] = -dudx[1][l]*(1.0 + w) + (1.0 - v)*dudx[2][l];
+                        }
+                        base = (1.0 - v) * (1.0 + w);
+                        break;
+                    case 5:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[1][l];
+                            dBase[l] = dudx[0][l]*(1.0 + w) + (1.0 + u)*dudx[2][l];
+                        }
+                        base = (1.0 + u) * (1.0 + w);
+                        break;
+                    case 6:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[0][l];
+                            dBase[l] = dudx[1][l]*(1.0 + w) + (1.0 + v)*dudx[2][l];
+                        }
+                        base = (1.0 + v) * (1.0 + w);
+                        break;
+                    case 7:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[1][l];
+                            dBase[l] = -dudx[0][l]*(1.0 + w) + (1.0 - u)*dudx[2][l];
+                        }
+                        base = (1.0 - u) * (1.0 + w);
+                        break;
+                    case 8:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[2][l];
+                            dBase[l] = -dudx[0][l]*(1.0 - v) - (1.0 - u)*dudx[1][l];
+                        }
+                        base = (1.0 - u) * (1.0 - v);
+                        break;
+                    case 9:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[2][l];
+                            dBase[l] = dudx[0][l]*(1.0 - v) - (1.0 + u)*dudx[1][l];
+                        }
+                        base = (1.0 + u) * (1.0 - v);
+                        break;
+                    case 10:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[2][l];
+                            dBase[l] = dudx[0][l]*(1.0 + v) + (1.0 + u)*dudx[1][l];
+                        }
+                        base = (1.0 + u) * (1.0 + v);
+                        break;
+                    case 11:
+                        for (int l=0; l<3; l++) {
+                            du[l] = dudx[2][l];
+                            dBase[l] = -dudx[0][l]*(1.0 + v) + (1.0 - u)*dudx[1][l];
+                        }
+                        base = (1.0 - u) * (1.0 + v);
+                        break;
+                }
+                
+                for (int l=0; l<3; l++) {
+                    wBasis[i][l] = base * du[l] / n;
+                }
+                rotWBasis[i][0] = (dBase[1]*du[2] - dBase[2]*du[1]) / n;
+                rotWBasis[i][1] = (dBase[2]*du[0] - dBase[0]*du[2]) / n;
+                rotWBasis[i][2] = (dBase[0]*du[1] - dBase[1]*du[0]) / n;
+                break;
+                
+            default:
+                NSLog(@"FEMElementDescription:getEdgeBasisElement: not implemented for this element type: %d.\n", element->Type.ElementCode/100);
+                errorfunct("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+                break;
+        }
+        if (nk < nj) {
+            for (int l=0; l<3; l++) {
+                wBasis[i][l] = -wBasis[i][l];
+                rotWBasis[i][l] = -rotWBasis[i][l];
+            }
+        }
+    }
+}
+
 @end

@@ -11,7 +11,11 @@
 #import "FEMModel.h"
 #import "FEMValueList.h"
 
-@interface FEMListUtilities : NSObject
+@interface FEMListUtilities : NSObject {
+    NSMutableDictionary *_timers;
+}
+
+@property(nonatomic, strong) NSMutableDictionary *timers;
 
 -(void)listParseDependencies:(NSArray *)dependencies index:(int)ind name:(NSString *)name toValues:(double *)t count:(int *)count model:(FEMModel *)model allGlobal:(BOOL *)allGlobal;
 
@@ -33,6 +37,8 @@
 
 -(FEMValueList *)listFindVariable:(NSString *)varName inArray:(NSArray *)array;
 -(BOOL)listCheckPresentVariable:(NSString *)varName inArray:(NSArray *)array;
+-(FEMValueList *)listFindPrefix:(NSString *)prefix inArray:(NSArray *)array info:(BOOL *)found;
+-(BOOL)listCheckPrefix:(NSString *)prefix inArray:(NSArray *)array;
 
 -(void)addStringInClassList:(id)className theVariable:(NSString *)varName withValue:(NSString *)value;
 -(void)addLogicalInClassList:(id)className theVariable:(NSString *)varName withValue:(BOOL)value;
@@ -46,5 +52,9 @@
 
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel *)model name:(NSString *)name;
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel *)model name:(NSString *)name;
+
+-(void)checkTimer:(NSString *)timerName deleteTimer:(BOOL *)deleteTimer resetTimer:(BOOL *)resetTimer model:(FEMModel *)model;
+-(void)resetTimer:(NSString *)timerName model:(FEMModel *)model;
+-(void)deletTimer:(NSString *)timerName;
 
 @end

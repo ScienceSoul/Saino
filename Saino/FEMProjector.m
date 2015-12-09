@@ -13,6 +13,7 @@
 @synthesize mesh = _mesh;
 @synthesize matrix = _matrix;
 @synthesize tMatrix = _tMatrix;
+@synthesize next = _next;
 
 - (id)init
 {
@@ -22,6 +23,7 @@
         _mesh = [[FEMMesh alloc] init];
         _matrix = [[FEMMatrix alloc] init];
         _tMatrix = [[FEMMatrix alloc] init];
+        _next = nil;
     }
     
     return self;

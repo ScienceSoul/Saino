@@ -37,5 +37,7 @@
 -(void)globalToLocalFromElement:(Element_t *)element elementNodes:(Nodes_t *)nodes localU:(double *)u localV:(double *)v localW:(double *)w x:(double)x y:(double)y z:(double)z model:(FEMModel *)aModel;
 -(double)interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v;
 -(double)interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
+-(void)invertMatrix3x3:(double[][3])G inverted:(double[][3])GI detG:(double)detG;
+-(void)getEdgeBasisElement:(Element_t *)element wBasis:(double **)wBasis rotWBasis:(double **)rotWBasis basis:(double *)basis dBasisdx:(double **)dBasisdx model:(FEMModel *)model;
 
 @end

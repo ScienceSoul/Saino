@@ -22,6 +22,8 @@
     int _solveCount;
     int _comm;
     int _umfPackNumeric;
+    int _projectorBC;
+    int _projectorType;
     double _rhsScaling;
     BOOL _cholesky;
     BOOL _ordered;
@@ -43,6 +45,8 @@
 @property(nonatomic, assign) int solveCount;
 @property(nonatomic, assign) int comm;
 @property(nonatomic, assign) int umfPackNumeric;
+@property(nonatomic, assign) int projectorBC;
+@property(nonatomic, assign) int projectorType;
 @property(nonatomic, assign) double rhsScaling;
 @property(nonatomic, assign, getter = isCholesky) BOOL cholesky;
 @property(nonatomic, assign, getter = isOrdered) BOOL ordered;

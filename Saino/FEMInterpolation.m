@@ -19,17 +19,18 @@
 
 #pragma mark Private methods
 
+/********************************************************
+Method corresponds to Elmer from git on October 27 2015
+********************************************************/
 -(void)FEMInterpolation_findPointsQuadrantForPoint:(double *)point dimension:(int)dim motherQuadrant:(Quadrant_t *)mother {
     
     int i, k;
     double bbox[6], eps3, *valuesPtr, maxVal;
     double const eps2 = 0.0;
     Quadrant_t *childQuadrant = NULL;
-    BOOL found;
     
     // Loop over child quadrants
-    found = NO;
-    for (i=0; i<(int)pow(2, dim); i++) {
+    for (i=0; i<(int)pow(2.0, dim); i++) {
         childQuadrant = mother->childQuadrants[i].quadrant;
         memcpy(bbox, childQuadrant->boundingBox, sizeof(childQuadrant->boundingBox));
         
@@ -54,13 +55,11 @@
         
         // Is the point in childQuadrant[i]
         if ( (point[0] >= bbox[0]) && (point[0] <= bbox[3]) && (point[1] >= bbox[1]) && (point[1] <= bbox[4]) &&
-            (point[2] >= bbox[2]) && (point[2] <= bbox[5]) ) {
-            found = YES;
-            break;
-        }
+            (point[2] >= bbox[2]) && (point[2] <= bbox[5]) ) break;
     }
     
-    if ( found == NO) {
+    if ( i >= (int)pow(2.0, dim)) {
+        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants!\n");
         mother = NULL;
         return;
     }
@@ -108,11 +107,13 @@
     double *numericeps   ->  accuracy of numerical operations
     double *globaldist   ->  returns the distance from the element in global coordinates
     doubl *localdist     ->  returns the distance from the element in local coordinates
+ 
+    Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************/
--(BOOL)isPointInElement:(Element_t *)element elementNodes:(Nodes_t *)nodes point:(double *)aPoint localCoordinates:(double *)localCoords globalEpsilon:(double *)globaleps localEpsilon:(double *)localeps numericEpsilon:(double *)numericeps globalDistance:(double *)globaldist localDistance:(double *)localdist model:(FEMModel *)aModel {
+-(BOOL)isPointInElement:(Element_t *)element elementNodes:(Nodes_t *)nodes point:(double *)aPoint localCoordinates:(double *)localCoords globalEpsilon:(double *)globaleps localEpsilon:(double *)localeps numericEpsilon:(double *)numericeps globalDistance:(double *)globaldist localDistance:(double *)localdist model:(FEMModel *)model edgeBasis:(BOOL *)edgeBasis {
     
-    int i, n;
+    int n;
     double ug, vg, wg, xdist, ydist, zdist, sumdist, eps0, eps1, eps2, minx,
            maxx, miny, maxy, minz, maxz;
     FEMPElementMaps *elementMaps;
@@ -122,6 +123,7 @@
     elementMaps = [[FEMPElementMaps alloc] init];
     elementDescription = [FEMElementDescription sharedElementDescription];
     
+    // Initialize
     isInElement = NO;
     n = element->Type.NumberOfNodes;
     
@@ -155,44 +157,14 @@
     } else if (globaldist != NULL) {
         // When distance to be computed all coordinate directions need to be checked
         
-        minx = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->x[i] < minx) {
-                minx = nodes->x[i];
-            }
-        }
-        maxx = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->x[i] > maxx) {
-                maxx = nodes->x[i];
-            }
-        }
+        vDSP_minvD(nodes->x, 1, &minx, n);
+        vDSP_maxvD(nodes->x, 1, &maxx, n);
         
-        miny = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->y[i] < miny) {
-                miny = nodes->y[i];
-            }
-        }
-        maxy = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->y[i] > maxy) {
-                maxy = nodes->y[i];
-            }
-        }
-        
-        minz = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->z[i] < minz) {
-                minz = nodes->z[i];
-            }
-        }
-        maxz = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->z[i] > maxz) {
-                maxz = nodes->z[i];
-            }
-        }
+        vDSP_minvD(nodes->y, 1, &miny, n);
+        vDSP_maxvD(nodes->y, 1, &maxy, n);
+
+        vDSP_minvD(nodes->z, 1, &minz, n);
+        vDSP_maxvD(nodes->z, 1, &maxz, n);
         
         xdist = max(max(aPoint[0] - maxx, 0.0), minx - aPoint[0]);
         ydist = max(max(aPoint[1] - maxy, 0.0), miny - aPoint[1]);
@@ -205,56 +177,24 @@
         if (zdist > eps0 + eps1 * (maxz - minz) ) return isInElement;
     } else {
         // Otherwise make decision independently after each coordinate direction
-        
-        minx = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->x[i] < minx) {
-                minx = nodes->x[i];
-            }
-        }
-        maxx = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->x[i] > maxx) {
-                maxx = nodes->x[i];
-            }
-        }
+        vDSP_minvD(nodes->x, 1, &minx, n);
+        vDSP_maxvD(nodes->x, 1, &maxx, n);
         xdist = max(max(aPoint[0] - maxx, 0.0), minx - aPoint[0]);
         if (xdist > eps0 + eps1 * (maxx - minx)) return isInElement;
         
-        
-        miny = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->y[i] < miny) {
-                miny = nodes->y[i];
-            }
-        }
-        maxy = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->y[i] > maxy) {
-                maxy = nodes->y[i];
-            }
-        }
+        vDSP_minvD(nodes->y, 1, &miny, 1);
+        vDSP_maxvD(nodes->y, 1, &maxy, 1);
         ydist = max(max(aPoint[1] - maxy, 0.0), miny - aPoint[1]);
         if (ydist > eps0 + eps1 * (maxy - miny)) return isInElement;
         
-        minz = HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->z[i] < minz) {
-                minz = nodes->z[i];
-            }
-        }
-        maxz = -HUGE_VAL;
-        for (i=0; i<n; i++) {
-            if (nodes->z[i] > maxz) {
-                maxz = nodes->z[i];
-            }
-        }
+        vDSP_minvD(nodes->z, 1, &minz, n);
+        vDSP_maxvD(nodes->z, 1, &maxz, n);
         zdist = max(max(aPoint[2] - maxz, 0.0), minz - aPoint[2]);
         if (zdist > eps0 + eps1 * (maxz - minz)) return isInElement;
     }
     
     // Get element local coordinates from global coordinates of the point
-    [elementDescription globalToLocalFromElement:element elementNodes:nodes localU:&ug localV:&vg localW:&wg x:aPoint[0] y:aPoint[1] z:aPoint[2] model:aModel];
+    [elementDescription globalToLocalFromElement:element elementNodes:nodes localU:&ug localV:&vg localW:&wg x:aPoint[0] y:aPoint[1] z:aPoint[2] model:model];
     
     // Currently the eps of global coordinates is mixed with the eps of local
     // coordinates which is not totally satisfying. There could be a sloppier
@@ -309,7 +249,11 @@
         *localdist = sumdist;
     }
     
-    if ([elementMaps isPElement:element] == YES) {
+    BOOL trans = (edgeBasis != NULL) ? YES : NO;
+    if (trans == YES) trans = *edgeBasis;
+    trans = (trans == YES || [elementMaps isPElement:element] == YES) ? YES : NO;
+    
+    if (trans == YES) {
         switch (element->Type.ElementCode / 100) {
             case 3:
                 ug = 2.0 * ug + vg - 1.0;
@@ -341,7 +285,7 @@
     return isInElement;
 }
 
--(void)putElementsInChildQuadrants:(QuadrantPointer_t *)childQuadrants motherQuadrant:(Quadrant_t *)mother mesh:(FEMMesh *)aMesh dimension:(int)dim {
+-(void)putElementsInChildQuadrants:(QuadrantPointer_t *)childQuadrants motherQuadrant:(Quadrant_t *)mother mesh:(FEMMesh *)mesh dimension:(int)dim {
     
     int i, j, t, n;
     int elementList[(int)pow(2, dim)][mother->nElementsInQuadrant];
@@ -352,13 +296,13 @@
     Nodes_t *nodes;
     BOOL elementInQuadrant;
     
-    for (i=0; i<(int)pow(2, dim); i++) {
+    for (i=0; i<(int)pow(2.0, dim); i++) {
         childQuadrants[i].quadrant->nElementsInQuadrant = 0;
         childQuadrants[i].quadrant->minElementSize = 1.0e20;
     }
     
-    elements = aMesh.getElements;
-    nodes = aMesh.getNodes;
+    elements = mesh.getElements;
+    nodes = mesh.getNodes;
     
     for (t=0; t<mother->nElementsInQuadrant; t++) {
         n = elements[mother->elements[t]].Type.NumberOfNodes;
@@ -417,7 +361,7 @@
         // Is the element in one of the child quadrant?
         // Check whether element bounding box crosses any of the child
         // quadrant bounding box
-        for (i=0; i<(int)pow(2, dim); i++) { // Loop over child quadrants
+        for (i=0; i<(int)pow(2.0, dim); i++) { // Loop over child quadrants
             
             memcpy(bbox, childQuadrants[i].quadrant->boundingBox, sizeof(childQuadrants[i].quadrant->boundingBox));
             
@@ -449,7 +393,7 @@
         }
     }
     
-    for (i=0; i<(int)pow(2, dim); i++) {
+    for (i=0; i<(int)pow(2.0, dim); i++) {
         if (childQuadrants[i].quadrant->nElementsInQuadrant != 0) {
             childQuadrants[i].quadrant->elements = intvec(0, childQuadrants[i].quadrant->nElementsInQuadrant-1);
             
@@ -460,18 +404,18 @@
     }
 }
 
--(void)createChildQuadrantFromMother:(Quadrant_t *)quadrant mesh:(FEMMesh *)aMesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int *)gen {
+-(void)createChildQuadrantFromMother:(Quadrant_t *)quadrant mesh:(FEMMesh *)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int *)gen {
     
     int i, n;
     QuadrantPointer_t childQuadrant[8];
     double xmin, xmax, ymin, ymax, zmin, zmax;
     
     // Create 2^dim child quadrants
-    n = (int)pow(2, dim);
+    n = (int)pow(2.0, dim);
     quadrant->childQuadrants = (QuadrantPointer_t*) malloc( sizeof(QuadrantPointer_t) * n );
     quadrant->numberOfchildQuadrants = n;
     for (i=0; i<n; i++) {
-        quadrant->childQuadrants[i].quadrant = (Quadrant_t*) malloc( sizeof(Quadrant_t) * 1);
+        quadrant->childQuadrants[i].quadrant = (Quadrant_t*) malloc( sizeof(Quadrant_t));
         childQuadrant[i].quadrant = quadrant->childQuadrants[i].quadrant;
         childQuadrant[i].quadrant->nElementsInQuadrant = 0;
         childQuadrant[i].quadrant->elements = NULL;
@@ -552,7 +496,7 @@
     
     // Loop over all elements in the mother quadrant, placing them in
     // one of the 2^dim quadrants
-    [self putElementsInChildQuadrants:childQuadrant motherQuadrant:quadrant mesh:aMesh dimension:dim];
+    [self putElementsInChildQuadrants:childQuadrant motherQuadrant:quadrant mesh:mesh dimension:dim];
     
     // Check whether we need to branch for the next level
     for (i=0; i<n; i++) {
@@ -561,7 +505,7 @@
             if (childQuadrant[i].quadrant->size > childQuadrant[i].quadrant->minElementSize) {
                 if (*gen <= 8) {
                     *gen = *gen + 1;
-                    [self createChildQuadrantFromMother:childQuadrant[i].quadrant mesh:aMesh dimension:dim maxLeafElements:maxLeafElems generation:gen];
+                    [self createChildQuadrantFromMother:childQuadrant[i].quadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElems generation:gen];
                     *gen = *gen - 1;
                 }
             }
@@ -617,7 +561,7 @@
     }
     
     // Create mother of all quadrants
-     quadrant = (Quadrant_t*) malloc( sizeof(Quadrant_t) * 1 );
+     quadrant = (Quadrant_t*) malloc(sizeof(Quadrant_t));
     
     quadrant->boundingBox[0] = xmin;
     quadrant->boundingBox[1] = ymin;
