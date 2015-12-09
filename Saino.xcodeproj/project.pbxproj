@@ -236,8 +236,8 @@
 		730C42CC1B2686E2009411B7 /* Saino App Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Saino App Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		730C42CF1B2686E2009411B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		730C42D01B2686E2009411B7 /* Saino_App_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Saino_App_Tests.m; sourceTree = "<group>"; };
-		730C42DB1B26F499009411B7 /* FEMTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FEMTest.h; path = ../FEMTest.h; sourceTree = "<group>"; };
-		730C42DC1B26F499009411B7 /* FEMTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FEMTest.m; path = ../FEMTest.m; sourceTree = "<group>"; };
+		730C42DB1B26F499009411B7 /* FEMTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMTest.h; sourceTree = "<group>"; };
+		730C42DC1B26F499009411B7 /* FEMTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMTest.m; sourceTree = "<group>"; };
 		730C42E41B3A895B009411B7 /* SainoViewControler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SainoViewControler.h; sourceTree = "<group>"; };
 		730C42E51B3A895B009411B7 /* SainoViewControler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SainoViewControler.m; sourceTree = "<group>"; };
 		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };

@@ -114,7 +114,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "Step.sif"
+            argument = "./Tests/dummy.sif"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
