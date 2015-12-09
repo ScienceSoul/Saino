@@ -73,6 +73,7 @@ FOUNDATION_EXPORT const unsigned char SainoCoreVersionString[];
 #import <SainoCore/FEMMagneticInductionSolution.h>
 #import <SainoCore/FEMMeshUpdateSolution.h>
 #import <SainoCore/FEMStressAnalysisSolution.h>
+#import <SainoCore/FEMInterpolateMeshToMesh.h>
 #import <SainoCore/FemTest.h>
 
 #import <SainoCore/Constructors.h>

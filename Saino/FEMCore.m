@@ -6296,7 +6296,7 @@ static dispatch_once_t onceToken;
     free_dmatrix(damp, 0, (dofs*n)-1, 0, (dofs*n)-1);
 }
 
--(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities{ // rows and cols for stiff matrix
+-(void)defaultFirstOrderTime:(FEMModel *)model inSolution:(FEMSolution *)solution forElement:(Element_t *)element realMass:(double **)mass realStiff:(double **)stiff realForce:(double *)force stiffRows:(int *)rows stiffCols:(int *)cols timeIntegration:(FEMTimeIntegration *)timeIntegration utilities:(FEMUtilities *)utilities{ // rows and cols for stiff and mass matrix
     
     int i, n;
     double dt;

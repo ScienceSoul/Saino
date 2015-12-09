@@ -53,10 +53,12 @@ enum {
     BOOL _newtonLinearization;
     BOOL _phaseSpatial;
     BOOL _transientAssembly;
+    int _cols;
     int _doneTime;
     int _phaseChangeModel;
     int _localNodes;
     int *_indexes;
+    int _rows;
     int *_saveIndexes;
     int *_tempPerm;
     double _dt;
@@ -800,7 +802,9 @@ enum {
         _allocationDone = NO;
         _constantBulk = NO;
         _newtonLinearization = NO;
+        _cols = 0;
         _doneTime = 0;
+        _rows = 0;
         _powerScaling = 1.0;
         _prevPowerScaling = 1.0;
         _tempPerm = NULL;
@@ -898,7 +902,7 @@ enum {
 
 -(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, l, n, nb=0, nd, t, bf_id, body_id, cols, compressibilityModel=-1, eq_id, iter, mat_id, nsdofs=0, nonLinearIter, newtonIter, rows, smartHeaterNode=-1, smartHeaterBC=-1;
+    int i, j, k, l, n, nb=0, nd, t, bf_id, body_id, compressibilityModel=-1, eq_id, iter, mat_id, nsdofs=0, nonLinearIter, newtonIter, smartHeaterNode=-1, smartHeaterBC=-1;
     int *indexes = NULL, *flowPerm = NULL;
     double at=0.0, at0, C1, dist, dt0, jx, jy, jz, cumulativeTime, newtonTol, meltPoint=0.0, minDist, nonLinearTol, norm, powerRelax, powerSensitivity, powerTimeScale=0.0,
            prevNorm, referencePressure=0.0, relax, relativeChange, s, saveRelax, smartTol=0.0, specificHeatRatio, st, sum, totat, totst, xave=0.0, yave=0.0;
@@ -1198,6 +1202,9 @@ enum {
             errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
         }
         
+        _rows = 2*n;
+        _cols = 2*n;
+        
         if (smartHeaterControl == YES || integralHeaterControl == YES) {
             n = model.numberOfBodyForces;
             if (_allocationDone == YES) {
@@ -1251,9 +1258,6 @@ enum {
             memset( _yy, 0.0, tempContainers->sizeValues*sizeof(double) );
             memset( _forceHeater, 0.0, tempContainers->sizeValues*sizeof(double) );
         }
-        
-        cols = 2*n;
-        rows = 2*n;
         
         _allocationDone = YES;
     }
@@ -1937,7 +1941,7 @@ enum {
                 
                 if (heaterControlLocal == YES && transientHeaterControl == NO) {
                     if (_transientAssembly == YES && _constantBulk == NO) {
-                        defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &rows, &cols, timeIntegration, utilities);
+                        defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &_rows, &_cols, timeIntegration, utilities);
                     }
                     if (indexes == NULL || n != nb) {
                         if (indexes != NULL) free_ivector(indexes, 0, nb-1);
@@ -1947,7 +1951,7 @@ enum {
                     for (i=0; i<n; i++) {
                         indexes[i] = _tempPerm[element->NodeIndexes[i]];
                     }
-                    updateGlobalEquationsModelIMP(core, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:), model, solution, element, _stiff, _forceHeater, _force, n, 1, indexes, &rows, &cols, NULL, crsMatrix, bandMatrix);
+                    updateGlobalEquationsModelIMP(core, @selector(updateGlobalEquationsModel:inSolution:element:localStiffMatrix:forceVector:localForce:size:dofs:nodeIndexes:rows:cols:rotateNT:crsMatrix:bandMatrix:), model, solution, element, _stiff, _forceHeater, _force, n, 1, indexes, &_rows, &_cols, NULL, crsMatrix, bandMatrix);
                 } else {
                     bubbles = (useBubbles == YES && stabilize == NO && ([convectionFlag isEqualToString:@"computed"] == YES || [convectionFlag isEqualToString:@"constant"] == YES)) ? YES : NO;
                     
@@ -1957,7 +1961,7 @@ enum {
                         if (_constantBulk == YES) {
                             defaultUpdateMassIMP(core, @selector(defaultUpdateMass:element:solution:model:), _mass, element, solution, model);
                         } else {
-                            defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &rows, &cols, timeIntegration, utilities);
+                            defaultFirstOrderTimeIMP(core, @selector(defaultFirstOrderTime:inSolution:forElement:realMass:realStiff:realForce:stiffRows:stiffCols:timeIntegration:utilities:), model, solution, element, _mass, _stiff, _force, &_rows, &_cols, timeIntegration, utilities);
                         }
                     } else if (solution.nOfEigenValues > 0) {
                         defaultUpdateDampIMP(core, @selector(defaultUpdateDamp:element:solution:model:), _mass, element, solution, model);
@@ -1968,7 +1972,7 @@ enum {
                     }
                     
                     defaultUpdateEquationsIMP(core, @selector(defaultUpdateEquations:inSolution:forElement:realStiff:realForce:stiffRows:stiffCols:crsMatrix:bandMatrix:),
-                                              model, solution, element, _stiff, _force, &rows, &cols, crsMatrix, bandMatrix);
+                                              model, solution, element, _stiff, _force, &_rows, &_cols, crsMatrix, bandMatrix);
                 }
             } // Bulk elements
             
