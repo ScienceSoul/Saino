@@ -364,8 +364,8 @@ void __attribute__((overloadable)) fatal(char head[], char message[])
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
-    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
+    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "%s: %s\n", head, message);
     fprintf(stderr, "\n");
@@ -380,8 +380,8 @@ void __attribute__((overloadable)) fatal(char head[], char message[], int n)
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
-    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
+    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "%s: %s %d.\n", head, message, n);
     fprintf(stderr, "\n");
@@ -396,8 +396,8 @@ void __attribute__((overloadable)) fatal(char head[], char message[], double n)
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
-    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
+    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "%s: %s %f.\n", head, message, n);
     fprintf(stderr, "\n");
