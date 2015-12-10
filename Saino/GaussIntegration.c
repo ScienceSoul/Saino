@@ -415,15 +415,14 @@ void GaussQuadraturePoints1D(int n) {
         
         s = EvalPoly(n,P,Points[i]);
         if( fabs(s) > 1.0e-12 ) {
-            warnfunct("GaussQuadraturePoints1D", "-------------------------------------------------------");
-            warnfunct("GaussQuadraturePoints1D", "Computed integration point");
-            warnfunct("GaussQuadraturePoints1D", "seems to be inaccurate");
-            warnfunct("GaussQuadraturePoints1D", "Points req.:", n);
-            warnfunct("GaussQuadraturePoints1D", "Residual:");
+            warning("GaussQuadraturePoints1D", "-------------------------------------------------------");
+            warning("GaussQuadraturePoints1D", "Computed integration point seems to be inaccurate.");
+            warning("GaussQuadraturePoints1D", "Points req.:", n);
+            warning("GaussQuadraturePoints1D", "Residual: ");
             printf("%f\n", s);
-            warnfunct("GaussQuadraturePoints1D", "Point: +-: ");
+            warning("GaussQuadraturePoints1D", "Point: +-: ");
             printf("%f\n", sqrt(Points[i]));
-             warnfunct("GaussQuadraturePoints1D", "-------------------------------------------------------");
+            warning("GaussQuadraturePoints1D", "-------------------------------------------------------");
         }
     }
     
@@ -539,7 +538,7 @@ GaussIntegrationPoints* GaussQuadrature1D(int np) {
     pt = IntegStuff;
     if(np < 1 || np > MAXN) {
         pt->n = 0;
-        warnfunct("GaussQuadrature1D", "Invalid number of points: ", np);
+        warning("GaussQuadrature1D", "Invalid number of points:", np);
         return pt;
     }
     
@@ -765,7 +764,7 @@ GaussIntegrationPoints* GaussQuadraturePyramid(int np) {
     pt = IntegStuff;
     if( n < 1 || n > MAXN ) {
         pt->n = 0;
-        warnfunct("GaussQuadraturePyramid", "Invalid number of points: ", n);
+        warning("GaussQuadraturePyramid", "Invalid number of points:", n);
         return pt;
     }
     
@@ -805,7 +804,7 @@ GaussIntegrationPoints* GaussQuadratureWedge(int np) {
     pt = IntegStuff;
     if ( n < 1 || n > MAXN) {
         pt->n = 0;
-        warnfunct("GaussQuadratureWedge", "Invalid number of points: ", n);
+        warning("GaussQuadratureWedge", "Invalid number of points:", n);
         return pt;
     }
     
@@ -844,7 +843,7 @@ GaussIntegrationPoints* GaussQuadratureQuad(int np) {
     pt = IntegStuff;
     if( n < 1 || n > MAXN ) {
         pt->n = 0.0;
-        warnfunct("GaussQuadratureQuad", "Invalid number of points: ", n);
+        warning("GaussQuadratureQuad", "Invalid number of points:", n);
         return pt;
     }
     
@@ -874,7 +873,7 @@ GaussIntegrationPoints* GaussQuadratureBrick(int np) {
     pt = IntegStuff;
     if ( n < 1 || n > MAXN) {
         pt->n = 0;
-        warnfunct("GaussQuadratureBrick", "Invalid number of points: ", n);
+        warning("GaussQuadratureBrick", "Invalid number of points:", n);
         return pt;
     }
     

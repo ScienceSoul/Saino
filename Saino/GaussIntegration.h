@@ -104,7 +104,7 @@ inline GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int 
             } else if (*relOrder == -1) {
                 n = element->Type.GaussPoints0;
             } else {
-                warnfunct("GaussQuadrature", "RelOrder can only be {-1, 0, 1}!");
+                warning("GaussQuadrature", "RelOrder can only be {-1, 0, 1}.");
             }
         }
     } else {

@@ -94,7 +94,7 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
     
     if (fabs(fx) > 1.0e-09) {
         printf("fx: %f\n", fx);
-        warnfunct("solve_ufric", "problems in value of fx");
+        warning("solve_ufric", "Problems in value of fx.");
     }
 }
 

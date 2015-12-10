@@ -406,17 +406,17 @@ void __attribute__((overloadable)) fatal(char head[], char message[], double n)
     exit(-1);
 }
 
-void __attribute__((overloadable)) warnfunct(char head[], char message[])
+void __attribute__((overloadable)) warning(char head[], char message[])
 {
     printf("%s: %s\n", head, message);
 }
 
-void __attribute__((overloadable)) warnfunct(char head[], char message[], int n)
+void __attribute__((overloadable)) warning(char head[], char message[], int n)
 {
-    printf("%s: %s %d\n", head, message, n);
+    printf("%s: %s %d.\n", head, message, n);
 }
 
-void __attribute__((overloadable)) warnfunct(char head[], char message[], double n)
+void __attribute__((overloadable)) warning(char head[], char message[], double n)
 {
-    printf("%s: %s %f\n", head, message, n);
+    printf("%s: %s %f.\n", head, message, n);
 }
