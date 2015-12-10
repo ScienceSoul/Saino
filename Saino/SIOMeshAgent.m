@@ -430,7 +430,7 @@ static char *_parallel_extensions[] = {
     }
     for (i=0; i<elNodes; i++) {
         if (![self SIOMeshAgent_copyCoords:coord+i*3 address:nodes[i]]) {
-            NSLog(@"SIOMeshAgent:readNextElementCoordinates: error! Program terminating now...");
+            NSLog(@"SIOMeshAgent:readNextElementCoordinates: an error occurred. Saino will abort the simulation now...");
             exit(14);
         }
     }

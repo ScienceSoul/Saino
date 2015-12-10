@@ -172,7 +172,7 @@
                     }
                 } else {
                     NSLog(@"FEMMaterialModels:effectiveViscosity: can't find variable %@ to inquire temperature field for Glen.\n", temperatureName);
-                    fatal("FEMMaterialModels:effectiveViscosity", "Program terminating now...");
+                    fatal("FEMMaterialModels:effectiveViscosity", "Saino will abort the simulation now...");
                 }
             } else {
                 for (i=0; i<n; i++) {

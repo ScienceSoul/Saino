@@ -1505,7 +1505,7 @@ static dispatch_once_t onceToken;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d.\n", info);
-        fatal("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
+        fatal("FEMElementDescription:computeStabilizationParameterInElement", "Saino will abort the simulation now...");
     }
     *mk = eigr[n-2];
         
@@ -2528,7 +2528,7 @@ static dispatch_once_t onceToken;
     
     if (element->Type.BasisFunctionDegree > 1) {
         NSLog(@"FEMElementDescription:getEdgeBasisElement: can only handle linear elements, sorry.\n");
-        fatal("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+        fatal("FEMElementDescription:getEdgeBasisElement", "Saino will abort the simulation now...");
     }
     
     switch (element->Type.ElementCode/100) {
@@ -2936,7 +2936,7 @@ static dispatch_once_t onceToken;
                 
             default:
                 NSLog(@"FEMElementDescription:getEdgeBasisElement: not implemented for this element type: %d.\n", element->Type.ElementCode/100);
-                fatal("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+                fatal("FEMElementDescription:getEdgeBasisElement", "Saino will abort the simulation now...");
                 break;
         }
         if (nk < nj) {

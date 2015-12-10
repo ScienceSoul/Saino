@@ -1614,7 +1614,7 @@ jump:
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
                 NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@ '].\n", self.modelName);
-                fatal("FEMJob:runWithInitialize","Program terminating now...");
+                fatal("FEMJob:runWithInitialize","Saino will abort the simulation now...");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             

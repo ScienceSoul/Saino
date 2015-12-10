@@ -115,7 +115,7 @@
                 }
             } else {
                 NSLog(@"FEMStructuredMeshMapper:solutionComputer: top surface variable is missing: %@.\n", varName);
-                fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
             }
         }
     }
@@ -172,7 +172,7 @@
                 }
             } else {
                 NSLog(@"FEMStructuredMeshMapper:solutionComputer: bottom surface variable is missing: %@.\n", varName);
-                fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
             }
         }
     }
@@ -219,7 +219,7 @@
             }
         } else {
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
     
@@ -238,7 +238,7 @@
             }
         } else {
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
     
@@ -302,7 +302,7 @@
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: position %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal %f, botVal %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: top and bottom get tangled: %f %f.\n", topVal, bottomVal);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
         
         xLoc = wTop * topVal + (1.0 - wTop) * bottomVal;

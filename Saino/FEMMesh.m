@@ -454,13 +454,13 @@
     [meshIO openMeshAtPath:name];
     if (meshIO.info != 0) {
         NSLog(@"FEMMesh:loadMeshForModel: unable to load mesh: %@.\n", name);
-        fatal("FEMMesh:loadMeshForModel", "Program terminating now...");
+        fatal("FEMMesh:loadMeshForModel", "Saino will abort the simulation now...");
     }
     
     [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
         NSLog(@"FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %@.\n", name);
-        fatal("FEMMesh:loadMeshForModel", "Program terminating now...");
+        fatal("FEMMesh:loadMeshForModel", "Saino will abort the simulation now...");
     }
     
     if (bd == YES) self.numberOfBulkElements = 0;

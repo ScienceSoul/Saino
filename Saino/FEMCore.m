@@ -2538,7 +2538,7 @@ static const int PRECOND_VANKA     =  560;
             NSLog(@"FEMCore:SolveEquations: \n");
             NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d.\n", i);
             NSLog(@"FEMCore:SolveEquations: \n");
-            fatal("FEMCore:SolveEquations", "Program terminating now...");
+            fatal("FEMCore:SolveEquations", "Saino will abort the simulation now...");
         }
     }
 }
@@ -2632,7 +2632,7 @@ static const int PRECOND_VANKA     =  560;
             [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         } else {
             NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %@.\n", (solution.solutionInfo)[@"equation"]);
-            fatal("FEMCore:FEMCore_singleSolution", "Program terminating now...");
+            fatal("FEMCore:FEMCore_singleSolution", "Saino will abort the simulation now...");
         }
 
     } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be deallocated with its asssociated solution
@@ -2640,7 +2640,7 @@ static const int PRECOND_VANKA     =  560;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
     } else {
         NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@.\n", (solution.solutionInfo)[@"equation"]);
-        fatal("FEMCore:FEMCore_singleSolution", "Program terminating now...");
+        fatal("FEMCore:FEMCore_singleSolution", "Saino will abort the simulation now...");
     }
 }
 
@@ -2944,7 +2944,7 @@ static dispatch_once_t onceToken;
             }
         } else {
             NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: unknown time stepping method: %@.\n", method);
-            fatal("FEMCore:FEMCore_initializeTimeStepInSolution", "Program terminating now...");
+            fatal("FEMCore:FEMCore_initializeTimeStepInSolution", "Saino will abort the simulation now...");
         }
     }
     
@@ -3501,7 +3501,7 @@ static dispatch_once_t onceToken;
         currentElement = element;
     } else {
         NSLog(@"FEMCore:getActiveElement: invalid element number requested: %d\n", t);
-        fatal("FEMCore:getActiveElement", "Program terminating now...");
+        fatal("FEMCore:getActiveElement", "Saino will abort the simulation now...");
     }
     return element;
 }
@@ -4437,7 +4437,7 @@ static dispatch_once_t onceToken;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d.\n", info);
-        fatal("FEMCore:solveWithLapackMatrix", "Program terminating now...");
+        fatal("FEMCore:solveWithLapackMatrix", "Saino will abort the simulation now...");
     }
     
     trans = "N";
@@ -4445,7 +4445,7 @@ static dispatch_once_t onceToken;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d.\n", info);
-        fatal("FEMCore:solveWithLapackMatrix", "Program terminating now...");
+        fatal("FEMCore:solveWithLapackMatrix", "Saino will abort the simulation now...");
     }
     
     free_ivector(ipiv, 0, n-1);
@@ -7604,12 +7604,12 @@ static dispatch_once_t onceToken;
             FEMVariable *weightVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str onlySearch:NULL maskName:NULL info:&stat];
             if (weightVar == nil) {
                 NSLog(@"FEMCore:computeChange: average solution weight missing: %@.\n", str);
-                fatal("FEMCore:computeChange", "Program terminating now...");
+                fatal("FEMCore:computeChange", "Saino will abort the simulation now...");
             }
             variableArraysContainer *weightVarContainers = weightVar.getContainers;
             if (n != weightVarContainers->sizeValues) {
                 NSLog(@"FEMCore:computeChange: field and weight mismatch: %@.\n", str);
-                fatal("FEMCore:computeChange", "Program terminating now...");
+                fatal("FEMCore:computeChange", "Saino will abort the simulation now...");
             }
     
             double sum;
@@ -8666,7 +8666,7 @@ static dispatch_once_t onceToken;
     } else if ([deviceType isEqualToString:@"cpu"] == YES) {
         queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);
     } else {
-        fatal("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Program terminating now...");
+        fatal("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Saino will abort the simulation now...");
     }
     
     cl_uint vectorTypes[] = {CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE};

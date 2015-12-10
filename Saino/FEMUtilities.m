@@ -370,7 +370,7 @@
     
     if (aContainer == NULL) {
         NSLog(@"FEMUtilities:addVariableTo: container argument is not allocated.\n");
-        fatal("FEMUtilities:addVariableTo:", "Program terminating now...");
+        fatal("FEMUtilities:addVariableTo:", "Saino will abort the simulation now...");
     }
     
     for (FEMVariable *variable in anArray) {
@@ -1421,12 +1421,12 @@
         NSBundle *solutionBundle = [self loadBundle:solution.plugInName];
         if (solutionBundle == nil) {
             NSLog(@"FEMUtilities:addEquationBasicsToSolution: error loading plug-in bundle.\n");
-            fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+            fatal("FEMUtilities:addEquationBasicsToSolution", "Saino will abort the simulation now...");
         }
         // Instantiate the plug-in principal class
         if ([solution instantiatePrincipalClassFromPlugIn:solutionBundle] == NO) {
             NSLog(@"FEMUtilities:addEquationBasicsToSolution: error instanciating plug-in principal class.\n");
-            fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+            fatal("FEMUtilities:addEquationBasicsToSolution", "Saino will abort the simulation now...");
         }
     } else { // We are woking with a built-in solution computer
         solution.hasBuiltInSolution = YES;
@@ -1561,7 +1561,7 @@
             }
             if (found == NO) {
                 NSLog(@"FEMUtilities:addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation.\n", varName);
-                fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+                fatal("FEMUtilities:addEquationBasicsToSolution", "Saino will abort the simulation now...");
             }
             
             // Compute the size of the permutation vector

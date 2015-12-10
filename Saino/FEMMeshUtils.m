@@ -314,7 +314,7 @@
         rtmp[2] = vector[2];
     } else {
         NSLog(@"FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType: unknown transformation: %@.\n", type);
-        fatal("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Program terminating now...");
+        fatal("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Saino will abort the simulation now...");
     }
     memcpy(vector, rtmp, sizeof(rtmp));
 }
@@ -1293,7 +1293,7 @@ jump:
     // really never be possible
     if (bMesh1.numberOfNodes == 0 || bMesh2.numberOfNodes == 0) {
         NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: no active nodes on periodic boundary.\n");
-        fatal("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Program terminating now...");
+        fatal("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Saino will abort the simulation now...");
     }
     NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
     
@@ -1415,7 +1415,7 @@ jump:
             NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: %d\n", coordMap.ivector[i]);
         }
         NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: coordinate mapping should be a permutation of 1, 2 and 3.\n");
-        fatal("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Program terminating now...");
+        fatal("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Saino will abort the simulation now...");
     }
     
     for (int meshNo=1; meshNo<=2; meshNo++) {
@@ -3170,7 +3170,7 @@ jump:
                     break;
                 default:
                     NSLog(@"FEMMeshUtils:findEdges3DInMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                    fatal("FEMMeshUtils:findEdges3DInMesh", "Program terminating now...");
+                    fatal("FEMMeshUtils:findEdges3DInMesh", "Saino will abort the simulation now...");
                     break;
             }
         }
@@ -3506,7 +3506,7 @@ jump:
                     
                 default:
                     NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                    fatal("FEMMeshUtils:findFaces3DForMesh", "Program terminating now...");
+                    fatal("FEMMeshUtils:findFaces3DForMesh", "Saino will abort the simulation now...");
                     break;
             }
             
@@ -3611,7 +3611,7 @@ jump:
                         
                     default:
                         NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                        fatal("FEMMeshUtils:findFaces3DForMesh", "Program terminating now...");
+                        fatal("FEMMeshUtils:findFaces3DForMesh", "Saino will abort the simulation now...");
                         break;
                 }
                 
@@ -4884,7 +4884,7 @@ jump:
                 
             default:
                 NSLog(@"FEMMeshUtils:splitMeshEqual: element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
-                fatal("FEMMeshUtils:splitMeshEqual", "Program terminating now...");
+                fatal("FEMMeshUtils:splitMeshEqual", "Saino will abort the simulation now...");
         }
     }
     
@@ -6262,7 +6262,7 @@ jump:
     if (rounds == 0) {
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: try to increase value for > dot product tolerance <.\n");
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: zero rounds implies unsuccessfull operations.\n");
-        fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Program terminating now...");
+        fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Saino will abort the simulation now...");
     }
     
     // Compute the number of layers. The rounds above may in some cases

@@ -159,7 +159,7 @@
         self.coordinates = polar;
     } else {
         NSLog(@"FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %@.\n", csys);
-        fatal("FEMModel:FEMModel_setCoordinateSystem", "Program terminating now...");
+        fatal("FEMModel:FEMModel_setCoordinateSystem", "Saino will abort the simulation now...");
     }
 }
 
