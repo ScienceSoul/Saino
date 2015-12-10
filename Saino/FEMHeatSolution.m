@@ -349,7 +349,7 @@ enum {
     
     // Integration stuff
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution:FEMHeatSolution_integrationOverSurfaceElement", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMHeatSolution:FEMHeatSolution_integrationOverSurfaceElement", "Allocation error in FEMNumericIntegration.");
     IP = GaussQuadrature(element, NULL, NULL);
 
     coordinateSystem = [[FEMCoordinateSystems alloc] init];
@@ -1199,7 +1199,7 @@ enum {
             _load == NULL || _force == NULL || _timeForce == NULL || _perfusionRate == NULL || _perfusionDensity == NULL ||
             _perfusionHeatCapacity == NULL || _perfusionRefTemperature == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL ||
             _elementNodes->z == NULL) {
-            errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
+            fatal("FEMHeatSolution:solutionComputer", "Memory allocation error.");
         }
         
         _rows = 2*n;
@@ -1232,7 +1232,7 @@ enum {
             _integralHeaters = boolvec(0, n-1);
             if (_heaterArea == NULL || _heaterDensity == NULL || _heaterSource == NULL || _heaterScaling == NULL || _heaterTarget == NULL ||
                 _smarterHeaters == NULL || _integralHeaters == NULL) {
-                 errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
+                 fatal("FEMHeatSolution:solutionComputer", "Memory allocation error.");
             }
             memset( _smarterHeaters, false, n*sizeof(bool) );
             memset( _integralHeaters, false, n*sizeof(bool) );
@@ -1252,7 +1252,7 @@ enum {
             _yy = doublevec(0, tempContainers->sizeValues-1);
             _forceHeater = doublevec(0, tempContainers->sizeValues-1);
             if (_xx == NULL || _yy == NULL || _forceHeater == NULL) {
-                errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
+                fatal("FEMHeatSolution:solutionComputer", "Memory allocation error.");
             }
             memset( _xx, 0.0, tempContainers->sizeValues*sizeof(double) );
             memset( _yy, 0.0, tempContainers->sizeValues*sizeof(double) );
@@ -1412,7 +1412,7 @@ enum {
                 }
             }
             if (smartHeaterBC < 0) {
-                errorfunct("FEMHeatSolution:solutionComputer", "Smart heater boundary / Phase change is undefined");
+                fatal("FEMHeatSolution:solutionComputer", "Smart heater boundary / Phase change is undefined.");
             }
             
             boundaryConditionAtID = (model.boundaryConditions)[smartHeaterBC];
@@ -1422,7 +1422,7 @@ enum {
                     meltPoint = [listUtilities listGetConstReal:model inArray:material.valuesList forVariable:@"melting point" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) break;
                 }
-                if (found == NO) errorfunct("FEMHeatSolution:solutionComputer", "Smart heater temperature / melting point is undefined.");
+                if (found == NO) fatal("FEMHeatSolution:solutionComputer", "Smart heater temperature / melting point is undefined.");
             }
             
             // Find the node related to temperature control
@@ -1495,7 +1495,7 @@ enum {
     _prevSolution = doublevec(0, _localNodes-1);
     
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration.");
     
     while (cumulativeTime < timeStep-1.0e-12 || transient == NO) {
         // The first time around this has been done by the caller...

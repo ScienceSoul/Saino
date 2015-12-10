@@ -246,7 +246,7 @@
                 xn = (w[i] + w[i-1]) / 2.0;
                 minhn = min(minhn, w[i]-w[i-1]);
                 h[i-1] = [listUtilities listGetValueParameter:model inArray:model.simulation.valuesList forVariable:@"extruded mesh density" value:xn info:&found minValue:NULL maxValue:NULL];
-                if (h[i-1] < DBL_EPSILON) errorfunct("FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable", "Given value for h[i] was negative!");
+                if (h[i-1] < DBL_EPSILON) fatal("FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable", "Given value for h[i] was negative.");
             }
             
             // Utilize symmetric Gaus-Seidel to compute the new positions w(i)
@@ -314,7 +314,7 @@
         rtmp[2] = vector[2];
     } else {
         NSLog(@"FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType: unknown transformation: %@.\n", type);
-        errorfunct("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Program terminating now...");
+        fatal("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Program terminating now...");
     }
     memcpy(vector, rtmp, sizeof(rtmp));
 }
@@ -600,7 +600,7 @@
     GaussIntegrationPoints *IP = NULL;
     
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh", "Allocation error in FEMNumericIntegration.");
     
     FEMListMatrix *listmatrix = [[FEMListMatrix alloc] init];
     
@@ -1058,7 +1058,7 @@ jump:
     
     // BCs index should start from 0
     if (mbd < 0 || trgt < 0) {
-        errorfunct("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Invalid target boundaries");
+        fatal("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Invalid target boundaries.");
     }
     
     // If the target is larger than number of given boundaries given then
@@ -1293,7 +1293,7 @@ jump:
     // really never be possible
     if (bMesh1.numberOfNodes == 0 || bMesh2.numberOfNodes == 0) {
         NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: no active nodes on periodic boundary.\n");
-        errorfunct("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Program terminating now...");
+        fatal("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Program terminating now...");
     }
     NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
     
@@ -1415,7 +1415,7 @@ jump:
             NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: %d\n", coordMap.ivector[i]);
         }
         NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: coordinate mapping should be a permutation of 1, 2 and 3.\n");
-        errorfunct("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Program terminating now");
+        fatal("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Program terminating now...");
     }
     
     for (int meshNo=1; meshNo<=2; meshNo++) {
@@ -1699,7 +1699,7 @@ jump:
     //double m14 = det3x3(a);
     
     if (fabs(m11) < DBL_EPSILON) {
-        errorfunct("FEMMeshUtils:FEMMeshUtils_cylinderFitMesh", "Points can not be a circle");
+        fatal("FEMMeshUtils:FEMMeshUtils_cylinderFitMesh", "Points can not be a circle.");
     }
     
     double x0 = 0.5 * m12 / m11;
@@ -1929,7 +1929,7 @@ jump:
         }
         
         if (x2r_min[2] < DBL_EPSILON) {
-            errorfunct("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Radius cannot be almost zero");
+            fatal("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Radius cannot be almost zero.");
         }
         
         // Memorize the bounding box for the 1st mesh
@@ -2001,7 +2001,7 @@ jump:
             if (dfii1 < dfii2) {
                 NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: you might try to switch master and target.\n");
             }
-            errorfunct("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Check your settings, this can not be periodic.\n");
+            fatal("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Check your settings, this can not be periodic.");
         }
         int value = round(nSymmetry);
         [listUtilities addIntegerInClassList:bcParams.valuesList theVariable:@"rotational projector periods" withValue:&value orUsingBlock:NULL];
@@ -2266,7 +2266,7 @@ jump:
             bMeshNodes = bMesh.getNodes;
             
             integration = [[FEMNumericIntegration alloc] init];
-            if ([integration allocation:bMesh] == NO) errorfunct("FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1", "Allocation error in FEMNumericIntegration!");
+            if ([integration allocation:bMesh] == NO) fatal("FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1", "Allocation error in FEMNumericIntegration.");
             
             memset(normalSum, 0.0, sizeof(normalSum) );
             refSum = 0.0;
@@ -3170,7 +3170,7 @@ jump:
                     break;
                 default:
                     NSLog(@"FEMMeshUtils:findEdges3DInMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                    errorfunct("FEMMeshUtils:findEdges3DInMesh", "Program terminating now.");
+                    fatal("FEMMeshUtils:findEdges3DInMesh", "Program terminating now...");
                     break;
             }
         }
@@ -3506,7 +3506,7 @@ jump:
                     
                 default:
                     NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                    errorfunct("FEMMeshUtils:findFaces3DForMesh", "Program terminating now.");
+                    fatal("FEMMeshUtils:findFaces3DForMesh", "Program terminating now...");
                     break;
             }
             
@@ -3611,7 +3611,7 @@ jump:
                         
                     default:
                         NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
-                        errorfunct("FEMMeshUtils:findFaces3DForMesh", "Program terminating now.");
+                        fatal("FEMMeshUtils:findFaces3DForMesh", "Program terminating now...");
                         break;
                 }
                 
@@ -4024,7 +4024,7 @@ jump:
         // TODO: Implement this case
     } else {
         if (fullCircle == YES) {
-            errorfunct("FEMMeshUtils:periodicProjectorInModel", "A full circle can not be dealt with the generic projector");
+            fatal("FEMMeshUtils:periodicProjectorInModel", "A full circle can not be dealt with the generic projector.");
         }
         BOOL useQuandrantTree = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"use quadrant tree" info:&found];
         if (found == NO) useQuandrantTree = YES;
@@ -4884,7 +4884,7 @@ jump:
                 
             default:
                 NSLog(@"FEMMeshUtils:splitMeshEqual: element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
-                errorfunct("FEMMeshUtils:splitMeshEqual", "Program terminating now...");
+                fatal("FEMMeshUtils:splitMeshEqual", "Program terminating now...");
         }
     }
     
@@ -5082,7 +5082,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5113,7 +5113,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5144,7 +5144,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5175,7 +5175,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5275,7 +5275,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5307,7 +5307,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5339,7 +5339,7 @@ jump:
                     }
                     if (n3 > 2)  break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5371,7 +5371,7 @@ jump:
                     }
                     if (n3 > 2) break;
                 }
-                if (n3 < 3) errorfunct("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
+                if (n3 < 3) fatal("FEMMeshUtils:splitMeshEqual", "Parent element not found.");
                 newElements[newElCnt].BoundaryInfo->Left = eptr;
                 newElCnt++;
                 
@@ -5599,7 +5599,7 @@ jump:
 -(void)allocatePDefinitionsElement:(Element_t *)element {
     
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
-    if (element->Pdefs == NULL) errorfunct("FEMMeshUtils:allocatePDefinitionsElement", "Unable to allocate memory");
+    if (element->Pdefs == NULL) fatal("FEMMeshUtils:allocatePDefinitionsElement", "Unable to allocate memory.");
     
     // Initialize fields
     element->Pdefs->p = 0;
@@ -6039,7 +6039,7 @@ jump:
         activeDirection = [(solution.solutionInfo)[@"active coordinate"] intValue];
     }
     if (activeDirection < 1 || activeDirection > 3) {
-        errorfunct("FEMMeshUtils:detectExtrudedStructureMesh", "Invalid value for active coordinate");
+        fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Invalid value for active coordinate.");
     }
     memset( unitVector, 0.0, sizeof(unitVector) );
     unitVector[activeDirection-1] = 1.0;
@@ -6262,7 +6262,7 @@ jump:
     if (rounds == 0) {
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: try to increase value for > dot product tolerance <.\n");
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: zero rounds implies unsuccessfull operations.\n");
-        errorfunct("FEMMeshUtils:detectExtrudedStructureMesh", "Program terminating now...");
+        fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Program terminating now...");
     }
     
     // Compute the number of layers. The rounds above may in some cases

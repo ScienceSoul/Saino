@@ -515,7 +515,7 @@
                 if (any == YES) np = 0;
                 
                 FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-                if ([integration allocation:oldMesh] == NO) errorfunct("FEMMeshUtils:interpolateQMeshh", "Allocation error in FEMNumericIntegration!");
+                if ([integration allocation:oldMesh] == NO) fatal("FEMMeshUtils:interpolateQMeshh", "Allocation error in FEMNumericIntegration.");
                 
                 if (edgeBasis == YES) {
                     wBasis = doublematrix(0, k-1, 0, 2);
@@ -754,7 +754,7 @@
     bMesh1Elements = bMesh1.getElements;
     bMesh2Elements = bMesh2.getElements;
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:bMesh1] == NO) errorfunct("FEMInterpolateMeshToMesh:weightedProjectorMesh2", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:bMesh1] == NO) fatal("FEMInterpolateMeshToMesh:weightedProjectorMesh2", "Allocation error in FEMNumericIntegration.");
     for (int i=0; i<bMesh1.numberOfBulkElements; i++) {
         //TODO: the following call is not complete, so it won't work.
         // We need to update the interface of GaussQuadrature so that it supports edge basis
@@ -1027,7 +1027,7 @@
                         [listMatrix addToMatrixElement:matrixContainers->ListMatrix atIndex:equind[indexes[p]] andIndex:indexes[q] value:weight*cblas_ddot(3, vq, 1, wq, 1) setValue:NULL];
                     }
                     for (int q=rows[noGaussPoints]+np; q<=rows[noGaussPoints+1]-1; q+=3) {
-                        if (cols[q] > 0) errorfunct("FEMInterpolateMeshToMesh:weightedProjectorMesh2", "Error in this method");
+                        if (cols[q] > 0) fatal("FEMInterpolateMeshToMesh:weightedProjectorMesh2", "Error in this method.");
                         vq[0] = values[q];
                         vq[1] = values[q+1];
                         vq[2] = values[q+2];

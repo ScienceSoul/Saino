@@ -596,7 +596,7 @@
             _heatExpansionCoeff == NULL || _gasConstant == NULL || _heatCapacity == NULL || _referenceTemperature == NULL || _localTempPrev == NULL ||
             _localTemperature == NULL || _pSolution == NULL || _potentialField == NULL || _potentialCoefficient == NULL || _loadVector == NULL ||
             _alpha == NULL || _beta == NULL || _extPressure == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL || _elementNodes->z == NULL) {
-            errorfunct("FEMFlowSolution:solutionComputer", "Memory allocation error");
+            fatal("FEMFlowSolution:solutionComputer", "Memory allocation error.");
         }
         
         memset(*_drag, 0.0, (3*n)*sizeof(double) );
@@ -729,7 +729,7 @@
     }
     
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration.");
     
     for (iter=1; iter<=nonLinearIter; iter++) {
         

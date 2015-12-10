@@ -218,7 +218,7 @@ static const int PRECOND_VANKA     =  560;
         }
     } else {
         //TODO: implements solvers for complex matrix
-        errorfunct("FEMCore:FEMCore_iterCallType:", "linear solvers for complex matrix not implemented yet");
+        fatal("FEMCore:FEMCore_iterCallType:", "linear solvers for complex matrix not implemented yet.");
     }
 }
 
@@ -968,7 +968,7 @@ static const int PRECOND_VANKA     =  560;
         // Compute sum of element-wise normals for nodes on boundaries
         elementDescription = [FEMElementDescription sharedElementDescription];
         integration = [[FEMNumericIntegration alloc] init];
-        if ([integration allocation:mesh] == NO) errorfunct("FEMCore:FEMCore_localMatrix", "Allocation error in FEMNumericIntegration!");
+        if ([integration allocation:mesh] == NO) fatal("FEMCore:FEMCore_localMatrix", "Allocation error in FEMNumericIntegration.");
         elements = mesh.getElements;
         nodes = mesh.getNodes;
         nrm = doublevec(0, 2);
@@ -1308,7 +1308,7 @@ static const int PRECOND_VANKA     =  560;
             FEMMatrixCRS *matrixCRS = [[FEMMatrixCRS alloc] init];
             [matrixCRS fctlLowOrderInSolution:solution orMatrix:nil];
         } else {
-            errorfunct("FEMCore:FEMCore_finishAssemblyModel", "FCT scheme implemented only for one dof");
+            fatal("FEMCore:FEMCore_finishAssemblyModel", "FCT scheme implemented only for one dof.");
         }
     }
     
@@ -2320,10 +2320,10 @@ static const int PRECOND_VANKA     =  560;
     matContainers = matrix.getContainers;
     
     if (matContainers->DiagScaling == NULL) {
-        errorfunct("FEMCore:FEMCore_reverseRowEquilibrationMatrix", "Diag is a null pointer!");
+        fatal("FEMCore:FEMCore_reverseRowEquilibrationMatrix", "Diag is a null pointer.");
     }
     if (matContainers->sizeDiagScaling != n) {
-        errorfunct("FEMCore:FEMCore_reverseRowEquilibrationMatrix", "Diag of wrong size!");
+        fatal("FEMCore:FEMCore_reverseRowEquilibrationMatrix", "Diag of wrong size.");
     }
     
     for (i=0; i<n; i++) {
@@ -2538,7 +2538,7 @@ static const int PRECOND_VANKA     =  560;
             NSLog(@"FEMCore:SolveEquations: \n");
             NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d.\n", i);
             NSLog(@"FEMCore:SolveEquations: \n");
-            errorfunct("FEMCore:SolveEquations", "Program terminating now...");
+            fatal("FEMCore:SolveEquations", "Program terminating now...");
         }
     }
 }
@@ -2632,7 +2632,7 @@ static const int PRECOND_VANKA     =  560;
             [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         } else {
             NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %@.\n", (solution.solutionInfo)[@"equation"]);
-            errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
+            fatal("FEMCore:FEMCore_singleSolution", "Program terminating now...");
         }
 
     } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be deallocated with its asssociated solution
@@ -2640,7 +2640,7 @@ static const int PRECOND_VANKA     =  560;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
     } else {
         NSLog(@"FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %@.\n", (solution.solutionInfo)[@"equation"]);
-        errorfunct("FEMCore:FEMCore_singleSolution", "Program terminating now...");
+        fatal("FEMCore:FEMCore_singleSolution", "Program terminating now...");
     }
 }
 
@@ -2944,7 +2944,7 @@ static dispatch_once_t onceToken;
             }
         } else {
             NSLog(@"FEMCore:FEMCore_initializeTimeStepInSolution: unknown time stepping method: %@.\n", method);
-            errorfunct("FEMCore:FEMCore_initializeTimeStepInSolution", "Program terminating now...");
+            fatal("FEMCore:FEMCore_initializeTimeStepInSolution", "Program terminating now...");
         }
     }
     
@@ -3501,7 +3501,7 @@ static dispatch_once_t onceToken;
         currentElement = element;
     } else {
         NSLog(@"FEMCore:getActiveElement: invalid element number requested: %d\n", t);
-        errorfunct("FEMCore:getActiveElement", "Program terminating now");
+        fatal("FEMCore:getActiveElement", "Program terminating now...");
     }
     return element;
 }
@@ -3915,7 +3915,7 @@ static dispatch_once_t onceToken;
             // Add index for each bubble dof in edge
             for (i=0; i<element->BDOFs; i++) {
                 if (size < n) {
-                    errorfunct("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    fatal("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
@@ -3934,7 +3934,7 @@ static dispatch_once_t onceToken;
                 for (j=0; j<edges[faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].EdgeIndexes[i]].BDOFs; j++) {
                     
                     if (size < n) {
-                        errorfunct("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
+                        fatal("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
                         return;
                     }
                     
@@ -3946,7 +3946,7 @@ static dispatch_once_t onceToken;
             // Add indexes of faces bubbles
             for (i=0; i<faces[parent->FaceIndexes[element->Pdefs->LocalNumber]].BDOFs; i++) {
                 if (size < n) {
-                    errorfunct("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
+                    fatal("FEMCore:getBoundaryIndexes", "Not enough space reserved for indexes.");
                     return;
                 }
                 
@@ -3957,7 +3957,7 @@ static dispatch_once_t onceToken;
             *indexSize = n;
             break;
         default:
-            errorfunct("FEMCore:getBoundaryIndexes", "Unsupported dimension.");
+            fatal("FEMCore:getBoundaryIndexes", "Unsupported dimension.");
             break;
     }
 }
@@ -4205,7 +4205,7 @@ static dispatch_once_t onceToken;
     FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     FEMNumericIntegration *numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMCore:localBoundaryIntegral", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:solution.mesh] == NO) fatal("FEMCore:localBoundaryIntegral", "Allocation error in FEMNumericIntegration.");
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
@@ -4356,7 +4356,7 @@ static dispatch_once_t onceToken;
     BOOL stat;
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:solution.mesh] == NO) errorfunct("FEMCore:localBoundaryBDOFs", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:solution.mesh] == NO) fatal("FEMCore:localBoundaryBDOFs", "Allocation error in FEMNumericIntegration.");
     
     
     listUtil = [[FEMListUtilities alloc] init];
@@ -4437,7 +4437,7 @@ static dispatch_once_t onceToken;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d.\n", info);
-        errorfunct("FEMCore:solveWithLapackMatrix", "Program terminating now...");
+        fatal("FEMCore:solveWithLapackMatrix", "Program terminating now...");
     }
     
     trans = "N";
@@ -4445,7 +4445,7 @@ static dispatch_once_t onceToken;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMCore:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d.\n", info);
-        errorfunct("FEMCore:solveWithLapackMatrix", "Program terminating now...");
+        fatal("FEMCore:solveWithLapackMatrix", "Program terminating now...");
     }
     
     free_ivector(ipiv, 0, n-1);
@@ -4813,7 +4813,7 @@ static dispatch_once_t onceToken;
     
     if (anyActive == YES) {
         
-        if (permOffset > 0) errorfunct("setDirichletBoundaries", "Periodicity not supported with offset");
+        if (permOffset > 0) fatal("setDirichletBoundaries", "Periodicity not supported with offset.");
         
         donePeriodic = (BOOL*)malloc(sizeof(BOOL) * solution.mesh.numberOfNodes );
         memset( donePeriodic, NO, solution.mesh.numberOfNodes*sizeof(BOOL) );
@@ -5366,12 +5366,12 @@ static dispatch_once_t onceToken;
     }
     
     if (diag == NULL) {
-        errorfunct("FEMCore:backScaleLinearSystem", "Diag is a null pointer");
+        fatal("FEMCore:backScaleLinearSystem", "Diag is a null pointer.");
     }
     if (diagScaling != NULL) {
-        if (*sizeOfDiagScaling != n) errorfunct("FEMCore:backScaleLinearSystem", "Diag of wrong size");
+        if (*sizeOfDiagScaling != n) fatal("FEMCore:backScaleLinearSystem", "Diag of wrong size.");
     } else {
-        if (matContainers->sizeDiagScaling != n) errorfunct("FEMCore:backScaleLinearSystem", "Diag of wrong size");
+        if (matContainers->sizeDiagScaling != n) fatal("FEMCore:backScaleLinearSystem", "Diag of wrong size.");
     }
     
     if (b != NULL) {
@@ -5738,7 +5738,7 @@ static dispatch_once_t onceToken;
     memset( weightsVarContainers->Values, 0.0, weightsVarContainers->sizeValues*sizeof(double) );
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:solution.mesh] == NO) errorfunct("FEMCore:computeNodalWeightsInSolution", "Allocation error in computeNodalWeightsInSolution!");
+    if ([integration allocation:solution.mesh] == NO) fatal("FEMCore:computeNodalWeightsInSolution", "Allocation error in computeNodalWeightsInSolution.");
     
     elements = solution.mesh.getElements;
     nodes = solution.mesh.getNodes;
@@ -6948,7 +6948,7 @@ static dispatch_once_t onceToken;
         _kernStiff = doublematrix(0, n-1, 0, n-1);
         _kernWork = doublevec(0, n-1);
         if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
-            errorfunct("FEMCore:dirichletBoundaryConditions", "Memory allocation error.");
+            fatal("FEMCore:dirichletBoundaryConditions", "Memory allocation error.");
         _size1kernStiff = n;
         _size2kernStiff = n;
         _sizekernWork = n;
@@ -6965,7 +6965,7 @@ static dispatch_once_t onceToken;
         _kernStiff = doublematrix(0, n-1, 0, n-1);
         _kernWork = doublevec(0, n-1);
         if (_g_Ind == NULL || _l_Ind == NULL || _kernStiff == NULL || _kernWork == NULL)
-            errorfunct("FEMCore:dirichletBoundaryConditions", "Memory allocation error.");
+            fatal("FEMCore:dirichletBoundaryConditions", "Memory allocation error.");
 
         _size1kernStiff = n;
         _size2kernStiff = n;
@@ -7459,7 +7459,7 @@ static dispatch_once_t onceToken;
     
     if (isnan(norm) != 0 || norm > maxNorm) {
         NSLog(@"FEMCore:computeChange: computed norm: %lf.\n", norm);
-        errorfunct("FEMCore:computeChange", "Norm of solution has crossed given bounds.");
+        fatal("FEMCore:computeChange", "Norm of solution has crossed given bounds.");
     }
     
     matContainers = solution.matrix.getContainers;
@@ -7604,12 +7604,12 @@ static dispatch_once_t onceToken;
             FEMVariable *weightVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str onlySearch:NULL maskName:NULL info:&stat];
             if (weightVar == nil) {
                 NSLog(@"FEMCore:computeChange: average solution weight missing: %@.\n", str);
-                errorfunct("FEMCore:computeChange", "Program terminating now");
+                fatal("FEMCore:computeChange", "Program terminating now...");
             }
             variableArraysContainer *weightVarContainers = weightVar.getContainers;
             if (n != weightVarContainers->sizeValues) {
                 NSLog(@"FEMCore:computeChange: field and weight mismatch: %@.\n", str);
-                errorfunct("FEMCore:computeChange", "Program terminating now");
+                fatal("FEMCore:computeChange", "Program terminating now...");
             }
     
             double sum;
@@ -7873,7 +7873,7 @@ static dispatch_once_t onceToken;
     if (iterType == ITER_GMRES) {
         work = doublematrix(0, n-1, 0, wsize-1);
         if (work == NULL) {
-            errorfunct("FEMCore:iterativeSolveMatrix", "Memory allocation error");
+            fatal("FEMCore:iterativeSolveMatrix", "Memory allocation error.");
         }
     }
     
@@ -8078,9 +8078,9 @@ static dispatch_once_t onceToken;
     
     if (ipar[29] != 1 /*TODO: add support for parallel run*/) {
         if (ipar[29] == 3) {
-            errorfunct("FEMCore:iterativeSolveMatrix", "System diverged over tolerance.");
+            fatal("FEMCore:iterativeSolveMatrix", "System diverged over tolerance.");
         } else if (abortNotConverged == YES) {
-            errorfunct("FEMCore:iterativeSolveMatrix", "Failed convergence tolerances.");
+            fatal("FEMCore:iterativeSolveMatrix", "Failed convergence tolerances.");
         } else {
             NSLog(@"FEMCore:iterativeSolveMatrix: Failed convergence tolerances.");
         }
@@ -8149,7 +8149,7 @@ static dispatch_once_t onceToken;
         }
         if (found == NO) {
             varContainers->NonLinValues = doublevec(0, n-1);
-            if (varContainers->NonLinValues == NULL) errorfunct("FEMCore:solveSystemMatrix", "Memory allocation error.");
+            if (varContainers->NonLinValues == NULL) fatal("FEMCore:solveSystemMatrix", "Memory allocation error.");
             varContainers->sizeNonLinValues = n;
         }
         for (i=0; i<n; i++) {
@@ -8666,7 +8666,7 @@ static dispatch_once_t onceToken;
     } else if ([deviceType isEqualToString:@"cpu"] == YES) {
         queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);
     } else {
-        errorfunct("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Program terminating now...");
+        fatal("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Program terminating now...");
     }
     
     cl_uint vectorTypes[] = {CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE};

@@ -172,7 +172,7 @@
                     }
                 } else {
                     NSLog(@"FEMMaterialModels:effectiveViscosity: can't find variable %@ to inquire temperature field for Glen.\n", temperatureName);
-                    errorfunct("FEMMaterialModels:effectiveViscosity", "Program terminating now...");
+                    fatal("FEMMaterialModels:effectiveViscosity", "Program terminating now...");
                 }
             } else {
                 for (i=0; i<n; i++) {
@@ -225,7 +225,7 @@
         } else {
             arrheniusFactor = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"arrhenius factor" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
-                errorfunct("FEMMaterialModels:effectiveViscosity", "'set arrhenius factor' parameter is true but not value 'arrhenius factor'.");
+                fatal("FEMMaterialModels:effectiveViscosity", "'set arrhenius factor' parameter is true but not value for 'arrhenius factor'.");
             }
         }
         
@@ -391,7 +391,7 @@
     } else if ([viscosityFlag isEqualToString:@"ke"] == YES || [viscosityFlag isEqualToString:@"k-epsilon"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"kinetic energy" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined.");
         variableArraysContainer *varContainers = var.getContainers;
         ke_k = 0.0;
         for (i=0; i<n; i++) {
@@ -400,7 +400,7 @@
         var = nil;
         varContainers = NULL;
         var = [utilities getVariableFrom:model.variables model:model name:@"kinetic dissipation" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined.");
         varContainers = var.getContainers;
         ke_e = 0.0;
         for (i=0; i<n; i++) {
@@ -421,7 +421,7 @@
             var = nil;
             varContainers = NULL;
             var = [utilities getVariableFrom:model.variables model:model name:@"v2" onlySearch:NULL maskName:nil info:&found];
-            if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The v2 variable is not defined!");
+            if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The v2 variable is not defined.");
             varContainers = var.getContainers;
             ke_z = 0.0;
             for (i=0; i<n; i++) {
@@ -456,7 +456,7 @@
     } else if ([viscosityFlag isEqualToString:@"spalart-allmaras"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"turbulent viscosity" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The turbulent viscosity variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The turbulent viscosity variable is not defined.");
         variableArraysContainer *varContainers = var.getContainers;
         for (i=0; i<n; i++) {
             mu = mu + integration.basis[i]*varContainers->Values[varContainers->Perm[element->NodeIndexes[i]]];
@@ -467,7 +467,7 @@
     } else if ([viscosityFlag isEqualToString:@"k-omega"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"kinetic energy" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined.");
         variableArraysContainer *varContainers = var.getContainers;
         ke_k = 0.0;
         for (i=0; i<n; i++) {
@@ -476,7 +476,7 @@
         var = nil;
         varContainers = NULL;
         var = [utilities getVariableFrom:model.variables model:model name:@"kinetic dissipation" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined.");
         varContainers = var.getContainers;
         ke_e = 0.0;
         for (i=0; i<n; i++) {
@@ -486,7 +486,7 @@
     } else if ([viscosityFlag isEqualToString:@"sst k-omega"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"kinetic energy" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic energy variable is not defined.");
         variableArraysContainer *varContainers = var.getContainers;
         ke_k = 0.0;
         for (i=0; i<n; i++) {
@@ -495,7 +495,7 @@
         var = nil;
         varContainers = NULL;
         var = [utilities getVariableFrom:model.variables model:model name:@"kinetic dissipation" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The kinetic dissipation variable is not defined.");
         varContainers = var.getContainers;
         ke_e = 0.0;
         for (i=0; i<n; i++) {
@@ -504,7 +504,7 @@
         var = nil;
         varContainers = NULL;
         var = [utilities getVariableFrom:model.variables model:model name:@"wall distance" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "The wall distance variable is not defined!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The wall distance variable is not defined.");
         varContainers = var.getContainers;
         double dist = 0.0;
         for (i=0; i<n; i++) {
@@ -516,7 +516,7 @@
     } else if ([viscosityFlag isEqualToString:@"levelset"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"surface" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "Variable surface needed in levelset viscosity model but not found!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "Variable surface needed in levelset viscosity model but not found.");
         variableArraysContainer *varContainers = var.getContainers;
         
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity difference" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
@@ -557,7 +557,7 @@
     if (found == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"temperature" onlySearch:NULL maskName:nil info:&found];
-        if (var == nil) errorfunct("FEMMaterialModels:effectiveViscosity", "Variable temperature needed for thermal model but not found!");
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "Variable temperature needed for thermal model but not found.");
         variableArraysContainer *varContainers = var.getContainers;
         c2 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"viscosity temp ref" info:&found minValue:NULL maxValue:NULL];
         c3 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"viscosity temp offset" info:&found minValue:NULL maxValue:NULL];

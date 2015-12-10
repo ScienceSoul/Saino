@@ -170,7 +170,7 @@ inline double detJ(double *covariantMetricTensor, double *dx, Element_t *element
             break;
             
         default:
-            errorfunct("FEMNumericIntegration:detJForElement", "Dimension not supported!!");
+            fatal("FEMNumericIntegration:detJForElement", "Dimension not supported.");
             break;
     }
     
@@ -183,7 +183,7 @@ inline double detJ(double *covariantMetricTensor, double *dx, Element_t *element
         if (cdim < dim) {
             printf("detJForElement: element dimension larger than mesh dimension: %d vs %d\n", dim, cdim);
         }
-        errorfunct("detJForElement", "Programm terminating now...");
+        fatal("detJForElement", "Programm terminating now...");
     }
     return detG;
 }
@@ -225,7 +225,7 @@ inline bool contravariantMetric(double *elementMetric, double *dx, Element_t *el
             break;
             
         default:
-            errorfunct("FEMNumericIntegration:setMetricForElement", "Dimension not supported!!");
+            fatal("FEMNumericIntegration:setMetricForElement", "Dimension not supported.");
             break;
     }
     
@@ -341,7 +341,7 @@ inline void globalSecondDerivatives(double *elementMetric, Element_t *element, N
             break;
             
         default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Coordinate dimension not supported!!");
+            fatal("FEMNumericIntegration:globalSecondDerivativesForElement", "Coordinate dimension not supported.");
             break;
     }
     
@@ -409,7 +409,7 @@ inline void globalSecondDerivatives(double *elementMetric, Element_t *element, N
             break;
             
         default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
+            fatal("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported.");
             break;
     }
     
@@ -466,7 +466,7 @@ inline void globalSecondDerivatives(double *elementMetric, Element_t *element, N
             break;
             
         default:
-            errorfunct("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported");
+            fatal("FEMNumericIntegration:globalSecondDerivativesForElement", "Element dimension not supported.");
             break;
     }
     

@@ -370,7 +370,7 @@
     
     if (aContainer == NULL) {
         NSLog(@"FEMUtilities:addVariableTo: container argument is not allocated.\n");
-        errorfunct("FEMUtilities:addVariableTo:", "Program terminating now...");
+        fatal("FEMUtilities:addVariableTo:", "Program terminating now...");
     }
     
     for (FEMVariable *variable in anArray) {
@@ -981,7 +981,7 @@
     detA = a[0][0] * a[1][1] - a[0][1] * a[1][0];
     
     if (detA == 0.0) {
-        errorfunct("FEMUtilities:solveLinearSystem2x2", "Singular matrix, bad!!!");
+        fatal("FEMUtilities:solveLinearSystem2x2", "Singular matrix, bad...");
         return;
     }
     
@@ -1125,11 +1125,11 @@
                 ind.location = -1;
             }
             ind1 = [str rangeOfString:@":"];
-            if (ind1.location == NSNotFound) errorfunct("FEMUtilities:appendNameFromString", "Missing separator ':' in variable definition using '[ ]' syntax.");
+            if (ind1.location == NSNotFound) fatal("FEMUtilities:appendNameFromString", "Missing separator ':' in variable definition using '[ ]' syntax.");
             if (j == 0) {
-                if (ind1.location < ind.location) errorfunct("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
+                if (ind1.location < ind.location) fatal("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
             } else {
-                if (ind1.location == 0) errorfunct("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
+                if (ind1.location == 0) fatal("FEMUtilities:appendNameFromString", "Syntax error in variable definition.");
             }
             i = (int)ind1.location + 1;
             while (1) {
@@ -1221,7 +1221,7 @@
                 
                 //TODO: app support for parallel run where in case of a parallel run
                 // the direct solver must be MUMPS
-                if ([str isEqualToString:@"mumps"] == YES) errorfunct("FEMUtilities:checkOptionsInSolution", "Currenly no serial version of the mumps solver implemented,");
+                if ([str isEqualToString:@"mumps"] == YES) fatal("FEMUtilities:checkOptionsInSolution", "Currenly no serial version of the mumps solver implemented.");
                 
                 if ([str isEqualToString:@"banded"] == YES) {
                     
@@ -1230,13 +1230,13 @@
                 } else if ([str isEqualToString:@"mumps"] == YES) {
                     
                 } else if ([str isEqualToString:@"superlu"] == YES) {
-                    errorfunct("FEMUtilities:checkOptionsInSolution", "SuperLU solver is not available.");
+                    fatal("FEMUtilities:checkOptionsInSolution", "SuperLU solver is not available.");
                 } else if ([str isEqualToString:@"pardiso"] == YES) {
-                    errorfunct("FEMUtilities:checkOptionsInSolution", "Pardiso solver is not available.");
+                    fatal("FEMUtilities:checkOptionsInSolution", "Pardiso solver is not available.");
                 } else if ([str isEqualToString:@"cholmod"] == YES || [str isEqualToString:@"spqr"] == YES) {
-                    errorfunct("FEMUtilities:checkOptionsInSolution", "Cholmod solver is not available.");
+                    fatal("FEMUtilities:checkOptionsInSolution", "Cholmod solver is not available.");
                 } else {
-                    errorfunct("FEMUtilities:checkOptionsInSolution", "Unknown direct solver method.");
+                    fatal("FEMUtilities:checkOptionsInSolution", "Unknown direct solver method.");
                 }
             } else {
                 //TODO: add support for parallel run since then it should be mumps by default.
@@ -1421,12 +1421,12 @@
         NSBundle *solutionBundle = [self loadBundle:solution.plugInName];
         if (solutionBundle == nil) {
             NSLog(@"FEMUtilities:addEquationBasicsToSolution: error loading plug-in bundle.\n");
-            errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+            fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
         }
         // Instantiate the plug-in principal class
         if ([solution instantiatePrincipalClassFromPlugIn:solutionBundle] == NO) {
             NSLog(@"FEMUtilities:addEquationBasicsToSolution: error instanciating plug-in principal class.\n");
-            errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+            fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
         }
     } else { // We are woking with a built-in solution computer
         solution.hasBuiltInSolution = YES;
@@ -1550,7 +1550,7 @@
             if ((solution.solutionInfo)[@"equation"] != nil) {
                 eq = (solution.solutionInfo)[@"equation"];
             } else {
-                errorfunct("FEMUtilities:addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
+                fatal("FEMUtilities:addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
             }
             found = NO;
             for (FEMEquation *equation in model.equations) {
@@ -1561,7 +1561,7 @@
             }
             if (found == NO) {
                 NSLog(@"FEMUtilities:addEquationBasicsToSolution: variable %@ exists but it's not associated to any equation.\n", varName);
-                errorfunct("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
+                fatal("FEMUtilities:addEquationBasicsToSolution", "Program terminating now...");
             }
             
             // Compute the size of the permutation vector
@@ -2192,14 +2192,14 @@
                 found = [listUtilities listGetConstRealArray:model inArray:solution.valuesList forVariable:@"frequency" buffer:&freqv];
                 if (found == YES) {
                     if (freqv.m < n) {
-                        errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'frequency' must be at least the same size as the Harmonic system values.");
+                        fatal("FEMUtilities:addEquationToSolution", "The solution option 'frequency' must be at least the same size as the Harmonic system values.");
                     }
                     if (freqv.matrix != NULL) {
                         free_dmatrix(freqv.matrix, 0, freqv.m-1, 0, freqv.n-1);
                         freqv.matrix = NULL;
                     }
                 } else {
-                    errorfunct("FEMUtilities:addEquationToSolution", "The solution option 'fequency' must be given for harmonic analysis.");
+                    fatal("FEMUtilities:addEquationToSolution", "The solution option 'fequency' must be given for harmonic analysis.");
                 }
             } else {
                 n = 1;
@@ -2288,7 +2288,7 @@
                     if (mgAlgebraic == YES) {
                         mgLevels = 10;
                     } else {
-                        errorfunct("FEMUtilities:addEquationToSolution", "'mg levels' must be defined for geometric multigrid.");
+                        fatal("FEMUtilities:addEquationToSolution", "'mg levels' must be defined for geometric multigrid.");
                     }
                 }
             }

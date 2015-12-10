@@ -723,7 +723,7 @@
     
     if (aContainers->Cols[n] >= 0) {
         NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, aContainers->Cols[n]);
-        errorfunct("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
+        fatal("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
     
     aContainers->Cols[n] = j;

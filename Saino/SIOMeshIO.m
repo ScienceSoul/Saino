@@ -60,7 +60,7 @@
     
     if (directory == nil) {
         NSLog(@"SIOMeshIO:openMeshAtPath: no assignment to directory name (empty object pointer).\n");
-        errorfunct("SIOMeshIO:openMeshAtPath", "Program terminating now...");
+        fatal("SIOMeshIO:openMeshAtPath", "Program terminating now...");
     }
     _meshAgent = [[SIOMeshAgent alloc] initWithManager:self.modelManager split:self.parallelState.numProc part:self.parallelState.myProc];
     

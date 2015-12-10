@@ -417,7 +417,7 @@ enum {
             _load == NULL || _force == NULL || _timeForce == NULL || _perfusionRate == NULL || _perfusionDensity == NULL ||
             _perfusionHeatCapacity == NULL || _perfusionRefTemperature == NULL || _elementNodes->x == NULL || _elementNodes->y == NULL ||
             _elementNodes->z == NULL) {
-            errorfunct("FEMHeatSolution:solutionComputer", "Memory allocation error");
+            fatal("FEMHeatSolution:solutionComputer", "Memory allocation error.");
         }
         
         cols = 2*n;
@@ -484,7 +484,7 @@ enum {
     _prevSolution = doublevec(0, _localNodes-1);
     
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMHeatSolution_OpenCL:solutionComputer", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMHeatSolution_OpenCL:solutionComputer", "Allocation error in FEMNumericIntegration.");
     
 	// Connect to a compute devise
 	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &devices, NULL);

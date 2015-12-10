@@ -86,7 +86,7 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
         *dfx = d_wall_law(*ufric, ut, densit, viscos, dist, rough);
         
         // Newton steps
-        if (*dfx == 0.0) errorfunct("solve_ufric", "dfx = 0");
+        if (*dfx == 0.0) fatal("solve_ufric", "dfx = 0.");
         *ufric = *ufric - fx / *dfx;
         yplus = densit * *ufric * dist / viscos;
         if (fabs(fx) <= tol) break;

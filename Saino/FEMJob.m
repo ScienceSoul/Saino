@@ -762,7 +762,7 @@
                 adaptiveLimit = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive time error" info:&found minValue:NULL maxValue:NULL];
                 
                 if (found == NO) {
-                    errorfunct("FEMJob:FEMJob_runSimulation", "Adaptive time limit must be be given for adaptive stepping scheme.");
+                    fatal("FEMJob:FEMJob_runSimulation", "Adaptive time limit must be be given for adaptive stepping scheme.");
                 }
                 
                 adaptiveMaxTimeStep = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"adaptive max time step" info:&found minValue:NULL maxValue:NULL];
@@ -1210,14 +1210,14 @@ jump:
             if ([fileManager createFileAtPath:fName contents:nil attributes:nil] == YES) {
                 outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
             } else {
-                errorfunct("FEMJob:FEMJob_saveResult", "Can't create result file.");
+                fatal("FEMJob:FEMJob_saveResult", "Can't create result file.");
             }
         } else { // File already exists, erase it and start from scratch
             [fileManager removeItemAtPath:fName error:nil];
             if ([fileManager createFileAtPath:fName contents:nil attributes:nil] == YES) {
                 outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
             } else {
-                errorfunct("FEMJob:FEMJob_saveResult", "Can't create result file.");
+                fatal("FEMJob:FEMJob_saveResult", "Can't create result file.");
             }
         }
         // The first time, we start by writing the header
@@ -1587,7 +1587,7 @@ jump:
     if (_gotModelName == NO) {
         NSFileHandle *startFile = [NSFileHandle fileHandleForReadingAtPath:@"SAINO_STARTINFO"];
         if (startFile == nil) {
-            errorfunct("FEMJob:runWithInitialize", "SAINO_STARTINFO file not found.");
+            fatal("FEMJob:runWithInitialize", "SAINO_STARTINFO file not found.");
         }
         NSData *buffer = [startFile readDataToEndOfFile];
         self.modelName = [[NSString alloc] initWithData:buffer encoding:NSUTF8StringEncoding];
@@ -1614,7 +1614,7 @@ jump:
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
                 NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@ '].\n", self.modelName);
-                errorfunct("FEMJob:runWithInitialize","Program terminating now...");
+                fatal("FEMJob:runWithInitialize","Program terminating now...");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
@@ -1678,7 +1678,7 @@ jump:
          // Time integration and/or steady state steps
         if (_transient == YES || _scanning == YES) {
             found = [listUtilities listGetIntegerArray:self.model inArray:self.model.simulation.valuesList forVariable:@"time step intervals" buffer:&listBuffer];
-            if (found == NO) errorfunct("FEMJob:runWithInitialize", "Keyword > time step intervals < must be defined for transient and scanning simulations.");
+            if (found == NO) fatal("FEMJob:runWithInitialize", "Keyword > time step intervals < must be defined for transient and scanning simulations.");
             
             _timeSteps = intvec(0, listBuffer.m-1);
             _sizeTimeSteps = listBuffer.m;

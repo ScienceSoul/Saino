@@ -92,7 +92,7 @@ inline GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int 
                 eldim = element->Type.dimension;
                 p1d = (int)round(pow((double)n, (1.0/(double)eldim))) + *relOrder;
                 if (p1d < 1) {
-                    errorfunct("GaussIntegrationPoints", "Number of integration points must remain positive!");
+                    fatal("GaussIntegrationPoints", "Number of integration points must remain positive.");
                 }
                 n = (int)pow((double)p1d, (double)eldim);
             }

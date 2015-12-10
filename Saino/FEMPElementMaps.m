@@ -298,7 +298,7 @@
     
     if (localEdge < 0) {
         NSLog(@"FEMPElementMaps:getBrickFaceEdgeMap: unknown combination node for (face,node): %d %d.\n", face, node);
-        errorfunct("FEMPElementMaps:getBrickFaceEdgeMap", "Terminating now!!!");
+        fatal("FEMPElementMaps:getBrickFaceEdgeMap", "Terminating now...");
     }    
     return localEdge;
 }
@@ -325,7 +325,7 @@
             }
             break;
         default:
-            errorfunct("FEMPElementMaps:getTetraEdgeMap", "Unknown tetra type.");
+            fatal("FEMPElementMaps:getTetraEdgeMap", "Unknown tetra type.");
             break;
     }
 }
@@ -351,7 +351,7 @@
             }
             break;
         default:
-            errorfunct("FEMPElementMaps:getTetraFaceMap", "Unknown tetra type.");
+            fatal("FEMPElementMaps:getTetraFaceMap", "Unknown tetra type.");
             break;
     }
 }
@@ -486,7 +486,7 @@
                     map = _tetraFaceMap2;
                     break;
                 default:
-                    errorfunct("FEMPElementMaps:getFaceMapForElement", "Unknown tetra type for p element.");
+                    fatal("FEMPElementMaps:getFaceMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -500,7 +500,7 @@
             map = _brickFaceMap;
             break;
         default:
-            errorfunct("FEMPElementMaps:getFaceMapForElement", "Unsupported element type.");
+            fatal("FEMPElementMaps:getFaceMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -540,7 +540,7 @@
                     map = _tetraEdgeMap2;
                     break;
                 default:
-                     errorfunct("FEMPElementMaps:getEdgeMapForElement", "Unknown tetra type for p element.");
+                     fatal("FEMPElementMaps:getEdgeMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -554,7 +554,7 @@
             map =_brickEdgeMap;
             break;
         default:
-            errorfunct("FEMPElementMaps:getEdgeMapForElement", "Unsupported element type.");
+            fatal("FEMPElementMaps:getEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -588,7 +588,7 @@
                     map = _tetraFaceEdgeMap2;
                     break;
                 default:
-                    errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type for p element.");
+                    fatal("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type for p element.");
                     break;
             }
             break;
@@ -602,7 +602,7 @@
             map =_brickFaceEdgeMap;
             break;
         default:
-            errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
+            fatal("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -653,7 +653,7 @@
             [self getBrickFaceMap:map index:i];
             break;
         default:
-            errorfunct("FEMPElementMaps:getBoundaryMapForElement", "Unsupported element type.");
+            fatal("FEMPElementMaps:getBoundaryMapForElement", "Unsupported element type.");
             break;
     }
 }
@@ -691,7 +691,7 @@
                     }
                     break;
                 default:
-                    errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type.");
+                    fatal("FEMPElementMaps:getFaceEdgeMapForElement", "Unknown tetra type.");
                     break;
             }
             break;
@@ -711,7 +711,7 @@
             }
             break;
         default:
-            errorfunct("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
+            fatal("FEMPElementMaps:getFaceEdgeMapForElement", "Unsupported element type.");
             break;
     }
 }

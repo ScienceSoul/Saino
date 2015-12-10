@@ -731,7 +731,7 @@
     }
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMElementUtils:elementArea", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMElementUtils:elementArea", "Allocation error in FEMNumericIntegration.");
     IP = GaussQuadrature(element, NULL, NULL);
     
     // Start integrating

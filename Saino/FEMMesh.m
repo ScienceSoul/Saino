@@ -212,7 +212,7 @@
     } else if (tetra->NodeIndexes[2] < tetra->NodeIndexes[1]) {
         tetra->Pdefs->TetraType = 2;
     } else {
-        errorfunct("FEMMesh:FEMMesh_convertToACTetra", "Corrupted element type.");
+        fatal("FEMMesh:FEMMesh_convertToACTetra", "Corrupted element type.");
     }
     
     free_ivector(face, 0, 2);
@@ -396,7 +396,7 @@
     element->Pdefs = NULL;
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
     if (element->Pdefs == NULL) {
-        errorfunct("FEMMesh:allocatePDefinitionsForElement", "Unable to allocate memory");
+        fatal("FEMMesh:allocatePDefinitionsForElement", "Unable to allocate memory.");
     }
     
     element->Pdefs->p = 0;
@@ -454,13 +454,13 @@
     [meshIO openMeshAtPath:name];
     if (meshIO.info != 0) {
         NSLog(@"FEMMesh:loadMeshForModel: unable to load mesh: %@.\n", name);
-        errorfunct("FEMMesh:loadMeshForModel", "Program terminating now...");
+        fatal("FEMMesh:loadMeshForModel", "Program terminating now...");
     }
     
     [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
         NSLog(@"FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %@.\n", name);
-        errorfunct("FEMMesh:loadMeshForModel", "Program terminating now...");
+        fatal("FEMMesh:loadMeshForModel", "Program terminating now...");
     }
     
     if (bd == YES) self.numberOfBulkElements = 0;
@@ -475,7 +475,7 @@
     }
     
     _globalNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
-    if (_globalNodes == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate nodes structure.");
+    if (_globalNodes == NULL) fatal("FEMMesh:loadMeshForModel", "Failure to allocate nodes structure.");
     initNodes(_globalNodes);
     _globalNodes->numberOfNodes = self.numberOfNodes;
     _globalNodes->x = doublevec(0, self.numberOfNodes-1);
@@ -483,7 +483,7 @@
     _globalNodes->z = doublevec(0, self.numberOfNodes-1);
     
     _elements = (Element_t*) malloc( sizeof(Element_t) * (self.numberOfBulkElements+self.numberOfBoundaryElements) );
-    if (_elements == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate elements structure.");
+    if (_elements == NULL) fatal("FEMMesh:loadMeshForModel", "Failure to allocate elements structure.");
     initElements(_elements, self.numberOfBulkElements+self.numberOfBoundaryElements);
     self.numberOfElements = self.numberOfBulkElements+self.numberOfBoundaryElements;
     
@@ -499,10 +499,10 @@
     if (found == YES) {
         if (coordMap.m != 3) {
             NSLog(@"FEMMesh:loadMeshForModel: inconsistent coordinate mapping: \n");
-            errorfunct("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
+            fatal("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
         }
         if (min_array(coordMap.ivector, 3) < 1 || max_array(coordMap.ivector, 3) > 3) {
-            errorfunct("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
+            fatal("FEMMesh:loadMeshForModel", "Coordinate mapping should be a permutation of 1, 2, 3.");
         }
         j = 0;
         for (i=coordMap.ivector[0]-1; i<3*self.numberOfNodes; i+=3) {
@@ -608,10 +608,10 @@
     elementTags = intvec(0, (self.numberOfBulkElements+1)-1);
     
     edgeDofs = intvec(0, self.numberOfBulkElements-1);
-    if (edgeDofs == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate edge dofs.");
+    if (edgeDofs == NULL) fatal("FEMMesh:loadMeshForModel", "Failure to allocate edge dofs.");
     
     faceDofs = intvec(0, self.numberOfBulkElements-1);
-    if (faceDofs == NULL) errorfunct("FEMMesh:loadMeshForModel", "Failure to allocate face dofs.");
+    if (faceDofs == NULL) fatal("FEMMesh:loadMeshForModel", "Failure to allocate face dofs.");
     
     memset( elementTags, 0, (self.numberOfBulkElements+1)*sizeof(int) );
     dgIndex = 0;
@@ -814,7 +814,7 @@
             n = _elements[i].Type.NumberOfNodes;
             
             _elements[i].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            if (_elements[i].BoundaryInfo == NULL) errorfunct("FEMMesh:loadMeshForModel", "Unable to allocate the boundary info.");
+            if (_elements[i].BoundaryInfo == NULL) fatal("FEMMesh:loadMeshForModel", "Unable to allocate the boundary info.");
             initBoundaryInfo(_elements[i].BoundaryInfo);
             
             _elements[i].BoundaryInfo->Constraint = 0;
@@ -1366,7 +1366,7 @@
         case 2:
             
             if (intervals[1] <= 0) {
-                errorfunct("FEMMesh:Simple2DMesh", "No intervals given for second direction discretization in rectangle domain.");
+                fatal("FEMMesh:Simple2DMesh", "No intervals given for second direction discretization in rectangle domain.");
             }
             
             meshsize1 = (maxx-minx) / intervals[0];
@@ -1378,7 +1378,7 @@
             break;
             
         default:
-            errorfunct("FEMMesh:Simple2DMesh", "Failure in method Simple2DMesh. Cant initialize mesh.");
+            fatal("FEMMesh:Simple2DMesh", "Failure in method Simple2DMesh. Cant initialize mesh.");
             break;
     }
     

@@ -55,7 +55,7 @@
     
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
     cMatrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:1 permutation:cPerm sizeOfPermutation:model.numberOfNodes matrixFormat:MATRIX_CRS optimizeBandwidth:NO equationName:nil discontinuousGalerkinSolution:NULL globalBubbles:NULL];
-    if (cMatrix == nil) errorfunct("FEMFreeSurface_poissonSolveModel", "Can't create matrix");
+    if (cMatrix == nil) fatal("FEMFreeSurface_poissonSolveModel", "Can't create matrix.");
     
     localMatrix = doublematrix(0, model.maxElementNodes-1, 0, model.maxElementNodes-1);
     nodes = (Nodes_t*)malloc(sizeof(Nodes_t));

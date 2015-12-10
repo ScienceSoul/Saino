@@ -105,7 +105,7 @@
             if (found == YES) {
                 varContainers = var.getContainers;
                 if (var.dofs != 1) {
-                    errorfunct("FEMStructuredMeshMapper:solutionComputer", "Top surface should have only 1 dof.");
+                    fatal("FEMStructuredMeshMapper:solutionComputer", "Top surface should have only 1 dof.");
                 } else {
                     if (varContainers != NULL) {
                         _topField = varContainers->Values;
@@ -115,7 +115,7 @@
                 }
             } else {
                 NSLog(@"FEMStructuredMeshMapper:solutionComputer: top surface variable is missing: %@.\n", varName);
-                errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
             }
         }
     }
@@ -162,7 +162,7 @@
             if (found == YES) {
                 varContainers = var.getContainers;
                 if (var.dofs != 1) {
-                    errorfunct("FEMStructuredMeshMapper:solutionComputer", "Bottom surface should have only 1 dof.");
+                    fatal("FEMStructuredMeshMapper:solutionComputer", "Bottom surface should have only 1 dof.");
                 } else {
                     if (varContainers != NULL) {
                         _bottomField = varContainers->Values;
@@ -172,7 +172,7 @@
                 }
             } else {
                 NSLog(@"FEMStructuredMeshMapper:solutionComputer: bottom surface variable is missing: %@.\n", varName);
-                errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
             }
         }
     }
@@ -215,11 +215,11 @@
             if (veloVar.dofs == 1) {
                 gotVeloVar = YES;
             } else {
-                errorfunct("FEMStructuredMeshMapper:solutionComputer", "The size of mesh velocity must be one.");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh velocity must be one.");
             }
         } else {
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
-            errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
         }
     }
     
@@ -234,11 +234,11 @@
             if (updateVar.dofs == 1) {
                 gotUpdateVar = YES;
             } else {
-                errorfunct("FEMStructuredMeshMapper:solutionComputer", "The size of mesh update must be one.");
+                fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh update must be one.");
             }
         } else {
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
-            errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
         }
     }
     
@@ -302,7 +302,7 @@
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: position %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal %f, botVal %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
             NSLog(@"FEMStructuredMeshMapper:solutionComputer: top and bottom get tangled: %f %f.\n", topVal, bottomVal);
-            errorfunct("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Program terminating now...");
         }
         
         xLoc = wTop * topVal + (1.0 - wTop) * bottomVal;

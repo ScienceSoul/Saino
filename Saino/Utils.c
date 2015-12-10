@@ -597,7 +597,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr) {
             arr[l+1] = arr[j];
             arr[j] = a;
             jstack += 2;
-            if (jstack > NSTACK) errorfunct("Sort", "NSTACK too small in sort routine");
+            if (jstack > NSTACK) fatal("Sort", "NSTACK too small in sort routine.");
             if (ir-i+1 >= j-l) {
                 istack[jstack] = ir;
                 istack[jstack-1] = i;
@@ -677,7 +677,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, int *brr) {
             brr[l+1] = brr[j];
             brr[j] = b;
             jstack += 2;
-            if (jstack > NSTACK) errorfunct("Sort", "NSTACK too small in sort routine");
+            if (jstack > NSTACK) fatal("Sort", "NSTACK too small in sort routine.");
             if (ir-i+1 >= j-l) {
                 istack[jstack] = ir;
                 istack[jstack-1] = i;
@@ -752,7 +752,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, float *brr) {
             brr[l+1] = brr[j];
             brr[j] = b;
             jstack += 2;
-            if (jstack > NSTACK) errorfunct("Sort", "NSTACK too small in sort routine");
+            if (jstack > NSTACK) fatal("Sort", "NSTACK too small in sort routine.");
             if (ir-i+1 >= j-l) {
                 istack[jstack] = ir;
                 istack[jstack-1] = i;
@@ -827,7 +827,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, double *brr) 
             brr[l+1] = brr[j];
             brr[j] = b;
             jstack += 2;
-            if (jstack > NSTACK) errorfunct("Sort", "NSTACK too small in sort routine");
+            if (jstack > NSTACK) fatal("Sort", "NSTACK too small in sort routine.");
             if (ir-i+1 >= j-l) {
                 istack[jstack] = ir;
                 istack[jstack-1] = i;

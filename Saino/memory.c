@@ -17,7 +17,7 @@ bool *boolvec(long nl, long nh) {
     bool *v;
 	
 	v = (bool *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(bool)));
-	if (!v) errorfunct("intvec", "Allocation failure for the bool vector");
+	if (!v) fatal("intvec", "Allocation failure for the bool vector.");
 	return v-nl+FI_END;
 }
 
@@ -26,7 +26,7 @@ int *intvec(long nl, long nh)
 	int *v;
 	
 	v = (int *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(int)));
-	if (!v) errorfunct("intvec", "Allocation failure for the integer vector");
+	if (!v) fatal("intvec", "Allocation failure for the integer vector.");
 	return v-nl+FI_END;
 }
 
@@ -35,7 +35,7 @@ unsigned long *ulongvec(long nl, long nh)
     unsigned long *v;
 	
 	v = (unsigned long *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(unsigned long)));
-	if (!v) errorfunct("intvec", "Allocation failure for the long vector");
+	if (!v) fatal("intvec", "Allocation failure for the long vector.");
 	return v-nl+FI_END;
 }
 
@@ -45,7 +45,7 @@ double *doublevec(long nl, long nh)
 	double *v;
 	
 	v = (double *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(double)));
-	if (!v) errorfunct("doublevec", "Allocation failure for the double vector");
+	if (!v) fatal("doublevec", "Allocation failure for the double vector.");
 	
 	return v-nl+FI_END;
 }
@@ -55,7 +55,7 @@ float *floatvec(long nl, long nh)
 	float *v;
 	
 	v = (float *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(float)));
-	if (!v) errorfunct("floatvec", "Allocation failure for the float vector");
+	if (!v) fatal("floatvec", "Allocation failure for the float vector.");
 	
 	return v-nl+FI_END;
 }
@@ -66,7 +66,7 @@ double complex *cdoublevec(long nl, long nh)
 	double complex *v;
 	
 	v = (double complex *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(double complex)));
-	if (!v) errorfunct("cdoublevec", "Allocation failure for the complex double vector");
+	if (!v) fatal("cdoublevec", "Allocation failure for the complex double vector.");
 	
 	return v-nl+FI_END;
 }
@@ -77,12 +77,12 @@ bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
 	bool **m;
 	
 	m = (bool **) malloc((size_t) ((nrow+FI_END)*sizeof(bool*)));
-	if (!m) errorfunct("intmatrix", "Allocation failure for the integer matrix 1");
+	if (!m) fatal("intmatrix", "Allocation failure for the integer matrix 1.");
 	m += FI_END;
 	m -= nrl;
 	
 	m[nrl] = (bool *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(bool)));
-	if (!m[nrl]) errorfunct("intmatrix", "Allocation failure for the integer matrix 2");
+	if (!m[nrl]) fatal("intmatrix", "Allocation failure for the integer matrix 2.");
 	m[nrl] += FI_END;
 	m[nrl] -= ncl;
 	
@@ -98,12 +98,12 @@ int **intmatrix(long nrl, long nrh, long ncl, long nch)
 	int **m;
 	
 	m = (int **) malloc((size_t) ((nrow+FI_END)*sizeof(int*)));
-	if (!m) errorfunct("intmatrix", "Allocation failure for the integer matrix 1");
+	if (!m) fatal("intmatrix", "Allocation failure for the integer matrix 1.");
 	m += FI_END;
 	m -= nrl;
 	
 	m[nrl] = (int *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(int)));
-	if (!m[nrl]) errorfunct("intmatrix", "Allocation failure for the integer matrix 2");
+	if (!m[nrl]) fatal("intmatrix", "Allocation failure for the integer matrix 2.");
 	m[nrl] += FI_END;
 	m[nrl] -= ncl;
 	
@@ -118,12 +118,12 @@ double **doublematrix(long nrl, long nrh, long ncl, long nch)
 	double **m;
 	
 	m = (double **) malloc((size_t) ((nrow+FI_END)*sizeof(double*)));
-	if (!m) errorfunct("doublematrix", "Allocation failure for the double matrix 1");
+	if (!m) fatal("doublematrix", "Allocation failure for the double matrix 1.");
 	m += FI_END;
 	m -= nrl;
 	
 	m[nrl]=(double *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double)));
-	if (!m[nrl]) errorfunct("doublematrix", "Allocation failure for the double matrix 2");
+	if (!m[nrl]) fatal("doublematrix", "Allocation failure for the double matrix 2.");
 	m[nrl] += FI_END;
 	m[nrl] -= ncl;
 	
@@ -138,12 +138,12 @@ float **floatmatrix(long nrl, long nrh, long ncl, long nch)
 	float **m;
 	
 	m = (float **) malloc((size_t) ((nrow+FI_END)*sizeof(float*)));
-	if (!m) errorfunct("floatmatrix", "Allocation failure for the float matrix 1");
+	if (!m) fatal("floatmatrix", "Allocation failure for the float matrix 1.");
 	m += FI_END;
 	m -= nrl;
 	
 	m[nrl]=(float *) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(float)));
-	if (!m[nrl]) errorfunct("floatmatrix", "Allocation failure for the float matrix 2");
+	if (!m[nrl]) fatal("floatmatrix", "Allocation failure for the float matrix 2.");
 	m[nrl] += FI_END;
 	m[nrl] -= ncl;
 	
@@ -158,12 +158,12 @@ double complex **cdoublematrix(long nrl, long nrh, long ncl, long nch) {
 	double complex **m;
 	
 	m = (double complex**) malloc((size_t) ((nrow+FI_END)*sizeof(double complex*)));
-	if (!m) errorfunct("cdoublematrix", "Allocation failure for the double matrix 1");
+	if (!m) fatal("cdoublematrix", "Allocation failure for the double matrix 1.");
 	m += FI_END;
 	m -= nrl;
 	
 	m[nrl]=(double complex*) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double complex)));
-	if (!m[nrl]) errorfunct("cdoublematrix", "Allocation failure for the double matrix 2");
+	if (!m[nrl]) fatal("cdoublematrix", "Allocation failure for the double matrix 2.");
 	m[nrl] += FI_END;
 	m[nrl] -= ncl;
 	
@@ -179,19 +179,19 @@ double ***d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	
 	/*Allocate pointers to pointers to rows*/
 	t = (double ***) malloc((size_t) ((nrow+FI_END)*sizeof(double**)));
-	if (!t) errorfunct("d3tensor", "Allocation failure 1 in d3tensor()");
+	if (!t) fatal("d3tensor", "Allocation failure 1 in d3tensor().");
 	t += FI_END;
 	t -= nrl;
 	
 	/*Alocate pointers to rows and set pointers to them*/
 	t[nrl] = (double **) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(double*)));
-	if (!t[nrl]) errorfunct("d3tensor", "Allocation failure 2 in d3tensor()");
+	if (!t[nrl]) fatal("d3tensor", "Allocation failure 2 in d3tensor().");
 	t[nrl] += FI_END;
 	t[nrl] -= ncl;
 	
 	/*Allocate rows and set pointers to them*/
 	t[nrl][ncl] = (double *) malloc((size_t) ((nrow*ncol*ndep+FI_END)*sizeof(double)));
-	if (!t[nrl][ncl]) errorfunct("d3tensor", "Allocation failure 3 in d3tensor()");
+	if (!t[nrl][ncl]) fatal("d3tensor", "Allocation failure 3 in d3tensor().");
 	t[nrl][ncl] += FI_END;
 	t[nrl][ncl] -= ndl;
 	
@@ -213,19 +213,19 @@ float ***f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	
 	/*Allocate pointers to pointers to rows*/
 	t = (float ***) malloc((size_t) ((nrow+FI_END)*sizeof(float**)));
-	if (!t) errorfunct("d3tensor", "Allocation failure 1 in f3tensor()");
+	if (!t) fatal("d3tensor", "Allocation failure 1 in f3tensor().");
 	t += FI_END;
 	t -= nrl;
 	
 	/*Alocate pointers to rows and set pointers to them*/
 	t[nrl] = (float **) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(float*)));
-	if (!t[nrl]) errorfunct("d3tensor", "Allocation failure 2 in f3tensor()");
+	if (!t[nrl]) fatal("d3tensor", "Allocation failure 2 in f3tensor().");
 	t[nrl] += FI_END;
 	t[nrl] -= ncl;
 	
 	/*Allocate rows and set pointers to them*/
 	t[nrl][ncl] = (float *) malloc((size_t) ((nrow*ncol*ndep+FI_END)*sizeof(float)));
-	if (!t[nrl][ncl]) errorfunct("d3tensor", "Allocation failure 3 in f3tensor()");
+	if (!t[nrl][ncl]) fatal("d3tensor", "Allocation failure 3 in f3tensor().");
 	t[nrl][ncl] += FI_END;
 	t[nrl][ncl] -= ndl;
 	
@@ -247,19 +247,19 @@ int ***i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	
 	/*Allocate pointers to pointers to rows*/
 	t = (int ***) malloc((size_t) ((nrow+FI_END)*sizeof(int**)));
-	if (!t) errorfunct("i3tensor", "Allocation failure 1 in i3tensor()");
+	if (!t) fatal("i3tensor", "Allocation failure 1 in i3tensor().");
 	t += FI_END;
 	t -= nrl;
 	
 	/*Alocate pointers to rows and set pointers to them*/
 	t[nrl] = (int **) malloc((size_t) ((nrow*ncol+FI_END)*sizeof(int*)));
-	if (!t[nrl]) errorfunct("i3tensor", "Allocation failure 2 in i3tensor()");
+	if (!t[nrl]) fatal("i3tensor", "Allocation failure 2 in i3tensor().");
 	t[nrl] += FI_END;
 	t[nrl] -= ncl;
 	
 	/*Allocate rows and set pointers to them*/
 	t[nrl][ncl] = (int *) malloc((size_t) ((nrow*ncol*ndep+FI_END)*sizeof(int)));
-	if (!t[nrl][ncl]) errorfunct("i3tensor", "Allocation failure 3 in i3tensor()");
+	if (!t[nrl][ncl]) fatal("i3tensor", "Allocation failure 3 in i3tensor().");
 	t[nrl][ncl] += FI_END;
 	t[nrl][ncl] -= ndl;
 	
@@ -358,43 +358,51 @@ void free_i3tensor(int ***t, long nrl, long nrh, long ncl, long nch, long ndl, l
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void __attribute__((overloadable)) errorfunct(char head[], char message[])
+void __attribute__((overloadable)) fatal(char head[], char message[])
 {
-    printf("################################################################\n");
-    printf("################################################################\n");
-    printf("######################### SAINO Program ########################\n");
-    printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##        Plase read the error message for diagnose           ##\n");
-    printf("## %s: %s##\n", head, message);
-    printf("################################################################\n");
-    printf("################################################################\n");
-    
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "######################### SAINO Program ########################\n");
+    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
+    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "%s: %s\n", head, message);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
     exit(-1);
 }
 
-void __attribute__((overloadable)) errorfunct(char head[], char message[], int n)
+void __attribute__((overloadable)) fatal(char head[], char message[], int n)
 {
-    printf("################################################################\n");
-    printf("################################################################\n");
-    printf("######################### SAINO Program ########################\n");
-    printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##        Plase read the error message for diagnose           ##\n");
-    printf("## %s: %s %d##\n", head, message, n);
-    printf("################################################################\n");
-    printf("################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "######################### SAINO Program ########################\n");
+    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
+    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "%s: %s %d.\n", head, message, n);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
     exit(-1);
 }
 
-void __attribute__((overloadable)) errorfunct(char head[], char message[], double n)
+void __attribute__((overloadable)) fatal(char head[], char message[], double n)
 {
-    printf("################################################################\n");
-    printf("################################################################\n");
-    printf("######################### SAINO Program ########################\n");
-    printf("##                 A FATAL ERROR has occured                  ##\n");
-    printf("##        Plase read the error message for diagnose           ##\n");
-    printf("## %s: %s %f##\n", head, message, n);
-    printf("################################################################\n");
-    printf("################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "######################### SAINO Program ########################\n");
+    fprintf(stderr, "##                 A FATAL ERROR has occured                  ##\n");
+    fprintf(stderr, "##        Plase read the error message for diagnose           ##\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "%s: %s %f.\n", head, message, n);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
     exit(-1);
 }
 

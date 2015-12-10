@@ -1388,7 +1388,7 @@ static dispatch_once_t onceToken;
     work = doublevec(0, (16*n)-1);
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
-    if ([numericIntegration allocation:mesh] == NO) errorfunct("FEMElementDescription:computeStabilizationParameter", "Allocation error in FEMNumericIntegration!");
+    if ([numericIntegration allocation:mesh] == NO) fatal("FEMElementDescription:computeStabilizationParameter", "Allocation error in FEMNumericIntegration.");
     
     if (element->Type.BasisFunctionDegree <= 1) {
         switch (element->Type.ElementCode) {
@@ -1505,7 +1505,7 @@ static dispatch_once_t onceToken;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
         NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d.\n", info);
-        errorfunct("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
+        fatal("FEMElementDescription:computeStabilizationParameterInElement", "Program terminating now...");
     }
     *mk = eigr[n-2];
         
@@ -2092,7 +2092,7 @@ static dispatch_once_t onceToken;
             z1 = [self interpolateInElement:element nodalValues:nz evaluatedAt:1.0/3.0 andAt:1.0/3.0 andAt:0.0 withBasis:NULL];
             break;
         default:
-            errorfunct("FEMElementDescription:checkNormalDirectionInBDElement", "Invalid element code for parent element.");
+            fatal("FEMElementDescription:checkNormalDirectionInBDElement", "Invalid element code for parent element.");
             break;
     }
     
@@ -2186,7 +2186,7 @@ static dispatch_once_t onceToken;
             normals[2] = (dxdu * dydv - dxdv * dydu) * detA;
             break;
         default:
-            errorfunct("FEMElementDescription:nomalVectorForBDElement", "Invalid dimension for determining normal!");
+            fatal("FEMElementDescription:nomalVectorForBDElement", "Invalid dimension for determining normal.");
             break;
     }
     
@@ -2528,7 +2528,7 @@ static dispatch_once_t onceToken;
     
     if (element->Type.BasisFunctionDegree > 1) {
         NSLog(@"FEMElementDescription:getEdgeBasisElement: can only handle linear elements, sorry.\n");
-        errorfunct("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+        fatal("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
     }
     
     switch (element->Type.ElementCode/100) {
@@ -2936,7 +2936,7 @@ static dispatch_once_t onceToken;
                 
             default:
                 NSLog(@"FEMElementDescription:getEdgeBasisElement: not implemented for this element type: %d.\n", element->Type.ElementCode/100);
-                errorfunct("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
+                fatal("FEMElementDescription:getEdgeBasisElement", "Program terminating now...");
                 break;
         }
         if (nk < nj) {

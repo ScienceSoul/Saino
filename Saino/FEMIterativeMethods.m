@@ -239,7 +239,7 @@
     FEMPrecondition *preconditioning;
     
     if (polyDegree < 2) {
-        errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Polynomial degree < 2.");
+        fatal("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Polynomial degree < 2.");
     }
     
     t = doublevec(0, n-1);
@@ -359,7 +359,7 @@
             }
             rho1 = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (rho0 == zero) {
-                errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
+                fatal("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             beta = alpha * (rho1/rho0);
@@ -400,7 +400,7 @@
             }
             sigma = cblas_ddot(n, buffer, 1, buffer2, 1);
             if (sigma == zero) {
-                errorfunct("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
+                fatal("FEMIterativeMethods:FEMIterativeMethods_BICGStabLNumberOfDimension", "Breakdown error.");
             }
             
             alpha = rho1/sigma;

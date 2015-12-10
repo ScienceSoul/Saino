@@ -159,7 +159,7 @@
         self.coordinates = polar;
     } else {
         NSLog(@"FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %@.\n", csys);
-        errorfunct("FEMModel:FEMModel_setCoordinateSystem", "Program terminating now...");
+        fatal("FEMModel:FEMModel_setCoordinateSystem", "Program terminating now...");
     }
 }
 
@@ -173,7 +173,7 @@
     FEMNumericIntegration *integration;
     
     integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) errorfunct("FEMModel:FEMModel_localMatrix", "Allocation error in FEMNumericIntegration!");
+    if ([integration allocation:mesh] == NO) fatal("FEMModel:FEMModel_localMatrix", "Allocation error in FEMNumericIntegration.");
     
     nodes.x = doublevec(0, numberOfNodes-1);
     nodes.y = doublevec(0, numberOfNodes-1);

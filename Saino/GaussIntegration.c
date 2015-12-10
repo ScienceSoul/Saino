@@ -476,7 +476,7 @@ void GaussQuadratureInit(void) {
         IntegStuff->s = doublevec(0, MAX_INTEGRATION_POINTS-1);
         
         if (IntegStuff->u == NULL || IntegStuff->v == NULL || IntegStuff->w == NULL || IntegStuff->s == NULL) {
-            errorfunct("GaussQuadratureInit", "Memory allocation error.");
+            fatal("GaussQuadratureInit", "Memory allocation error.");
         }
     }
 }
