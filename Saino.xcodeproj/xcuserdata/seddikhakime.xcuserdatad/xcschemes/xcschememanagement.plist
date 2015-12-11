@@ -4,8 +4,10 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>FEMStructuredMeshMapper.xcscheme_^#shared#^_</key>
+		<key>FEMStructuredMeshMapper.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<true/>
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
@@ -14,8 +16,10 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>SainoCore Logic Tests.xcscheme_^#shared#^_</key>
+		<key>SainoCore Logic Tests.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<true/>
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
