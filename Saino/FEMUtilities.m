@@ -2482,6 +2482,8 @@
 -(BOOL)plugInClassIsValid:(Class)plugInClass {
     
     if ([plugInClass conformsToProtocol:@protocol(SainoSolutionsComputer)] == YES) {
+        if ([plugInClass instancesRespondToSelector:@selector(solutionComputer:model:timeStep:transientSimulation:)] == YES) NSLog(@"Respond to solutionComputer.\n");
+        if ([plugInClass instancesRespondToSelector:@selector(deallocation:)] == YES) NSLog(@"Respond to deallocation.\n");
         if ([plugInClass instancesRespondToSelector:@selector(solutionComputer:model:timeStep:transientSimulation:)] == YES &&
                 [plugInClass instancesRespondToSelector:@selector(deallocation:)] == YES) {
             return YES;
