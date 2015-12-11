@@ -1,0 +1,14 @@
+# Mac OX S
+*.DS_Store
+
+# XCode
+Saino.xcodeproj/project.xcworkspace/*
+Saino.xcodeproj/xcuserdata/*
+
+# Tests
+Tests/
+
+# Extras
+Extras/
+docs/
+cloc-1.56.pl
