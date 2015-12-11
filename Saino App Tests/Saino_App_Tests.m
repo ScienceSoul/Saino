@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
 #import <SainoCore/FEMTest.h>
 #import "SainoViewControler.h"
