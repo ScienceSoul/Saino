@@ -187,6 +187,13 @@
 			remoteGlobalIDString = 7315511C13583FFD004CCD09;
 			remoteInfo = Saino;
 		};
+		7333C4D31C1ADE2400514B41 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 738AB9E91BC7C9220038AAEF;
+			remoteInfo = SainoCore;
+		};
 		738AB9EF1BC7C9220038AAEF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
@@ -998,6 +1005,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7333C4D41C1ADE2400514B41 /* PBXTargetDependency */,
 			);
 			name = FEMStructuredMeshMapper;
 			productName = FEMStructuredMeshMapper;
@@ -1249,6 +1257,11 @@
 			isa = PBXTargetDependency;
 			target = 7315511C13583FFD004CCD09 /* Saino */;
 			targetProxy = 730C42D21B2686E2009411B7 /* PBXContainerItemProxy */;
+		};
+		7333C4D41C1ADE2400514B41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
+			targetProxy = 7333C4D31C1ADE2400514B41 /* PBXContainerItemProxy */;
 		};
 		738AB9F01BC7C9220038AAEF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

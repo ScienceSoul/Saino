@@ -28,7 +28,26 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "738DA0731BCCB63C000CCE84"
+               BuildableName = "SainoCore Logic Tests.xctest"
+               BlueprintName = "SainoCore Logic Tests"
+               ReferencedContainer = "container:Saino.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "738AB9E91BC7C9220038AAEF"
+            BuildableName = "SainoCore.framework"
+            BlueprintName = "SainoCore"
+            ReferencedContainer = "container:Saino.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>

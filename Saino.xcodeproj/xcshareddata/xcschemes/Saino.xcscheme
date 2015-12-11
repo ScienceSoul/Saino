@@ -28,20 +28,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "73A006501B004C270017013B"
-               BuildableName = "Saino Logic Tests.xctest"
-               BlueprintName = "Saino Logic Tests"
-               ReferencedContainer = "container:Saino.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "730C42CB1B2686E2009411B7"
                BuildableName = "Saino App Tests.xctest"
                BlueprintName = "Saino App Tests"
@@ -56,16 +42,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "73A006501B004C270017013B"
-               BuildableName = "Saino Logic Tests.xctest"
-               BlueprintName = "Saino Logic Tests"
-               ReferencedContainer = "container:Saino.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
          <TestableReference
             skipped = "NO">
             <BuildableReference
