@@ -5,9 +5,6 @@
 Saino.xcodeproj/project.xcworkspace/*
 Saino.xcodeproj/xcuserdata/*
 
-# Tests
-Tests/
-
 # Extras
 Extras/
 docs/
