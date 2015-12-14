@@ -5,6 +5,10 @@
 Saino.xcodeproj/project.xcworkspace/*
 Saino.xcodeproj/xcuserdata/*
 
+# Tests .ep and .result files
+Tests/**/*.ep
+Tests/**/*.result
+
 # Extras
 Extras/
 docs/
