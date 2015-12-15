@@ -73,7 +73,7 @@
       displayScale = "1.00"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seddikhakime/Documents/Saino"
+      customWorkingDirectory = "/Users/${USER}/Documents/Saino"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
