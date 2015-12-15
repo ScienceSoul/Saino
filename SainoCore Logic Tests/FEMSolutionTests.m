@@ -42,16 +42,17 @@
     BOOL useAppSupportPath = NO;
     NSString *bundleName;
     // Small hack so that testing works locally with XCode and with XCodeServer CI.
-    // If the user name matches, then we are testing locally, otherwise we are in
-    // XCodeServer and we need to resolve the full path
+    // If the user name matches _xcsbuildd (the XCodeServer CI user), then we need to read
+    // the environment variable XCS_SOURCE_DIR to properlly look at the source directory
+    // for the integration
     if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
         NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
         bundleName = [user stringByAppendingPathComponent:@"Documents/Saino/PlugIns/FEMStructuredMeshMapper"];
-    } else bundleName = @"PlugIns/FEMStructuredMeshMapper";
-    
-    NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
-    NSDictionary *env = [processIngo environment];
-    NSLog(@"env: %@\n.", env[@"XCS_SOURCE_DIR"]);
+    } else if ([@"_xcsbuildd" isEqualToString:NSUserName()]) {
+        NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
+        NSDictionary *env = [processIngo environment];
+        bundleName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/PlugIns/FEMStructuredMeshMapper"];
+    }
     
     NSLog(@"user name: %@\n", NSUserName());
     

@@ -2483,17 +2483,7 @@
             if (found == YES) break;
         }
     } else {
-        // Small hack so that testing works locally with XCode and with XCodeServer CI.
-        // If the user name matches, then we are testing locally, otherwise we are in
-        // XCodeServer and we need to resolve the full path
-        if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
-            currentBundle = [NSBundle bundleWithPath:[bundleName stringByAppendingPathExtension:self.ext]];
-        } else {
-            NSFileManager *fileManager = [NSFileManager defaultManager];
-            NSString *currentPath = [fileManager currentDirectoryPath];
-            NSString *searchedSolutionBundle = [currentPath stringByAppendingPathComponent:[bundleName stringByAppendingPathExtension:self.ext]];
-            currentBundle = [NSBundle bundleWithPath:searchedSolutionBundle];
-        }
+        currentBundle = [NSBundle bundleWithPath:[bundleName stringByAppendingPathExtension:self.ext]];
     }
     
     return currentBundle;
