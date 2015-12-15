@@ -1418,7 +1418,8 @@
     // using a plug-in when we parse the MDF. So if we get nil, we are not using a plug-in.
     if (solution.plugInName != nil) { // We are woking with a solution computer provided by a plug-in
         // Load the plug-in bundle
-        NSBundle *solutionBundle = [self loadBundle:solution.plugInName];
+        BOOL useAppSupportPath = NO;
+        NSBundle *solutionBundle = [self loadBundle:solution.plugInName useApplicationSupportPath:&useAppSupportPath];
         if (solutionBundle == nil) {
             NSLog(@"FEMUtilities:addEquationBasicsToSolution: error loading plug-in bundle.\n");
             fatal("FEMUtilities:addEquationBasicsToSolution", "Saino will abort the simulation now...");
@@ -2441,41 +2442,60 @@
     return fileName;
 }
 
--(NSBundle *)loadBundle:(NSString *)bundleName {
+-(NSBundle *)loadBundle:(NSString *)bundleName useApplicationSupportPath:(BOOL *)useApplicationSupportPath {
     
-    BOOL found = NO;
     NSBundle *currentBundle;
     NSArray *librarySearchPaths;
     NSMutableArray *bundleSearchPaths = [NSMutableArray array];
+    BOOL found = NO, searchApplicationSupportPath;
     
-    // NSSearchPathForDirectoriesInDomains will return:
-    //      /Users/seddikhakime/Library
-    //      /Library
-    //      /Network/Library
-    librarySearchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSAllDomainsMask - NSSystemDomainMask, YES);
-    for (NSString *currPath in librarySearchPaths) {
-        [bundleSearchPaths addObject:[currPath stringByAppendingPathComponent:self.appSupportSubpath]];
-    }
+    if (useApplicationSupportPath != NULL) {
+        searchApplicationSupportPath = *useApplicationSupportPath;
+    } else searchApplicationSupportPath = NO;
     
-    NSString *builtInPlugInsPath = [[NSBundle mainBundle] builtInPlugInsPath];
-    if (builtInPlugInsPath != nil) [bundleSearchPaths addObject:builtInPlugInsPath];
-    
-    NSString *searchedSolutionBundle = [bundleName stringByAppendingPathExtension:self.ext];
-    
-    for (NSString *currPath in bundleSearchPaths) {
-        NSDirectoryEnumerator *bundleEnum;
-        bundleEnum = [[NSFileManager defaultManager] enumeratorAtPath:currPath];
-        if (bundleEnum) {
-            for (NSString *currBundlePath in bundleEnum) {
-                if ([currBundlePath isEqualToString:searchedSolutionBundle] == YES) {
-                    currentBundle = [NSBundle bundleWithPath:[currPath stringByAppendingPathComponent:currBundlePath]];
-                    found = YES;
-                    break;
+    if (searchApplicationSupportPath == YES) {
+        // NSSearchPathForDirectoriesInDomains will return:
+        //      /Users/seddikhakime/Library
+        //      /Library
+        //      /Network/Library
+        librarySearchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSAllDomainsMask - NSSystemDomainMask, YES);
+        for (NSString *currPath in librarySearchPaths) {
+            [bundleSearchPaths addObject:[currPath stringByAppendingPathComponent:self.appSupportSubpath]];
+        }
+        
+        NSString *builtInPlugInsPath = [[NSBundle mainBundle] builtInPlugInsPath];
+        if (builtInPlugInsPath != nil) [bundleSearchPaths addObject:builtInPlugInsPath];
+        
+        NSString *searchedSolutionBundle = [bundleName stringByAppendingPathExtension:self.ext];
+        
+        for (NSString *currPath in bundleSearchPaths) {
+            NSDirectoryEnumerator *bundleEnum;
+            bundleEnum = [[NSFileManager defaultManager] enumeratorAtPath:currPath];
+            if (bundleEnum) {
+                for (NSString *currBundlePath in bundleEnum) {
+                    if ([currBundlePath isEqualToString:searchedSolutionBundle] == YES) {
+                        currentBundle = [NSBundle bundleWithPath:[currPath stringByAppendingPathComponent:currBundlePath]];
+                        found = YES;
+                        break;
+                    }
                 }
             }
+            if (found == YES) break;
         }
-        if (found == YES) break;
+    } else {
+        // Small hack so that testing works locally with XCode and with XCodeServer CI.
+        // If the user name matches, then we are testing locally, otherwise we are in
+        // XCodeServer and we need to resolve the full path
+        if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
+            currentBundle = [NSBundle bundleWithPath:[bundleName stringByAppendingPathExtension:self.ext]];
+        } else {
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            NSString *currentPath = [fileManager currentDirectoryPath];
+            NSString *searchedSolutionBundle = [currentPath stringByAppendingPathComponent:[bundleName stringByAppendingPathExtension:self.ext]];
+            currentBundle = [NSBundle bundleWithPath:searchedSolutionBundle];
+        }
     }
+    
     return currentBundle;
 }
 

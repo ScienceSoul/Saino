@@ -46,7 +46,7 @@
 -(NSMutableString *)nextFreeFileName:(NSString *)fileName0 suffix:(NSString *)suffix0 lastExisting:(BOOL *)lastExisting;
 
 // Load bundle for plug-ins support
--(NSBundle *)loadBundle:(NSString *)bundleName;
+-(NSBundle *)loadBundle:(NSString *)bundleName useApplicationSupportPath:(BOOL *)useApplicationSupportPath;
 
 // Plug-in validation
 -(BOOL)plugInClassIsValid:(Class)plugInClass;

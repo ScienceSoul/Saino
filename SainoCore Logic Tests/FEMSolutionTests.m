@@ -39,7 +39,17 @@
 
     BOOL validBundle;
 
-    NSBundle *bundle = [self.utilities loadBundle:@"FEMStructuredMeshMapper"];
+    BOOL useAppSupportPath = NO;
+    NSString *bundleName;
+    // Small hack so that testing works locally with XCode and with XCodeServer CI.
+    // If the user name matches, then we are testing locally, otherwise we are in
+    // XCodeServer and we need to resolve the full path
+    if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
+        NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
+        bundleName = [user stringByAppendingPathComponent:@"Documents/Saino/PlugIns/FEMStructuredMeshMapper"];
+    } else bundleName = @"PlugIns/FEMStructuredMeshMapper";
+    
+    NSBundle *bundle = [self.utilities loadBundle:bundleName useApplicationSupportPath:&useAppSupportPath];
     if (bundle != nil) {
         Class currPrincipalClass = [bundle principalClass];
         if (currPrincipalClass) {
