@@ -36,6 +36,20 @@
     _saino_view = _saino_view_controller.view;
     
     _targetEps = 1.0e-5;
+    
+    NSString *dirName;
+    if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
+        NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
+        dirName = [user stringByAppendingPathComponent:@"Documents/Saino/Tests"];
+    } else if ([@"_xcsbuildd" isEqualToString:NSUserName()]) {
+        NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
+        NSDictionary *env = [processIngo environment];
+        dirName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/Tests"];
+    } else {
+        NSLog(@"User name not supported for testing.\n");
+    }
+    NSLog(@"user name: %@\n", NSUserName());
+    self.testApp.path = [NSMutableString stringWithString:dirName];
 }
 
 -(void)tearDown {

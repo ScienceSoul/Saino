@@ -20,6 +20,7 @@
 
 @implementation FEMTest
 
+@synthesize path = _path;
 @synthesize do_heatq = _do_heatq;
 @synthesize do_step_stokes = _do_step_stokes;
 @synthesize do_natural_convection = _do_natural_convection;
@@ -177,19 +178,8 @@ static dispatch_once_t onceToken;
     mod.boundaryConditions = @[boundaryCondition];
     mod.numberOfBoundaryConditions = 1;
     
-    NSString *dirName;
-    if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
-        NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
-        dirName = [user stringByAppendingPathComponent:@"Documents/Saino/Tests"];
-    } else if ([@"_xcsbuildd" isEqualToString:NSUserName()]) {
-        NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
-        NSDictionary *env = [processIngo environment];
-        dirName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/Tests"];
-    } else {
-        NSLog(@"User name not supported for testing.\n");
-    }
-    mod.meshDir = [NSMutableString stringWithString:[dirName stringByAppendingPathComponent:@"heateq"]];
-    mod.meshName = [NSMutableString stringWithString:[dirName stringByAppendingPathComponent:@"heateq/Mesh"]];
+    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"heateq"]];
+    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"heateq/Mesh"]];
 }
 
 -(void)setUpStepStokesTest:(id)model {
@@ -321,8 +311,8 @@ static dispatch_once_t onceToken;
     mod.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3];
     mod.numberOfBoundaryConditions = 3;
     
-    mod.meshDir = [NSMutableString stringWithString:@"./Tests/Step_stokes"];
-    mod.meshName = [NSMutableString stringWithString:@"./Tests/Step_stokes/Step"];
+    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"Step_stokes"]];
+    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"Step_stokes/Step"]];
 }
 
 -(void)setUpNaturalConvectionTest:(id)model {
@@ -521,8 +511,8 @@ static dispatch_once_t onceToken;
     mod.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3, boundaryCondition4];
     mod.numberOfBoundaryConditions = 4;
     
-    mod.meshDir = [NSMutableString stringWithString:@"./Tests/NaturalConvection"];
-    mod.meshName = [NSMutableString stringWithString:@"./Tests/NaturalConvection/square"];
+    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection"]];
+    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection/square"]];
 }
 
 @end

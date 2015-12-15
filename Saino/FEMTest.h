@@ -10,6 +10,7 @@
 
 @interface FEMTest : NSObject
 
+@property(nonatomic, strong) NSMutableString *path;
 @property(nonatomic, assign) BOOL do_heatq;
 @property(nonatomic, assign) BOOL do_step_stokes;
 @property(nonatomic, assign) BOOL do_natural_convection;
