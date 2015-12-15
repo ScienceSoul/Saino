@@ -54,8 +54,6 @@
         bundleName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/PlugIns/FEMStructuredMeshMapper"];
     }
     
-    NSLog(@"user name: %@\n", NSUserName());
-    
     NSBundle *bundle = [self.utilities loadBundle:bundleName useApplicationSupportPath:&useAppSupportPath];
     if (bundle != nil) {
         Class currPrincipalClass = [bundle principalClass];
