@@ -214,7 +214,7 @@
 		7360543F1BCCF08E00832758 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
-			dstPath = /Users/seddikhakime/Documents/Saino/PlugIns;
+			dstPath = "/Users/${USER}/Documents/Saino/PlugIns";
 			dstSubfolderSpec = 0;
 			files = (
 				736054401BCCF19900832758 /* FEMStructuredMeshMapper.bundle in CopyFiles */,
