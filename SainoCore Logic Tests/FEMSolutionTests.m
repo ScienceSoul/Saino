@@ -49,6 +49,12 @@
         bundleName = [user stringByAppendingPathComponent:@"Documents/Saino/PlugIns/FEMStructuredMeshMapper"];
     } else bundleName = @"PlugIns/FEMStructuredMeshMapper";
     
+    NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
+    NSDictionary *env = [processIngo environment];
+    NSLog(@"env: %@\n.", env[@"XCS_SOURCE_DIR"]);
+    
+    NSLog(@"user name: %@\n", NSUserName());
+    
     NSBundle *bundle = [self.utilities loadBundle:bundleName useApplicationSupportPath:&useAppSupportPath];
     if (bundle != nil) {
         Class currPrincipalClass = [bundle principalClass];
@@ -57,20 +63,6 @@
         }
     } else {
         NSLog(@"Can't load bundle.\n");
-        NSLog(@"bundle name: %@\n", bundleName);
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSString *currentPath = [fileManager currentDirectoryPath];
-        NSLog(@"current path: %@\n", currentPath);
-        NSLog(@"user name: %@\n", NSUserName());
-        
-        int MAX = 255;
-        char wd[MAX];
-        wd[MAX-1] = '\0';
-        if (getcwd(wd, MAX-1) == NULL) {
-            NSLog(@"Can't find pwd path.\n");
-        } else {
-            NSLog(@"pwd: %@\n", [NSString stringWithUTF8String:getcwd(wd, MAX-1)]);
-        }
     }
     XCTAssertTrue(validBundle, @"FEMSolutionTests: problem loading a bundle");
 
