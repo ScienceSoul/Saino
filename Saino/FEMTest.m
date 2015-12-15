@@ -177,8 +177,19 @@ static dispatch_once_t onceToken;
     mod.boundaryConditions = @[boundaryCondition];
     mod.numberOfBoundaryConditions = 1;
     
-    mod.meshDir = [NSMutableString stringWithString:@"./Tests/heateq"];
-    mod.meshName = [NSMutableString stringWithString:@"./Tests/heateq/Mesh"];
+    NSString *dirName;
+    if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
+        NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
+        dirName = [user stringByAppendingPathComponent:@"Documents/Saino/Tests"];
+    } else if ([@"_xcsbuildd" isEqualToString:NSUserName()]) {
+        NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
+        NSDictionary *env = [processIngo environment];
+        dirName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/Tests"];
+    } else {
+        NSLog(@"User name not supported for testing.\n");
+    }
+    mod.meshDir = [NSMutableString stringWithString:[dirName stringByAppendingPathComponent:@"heateq"]];
+    mod.meshName = [NSMutableString stringWithString:[dirName stringByAppendingPathComponent:@"heateq/Mesh"]];
 }
 
 -(void)setUpStepStokesTest:(id)model {

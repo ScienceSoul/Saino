@@ -43,7 +43,7 @@
     NSString *bundleName;
     // Small hack so that testing works locally with XCode and with XCodeServer CI.
     // If the user name matches _xcsbuildd (the XCodeServer CI user), then we need to read
-    // the environment variable XCS_SOURCE_DIR to properlly look at the source directory
+    // the environment variable XCS_SOURCE_DIR to properly look at the source directory
     // for the integration
     if ([@"seddikhakime" isEqualToString:NSUserName()] || [@"hakimeseddik" isEqualToString:NSUserName()]) {
         NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
@@ -52,6 +52,8 @@
         NSProcessInfo *processIngo = [[NSProcessInfo alloc] init];
         NSDictionary *env = [processIngo environment];
         bundleName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/PlugIns/FEMStructuredMeshMapper"];
+    } else {
+        NSLog(@"User name not supported for testing.\n");
     }
     
     NSBundle *bundle = [self.utilities loadBundle:bundleName useApplicationSupportPath:&useAppSupportPath];
