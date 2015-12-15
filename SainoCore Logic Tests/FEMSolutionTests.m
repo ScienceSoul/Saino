@@ -62,6 +62,15 @@
         NSString *currentPath = [fileManager currentDirectoryPath];
         NSLog(@"current path: %@\n", currentPath);
         NSLog(@"user name: %@\n", NSUserName());
+        
+        int MAX = 255;
+        char wd[MAX];
+        wd[MAX-1] = '\0';
+        if (getcwd(wd, MAX-1) == NULL) {
+            NSLog(@"Can't find pwd path.\n");
+        } else {
+            NSLog(@"pwd: %@\n", [NSString stringWithUTF8String:getcwd(wd, MAX-1)]);
+        }
     }
     XCTAssertTrue(validBundle, @"FEMSolutionTests: problem loading a bundle");
 
