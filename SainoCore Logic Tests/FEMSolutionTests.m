@@ -57,6 +57,11 @@
         }
     } else {
         NSLog(@"Can't load bundle.\n");
+        NSLog(@"bundle name: %@\n", bundleName);
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSString *currentPath = [fileManager currentDirectoryPath];
+        NSLog(@"current path: %@\n", currentPath);
+        NSLog(@"user name: %@\n", NSUserName());
     }
     XCTAssertTrue(validBundle, @"FEMSolutionTests: problem loading a bundle");
 
