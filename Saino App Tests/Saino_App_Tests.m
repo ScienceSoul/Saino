@@ -61,6 +61,9 @@
     int success;
     double targetNorm = 0.768016492512e-01;
     
+    NSLog(@"I am here*********************\n");
+    NSLog(@"path: %@\n", self.testApp.path);
+    
     [_saino_view_controller press:[_saino_view viewWithTag: 1]];  // Heateq
     
     if (self.testApp.heatq_allDone == YES) {
