@@ -12,15 +12,15 @@
 
 // This class is used by FEMElementDescription for the elements definition.
 
-@property (nonatomic, strong) NSNumber *dimension;
-@property (nonatomic, strong) NSString *topology;
-@property (nonatomic, strong) NSNumber *code;
-@property (nonatomic, strong) NSNumber *nodes;
-@property (nonatomic, strong) NSArray *nodeU;
-@property (nonatomic, strong) NSArray *nodeV;
-@property (nonatomic, strong) NSArray *nodeW;
-@property (nonatomic, strong) NSArray *basis;
-@property (nonatomic, strong) NSArray *gaussPoints;
-@property (nonatomic, strong) NSNumber *stabilization;
+@property (nonatomic, strong, nonnull) NSNumber *dimension;
+@property (nonatomic, strong, nonnull) NSString *topology;
+@property (nonatomic, strong, nonnull) NSNumber *code;
+@property (nonatomic, strong, nonnull) NSNumber *nodes;
+@property (nonatomic, strong, nonnull) NSArray *nodeU;
+@property (nonatomic, strong, nonnull) NSArray *nodeV;
+@property (nonatomic, strong, nonnull) NSArray *nodeW;
+@property (nonatomic, strong, nonnull) NSArray *basis;
+@property (nonatomic, strong, nonnull) NSArray *gaussPoints;
+@property (nonatomic, strong, nonnull) NSNumber *stabilization;
 
 @end

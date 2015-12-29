@@ -12,17 +12,19 @@
 #import "Utils.h"
 
 @interface FEMInterpolation ()
--(void)FEMInterpolation_findPointsQuadrantForPoint:(double *)point dimension:(int)dim motherQuadrant:(Quadrant_t *)mother;
+-(void)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother;
 @end
 
 @implementation FEMInterpolation
 
 #pragma mark Private methods
 
-/********************************************************
-Method corresponds to Elmer from git on October 27 2015
-********************************************************/
--(void)FEMInterpolation_findPointsQuadrantForPoint:(double *)point dimension:(int)dim motherQuadrant:(Quadrant_t *)mother {
+/************************************************************
+ 
+    Method corresponds to Elmer from git on October 27 2015
+ 
+************************************************************/
+-(void)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother {
     
     int i, k;
     double bbox[6], eps3, *valuesPtr, maxVal;
@@ -85,7 +87,7 @@ Method corresponds to Elmer from git on October 27 2015
     return self;
 }
 
--(void)findLeafElementsForPoint:(double *)point dimension:(int)dim rootQuadrant:(Quadrant_t *)root leafQuadrant:(Quadrant_t *)leaf {
+-(void)findLeafElementsForPoint:(double * __nonnull)point dimension:(int)dim rootQuadrant:(Quadrant_t * __nonnull)root leafQuadrant:(Quadrant_t * __nonnull)leaf {
     
     leaf = root;
     
@@ -111,7 +113,7 @@ Method corresponds to Elmer from git on October 27 2015
     Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************/
--(BOOL)isPointInElement:(Element_t *)element elementNodes:(Nodes_t *)nodes point:(double *)aPoint localCoordinates:(double *)localCoords globalEpsilon:(double *)globaleps localEpsilon:(double *)localeps numericEpsilon:(double *)numericeps globalDistance:(double *)globaldist localDistance:(double *)localdist model:(FEMModel *)model edgeBasis:(BOOL *)edgeBasis {
+-(BOOL)isPointInElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes point:(double * __nonnull)aPoint localCoordinates:(double * __nonnull)localCoords globalEpsilon:(double * __nullable)globaleps localEpsilon:(double * __nullable)localeps numericEpsilon:(double * __nullable)numericeps globalDistance:(double * __nullable)globaldist localDistance:(double * __nullable)localdist model:(FEMModel * __nonnull)model edgeBasis:(BOOL * __nullable)edgeBasis {
     
     int n;
     double ug, vg, wg, xdist, ydist, zdist, sumdist, eps0, eps1, eps2, minx,
@@ -285,7 +287,7 @@ Method corresponds to Elmer from git on October 27 2015
     return isInElement;
 }
 
--(void)putElementsInChildQuadrants:(QuadrantPointer_t *)childQuadrants motherQuadrant:(Quadrant_t *)mother mesh:(FEMMesh *)mesh dimension:(int)dim {
+-(void)putElementsInChildQuadrants:(QuadrantPointer_t * __nonnull)childQuadrants motherQuadrant:(Quadrant_t * __nonnull)mother mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim {
     
     int i, j, t, n;
     int elementList[(int)pow(2, dim)][mother->nElementsInQuadrant];
@@ -404,7 +406,7 @@ Method corresponds to Elmer from git on October 27 2015
     }
 }
 
--(void)createChildQuadrantFromMother:(Quadrant_t *)quadrant mesh:(FEMMesh *)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int *)gen {
+-(void)createChildQuadrantFromMother:(Quadrant_t * __nonnull)quadrant mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int * __nonnull)gen {
     
     int i, n;
     QuadrantPointer_t childQuadrant[8];
@@ -526,14 +528,14 @@ Method corresponds to Elmer from git on October 27 2015
     Quandrant_t    ->  quadrant tree structure root
  
 **********************************************************************************/
--(void)buildQuadrantTreeForMesh:(FEMMesh *)mesh model:(FEMModel *)aModel boundingBox:(double *)box rootQuadrant:(Quadrant_t *)quadrant {
+-(void)buildQuadrantTreeForMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundingBox:(double * __nonnull)box rootQuadrant:(Quadrant_t * __nullable)quadrant {
     
     int dim, generation, i;
     double xmin, xmax, ymin, ymax, zmin, zmax;
     Quadrant_t *motherQuadrant;
     int maxLeafElements;
     
-    dim = aModel.dimension;
+    dim = model.dimension;
     
     if (dim == 3) {
         maxLeafElements = 16;

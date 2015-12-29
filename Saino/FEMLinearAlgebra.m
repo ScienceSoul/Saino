@@ -23,7 +23,7 @@
     return self;
 }
 
--(void)LUDecompositionOfMatrix:(double **)a ofSize:(int)n resultPivot:(int *)pivot {
+-(void)LUDecompositionOfMatrix:(double * __nonnull * __nonnull)a ofSize:(int)n resultPivot:(int * __nonnull)pivot {
     
     int i, j, k, l;
     double swap;
@@ -71,7 +71,7 @@
     }
 }
 
--(void)invertMatrix:(double **)a ofSize:(int)n {
+-(void)invertMatrix:(double * __nonnull * __nonnull)a ofSize:(int)n {
     
     int i, j, k;
     double s;

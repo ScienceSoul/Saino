@@ -11,23 +11,23 @@
 
 @implementation FEMPElementMaps {
     
-    int **_quadEdgeMap;
-    int **_triangleEdgeMap;
-    int **_tetraEdgeMap1;
-    int **_tetraFaceMap1;
-    int **_tetraFaceEdgeMap1;
-    int **_tetraEdgeMap2;
-    int **_tetraFaceMap2;
-    int **_tetraFaceEdgeMap2;
-    int **_brickEdgeMap;
-    int **_brickFaceMap;
-    int **_brickFaceEdgeMap;
-    int **_wedgeEdgeMap;
-    int **_wedgeFaceMap;
-    int **_wedgeFaceEdgeMap;
-    int **_pyramidEdgeMap;
-    int **_pyramidFaceMap;
-    int **_pyramidFaceEdgeMap;
+    int *__nonnull * __nonnull _quadEdgeMap;
+    int * __nonnull * __nonnull _triangleEdgeMap;
+    int * __nonnull * __nonnull _tetraEdgeMap1;
+    int * __nonnull * __nonnull _tetraFaceMap1;
+    int * __nonnull * __nonnull _tetraFaceEdgeMap1;
+    int * __nonnull * __nonnull _tetraEdgeMap2;
+    int * __nonnull * __nonnull _tetraFaceMap2;
+    int * __nonnull * __nonnull _tetraFaceEdgeMap2;
+    int * __nonnull * __nonnull _brickEdgeMap;
+    int * __nonnull * __nonnull _brickFaceMap;
+    int * __nonnull * __nonnull _brickFaceEdgeMap;
+    int * __nonnull * __nonnull _wedgeEdgeMap;
+    int * __nonnull * __nonnull _wedgeFaceMap;
+    int * __nonnull * __nonnull _wedgeFaceEdgeMap;
+    int * __nonnull * __nonnull _pyramidEdgeMap;
+    int * __nonnull * __nonnull _pyramidFaceMap;
+    int * __nonnull * __nonnull _pyramidFaceEdgeMap;
 }
 
 - (id)init
@@ -211,7 +211,7 @@
     freedom for given element bubbles.
 
 ******************************************************************/
--(int)bubbleDofsForElement:(Element_t *)element degree:(int)p {
+-(int)bubbleDofsForElement:(Element_t * __nonnull)element degree:(int)p {
     
     int bubbleDofs;
     
@@ -254,7 +254,7 @@
     return bubbleDofs;
 }
 
--(void)getTriangleEdgeMap:(int *)edge index:(int)i {
+-(void)getTriangleEdgeMap:(int * __nonnull)edge index:(int)i {
     
     int j;
     
@@ -263,7 +263,7 @@
     }
 }
 
--(void)getQuadEdgeMap:(int *)edge index:(int)i {
+-(void)getQuadEdgeMap:(int * __nonnull)edge index:(int)i {
     
     int j;
     
@@ -272,7 +272,7 @@
     }
 }
 
--(void)getBrickEdgeMap:(int *)edge index:(int)i {
+-(void)getBrickEdgeMap:(int * __nonnull)edge index:(int)i {
     
     int j;
     
@@ -281,7 +281,7 @@
     }
 }
 
--(void)getBrickFaceMap:(int *)face index:(int)i {
+-(void)getBrickFaceMap:(int * __nonnull)face index:(int)i {
     
     int j;
     
@@ -304,7 +304,7 @@
 }
 
 
--(void)getTetraEdgeMap:(int *)edge index:(int)i type:(int *)type {
+-(void)getTetraEdgeMap:(int * __nonnull)edge index:(int)i type:(int * __nullable)type {
     
     int j, t;
     
@@ -330,7 +330,7 @@
     }
 }
 
--(void)getTetraFaceMap:(int *)face index:(int)i type:(int *)type {
+-(void)getTetraFaceMap:(int * __nonnull)face index:(int)i type:(int * __nullable)type {
     
     int j, t;
     
@@ -356,7 +356,7 @@
     }
 }
 
--(void)getWedgeEdgeMap:(int *)edge index:(int)i {
+-(void)getWedgeEdgeMap:(int * __nonnull)edge index:(int)i {
     
     int j;
     
@@ -365,7 +365,7 @@
     }
 }
 
--(void)getWedgeFaceMap:(int *)face index:(int)i {
+-(void)getWedgeFaceMap:(int * __nonnull)face index:(int)i {
     
     int j;
     
@@ -374,7 +374,7 @@
     }
 }
 
--(void)getPyramidEdgeMap:(int *)edge index:(int)i {
+-(void)getPyramidEdgeMap:(int * __nonnull)edge index:(int)i {
     
     int j;
     
@@ -383,7 +383,7 @@
     }
 }
 
--(void)getPyramidFaceMap:(int *)face index:(int)i {
+-(void)getPyramidFaceMap:(int * __nonnull)face index:(int)i {
     
     int j;
     
@@ -392,7 +392,7 @@
     }
 }
 
--(BOOL)isPElement:(Element_t *)element {
+-(BOOL)isPElement:(Element_t * __nonnull)element {
     
     if (element->Pdefs != NULL) {
         return YES;
@@ -405,7 +405,7 @@
  not yet defined in the FEMElementDescription class
  
 ***************************************************************/
--(void)getRefPElementNodesForElement:(Element_t *)element nodeU:(double *)u nodeV:(double *)v nodeW:(double *)w {
+-(void)getRefPElementNodesForElement:(Element_t * __nonnull)element nodeU:(double * __nonnull)u nodeV:(double * __nonnull)v nodeW:(double * __nonnull)w {
     
     int n;
     
@@ -467,7 +467,7 @@
         int **map          -> Map containing local numbers of local faces
 
 ***************************************************************************************/
--(void)getFaceMapForElement:(Element_t *)element faceMap:(int **)map {
+-(void)getFaceMapForElement:(Element_t * __nonnull)element faceMap:(int * __nullable * __nullable)map {
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
@@ -515,7 +515,7 @@
  int **map          -> Map containing local numbers of local faces
  
  ***************************************************************************************/
--(void)getEdgeMapForElement:(Element_t *)element edgeMap:(int **)map {
+-(void)getEdgeMapForElement:(Element_t * __nonnull)element edgeMap:(int * __nullable * __nullable)map {
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
@@ -569,7 +569,7 @@
  int **map          -> Map containing local numbers of local faces
  
  ***************************************************************************************/
--(void)getFaceEdgeMapForElement:(Element_t *)element faceEdgeMap:(int **)map {
+-(void)getFaceEdgeMapForElement:(Element_t * __nonnull)element faceEdgeMap:(int * __nullable * __nullable)map {
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
@@ -612,7 +612,7 @@
     Method checks if given element is a p element pyramid
 
 **********************************************************************/
--(BOOL)isPPyramid:(Element_t *)element {
+-(BOOL)isPPyramid:(Element_t * __nonnull)element {
     
     return (element->Type.ElementCode/100 == 6 && [self isPElement:element] == YES) ? YES : NO;
 }
@@ -623,7 +623,7 @@
     in that edge or face.
  
 **********************************************************************/
--(void)getBoundaryMapForElement:(Element_t *)element localNumber:(int)i resultMap:(int *)map {
+-(void)getBoundaryMapForElement:(Element_t * __nonnull)element localNumber:(int)i resultMap:(int * __nonnull)map {
     
     memset( map, 0, 4*sizeof(int) );
     
@@ -665,7 +665,7 @@
     of local edges on face.
  
 **********************************************************************/
--(void)getFaceEdgeMapForElement:(Element_t *)element index:(int)i resultMap:(int *)map {
+-(void)getFaceEdgeMapForElement:(Element_t * __nonnull)element index:(int)i resultMap:(int * __nonnull)map {
     
     int j;
     
@@ -729,7 +729,7 @@
     Return number of face dofs for element.
  
 **********************************************************************/
--(int)getFaceDofsForElement:(Element_t *)element polyDegree:(int)p faceNumber:(int)number {
+-(int)getFaceDofsForElement:(Element_t * __nonnull)element polyDegree:(int)p faceNumber:(int)number {
     
     int faceDofs;
     
@@ -778,7 +778,7 @@
     return faceDofs = max(0, faceDofs);
 }
 
--(int)getNumberOfGaussPointsForFace:(Element_t *)face inMesh:(FEMMesh *)mesh {
+-(int)getNumberOfGaussPointsForFace:(Element_t * __nonnull)face inMesh:(FEMMesh * __nonnull)mesh {
     
     int i, edgep, maxp;
     Element_t *edges;
@@ -803,7 +803,7 @@
     return pow(maxp, 2);
 }
 
--(int)getEdgePForElement:(Element_t *)element inMesh:(FEMMesh *)mesh {
+-(int)getEdgePForElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh {
     
     int i, edgep;
     Element_t *edges;
@@ -829,7 +829,7 @@
     return edgep;
 }
 
--(int)getFacePForElement:(Element_t *)element inMesh:(FEMMesh *)mesh {
+-(int)getFacePForElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh {
     
     int i, facep;
     Element_t *faces;
@@ -854,59 +854,7 @@
     return facep;
 }
 
-/****************************************************************************
-  
-    Based on element bubble polynomial degree p, return degrees of freedom
-    for given elements bubbles.
- 
-    ELement_t *element   ->  element to get bubble dofs to
-    int p                ->  element polynomial degree p
- 
-    Returns number of bubble dofs for element
-
-*****************************************************************************/
--(int)getBubbleDofsForElement:(Element_t *)element polyDegree:(int)p {
-    
-    int bubbleDofs;
-    
-    if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element.\n");
-        return bubbleDofs = 0;
-    }
-    
-    bubbleDofs = 0;
-    switch (element->Type.ElementCode / 100) {
-        case 2: // Line
-            if (p >= 2) bubbleDofs = p - 1;
-            break;
-        case 3: // Triangle
-            if (p >= 3) bubbleDofs = (p-1)*(p-2)/2;
-            break;
-        case 4: // Quad
-            if (p >= 4) bubbleDofs = (p-2)*(p-3)/2;
-            break;
-        case 5: // Tetrahedron
-            if (p >= 4) bubbleDofs = (p-1)*(p-2)*(p-3)/6;
-            break;
-        case 6: // Pyramid
-            if (p >= 4) bubbleDofs = (p-1)*(p-2)*(p-3)/6;
-            break;
-        case 7: // Wedge
-            if (p >= 5) bubbleDofs = (p-2)*(p-3)*(p-4)/6;
-            break;
-        case 8: // Brick
-            if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
-            break;
-        default:
-            NSLog(@"getBubbleDofsForElement: unsupported p element type.\n");
-            bubbleDofs = p;
-            break;
-    }
-    
-    return bubbleDofs = max(0,bubbleDofs);
-}
-
--(int)getNumberOfGaussPointsForElement:(Element_t *)element inMesh:(FEMMesh *)mesh {
+-(int)getNumberOfGaussPointsForElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh {
     
     int edgep, facep, bubblep, nb, maxp;
     
@@ -965,7 +913,59 @@
     return pow(maxp, element->Type.dimension);
 }
 
--(int)getEdgeDofsForElement:(Element_t *)element polyDegree:(int)p {
+/****************************************************************************
+ 
+    Based on element bubble polynomial degree p, return degrees of freedom
+    for given elements bubbles.
+ 
+    ELement_t *element   ->  element to get bubble dofs to
+    int p                ->  element polynomial degree p
+ 
+    Returns number of bubble dofs for element
+ 
+*****************************************************************************/
+-(int)getBubbleDofsForElement:(Element_t * __nonnull)element polyDegree:(int)p {
+    
+    int bubbleDofs;
+    
+    if (element->Pdefs == NULL) {
+        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element.\n");
+        return bubbleDofs = 0;
+    }
+    
+    bubbleDofs = 0;
+    switch (element->Type.ElementCode / 100) {
+        case 2: // Line
+            if (p >= 2) bubbleDofs = p - 1;
+            break;
+        case 3: // Triangle
+            if (p >= 3) bubbleDofs = (p-1)*(p-2)/2;
+            break;
+        case 4: // Quad
+            if (p >= 4) bubbleDofs = (p-2)*(p-3)/2;
+            break;
+        case 5: // Tetrahedron
+            if (p >= 4) bubbleDofs = (p-1)*(p-2)*(p-3)/6;
+            break;
+        case 6: // Pyramid
+            if (p >= 4) bubbleDofs = (p-1)*(p-2)*(p-3)/6;
+            break;
+        case 7: // Wedge
+            if (p >= 5) bubbleDofs = (p-2)*(p-3)*(p-4)/6;
+            break;
+        case 8: // Brick
+            if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
+            break;
+        default:
+            NSLog(@"getBubbleDofsForElement: unsupported p element type.\n");
+            bubbleDofs = p;
+            break;
+    }
+    
+    return bubbleDofs = max(0,bubbleDofs);
+}
+
+-(int)getEdgeDofsForElement:(Element_t * __nonnull)element polyDegree:(int)p {
     
     if (element->Pdefs == NULL) {
         return 0;

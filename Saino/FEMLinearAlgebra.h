@@ -10,7 +10,7 @@
 
 @interface FEMLinearAlgebra : NSObject
 
--(void)LUDecompositionOfMatrix:(double **)a ofSize:(int)n resultPivot:(int *)pivot;
--(void)invertMatrix:(double **)a ofSize:(int)n;
+-(void)LUDecompositionOfMatrix:(double * __nonnull * __nonnull)a ofSize:(int)n resultPivot:(int * __nonnull)pivot;
+-(void)invertMatrix:(double * __nonnull * __nonnull)a ofSize:(int)n;
 
 @end
