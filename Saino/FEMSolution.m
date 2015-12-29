@@ -55,12 +55,19 @@
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
         _hasBuiltInSolution = NO;
         _builtInSolution = nil;
         _plugInPrincipalClassInstance = nil;
         
+        _plugInName = nil;
+        _matrix = nil;
+        _variable = nil;
+        _mesh = nil;
+        _normalTangentialName = nil;
+        _exportedVariables = nil;
+        
         _solutionInfo = [[NSMutableDictionary alloc] init];
+        _valuesList = [[NSMutableArray alloc] init];
         
         _containers = (solutionArraysContainer*)malloc(sizeof(solutionArraysContainer));
         _containers->activeElements = NULL;
@@ -112,14 +119,16 @@
     _matrix = nil;
     _variable = nil;
     _mesh = nil;
+    _normalTangentialName = nil;
+    _exportedVariables = nil;
 }
 
--(solutionArraysContainer*)getContainers {
+-(solutionArraysContainer * __nonnull)getContainers {
     
     return _containers;
 }
 
--(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle *)bundle {
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * __nonnull)bundle {
     
     Class currPrincipalClass;
     FEMUtilities *utilities;

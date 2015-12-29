@@ -138,7 +138,9 @@
     this method will return dummy (that is the standard naming form used by a solution variable).
     Otherwise it will return the name as it is.
 */
--(NSString *)canonicalizeName {
+-(NSString * __nullable)canonicalizeName {
+    
+    if (self.name == nil) return nil;
     
     NSRange ind = [self.name rangeOfString:@"["];
     if (ind.location != NSNotFound) {
@@ -148,7 +150,7 @@
     }
 }
 
--(variableArraysContainer*)getContainers {
+-(variableArraysContainer * __nonnull)getContainers {
     
     return _containers;
 }

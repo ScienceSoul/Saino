@@ -32,13 +32,13 @@
     BOOL _complexMatrix;
     BOOL _dgMatrix;
     
-    matrixArraysContainer *_containers;
+    matrixArraysContainer * __nonnull _containers;
 }
 
-@property(nonatomic, strong) FEMMatrix *child;
-@property(nonatomic, strong) FEMMatrix *parent;
-@property(nonatomic, strong) FEMMatrix *constraint;
-@property(nonatomic, strong) FEMMatrix *ematrix;
+@property(nonatomic, strong, nullable) FEMMatrix *child;
+@property(nonatomic, strong, nullable) FEMMatrix *parent;
+@property(nonatomic, strong, nullable) FEMMatrix *constraint;
+@property(nonatomic, strong, nullable) FEMMatrix *ematrix;
 @property(nonatomic, assign) int numberOfRows;
 @property(nonatomic, assign) int subband;
 @property(nonatomic, assign) int format;
@@ -56,6 +56,6 @@
 @property(nonatomic, assign, getter = isDgmatrix) BOOL dgMatrix;
 
 -(void)deallocation;
--(matrixArraysContainer *)getContainers;
+-(matrixArraysContainer * __nonnull)getContainers;
 
 @end

@@ -35,12 +35,12 @@
     BOOL _stabilize;
     BOOL _outputActive;
     
-    Element_t *_elements;
-    Element_t *_edges;
-    Element_t *_faces;
-    Nodes_t *_globalNodes;
-    Quadrant_t *_rootQuadrant;
-    Factors_t *_viewFactors;
+    Element_t * __nullable _elements;
+    Element_t * __nullable _edges;
+    Element_t * __nullable _faces;
+    Nodes_t * __nullable _globalNodes;
+    Quadrant_t * __nullable _rootQuadrant;
+    Factors_t * __nullable _viewFactors;
     
     NSMutableString *_name;
     NSMutableArray *_variables;              // Mutable array of FEMVariable classes
@@ -51,10 +51,10 @@
     FEMMesh *_parent;
     FEMMesh *_child;
     
-    int *_colorMapping;
-    int *_elementNodeIndexesStore;
-    int *_discontinousPerm;
-    int *_invPerm;
+    int * __nullable _colorMapping;
+    int * __nullable _elementNodeIndexesStore;
+    int * __nullable _discontinousPerm;
+    int * __nullable _invPerm;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -78,45 +78,45 @@
 @property(nonatomic, assign, getter = isChanged) BOOL changed;
 @property(nonatomic, assign, getter = isStabilize) BOOL stabilize;
 @property(nonatomic, assign, getter = isDiscontinuousMesh) BOOL discontinuousMesh;
-@property(nonatomic, strong) NSMutableString *name;
-@property(nonatomic, strong) NSMutableArray *variables;
-@property(nonatomic, strong) NSMutableArray *projectors;
-@property(nonatomic, strong) NSMutableArray *next;
-@property(nonatomic, strong) NSMutableArray *colors;
-@property(nonatomic, strong) FEMMesh *parent;
-@property(nonatomic, strong) FEMMesh *child;
+@property(nonatomic, strong, nullable) NSMutableString *name;
+@property(nonatomic, strong, nullable) NSMutableArray *variables;
+@property(nonatomic, strong, nonnull) NSMutableArray *projectors;
+@property(nonatomic, strong, nonnull) NSMutableArray *next;
+@property(nonatomic, strong, nonnull) NSMutableArray *colors;
+@property(nonatomic, strong, nullable) FEMMesh *parent;
+@property(nonatomic, strong, nullable) FEMMesh *child;
 
--(void)loadMeshForModel:(FEMModel *)model meshDirectory:(NSString *)dir meshName:(NSString *)name boundariesOnly:(BOOL)bd numberOfPartitions:(int *)numParts partitionID:(int *)partID definitions:(int *)defDofs;
+-(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs;
 
 //Allocations methods
--(void)allocatePDefinitionsForElement:(Element_t *)element;
+-(void)allocatePDefinitionsForElement:(Element_t * __nonnull)element;
 
 // Nodes getter
--(Nodes_t *)getNodes;
+-(Nodes_t * __nullable)getNodes;
 
 // Elements getter
--(Element_t *)getElements;
+-(Element_t * __nullable)getElements;
 
 // Edges getter 
--(Element_t *)getEdges;
+-(Element_t * __nullable)getEdges;
 
 // Faces getter
--(Element_t *)getFaces;
+-(Element_t * __nullable)getFaces;
 
 // Quadrant getter
--(Quadrant_t *)getQuadrant;
+-(Quadrant_t * __nullable)getQuadrant;
 
 // Color mapping getter
--(int *)getColorMapping;
+-(int * __nullable)getColorMapping;
 
 // Element permutation store getter
--(int *)getElementNodeIndexesStore;
+-(int * __nullable)getElementNodeIndexesStore;
 
 // Discontinous permutation getter
--(int *)getDiscontinousPerm;
+-(int * __nullable)getDiscontinousPerm;
 
 // Inverse permutation getter
--(int *)getInvPerm;
+-(int * __nullable)getInvPerm;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;
@@ -129,13 +129,5 @@
 -(void)deallocateMeshFaceTables;
 -(void)deallocateMeshViewFactorTables;
 -(void)deallocateQuadrantTree;
-
--(void)Simple2DMeshBorders:(double*)borders withSize:(int*) meshSize elemetCode:(int) elementID;
-
-
-
-
-
-
 
 @end

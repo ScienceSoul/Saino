@@ -32,12 +32,12 @@
     BOOL _secondary;
     BOOL _componentSecondaryVariable;
     
-    variableArraysContainer *_containers;
+    variableArraysContainer * __nonnull _containers;
 }
 
-@property(nonatomic, strong) NSString *name;
-@property(nonatomic, strong) id primaryMesh;
-@property(nonatomic, strong) id solution;
+@property(nonatomic, strong, nullable) NSString *name;
+@property(nonatomic, strong, nullable) id primaryMesh;
+@property(nonatomic, strong, nullable) id solution;
 @property(nonatomic, assign) int nameLength;
 @property(nonatomic, assign) int dofs;
 @property(nonatomic, assign) int nonLinConverged;
@@ -56,7 +56,7 @@
 @property(nonatomic, assign, getter = isComponentSecondaryVariable) BOOL componentSecondaryVariable;
 
 -(void)deallocation;
--(NSString *)canonicalizeName;
--(variableArraysContainer *)getContainers;
+-(NSString * __nullable)canonicalizeName;
+-(variableArraysContainer * __nonnull)getContainers;
           
 @end

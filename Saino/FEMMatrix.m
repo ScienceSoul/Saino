@@ -253,7 +253,7 @@
     }
 }
 
--(matrixArraysContainer *)getContainers {
+-(matrixArraysContainer * __nonnull)getContainers {
     
     return _containers;
 }

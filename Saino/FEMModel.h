@@ -51,10 +51,10 @@
     FEMConstants *_constants;
     FileReader *_mdf;
     
-    Element_t *_elements;
-    Element_t *_currentElement;
-    Nodes_t *_nodes;
-    modelArraysContainer *_containers;
+    Element_t * __nullable _elements;
+    Element_t * __nullable _currentElement;
+    Nodes_t * __nullable _nodes;
+    modelArraysContainer * __nonnull _containers;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -72,42 +72,42 @@
 @property(nonatomic, assign) int coordinates;
 @property(nonatomic, assign) int totalMatrixElements;
 @property(nonatomic, assign) int maxElementNodes;
-@property(nonatomic, weak) id mesh;
-@property(nonatomic, weak) id solution;
-@property(nonatomic, strong) NSMutableString *meshDir;
-@property(nonatomic, strong) NSMutableString *meshName;
-@property(nonatomic, strong) NSMutableString *outputPath;
-@property(nonatomic, strong) NSArray *boundaryID;
-@property(nonatomic, strong) NSArray *solutions;
-@property(nonatomic, strong) NSMutableArray *meshes;
-@property(nonatomic, strong) NSArray *bodies;
-@property(nonatomic, strong) NSArray *bodyForces;
-@property(nonatomic, strong) NSArray *boundaryConditions;
-@property(nonatomic, strong) NSArray *boundaries;
-@property(nonatomic, strong) NSArray *equations;
-@property(nonatomic, strong) NSArray *initialConditions;
-@property(nonatomic, strong) NSArray *materials;
-@property(nonatomic, strong) NSMutableArray *variables;
-@property(nonatomic, strong) FEMSimulation *simulation;
-@property(nonatomic, strong) FEMConstants *constants;
-@property(nonatomic, strong) FileReader *mdf;
+@property(nonatomic, weak, nullable) id mesh;
+@property(nonatomic, weak, nullable) id solution;
+@property(nonatomic, strong, nonnull) NSMutableString *meshDir;
+@property(nonatomic, strong, nonnull) NSMutableString *meshName;
+@property(nonatomic, strong, nonnull) NSMutableString *outputPath;
+@property(nonatomic, strong, nonnull) NSArray *boundaryID;
+@property(nonatomic, strong, nullable) NSArray *solutions;
+@property(nonatomic, strong, nonnull) NSMutableArray *meshes;
+@property(nonatomic, strong, nullable) NSArray *bodies;
+@property(nonatomic, strong, nullable) NSArray *bodyForces;
+@property(nonatomic, strong, nullable) NSArray *boundaryConditions;
+@property(nonatomic, strong, nullable) NSArray *boundaries;
+@property(nonatomic, strong, nullable) NSArray *equations;
+@property(nonatomic, strong, nullable) NSArray *initialConditions;
+@property(nonatomic, strong, nullable) NSArray *materials;
+@property(nonatomic, strong, nonnull) NSMutableArray *variables;
+@property(nonatomic, strong, nonnull) FEMSimulation *simulation;
+@property(nonatomic, strong, nonnull) FEMConstants *constants;
+@property(nonatomic, strong, nullable) FileReader *mdf;
 
 -(void)deallocation;
 
 // The dummy arguments are placeholders for future arguments related to MPI support
--(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2;
+-(void)loadModelName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd dummy:(int * __nullable)d1 dummy:(int * __nullable)d2;
 
 // Elements getter
--(Element_t *)getElements;
--(Element_t *)getCurrentElement;
+-(Element_t * __nullable)getElements;
+-(Element_t * __nullable)getCurrentElement;
 
 // Nodes getter
--(Nodes_t *)getNodes;
+-(Nodes_t * __nullable)getNodes;
 
 // Elements and nodes setters
--(void)SetElements:(Element_t *)elements;
--(void)setNodes:(Nodes_t *)nodes;
+-(void)SetElements:(Element_t * __nonnull)elements;
+-(void)setNodes:(Nodes_t * __nonnull)nodes;
 
--(modelArraysContainer *)getContainers;
+-(modelArraysContainer * __nonnull)getContainers;
 
 @end

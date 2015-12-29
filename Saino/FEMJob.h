@@ -19,10 +19,10 @@
     NSString *_modelName;
 }
 
-@property(nonatomic, strong) FEMCore *core;
-@property(nonatomic, strong) FEMElementDescription *elementDescription;
-@property(nonatomic, strong) FEMModel *model;
-@property(nonatomic, strong) NSString *modelName;
+@property(nonatomic, strong, nonnull) FEMCore *core;
+@property(nonatomic, strong, nonnull) FEMElementDescription *elementDescription;
+@property(nonatomic, strong, nonnull) FEMModel *model;
+@property(nonatomic, strong, nonnull) NSString *modelName;
 
 -(void)runWithInitialize:(int)initialize;
 -(void)deallocation;

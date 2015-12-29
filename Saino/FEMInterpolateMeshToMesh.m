@@ -93,7 +93,7 @@
 
 /********************************************************************************************************
  
-    Interpolates velues of all variables from a mesh associated with the old model to the mesh
+    Interpolates values of all variables from a mesh associated with the old model to the mesh
     of the new model.
  
     (FEMMesh *)oldMesh         ->  Old mesh class
@@ -611,7 +611,6 @@
         free_dvector(localW, 0, newMesh.numberOfNodes-1);
         
         // Store also the transpose of the projector
-        projector.tMatrix = nil;
         if (edgeBasis == YES) {
             if (found == YES) {
                 n = oldMesh.numberOfNodes;

@@ -384,7 +384,6 @@
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
         _dimension = 0;
         _numberOfNodes = 0;
         _numberOfBulkElements = 0;
@@ -400,6 +399,7 @@
         _totalMatrixElements = 0;
         _maxElementNodes = 0;
         _mesh = nil;
+        _solution = nil;
         
         _outputPath = [NSMutableString stringWithString:@" "];
         _boundaryID = [[NSArray alloc] init];
@@ -492,7 +492,7 @@
     _nodes = NULL;
 }
 
--(void)loadModelName:(NSString *)name boundariesOnly:(BOOL)bd dummy:(int *)d1 dummy:(int *)d2 {
+-(void)loadModelName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd dummy:(int * __nullable)d1 dummy:(int * __nullable)d2 {
     
     int i, j, l, nlen, meshKeep, meshLevels, sizeNodal, numberPartitions, partitionID;
     int defDofs[6];
@@ -871,32 +871,32 @@
 
 #pragma mark Elements getter
 
--(Element_t *)getElements {
+-(Element_t * __nullable)getElements {
     
     return _elements;
 }
 
--(Element_t *)getCurrentElement {
+-(Element_t * __nullable)getCurrentElement {
     
     return _currentElement;
 }
 
 #pragma mark Nodes getter
--(Nodes_t *)getNodes {
+-(Nodes_t * __nullable)getNodes {
     
     return _nodes;
 }
 
 #pragma mark Elements and Nodes setter
--(void)SetElements:(Element_t *)elements {
+-(void)SetElements:(Element_t * __nonnull)elements {
     _elements = elements;
 }
 
--(void)setNodes:(Nodes_t *)nodes {
+-(void)setNodes:(Nodes_t * __nonnull)nodes {
     _nodes = nodes;
 }
 
--(modelArraysContainer*)getContainers {
+-(modelArraysContainer * __nonnull)getContainers {
     
     return _containers;
 }

@@ -19,7 +19,6 @@
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
         _mesh = [[FEMMesh alloc] init];
         _matrix = [[FEMMatrix alloc] init];
         _tMatrix = [[FEMMatrix alloc] init];

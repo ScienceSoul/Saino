@@ -25,20 +25,20 @@
 #endif
 
 @interface FEMJob ()
--(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle;
--(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle;
--(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle *)fileHandle;
--(void)FEMJob_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle;
+-(void)FEMJob_writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle *__nonnull)fileHandle;
+-(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle;
+-(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle;
+-(void)FEMJob_writeBytes:(const void * __nonnull)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle * __nonnull)fileHandle;
 
--(void)FEMJob_addSolutionsModel:(FEMModel *)model;
--(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel *)model;
--(void)FEMJob_setInitialConditionsModel:(FEMModel *)model;
--(void)FEMJob_initCondModel:(FEMModel *)model;
--(void)FEMJob_restartModel:(FEMModel *)model;
--(void)FEMJob_runSimulation:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning;
--(void)FEMJob_saveToPostModel:(FEMModel *)model currentStep:(int)currentStep;
--(int)FEMJob_saveResult:(NSString *)fileName model:(FEMModel *)model mesh:(FEMMesh *)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL *)freeSurface;
--(void)FEMJob_saveCurrent:(FEMModel *)model currentStep:(int)currentStep;
+-(void)FEMJob_addSolutionsModel:(FEMModel * __nonnull)model;
+-(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * __nonnull)model;
+-(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model;
+-(void)FEMJob_initCondModel:(FEMModel * __nonnull)model;
+-(void)FEMJob_restartModel:(FEMModel * __nonnull)model;
+-(void)FEMJob_runSimulation:(FEMModel * __nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * __nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning;
+-(void)FEMJob_saveToPostModel:(FEMModel * __nonnull)model currentStep:(int)currentStep;
+-(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface;
+-(void)FEMJob_saveCurrent:(FEMModel * __nonnull)model currentStep:(int)currentStep;
 @end
 
 @implementation FEMJob {
@@ -57,18 +57,18 @@
     int _savedSteps;
     int _coupledMaxIter;
     int _coupledMinIter;
-    int *_timeSteps;
-    int *_outputIntervals;
+    int * __nullable _timeSteps;
+    int * __nullable _outputIntervals;
     double _s;
     double _dt;
-    double *_sTime;
-    double *_sStep;
-    double *_sInterval;
-    double *_sSize;
-    double **_sPrevSizes;
-    double *_steadyIt;
-    double *_nonLinIt;
-    double **_timeStepSizes;
+    double * __nullable _sTime;
+    double * __nullable _sStep;
+    double * __nullable _sInterval;
+    double * __nullable _sSize;
+    double * __nullable * __nullable _sPrevSizes;
+    double * __nullable _steadyIt;
+    double * __nullable _nonLinIt;
+    double * __nullable * __nullable _timeStepSizes;
     int _sizeTimeSteps;
     int _sizeOutputIntervals;
     int _sizeSTime;
@@ -82,9 +82,9 @@
     int _size1TimeStepSizes;
     int _size2TimeStepSizes;
     
-    NSMutableString *_outputName;
-    NSMutableString *_postName;
-    NSString *_when;
+    NSMutableString * __nonnull _outputName;
+    NSMutableString * __nonnull _postName;
+    NSString * __nullable _when;
 }
 
 @synthesize core = _core;
@@ -94,14 +94,14 @@
 
 #pragma mark Private methods
 
--(void)FEMJob_writeString:(NSString *)string toFileHandle:(NSFileHandle *)fileHandle {
+-(void)FEMJob_writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle * __nonnull)fileHandle {
     
     NSData *buffer;
     buffer = (NSMutableData *)[string dataUsingEncoding:NSUTF8StringEncoding];
     [fileHandle writeData:buffer];
 }
 
--(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle *)fileHandle {
+-(void)FEMJob_writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
     
     NSData *buffer;
     NSString *strBuffer;
@@ -110,7 +110,7 @@
     [fileHandle writeData:buffer];
 }
 
--(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle *)fileHandle {
+-(void)FEMJob_writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
     
     NSData *buffer;
     NSString *strBuffer;
@@ -119,7 +119,7 @@
     [fileHandle writeData:buffer];
 }
 
--(void)FEMJob_writeBytes:(const void *)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle *)fileHandle {
+-(void)FEMJob_writeBytes:(const void * __nonnull)bytes length:(NSUInteger)length toFileHandle:(NSFileHandle * __nonnull)fileHandle {
     
     NSData *buffer;
     buffer = [NSData dataWithBytes:bytes length:length];
@@ -129,7 +129,7 @@
 /***********************************
     Add flags for active solutions
 ***********************************/
--(void)FEMJob_addSolutionsModel:(FEMModel *)model {
+-(void)FEMJob_addSolutionsModel:(FEMModel * __nonnull)model {
     
     int i, j;
     BOOL initSolution, found;
@@ -195,7 +195,7 @@
 /*******************************************************************
     Add coordinate and time variables to the meshe(s) in the model
 *******************************************************************/
--(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel *)model {
+-(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * __nonnull)model {
     
     FEMVariable *dtVar = nil;
     FEMSolution *solution = nil;
@@ -254,7 +254,7 @@
     free(varContainers);
 }
 
--(void)FEMJob_initCondModel:(FEMModel *)model {
+-(void)FEMJob_initCondModel:(FEMModel * __nonnull)model {
     
     int i, j, k, k1, l, n, t, dofs;
     int *indexes;
@@ -392,7 +392,7 @@
 /*************************************************************
     Check if we are restarting, and if yes read field values
 *************************************************************/
--(void)FEMJob_restartModel:(FEMModel *)model {
+-(void)FEMJob_restartModel:(FEMModel * __nonnull)model {
     
     int k, minVal;
     double startTime;
@@ -443,7 +443,7 @@
 /******************************************
     Set initial conditions for the fields
 ******************************************/
--(void)FEMJob_setInitialConditionsModel:(FEMModel *)model {
+-(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model {
     
     int i, j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
     double udot, parU, parV, *nrm, *t1, *t2, *vec, *tmp;
@@ -660,7 +660,7 @@
     if (tensor.tensor != NULL) free_d3tensor(tensor.tensor, 0, tensor.m-1, 0, tensor.n-1, 0, tensor.p-1);
 }
 
--(void)FEMJob_runSimulation:(FEMModel *)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int* )outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning{
+-(void)FEMJob_runSimulation:(FEMModel * __nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * __nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning {
     
     int i, j, k, jj, kk, n, interval, timeStep, stepCount = 0, cumTimeStep, realTimeStep, timeLeft, adaptiveKeepSmallest, minVal, smallestCount,
         stepControl=-1;
@@ -999,7 +999,7 @@ jump:
 /***********************************************************************************
     Saves results file to post proecessing file of ElmerPost format if requested
 ***********************************************************************************/
--(void)FEMJob_saveToPostModel:(FEMModel *)model currentStep:(int)currentStep {
+-(void)FEMJob_saveToPostModel:(FEMModel * __nonnull)model currentStep:(int)currentStep {
     
     int j, k, timeSteps, savedEigenValues;
     BOOL found, lastExisting, eigenAnal=NO, append;
@@ -1159,7 +1159,7 @@ jump:
     Save fields in a file that may be used for restarting a simulation.
     The data is saved in ascii format (no binary format support yet).
 ***********************************************************************************/
--(int)FEMJob_saveResult:(NSString *)fileName model:(FEMModel *)model mesh:(FEMMesh *)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL *)freeSurface {
+-(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface {
     
     int i, k, dofs, n, saveCount;
     BOOL found, freeSurfaceFlag, moveBoundary, sameAsPrev, all;
@@ -1360,7 +1360,7 @@ jump:
 /***********************************************************************************
     Saves current time step to external files
 ***********************************************************************************/
--(void)FEMJob_saveCurrent:(FEMModel *)model currentStep:(int)currentStep {
+-(void)FEMJob_saveCurrent:(FEMModel * __nonnull)model currentStep:(int)currentStep {
     
     int j, k;
     BOOL found, binaryOutput, saveAll, eigenAnal=NO;

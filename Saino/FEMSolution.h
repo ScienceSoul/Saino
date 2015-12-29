@@ -41,7 +41,7 @@
     NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes for exported variables
     NSMutableArray *_valuesList;                     // Array of FEMValueList objects
     
-    solutionArraysContainer *_containers;
+    solutionArraysContainer * __nonnull _containers;
 }
 
 @property(nonatomic, assign) int simulationID;
@@ -62,21 +62,21 @@
 @property(nonatomic, assign, getter = isMultigridSolution) BOOL multigridSolution;
 @property(nonatomic, assign, getter = isMultigridEqualPlit) BOOL multigridEqualPlit;
 @property(nonatomic, assign) BOOL hasBuiltInSolution;
-@property(nonatomic, strong) id builtInSolution;
-@property(nonatomic, strong) id plugInPrincipalClassInstance;
-@property(nonatomic, strong) NSString *plugInName;
-@property(nonatomic, strong) FEMMatrix *matrix;
-@property(nonatomic, strong) FEMVariable *variable;
-@property(nonatomic, strong) FEMMesh *mesh;
-@property(nonatomic, strong) NSMutableDictionary *solutionInfo;
-@property(nonatomic, strong) NSString *normalTangentialName;
-@property(nonatomic, strong) NSMutableDictionary *exportedVariables;
-@property(nonatomic, strong) NSMutableArray *valuesList;
+@property(nonatomic, strong, nullable) id builtInSolution;
+@property(nonatomic, strong, nullable) id plugInPrincipalClassInstance;
+@property(nonatomic, strong, nullable) NSString *plugInName;
+@property(nonatomic, strong, nullable) FEMMatrix *matrix;
+@property(nonatomic, strong, nullable) FEMVariable *variable;
+@property(nonatomic, strong, nullable) FEMMesh *mesh;
+@property(nonatomic, strong, nonnull) NSMutableDictionary *solutionInfo;
+@property(nonatomic, strong, nullable) NSString *normalTangentialName;
+@property(nonatomic, strong, nullable) NSMutableDictionary *exportedVariables;
+@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
 
 -(void)deallocation;
--(solutionArraysContainer *)getContainers;
+-(solutionArraysContainer * __nonnull)getContainers;
 
 // Instantiate the plug-in principal class
--(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle *)bundle;
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * __nonnull)bundle;
 
 @end

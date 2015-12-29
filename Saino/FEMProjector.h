@@ -19,9 +19,9 @@
     FEMProjector *_next;
 }
 
-@property(nonatomic, strong) FEMMesh *mesh;
-@property(nonatomic, strong) FEMMatrix *matrix;
-@property(nonatomic, strong) FEMMatrix *tMatrix;
-@property(nonatomic, strong) FEMProjector *next;
+@property(nonatomic, strong, nonnull) FEMMesh *mesh;
+@property(nonatomic, strong, nonnull) FEMMatrix *matrix;
+@property(nonatomic, strong, nonnull) FEMMatrix *tMatrix;
+@property(nonatomic, strong, nullable) FEMProjector *next;
 
 @end

@@ -346,7 +346,6 @@
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
         _outputActive = NO;
         _adaptiveMesh = NO;
         _changed = NO;
@@ -378,20 +377,23 @@
         
         _variables = [[NSMutableArray alloc] init];
         _projectors = [[NSMutableArray alloc] init];
+        _next = [[NSMutableArray alloc] init];
         _colors = [[NSMutableArray alloc] init];
         
+        _name = nil;
         _parent = nil;
         _child = nil;
         
         _colorMapping = NULL;
         _elementNodeIndexesStore = NULL;
         _discontinousPerm = NULL;
+        _invPerm = NULL;
     }
     
     return self;
 }
 
--(void)allocatePDefinitionsForElement:(Element_t *)element {
+-(void)allocatePDefinitionsForElement:(Element_t * __nonnull)element {
     
     element->Pdefs = NULL;
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
@@ -407,7 +409,7 @@
     element->Pdefs->GaussPoints = 0;
 }
 
--(void)loadMeshForModel:(FEMModel *)model meshDirectory:(NSString *)dir meshName:(NSString *)name boundariesOnly:(BOOL)bd numberOfPartitions:(int *)numParts partitionID:(int *)partID definitions:(int *)defDofs {
+-(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs {
     
     int i, j, k, n, body, colorID, type, bndry, left, right, tag;
     int addr1, addr2;
@@ -1012,58 +1014,58 @@
 
 #pragma mark Nodes getter
 
--(Nodes_t *)getNodes {
+-(Nodes_t * __nullable)getNodes {
     
     return _globalNodes;
 }
 
 #pragma mark Elements getter
 
--(Element_t *)getElements {
+-(Element_t * __nullable)getElements {
     
     return _elements;
 }
 
 #pragma mark Edges getter
 
--(Element_t *)getEdges {
+-(Element_t * __nullable)getEdges {
     
     return _edges;
 }
 
 #pragma mark Faces getter
 
--(Element_t *)getFaces {
+-(Element_t * __nullable)getFaces {
     
     return _faces;
 }
 
 #pragma mark Quadrant getter
--(Quadrant_t *)getQuadrant {
+-(Quadrant_t * __nullable)getQuadrant {
     
     return _rootQuadrant;
 }
 
 #pragma mark Color mapping getter
--(int *)getColorMapping {
+-(int * __nullable)getColorMapping {
     
     return _colorMapping;
 }
 
 #pragma mark Element permutation store getter
--(int *)getElementNodeIndexesStore {
+-(int * __nullable)getElementNodeIndexesStore {
     
     return _elementNodeIndexesStore;
 }
 
 #pragma mark Discontinous permutation getter
--(int *)getDiscontinousPerm {
+-(int * __nullable)getDiscontinousPerm {
     
     return _discontinousPerm;
 }
 
 #pragma mark Inverse permutation getter
--(int *)getInvPerm {
+-(int * __nullable)getInvPerm {
     
     return _invPerm;
 }
@@ -1146,7 +1148,6 @@
         free(varContainers);
         varContainers = NULL;
     }
-    self.variables = nil;
 }
 
 -(void)deallocateMeshEdgeTables {
@@ -1293,7 +1294,6 @@
         [projector.matrix deallocation];
         [projector.tMatrix deallocation];
     }
-    _projectors = nil;
 
     // Deallocate quadrant tree (used in mesh to mesh interpolation)
     [self FEMMesh_deallocateQuadrantTree:_rootQuadrant];
@@ -1322,240 +1322,5 @@
         _invPerm = NULL;
     }
 }
-
--(void)Simple2DMeshBorders:(double*)borders withSize:(int*) intervals elemetCode:(int) elementID {
-    
-    int i, j, k, l;
-    int m, n, o, p;
-    double minx, maxx, miny, maxy, incri, incrj;
-    double meshsize1=0.0, meshsize2=0.0;
-    int domainShape;
-    int **side1 = NULL, **side2 = NULL, **side3 = NULL, **side4 = NULL;
-    BOOL ct=NO;
-    
-    minx = borders[0];
-    maxx = borders[1];
-    miny = borders[2];
-    maxy = borders[3];
-    
-    // Rectangle or square?
-    if ( (maxx-minx) > 0 && (maxy-miny) > 0 && (maxx-minx) == (maxy-miny) ) {
-        domainShape = 1;                                                               // valid square
-    } else  if ((maxx-minx) > 0 && (maxy-miny) > 0 && (maxx-minx) != (maxy-miny)) {
-        domainShape = 2;                                                              // valid rectangle
-    }
-    else {
-        domainShape = -1;                                                             // Something wrong with borders input
-    }
-    
-    [self setDimension:2];
-    
-    // Build nodes
-    switch (domainShape) {
-        case 1:
-            
-            meshsize1 = (maxx-minx) / intervals[0];
-            meshsize2 = meshsize1;
-            intervals[1] = intervals[0];
-            
-            // Allocate memory for the GlobalNodes
-            // TODO: [self AllocateNodes:0 :((intervals[0]+1)*(intervals[0]+1))-1];
-            
-            break;
-            
-        case 2:
-            
-            if (intervals[1] <= 0) {
-                fatal("FEMMesh:Simple2DMesh", "No intervals given for second direction discretization in rectangle domain.");
-            }
-            
-            meshsize1 = (maxx-minx) / intervals[0];
-            meshsize2 = (maxy-miny) / intervals[1];
-            
-            // Allocate memory for the GlobalNodes
-            //TODO: [self AllocateNodes:0 :((intervals[0]+1)*(intervals[1]+1))-1];
-            
-            break;
-            
-        default:
-            fatal("FEMMesh:Simple2DMesh", "Failure in method Simple2DMesh. Cant initialize mesh.");
-            break;
-    }
-    
-    l = 1;
-    k = 0;
-    incri = minx;
-    incrj = miny;
-    
-    for (i=0; i<=intervals[0]; i++) {
-        for (j=0; j<=intervals[1]; j++) {
-            
-            _globalNodes->x[k] = incri;
-            _globalNodes->y[k] = incrj;
-            _globalNodes->z[k] = 0.0;
-            incrj = incrj + meshsize2;
-            l++;
-            k++;
-            
-        }
-        incrj = miny;
-        incri = incri + meshsize1;
-    }
-    
-    
-    // Build elements and remember boundary elements
-    switch (domainShape) {
-        case 1:
-            
-            // Allocate memory for the Elements
-            //Elements = ElementVec(0, (intervals[0]*intervals[0]));
-            //Elements->NodeIndexes = intvec(0, 3);
-            
-            side1 = intmatrix(0, intervals[0], 0, 2);
-            side2 = intmatrix(0, intervals[0], 0, 2);
-            side3 = intmatrix(0, intervals[0], 0, 2);
-            side4 = intmatrix(0, intervals[0], 0, 2);
-            
-            break;
-            
-        case 2:
-            
-            //Elements = ElementVec(0, (intervals[0]*intervals[1]));
-            //Elements->NodeIndexes = intvec(0, 3);
-            
-            side1 = intmatrix(0, intervals[0], 0, 2);
-            side2 = intmatrix(0, intervals[1], 0, 2);
-            side3 = intmatrix(0, intervals[0], 0, 2);
-            side4 = intmatrix(0, intervals[1], 0, 2);
-            
-            break;
-            
-    }
-    
-    k = 0;
-    l = 1;
-    
-    m = 0;
-    n = 0;
-    o = 0;
-    p = 0;
-    
-    for (i=0; i<((intervals[0]+1)*(intervals[1]+1))-(intervals[1]+2); i++) {
-        
-        // Top boundary elements
-        for (j=1;j<(intervals[1]+1);j++) {
-            if ( i == 0+(j*(intervals[1]+1)-1) ) {
-                side3[o][2] = k-1;
-                o++;
-                ct = YES;
-                break;
-            }
-        }
-        
-        if (ct == YES) {
-            ct = NO;
-            continue;
-        }
-        
-        _elements[k].ElementIndex = l;
-        _elements[k].BodyID = 1;
-        _elements[k].Type.ElementCode = 404;
-        
-        // Left boundary elements
-        if ( i < (intervals[1]+1) ) {
-            side4[p][2] = k;
-            p++;
-        }
-        
-        // Bottom boundary elements
-        for ( j=0;j<(intervals[1]+1);j++ ) {
-            if ( i == 0+j*(intervals[1]+1) ) {
-                side1[m][2] = k;
-                m++;
-                break;
-            }
-        }
-        
-        // Right boundary elements
-        if ( i >= ((intervals[0]+1)*(intervals[1]+1))-(2*(intervals[1]+1)) ) {
-            side2[n][2] = k;
-            n++;
-            break;
-        }
-        
-        k++;
-        l++;
-    }
-    
-    // Build boundary elements
-    
-    switch (domainShape) {
-        case 1:
-            
-            // Allocate memory for the boundary elements
-            //BDElements = BDElementVec(0, (intervals[0]*4)-1);
-            //BDElements->NodeIndexes = intvec(0, 1);
-            
-            break;
-            
-        case 2:
-            
-            //BDElements = BDElementVec(0, ((intervals[0]*2)+(intervals[1]*2))-1);
-            //BDElements->NodeIndexes = intvec(0, 1);
-            
-            break;
-            
-    }
-    
-    k = 0;
-    l = 1;
-    
-    // Boundaries are numbered anti-clockwise
-    // First boundary -> bottom side
-    for (i=0; i<m; i++) {
-        
-        //TODO:
-    }
-    
-    // Second boundary -> right side
-    for (i=0; i<n; i++) {
-        
-        //TODO:
-    }
-    
-    // Third boundary -> top side
-    for (i=0; i<o; i++) {
-        
-        //TODO:
-    }
-    
-    // Fourth boundary -> left side
-    for (i=0; i<p; i++) {
-        
-        //TODO:
-    }
-    
-    switch (domainShape) {
-        case 1:
-            
-            free_imatrix(side1, 0, intervals[0], 0, 2);
-            free_imatrix(side2, 0, intervals[0], 0, 2);
-            free_imatrix(side3, 0, intervals[0], 0, 2);
-            free_imatrix(side4, 0, intervals[0], 0, 2);
-            
-            break;
-            
-        case 2:
-            
-            free_imatrix(side1, 0, intervals[0], 0, 2);
-            free_imatrix(side2, 0, intervals[1], 0, 2);
-            free_imatrix(side3, 0, intervals[0], 0, 2);
-            free_imatrix(side4, 0, intervals[1], 0, 2);
-            
-            break;
-    }
-    
-}
-
 
 @end
