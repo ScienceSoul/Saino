@@ -2862,7 +2862,7 @@ jump:
     Find 2D mesh edges.
  
 ************************************************************************/
--(void)findEdges2DInMesh:(FEMMesh *)mesh {
+-(void)findEdges2DInMesh:(FEMMesh * __nonnull)mesh {
     
     int i, j, k, n=0, numbOfEdges;
     int node1, node2, edge=-1, swap, degree;
@@ -3022,7 +3022,7 @@ jump:
  Find 3D mesh edges.
  
 ************************************************************************/
--(void)findEdges3DInMesh:(FEMMesh *)mesh {
+-(void)findEdges3DInMesh:(FEMMesh * __nonnull)mesh {
     
     int i, ii, jj, k, n=0, numbOfEdges;
     int n1, n2;
@@ -3337,7 +3337,7 @@ jump:
  Find 3D mesh faces.
  
  ************************************************************************/
--(void)findFaces3DInMesh:(FEMMesh *)mesh {
+-(void)findFaces3DInMesh:(FEMMesh * __nonnull)mesh {
     
     int i, j, k, n, numbOfFaces;
     int n1 = 0, n2;
@@ -3683,7 +3683,7 @@ jump:
     Only for triangles and tetras. If mesh already has edges, do nothing
 
 ************************************************************************/
--(void)findEdgesForMesh:(FEMMesh *)mesh findEdges:(BOOL *)present {
+-(void)findEdgesForMesh:(FEMMesh * __nonnull)mesh findEdges:(BOOL * __nullable)present {
     
     Element_t *edges, *faces;
     BOOL findEdges3D;
@@ -3721,7 +3721,7 @@ jump:
     p element attributes from element edge to boundary edge
 
 *************************************************************************/
--(void)assignLocalNumberToEdgeElement:(Element_t *)edge fromElement:(Element_t *)element inMesh:(FEMMesh *)mesh {
+-(void)assignLocalNumberToEdgeElement:(Element_t * __nonnull)edge fromElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh {
     
     int i, j, n, edgeNumber, numbEdges, bMap[4];
     Element_t *entity;
@@ -3826,7 +3826,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 ************************************************************************************************************/
--(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL *)galerkin {
+-(FEMMatrix * __nullable)periodicProjectorInModel:(FEMModel * __nonnull)model forMesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * __nullable)galerkin {
     
     int dim;
     FEMMatrix *projector;
@@ -4085,7 +4085,7 @@ jump:
     Currently works only for linear elements
  
 ********************************************************************************************/
--(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal {
+-(FEMMesh * __nullable)splitMeshEqual:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model nodal:(double * __nullable)h sizeNodal:(int * __nullable)sizeNodal {
     
     int i, j=0, k, l, n, newElCnt, nodeCnt, edgeCnt, node, parentID, diag, minVal, maxVal;
     int faceNumber, edge1, edge2, edge3, edge4, node12, node23, node34, node41, node31;
@@ -5418,7 +5418,7 @@ jump:
     return newMesh;
 }
 
--(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model {
+-(void)setStabilizationParametersInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model {
     
     int i, j, n;
     Element_t *elements;
@@ -5462,7 +5462,7 @@ jump:
     free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
 }
 
--(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model {
+-(void)setCurrentMesh:(FEMMesh * __nonnull)mesh inModel:(FEMModel * __nonnull)model {
     
     Element_t *meshElements;
     Nodes_t *meshNodes;
@@ -5482,7 +5482,7 @@ jump:
     model.numberOfBoundaryElements = mesh.numberOfBoundaryElements;
 }
 
--(void)updateMesh:(FEMMesh *)mesh inSolution:(FEMSolution *)solution model:(FEMModel *)model {
+-(void)updateMesh:(FEMMesh * __nonnull)mesh inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
     
     int i, j, k, n, dofs, n1, n2;
     int *permutation;
@@ -5596,7 +5596,7 @@ jump:
     solution.mesh.changed = YES;
 }
 
--(void)allocatePDefinitionsElement:(Element_t *)element {
+-(void)allocatePDefinitionsElement:(Element_t * __nonnull)element {
     
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
     if (element->Pdefs == NULL) fatal("FEMMeshUtils:allocatePDefinitionsElement", "Unable to allocate memory.");
@@ -5610,7 +5610,7 @@ jump:
     element->Pdefs->GaussPoints = 0;
 }
 
--(void)setEdgeFaceDofsMesh:(FEMMesh *)mesh edgeDofs:(int *)edgeDofs faceDofs:(int *)faceDofs {
+-(void)setEdgeFaceDofsMesh:(FEMMesh * __nonnull)mesh edgeDofs:(int * __nullable)edgeDofs faceDofs:(int * __nullable)faceDofs {
     
     Element_t *elements = NULL, *edges = NULL, *faces = NULL;
     
@@ -5701,7 +5701,7 @@ jump:
     [elementMaps deallocation];
 }
 
--(void)setMaximumDofsMesh:(FEMMesh *)mesh {
+-(void)setMaximumDofsMesh:(FEMMesh * __nonnull)mesh {
     
     Element_t *elements = mesh.getElements;
     FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
@@ -5744,7 +5744,7 @@ jump:
     with indexes one larger than the maximum used on by the 2D mesh.
 
 *************************************************************************/
--(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model {
+-(FEMMesh * __nonnull)extrudeMesh:(FEMMesh * __nonnull)mesh inLevels:(int)inLevels model:(FEMModel * __nonnull)model {
     
     int j, k, l, n, bcid, cnt, extrudedCoord, ind[8], ln, max_bid, max_body, nnodes;
     double currentCoord, w;
@@ -6022,7 +6022,7 @@ jump:
     Returns the integer number of elements in the pointer structures
 
 *********************************************************************************************************************************/
--(int)detectExtrudedStructureMesh:(FEMMesh *)mesh solution:(FEMSolution *)solution model:(FEMModel *)model externVariable:(FEMVariable *)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int *)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int *)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int *)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int *)downNodePointer numberOfLayers:(int *)numberOfLayers nodeLayer:(int *)nodeLayer {
+-(int)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model externVariable:(FEMVariable * __nullable)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers nodeLayer:(int * __nullable)nodeLayer {
     
     int activeDirection, dim, ii, jj, nsize;
     int *bottomPointer = NULL, *downPointer = NULL, *layer = NULL, *topPointer = NULL, *upPointer = NULL;
@@ -6393,7 +6393,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ***************************************************************************************/
--(void)preRotationalProjectorMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode {
+-(void)preRotationalProjectorMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 mirrorNode:(BOOL * __nullable)mirrorNode sizeMirrorNode:(int * __nullable)sizeMirrorNode {
     
     int nFii;
     double fii;
@@ -6457,7 +6457,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ****************************************************************************/
--(void)postRotationalProjector:(FEMMatrix *)projector mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode {
+-(void)postRotationalProjector:(FEMMatrix * __nonnull)projector mirrorNode:(BOOL * __nonnull)mirrorNode sizeMirrorNode:(int * __nonnull)sizeMirrorNode {
     
     if (mirrorNode == NULL) return;
     
@@ -6488,7 +6488,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 **************************************************************************/
--(void)saveProjector:(FEMMatrix *)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString *)prefix invPerm:(int *)invPerm {
+-(void)saveProjector:(FEMMatrix * __nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * __nonnull)prefix invPerm:(int * __nullable)invPerm {
     
     double dia, rowsum;
     

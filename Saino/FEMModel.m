@@ -865,7 +865,7 @@
     [self.outputPath setString:self.meshDir];
 
     for (FEMMesh *mesh in self.meshes) {
-        [meshUtils SetStabilizationParametersInMesh:mesh model:self];
+        [meshUtils setStabilizationParametersInMesh:mesh model:self];
     }
 }
 

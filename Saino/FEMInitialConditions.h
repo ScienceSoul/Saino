@@ -13,6 +13,6 @@
     NSMutableArray *_valuesList;  // Array of FEMValueList objects
 }
 
-@property(nonatomic, strong) NSMutableArray *valuesList;
+@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
 
 @end

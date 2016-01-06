@@ -15,6 +15,6 @@
 }
 
 @property(nonatomic, assign) int tag;
-@property(nonatomic, strong) NSMutableArray *valuesList;
+@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
 
 @end

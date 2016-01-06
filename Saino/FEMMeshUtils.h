@@ -13,22 +13,22 @@
 
 @interface FEMMeshUtils : NSObject
 
--(void)findEdges2DInMesh:(FEMMesh *)mesh;
--(void)findEdges3DInMesh:(FEMMesh *)mesh;
--(void)findFaces3DInMesh:(FEMMesh *)mesh;
--(void)findEdgesForMesh:(FEMMesh *)mesh findEdges:(BOOL *)edges;
--(void)assignLocalNumberToEdgeElement:(Element_t *)edge fromElement:(Element_t *)element inMesh:(FEMMesh *)mesh;
--(FEMMatrix *)periodicProjectorInModel:(FEMModel *)model forMesh:(FEMMesh *)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL *)galerkin;
--(FEMMesh *)splitMeshEqual:(FEMMesh *)mesh model:(FEMModel *)model nodal:(double *)h sizeNodal:(int *)sizeNodal;
--(void)SetStabilizationParametersInMesh:(FEMMesh *)mesh model:(FEMModel *)model;
--(void)setCurrentMesh:(FEMMesh *)mesh inModel:(FEMModel *)model;
--(void)updateMesh:(FEMMesh *)mesh inSolution:(FEMSolution *)solution model:(FEMModel *)model;
--(void)allocatePDefinitionsElement:(Element_t *)element;
--(void)setEdgeFaceDofsMesh:(FEMMesh *)mesh edgeDofs:(int *)edgeDofs faceDofs:(int *)faceDofs;
--(void)setMaximumDofsMesh:(FEMMesh *)mesh;
--(FEMMesh *)extrudeMesh:(FEMMesh *)mesh inLevels:(int)inLevels model:(FEMModel *)model;
--(int)detectExtrudedStructureMesh:(FEMMesh *)mesh solution:(FEMSolution *)solution model:(FEMModel *)model externVariable:(FEMVariable *)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int *)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int *)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int *)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int *)downNodePointer numberOfLayers:(int *)numberOfLayers nodeLayer:(int *)nodeLayer;
--(void)preRotationalProjectorMesh1:(FEMMesh *)bMesh1 mesh2:(FEMMesh *)bMesh2 mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode;
--(void)postRotationalProjector:(FEMMatrix *)projector mirrorNode:(BOOL *)mirrorNode sizeMirrorNode:(int *)sizeMirrorNode;
--(void)saveProjector:(FEMMatrix *)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString *)prefix invPerm:(int *)invPerm;
+-(void)findEdges2DInMesh:(FEMMesh * __nonnull)mesh;
+-(void)findEdges3DInMesh:(FEMMesh * __nonnull)mesh;
+-(void)findFaces3DInMesh:(FEMMesh * __nonnull)mesh;
+-(void)findEdgesForMesh:(FEMMesh * __nonnull)mesh findEdges:(BOOL * __nullable)present;
+-(void)assignLocalNumberToEdgeElement:(Element_t * __nonnull)edge fromElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh;
+-(FEMMatrix * __nullable)periodicProjectorInModel:(FEMModel * __nonnull)model forMesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * __nullable)galerkin;
+-(FEMMesh * __nullable)splitMeshEqual:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model nodal:(double * __nullable)h sizeNodal:(int * __nullable)sizeNodal;
+-(void)setStabilizationParametersInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model;
+-(void)setCurrentMesh:(FEMMesh * __nonnull)mesh inModel:(FEMModel * __nonnull)model;
+-(void)updateMesh:(FEMMesh * __nonnull)mesh inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
+-(void)allocatePDefinitionsElement:(Element_t * __nonnull)element;
+-(void)setEdgeFaceDofsMesh:(FEMMesh * __nonnull)mesh edgeDofs:(int * __nullable)edgeDofs faceDofs:(int * __nullable)faceDofs;
+-(void)setMaximumDofsMesh:(FEMMesh * __nonnull)mesh;
+-(FEMMesh * __nonnull)extrudeMesh:(FEMMesh * __nonnull)mesh inLevels:(int)inLevels model:(FEMModel * __nonnull)model;
+-(int)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model externVariable:(FEMVariable * __nullable)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers nodeLayer:(int * __nullable)nodeLayer;
+-(void)preRotationalProjectorMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 mirrorNode:(BOOL * __nullable)mirrorNode sizeMirrorNode:(int * __nullable)sizeMirrorNode;
+-(void)postRotationalProjector:(FEMMatrix * __nonnull)projector mirrorNode:(BOOL * __nonnull)mirrorNode sizeMirrorNode:(int * __nonnull)sizeMirrorNode;
+-(void)saveProjector:(FEMMatrix * __nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * __nonnull)prefix invPerm:(int * __nullable)invPerm;
 @end

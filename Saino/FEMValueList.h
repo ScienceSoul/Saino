@@ -10,7 +10,7 @@
 
 #import "Constructors.h"
 
-typedef double (^inputBlock) (double *variablesValues);
+typedef double (^inputBlock) (double * __nullable variablesValues);
 
 @interface FEMValueList : NSObject {
     
@@ -24,7 +24,7 @@ typedef double (^inputBlock) (double *variablesValues);
     NSArray *_dependencies;       // Store the names of the variable to whhich there is/are a
                                   // dependency(ies) in the execution of the block
     
-    valueListArraysContainer *_containers;
+    valueListArraysContainer * __nonnull _containers;
     inputBlock _block;
 }
 
@@ -33,12 +33,12 @@ typedef double (^inputBlock) (double *variablesValues);
 @property(nonatomic, assign) int nameLength;
 @property(nonatomic, assign) int numberOfDependencies;
 @property(nonatomic, assign, getter = isLvalue) BOOL lValue;
-@property(nonatomic, strong) NSString *name;
-@property(nonatomic, strong) NSString *cValue;
-@property(nonatomic, strong) NSArray *dependencies;
-@property(copy) inputBlock block;
+@property(nonatomic, strong, nonnull) NSString *name;
+@property(nonatomic, strong, nullable) NSString *cValue;
+@property(nonatomic, strong, nullable) NSArray *dependencies;
+@property(copy, nullable) inputBlock block;
 
 -(void)deallocation;
--(valueListArraysContainer *)getContainers;
+-(valueListArraysContainer * __nonnull)getContainers;
 
 @end
