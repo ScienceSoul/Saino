@@ -25,10 +25,10 @@
     return self;
 }
 
--(ListMatrix_t *)allocateMatrix:(int)n {
+-(ListMatrix_t * __nonnull)allocateMatrix:(int)n {
     
     int i;
-    ListMatrix_t *matrix;
+    ListMatrix_t *matrix = NULL;
     
     matrix = (ListMatrix_t*)malloc(sizeof(ListMatrix_t) * n );
     for (i=0; i<n; i++) {
@@ -41,10 +41,10 @@
     return matrix;
 }
 
--(void)freeMatrix:(ListMatrix_t *)list size:(int)n {
+-(void)freeMatrix:(ListMatrix_t * __nonnull)list size:(int)n {
     
     int i;
-    ListMatrixEntry_t *p, *p1;
+    ListMatrixEntry_t *p = NULL, *p1 = NULL;
     
     if (list == NULL) return;
     
@@ -59,10 +59,10 @@
     free(list);
 }
 
--(ListMatrix_t *)enlargeMatrix:(ListMatrix_t *)matrix toSize:(int)n {
+-(ListMatrix_t * __nonnull)enlargeMatrix:(ListMatrix_t * __nonnull)matrix toSize:(int)n {
     
     int i;
-    ListMatrix_t *newMatrix;
+    ListMatrix_t *newMatrix = NULL;
     
     newMatrix = [self allocateMatrix:n];
     if (matrix != NULL) {
@@ -75,9 +75,9 @@
     return newMatrix;
 }
 
--(ListMatrixEntry_t *)getMatrixIndexInListMatrix:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2 {
+-(ListMatrixEntry_t * __nonnull)getMatrixIndexInListMatrix:(ListMatrix_t * __nullable)list atIndex:(int)k1 andIndex:(int)k2 {
     
-    ListMatrixEntry_t *cList, *entry, *prev;
+    ListMatrixEntry_t *cList = NULL, *entry = NULL, *prev = NULL;
     
     if (list == NULL) list = [self allocateMatrix:k1+1];
     
@@ -131,9 +131,9 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************/
--(void)addToMatrixElement:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL *)setValue {
+-(void)addToMatrixElement:(ListMatrix_t * __nonnull)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL * __nullable)setValue {
     
-    ListMatrixEntry_t *entry;
+    ListMatrixEntry_t *entry = NULL;
     BOOL set;
     
     if (setValue != NULL) set = *setValue;
@@ -154,7 +154,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 *************************************************************************************/
--(void)convertToCRSMatrix:(FEMMatrix *)matrix{
+-(void)convertToCRSMatrix:(FEMMatrix * __nonnull)matrix{
     
     int n, *rows = NULL, *cols = NULL, *diag = NULL;
     double *values = NULL;

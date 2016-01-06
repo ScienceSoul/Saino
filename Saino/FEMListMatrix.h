@@ -18,11 +18,11 @@
 
 @property(nonatomic, assign) int listMatrixGrowth;
 
--(ListMatrix_t *)allocateMatrix:(int)n;
--(void)freeMatrix:(ListMatrix_t *)list size:(int)n;
--(ListMatrix_t *)enlargeMatrix:(ListMatrix_t *)matrix toSize:(int)n;
--(ListMatrixEntry_t *)getMatrixIndexInListMatrix:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2;
--(void)addToMatrixElement:(ListMatrix_t *)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL *)setValue;
--(void)convertToCRSMatrix:(FEMMatrix *)matrix;
+-(ListMatrix_t * __nonnull)allocateMatrix:(int)n;
+-(void)freeMatrix:(ListMatrix_t * __nonnull)list size:(int)n;
+-(ListMatrix_t * __nonnull)enlargeMatrix:(ListMatrix_t * __nonnull)matrix toSize:(int)n;
+-(ListMatrixEntry_t * __nonnull)getMatrixIndexInListMatrix:(ListMatrix_t * __nullable)list atIndex:(int)k1 andIndex:(int)k2;
+-(void)addToMatrixElement:(ListMatrix_t * __nonnull)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL * __nullable)setValue;
+-(void)convertToCRSMatrix:(FEMMatrix * __nonnull)matrix;
 
 @end

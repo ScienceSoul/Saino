@@ -10,18 +10,18 @@
 #import "Utils.h"
 
 @interface FEMBandwidthOptimize ()
--(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t *)current index:(int *)index permLocal:(int *)permLocal doneIndex:(int *)doneIndex localNodes:(int)localNodes;
--(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t *)listMatrix maxLevel:(int *)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin;
+-(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * __nonnull)current index:(int * __nonnull)index permLocal:(int * __nonnull)permLocal doneIndex:(int * __nonnull)doneIndex localNodes:(int)localNodes;
+-(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * __nonnull)listMatrix maxLevel:(int * __nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin;
 @end
 
 @implementation FEMBandwidthOptimize
 
 #pragma mark Private methods
 
--(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t *)current index:(int *)index permLocal:(int *)permLocal doneIndex:(int *)doneIndex localNodes:(int)localNodes {
+-(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * __nonnull)current index:(int * __nonnull)index permLocal:(int * __nonnull)permLocal doneIndex:(int * __nonnull)doneIndex localNodes:(int)localNodes {
     
     int k;
-    ListMatrixEntry_t *p;
+    ListMatrixEntry_t *p = NULL;
     
     p = current;
     while (p != NULL) {
@@ -37,11 +37,11 @@
     }
 }
 
--(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t *)listMatrix maxLevel:(int *)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin {
+-(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * __nonnull)listMatrix maxLevel:(int * __nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin {
     
     int n, level, stackp;
-    ListMatrixEntry_t *p;
-    Stack_t *stack;
+    ListMatrixEntry_t *p = NULL;
+    Stack_t *stack = NULL;
     
     n = nin;
     level = levelin;
@@ -97,11 +97,11 @@
 /***********************************************************************************
     Method for computing the bandwidth of a sparse matrix
 ***********************************************************************************/
--(int)computeBandWidthInListMatrix:(ListMatrix_t *)list size:(int)n reorder:(int *)reorder invInitialReorder:(int *)invInitialReorder {
+-(int)computeBandWidthInListMatrix:(ListMatrix_t * __nonnull)list size:(int)n reorder:(int * __nullable)reorder invInitialReorder:(int * __nullable)invInitialReorder {
     
     int i, j, k;
     int halfBandwidth;
-    ListMatrixEntry_t *clist;
+    ListMatrixEntry_t *clist = NULL;
     
     halfBandwidth = 0;
     for (i=0; i<n; i++) {
@@ -126,7 +126,7 @@
     Method for reording variables for bandwidth and/or gaussian elimination filling optimization. Also computes node
     to element connections (which implies node to node connections and thus the global matrix structure).
 ****************************************************************************************************************************/
--(int)optimizeBandwidthInListMatrix:(ListMatrix_t *)listMatrix permutation:(int *)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int *)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString *)equation{
+-(int)optimizeBandwidthInListMatrix:(ListMatrix_t * __nonnull)listMatrix permutation:(int * __nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * __nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * __nonnull)equation {
     
     int i, j, k, halfBandwidth, halfBandwidthBefore, halfBandwidthAfter, index;
     int minDegree, startNode, maxLevel;

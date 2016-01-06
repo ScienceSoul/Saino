@@ -15,10 +15,10 @@
 -(void)FEMCoordinateSystems_cylindricalSymbols:(double[][3][3])symbols radial:(double)r azimut:(double)z height:(double)t;
 -(void)FEMCoordinateSystems_cylindricalDerivSymbols:(double[][3][3][3])dSymbols radial:(double)r azimut:(double)z height:(double)t;
 
--(double)FEMCoordinateSystems_polarSquareRootMetricModel:(FEMModel *)model radial:(double)r azimut:(double)z height:(double)t;
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model metric:(double[][3])metric radial:(double)r azimut:(double)z height:(double)t;
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model symbols:(double[][3][3])symbols radial:(double)r azimut:(double)z height:(double)t;
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model derivSymbols:(double[][3][3][3])dSymbols radial:(double)r azimut:(double)z height:(double)t;
+-(double)FEMCoordinateSystems_polarSquareRootMetricModel:(FEMModel * __nonnull)model radial:(double)r azimut:(double)z height:(double)t;
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model metric:(double[][3])metric radial:(double)r azimut:(double)z height:(double)t;
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model symbols:(double[][3][3])symbols radial:(double)r azimut:(double)z height:(double)t;
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model derivSymbols:(double[][3][3][3])dSymbols radial:(double)r azimut:(double)z height:(double)t;
 @end
 
 @implementation FEMCoordinateSystems
@@ -63,7 +63,7 @@
     }
 }
 
--(double)FEMCoordinateSystems_polarSquareRootMetricModel:(FEMModel *)model radial:(double)r azimut:(double)z height:(double)t {
+-(double)FEMCoordinateSystems_polarSquareRootMetricModel:(FEMModel * __nonnull)model radial:(double)r azimut:(double)z height:(double)t {
     
     double s;
     
@@ -76,7 +76,7 @@
     return s;
 }
 
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model metric:(double[][3])metric radial:(double)r azimut:(double)z height:(double)t {
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model metric:(double[][3])metric radial:(double)r azimut:(double)z height:(double)t {
     
     int i;
     
@@ -93,7 +93,7 @@
     }
 }
 
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model symbols:(double[][3][3])symbols radial:(double)r azimut:(double)z height:(double)t {
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model symbols:(double[][3][3])symbols radial:(double)r azimut:(double)z height:(double)t {
     
     memset(**symbols, 0.0, (3*3*3)*sizeof(double) );
     symbols[1][1][0] = -r * pow(cos(t), 2.0);
@@ -116,7 +116,7 @@
     }
 }
 
--(void)FEMCoordinateSystems_polarModel:(FEMModel *)model derivSymbols:(double[][3][3][3])dSymbols radial:(double)r azimut:(double)z height:(double)t {
+-(void)FEMCoordinateSystems_polarModel:(FEMModel * __nonnull)model derivSymbols:(double[][3][3][3])dSymbols radial:(double)r azimut:(double)z height:(double)t {
     
     memset(***dSymbols, 0.0, (3*3*3*3)*sizeof(double) );
     dSymbols[1][1][0][0] = -pow(cos(t), 2.0);
@@ -154,7 +154,7 @@
     return self;
 }
 
--(double)coordinateSquareRootMetricModel:(FEMModel *)model coordX:(double)x coordY:(double)y coordZ:(double)z {
+-(double)coordinateSquareRootMetricModel:(FEMModel * __nonnull)model coordX:(double)x coordY:(double)y coordZ:(double)z {
     
     double sqrtMetric = 0.0;
     
@@ -169,7 +169,7 @@
     return sqrtMetric;
 }
 
--(void)coordinateSystemInfoModel:(FEMModel *)model metric:(double[][3])metric sqrtMetric:(double *)sqrtMetric symbols:(double[][3][3])symbols dSymbols:(double[][3][3][3])dSymbols coordX:(double)x coordY:(double)y coordZ:(double)z {
+-(void)coordinateSystemInfoModel:(FEMModel * __nonnull)model metric:(double[][3])metric sqrtMetric:(double * __nonnull)sqrtMetric symbols:(double[][3][3])symbols dSymbols:(double[][3][3][3])dSymbols coordX:(double)x coordY:(double)y coordZ:(double)z {
     
     int i;
     

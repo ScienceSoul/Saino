@@ -20,8 +20,8 @@
 #import "Utils.h"
 
 @interface FEMElementUtils ()
--(ListMatrix_t *)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles;
--(void)FEMElementUtils_initializeMatrix:(FEMMatrix *)matrix size:(int)n list:(ListMatrix_t *)list reorder:(int *)reorder invInitialReorder:(int *)invInitialReorder dofs:(int)dofs;
+-(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles;
+-(void)FEMElementUtils_initializeMatrix:(FEMMatrix * __nonnull)matrix size:(int)n list:(ListMatrix_t * __nonnull)list reorder:(int * __nonnull)reorder invInitialReorder:(int * __nonnull)invInitialReorder dofs:(int)dofs;
 @end
 
 @implementation FEMElementUtils
@@ -33,12 +33,12 @@
     matrix is flexible since it can account for any entries. Also constraints and periodic BCs may give rise to 
     entries in the list matrix topology.
 ************************************************************************************************************************/
--(ListMatrix_t *)FEMElementUtils_makeListMatrixInModel:(FEMModel *)model solution:(FEMSolution *)solution mesh:(FEMMesh *)mesh reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString *)equation dgSolver:(BOOL *)dgSolver globalBubbles:(BOOL *)globalBubbles {
+-(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles {
     
     int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs;
     int indexSize, numberOfFactors;
     int invPerm[localNodes], *indexes = NULL;
-    BOOL foundDG, gb, found, radiation;
+    BOOL foundDG, found, radiation;
     FEMMatrix *projector;
     FEMListUtilities *listUtilities;
     FEMListMatrix *listMatrix;
@@ -47,9 +47,6 @@
     Element_t *elements, *element, *edges, *faces;
     matrixArraysContainer *matContainers = NULL;
     modelArraysContainer *modelContainers = NULL;
-    
-    gb = NO;
-    if (globalBubbles != NULL) gb = *globalBubbles;
     
     listUtilities = [[FEMListUtilities alloc] init];
     
@@ -68,7 +65,7 @@
     edges = mesh.getEdges;
     
     foundDG = NO;
-    if (*dgSolver == YES) {
+    if (*dgSolver == YES && equation != nil) {
         for (t=0; t<mesh.numberOfEdges; t++) {
             n = 0;
             if (edges[t].BoundaryInfo->Left != NULL) {
@@ -152,7 +149,7 @@
             
             n = element->NDOFs + element->Type.NumberOfEdges * edofs + element->Type.NumberOfFaces * fdofs;
             
-            if (gb == YES) n = n + element->BDOFs;
+            if (*globalBubbles == YES) n = n + element->BDOFs;
             
             if (n > indexSize) {
                 if (indexes != NULL) free_ivector(indexes, 0, indexSize-1);
@@ -188,7 +185,7 @@
                 }
             }
             
-            if (gb == YES && element->BubbleIndexes != NULL) {
+            if (*globalBubbles == YES && element->BubbleIndexes != NULL) {
                 for (i=0; i<element->BDOFs; i++) {
                     indexes[n] = fdofs * mesh.numberOfFaces + mesh.numberOfNodes + edofs * mesh.numberOfEdges + element->BubbleIndexes[i];
                     n++;
@@ -303,7 +300,7 @@
     glueLocalMatrix (defined in the FEMMatrixCRS class) is called (build up the index tables of 
     a CRS format matrix).
 ****************************************************************************************************************/
--(void)FEMElementUtils_initializeMatrix:(FEMMatrix *)matrix size:(int)n list:(ListMatrix_t *)list reorder:(int *)reorder invInitialReorder:(int *)invInitialReorder dofs:(int)dofs {
+-(void)FEMElementUtils_initializeMatrix:(FEMMatrix * __nonnull)matrix size:(int)n list:(ListMatrix_t * __nonnull)list reorder:(int * __nonnull)reorder invInitialReorder:(int * __nonnull)invInitialReorder dofs:(int)dofs {
     
     int i, j, k, l, m, k1, k2;
     ListMatrixEntry_t *cList;
@@ -347,7 +344,7 @@
     return self;
 }
 
--(FEMMatrix *)createMatrixInModel:(FEMModel *)model forSolution:(FEMSolution *)solution mesh:(FEMMesh *)mesh dofs:(int)dofs permutation:(int *)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString *)equation discontinuousGalerkinSolution:(BOOL *)dgSolution globalBubbles:(BOOL *)gbBubbles {
+-(FEMMatrix * __nonnull)createMatrixInModel:(FEMModel * __nonnull)model forSolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh dofs:(int)dofs permutation:(int * __nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * __nullable)equation discontinuousGalerkinSolution:(BOOL * __nullable)dgSolution globalBubbles:(BOOL * __nullable)gbBubbles {
     
     int i, j, k, l, m, n, p, k1, edofs, fdofs, bdofs, cols;
     int *invInitialReorder;
@@ -675,7 +672,7 @@
     Given the normal, return the tangent directions. The first tangent direction will always be on 
     the xy-plane if also the normal is in the xy-plane.
 *************************************************************************************************/
--(void)tangentDirectionsForNormal:(double *)normal tangent1:(double *)tangent1 tangent2:(double *)tangent2 {
+-(void)tangentDirectionsForNormal:(double * __nonnull)normal tangent1:(double * __nonnull)tangent1 tangent2:(double * __nonnull)tangent2 {
     
     int i;
     double n1, n2, n3, sum;
@@ -709,7 +706,7 @@
     }
 }
 
--(double)elementArea:(Element_t *)element numberOfNodes:(int)n mesh:(FEMMesh *)mesh nodel:(FEMModel *)model {
+-(double)elementArea:(Element_t * __nonnull)element numberOfNodes:(int)n mesh:(FEMMesh * __nonnull)mesh nodel:(FEMModel * __nonnull)model {
     
     int i, t;
     double a, detJ, sqrtMetric, nx[n], ny[n], nz[n], u, v, w, x, y, z;
