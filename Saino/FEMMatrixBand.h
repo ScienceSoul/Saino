@@ -12,17 +12,15 @@
 
 @interface FEMMatrixBand : NSObject
 
--(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues;
--(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n;
--(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
--(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value;
--(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes;
--(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value;
+-(FEMMatrix * __nonnull)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues;
+-(void)zeroRowInGlobal:(FEMSolution * __nonnull)solution numberOfRows:(int)n;
+-(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value;
+-(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value;
+-(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inGlobal:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * __nonnull)indexes;
+-(void)sBand_setDirichlet:(FEMSolution * __nonnull)solution orderedNumber:(int)n value:(double)value;
 // Band Matrix-vector multiply
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v;
-
--(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n;
--(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value;
--(void)matrixVectorMultiply:(FEMMatrix *)a vector:(double *)u result:(double *)v;
-
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double * __nonnull)u result:(double * __nonnull)v;
+-(void)zeroRowInMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n;
+-(void)setElementInMatrix:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j value:(double)value;
+-(void)matrixVectorMultiply:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)u result:(double * __nonnull)v;
 @end

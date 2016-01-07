@@ -160,7 +160,7 @@
     return str;
 }
 
--(NSString * __nullable)listGetString:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
+-(NSString * __nullable)listGetString:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
     
     NSString *s = nil;
     char *nameStr = NULL;
@@ -305,7 +305,7 @@
     assumed to be set inside the code. This should be used with caution
     is it sets some confusing limitations to the user.
 **************************************************************************/
--(double)listGetValueParameter:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
+-(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
     
     double f, t[1];
     char *nameStr = NULL;
@@ -481,7 +481,7 @@
 /**********************************************************************************
     Gets a constant real from the list by its name
 **********************************************************************************/
--(double)listGetConstReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
+-(double)listGetConstReal:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
 
     double f = 0.0;
     char *nameStr = NULL;
@@ -535,7 +535,7 @@
 /**********************************************************************************
     Gets a constant real array from the list by its name
 **********************************************************************************/
--(BOOL)listGetConstRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetConstRealArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
 
     int i, j, n1, n2;
     BOOL found;
@@ -587,7 +587,7 @@
 /**********************************************************************************
     Gets an integer array from the list by its name
 **********************************************************************************/
--(BOOL)listGetIntegerArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetIntegerArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
     
     int i, n;
     BOOL found;
@@ -632,7 +632,7 @@
     return found;
 }
 
--(int)listGetInteger:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv {
+-(int)listGetInteger:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv {
     
     int l = 0;
     char *nameStr = NULL;
@@ -679,7 +679,7 @@
     return l;
 }
 
--(BOOL)listGetLogical:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
+-(BOOL)listGetLogical:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
     
     BOOL l = NO;
     char *nameStr = NULL;

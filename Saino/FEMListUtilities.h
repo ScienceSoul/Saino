@@ -21,17 +21,17 @@
 
 -(void)listSetNameSpace:(NSString * __nonnull)str;
 -(char * __nonnull)listGetNameSpaceForVariable:(char * __nonnull)varName;
--(NSString * __nullable)listGetString:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
+-(NSString * __nullable)listGetString:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
 -(BOOL)listGetReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
--(double)listGetValueParameter:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
+-(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
 -(BOOL)listGetRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result;
--(double)listGetConstReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
--(BOOL)listGetConstRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
+-(double)listGetConstReal:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
+-(BOOL)listGetConstRealArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
 
--(BOOL)listGetIntegerArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
--(int)listGetInteger:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv;
+-(BOOL)listGetIntegerArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
+-(int)listGetInteger:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv;
 
--(BOOL)listGetLogical:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
+-(BOOL)listGetLogical:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
 
 -(BOOL)listGetDerivativeValue:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result;
 

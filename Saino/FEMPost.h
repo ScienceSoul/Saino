@@ -12,6 +12,6 @@
 
 @interface FEMPost : NSObject
 
--(void)writeElmerPostFile:(NSString *)postFile resultFile:(NSString *)resultFile model:(FEMModel *)model timeCount:(int)timeCount append:(BOOL *)append;
+-(void)writeElmerPostFile:(NSString * __nonnull)postFile resultFile:(NSString * __nonnull)resultFile model:(FEMModel * __nonnull)model timeCount:(int)timeCount append:(BOOL * __nonnull)append;
 
 @end

@@ -125,7 +125,7 @@
     [self.listUtilities addConstRealArrayInClassList:self.equation theVariable:@"test real array" withValues:matrix size1:3 size2:3 orUsingBlock:nil string:nil];
     free_dmatrix(matrix, 0, 2, 0, 2);
     
-    found = [self.listUtilities listGetRealArray:nil inArray:self.equation.valuesList forVariable:@"test real array" numberOfNodes:3 indexes:NULL buffer:&result];
+    found = [self.listUtilities listGetRealArray:self.model inArray:self.equation.valuesList forVariable:@"test real array" numberOfNodes:3 indexes:NULL buffer:&result];
     XCTAssertTrue(result.tensor != NULL, @"FEMListUtilitiesTests: Result tensor in method listGetRealArray:inArray:forVariable:numberOfNodes:indexes:buffer: is null. It should have been allocated.");
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {

@@ -11,7 +11,7 @@
 
 @interface FEMMatrixCRS ()
 
--(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int *)array theValue:(int)value;
+-(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int * __nonnull)array theValue:(int)value;
 
 @end
 
@@ -20,7 +20,7 @@
 
 #pragma mark Private methods
 
--(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int *)array theValue:(int)value {
+-(int)FEMMatrixCRS_SearchWithinLength:(int)n inArray:(int * __nonnull)array theValue:(int)value {
     
     int lower, upper, lou, index;
     
@@ -80,7 +80,7 @@
     BOOL allocateValues ->  Should the values arrays be allocated?
  
 *********************************************************************************************************************/
--(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows totalNonZeros:(int)totalNonZeros rowNonZeros:(int *)rowNonZeros degreesFreedom:(int)degreesFreedom reorder:(int *)reorder sizeOfReorder:(int)sizeOfReorder allocateValues:(BOOL)allocateValues {
+-(FEMMatrix * __nonnull)createMatrixWithNumberOfRows:(int)rows totalNonZeros:(int)totalNonZeros rowNonZeros:(int * __nonnull)rowNonZeros degreesFreedom:(int)degreesFreedom reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder allocateValues:(BOOL)allocateValues {
     
     int i, j, k;
     FEMMatrix *matrix;
@@ -129,7 +129,7 @@
     return matrix;
 }
 
--(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
+-(void)zeroRowInGlobal:(FEMSolution * __nonnull)solution numberOfRows:(int)n {
     
     int i;
     matrixArraysContainer *matContainers = NULL;
@@ -165,7 +165,7 @@
         FEMSolution *solution   ->  solution class containing the matrix
         BOOL *alsoValues        ->  whether values are sorted
 ************************************************************************************************/
--(void)sortGlobal:(FEMSolution *)solution alsoValues:(BOOL *)alsoValues {
+-(void)sortGlobal:(FEMSolution * __nonnull)solution alsoValues:(BOOL * __nullable)alsoValues {
     
     int i, j, k, n;
     int *buffer1;
@@ -245,8 +245,8 @@
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
- *********************************************************************************************************/
--(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
+*********************************************************************************************************/
+-(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
@@ -282,7 +282,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be added
 ************************************************************************************************************/
--(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
+-(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
     matrixArraysContainer *matContainers = NULL;
@@ -323,7 +323,7 @@
         int *indexes           -> Maps element node number to global (or partition) node number
                                   (to matrix rows and cols if dofs = 1)
 *******************************************************************************************************************************************/
--(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
+-(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inGlobal:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * __nonnull)indexes {
     
     int i, j, k, l, c, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -396,7 +396,7 @@
         int n                -> index of the dofs to be fixed
         double value         -> Dirichlet value to be set
 ************************************************************************************************************/
--(void)setSymmetricDirichletInGlobal:(FEMSolution *)solution atIndex:(int)n value:(double)value {
+-(void)setSymmetricDirichletInGlobal:(FEMSolution * __nonnull)solution atIndex:(int)n value:(double)value {
     
     int i, j, k, l, m, k1, k2;
     BOOL isMass, isDamp;
@@ -470,7 +470,7 @@
         double *u              -> Vector to multiply
         double *v              -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v {
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double * __nonnull)u result:(double * __nonnull)v {
     
     int i, j, n;
     double rsum;
@@ -502,7 +502,7 @@
         double *u              -> Vector to multiply
         double *v              -> Result vector
 *******************************************************************************************/
--(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double complex *)u result:(double complex *)v {
+-(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double complex * __nonnull)u result:(double complex * __nonnull)v {
     
     int i, j, n;
     double complex s, rsum;
@@ -533,7 +533,7 @@
     This method takes as argument a solution from which the matrix is used  
     or an individual matrix
 *********************************************************************************************/
--(void)fctlLowOrderInSolution:(FEMSolution *)solution orMatrix:(FEMMatrix *)matrix {
+-(void)fctlLowOrderInSolution:(FEMSolution * __nullable)solution orMatrix:(FEMMatrix * __nullable)matrix {
     
     int i, j, k, k2, n;
     double aij, aji, aii, dij;
@@ -634,7 +634,7 @@
         int *indexes            -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
 ************************************************************************************************************/
--(void)glueLocalMatrix:(double **)localMatrix inMatrix:(FEMMatrix *)matrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int *)indexes {
+-(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inMatrix:(FEMMatrix * __nonnull)matrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int * __nonnull)indexes {
     
     int i, j, k, l, c, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -704,54 +704,54 @@
         int i        -> row number of the matrix element
         int j        -> column number of the matrix element
 *****************************************************************************************/
--(void)makeMatrixIndex:(FEMMatrix *)a row:(int)i col:(int)j {
+-(void)makeMatrixIndex:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j {
     
     int k, n;
-    matrixArraysContainer *aContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
-    aContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
-    n = aContainers->Rows[i];
-    for (k=aContainers->Rows[i]; k<=aContainers->Rows[i+1]-1; k++) {
-        if (aContainers->Cols[k] == j) {
+    n = matContainers->Rows[i];
+    for (k=matContainers->Rows[i]; k<=matContainers->Rows[i+1]-1; k++) {
+        if (matContainers->Cols[k] == j) {
             return;
-        } else if (aContainers->Cols[k] < 0) {
+        } else if (matContainers->Cols[k] < 0) {
             n = k;
             break;
         }
     }
     
-    if (aContainers->Cols[n] >= 0) {
-        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, aContainers->Cols[n]);
+    if (matContainers->Cols[n] >= 0) {
+        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, matContainers->Cols[n]);
         fatal("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
     
-    aContainers->Cols[n] = j;
+    matContainers->Cols[n] = j;
 }
 
--(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
+-(void)zeroRowInMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n {
     
     int i;
-    matrixArraysContainer *aContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
-    aContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
-    for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
-        aContainers->Values[i] = 0.0;
+    for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+        matContainers->Values[i] = 0.0;
     }
     
-    if (aContainers->MassValues != NULL) {
-        if (aContainers->sizeMassValues == aContainers->sizeValues) {
-            for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
-                aContainers->MassValues[i] = 0.0;
+    if (matContainers->MassValues != NULL) {
+        if (matContainers->sizeMassValues == matContainers->sizeValues) {
+            for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+                matContainers->MassValues[i] = 0.0;
             }
         }
     }
     
-    if (aContainers->DampValues != NULL) {
-        if (aContainers->sizeDampValues == aContainers->sizeValues) {
-            for (i=aContainers->Rows[n]; i<=aContainers->Rows[n+1]-1; i++) {
-                aContainers->DampValues[i] = 0.0;
+    if (matContainers->DampValues != NULL) {
+        if (matContainers->sizeDampValues == matContainers->sizeValues) {
+            for (i=matContainers->Rows[n]; i<=matContainers->Rows[n+1]-1; i++) {
+                matContainers->DampValues[i] = 0.0;
             }
         }
     }
@@ -764,76 +764,76 @@
         Matrix_t *a             ->  the matrix class
         BOOL *alsoValues        ->  whether values are sorted
 ************************************************************************************************/
--(void)sortMatrix:(FEMMatrix *)a alsoValues:(BOOL *)alsoValues {
+-(void)sortMatrix:(FEMMatrix * __nonnull)matrix alsoValues:(BOOL * __nullable)alsoValues {
     
     int i, j, k, n;
     int *buffer1;
     double *buffer2;
     BOOL sortValues;
-    matrixArraysContainer *aContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
-    aContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
     sortValues = NO;
     if (alsoValues != NULL) sortValues = *alsoValues;
     
-    n = a.numberOfRows;
+    n = matrix.numberOfRows;
     
-    if (a.isOrdered == NO) {
+    if (matrix.isOrdered == NO) {
         if (sortValues == YES) {
-            buffer1 = intvec(0, aContainers->sizeValues-1);
-            buffer2 = doublevec(0, aContainers->sizeValues-1);
+            buffer1 = intvec(0, matContainers->sizeValues-1);
+            buffer2 = doublevec(0, matContainers->sizeValues-1);
             for (i=0; i<n; i++) {
-                memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
-                memset( buffer2, 0.0, aContainers->sizeValues*sizeof(double) );
+                memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
+                memset( buffer2, 0.0, matContainers->sizeValues*sizeof(double) );
                 k = 0;
-                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = aContainers->Cols[j];
-                    buffer2[k] = aContainers->Values[j];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = matContainers->Cols[j];
+                    buffer2[k] = matContainers->Values[j];
                     k++;
                 }
-                sort(aContainers->Rows[i+1]-aContainers->Rows[i], buffer1-1, buffer2-1);
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1, buffer2-1);
                 k = 0;
-                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
-                    aContainers->Cols[j] = buffer1[k];
-                    aContainers->Values[j] = buffer2[k];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->Cols[j] = buffer1[k];
+                    matContainers->Values[j] = buffer2[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, aContainers->sizeValues-1);
-            free_dvector(buffer2, 0, aContainers->sizeValues-1);
+            free_ivector(buffer1, 0, matContainers->sizeValues-1);
+            free_dvector(buffer2, 0, matContainers->sizeValues-1);
             
         } else {
-            buffer1 = intvec(0, aContainers->sizeValues-1);
+            buffer1 = intvec(0, matContainers->sizeValues-1);
             for (i=0; i<n; i++) {
-                memset( buffer1, 0, aContainers->sizeValues*sizeof(int) );
+                memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
                 k = 0;
-                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = aContainers->Cols[j];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    buffer1[k] = matContainers->Cols[j];
                     k++;
                 }
-                sort(aContainers->Rows[i+1]-aContainers->Rows[i], buffer1-1);
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1);
                 k = 0;
-                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
-                    aContainers->Cols[j] = buffer1[k];
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    matContainers->Cols[j] = buffer1[k];
                     k++;
                 }
             }
-            free_ivector(buffer1, 0, aContainers->sizeValues-1);
+            free_ivector(buffer1, 0, matContainers->sizeValues-1);
         }
         
-        if (aContainers->Diag != NULL) {
+        if (matContainers->Diag != NULL) {
             for (i=0; i<n; i++) {
-                for (j=aContainers->Rows[i]; j<=aContainers->Rows[i+1]-1; j++) {
-                    if (aContainers->Cols[j] == i) {
-                        aContainers->Diag[i] = j;
+                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+                    if (matContainers->Cols[j] == i) {
+                        matContainers->Diag[i] = j;
                         break;
                     }
                 }
             }
         }
         
-        a.ordered = YES;
+        matrix.ordered = YES;
     }
 }
 
@@ -846,36 +846,36 @@
         double value            ->  value to be set
  
 ************************************************************************************************/
--(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value {
+-(void)setElementInMatrix:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j value:(double)value {
     
     int ii, jj, k, l;
-    matrixArraysContainer *aContainers = NULL;
+    matrixArraysContainer *matContainers = NULL;
     
-    aContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
-    if (aContainers->Diag != NULL || i != j || a.isOrdered == NO) {
-        jj = aContainers->Rows[i+1]-aContainers->Rows[i];
+    if (matContainers->Diag != NULL || i != j || matrix.isOrdered == NO) {
+        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
         int buffer[jj];
         memset( buffer, 0, sizeof(buffer) );
         l = 0;
-        for (ii=aContainers->Rows[i]; ii<=aContainers->Rows[i+1]-1; ii++) {
-            buffer[l] = aContainers->Cols[ii];
+        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
+            buffer[l] = matContainers->Cols[ii];
             l++;
         }
-        k = [self FEMMatrixCRS_SearchWithinLength:aContainers->Rows[i+1]-aContainers->Rows[i] inArray:buffer theValue:j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
         if (k < 0) {
             NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
         }
-        k = k + aContainers->Rows[i];
+        k = k + matContainers->Rows[i];
     } else {
-        k = aContainers->Diag[i];
+        k = matContainers->Diag[i];
     }
     
-    aContainers->Values[k] = value;
+    matContainers->Values[k] = value;
 }
 
--(void)applyProjector:(FEMMatrix *)pMatrix values:(double *)u permutation:(int *)uperm values:(double *)v permutation:(int *)vperm transpose:(BOOL *)trans {
+-(void)applyProjector:(FEMMatrix * __nonnull)pMatrix values:(double * __nonnull)u permutation:(int * __nullable)uperm values:(double * __nonnull)v permutation:(int * __nullable)vperm transpose:(BOOL * __nullable)trans {
     
     int i, j, k, l, n;
     matrixArraysContainer *containers = NULL;
@@ -954,7 +954,7 @@
         double *v          -> Result vector
  
 *******************************************************************************************/
--(void)matrixVectorMultiply:(FEMMatrix *)matrix vector:(double *)u result:(double *)v {
+-(void)matrixVectorMultiply:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)u result:(double * __nonnull)v {
     
     int i, j, n;
     double rsum;
@@ -986,7 +986,7 @@
         double *v          -> Result vector
  
 *******************************************************************************************/
--(void)complexMatrixVectorMultiply:(FEMMatrix *)matrix vector:(double complex *)u result:(double complex *)v {
+-(void)complexMatrixVectorMultiply:(FEMMatrix * __nonnull)matrix vector:(double complex * __nonnull)u result:(double complex * __nonnull)v {
     
     int i, j, n;
     double complex s, rsum;
@@ -1007,7 +1007,7 @@
     }
 }
 
--(void)zeroMatrix:(FEMMatrix *)matrix {
+-(void)zeroMatrix:(FEMMatrix * __nonnull)matrix {
     
     matrixArraysContainer *matContainers = NULL;
     matContainers = matrix.getContainers;

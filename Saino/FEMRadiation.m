@@ -22,13 +22,12 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
-        
     }
     
     return self;
 }
 
--(double)computeRadiationLoadModel:(FEMModel *)model mesh:(FEMMesh *)mesh element:(Element_t *)elememt temperature:(double *)temperature reorder:(int *)reorder emissivity:(double)emissivity angleFraction:(double *)angleFraction {
+-(double)computeRadiationLoadModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh element:(Element_t * __nonnull)elememt temperature:(double * __nonnull)temperature reorder:(int * __nonnull)reorder emissivity:(double)emissivity angleFraction:(double * __nullable)angleFraction {
     
     int i, j, *cols, n;
     double a1, a2, asum, emissivity1, sum, t, *vals;
@@ -91,7 +90,7 @@
     return t;
 }
 
--(double)computeRadiationCoeffModel:(FEMModel *)model mesh:(FEMMesh *)mesh element:(Element_t *)element index:(int)k {
+-(double)computeRadiationCoeffModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh element:(Element_t * __nonnull)element index:(int)k {
     
     int n;
     double area, emissivity, sum, t;

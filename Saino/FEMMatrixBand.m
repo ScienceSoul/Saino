@@ -36,7 +36,7 @@
     BOOL allocateValues ->  Should the values arrays be allocated?
  
  *********************************************************************************************************************/
--(FEMMatrix *)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
+-(FEMMatrix * __nonnull)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
     
     FEMMatrix *matrix;
     matrixArraysContainer *matContainers = NULL;
@@ -59,7 +59,7 @@
     return matrix;
 }
 
--(void)zeroRowInGlobal:(FEMSolution *)solution numberOfRows:(int)n {
+-(void)zeroRowInGlobal:(FEMSolution * __nonnull)solution numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -86,7 +86,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 **********************************************************************************************************/
--(void)setElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
+-(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -109,7 +109,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 **********************************************************************************************************/
--(void)addToElementInGlobal:(FEMSolution *)solution row:(int)i col:(int)j value:(double)value {
+-(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     int k;
     matrixArraysContainer *matContainers = NULL;
@@ -141,7 +141,7 @@
         int **indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
 *****************************************************************************************************************************************/
--(void)glueLocalMatrix:(double **)localMatrix inGlobal:(FEMSolution *)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int *)indexes {
+-(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inGlobal:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * __nonnull)indexes {
     
     int i, j, k, l, ind, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -193,7 +193,7 @@
         int n                   -> ordered number of the unknown (i.e., matrix row and column number)
         double value            -> value for the unknown
 ************************************************************************************************************/
--(void)sBand_setDirichlet:(FEMSolution *)solution orderedNumber:(int)n value:(double)value {
+-(void)sBand_setDirichlet:(FEMSolution * __nonnull)solution orderedNumber:(int)n value:(double)value {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -226,7 +226,7 @@
         double *u              -> Vector to multiply
         double *v              -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiplyInGlobal:(FEMSolution *)solution vector:(double *)u result:(double *)v {
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double * __nonnull)u result:(double * __nonnull)v {
     
     int i, j, n;
     double s;
@@ -258,20 +258,20 @@
     }
 }
 
--(void)zeroRowInMatrix:(FEMMatrix *)a numberOfRows:(int)n {
+-(void)zeroRowInMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
-    if (a.format == MATRIX_BAND) {
-        for (j=max(0, n-a.subband); j<=min(a.numberOfRows-1, n+a.subband); j++) {
-            matContainers->Values[(j*(3*a.subband+1) + (n)-(j)+2*a.subband)] = 0.0;
+    if (matrix.format == MATRIX_BAND) {
+        for (j=max(0, n-matrix.subband); j<=min(matrix.numberOfRows-1, n+matrix.subband); j++) {
+            matContainers->Values[(j*(3*matrix.subband+1) + (n)-(j)+2*matrix.subband)] = 0.0;
         }
     } else {
-        for (j=max(0, n-a.subband); j<=n; j++) {
-            matContainers->Values[(j*(a.subband+1) + (n)-(j))] = 0.0;
+        for (j=max(0, n-matrix.subband); j<=n; j++) {
+            matContainers->Values[(j*(matrix.subband+1) + (n)-(j))] = 0.0;
         }
     }
 }
@@ -285,16 +285,16 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 ************************************************************************************************/
--(void)setElementInMatrix:(FEMMatrix *)a row:(int)i col:(int)j value:(double)value {
+-(void)setElementInMatrix:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
-    matContainers = a.getContainers;
+    matContainers = matrix.getContainers;
     
-    if (a.format == MATRIX_BAND) {
-        matContainers->Values[(j*(3*a.subband+1) + (i)-(j)+2*a.subband)] = value;
+    if (matrix.format == MATRIX_BAND) {
+        matContainers->Values[(j*(3*matrix.subband+1) + (i)-(j)+2*matrix.subband)] = value;
     } else {
-        if (j <= i) matContainers->Values[(j*(a.subband+1) + (i)-(j))] = value;
+        if (j <= i) matContainers->Values[(j*(matrix.subband+1) + (i)-(j))] = value;
     }
 }
 
@@ -308,32 +308,32 @@
         double *u     -> Vector to multiply
         double *v     -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiply:(FEMMatrix *)a vector:(double *)u result:(double *)v {
+-(void)matrixVectorMultiply:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)u result:(double * __nonnull)v {
     
     int i, j, n;
     double s;
     matrixArraysContainer *matContainers = NULL;
     
-    n = a.numberOfRows;
-    matContainers = a.getContainers;
+    n = matrix.numberOfRows;
+    matContainers = matrix.getContainers;
     
-    if (a.format == MATRIX_BAND) {
+    if (matrix.format == MATRIX_BAND) {
         for (i=0; i<n; i++) {
             s = 0.0;
-            for (j=max(0, i-a.subband); j<=min(n-1, i+a.subband); j++) {
-                s = s + u[j] * matContainers->Values[((j)*(3*a.subband+1) + (i)-(j)+2*a.subband)];
+            for (j=max(0, i-matrix.subband); j<=min(n-1, i+matrix.subband); j++) {
+                s = s + u[j] * matContainers->Values[((j)*(3*matrix.subband+1) + (i)-(j)+2*matrix.subband)];
             }
             v[i] = s;
         }
     } else {
         for (i=0; i<n; i++) {
             s = 0.0;
-            for (j=max(0, i-a.subband); j<=i; j++) {
-                s = s + u[j] * matContainers->Values[(j)*(a.subband+1) + (i)-(j)];
+            for (j=max(0, i-matrix.subband); j<=i; j++) {
+                s = s + u[j] * matContainers->Values[(j)*(matrix.subband+1) + (i)-(j)];
             }
             
-            for (j=i+1; j<=min(i+a.subband, a.numberOfRows-1); j++) {
-                s = s + u[j] + matContainers->Values[(i)*(a.subband+1) + (j)-(i)];
+            for (j=i+1; j<=min(i+matrix.subband, matrix.numberOfRows-1); j++) {
+                s = s + u[j] + matContainers->Values[(i)*(matrix.subband+1) + (j)-(i)];
             }
             v[i] = s;
         }
