@@ -422,7 +422,7 @@
                         }
                     }
                 }
-            } else if (list.type == List_TYPE_BLOCK || list.type == LIST_TYPE_VARIABLE_TENSOR){
+            } else if (list.type == List_TYPE_BLOCK || list.type == LIST_TYPE_VARIABLE_TENSOR) {
                 memset(**result->tensor, 0.0, (n1*n2*n)*sizeof(double) );
                 for (i=0; i<n; i++) {
                     k = nodeIndexes[i];
