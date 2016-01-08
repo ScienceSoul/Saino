@@ -22,17 +22,18 @@
     self = [super init];
     if (self) {
         //TODO: Initialize here
-        
     }
     
     return self;
 }
 
 /******************************************************************************
+ 
     Return second invariant.
     Note: Actually square of the second invariant of the velocity is returned
+ 
 ******************************************************************************/
--(double)secondInvariantVelo:(double[3])velo dVelodx:(double[][3])dVelodx crtMatrix:(double[][3])crtMatrix symbols:(double[][3][3])symbols model:(FEMModel*)model {
+-(double)secondInvariantVelo:(double[3])velo dVelodx:(double[][3])dVelodx crtMatrix:(double[][3])crtMatrix symbols:(double[][3][3])symbols model:(FEMModel* __nonnull)model {
     
     int i, j, k, l;
     double s, t;
@@ -80,11 +81,13 @@
 }
 
 /*************************************************************************************************
+ 
     Returns effective viscosity for Navier-Stokes equation.
     The viscosity model may be either some non-newtonian material law or from turbulence models, 
     but not from both at the same time.
+ 
 *************************************************************************************************/
--(double)effectiveViscosity:(double)viscosity density:(double)density velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz element:(Element_t *)element nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w muder:(double *)muder mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration {
+-(double)effectiveViscosity:(double)viscosity density:(double)density velocityX:(double * __nonnull)ux velocitY:(double * __nonnull)uy velocityZ:(double * __nonnull)uz element:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w muder:(double * __nullable)muder mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration {
     
     int i, j, k;
     double a1, a2, arrheniusFactor, c1, c2, c3, c4, cmu, ct, dVelodx[3][3], dSymb[3][3][3][3], ehf, h, ke_k, ke_e, ke_z, metric[3][3], mu, q1, q2,
@@ -573,9 +576,11 @@
 }
 
 /***************************************************************************
+ 
     Returns effective heat conductivity mainly related to turbulent models.
+ 
 ***************************************************************************/
--(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t *)element temperature:(double *)temperature velocityX:(double *)ux velocitY:(double *)uy velocityZ:(double *)uz nodes:(Nodes_t *)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w conductivityFlag:(NSString *)conductivityFlag core:(FEMCore *)core mesh:(FEMMesh *)mesh model:(FEMModel *)model integration:(FEMNumericIntegration *)integration listUtilities:(FEMListUtilities *)listUtilities {
+-(double)effectiveConductivity:(double)conductivity density:(double)density element:(Element_t * __nonnull)element temperature:(double * __nullable)temperature velocityX:(double * __nonnull)ux velocitY:(double * __nonnull)uy velocityZ:(double * __nonnull)uz nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n numberOfPoints:(int)nd integrationU:(double)u integrationV:(double)v integrationW:(double)w conductivityFlag:(NSString * __nonnull)conductivityFlag core:(FEMCore * __nonnull)core mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration listUtilities:(FEMListUtilities * __nonnull)listUtilities {
     
     int i;
     double c_p, mu, pCond, pr_t, tmu;
@@ -618,6 +623,7 @@
         }
     } else if ([conductivityFlag isEqualToString:@"user function"] == YES) {
         // TODO: implement this later if we need it
+        // In that case change the method argument temperature from __nullable to __nonnull
     } else {
         NSLog(@"FEMMaterialModels:effectiveConductivity: unknown material model.\n");
     }

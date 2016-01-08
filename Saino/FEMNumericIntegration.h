@@ -20,16 +20,16 @@
 }
 
 @property(nonatomic, assign) double metricDeterminant;
-@property(nonatomic, assign) double *basis;
-@property(nonatomic, assign) double **basisFirstDerivative;
-@property(nonatomic, assign) double ***basisSecondDerivative;
+@property(nonatomic, assign) double * __nullable basis;
+@property(nonatomic, assign) double * __nullable * __nullable basisFirstDerivative;
+@property(nonatomic, assign) double * __nullable * __nullable * __nullable basisSecondDerivative;
 
--(BOOL)allocation:(FEMMesh *)mesh;
--(void)deallocation:(FEMMesh *)mesh;
+-(BOOL)allocation:(FEMMesh * __nonnull)mesh;
+-(void)deallocation:(FEMMesh * __nonnull)mesh;
 
--(BOOL)setBasisForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
--(BOOL)setBasisFirstDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
--(BOOL)setBasisSecondDerivativeForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int *)degree;
--(BOOL)setMetricDeterminantForElement:(Element_t *)element elementNodes:(Nodes_t *)nodes inMesh:(FEMMesh *)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w;
+-(BOOL)setBasisForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree;
+-(BOOL)setBasisFirstDerivativeForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree;
+-(BOOL)setBasisSecondDerivativeForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree;
+-(BOOL)setMetricDeterminantForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w;
 
 @end

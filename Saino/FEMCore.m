@@ -2765,7 +2765,7 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Singleton method
 
-static FEMCore *sharedCore = nil;
+static FEMCore * __nullable sharedCore = nil;
 static dispatch_once_t onceToken;
 
 +(id __nonnull)sharedCore {

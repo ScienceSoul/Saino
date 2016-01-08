@@ -10,7 +10,7 @@
 
 @interface FEMTest : NSObject
 
-@property(nonatomic, strong) NSMutableString *path;
+@property(nonatomic, strong, nonnull) NSMutableString *path;
 @property(nonatomic, assign) BOOL do_heatq;
 @property(nonatomic, assign) BOOL do_step_stokes;
 @property(nonatomic, assign) BOOL do_natural_convection;
@@ -20,12 +20,12 @@
 @property(nonatomic, assign) double norm;
 
 // This class method retuns an instance (singleton) of FEMTest
-+(id)sharedTest;
++(id __nonnull)sharedTest;
 +(void)selfDestruct;
 
 -(void)reset;
--(void)setUpHeateqTest:(id)model;
--(void)setUpStepStokesTest:(id)model;
--(void)setUpNaturalConvectionTest:(id)model;
+-(void)setUpHeateqTest:(id __nonnull)model;
+-(void)setUpStepStokesTest:(id __nonnull)model;
+-(void)setUpNaturalConvectionTest:(id __nonnull)model;
 
 @end

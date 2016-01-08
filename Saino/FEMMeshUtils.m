@@ -847,7 +847,7 @@
                 stat = [integration setBasisFirstDerivativeForElement:oldFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
                 stat = [integration setMetricDeterminantForElement:oldFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
                 
-                [elementDescription getEdgeBasisElement:oldFace wBasis:wBasis rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative model:model];
+                [elementDescription getEdgeBasisElement:oldFace wBasis:wBasis rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative];
                 
                 point[0] = cblas_ddot(nn, integration.basis, 1, elementNodes->x, 1);
                 point[1] = cblas_ddot(nn, integration.basis, 1, elementNodes->y, 1);
@@ -867,7 +867,7 @@
                 stat = [integration setMetricDeterminantForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
                 detJ = integration.metricDeterminant;
                 
-                [elementDescription getEdgeBasisElement:newFace wBasis:wBasis2 rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative model:model];
+                [elementDescription getEdgeBasisElement:newFace wBasis:wBasis2 rotWBasis:rotWBasis basis:basis dBasisdx:basisFirstDerivative];
                 
                 weight = detJ * IP->s[it] * coeff;
                 

@@ -29,10 +29,10 @@
 @synthesize natural_convection_allDone = _natural_convection_allDone;
 @synthesize norm = _norm;
 
-static FEMTest *sharedTest = nil;
+static FEMTest * __nullable sharedTest = nil;
 static dispatch_once_t onceToken;
 
-+(id)sharedTest {
++(id __nonnull)sharedTest {
     
     dispatch_once(&onceToken, ^{
         sharedTest = [[self alloc] init];
@@ -65,7 +65,7 @@ static dispatch_once_t onceToken;
     _norm = 0.0;
 }
 
--(void)setUpHeateqTest:(id)model {
+-(void)setUpHeateqTest:(id __nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -182,7 +182,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"heateq/Mesh"]];
 }
 
--(void)setUpStepStokesTest:(id)model {
+-(void)setUpStepStokesTest:(id __nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -315,7 +315,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"Step_stokes/Step"]];
 }
 
--(void)setUpNaturalConvectionTest:(id)model {
+-(void)setUpNaturalConvectionTest:(id __nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     

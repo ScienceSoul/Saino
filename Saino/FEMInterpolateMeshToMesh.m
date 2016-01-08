@@ -19,7 +19,7 @@
 #import "FEMListMatrix.h"
 
 @interface FEMInterpolateMeshToMesh ()
--(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray *)variables model:(FEMModel *)aModel fromMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh projector:(FEMProjector *)projector utilities:(FEMUtilities *)utilities;
+-(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * __nonnull)variables model:(FEMModel * __nonnull)model fromMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh projector:(FEMProjector * __nonnull)projector utilities:(FEMUtilities * __nonnull)utilities;
 @end
 
 @implementation FEMInterpolateMeshToMesh
@@ -29,7 +29,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray *)variables model:(FEMModel *)aModel fromMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh projector:(FEMProjector *)projector utilities:(FEMUtilities *)utilities {
+-(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * __nonnull)variables model:(FEMModel * __nonnull)model fromMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh projector:(FEMProjector * __nonnull)projector utilities:(FEMUtilities * __nonnull)utilities {
     
     int i, j;
     variableArraysContainer *varContainers = NULL, *oldContainers = NULL, *newContainers = NULL;
@@ -48,8 +48,8 @@
         
         if (variable.dofs == 1 && [variable.name isEqualToString:@"coordinate"] == YES) {
             only = YES;
-            oldSol = [utilities getVariableFrom:oldMesh.variables model:aModel name:variable.name onlySearch:&only maskName:NULL info:&stat];
-            newSol = [utilities getVariableFrom:newMesh.variables model:aModel name:variable.name onlySearch:&only maskName:NULL info:&stat];
+            oldSol = [utilities getVariableFrom:oldMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
+            newSol = [utilities getVariableFrom:newMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
             
             if (newSol == nil) continue;
             
@@ -112,7 +112,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 ********************************************************************************************************/
--(void)interpolateQMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh oldVariables:(NSMutableArray *)oldVar newVariables:(NSMutableArray *)newVar model:(FEMModel *)model quadrantTree:(BOOL *)useQuandrant projector:(FEMProjector *)projector mask:(NSString *)maskName nodesPresent:(BOOL *)nodesPresent newMaskPerm:(int *)newMaskPerm {
+-(void)interpolateQMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh oldVariables:(NSMutableArray * __nullable)oldVar newVariables:(NSMutableArray * __nullable)newVar model:(FEMModel * __nonnull)model quadrantTree:(BOOL * __nullable)useQuandrant projector:(FEMProjector * __nullable)projector mask:(NSString * __nullable)maskName nodesPresent:(BOOL * __nullable)nodesPresent newMaskPerm:(int * __nullable)newMaskPerm {
     
     int i, j, k, l=-1, n, bfId, qTreeFails, np, nrow, totFails;
     int dim, epsTries, passiveCoordinate;
@@ -526,7 +526,7 @@
                     } else {
                         stat = [integration setBasisForElement:element elementNodes:nodes inMesh:oldMesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
                         stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:oldMesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:u withBubbles:NO basisDegree:NULL];
-                        [elementDescription getEdgeBasisElement:element wBasis:wBasis rotWBasis:rotBasis basis:integration.basis dBasisdx:integration.basisFirstDerivative model:model];
+                        [elementDescription getEdgeBasisElement:element wBasis:wBasis rotWBasis:rotBasis basis:integration.basis dBasisdx:integration.basisFirstDerivative];
                         
                     }
                 } else {
@@ -670,7 +670,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *******************************************************************************/
--(void)interpolateMesh:(FEMMesh *)oldMesh toMesh:(FEMMesh *)newMesh oldVariables:(NSMutableArray *)oldVar newVariables:(NSMutableArray *)newVar model:(FEMModel *)model quadrantTree:(BOOL *)useQuandrant projector:(FEMProjector *)projector mask:(NSString *)maskName unfoundNodes:(BOOL *)unfoundNodes {
+-(void)interpolateMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh oldVariables:(NSMutableArray * __nullable)oldVar newVariables:(NSMutableArray * __nullable)newVar model:(FEMModel * __nonnull)model quadrantTree:(BOOL * __nullable)useQuandrant projector:(FEMProjector * __nullable)projector mask:(NSString * __nullable)maskName unfoundNodes:(BOOL * __nullable)unfoundNodes {
     
     BOOL *foundNodes = (BOOL*)malloc(sizeof(BOOL) * newMesh.numberOfNodes );
     memset( foundNodes, 0, newMesh.numberOfNodes*sizeof(BOOL) );
@@ -699,7 +699,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ***********************************************************************************/
--(FEMMatrix *)weightedProjectorMesh2:(FEMMesh *)bMesh2 mesh1:(FEMMesh *)bMesh1 inversePermutation2:(int *)invPerm2 sizeInversePermutation2:(int)sizeInversePermutation2 inversePermutation1:(int *)invPerm1 sizeInversePermutation1:(int)sizeInversePermutation1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating periodicScale:(double)periodicScale nodalJump:(BOOL)nodalJump model:(FEMModel *)model {
+-(FEMMatrix * __nonnull)weightedProjectorMesh2:(FEMMesh * __nonnull)bMesh2 mesh1:(FEMMesh * __nonnull)bMesh1 inversePermutation2:(int * __nonnull)invPerm2 sizeInversePermutation2:(int)sizeInversePermutation2 inversePermutation1:(int * __nonnull)invPerm1 sizeInversePermutation1:(int)sizeInversePermutation1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating periodicScale:(double)periodicScale nodalJump:(BOOL)nodalJump model:(FEMModel * __nonnull)model {
     
     int n, np, eqindsize, *indexes, pp, qq;
     double **rotWBasis = NULL, u, v, w, **wBasis = NULL, vq[3], wq[3];
@@ -958,7 +958,7 @@
                     stat = [integration setBasisForElement:element elementNodes:nodes inMesh:bMesh1 firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
                     stat = [integration setBasisFirstDerivativeForElement:element elementNodes:nodes inMesh:bMesh1 firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
                     stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:bMesh1 firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
-                    [elementDescription getEdgeBasisElement:element wBasis:wBasis rotWBasis:rotWBasis basis:integration.basis dBasisdx:integration.basisFirstDerivative model:model];
+                    [elementDescription getEdgeBasisElement:element wBasis:wBasis rotWBasis:rotWBasis basis:integration.basis dBasisdx:integration.basisFirstDerivative];
                 }
             } else {
                 stat = [integration setBasisForElement:element elementNodes:elementNodes inMesh:bMesh1 firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];

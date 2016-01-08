@@ -10,6 +10,6 @@
 
 @interface FEMParallelMPI : NSObject
 
--(double)parallelReductionOfValue:(double)r operArg:(int *)oper_arg;
+-(double)parallelReductionOfValue:(double)r operArg:(int * __nullable)oper_arg;
 
 @end

@@ -17,8 +17,8 @@
 @interface FEMElementDescription ()
 
 -(void)FEMElementDescription_initElementsDefinition;
--(void)FEMElementDescription_compute1DPBasis:(double **)basis sizeOfBasis:(int)n;
--(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u;
+-(void)FEMElementDescription_compute1DPBasis:(double * __nonnull * __nonnull)basis sizeOfBasis:(int)n;
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u;
 @end
 
 @implementation FEMElementDescription {
@@ -34,46 +34,46 @@
     //---------------------------------------
     // List of supported elements definition
     //---------------------------------------
-    FEMElementsDefinition *_1nodePoint;
-    FEMElementsDefinition *_2nodePeriodic;
-    FEMElementsDefinition *_2nodeLine;
-    FEMElementsDefinition *_3nodeLine;
-    FEMElementsDefinition *_4nodeLine;
-    FEMElementsDefinition *_3nodeTriangle;
-    FEMElementsDefinition *_6nodeTriangle;
-    FEMElementsDefinition *_10nodeTriangle;
-    FEMElementsDefinition *_4nodeQuadrilateral;
-    FEMElementsDefinition *_8nodeQuadrilateral;
-    FEMElementsDefinition *_9nodeQuadrilateral;
-    FEMElementsDefinition *_12nodeQuadrilateral;
-    FEMElementsDefinition *_16nodeQuadrilateral;
-    FEMElementsDefinition *_4nodeTetrahedron;
-    FEMElementsDefinition *_10nodeTetrahedron;
-    FEMElementsDefinition *_5nodePyramid;
-    FEMElementsDefinition *_13nodePyramid;
-    FEMElementsDefinition *_6nodeWedge;
-    FEMElementsDefinition *_8nodeOctahedron;
-    FEMElementsDefinition *_20nodeOctahedron;
-    FEMElementsDefinition *_27nodeOctahedron;
+    FEMElementsDefinition * __nonnull _1nodePoint;
+    FEMElementsDefinition * __nonnull _2nodePeriodic;
+    FEMElementsDefinition * __nonnull _2nodeLine;
+    FEMElementsDefinition * __nonnull _3nodeLine;
+    FEMElementsDefinition * __nonnull _4nodeLine;
+    FEMElementsDefinition * __nonnull _3nodeTriangle;
+    FEMElementsDefinition * __nonnull _6nodeTriangle;
+    FEMElementsDefinition * __nonnull _10nodeTriangle;
+    FEMElementsDefinition * __nonnull _4nodeQuadrilateral;
+    FEMElementsDefinition * __nonnull _8nodeQuadrilateral;
+    FEMElementsDefinition * __nonnull _9nodeQuadrilateral;
+    FEMElementsDefinition * __nonnull _12nodeQuadrilateral;
+    FEMElementsDefinition * __nonnull _16nodeQuadrilateral;
+    FEMElementsDefinition * __nonnull _4nodeTetrahedron;
+    FEMElementsDefinition * __nonnull _10nodeTetrahedron;
+    FEMElementsDefinition * __nonnull _5nodePyramid;
+    FEMElementsDefinition * __nonnull _13nodePyramid;
+    FEMElementsDefinition * __nonnull _6nodeWedge;
+    FEMElementsDefinition * __nonnull _8nodeOctahedron;
+    FEMElementsDefinition * __nonnull _20nodeOctahedron;
+    FEMElementsDefinition * __nonnull _27nodeOctahedron;
     
-    NSArray *_listOfDefinitions;
+    NSArray * __nonnull _listOfDefinitions;
     
     //-----------------------------------------------------
     // Linked list strurture which contains the elements
     // definition and their allocations. The elements
     // definition are provided by the class itself.
     //-----------------------------------------------------
-    ElementType_t *_elementTypeList;
+    ElementType_t * __nullable _elementTypeList;
     BOOL _isTypeListInitialized;
     
-    int **_point;
-    int **_line;
-    int **_triangle;
-    int **_quad;
-    int **_tetra;
-    int **_prism;
-    int **_wedge;
-    int **_brick;
+    int * __nonnull * __nonnull _point;
+    int * __nonnull * __nonnull _line;
+    int * __nonnull * __nonnull _triangle;
+    int * __nonnull * __nonnull _quad;
+    int * __nonnull * __nonnull _tetra;
+    int * __nonnull * __nonnull _prism;
+    int * __nonnull * __nonnull _wedge;
+    int * __nonnull * __nonnull _brick;
     
     BOOL _initialized[8];
 }
@@ -566,10 +566,12 @@
     
 }
 
--(void)FEMElementDescription_compute1DPBasis:(double **)basis sizeOfBasis:(int)n {
 /***************************************************************************
+ 
     Method to compute the 1D P-basis from Legendre polynomials
+ 
 ***************************************************************************/
+-(void)FEMElementDescription_compute1DPBasis:(double * __nonnull * __nonnull)basis sizeOfBasis:(int)n {
  
     int i, j, k, l;
     double s, p[n+1], p0[n], p1[n+1];
@@ -637,7 +639,7 @@
     Return y = x(u)
  
 **********************************************************************************************/
--(double)FEMElementDescription_interpolate1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u {
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u {
     
     int i, n;
     int *p;
@@ -664,10 +666,10 @@
 
 #pragma mark Singleton method
 
-static FEMElementDescription *sharedElementDescription = nil;
+static FEMElementDescription * __nullable sharedElementDescription = nil;
 static dispatch_once_t onceToken;
 
-+(id)sharedElementDescription {
++(id __nonnull)sharedElementDescription {
     
     dispatch_once(&onceToken, ^{
         sharedElementDescription = [[self alloc] init];
@@ -688,7 +690,6 @@ static dispatch_once_t onceToken;
     
     self = [super init];
     if (self) {
-        // Initialization code here.
         
         _maxElementNodes = 256;
         _maxDeg = 4;
@@ -707,6 +708,8 @@ static dispatch_once_t onceToken;
         for (i=0; i<8; i++) {
             _initialized[i] = NO;
         }
+        
+        _elementTypeList = NULL;
         
         // Construction of definitions
         [self FEMElementDescription_initElementsDefinition];
@@ -770,7 +773,6 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)addDescriptionOfElement:(ElementType_t *)element withBasisTerms:(int *)terms {
 /***********************************************************************************************
     Add an element description to global list of element types
  
@@ -780,11 +782,12 @@ static dispatch_once_t onceToken;
                                to the list below
  
 ***********************************************************************************************/
+-(void)addDescriptionOfElement:(ElementType_t * __nonnull)element withBasisTerms:(int * __nonnull)terms {
     
     int i, j, k, n, upow, vpow, wpow;
     double u, v, w;
     FEMLinearAlgebra *algebra;
-    ElementType_t *temp;
+    ElementType_t *temp = NULL;
     
     algebra = [[FEMLinearAlgebra alloc] init];
     
@@ -992,18 +995,18 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)initElementDescriptions {
 /***********************************************************************************************
-
-    Read the elements definition provided by the class and add the element types 
+ 
+    Read the elements definition provided by the class and add the element types
     to a global list.
     Users of the class should make sure to call this method in their code.
-
+ 
 ***********************************************************************************************/
+-(void)initElementDescriptions {
     
     int i, k;
     int *basisTerms;
-    ElementType_t *element;
+    ElementType_t *element = NULL;
     FEMElementsDefinition *defs;
     
     basisTerms = intvec(0, _maxDeg3-1);
@@ -1090,7 +1093,7 @@ static dispatch_once_t onceToken;
     free_ivector(basisTerms, 0, _maxDeg3-1);
 }
 
--(int **)getEdgeMap:(int)elementFamily {
+-(int * __nonnull * __nonnull)getEdgeMap:(int)elementFamily {
     
     int **edgeMag = NULL;
     
@@ -1266,17 +1269,17 @@ static dispatch_once_t onceToken;
     }
     
     return edgeMag;
-    
 }
 
--(double)elementDiameter:(Element_t *)element nodes:(Nodes_t *)nodes {
 /*****************************************************************************************
+ 
     Retrive element diameter parameter for stabilization
  
     Element_t *element  ->  element
     Nodes_t *nodes      ->  nodal coodinate arrays of the element
  
 *****************************************************************************************/
+-(double)elementDiameter:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes {
     
     int i, j, k, family;
     double x0, y0, z0, hk, a, s, cx, cy, cz;
@@ -1355,15 +1358,16 @@ static dispatch_once_t onceToken;
     return sqrt(hk);
 }
 
--(void)computeStabilizationParameterInElement:(Element_t *)element nodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh numberOfNodes:(int)n mk:(double *)mk hk:(double *)hk {
 /*******************************************************************************************************
-    Compute convection diffusion equation stabilization parameter for each and every element of the 
+ 
+    Compute convection diffusion equation stabilization parameter for each and every element of the
     model by solving the largest eigenvalue of
-        
-        Lu = \lambda Gu,
-        L = (\nabla^2 u,\nabla^2 w), G = (\nabla u,\nabla w)
+ 
+    Lu = \lambda Gu,
+    L = (\nabla^2 u,\nabla^2 w), G = (\nabla u,\nabla w)
  
 *******************************************************************************************************/
+-(void)computeStabilizationParameterInElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes mesh:(FEMMesh * __nonnull)mesh numberOfNodes:(int)n mk:(double * __nonnull)mk hk:(double * __nullable)hk {
  
     int i, j, p, q, t, dim;
     double *eigr, s, *ddp, *ddq, ***dNodalBasisdx;
@@ -1544,11 +1548,11 @@ static dispatch_once_t onceToken;
     [numericIntegration deallocation:mesh];
 }
 
--(ElementType_t *)getElementType:(int)code inMesh:(FEMMesh *)mesh stabilization:(BOOL *)computeStab {
+-(ElementType_t * __nullable)getElementType:(int)code inMesh:(FEMMesh * __nonnull)mesh stabilization:(BOOL * __nullable)computeStab {
         
     Element_t *elm = NULL;
     ElementType_t *element = NULL;
-    Nodes_t *nodes;
+    Nodes_t *nodes = NULL;
     
     element = _elementTypeList;
     
@@ -1603,7 +1607,7 @@ static dispatch_once_t onceToken;
     Return y = @x/@u
  
 **********************************************************************************************/
--(double)firstDerivative1DInElement:(Element_t *)element nodalValues:(double *)x evalutationPoint:(double)u {
+-(double)firstDerivative1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u {
     
     int i, n;
     int *p;
@@ -1643,7 +1647,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in u of quantity x at point u,v y = @x(u,v)/@u
     
 **********************************************************************************************/
--(double)firstDerivativeU2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+-(double)firstDerivativeU2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -1683,7 +1687,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in v of quantity x at point u,v y = @x(u,v)/@v
  
 **********************************************************************************************/
--(double)firstDerivativeV2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+-(double)firstDerivativeV2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -1723,7 +1727,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in u of quantity x at point u,v,w y = @x(u,v,w)/@u
  
 **********************************************************************************************/
--(double)firstDerivativeU3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeU3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1802,7 +1806,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in v of quantity x at point u,v,w y = @x(u,v,w)/@v
  
 **********************************************************************************************/
--(double)firstDerivativeV3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeV3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1881,7 +1885,7 @@ static dispatch_once_t onceToken;
  Return first partial derivative in w of quantity x at point u,v,w y = @x(u,v,w)/@w
  
 **********************************************************************************************/
--(double)firstDerivativeW3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeW3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1967,7 +1971,7 @@ static dispatch_once_t onceToken;
     Return y = x(u,v,w)
 
 **********************************************************************************************/
--(double)interpolateInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double *)basis {
+-(double)interpolateInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double * __nullable)basis {
     
     int n;
     double value=0.0;
@@ -2002,21 +2006,15 @@ static dispatch_once_t onceToken;
     no elements of the other side.
  
 ***************************************************************************************/
- 
--(void)checkNormalDirectionInBDElement:(Element_t *)boundary forNormals:(double *)normals mesh:(FEMMesh *)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL *)turn {
+-(void)checkNormalDirectionInBDElement:(Element_t * __nonnull)boundary forNormals:(double * __nonnull)normals mesh:(FEMMesh * __nonnull)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL * __nullable)turn {
     
     int i, n, k;
     double x1, y1, z1;
     double *nx, *ny, *nz;
-    Element_t *element, *rightElement, *leftElement;
-    Nodes_t *nodes;
+    Element_t *element = NULL, *rightElement = NULL, *leftElement = NULL;
+    Nodes_t *nodes = NULL;
     
     if (boundary->BoundaryInfo == NULL) return;
-    
-    element = NULL;
-    rightElement = NULL;
-    leftElement = NULL;
-    nodes = NULL;
     
     nodes = mesh.getNodes;
     
@@ -2117,13 +2115,15 @@ static dispatch_once_t onceToken;
 }
 
 /***************************************************************************************
+ 
     Gives the normal vector of a boundary element.
     For non-curved elements, the normal vector does not depend on the local coordinate
     while otherwise it does. There are different uses of the function where some do 
     not have the luxury of knowing the local coordinates and hence the center point is
     used as default.
+ 
 ***************************************************************************************/
--(void)normalVectorForBDElement:(Element_t *)boundary boundaryNodes:(Nodes_t *)nodes mesh:(FEMMesh *)mesh paraU:(double *)u0 paraV:(double *)v0 check:(BOOL *)check normals:(double *)normals {
+-(void)normalVectorForBDElement:(Element_t * __nonnull)boundary boundaryNodes:(Nodes_t * __nonnull)nodes mesh:(FEMMesh * __nonnull)mesh paraU:(double * __nullable)u0 paraV:(double * __nullable)v0 check:(BOOL * __nullable)check normals:(double * __nonnull)normals {
     
     double u, v, auu, auv, avv, detA, x=0.0, y=0.0, z=0.0;
     double dxdu, dxdv, dydu, dydv, dzdu, dzdv;
@@ -2222,7 +2222,7 @@ static dispatch_once_t onceToken;
     TODO: Needs support for p elements
  
 ***************************************************************************************************/
--(void)globalToLocalFromElement:(Element_t *)element elementNodes:(Nodes_t *)nodes localU:(double *)u localV:(double *)v localW:(double *)w x:(double)x y:(double)y z:(double)z model:(FEMModel *)aModel {
+-(void)globalToLocalFromElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes localU:(double * __nonnull)u localV:(double * __nonnull)v localW:(double * __nonnull)w x:(double)x y:(double)y z:(double)z model:(FEMModel * __nonnull)model {
     
     int i, j, n;
     int const maxIter = 50;
@@ -2280,7 +2280,7 @@ static dispatch_once_t onceToken;
                 J[1][0] = [self firstDerivativeU2DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v];
                 J[1][1] = [self firstDerivativeV2DInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v];
                 
-                switch (aModel.dimension) {
+                switch (model.dimension) {
                     case 3:
                         J[2][0] = [self firstDerivativeU2DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v];
                         J[2][1] = [self firstDerivativeV2DInElement:element nodalValues:nodes->z evaluatedAt:*u andAt:*v];
@@ -2378,20 +2378,20 @@ static dispatch_once_t onceToken;
     free_dmatrix(J, 0, 2, 0, 2);
 }
 
-/**********************************************************************************************
+/************************************************************************************************
  
- Given element structure, return value of a quantity x given at element nodes at local
- cooidinate points (u,v) inside the element. Element basis functions are used to compute the
- value. Used for 2d elements
+    Given element structure, return value of a quantity x given at element nodes at local
+    cooidinate points (u,v) inside the element. Element basis functions are used to compute the
+    value. Used for 2d elements
  
- Element_t *element  ->  element structure
- double *x           ->  nodal values of the quantity whose partial derivative is required
- double u, v         ->  points at which to evaluate the partial derivative
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u, v         ->  points at which to evaluate the partial derivative
  
- Return y = x(u,v)
+    Return y = x(u,v)
  
- **********************************************************************************************/
--(double)interpolate2DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v {
+************************************************************************************************/
+-(double)interpolate2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -2418,18 +2418,18 @@ static dispatch_once_t onceToken;
 
 /**********************************************************************************************
  
- Given element structure, return value of a quantity x given at element nodes at local
- cooidinate points (u,v,w) inside the element. Element basis functions are used to compute
- the value. Used for 3d elements
+    Given element structure, return value of a quantity x given at element nodes at local
+    cooidinate points (u,v,w) inside the element. Element basis functions are used to compute
+    the value. Used for 3d elements
  
- Element_t *element  ->  element structure
- double *x           ->  nodal values of the quantity whose partial derivative is required
- double u, v, w      ->  points at which to evaluate the partial derivative
+    Element_t *element  ->  element structure
+    double *x           ->  nodal values of the quantity whose partial derivative is required
+    double u, v, w      ->  points at which to evaluate the partial derivative
  
- Return y = x(u,v,w)
+    Return y = x(u,v,w)
  
- **********************************************************************************************/
--(double)interpolate3DInElement:(Element_t *)element nodalValues:(double *)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+**********************************************************************************************/
+-(double)interpolate3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -2516,12 +2516,12 @@ static dispatch_once_t onceToken;
     Obtaining optimal accuracy with these elements may require that the element map is affine, while the edge 
     basis functions given by the newer design (the function EdgeElementInfo) should also work on general meshes.
  
-     Method corresponds to Elmer from git on October 27 2015
+    Method corresponds to Elmer from git on October 27 2015
  
 ****************************************************************************************************************/
--(void)getEdgeBasisElement:(Element_t *)element wBasis:(double **)wBasis rotWBasis:(double **)rotWBasis basis:(double *)basis dBasisdx:(double **)dBasisdx model:(FEMModel *)model {
+-(void)getEdgeBasisElement:(Element_t * __nonnull)element wBasis:(double * __nonnull * __nonnull)wBasis rotWBasis:(double * __nonnull * __nonnull)rotWBasis basis:(double * __nonnull)basis dBasisdx:(double * __nonnull * __nonnull)dBasisdx {
  
-    int j, k, n=0, nk, nj, **edgeMap, size=0;
+    int j, k, n=0, nk, nj, **edgeMap = NULL, size=0;
     double base=0, curlBasis[8][3], dBase[3], dTriBase[3][3], detF=0, detG, du[3], dudx[3][3], dudx1[3], dudx2[3], dudx3[3], edgeBasis[8][3], f[3][3], g[3][3], g1[3], g2[3], g3[3], rBase[3], sum, tbase[3], triBase[3], u=0, v=0, w=0;
     
     //TODO: add support for parallel run
