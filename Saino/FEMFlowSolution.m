@@ -25,7 +25,7 @@
 
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
--(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel *)model;
+-(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * __nonnull)model;
 @end
 
 @implementation FEMFlowSolution {
@@ -38,51 +38,50 @@
     int _sizePDensity0;
     int _sizePDensity1;
     int _sizePseudoPressure;
-    int *_flowPerm;
-    int *_indexes;
-    double *_alpha;
-    double *_beta;
-    double *_density;
-    double **_drag;
-    double *_extPressure;
-    double *_flowSolution;
-    double *_force;
-    double *_gasConstant;
-    double *_heatExpansionCoeff;
-    double *_heatCapacity;
-    double *_layerThickness;
-    double *_localTempPrev;
-    double *_localTemperature;
-    double **_loadVector;
-    double **_mass;
-    double *_mu;
-    double *_mv;
-    double *_mw;
-    double *_mx;
-    double *_my;
-    double *_mz;
-    double *_pDensity0;
-    double *_pDensity1;
-    double *_permeability;
-    double *_potentialCoefficient;
-    double *_potentialField;
-    double *_pressure;
-    double *_prevDensity;
-    double *_prevPressure;
-    double *_pseudoCompressibility;
-    double *_pseudoPressure;
-    double *_pSolution;
-    double *_referenceTemperature;
-    double **_slipCoeff;
-    double **_stiff;
-    double *_timeForce;
-    double *_surfaceRoughness;
-    double *_u;
-    double *_v;
-    double *_viscosity;
-    double *_w;
-    Nodes_t *_elementNodes;
-    
+    int * __nullable _flowPerm;
+    int * __nullable _indexes;
+    double * __nullable _alpha;
+    double * __nullable _beta;
+    double * __nullable _density;
+    double * __nullable * __nullable _drag;
+    double * __nullable _extPressure;
+    double * __nullable _flowSolution;
+    double * __nullable _force;
+    double * __nullable _gasConstant;
+    double * __nullable _heatExpansionCoeff;
+    double * __nullable _heatCapacity;
+    double * __nullable _layerThickness;
+    double * __nullable _localTempPrev;
+    double * __nullable _localTemperature;
+    double * __nullable * __nullable _loadVector;
+    double * __nullable * __nullable _mass;
+    double * __nullable _mu;
+    double * __nullable _mv;
+    double * __nullable _mw;
+    double * __nullable _mx;
+    double * __nullable _my;
+    double * __nullable _mz;
+    double * __nullable _pDensity0;
+    double * __nullable _pDensity1;
+    double * __nullable _permeability;
+    double * __nullable _potentialCoefficient;
+    double *__nullable _potentialField;
+    double *__nullable _pressure;
+    double * __nullable _prevDensity;
+    double * __nullable _prevPressure;
+    double * __nullable _pseudoCompressibility;
+    double * __nullable _pseudoPressure;
+    double * __nullable _pSolution;
+    double * __nullable _referenceTemperature;
+    double * __nullable * __nullable _slipCoeff;
+    double * __nullable * __nullable _stiff;
+    double * __nullable _timeForce;
+    double * __nullable _surfaceRoughness;
+    double * __nullable _u;
+    double * __nullable _v;
+    double * __nullable _viscosity;
+    double * __nullable _w;
+    Nodes_t * __nullable _elementNodes;
 }
 
 -(void)FEMFlowSolution_nullify {
@@ -133,7 +132,7 @@
     _elementNodes = NULL;
 }
 
--(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel *)model {
+-(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * __nonnull)model {
     
     int l=0;
     double phi, r, x, y, x0, y0;
@@ -202,7 +201,7 @@
     return self;
 }
 
--(void)deallocation:(FEMSolution *)solution {
+-(void)deallocation:(FEMSolution * __nonnull)solution {
     
     int n = solution.mesh.maxElementDofs;
     variableArraysContainer *flowContainers = solution.variable.getContainers;
@@ -255,7 +254,7 @@
     if (_pDensity1 != NULL) free_dvector(_pDensity1, 0, _sizePDensity1);
 }
 
--(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, j, k, n, nb, nd, t, bf_id, body_id, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords=0, modelDim=0, newtonIter, nonLinearIter;
     static int dt, saveTimeStep=-1;

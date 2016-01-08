@@ -21,11 +21,11 @@
     return self;
 }
 
--(void)deallocation:(FEMSolution *)solution {
+-(void)deallocation:(FEMSolution * __nonnull)solution {
     
 }
 
--(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
 }
 
