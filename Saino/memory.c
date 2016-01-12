@@ -12,7 +12,7 @@
 #define FI_END 1
 #define FREE_ARG char*
 
-bool *boolvec(long nl, long nh) {
+bool * __nonnull boolvec(long nl, long nh) {
     
     bool *v;
 	
@@ -21,7 +21,7 @@ bool *boolvec(long nl, long nh) {
 	return v-nl+FI_END;
 }
 
-int *intvec(long nl, long nh)
+int * __nonnull intvec(long nl, long nh)
 {
 	int *v;
 	
@@ -30,7 +30,7 @@ int *intvec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-unsigned long *ulongvec(long nl, long nh)
+unsigned long * __nonnull ulongvec(long nl, long nh)
 {
     unsigned long *v;
 	
@@ -39,39 +39,36 @@ unsigned long *ulongvec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-double *doublevec(long nl, long nh)
+double * __nonnull doublevec(long nl, long nh)
 {
 	
 	double *v;
 	
 	v = (double *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(double)));
 	if (!v) fatal("doublevec", "Allocation failure for the double vector.");
-	
 	return v-nl+FI_END;
 }
 
-float *floatvec(long nl, long nh)
+float * __nonnull floatvec(long nl, long nh)
 {
 	float *v;
 	
 	v = (float *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(float)));
 	if (!v) fatal("floatvec", "Allocation failure for the float vector.");
-	
 	return v-nl+FI_END;
 }
 
-double complex *cdoublevec(long nl, long nh)
+double complex * __nonnull cdoublevec(long nl, long nh)
 {
 	
 	double complex *v;
 	
 	v = (double complex *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(double complex)));
 	if (!v) fatal("cdoublevec", "Allocation failure for the complex double vector.");
-	
 	return v-nl+FI_END;
 }
 
-bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
+bool * __nonnull * __nonnull boolmatrix(long nrl, long nrh, long ncl, long nch) {
     
     long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	bool **m;
@@ -91,7 +88,7 @@ bool **boolmatrix(long nrl, long nrh, long ncl, long nch) {
 	return m;
 }
 
-int **intmatrix(long nrl, long nrh, long ncl, long nch)
+int * __nonnull * __nonnull intmatrix(long nrl, long nrh, long ncl, long nch)
 {
 	
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
@@ -112,7 +109,7 @@ int **intmatrix(long nrl, long nrh, long ncl, long nch)
 	return m;
 }
 
-double **doublematrix(long nrl, long nrh, long ncl, long nch)
+double * __nonnull * __nonnull doublematrix(long nrl, long nrh, long ncl, long nch)
 {
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	double **m;
@@ -132,7 +129,7 @@ double **doublematrix(long nrl, long nrh, long ncl, long nch)
 	return m;
 }
 
-float **floatmatrix(long nrl, long nrh, long ncl, long nch)
+float * __nonnull * __nonnull floatmatrix(long nrl, long nrh, long ncl, long nch)
 {
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	float **m;
@@ -152,7 +149,7 @@ float **floatmatrix(long nrl, long nrh, long ncl, long nch)
 	return m;
 }
 
-double complex **cdoublematrix(long nrl, long nrh, long ncl, long nch) {
+double complex * __nonnull * __nonnull cdoublematrix(long nrl, long nrh, long ncl, long nch) {
     
     long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	double complex **m;
@@ -172,7 +169,7 @@ double complex **cdoublematrix(long nrl, long nrh, long ncl, long nch) {
 	return m;
 }
 
-double ***d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
+double * __nonnull * __nonnull * __nonnull d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	double ***t;
@@ -206,7 +203,7 @@ double ***d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	return t;	    
 }
 
-float ***f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
+float * __nonnull * __nonnull * __nonnull f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	float ***t;
@@ -240,7 +237,7 @@ float ***f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	return t;	    
 }
 
-int ***i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
+int * __nonnull * __nonnull * __nonnull i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	int ***t;
@@ -274,67 +271,67 @@ int ***i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
 	return t;	    
 }
 
-void free_bvector(bool *v, long nl, long nh){
+void free_bvector(bool * __nonnull v, long nl, long nh){
     
     free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_dvector(double *v, long nl, long nh)
+void free_dvector(double * __nonnull v, long nl, long nh)
 {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_fvector(float *v, long nl, long nh)
+void free_fvector(float * __nonnull v, long nl, long nh)
 {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_ivector(int *v, long nl, long nh)
+void free_ivector(int * __nonnull v, long nl, long nh)
 {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_cdvector(double complex *v, long nl, long nh)
+void free_cdvector(double complex * __nonnull v, long nl, long nh)
 {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_ulvector(unsigned long *v, long nl, long nh) 
+void free_ulvector(unsigned long * __nonnull v, long nl, long nh)
 {    
     free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_bmatrix(bool **m, long nrl, long nrh, long ncl, long nch) {
+void free_bmatrix(bool * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch) {
     
     free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_dmatrix(double **m, long nrl, long nrh, long ncl, long nch)
+void free_dmatrix(double * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
 { 
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_fmatrix(float **m, long nrl, long nrh, long ncl, long nch)
+void free_fmatrix(float * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
 {
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_imatrix(int **m, long nrl, long nrh, long ncl, long nch)
+void free_imatrix(int * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
 {
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_cdmatrix(double complex **m, long nrl, long nrh, long ncl, long nch) {
+void free_cdmatrix(double complex * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch) {
     
     free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_d3tensor(double ***t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
+void free_d3tensor(double * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
 {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));
@@ -342,7 +339,7 @@ void free_d3tensor(double ***t, long nrl, long nrh, long ncl, long nch, long ndl
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void free_f3tensor(float ***t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
+void free_f3tensor(float * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
 {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));
@@ -350,7 +347,7 @@ void free_f3tensor(float ***t, long nrl, long nrh, long ncl, long nch, long ndl,
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void free_i3tensor(int ***t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
+void free_i3tensor(int * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
 {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));

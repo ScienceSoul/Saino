@@ -27,5 +27,5 @@ typedef struct Variable_t {
     
 } Variable_t;
 
-void addVariable(Variable_t *variables, char *name, int dofs, double *values, int *perm, int *output, int *secondary);
-Variable_t* getVariable(Variable_t *variables, char *name);
+void addVariable(Variable_t * __nullable variables, char * __nonnull name, int dofs, double * __nonnull values, int * __nullable perm, int * __nullable output, int * __nullable secondary);
+Variable_t * __nullable getVariable(Variable_t * __nullable variables, char * __nonnull name);

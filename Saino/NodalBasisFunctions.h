@@ -15,6 +15,7 @@
 #include "Constructors.h"
 
 /****************************************************************************
+ 
     NodalBasisFunctions1D:
  
     Description:
@@ -25,14 +26,15 @@
  
     Function return value:
         double *y -> value of the quantity y = x(u)
+ 
 ****************************************************************************/
-inline void NodalBasisFunctions1D(double *y, Element_t *element, double u) {
+inline void NodalBasisFunctions1D(double * __nonnull y, Element_t * __nonnull element, double u) {
     
     int i, n;
-    int *p;
+    int *p = NULL;
     
     double s;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -44,11 +46,11 @@ inline void NodalBasisFunctions1D(double *y, Element_t *element, double u) {
             s = s + coeff[i] * pow(u, (double)p[i]);
         }
         y[n] = s;
-        
     }
 }
 
 /****************************************************************************
+ 
     NodalBasisFunction2D:
  
     Description:
@@ -59,14 +61,15 @@ inline void NodalBasisFunctions1D(double *y, Element_t *element, double u) {
  
     Function return value:
         double *y -> value of the quantity y = x(u)
+ 
 ****************************************************************************/
-inline void NodalBasisFunctions2D(double *y, Element_t *element, double u, double v) {
+inline void NodalBasisFunctions2D(double * __nonnull y, Element_t * __nonnull element, double u, double v) {
     
     int i, n;
-    int *p, *q;
+    int *p = NULL, *q = NULL;
     
     double s, s1, s2, s3;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -100,6 +103,7 @@ inline void NodalBasisFunctions2D(double *y, Element_t *element, double u, doubl
 }
 
 /**********************************************************************************
+ 
     InterpolateInElement3D:
  
     Description: Given element structure return value of a quantity x given at
@@ -115,14 +119,15 @@ inline void NodalBasisFunctions2D(double *y, Element_t *element, double u, doubl
  
     Function return value:
         double y -> value of the quantity y = x(u,v,w)
+ 
 **********************************************************************************/
-inline double InterpolateInElement3D(Element_t *element, double *x, double u, double v, double w) {
+inline double InterpolateInElement3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
     
     int i, l, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double y, s, s1, s2, s3, s4;
-    double *coeff;
+    double *coeff = NULL;
     
     l = element->Type.BasisFunctionDegree;
     
@@ -201,6 +206,7 @@ inline double InterpolateInElement3D(Element_t *element, double *x, double u, do
 }
 
 /****************************************************************************
+ 
     NodalBasisFunctions3D:
  
     Description:
@@ -211,14 +217,15 @@ inline double InterpolateInElement3D(Element_t *element, double *x, double u, do
  
     Function return value:
         double *y -> value of the quantity y = x(u)
+ 
 ****************************************************************************/
-inline void NodalBasisFunctions3D(double *y, Element_t *element, double u, double v, double w) {
+inline void NodalBasisFunctions3D(double * __nonnull y, Element_t * __nonnull element, double u, double v, double w) {
     
     int i, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double s, s1, s2, s3, s4;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -252,7 +259,7 @@ inline void NodalBasisFunctions3D(double *y, Element_t *element, double u, doubl
     }
 }
 
-inline void NodalBasisFunctions(int n, double *Basis, Element_t *element, double u, double v,double w) {
+inline void NodalBasisFunctions(int n, double * __nonnull Basis, Element_t * __nonnull element, double u, double v,double w) {
     int q, dim;
     double NodalBasis[n];
     
@@ -286,6 +293,7 @@ inline void NodalBasisFunctions(int n, double *Basis, Element_t *element, double
 }
 
 /****************************************************************************
+ 
     NodalFirstDerivatives1D:
  
     Description:
@@ -296,14 +304,15 @@ inline void NodalBasisFunctions(int n, double *Basis, Element_t *element, double
  
     Function return value:
         double **y -> value of the quantity y = @x/@u
+ 
 ****************************************************************************/
-inline void NodalFirstDerivatives1D(double *y, Element_t *element, double u) {
+inline void NodalFirstDerivatives1D(double * __nonnull y, Element_t * __nonnull element, double u) {
     
     int i, n;
-    int *p;
+    int *p = NULL;
     
     double s;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -319,6 +328,7 @@ inline void NodalFirstDerivatives1D(double *y, Element_t *element, double u) {
 }
 
 /****************************************************************************
+ 
     NodalFirstDerivatives2D:
  
     Description:
@@ -329,14 +339,15 @@ inline void NodalFirstDerivatives1D(double *y, Element_t *element, double u) {
  
     Function return value:
         double **y -> value of the quantity y = @x(u,v)/@u
+ 
 ****************************************************************************/
-inline void NodalFirstDerivatives2D(double *y, Element_t *element, double u, double v) {
+inline void NodalFirstDerivatives2D(double * __nonnull y, Element_t * __nonnull element, double u, double v) {
     
     int i, n;
-    int *p, *q;
+    int *p = NULL, *q = NULL;
     
     double s, s1, s2, s3, t, t1, t2, t3;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -381,6 +392,7 @@ inline void NodalFirstDerivatives2D(double *y, Element_t *element, double u, dou
 
 
 /***************************************************************************************
+ 
     FirstDerivativeInU3D:
  
     Description: Given element structure return value of the first partial derivative
@@ -395,14 +407,15 @@ inline void NodalFirstDerivatives2D(double *y, Element_t *element, double u, dou
  
     Function return value:
         double y -> value of the quantity y = @x(u,v,w)/@u
+ 
 ***************************************************************************************/
-inline double FirstDerivativeInU3D(Element_t *element, double *x, double u, double v, double w) {
+inline double FirstDerivativeInU3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
     
     int i, l, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double y, s, s1, s2, s3, s4;
-    double *coeff;
+    double *coeff = NULL;
     
     l = element->Type.BasisFunctionDegree;
     
@@ -485,6 +498,7 @@ inline double FirstDerivativeInU3D(Element_t *element, double *x, double u, doub
 }
 
 /***************************************************************************************
+ 
     FirstDerivativeInV3D:
  
     Description: Given element structure return value of the first partial derivative
@@ -499,14 +513,15 @@ inline double FirstDerivativeInU3D(Element_t *element, double *x, double u, doub
  
     Function return value:
         double y -> value of the quantity y = @x(u,v,w)/@v
+ 
 ****************************************************************************************/
-inline double FirstDerivativeInV3D(Element_t *element, double *x, double u, double v, double w) {
+inline double FirstDerivativeInV3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
     
     int i, l, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double y, s, s1, s2, s3, s4;
-    double *coeff;
+    double *coeff = NULL;
     
     l = element->Type.BasisFunctionDegree;
     
@@ -590,6 +605,7 @@ inline double FirstDerivativeInV3D(Element_t *element, double *x, double u, doub
 }
 
 /****************************************************************************************
+ 
     FirstDerivativeInW3D:
  
     Description: Given element structure return value of the first partial derivative
@@ -604,14 +620,15 @@ inline double FirstDerivativeInV3D(Element_t *element, double *x, double u, doub
  
     Function return value:
         double y -> value of the quantity y = @x(u,v,w)/@w
+ 
 *****************************************************************************************/
-inline double FirstDerivativeInW3D(Element_t *element, double *x, double u, double v, double w) {
+inline double FirstDerivativeInW3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
     
     int i, l, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double y, s, s1, s2, s3, s4;
-    double *coeff;
+    double *coeff = NULL;
     
     l = element->Type.BasisFunctionDegree;
     
@@ -698,6 +715,7 @@ inline double FirstDerivativeInW3D(Element_t *element, double *x, double u, doub
 }
 
 /****************************************************************************
+ 
     NodalFirstDerivatives3D:
  
     Description:
@@ -708,16 +726,17 @@ inline double FirstDerivativeInW3D(Element_t *element, double *x, double u, doub
  
     Function return value:
         double **y -> value of the quantity y =  @x(u,v,w)/@u
+ 
 ****************************************************************************/
-inline void NodalFirstDerivatives3D(double *y, Element_t *element, double u, double v, double w) {
+inline void NodalFirstDerivatives3D(double * __nonnull y, Element_t * __nonnull element, double u, double v, double w) {
     
     int i, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double s, s1, s2, s3, s4;
     double t, t1, t2, t3, t4;
     double z, z1, z2, z3, z4;
-    double *coeff;
+    double *coeff = NULL;
     
     for(n=0;n<element->Type.NumberOfNodes;n++) {
         
@@ -774,7 +793,7 @@ inline void NodalFirstDerivatives3D(double *y, Element_t *element, double u, dou
     }
 }
 
-inline void NodalFirstDerivatives(int n, double *dLBasisdx, Element_t *element, double u, double v, double w) {
+inline void NodalFirstDerivatives(int n, double * __nonnull dLBasisdx, Element_t * __nonnull element, double u, double v, double w) {
     
     int q, dim;
     double NodalBasis[n];
@@ -809,6 +828,7 @@ inline void NodalFirstDerivatives(int n, double *dLBasisdx, Element_t *element, 
 }
 
 /*******************************************************************************************************
+ 
     SecondDerivatives1D:
  
     Description: Given element structure return value of the second partial derivative with
@@ -823,15 +843,16 @@ inline void NodalFirstDerivatives(int n, double *dLBasisdx, Element_t *element, 
  
     Function return value:
         double y -> value of the quantity y = @x/@u
+ 
 *******************************************************************************************************/
-inline double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
+inline double SecondDerivatives1D(Element_t * __nonnull element, double * __nonnull nodes, double u) {
     
     double y;
     
     int i, n;
-    int *p;
+    int *p = NULL;
     double s;
-    double *coeff;
+    double *coeff = NULL;
     
     y = 0.0;
     for (n=0; n<element->Type.NumberOfNodes; n++) {
@@ -851,6 +872,7 @@ inline double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
 }
 
 /*********************************************************************************************************
+ 
     SecondDerivatives2D:
  
     Description: Given element structure return value of the second partial derivatives
@@ -866,14 +888,15 @@ inline double SecondDerivatives1D(Element_t* element, double *nodes, double u) {
  
     Function return value:
         double y -> value of the quantity s = @^2x(u,v)/@v^2
+ 
 *********************************************************************************************************/
-inline void SecondDerivatives2D(double *ddx, Element_t* element, double *nodes, double u, double v) {
+inline void SecondDerivatives2D(double * __nonnull ddx, Element_t * __nonnull element, double * __nonnull nodes, double u, double v) {
     
     int i, n;
-    int *p, *q;
+    int *p = NULL, *q = NULL;
     
     double s;
-    double *coeff;
+    double *coeff = NULL;
     
     for (n=0; n<element->Type.NumberOfNodes; n++) {
         
@@ -911,6 +934,7 @@ inline void SecondDerivatives2D(double *ddx, Element_t* element, double *nodes, 
 }
 
 /*****************************************************************************************************
+ 
     SecondDerivatives3D:
  
     Description: Given element structure return value of the second partial derivatives
@@ -926,14 +950,15 @@ inline void SecondDerivatives2D(double *ddx, Element_t* element, double *nodes, 
  
     Function return value:
         double y -> value of the quantity s = @^2x(u,v)/@v^2
+ 
 *****************************************************************************************************/
-inline void SecondDerivatives3D(double *ddx, Element_t* element, double *nodes, double u, double v, double w) {
+inline void SecondDerivatives3D(double * __nonnull ddx, Element_t * __nonnull element, double * __nonnull nodes, double u, double v, double w) {
     
     int i, n;
-    int *p, *q, *r;
+    int *p = NULL, *q = NULL, *r = NULL;
     
     double s;
-    double *coeff;
+    double *coeff = NULL;
     
     for (n=0; n<element->Type.NumberOfNodes; n++) {
         

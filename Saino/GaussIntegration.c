@@ -10,7 +10,7 @@
 
 static bool GInit = false;
 
-static GaussIntegrationPoints *IntegStuff;
+static GaussIntegrationPoints * __nullable IntegStuff = NULL;
 
 /***************************************************************************/
 /* Storage for 1D Gauss points and the weights. The values are computed on */
@@ -298,13 +298,15 @@ static double STetra11P[11] = {
     0.6832098141300300E-01, 0.3009586149124714E-01
 };
 
-extern inline void DerivPoly(int n, double *Q, double *P);
-extern inline double EvalPoly(int n, double *P, double x);
-extern inline void RefineRoots(int n, double *P, double *Q, double *Points);
+extern inline void DerivPoly(int n, double * __nonnull Q, double * __nonnull P);
+extern inline double EvalPoly(int n, double * __nonnull P, double x);
+extern inline void RefineRoots(int n, double * __nonnull P, double * __nonnull Q, double * __nonnull Points);
 
 /**************************************************************************************
+ 
     Function to compute gaussian integration points and weights in [-1,1] as roots
     of Legendre polynomials
+ 
 **************************************************************************************/
 void GaussQuadraturePoints1D(int n) {
    
@@ -501,12 +503,13 @@ void GaussQuadratureDeallocation(void) {
         IntegStuff->s = NULL;
     }
     free(IntegStuff);
+    IntegStuff = NULL;
     GInit = false;
 }
 
-GaussIntegrationPoints* GaussQuadrature0D(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadrature0D(int np) {
     
-    GaussIntegrationPoints* pt;
+    GaussIntegrationPoints* pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
     
@@ -521,17 +524,19 @@ GaussIntegrationPoints* GaussQuadrature0D(int np) {
 }
 
 /****************************************************************************
- Description: 
-    Return gaussian integration points for 1D line element            
+ 
+    Description:
+        Return gaussian integration points for 1D line element
                                                                            
- Arguments:
-    int n -> Number of points in the requested rule      
-    GaussIntegrationPoints *pt -> integration point structure
+    Arguments:
+        int n -> Number of points in the requested rule
+        GaussIntegrationPoints *pt -> integration point structure
+ 
 ****************************************************************************/
-GaussIntegrationPoints* GaussQuadrature1D(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadrature1D(int np) {
     
     int i;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if(!GInit) GaussQuadratureInit();
     
@@ -554,18 +559,20 @@ GaussIntegrationPoints* GaussQuadrature1D(int np) {
 }
 
 /****************************************************************************
- Description: 
-    Return gaussian integration points for 2D triangle element         
+ 
+    Description:
+        Return gaussian integration points for 2D triangle element
                                                                             
- Arguments:
-    int n -> Number of points in the requested rule      
-    GaussIntegrationPoints *pt -> integration point structure
+    Arguments:
+        int n -> Number of points in the requested rule
+        GaussIntegrationPoints *pt -> integration point structure
+ 
 ****************************************************************************/
-GaussIntegrationPoints* GaussQuadratureTriangle(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadratureTriangle(int np) {
     
     int i;
     double buffer;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
 
@@ -666,19 +673,51 @@ GaussIntegrationPoints* GaussQuadratureTriangle(int np) {
     return pt;
 }
 
+GaussIntegrationPoints * __nonnull GaussQuadratureQuad(int np) {
+    
+    int i, j, n, t;
+    GaussIntegrationPoints *pt = NULL;
+    
+    if (!GInit) GaussQuadratureInit();
+    
+    n = sqrt( (double)np ) + 0.5;
+    
+    pt = IntegStuff;
+    if( n < 1 || n > MAXN ) {
+        pt->n = 0.0;
+        warning("GaussQuadratureQuad", "Invalid number of points:", n);
+        return pt;
+    }
+    
+    t = 0;
+    for(i=0;i<n;i++) {
+        for(j=0;j<n;j++) {
+            pt->u[t] = AllPoints[j][n-1];
+            pt->v[t] = AllPoints[i][n-1];
+            pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1];
+            t++;
+        }
+    }
+    pt->n = t;
+    
+    return pt;
+}
+
 /****************************************************************************
- Description: 
-    Return gaussian integration points for 3D tetra element            
+ 
+    Description:
+        Return gaussian integration points for 3D tetra element
                                                                             
- Arguments:
-    int n -> Number of points in the requested rule      
-    GaussIntegrationPoints *pt -> integration point structure
+    Arguments:
+        int n -> Number of points in the requested rule
+        GaussIntegrationPoints *pt -> integration point structure
+ 
 ****************************************************************************/
-GaussIntegrationPoints* GaussQuadratureTetra(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadratureTetra(int np) {
     
     int i;
     double ScaleFactor;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
     
@@ -745,17 +784,19 @@ GaussIntegrationPoints* GaussQuadratureTetra(int np) {
 }
 
 /****************************************************************************
- Description: 
-    Return gaussian integration points for 3D prism element            
+ 
+    Description:
+        Return gaussian integration points for 3D prism element
                                                                             
- Arguments:
-    int n -> Number of points in the requested rule      
-    GaussIntegrationPoints *pt -> integration point structure
+    Arguments:
+        int n -> Number of points in the requested rule
+        GaussIntegrationPoints *pt -> integration point structure
+ 
 ****************************************************************************/
-GaussIntegrationPoints* GaussQuadraturePyramid(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadraturePyramid(int np) {
     
     int i, j, k, n, t;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
     
@@ -792,10 +833,10 @@ GaussIntegrationPoints* GaussQuadraturePyramid(int np) {
     return pt;
 }
 
-GaussIntegrationPoints* GaussQuadratureWedge(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadratureWedge(int np) {
     
     int i, j, k, n, t;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
     
@@ -831,40 +872,10 @@ GaussIntegrationPoints* GaussQuadratureWedge(int np) {
     return pt;
 }
 
-GaussIntegrationPoints* GaussQuadratureQuad(int np) {
-    
-    int i, j, n, t;
-    GaussIntegrationPoints *pt;
-    
-    if (!GInit) GaussQuadratureInit();
-    
-    n = sqrt( (double)np ) + 0.5;
-    
-    pt = IntegStuff;
-    if( n < 1 || n > MAXN ) {
-        pt->n = 0.0;
-        warning("GaussQuadratureQuad", "Invalid number of points:", n);
-        return pt;
-    }
-    
-    t = 0;
-    for(i=0;i<n;i++) {
-        for(j=0;j<n;j++) {
-            pt->u[t] = AllPoints[j][n-1];
-            pt->v[t] = AllPoints[i][n-1];
-            pt->s[t] = AllWeights[i][n-1] * AllWeights[j][n-1];
-            t++;
-        }
-    }
-    pt->n = t;
-    
-    return pt;
-}
-
-GaussIntegrationPoints* GaussQuadratureBrick(int np) {
+GaussIntegrationPoints * __nonnull GaussQuadratureBrick(int np) {
     
     int i, j, k, n, t;
-    GaussIntegrationPoints *pt;
+    GaussIntegrationPoints *pt = NULL;
     
     if (!GInit) GaussQuadratureInit();
     
@@ -894,4 +905,4 @@ GaussIntegrationPoints* GaussQuadratureBrick(int np) {
     return pt;
 }
 
-extern inline GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrder);
+extern inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull element, int * __nullable np, int * __nullable relOrder);

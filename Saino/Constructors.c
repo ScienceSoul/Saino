@@ -14,12 +14,12 @@
 
 #include "Constructors.h"
 
-void initNodes(Nodes_t *nodes) {
+void initNodes(Nodes_t * __nonnull nodes) {
     
     *nodes = (Nodes_t){.numberOfNodes=0, .x=NULL, .y=NULL, .z=NULL};
 }
 
-void initElements(Element_t *elements, int n) {
+void initElements(Element_t * __nonnull elements, int n) {
     
     int i;
     
@@ -28,12 +28,12 @@ void initElements(Element_t *elements, int n) {
     }
 }
 
-void initBoundaryInfo(BoundaryInfo_t *boundaryInfo) {
+void initBoundaryInfo(BoundaryInfo_t * __nonnull boundaryInfo) {
     
     *boundaryInfo = (BoundaryInfo_t){.Constraint=0, .Outbody=-1};
 }
 
-variableArraysContainer *allocateVariableContainer(void) {
+variableArraysContainer * __nonnull allocateVariableContainer(void) {
     
     variableArraysContainer *varContainers = NULL;
     varContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
@@ -43,7 +43,7 @@ variableArraysContainer *allocateVariableContainer(void) {
     return varContainers;
 }
 
-RungeKutta_t *allocateRungeKutta(int n) {
+RungeKutta_t * __nonnull allocateRungeKutta(int n) {
     
     RungeKutta_t *rungeKutta = NULL;
     

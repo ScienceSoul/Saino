@@ -14,7 +14,7 @@
 
 #include "Lists.h"
 
-void addVariable(Variable_t *variables, char *name, int dofs, double *values, int *perm, int *output, int *secondary) {
+void addVariable(Variable_t * __nullable variables, char * __nonnull name, int dofs, double * __nonnull values, int * __nullable perm, int * __nullable output, int * __nullable secondary) {
     
     Variable_t *temp1, *temp2;
     
@@ -83,7 +83,7 @@ void addVariable(Variable_t *variables, char *name, int dofs, double *values, in
     
 }
 
-Variable_t* getVariable(Variable_t *variables, char *name) {
+Variable_t * __nullable getVariable(Variable_t * __nullable variables, char * __nonnull name) {
     
     int k;
     Variable_t *cur_ptr;

@@ -21,7 +21,7 @@
 #define MAXN 13
 #define MAX_INTEGRATION_POINTS MAXN*MAXN*MAXN
 
-inline void DerivPoly(int n, double *Q, double *P) {
+inline void DerivPoly(int n, double * __nonnull Q, double * __nonnull P) {
     
     int i;
     
@@ -30,7 +30,7 @@ inline void DerivPoly(int n, double *Q, double *P) {
     }
 }
 
-inline double EvalPoly(int n, double *P, double x) {
+inline double EvalPoly(int n, double * __nonnull P, double x) {
     int i;
     double s;
     
@@ -42,7 +42,7 @@ inline double EvalPoly(int n, double *P, double x) {
     return s;
 }
 
-inline void RefineRoots(int n, double *P, double *Q, double *Points) {
+inline void RefineRoots(int n, double * __nonnull P, double * __nonnull Q, double * __nonnull Points) {
     
     int i, j;
     double x, s;
@@ -64,16 +64,16 @@ inline void RefineRoots(int n, double *P, double *Q, double *Points) {
 void GaussQuadraturePoints1D(int n);
 void GaussQuadratureInit(void);
 void GaussQuadratureDeallocation(void);
-GaussIntegrationPoints* GaussQuadrature0D(int np);
-GaussIntegrationPoints* GaussQuadrature1D(int np);
-GaussIntegrationPoints* GaussQuadratureTriangle(int np);
-GaussIntegrationPoints* GaussQuadratureQuad(int np);
-GaussIntegrationPoints* GaussQuadratureTetra(int np);
-GaussIntegrationPoints* GaussQuadraturePyramid(int np);
-GaussIntegrationPoints* GaussQuadratureWedge(int np);
-GaussIntegrationPoints* GaussQuadratureBrick(int np);
+GaussIntegrationPoints * __nonnull GaussQuadrature0D(int np);
+GaussIntegrationPoints * __nonnull GaussQuadrature1D(int np);
+GaussIntegrationPoints * __nonnull GaussQuadratureTriangle(int np);
+GaussIntegrationPoints * __nonnull GaussQuadratureQuad(int np);
+GaussIntegrationPoints * __nonnull GaussQuadratureTetra(int np);
+GaussIntegrationPoints * __nonnull GaussQuadraturePyramid(int np);
+GaussIntegrationPoints * __nonnull GaussQuadratureWedge(int np);
+GaussIntegrationPoints * __nonnull GaussQuadratureBrick(int np);
 
-inline GaussIntegrationPoints* GaussQuadrature(Element_t *element, int *np, int *relOrder) {
+inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull element, int * __nullable np, int * __nullable relOrder) {
     
     int n=0, eldim, p1d;
     GaussIntegrationPoints *IntegPoint = NULL;

@@ -96,23 +96,23 @@ enum {
 typedef struct {
     
     int numberOfNodes;
-    double *x;                  // First coordinate
-    double *y;                  // Second coordinate
-    double *z;                  // Third coordinate
+    double * __nullable x;                  // First coordinate
+    double * __nullable y;                  // Second coordinate
+    double * __nullable z;                  // Third coordinate
     
 } Nodes_t;
 
 typedef struct {
     
     int n;
-    int *p, *q, *r;
-    double *coeff;
+    int * __nullable p, * __nullable q, * __nullable r;
+    double * __nullable coeff;
     
 } BasisFunctions_t;
 
 typedef struct ElementType_t {
     
-    struct ElementType_t *NextElementType; // List of types
+    struct ElementType_t * __nullable NextElementType;
     
     int ElementCode;                       // Numeric code for element
     int BasisFunctionDegree,               // Linear or quadratic
@@ -126,9 +126,9 @@ typedef struct ElementType_t {
         GaussPoints0;
     
     double StabilizationMK;
-    double *NodeU, *NodeV, *NodeW;         // They have size of NumberOfNodes
+    double * __nullable NodeU, * __nullable NodeV, * __nullable NodeW;         // They have size of NumberOfNodes
     
-    BasisFunctions_t *BasisFunctions;
+    BasisFunctions_t * __nullable BasisFunctions;
     
 } ElementType_t;
 
@@ -136,19 +136,19 @@ typedef struct {
     
     int NumberOfFactors;
     int NumberOfImplicitFactors;
-    int *Elements;
-    double *Factors;
+    int * __nullable Elements;
+    double * __nullable Factors;
     int sizeElements, sizeFactors;
     
 } Factors_t;
 
 typedef struct {
     
-    Factors_t *GebhardtFactors;
-    int Constraint;            // Initialize it to 0 somewhere!! (Index counted from 1 to n)
-    int Outbody;               // Initialize to -1 somewhere!!
-    struct Element_t *Left;    // Initialize to NULL somewhere!!
-    struct Element_t *Right;   // Initialize to NULL somewhere!!
+    Factors_t * __nullable GebhardtFactors;
+    int Constraint;                         // Initialize it to 0 somewhere!! (Index counted from 1 to n)
+    int Outbody;                            // Initialize to -1 somewhere!!
+    struct Element_t * __nullable Left;    // Initialize to NULL somewhere!!
+    struct Element_t * __nullable Right;   // Initialize to NULL somewhere!!
     
 } BoundaryInfo_t;
 
@@ -173,15 +173,16 @@ typedef struct {
 typedef struct Element_t {
     
     ElementType_t Type;
-    BoundaryInfo_t *BoundaryInfo;
-    PElementDefs_t *Pdefs;                         // Initialize to NULL somewhere!!
+    BoundaryInfo_t * __nullable BoundaryInfo;
+    PElementDefs_t * __nullable Pdefs;                         // Initialize to NULL somewhere!!
     
-    RGBColors color;                               // Color of the element
+    RGBColors color;                                           // Color of the element
     
     bool colored;
     bool copy;
-    int *NodeIndexes, *EdgeIndexes, *FaceIndexes,
-        *BubbleIndexes, *DGIndexes;                // Initialize that to NULL somewhere!!
+    int * __nullable NodeIndexes, * __nullable EdgeIndexes,
+        * __nullable FaceIndexes, * __nullable BubbleIndexes,
+        * __nullable DGIndexes;                                // Initialize that to NULL somewhere!!
     
     int sizeNodeIndexes, sizeEdgeIndexes,
         sizeFaceIndexes, sizeBubbleIndexes,
@@ -196,15 +197,15 @@ typedef struct Element_t {
 } Element_t;
 
 typedef struct QuadrantPointer_t {
-    struct Quadrant_t *quadrant;
+    struct Quadrant_t * __nullable quadrant;
 } QuadrantPointer_t;
 
 typedef struct Quadrant_t {
     
     int nElementsInQuadrant;
     double size, minElementSize, boundingBox[6];
-    int *elements;
-    struct QuadrantPointer_t *childQuadrants;
+    int * __nullable elements;
+    struct QuadrantPointer_t * __nullable childQuadrants;
     int numberOfchildQuadrants;
 } Quadrant_t;
 
@@ -216,7 +217,7 @@ typedef struct ListMatrixEntry_t {
     
     int Index;
     double Value;
-    struct ListMatrixEntry_t *Next;
+    struct ListMatrixEntry_t * __nullable Next;
     
 } ListMatrixEntry_t;
 
@@ -225,73 +226,73 @@ typedef struct {
     int sizeOfContainer;     // If ListMatrix_t is contained within an array, the size of this array is given by
                              // this variable
     int Degree, Level;
-    ListMatrixEntry_t *Head;
+    ListMatrixEntry_t * __nullable Head;
     
 } ListMatrix_t;
 
 typedef struct {
-    ListMatrixEntry_t *p;
+    ListMatrixEntry_t * __nullable p;
 } Stack_t;
 
 typedef struct matrixArraysContainer {
     
-    ListMatrix_t *ListMatrix;
+    ListMatrix_t * __nullable ListMatrix;
     
-    int *Perm, *InvPerm, *RowOwner;
-    int *GRows, *GOrder;
-    int *Rows, *Cols, *Diag;
+    int * __nullable Perm, * __nullable InvPerm, * __nullable RowOwner;
+    int * __nullable GRows, * __nullable GOrder;
+    int * __nullable Rows, * __nullable Cols, * __nullable Diag;
     int sizePerm, sizeInvPerm, sizeRowOwner;
     int sizeGRows, sizeGOrder;
     int sizeRows, sizeCols, sizeDiag;
     
-    double *RHS, *BulkRHS, *RHS_im, **Force;
+    double * __nullable RHS, * __nullable BulkRHS, * __nullable RHS_im, * __nullable * __nullable Force;
     int sizeRHS, sizeBulkRHS, sizeRHS_im, size1force, size2Force;
     
-    double *Values, *ILUValues;
-    double *MassValues, *DampValues, *BulkValues, *DiagScaling;
+    double * __nullable Values, * __nullable ILUValues;
+    double * __nullable MassValues, * __nullable DampValues, * __nullable BulkValues, * __nullable DiagScaling;
     int sizeValues, sizeILUValues, sizeMassValues, sizeDampValues, sizeBulkValues, sizeDiagScaling;
     
-    int *ILURows, *ILUCols, *ILUDiag;
+    int * __nullable ILURows, * __nullable ILUCols, * __nullable ILUDiag;
     int sizeILURows, sizeILUCols, sizeILUDiag;
     
     // For complex system
-    double complex *CRHS, *CForce;
-    double complex *CValues, *CILUValues;
-    double complex *CMassValues, *CDampValues;
+    double complex * __nullable CRHS, * __nullable CForce;
+    double complex * __nullable CValues, * __nullable CILUValues;
+    double complex * __nullable CMassValues, * __nullable CDampValues;
     int sizeCRHS, sizeCForce, sizeCValues, sizeCILUValues,
         sizeCMassValues, sizeCDampValues;
     
     // For flux corrected transport
-    double *FCT_D;
-    double *MassValuesLumped;
+    double * __nullable FCT_D;
+    double * __nullable MassValuesLumped;
     int sizeFct;
     
 } matrixArraysContainer;
 
 typedef struct variableArraysContainer {
     
-    int *Perm;
-    double *Values;
+    int * __nullable Perm;
+    double * __nullable Values;
     
-    double **ComponentValues;                // Used if the variable is a component of a another variable with dofs > 1.
-                                             // This is a 1D array of pointers.
-    double **PrevValues;
+    double * __nullable * __nullable ComponentValues;                            // Used if the variable is a component of a another variable with dofs > 1.
+                                                                                 // This is a 1D array of pointers.
+    double * __nullable * __nullable PrevValues;
     
-    double ***ComponentPrevValues;           // Used if the variable is a component of a another variable with dofs > 1.
-                                             // This is a 2D array of pointers.
+    double * __nullable * __nullable * __nullable ComponentPrevValues;           // Used if the variable is a component of a another variable with dofs > 1.
+                                                                                 // This is a 2D array of pointers.
     
-    double **SecondaryToValues;              // Some variables may be defined so that their values point to a given column of
-                                             // another variable PrevValues. This is used for that particular case
-    double **ComponentSecondaryToValues;
-    double *PValues;
-    double *NonLinValues;
-    double *SteadyValues;
-    double complex *EigenValues;
-    double complex **EigenVectors;
-    double complex ***ComponentEigenVectors;  // This is a 2D array of pointers.
-    double complex **CValues;                 // This is a 1D array of pointers
-    bool *lowerLimitActive;
-    bool *upperLimitActive;
+    double * __nullable * __nullable SecondaryToValues;                          // Some variables may be defined so that their values point to a given column of
+                                                                                 // another variable PrevValues. This is used for that particular case
+    double * __nullable * __nullable ComponentSecondaryToValues;
+    double * __nullable PValues;
+    double * __nullable NonLinValues;
+    double * __nullable SteadyValues;
+    double complex * __nullable EigenValues;
+    double complex * __nullable * __nullable EigenVectors;
+    double complex * __nullable * __nullable * __nullable ComponentEigenVectors;  // This is a 2D array of pointers.
+    double complex * __nullable * __nullable CValues;                             // This is a 1D array of pointers
+    bool * __nullable lowerLimitActive;
+    bool * __nullable upperLimitActive;
     int sizePerm;
     int sizeValues;
     int sizeComponentValues;
@@ -317,8 +318,8 @@ typedef struct variableArraysContainer {
 
 typedef struct solutionArraysContainer {
     
-    int *activeElements;
-    int **defDofs;
+    int * __nullable activeElements;
+    int * __nullable * __nullable defDofs;
     int sizeActiveElements;
     int size1DefDofs;
     int size2DefDofs;
@@ -326,10 +327,10 @@ typedef struct solutionArraysContainer {
 
 typedef struct valueListArraysContainer {
     
-    int *iValues;
-    double *tValues;
-    double ***fValues;
-    double *cubicCoeff;
+    int * __nullable iValues;
+    double * __nullable tValues;
+    double * __nullable * __nullable * __nullable fValues;
+    double * __nullable cubicCoeff;
     int sizeTValues;
     int sizeFValues1;
     int sizeFValues2;
@@ -341,9 +342,9 @@ typedef struct valueListArraysContainer {
 
 typedef struct modelArraysContainer {
     
-    int *freeSurfaceNodes;
-    int *rowNonZeros;
-    double *boundaryCurvatures;
+    int * __nullable freeSurfaceNodes;
+    int * __nullable rowNonZeros;
+    double * __nullable boundaryCurvatures;
     int sizeFreeSurfaceNodes;
     int sizeRowNonZeros;
     int sizeBoundaryCurvatures;
@@ -352,10 +353,10 @@ typedef struct modelArraysContainer {
 
 typedef struct listBuffer {
     
-    int *ivector;
-    double *vector;
-    double **matrix;
-    double ***tensor;
+    int * __nullable ivector;
+    double * __nullable vector;
+    double * __nullable * __nullable matrix;
+    double * __nullable * __nullable * __nullable tensor;
     int m, n, p;
     
 } listBuffer;
@@ -363,22 +364,22 @@ typedef struct listBuffer {
 typedef struct HashEntry_t {
     
     int node1, node2, face, edge;
-    struct HashEntry_t *next;
+    struct HashEntry_t * __nullable next;
      
 } HashEntry_t;
 
 typedef struct HashTable_t {
     
-    HashEntry_t *head;
+    HashEntry_t * __nullable head;
 
 } HashTable_t;
 
 typedef struct RungeKutta_t {
 
-    double *k1;
-    double *k2;
-    double *k3;
-    double *k4;
+    double * __nullable k1;
+    double * __nullable k2;
+    double * __nullable k3;
+    double * __nullable k4;
     
 } RungeKutta_t;
 
@@ -392,9 +393,9 @@ typedef struct Dimensions_t {
 
 #endif
 
-void initNodes(Nodes_t *nodes);
-void initElements(Element_t *elements, int n);
-void initBoundaryInfo(BoundaryInfo_t *boundaryInfo);
-variableArraysContainer *allocateVariableContainer(void);
-RungeKutta_t *allocateRungeKutta(int n);
+void initNodes(Nodes_t * __nonnull nodes);
+void initElements(Element_t * __nonnull elements, int n);
+void initBoundaryInfo(BoundaryInfo_t * __nonnull boundaryInfo);
+variableArraysContainer * __nonnull allocateVariableContainer(void);
+RungeKutta_t * __nonnull allocateRungeKutta(int n);
 

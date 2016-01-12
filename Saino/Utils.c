@@ -75,7 +75,7 @@ double __attribute__((overloadable)) min(double x, double y, double z) {
     return (z < m) ? z : m;
 }
 
-int __attribute__((overloadable)) max_array(int *a, int num_elements)
+int __attribute__((overloadable)) max_array(int * __nonnull a, int num_elements)
 {
     int i, max = -INT_MAX;
     for (i=0; i<num_elements; i++) {
@@ -86,7 +86,7 @@ int __attribute__((overloadable)) max_array(int *a, int num_elements)
     return max;
 }
 
-double __attribute__((overloadable)) max_array(double *a, int num_elements) {
+double __attribute__((overloadable)) max_array(double * __nonnull a, int num_elements) {
     
     int i;
     double max = -HUGE_VAL;
@@ -99,7 +99,7 @@ double __attribute__((overloadable)) max_array(double *a, int num_elements) {
     
 }
 
-int __attribute__((overloadable)) min_array(int *a, int num_elements) {
+int __attribute__((overloadable)) min_array(int * __nonnull a, int num_elements) {
     
     int i, min = INT_MAX;
     for (i=0; i<num_elements; i++) {
@@ -111,7 +111,7 @@ int __attribute__((overloadable)) min_array(int *a, int num_elements) {
     
 }
 
-double __attribute__((overloadable)) min_array(double *a, int num_elements) {
+double __attribute__((overloadable)) min_array(double * __nonnull a, int num_elements) {
     
     int i;
     double min = HUGE_VAL;
@@ -123,11 +123,13 @@ double __attribute__((overloadable)) min_array(double *a, int num_elements) {
     return min;
 }
 
-bool __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
 /*************************************************************************************************
-    Test if all values in v satisfies the mask for value val for the range of data range
-    Work on an array of int values
+ 
+    Test if all values in v satisfies the mask for value val for the range of data range.
+    Work on an array of int values.
+ 
 *************************************************************************************************/
+bool __attribute__((overloadable)) all(int * __nonnull v, char mask, int val, int range) {
 
     int i;
     bool rlt = true;
@@ -168,11 +170,13 @@ bool __attribute__((overloadable)) all(int *v, char mask, int val, int range) {
     return rlt;
 }
 
-bool __attribute__((overloadable)) all(float *v, char mask, float val, int range) {
 /*************************************************************************************************
-    Test if all values in v satisfies the mask for value val for the range of data range
-    Work on an array of float values
+ 
+    Test if all values in v satisfies the mask for value val for the range of data range.
+    Work on an array of float values.
+ 
 *************************************************************************************************/
+bool __attribute__((overloadable)) all(float * __nonnull v, char mask, float val, int range) {
     
     int i;
     bool rlt = true;
@@ -213,11 +217,13 @@ bool __attribute__((overloadable)) all(float *v, char mask, float val, int range
     return rlt;
 }
 
-bool __attribute__((overloadable)) all(double *v, char mask, double val, int range) {
 /*************************************************************************************************
-    Test if all values in v satisfies the mask for value val for the range of data range
-    Work on an array of float values
+ 
+    Test if all values in v satisfies the mask for value val for the range of data range.
+    Work on an array of float values.
+ 
 *************************************************************************************************/
+bool __attribute__((overloadable)) all(double * __nonnull v, char mask, double val, int range) {
     
     int i;
     bool rlt = true;
@@ -258,11 +264,13 @@ bool __attribute__((overloadable)) all(double *v, char mask, double val, int ran
     return rlt;
 }
 
-bool __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range) {
 /*************************************************************************************************
-    Test if all values in v satisfies the mask for value val for the range of data range 
+
+    Test if all values in v satisfies the mask for value val for the range of data range
     starting at start
+
 *************************************************************************************************/
+bool __attribute__((overloadable)) all_in_range(int * __nonnull v, char mask, int val, int start, int range) {
     
     int i;
     bool rlt = true;
@@ -305,7 +313,7 @@ bool __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int 
 }
 
 
-bool __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
+bool __attribute__((overloadable)) any(int * __nonnull v, char mask, int val, int range) {
     
     int i;
     bool rlt = false;
@@ -347,7 +355,7 @@ bool __attribute__((overloadable)) any(int *v, char mask, int val, int range) {
     
 }
 
-bool __attribute__((overloadable)) any(float *v, char mask, float val, int range) {
+bool __attribute__((overloadable)) any(float * __nonnull v, char mask, float val, int range) {
     
     int i;
     bool rlt = false;
@@ -389,7 +397,7 @@ bool __attribute__((overloadable)) any(float *v, char mask, float val, int range
     
 }
 
-bool __attribute__((overloadable)) any(double *v, char mask, double val, int range) {
+bool __attribute__((overloadable)) any(double * __nonnull v, char mask, double val, int range) {
     
     int i;
     bool rlt = false;
@@ -431,7 +439,7 @@ bool __attribute__((overloadable)) any(double *v, char mask, double val, int ran
     
 }
 
-int __attribute__((overloadable)) count(int *v, char mask, int val, int range) {
+int __attribute__((overloadable)) count(int * __nonnull v, char mask, int val, int range) {
     
     int i;
     int rlt = 0;
@@ -470,7 +478,7 @@ int __attribute__((overloadable)) count(int *v, char mask, int val, int range) {
     
 }
 
-int __attribute__((overloadable)) count(float *v, char mask, float val, int range) {
+int __attribute__((overloadable)) count(float * __nonnull v, char mask, float val, int range) {
     
     int i;
     int rlt = 0;
@@ -509,7 +517,7 @@ int __attribute__((overloadable)) count(float *v, char mask, float val, int rang
     
 }
 
-int __attribute__((overloadable)) count(double *v, char mask, double val, int range) {
+int __attribute__((overloadable)) count(double * __nonnull v, char mask, double val, int range) {
     
     int i;
     int rlt = 0;
@@ -548,11 +556,13 @@ int __attribute__((overloadable)) count(double *v, char mask, double val, int ra
     
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr) {
 /*******************************************************************************************
- Sorts an array arr[1...n] into ascending order using Quicksort algorithm. n is imput;
- arr is replaced on output by its sorted rearrangment
+ 
+    Sorts an array arr[1...n] into ascending order using Quicksort algorithm. n is imput;
+    arr is replaced on output by its sorted rearrangment.
+ 
 *******************************************************************************************/
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -613,11 +623,13 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr) {
     free_ulvector(istack, 1, NSTACK);
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, int *brr) {
 /*******************************************************************************************
- Sorts an array arr[1...n] into ascending order using Quicksort, while making the 
- corresponding rearrangment of array brr[1...n]
+ 
+    Sorts an array arr[1...n] into ascending order using Quicksort, while making the
+    corresponding rearrangment of array brr[1...n].
+ 
 *******************************************************************************************/
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, int * __nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -691,7 +703,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, int *brr) {
     }
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, float *brr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, float * __nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -766,7 +778,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, float *brr) {
     }
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, double *brr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, double * __nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -841,7 +853,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int *arr, double *brr) 
     }    
 }
 
-void __attribute((overloadable)) reverse(int *arr, size_t narr) {
+void __attribute((overloadable)) reverse(int * __nonnull arr, size_t narr) {
     
     size_t i;
     
@@ -853,32 +865,38 @@ void __attribute((overloadable)) reverse(int *arr, size_t narr) {
 }
 
 /*******************************************************************************************
- Circular shift an array. Only works for shift > 0
+ 
+    Circular shift an array. Only works for shift > 0.
+
 *******************************************************************************************/
-void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shift) {
+void __attribute((overloadable)) cshift(int * __nonnull arr, size_t narr, unsigned long shift) {
     reverse(arr, shift);
     reverse(arr + shift, narr - shift);
     reverse(arr, narr);
 }
 
 /*******************************************************************************************
- Retunrs current data and time
+ 
+    Retunrs current data and time.
+
 *******************************************************************************************/
-char *dateAndTime(void){
+char * __nullable dateAndTime(void){
     time_t currtime;
     time(&currtime);
-    strftime(timeFormat,sizeof(timeFormat),"%Y/%m/%d %H:%M:%S",localtime(&currtime));
-    return (char *)timeFormat;
+    size_t n = strftime(timeFormat,sizeof(timeFormat),"%Y/%m/%d %H:%M:%S",localtime(&currtime));
+    if (n != 0) {
+        return (char *)timeFormat;
+    } else return NULL;
 }
 
-void startAdvanceOutput(char *solverName, char *outputType) {
+void startAdvanceOutput(char * __nonnull solverName, char * __nonnull outputType) {
     
     advanceTime1 = realtime();
     advanceTime2 = realtime();
     printf("%s: %s\n", solverName, outputType);
 }
 
-void advanceOutput(int t, int n, double *dot_t, double *percent_t) {
+void advanceOutput(int t, int n, double * __nullable dot_t, double * __nullable percent_t) {
     
     int i;
     double d_t, p_t;

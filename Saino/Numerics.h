@@ -17,11 +17,11 @@
 typedef struct {
     
     int n;
-    double *u, *v, *w, *s;
+    double * __nullable u, * __nullable v, * __nullable w, * __nullable s;
     
 } GaussIntegrationPoints;
 
-inline void invertMatrix3x3(double *GI, double *covariantMetricTensor, double detG) {
+inline void invertMatrix3x3(double * __nonnull GI, double * __nonnull covariantMetricTensor, double detG) {
     
     double s;
     
@@ -40,7 +40,7 @@ inline void invertMatrix3x3(double *GI, double *covariantMetricTensor, double de
     GI[8] =  s * ( covariantMetricTensor[0]*covariantMetricTensor[4] - covariantMetricTensor[3]*covariantMetricTensor[1] );
 }
 
-inline double det3x3(double **a) {
+inline double det3x3(double * __nonnull * __nonnull a) {
     
     double val;
     
@@ -52,7 +52,8 @@ inline double det3x3(double **a) {
 }
 
 /***********************************************************************************
-    Partial derivatives of global coordinates with respect to local coordinates
+ 
+    Partial derivatives of global coordinates with respect to local coordinates.
  
     Arguments:
         NDOFs              -> Number of DOFs
@@ -65,7 +66,7 @@ inline double det3x3(double **a) {
         int el             -> Element number
  
 ***********************************************************************************/
-inline void derivatives(double *dx, Element_t *element, int nDOFs, Nodes_t *nodes, double *dLBasisdx) {
+inline void derivatives(double * __nonnull dx, Element_t * __nonnull element, int nDOFs, Nodes_t * __nonnull nodes, double * __nonnull dLBasisdx) {
     
     int i, j, n, dim;
     double accum1, accum2, accum3;
@@ -89,7 +90,8 @@ inline void derivatives(double *dx, Element_t *element, int nDOFs, Nodes_t *node
 }
 
 /******************************************************************************************************
-    Compute the covariant metric tensor of the element coordinate system
+ 
+    Compute the covariant metric tensor of the element coordinate system.
  
     Arguments:
         NDOFs              -> Number of DOFs
@@ -100,7 +102,7 @@ inline void derivatives(double *dx, Element_t *element, int nDOFs, Nodes_t *node
                               local coordinates
  
 ******************************************************************************************************/
-inline void covariantMetric(double *covariantMetricTensor, double *dx, Element_t *element, int nDOFs, Nodes_t *nodes, int meshDimension, double *dLBasisdx) {
+inline void covariantMetric(double * __nonnull covariantMetricTensor, double * __nonnull dx, Element_t * __nonnull element, int nDOFs, Nodes_t * __nonnull nodes, int meshDimension, double * __nonnull dLBasisdx) {
     int i, j, k, dim, cdim;
     double s;
     
@@ -121,6 +123,7 @@ inline void covariantMetric(double *covariantMetricTensor, double *dx, Element_t
 }
 
 /**********************************************************************************************
+ 
     Compute determinant of covariant metric tensor det(J^TJ) and determinant
     of covariant metric tensor det(J^TJ).
  
@@ -134,10 +137,10 @@ inline void covariantMetric(double *covariantMetricTensor, double *dx, Element_t
         int el              -> Element number
  
     Function return value:
-        If function failure, element is degenerate
+        If function failure, element is degenerate.
  
 **********************************************************************************************/
-inline double detJ(double *covariantMetricTensor, double *dx, Element_t *element, Nodes_t *nodes, int meshDimension, double u, double v, double w, double *dLBasisdx) {
+inline double detJ(double * __nonnull covariantMetricTensor, double * __nonnull dx, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double *  __nonnull dLBasisdx) {
     
     int n, dim, cdim;
     double detG;
@@ -193,7 +196,7 @@ inline double detJ(double *covariantMetricTensor, double *dx, Element_t *element
     Compute contravariant metric tensor (=J^TJ)^-1 of element coordinate system
  
 *********************************************************************************************************/
-inline bool contravariantMetric(double *elementMetric, double *dx, Element_t *element, Nodes_t *nodes, int meshDimension, double u, double v, double w, double *dLBasisdx) {
+inline bool contravariantMetric(double * __nonnull elementMetric, double * __nonnull dx, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull dLBasisdx) {
     
     int i, j, dim, cdim;
     double detG, GI[9], covariantMetricTensor[9];
@@ -232,7 +235,7 @@ inline bool contravariantMetric(double *elementMetric, double *dx, Element_t *el
     return true;
 }
 
-inline bool localtoGlobalMap(double *ltoGMap, Element_t *element, Nodes_t* nodes, int meshDimension, double u, double v, double w, double *dLBasisdx) {
+inline bool localtoGlobalMap(double * __nonnull ltoGMap, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull dLBasisdx) {
     
     int i, j, k, dim, cdim;
     double dx[9], elementMetric[9], s;
@@ -260,6 +263,7 @@ inline bool localtoGlobalMap(double *ltoGMap, Element_t *element, Nodes_t* nodes
 }
 
 /******************************************************************************************************
+ 
     Arguments:
         Element_t* element -> structure describing the element
         Nodes_t* nodes     -> nodal coordinates
@@ -267,10 +271,10 @@ inline bool localtoGlobalMap(double *ltoGMap, Element_t *element, Nodes_t* nodes
         double u,v,w       -> point at which to evaluate
         double *f          -> nodal values of the quantity
  
-    Output: 3x3 matrix (values) of partial derivatives
+    Output: 3x3 matrix (values) of partial derivatives.
  
 ******************************************************************************************************/
-inline void globalSecondDerivatives(double *elementMetric, Element_t *element, Nodes_t *nodes, int meshDimension, double u, double v, double w, double *f, double *dLBasisdx, double *values) {
+inline void globalSecondDerivatives(double * __nonnull elementMetric, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull f, double * __nonnull dLBasisdx, double * __nonnull values) {
     
     int i, j, k, l, n, dim, cdim;
     double C1[3][3][3], C2[3][3][3], ddx[3][3][3];

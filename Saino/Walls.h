@@ -13,6 +13,7 @@
 
 
 /*************************************************************************************************************
+ 
     Give difference between the tangential velocity given by Reichardts's wall law and the tangential 
     velocity of the previous iteration
  
@@ -22,6 +23,7 @@
         density   -> density
         viscos    -> viscosity
         dist      -> distance from the wall
+ 
  *************************************************************************************************************/
 inline double wall_law(double ufric, double ut, double densit, double viscos, double dist, double rough) {
     
@@ -36,6 +38,7 @@ inline double wall_law(double ufric, double ut, double densit, double viscos, do
 }
 
 /*************************************************************************************************************
+ 
     Calculate derivative of the wall law
  
     Inputs:
@@ -44,6 +47,7 @@ inline double wall_law(double ufric, double ut, double densit, double viscos, do
         density   -> density
         viscos    -> viscosity
         dist      -> distance from the wall
+ 
  *************************************************************************************************************/
 inline double d_wall_law(double ufric, double ut, double densit, double viscos, double dist, double rough) {
     
@@ -59,6 +63,7 @@ inline double d_wall_law(double ufric, double ut, double densit, double viscos, 
 }
 
 /*************************************************************************************************************
+ 
     Solve the friction velocity of the previous iteration based on the wall law
  
     Inputs:
@@ -70,8 +75,9 @@ inline double d_wall_law(double ufric, double ut, double densit, double viscos, 
     Outputs:
         ufric   -> friction velocity
         dfx     -> derivative of the wall law
+ 
 *************************************************************************************************************/
-inline void solve_ufric(double densit, double viscos, double dist, double rough, double ut, double *ufric, double *dfx) {
+inline void solve_ufric(double densit, double viscos, double dist, double rough, double ut, double * __nonnull ufric, double * __nonnull dfx) {
     
     int iter, maxiter = 100;
     double fx=0.0, tauw, yplus;
@@ -100,6 +106,7 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
 
 
 /*************************************************************************************************************
+ 
     Calculate the boundary values of turbulent kinetic energy and its dissipation bases on the wall law
  
     Inputs:
@@ -112,8 +119,9 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
         tx      -> turbulent kinetic energy
         teps    -> turbulent kinetic energy dissipation
         tomg    -> ...
+ 
 *************************************************************************************************************/
-inline void kewall(double *tk, double *teps, double *tomg, double ut, double dist, double rough, double viscos, double densit) {
+inline void kewall(double * __nonnull tk, double * __nonnull teps, double * __nonnull tomg, double ut, double dist, double rough, double viscos, double densit) {
     
     double alpha, dfx, omegaPlus, tomgl, tomgt, ufric, utlocal, yplus;
     double cmyy   = 0.09;

@@ -29,34 +29,34 @@ int __attribute__((overloadable)) min(int w, int x, int y, int z);
 double __attribute__((overloadable)) min(double x, double y);
 double __attribute__((overloadable)) min(double x, double y, double z);
 
-int __attribute__((overloadable)) max_array(int *a, int num_elements);
-double __attribute__((overloadable)) max_array(double *a, int num_elements);
-int __attribute__((overloadable)) min_array(int *a, int num_elements);
-double __attribute__((overloadable)) min_array(double *a, int num_elements);
+int __attribute__((overloadable)) max_array(int * __nonnull a, int num_elements);
+double __attribute__((overloadable)) max_array(double * __nonnull a, int num_elements);
+int __attribute__((overloadable)) min_array(int * __nonnull a, int num_elements);
+double __attribute__((overloadable)) min_array(double * __nonnull a, int num_elements);
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr);
-bool __attribute__((overloadable)) all(int *v, char mask, int val, int range);
-bool __attribute__((overloadable)) all(float *v, char mask, float val, int range);
-bool __attribute__((overloadable)) all(double *v, char mask, double val, int range);
+bool __attribute__((overloadable)) all(int * __nonnull v, char mask, int val, int range);
+bool __attribute__((overloadable)) all(float * __nonnull v, char mask, float val, int range);
+bool __attribute__((overloadable)) all(double * __nonnull v, char mask, double val, int range);
 
-bool __attribute__((overloadable)) all_in_range(int *v, char mask, int val, int start, int range);
+bool __attribute__((overloadable)) all_in_range(int * __nonnull v, char mask, int val, int start, int range);
 
-bool __attribute__((overloadable)) any(int *v, char mask, int val, int range);
-bool __attribute__((overloadable)) any(float *v, char mask, float val, int range);
-bool __attribute__((overloadable)) any(double *v, char mask, double val, int range);
+bool __attribute__((overloadable)) any(int * __nonnull v, char mask, int val, int range);
+bool __attribute__((overloadable)) any(float * __nonnull v, char mask, float val, int range);
+bool __attribute__((overloadable)) any(double * __nonnull v, char mask, double val, int range);
 
-int __attribute__((overloadable)) count(int *v, char mask, int val, int range);
-int __attribute__((overloadable)) count(float *v, char mask, float val, int range);
-int __attribute__((overloadable)) count(double *v, char mask, double val, int range);
+int __attribute__((overloadable)) count(int * __nonnull v, char mask, int val, int range);
+int __attribute__((overloadable)) count(float * __nonnull v, char mask, float val, int range);
+int __attribute__((overloadable)) count(double * __nonnull v, char mask, double val, int range);
 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, int *brr); 
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, float *brr);
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, double *brr);
-void __attribute__((overloadable)) sort(unsigned long n, int *arr, double complex *brr);
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr);
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, int * __nonnull brr);
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, float * __nonnull brr);
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, double * __nonnull brr);
+void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, double complex * __nonnull brr); //TODO: Not implemented yet
 
-void __attribute((overloadable)) reverse(int *arr, size_t narr);
-void __attribute((overloadable)) cshift(int *arr, size_t narr, unsigned long shift);
+void __attribute((overloadable)) reverse(int * __nonnull arr, size_t narr);
+void __attribute((overloadable)) cshift(int * __nonnull arr, size_t narr, unsigned long shift);
 
-char *dateAndTime(void);
-void startAdvanceOutput(char *solverName, char *outputType);
-void advanceOutput(int t, int n, double *dot_t, double *percent_t);
+char * __nullable dateAndTime(void);
+void startAdvanceOutput(char * __nonnull solverName, char * __nonnull outputType);
+void advanceOutput(int t, int n, double * __nullable dot_t, double * __nullable percent_t);
