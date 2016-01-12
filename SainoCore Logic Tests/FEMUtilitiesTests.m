@@ -12,7 +12,7 @@
 
 @interface FEMUtilitiesTests : XCTestCase
 
-@property(nonatomic) FEMUtilities *utilities;
+@property(nonatomic, nonnull) FEMUtilities *utilities;
 
 @end
 

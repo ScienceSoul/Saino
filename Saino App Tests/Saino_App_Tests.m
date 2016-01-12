@@ -14,13 +14,13 @@
 #import "SainoViewControler.h"
 
 @interface Saino_App_Tests : XCTestCase {
-    SainoViewControler  *_saino_view_controller;
-    NSView              *_saino_view;
+    SainoViewControler  * __nonnull _saino_view_controller;
+    NSView              * __nonnull _saino_view;
     
     double _targetEps;
 }
 
-@property(nonatomic) FEMTest *testApp;
+@property(nonatomic, nonnull) FEMTest *testApp;
 
 @end
 

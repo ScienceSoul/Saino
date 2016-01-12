@@ -12,9 +12,9 @@
 
 @interface FEMSolutionTests : XCTestCase
 
-@property(nonatomic) FEMSolution *solution;
-@property(nonatomic) FEMUtilities *utilities;
-@property(nonatomic) id<SainoSolutionsComputer> instance;
+@property(nonatomic, nonnull) FEMSolution *solution;
+@property(nonatomic, nonnull) FEMUtilities *utilities;
+@property(nonatomic, nullable) id<SainoSolutionsComputer> instance;
 
 @end
 
