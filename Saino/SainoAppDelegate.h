@@ -16,7 +16,7 @@
     SainoViewControler *saino_view_controller;
 }
 
-@property (strong) IBOutlet NSWindow *window;
-@property (nonatomic) SainoViewControler *saino_view_controller;
+@property (strong, nonnull) IBOutlet NSWindow *window;
+@property (nonatomic, nonnull) SainoViewControler *saino_view_controller;
 
 @end

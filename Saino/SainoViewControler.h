@@ -11,11 +11,11 @@
 #import <SainoCore/FEMJob.h>
 
 @interface SainoViewControler : NSViewController {
-    FEMJob *_job;
+    FEMJob * __nullable _job;
 }
 
-@property (weak) IBOutlet NSTextField *displayField;
+@property (weak, nullable) IBOutlet NSTextField *displayField;
 
--(IBAction)press:(id)sender;
+-(IBAction)press:(id __nullable)sender;
 
 @end
