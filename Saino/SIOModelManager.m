@@ -10,9 +10,9 @@
 
 @interface SIOModelManager ()
 
--(int)SIOModelManager_mkdir:(NSString *)dir;
--(int)SIOModelManager_chdir:(NSString *)dir;
--(int)SIOModelManager_checkModel:(NSString *)model;
+-(int)SIOModelManager_mkdir:(NSString * __nonnull)dir;
+-(int)SIOModelManager_chdir:(NSString * __nonnull)dir;
+-(int)SIOModelManager_checkModel:(NSString * __nonnull)model;
 
 @end
 
@@ -24,7 +24,7 @@
 
 #pragma Private metods
 
--(int)SIOModelManager_mkdir:(NSString *)dir {
+-(int)SIOModelManager_mkdir:(NSString * __nonnull)dir {
     
     int rc;
     
@@ -46,7 +46,7 @@
 }
 
 
--(int)SIOModelManager_chdir:(NSString *)dir {
+-(int)SIOModelManager_chdir:(NSString * __nonnull)dir {
     
     int rc;
     
@@ -77,7 +77,7 @@
 }
 
 
--(int)SIOModelManager_checkModel:(NSString *)model {
+-(int)SIOModelManager_checkModel:(NSString * __nonnull)model {
     
     int rc, rc_access;
     struct stat buf;
@@ -138,6 +138,8 @@
         // to it after the data base has been closed
         fileMrg = [NSFileManager defaultManager];
         self.rundir = [fileMrg currentDirectoryPath];
+        self.modeldir = nil;
+        self.modelname = nil;
         
         umask(S_IRWXO);
     }
@@ -152,7 +154,7 @@
     
 }
 
--(int)createModel:(NSString *)dir {
+-(int)createModel:(NSString * __nonnull)dir {
     
     self.modeldir = [NSString stringWithString:dir]; 
     
@@ -169,7 +171,7 @@
     return 0;
 }
 
--(int)openModel:(NSString *)dir {
+-(int)openModel:(NSString * __nonnull)dir {
     
     self.modeldir = [NSString stringWithString:dir];
     
@@ -191,7 +193,7 @@
     return 0;
 }
 
--(int)openStream:(NSFileHandle *)fstr name:(NSString *)name mode:(NSString *)mode {
+-(int)openStream:(NSFileHandle * __nullable)fstr name:(NSString * __nonnull)name mode:(NSString * __nonnull)mode {
     
     if ([mode isEqualToString:@"read"]) {
         fstr = [NSFileHandle fileHandleForReadingAtPath:name];
@@ -210,13 +212,13 @@
     return 0;
 }
 
--(int)closeStrem:(NSFileHandle *)fstr {
+-(int)closeStrem:(NSFileHandle * __nonnull)fstr {
     
     [fstr closeFile];
     return 0;
 }
 
--(int)makeDirectory:(NSString *)dir {
+-(int)makeDirectory:(NSString * __nonnull)dir {
     
     return [self SIOModelManager_mkdir:dir];
 }

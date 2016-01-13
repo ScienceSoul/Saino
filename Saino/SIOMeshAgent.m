@@ -33,10 +33,10 @@ static char *_parallel_extensions[] = {
 
 @interface SIOMeshAgent ()
 
--(void)SIOMeshAgent_makeFilename:(char *)buf model:(const char *)model suffix:(const char *)suffix;
+-(void)SIOMeshAgent_makeFilename:(char * __nonnull)buf model:(const char * __nonnull)model suffix:(const char * __nonnull)suffix;
 -(int)SIOMeshAgent_elementNodes:(const int)type;
 -(void)SIOMeshAgent_cacheNodes;
--(int)SIOMeshAgent_copyCoords:(double *)target address:(const int)address;
+-(int)SIOMeshAgent_copyCoords:(double * __nonnull)target address:(const int)address;
 -(cacheNode *)SIOMeshAgent_searchNode:(const int)address;
 
 @end
@@ -65,7 +65,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Private methods
 
--(void)SIOMeshAgent_makeFilename:(char *)buf model:(const char *)model suffix:(const char *)suffix {
+-(void)SIOMeshAgent_makeFilename:(char * __nonnull)buf model:(const char * __nonnull)model suffix:(const char * __nonnull)suffix {
     
     buf[0] = '\0';
     strcat(buf, model);
@@ -127,7 +127,7 @@ static char *_parallel_extensions[] = {
     return retval;
 }
 
--(int)SIOMeshAgent_copyCoords:(double *)target address:(const int)address {
+-(int)SIOMeshAgent_copyCoords:(double * __nonnull)target address:(const int)address {
     
     int found = 1;
     if (self.parallel) {
@@ -152,7 +152,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Public methods
 
--(id)initWithManager:(SIOModelManager *)mm split:(int)split part:(int)part
+-(id __nonnull)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part
 {
     self = [super init];
     if (self) {
@@ -186,7 +186,7 @@ static char *_parallel_extensions[] = {
     return self;
 }
     
--(int)createMesh:(NSString *)dir {
+-(int)createMesh:(NSString * __nonnull)dir {
     
     int i;
     char filename[PATH_MAX];
@@ -201,7 +201,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)openMesh:(NSString *)dir {
+-(int)openMesh:(NSString * __nonnull)dir {
     
     int i, j, isLineBreak, lineCount = 0;
     char filename[PATH_MAX];
@@ -281,7 +281,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readDescriptorNode:(int *)nodeC element:(int *)elementC boundaryElement:(int *)boundaryElementC usedElementTypes:(int *)usedElementTypes usedElementTypeTags:(int *)usedElementTypeTags usedElementTypeCount:(int *)usedElementTypeCount {
+-(int)readDescriptorNode:(int * __nonnull)nodeC element:(int * __nonnull)elementC boundaryElement:(int * __nonnull)boundaryElementC usedElementTypes:(int * __nonnull)usedElementTypes usedElementTypeTags:(int * __nonnull)usedElementTypeTags usedElementTypeCount:(int * __nonnull)usedElementTypeCount {
     
     int i;
     
@@ -298,13 +298,13 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readPartDescriptor:(int *)shared {
+-(int)readPartDescriptor:(int * __nonnull)shared {
     
     *shared = self.sharedNodeCount;
     return 0;
 }
 
--(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly {
+-(int)readNextElementConnections:(int * __nonnull)tag part:(int * __nonnull)part body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly {
     
     int i, j, gotnodal;
     FileReader *reader;
@@ -339,6 +339,7 @@ static char *_parallel_extensions[] = {
         *tag = [tagstr intValue];
     }
     
+    // TODO: is this secure? What if pdofs is a smaller buffer?
     memset( pdofs, 0, 6*sizeof(int) );
     gotnodal = 0;
     for (i=0; i<[typestr length]; i++) {
@@ -382,7 +383,7 @@ static char *_parallel_extensions[] = {
     
     if (parallelAssembly != NULL) {
         if (*parallelAssembly == YES) {
-            *colorIndex = [filteredArray[j] intValue];
+            if (colorIndex != NULL) *colorIndex = [filteredArray[j] intValue];
         }
     }
     
@@ -393,7 +394,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextElementCoordinates:(int *)tag body:(int *)body type:(int *)type nodes:(int *)nodes coord:(double *)coord {
+-(int)readNextElementCoordinates:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord {
     
     int i, j;
     FileReader *reader;
@@ -439,7 +440,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextBoundaryElement:(int *)tag part:(int *)part boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord {
+-(int)readNextBoundaryElement:(int * __nonnull)tag part:(int * __nonnull)part boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord {
     
     int i, j;
     FileReader *reader;
@@ -508,7 +509,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readAllNodes:(int *)tags coord:(double *)coord {
+-(int)readAllNodes:(int * __nonnull)tags coord:(double * __nonnull)coord {
     
     int i = 0;
     int pt = 0;
@@ -525,7 +526,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readSharedNode:(int *)tag constraint:(int *)constraint coord:(double *)coord partCount:(int *)partcount partitions:(int *)partitions {
+-(int)readSharedNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partcount partitions:(int * __nonnull)partitions {
     
     int i, j;
     FileReader *reader;

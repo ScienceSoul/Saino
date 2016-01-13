@@ -40,10 +40,10 @@
     
 }
 
-@property(nonatomic, strong) SIOModelManager *manager;
-@property(nonatomic, strong) NSMutableArray *meshFileStreams;
-@property(nonatomic, strong) NSMutableArray *elementTypeTags;
-@property(nonatomic, strong) NSMutableArray *elementTypeCount;
+@property(nonatomic, strong, nullable) SIOModelManager *manager;
+@property(nonatomic, strong, nonnull) NSMutableArray *meshFileStreams;
+@property(nonatomic, strong, nonnull) NSMutableArray *elementTypeTags;
+@property(nonatomic, strong, nonnull) NSMutableArray *elementTypeCount;
 @property(nonatomic, assign) int parts;
 @property(nonatomic, assign) int me;
 @property(nonatomic, assign) int nodeCount;
@@ -56,17 +56,17 @@
 @property(nonatomic, assign) int parallel;
 @property(nonatomic, assign) int meshFiles;
 
--(id)initWithManager:(SIOModelManager *)mm split:(int)split part:(int)part;
--(int)createMesh:(NSString *)dir;
--(int)openMesh:(NSString *)dir;
+-(id __nonnull)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part;
+-(int)createMesh:(NSString * __nonnull)dir;
+-(int)openMesh:(NSString * __nonnull)dir;
 -(int)closeMesh;
 
 // Reading methods
--(int)readDescriptorNode:(int *)nodeC element:(int *)elementC boundaryElement:(int *)boundaryElementC usedElementTypes:(int *)usedElementTypes usedElementTypeTags:(int *)usedElementTypeTags usedElementTypeCount:(int *)usedElementTypeCount;
--(int)readNextElementConnections:(int *)tag part:(int *)part body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly;
--(int)readNextElementCoordinates:(int *)tag body:(int *)body type:(int *)type nodes:(int *)nodes coord:(double *)coord;
--(int)readNextBoundaryElement:(int *)tag part:(int *)part boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord;
--(int)readAllNodes:(int *)tags coord:(double *)coord;
+-(int)readDescriptorNode:(int * __nonnull)nodeC element:(int * __nonnull)elementC boundaryElement:(int * __nonnull)boundaryElementC usedElementTypes:(int * __nonnull)usedElementTypes usedElementTypeTags:(int * __nonnull)usedElementTypeTags usedElementTypeCount:(int * __nonnull)usedElementTypeCount;
+-(int)readNextElementConnections:(int * __nonnull)tag part:(int * __nonnull)part body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly;
+-(int)readNextElementCoordinates:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord;
+-(int)readNextBoundaryElement:(int * __nonnull)tag part:(int * __nonnull)part boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord;
+-(int)readAllNodes:(int * __nonnull)tags coord:(double * __nonnull)coord;
 
 // Writing methods
 //-(int)writeDescriptor:(int)nodeC: (int)elementC: (int)boundaryElementC: (int)usedElementTypes: (int *)elementTypeTags: (int *)elementCountByType;
@@ -75,7 +75,7 @@
 //-(int)writeBoundaryElement:(int)tag: (int)boundary: (int)leftElement: (int)rightElement: (int)type: (int *)nodes;
 //-(int)writeBoundaryElement:(int)tag: (int)boundary: (int)leftElement: (int)rightElement: (int)type: (int *)nodes;
 
--(int)readPartDescriptor:(int *)shared;
--(int)readSharedNode:(int *)tag constraint:(int *)constraint coord:(double *)coord partCount:(int *)partcount partitions:(int *)partitions;
+-(int)readPartDescriptor:(int * __nonnull)shared;
+-(int)readSharedNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partcount partitions:(int * __nonnull)partitions;
 
 @end

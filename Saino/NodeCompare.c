@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "NodeCompare.h"
 
-int __attribute__ ((cdecl)) nodecomp(const void *a, const void *b) {
+int __attribute__ ((cdecl)) nodecomp(const void * __nonnull a, const void * __nonnull b) {
     
     cacheNode *aptr = (cacheNode *)a;
     cacheNode *bptr = (cacheNode *)b;

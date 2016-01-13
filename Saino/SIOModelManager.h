@@ -18,18 +18,18 @@
 
 @interface SIOModelManager : NSObject 
 
-@property (nonatomic, strong) NSString *rundir;
-@property (nonatomic, strong) NSString *modeldir;
-@property (nonatomic, strong) NSString *modelname;
+@property (nonatomic, strong, nonnull) NSString *rundir;
+@property (nonatomic, strong, nullable) NSString *modeldir;
+@property (nonatomic, strong, nullable) NSString *modelname;
 
--(int)createModel:(NSString *)dir;
--(int)openModel:(NSString *)dir;
+-(int)createModel:(NSString * __nonnull)dir;
+-(int)openModel:(NSString * __nonnull)dir;
 -(int)closeModel;
 
--(int)openStream:(NSFileHandle *)fstr name:(NSString *)name mode:(NSString *)mode;
--(int)closeStrem:(NSFileHandle *)fstr;
+-(int)openStream:(NSFileHandle * __nullable)fstr name:(NSString * __nonnull)name mode:(NSString * __nonnull)mode;
+-(int)closeStrem:(NSFileHandle * __nonnull)fstr;
 
--(int)makeDirectory:(NSString *)dir;
+-(int)makeDirectory:(NSString * __nonnull)dir;
 
 -(void)deallocation;
 

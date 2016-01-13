@@ -30,13 +30,14 @@
             _info = -1;
         } else {
             _info = 0;
-        }               
+        }
+        _meshAgent = nil;
     }
     
     return self;
 }
 
--(id)initWithParallelNumberOfProcessors:(int)procs processorID:(int)me
+-(id __nonnull)initWithParallelNumberOfProcessors:(int)procs processorID:(int)me
 {
     self = [super init];
     if (self) {
@@ -56,7 +57,7 @@
     return self;
 }
 
--(void)openMeshAtPath:(NSString *)directory {
+-(void)openMeshAtPath:(NSString * __nonnull)directory {
     
     if (directory == nil) {
         NSLog(@"SIOMeshIO:openMeshAtPath: no assignment to directory name (empty object pointer).\n");
@@ -79,23 +80,25 @@
 
 -(void)close {
     
+    self.parallelState = nil;
     self.modelManager = nil;
+    self.meshAgent = nil;
     self.info = 0;
 }
 
--(void)getMeshDescriptionNodeCount:(int *)nodeCount elementCount:(int *)elementCount boundaryElementCount:(int *)boundaryElementCount usedElementTypes:(int *)usedElementTypes elementTypeTags:(int *)elementTypeTags elementCountByType:(int *)elementCountByType {
+-(void)getMeshDescriptionNodeCount:(int * __nonnull)nodeCount elementCount:(int * __nonnull)elementCount boundaryElementCount:(int * __nonnull)boundaryElementCount usedElementTypes:(int * __nonnull)usedElementTypes elementTypeTags:(int * __nonnull)elementTypeTags elementCountByType:(int * __nonnull)elementCountByType {
     
     self.info = -1;
     self.info = [self.meshAgent readDescriptorNode:nodeCount element:elementCount boundaryElement:boundaryElementCount usedElementTypes:usedElementTypes usedElementTypeTags:elementTypeTags usedElementTypeCount:elementCountByType];
 }
 
--(void)getMeshNodes:(int *)tags coord:(double *)coord {
+-(void)getMeshNodes:(int * __nonnull)tags coord:(double * __nonnull)coord {
     
     self.info = -1;
     self.info = [self.meshAgent readAllNodes:tags coord:coord];
 }
 
--(void)getMeshElementConnection:(int *)tag body:(int *)body type:(int *)type pdofs:(int *)pdofs nodes:(int *)nodes colorIndex:(int *)colorIndex parallelAssembly:(BOOL *)parallelAssembly {
+-(void)getMeshElementConnection:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly {
     
     int part;
     if ([self.meshAgent readNextElementConnections:tag part:&part body:body type:type pdofs:pdofs nodes:nodes colorIndex:colorIndex parallelAssembly:(BOOL *)parallelAssembly] != -1) {
@@ -103,7 +106,7 @@
     } else self.info = -1;
 }
 
--(void)getMeshBoundaryElement:(int *)tag boundary:(int *)boundary leftElement:(int *)leftElement rightElement:(int *)rightElement type:(int *)type nodes:(int *)nodes coord:(double *)coord {
+-(void)getMeshBoundaryElement:(int * __nonnull)tag boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord {
     
     int part;
     if ([self.meshAgent readNextBoundaryElement:tag part:&part boundary:boundary leftElement:leftElement rightElement:rightElement type:type nodes:nodes coord:coord] != -1) {
@@ -111,13 +114,13 @@
     } else self.info = -1;
 }
 
--(void)getPartDesription:(int *)sharedNodeCount {
+-(void)getPartDesription:(int * __nonnull)sharedNodeCount {
     
     self.info = -1;
     self.info = [self.meshAgent readPartDescriptor:sharedNodeCount];
 }
 
--(void)getPartNode:(int *)tag constraint:(int *)constraint coord:(double *)coord partCount:(int *)partCount parts:(int *)parts {
+-(void)getPartNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partCount parts:(int * __nonnull)parts {
     
     if ([self.meshAgent readSharedNode:tag constraint:constraint coord:coord partCount:partCount partitions:parts] != -1) {
         self.info = 0;

@@ -411,7 +411,7 @@
 
 -(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs {
     
-    int i, j, k, n, body, colorID, type, bndry, left, right, tag;
+    int i, j, k, n, body, colorID=-1, type, bndry, left, right, tag;
     int addr1, addr2;
     int meshDim, saveDim;
     int minIndex, maxIndex, minEIndex, maxEIndex, dgIndex, bid, defaultTargetBC;
@@ -1000,7 +1000,6 @@
     
     model.dimension = saveDim;
     
-
     if (isParallelAssembly == YES) {
         NSLog(@"FEMMesh:loadMeshForModel: Load colors...\n");
         [self FEMMesh_readColoredMesh:name];

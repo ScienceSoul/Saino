@@ -11,6 +11,6 @@
 #ifndef Saino_Header_h
 #define Saino_Header_h
 
-int __attribute__ ((cdecl)) nodecomp(const void *a, const void *b);
+int __attribute__ ((cdecl)) nodecomp(const void * __nonnull a, const void * __nonnull b);
 
 #endif
