@@ -152,10 +152,13 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Public methods
 
--(id __nonnull)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part
+-(id __nullable)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part
 {
     self = [super init];
     if (self) {
+        if (mm == nil) {
+            return nil;
+        }
         _manager = mm;
         _parts = split;
         _me = part;

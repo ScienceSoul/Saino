@@ -56,7 +56,7 @@
 @property(nonatomic, assign) int parallel;
 @property(nonatomic, assign) int meshFiles;
 
--(id __nonnull)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part;
+-(id __nullable)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part;
 -(int)createMesh:(NSString * __nonnull)dir;
 -(int)openMesh:(NSString * __nonnull)dir;
 -(int)closeMesh;
