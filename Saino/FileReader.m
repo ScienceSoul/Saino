@@ -24,7 +24,7 @@
  @param filePath A file path.
  @returns An initialized FileReader object or nil if the object could not be created.
  */
-- (id)initWithFilePath:(NSString*)filePath {
+- (id __nullable)initWithFilePath:(NSString * __nonnull)filePath {
     
 	self = [super init];
 	if (self != nil) {
@@ -65,7 +65,7 @@
  Empty lines are not returned.
  @returns Another single line on each call or nil if the file end has been reached.
  */
-- (NSString*)readLine {
+- (NSString * __nullable)readLine {
     
 	if (m_totalFileLength == 0 || m_currentOffset >= m_totalFileLength) {
 		return nil;
@@ -106,7 +106,7 @@
  Empty lines are returned as well.
  @returns Another single line on each call or nil if the file end has been reached.
  */
-- (NSString*)readLineBackwards {
+- (NSString * __nullable)readLineBackwards {
     
 	if (m_totalFileLength == 0 || (m_currentInset == 0 && m_chunkSize == 0)) {
 		return nil;
@@ -194,7 +194,7 @@
  Reads the file forwards while trimming white spaces.
  @returns Another single line on each call or nil if the file end has been reached.
  */
-- (NSString*)readTrimmedLine {
+- (NSString * __nullable)readTrimmedLine {
 	
 	return [[self readLine] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 }
@@ -205,7 +205,7 @@
  Reads the file forwards using a block object.
  @param block
  */
-- (void)enumerateLinesUsingBlock:(void(^)(NSString*, BOOL*))block {
+- (void)enumerateLinesUsingBlock:(void(^ __nonnull)(NSString * __nonnull, BOOL * __nonnull))block {
 	NSString* line = nil;
 	BOOL stop = NO;
 	while (stop == NO && (line = [self readLine])) {

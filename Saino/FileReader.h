@@ -13,25 +13,25 @@
 
 @interface FileReader : NSObject {
     
-    NSString*			m_filePath;				/**< File path. */
-	NSFileHandle*		m_fileHandle;			/**< File handle. */
-	unsigned long long	m_currentOffset;		/**< Current offset is needed for forwards reading. */
-	unsigned long long	m_currentInset;			/**< Current inset is needed for backwards reading. */
-	NSRange				m_prevDelimiterRange;	/**< Position and length of the last delimiter. */	
-	unsigned long long	m_totalFileLength;		/**< Total number of bytes in file. */
-	NSString*			m_lineDelimiter;		/**< Character for line break or page break. */
-	NSUInteger			m_chunkSize;			/**< Standard block size. */
+    NSString * __nonnull		m_filePath;				/**< File path. */
+	NSFileHandle * __nonnull	m_fileHandle;			/**< File handle. */
+	unsigned long long          m_currentOffset;		/**< Current offset is needed for forwards reading. */
+	unsigned long long          m_currentInset;			/**< Current inset is needed for backwards reading. */
+	NSRange                     m_prevDelimiterRange;	/**< Position and length of the last delimiter. */
+	unsigned long long          m_totalFileLength;		/**< Total number of bytes in file. */
+	NSString * __nonnull		m_lineDelimiter;		/**< Character for line break or page break. */
+	NSUInteger              m_chunkSize;			/**< Standard block size. */
 }
 
-- (id)initWithFilePath:(NSString*)filePath;
+- (id __nullable)initWithFilePath:(NSString * __nonnull)filePathh;
 - (void)closeHandle;
 - (void)rewind;
-- (NSString*)readLine;
-- (NSString*)readLineBackwards;
-- (NSString*)readTrimmedLine;
+- (NSString * __nullable)readLine;
+- (NSString * __nullable)readLineBackwards;
+- (NSString * __nullable)readTrimmedLine;
 
 #if NS_BLOCKS_AVAILABLE
-- (void)enumerateLinesUsingBlock:(void(^)(NSString*, BOOL*))block;
+- (void)enumerateLinesUsingBlock:(void(^ __nonnull)(NSString * __nonnull, BOOL * __nonnull))block;
 #endif
 
 @end

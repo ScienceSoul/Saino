@@ -21,7 +21,7 @@
  @param path A directory path.
  @returns An initialized DirectoryReader object or nil if the object could not be created.
  */
-- (id)initWithPath:(NSString*)path {
+- (id __nullable)initWithPath:(NSString * __nonnull)path {
     
 	self = [super init];
 	if (self != nil) {
@@ -41,7 +41,7 @@
  @param files Container for the listing.
  @returns YES if the directory was read otherwise NO.
  */
-- (BOOL)readDirectory:(NSArray**)files {
+- (BOOL)readDirectory:(NSArray * __nonnull * __nullable)files {
     
 	BOOL success = NO;
 	
@@ -64,7 +64,7 @@
 	return success;
 }
 
-- (BOOL)readDirectoryWithFileAttributes:(NSArray**)fileAttributes{
+- (BOOL)readDirectoryWithFileAttributes:(NSArray * __nonnull * __nullable)fileAttributes {
     NSArray *fileNames;
     BOOL success = [self readDirectory:&fileNames];
     
@@ -84,7 +84,7 @@
     return YES;
 }
 
-- (BOOL)readDirectoryByFileModificationDateDesc:(NSArray**)files{
+- (BOOL)readDirectoryByFileModificationDateDesc:(NSArray * __nonnull * __nullable)files {
     NSArray *fileAttributes;
     BOOL success = [self readDirectoryWithFileAttributes:&fileAttributes];
     if (!success) // couldn't read directory
