@@ -12,17 +12,17 @@
     
     int _nsize;
     int _pointerSize;
-    int *_bottomPerm;
-    int *_bottomPointer;
-    int *_maskPerm;
-    int *_topPerm;
-    int *_topPointer;
-    double *_bottomField;
-    double *_coord;
-    double *_field;
-    double *_origCoord;
-    double *_surface;
-    double *_topField;
+    int * __nullable _bottomPerm;
+    int * __nullable _bottomPointer;
+    int * __nullable _maskPerm;
+    int * __nullable _topPerm;
+    int * __nullable _topPointer;
+    double * __nullable _bottomField;
+    double * __nullable _coord;
+    double * __nullable _field;
+    double * __nullable _origCoord;
+    double * __nullable _surface;
+    double * __nullable _topField;
     BOOL _initialized;
     BOOL _maskExists;
     BOOL _visited;
@@ -53,7 +53,7 @@
     return self;
 }
 
--(void)solutionComputer:(FEMSolution *)solution model:(FEMModel *)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int j, n, ibot, itop, bottomNode, topNode;
     double at0, at1, bottomVal, bottomValue0, heps, topVal, topValue0, xLoc, x0Bot, x0Loc, x0Top, wTop;
@@ -371,7 +371,7 @@
     }
 }
 
--(void)deallocation:(FEMSolution *)solution {
+-(void)deallocation:(FEMSolution * __nonnull)solution {
     if (_origCoord != NULL) {
         free_dvector(_origCoord, 0, _nsize-1);
     }
