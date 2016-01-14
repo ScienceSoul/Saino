@@ -13,11 +13,6 @@
 #import "FEMMeshUtils.h"
 #import "FEMMatrixCRS.h"
 #import "FEMNumericIntegration.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMInitialConditions.h"
-#import "FEMEquation.h"
-#import "FEMBodyForce.h"
-#import "FEMMaterial.h"
 #import "Utils.h"
 
 #ifdef TEST

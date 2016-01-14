@@ -38,8 +38,8 @@
     FEMMesh *_mesh;
     NSMutableDictionary *_solutionInfo;
     NSString *_normalTangentialName;
-    NSMutableDictionary *_exportedVariables;         // Mutable dictionary holding FEMVariable classes for exported variables
-    NSMutableArray *_valuesList;                     // Array of FEMValueList objects
+    NSMutableDictionary *_exportedVariables;         // Exported variables
+    NSMutableArray *_valuesList;
     
     solutionArraysContainer * __nonnull _containers;
 }
@@ -70,8 +70,8 @@
 @property(nonatomic, strong, nullable) FEMMesh *mesh;
 @property(nonatomic, strong, nonnull) NSMutableDictionary *solutionInfo;
 @property(nonatomic, strong, nullable) NSString *normalTangentialName;
-@property(nonatomic, strong, nullable) NSMutableDictionary *exportedVariables;
-@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
+@property(nonatomic, strong, nullable) NSMutableDictionary <NSString *, FEMVariable *> *exportedVariables;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMValueList *> *valuesList;
 
 -(void)deallocation;
 -(solutionArraysContainer * __nonnull)getContainers;

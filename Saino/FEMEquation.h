@@ -8,11 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMValueList.h"
+
 @interface FEMEquation : NSObject {
     
-    NSMutableArray *_valuesList;  // Array of FEMValueList objects
+    NSMutableArray *_valuesList;
 }
 
-@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMValueList *> *valuesList;
 
 @end

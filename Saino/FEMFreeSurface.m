@@ -14,7 +14,6 @@
 #import "FEMUtilities.h"
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
-#import "FEMBoundaryCondition.h"
 #import "GaussIntegration.h"
 #import "Utils.h"
 

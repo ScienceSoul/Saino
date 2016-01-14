@@ -10,7 +10,6 @@
 #import "FEMCore.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
-#import "FEMBoundaryCondition.h"
 #import "FEMPElementMaps.h"
 #import "FEMElementDescription.h"
 #import "FEMUtilities.h"

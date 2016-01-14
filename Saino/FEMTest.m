@@ -10,12 +10,7 @@
 
 #import "FEMModel.h"
 #import "FEMListUtilities.h"
-#import "FEMEquation.h"
 #import "FEMSolution.h"
-#import "FEMMaterial.h"
-#import "FEMBodyForce.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMInitialConditions.h"
 #import "memory.h"
 
 @implementation FEMTest

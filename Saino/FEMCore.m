@@ -11,16 +11,10 @@
 #include <math.h>
 #import <complex.h>
 
-#import "FEMValueList.h"
-#import "FEMBodyForce.h"
-#import "FEMBoundaryCondition.h"
-#import "FEMSimulation.h"
-
 #import "FEMHUTIter.h"
 #import "FEMIterativeMethods.h"
 #import "FEMPrecondition.h"
 #import "FEMParallelMPI.h"
-
 #import "FEMElementDescription.h"
 #import "FEMElementUtils.h"
 #import "FEMNumericIntegration.h"
@@ -30,7 +24,6 @@
 #import "FEMMagneticInductionSolution.h"
 #import "FEMStressAnalysisSolution.h"
 #import "FEMMeshUpdateSolution.h"
-#import "FEMMaterial.h"
 #import "FEMHeatSolution.h"
 #import "FEMHeatSolution_OpenCL.h"
 #import "GaussIntegration.h"

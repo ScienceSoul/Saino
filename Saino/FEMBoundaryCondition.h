@@ -14,16 +14,17 @@
 #import <Foundation/Foundation.h>
 
 #import "FEMMatrix.h"
+#import "FEMValueList.h"
 
 @interface FEMBoundaryCondition : NSObject {
     
     int _tag;
-    NSMutableArray *_valuesList;  // Array of FEMValueList objects
+    NSMutableArray *_valuesList;
     FEMMatrix *_pMatrix;
 }
 
 @property(nonatomic, assign) int tag;
-@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMValueList *> *valuesList;
 @property(nonatomic, strong, nullable) FEMMatrix *pMatrix;
 
 

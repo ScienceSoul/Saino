@@ -296,9 +296,10 @@
             [interpolation findLeafElementsForPoint:point dimension:dim rootQuadrant:rootQuadrant leafQuadrant:leafQuadrant];
             
             if (leafQuadrant != NULL) {
+                FEMBodyForce *bodyForceAtID;
                 // Go through the bulk elements in the last child quadrant only.
                 // Try to find matching element with progressively sloppier tests.
-                // All at most 100% of slack
+                // Allow at most 100% of slack
                 eps1 = epsGlobal;
                 eps2 = epsLocal;
                 
@@ -310,7 +311,8 @@
                         if (maskExists == YES) {
                             if ((model.bodies)[oldElements[leafQuadrant->elements[k]].BodyID-1][@"body force"] == nil) continue;
                             bfId = [(model.bodies)[oldElements[leafQuadrant->elements[k]].BodyID][@"body force"] intValue];
-                            if ([listUtilities listCheckPresentVariable:maskName inArray:(model.bodyForces)[bfId-1]] == NO) continue;
+                            bodyForceAtID = (model.bodyForces)[bfId-1];
+                            if ([listUtilities listCheckPresentVariable:maskName inArray:bodyForceAtID.valuesList] == NO) continue;
                         }
                         
                         n = oldElements[leafQuadrant->elements[k]].Type.NumberOfNodes;

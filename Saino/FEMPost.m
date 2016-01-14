@@ -10,7 +10,6 @@
 
 #import "FEMPost.h"
 #import "FEMUtilities.h"
-#import "FEMBoundaryCondition.h"
 #import "FEMListUtilities.h"
 #import "FileReader.h"
 #import "Utils.h"

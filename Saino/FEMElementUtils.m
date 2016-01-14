@@ -10,7 +10,6 @@
 #import "FEMListUtilities.h"
 #import "FEMUtilities.h"
 #import "FEMListMatrix.h"
-#import "FEMBoundaryCondition.h"
 #import "FEMBandwidthOptimize.h"
 #import "FEMMatrixCRS.h"
 #import "FEMMatrixBand.h"

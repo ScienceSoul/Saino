@@ -8,12 +8,8 @@
 
 #import "FEMHeatSolution_OpenCL.h"
 #import "FEMCore.h"
-#import "FEMBoundaryCondition.h"
 #import "FEMListUtilities.h"
 #import "FEMElementUtils.h"
-#import "FEMBodyForce.h"
-#import "FEMMaterial.h"
-#import "FEMEquation.h"
 #import "FEMRadiation.h"
 #import "FEMNumericIntegration.h"
 #import "FEMCoordinateSystems.h"

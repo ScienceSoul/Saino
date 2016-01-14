@@ -43,11 +43,11 @@
     Factors_t * __nullable _viewFactors;
     
     NSMutableString *_name;
-    NSMutableArray *_variables;              // Mutable array of FEMVariable classes
-    NSMutableArray *_projectors;             // Mutable array of FEMProjector classes
-    NSMutableArray *_next;                   // Mutable array of FEMMesh classes
-    NSMutableArray *_colors;                 // Mutable array of mutable arrays for each color. Each array stores the number of elements for that color,
-                                             // The color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
+    NSMutableArray *_variables;
+    NSMutableArray *_projectors;               // Mutable array of FEMProjector classes
+    NSMutableArray *_next;
+    NSMutableArray *_colors;                   // Mutable arrays for each color. Each array stores the number of elements for that color,
+                                               // the color index and the corresponding RGB values for that color as: [number of elements, color index, R, G, B]
     FEMMesh *_parent;
     FEMMesh *_child;
     
@@ -79,10 +79,10 @@
 @property(nonatomic, assign, getter = isStabilize) BOOL stabilize;
 @property(nonatomic, assign, getter = isDiscontinuousMesh) BOOL discontinuousMesh;
 @property(nonatomic, strong, nullable) NSMutableString *name;
-@property(nonatomic, strong, nullable) NSMutableArray *variables;
+@property(nonatomic, strong, nullable) NSMutableArray <FEMVariable *> *variables;
 @property(nonatomic, strong, nonnull) NSMutableArray *projectors;
-@property(nonatomic, strong, nonnull) NSMutableArray *next;
-@property(nonatomic, strong, nonnull) NSMutableArray *colors;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMMesh *> *next;
+@property(nonatomic, strong, nonnull) NSMutableArray <NSMutableArray *> *colors;
 @property(nonatomic, strong, nullable) FEMMesh *parent;
 @property(nonatomic, strong, nullable) FEMMesh *child;
 

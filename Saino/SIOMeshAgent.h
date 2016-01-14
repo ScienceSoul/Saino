@@ -21,7 +21,7 @@
     
     SIOModelManager *_manager;
     
-    // All streams. i.e., array of FileReader classes
+    // All streams. i.e., array of FileReader or NSFileHandle classes
     NSMutableArray *_meshFileStreams;
     
     int _parts;
@@ -42,8 +42,8 @@
 
 @property(nonatomic, strong, nullable) SIOModelManager *manager;
 @property(nonatomic, strong, nonnull) NSMutableArray *meshFileStreams;
-@property(nonatomic, strong, nonnull) NSMutableArray *elementTypeTags;
-@property(nonatomic, strong, nonnull) NSMutableArray *elementTypeCount;
+@property(nonatomic, strong, nonnull) NSMutableArray <NSString *> *elementTypeTags;
+@property(nonatomic, strong, nonnull) NSMutableArray <NSString *> *elementTypeCount;
 @property(nonatomic, assign) int parts;
 @property(nonatomic, assign) int me;
 @property(nonatomic, assign) int nodeCount;

@@ -15,7 +15,7 @@
     NSMutableDictionary *_timers;
 }
 
-@property(nonatomic, strong, nonnull) NSMutableDictionary *timers;
+@property(nonatomic, strong, nonnull) NSMutableDictionary <NSString *, NSNumber *> *timers;
 
 -(void)listParseDependencies:(NSArray * __nonnull)dependencies index:(int)ind name:(NSString * __nonnull)name toValues:(double * __nonnull)t count:(int * __nonnull)count model:(FEMModel * __nonnull)model allGlobal:(BOOL * __nonnull)allGlobal;
 

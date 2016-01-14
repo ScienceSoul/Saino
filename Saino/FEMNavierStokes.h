@@ -10,7 +10,6 @@
 
 #import "FEMCore.h"
 #import "FEMNumericIntegration.h"
-#import "FEMMaterial.h"
 #import "FEMElementDescription.h"
 #import "FEMMaterialModels.h"
 #import "FEMDifferentials.h"

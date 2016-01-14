@@ -9,8 +9,6 @@
 #import "FEMDiffuseConvectiveGeneralAnisotropic.h"
 #import "FEMListUtilities.h"
 #import "FEMNumericIntegration.h"
-#import "FEMMaterial.h"
-#import "FEMBodyForce.h"
 #import "GaussIntegration.h"
 #import "Utils.h"
 

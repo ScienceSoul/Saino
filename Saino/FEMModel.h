@@ -9,8 +9,15 @@
 #import <Foundation/Foundation.h>
 
 #import "Constructors.h"
+#import "FEMVariable.h"
 #import "FEMSimulation.h"
 #import "FEMConstants.h"
+#import "FEMBodyForce.h"
+#import "FEMBoundaryCondition.h"
+#import "FEMBoundary.h"
+#import "FEMEquation.h"
+#import "FEMInitialConditions.h"
+#import "FEMMaterial.h"
 #import "FileReader.h"
 
 @interface FEMModel : NSObject {
@@ -36,17 +43,17 @@
     NSMutableString *_meshDir;
     NSMutableString *_meshName;
     NSMutableString *_outputPath;
-    NSArray *_boundaryID;                           // Array of NSNumbers for boundaries ID
-    NSArray *_solutions;                            // Array of all solutions in the model
-    NSMutableArray *_meshes;                        // Array of meshes used by the model
-    NSArray *_bodies;                               // Array of dictionaries
-    NSArray *_bodyForces;                           // Array of FEMBodyForce objects
-    NSArray *_boundaryConditions;                   // Array of FEMBoundaryCondition objects
-    NSArray *_boundaries;                           // Array of FEMBoundary objects
-    NSArray *_equations;                            // Array of FEMEquation objects
-    NSArray *_initialConditions;                    // Array of FEMInitialConditions objects
-    NSArray *_materials;                            // Array of FEMMaterial objects
-    NSMutableArray *_variables;                     // Mutable array of FEMVariable classes
+    NSArray *_boundaryID;                        // Boundaries ID
+    NSArray *_solutions;                         // Array of all solutions in the model
+    NSMutableArray *_meshes;                     // Array of meshes used by the model
+    NSArray *_bodies;
+    NSArray *_bodyForces;
+    NSArray *_boundaryConditions;
+    NSArray *_boundaries;
+    NSArray *_equations;
+    NSArray *_initialConditions;
+    NSArray *_materials;
+    NSMutableArray *_variables;
     FEMSimulation *_simulation;
     FEMConstants *_constants;
     FileReader *_mdf;
@@ -77,17 +84,17 @@
 @property(nonatomic, strong, nonnull) NSMutableString *meshDir;
 @property(nonatomic, strong, nonnull) NSMutableString *meshName;
 @property(nonatomic, strong, nonnull) NSMutableString *outputPath;
-@property(nonatomic, strong, nonnull) NSArray *boundaryID;
+@property(nonatomic, strong, nonnull) NSArray <NSNumber *> *boundaryID;
 @property(nonatomic, strong, nullable) NSArray *solutions;
 @property(nonatomic, strong, nonnull) NSMutableArray *meshes;
-@property(nonatomic, strong, nullable) NSArray *bodies;
-@property(nonatomic, strong, nullable) NSArray *bodyForces;
-@property(nonatomic, strong, nullable) NSArray *boundaryConditions;
-@property(nonatomic, strong, nullable) NSArray *boundaries;
-@property(nonatomic, strong, nullable) NSArray *equations;
-@property(nonatomic, strong, nullable) NSArray *initialConditions;
-@property(nonatomic, strong, nullable) NSArray *materials;
-@property(nonatomic, strong, nonnull) NSMutableArray *variables;
+@property(nonatomic, strong, nullable) NSArray <NSDictionary *> *bodies;
+@property(nonatomic, strong, nullable) NSArray <FEMBodyForce *> *bodyForces;
+@property(nonatomic, strong, nullable) NSArray <FEMBoundaryCondition *> *boundaryConditions;
+@property(nonatomic, strong, nullable) NSArray <FEMBoundary *> *boundaries;
+@property(nonatomic, strong, nullable) NSArray <FEMEquation *> *equations;
+@property(nonatomic, strong, nullable) NSArray <FEMInitialConditions *> *initialConditions;
+@property(nonatomic, strong, nullable) NSArray <FEMMaterial *> *materials;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMVariable *> *variables;
 @property(nonatomic, strong, nonnull) FEMSimulation *simulation;
 @property(nonatomic, strong, nonnull) FEMConstants *constants;
 @property(nonatomic, strong, nullable) FileReader *mdf;

@@ -12,7 +12,6 @@
 #import "FEMCore.h"
 #import "FEMElementUtils.h"
 #import "FEMListUtilities.h"
-#import "FEMBoundaryCondition.h"
 #import "Utils.h"
 
 @implementation FEMRadiation

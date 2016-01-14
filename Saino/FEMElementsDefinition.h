@@ -16,11 +16,11 @@
 @property (nonatomic, strong, nonnull) NSString *topology;
 @property (nonatomic, strong, nonnull) NSNumber *code;
 @property (nonatomic, strong, nonnull) NSNumber *nodes;
-@property (nonatomic, strong, nonnull) NSArray *nodeU;
-@property (nonatomic, strong, nonnull) NSArray *nodeV;
-@property (nonatomic, strong, nonnull) NSArray *nodeW;
-@property (nonatomic, strong, nonnull) NSArray *basis;
-@property (nonatomic, strong, nonnull) NSArray *gaussPoints;
+@property (nonatomic, strong, nonnull) NSArray <NSNumber *> *nodeU;
+@property (nonatomic, strong, nonnull) NSArray <NSNumber *> *nodeV;
+@property (nonatomic, strong, nonnull) NSArray <NSNumber *> *nodeW;
+@property (nonatomic, strong, nonnull) NSArray <NSNumber *> *basis;
+@property (nonatomic, strong, nonnull) NSArray <NSNumber *> *gaussPoints;
 @property (nonatomic, strong, nonnull) NSNumber *stabilization;
 
 @end

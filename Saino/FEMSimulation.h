@@ -8,13 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
+#import "FEMValueList.h"
+
 @interface FEMSimulation : NSObject {
     
     int _tag;
-    NSMutableArray *_valuesList;  // Array of FEMValueList objects
+    NSMutableArray *_valuesList;
 }
 
 @property(nonatomic, assign) int tag;
-@property(nonatomic, strong, nonnull) NSMutableArray *valuesList;
+@property(nonatomic, strong, nonnull) NSMutableArray <FEMValueList *> *valuesList;
 
 @end

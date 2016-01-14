@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import "FEMCore.h"
-#import "FEMModel.h"
 #import "FEMElementDescription.h"
 
 @interface FEMJob : NSObject {

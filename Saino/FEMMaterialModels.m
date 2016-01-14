@@ -9,7 +9,6 @@
 #import "FEMMaterialModels.h"
 #import "FEMCore.h"
 #import "FEMListUtilities.h"
-#import "FEMMaterial.h"
 #import "FEMCoordinateSystems.h"
 #import "FEMLinearAlgebra.h"
 #include "FEMElementDescription.h"

@@ -8,7 +8,6 @@
 
 #import "FEMUtilities.h"
 #import "FEMCore.h"
-#import "FEMEquation.h"
 #import "FEMPElementMaps.h"
 #import "FEMProjector.h"
 #import "FEMElementUtils.h"

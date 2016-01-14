@@ -35,7 +35,7 @@ typedef double (^inputBlock) (double * __nullable variablesValues);
 @property(nonatomic, assign, getter = isLvalue) BOOL lValue;
 @property(nonatomic, strong, nonnull) NSString *name;
 @property(nonatomic, strong, nullable) NSString *cValue;
-@property(nonatomic, strong, nullable) NSArray *dependencies;
+@property(nonatomic, strong, nullable) NSArray <NSString *> *dependencies;
 @property(copy, nullable) inputBlock block;
 
 -(void)deallocation;

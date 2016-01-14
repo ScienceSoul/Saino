@@ -7,12 +7,10 @@
 //
 
 #import "FEMDifferentials.h"
-#import "FEMBodyForce.h"
 #import "FEMListUtilities.h"
 #import "FEMUtilities.h"
 #import "FEMCoordinateSystems.h"
 #import "FEMLinearAlgebra.h"
-#import "FEMMaterial.h"
 
 @interface FEMDifferentials ()
 -(void)FEMDifferentials_computeLorentzMagnetic:(double * __nonnull)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double * __nonnull)lorentzForce model:(FEMModel * __nonnull)model;

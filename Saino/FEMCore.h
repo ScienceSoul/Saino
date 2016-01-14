@@ -70,7 +70,7 @@
 @property(nonatomic, assign) double * __nullable * __nullable boundaryTangent1;
 @property(nonatomic, assign) double * __nullable * __nullable boundaryTangent2;
 @property(nonatomic, strong, nonnull) NSMutableString *normalTangentialName;
-@property(nonatomic, strong, nonnull) NSMutableArray *outputLevelMask;
+@property(nonatomic, strong, nonnull) NSMutableArray <NSNumber *> *outputLevelMask;
 @property(nonatomic, assign, getter = isOutputPrefix) BOOL outputPrefix;
 @property(nonatomic, assign, getter = isOutputCaller) BOOL outputCaller;
 @property(nonatomic, assign) int maxOutputLevel;
