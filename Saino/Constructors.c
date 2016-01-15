@@ -24,7 +24,9 @@ void initElements(Element_t * __nonnull elements, int n) {
     int i;
     
     for (i=0; i<n; i++) {
-        elements[i] = (Element_t){.color.red=-1, .color.green=-1, .color.blue=-1, .color.colorIndex=-1, .colored=false, .copy=false, .BodyID=0, .Splitted=0, .BoundaryInfo=NULL, .NodeIndexes=NULL, .EdgeIndexes=NULL, .FaceIndexes=NULL, .BubbleIndexes=NULL, .DGIndexes=NULL, .Pdefs=NULL};
+        elements[i] = (Element_t){.color.red=-1, .color.green=-1, .color.blue=-1, .color.colorIndex=-1, .ElementIndex=-1, .GElementIndex=-1,
+                                  .colored=false, .copy=false, .BodyID=0, .Splitted=0, .NDOFs=-1, .BDOFs=-1, .DGDOFs=-1, .BoundaryInfo=NULL,
+                                  .NodeIndexes=NULL, .EdgeIndexes=NULL, .FaceIndexes=NULL, .BubbleIndexes=NULL, .DGIndexes=NULL, .Pdefs=NULL};
     }
 }
 

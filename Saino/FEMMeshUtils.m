@@ -275,7 +275,7 @@
         }
         free_dvector(wold, 0, n);
         free_dvector(h, 0, n-1);
-    } else {
+    } else { // Uniform division
         NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating linear division.\n");
         for (int i=0; i<=n; i++) {
             w[i] = i/(1.0 * n);
@@ -5736,11 +5736,13 @@ jump:
     must be done with StructuredMeshMapper or some similar utility.
     The top and bottom surface will be assigned Boundary Conditions tags
     with indexes one larger than the maximum used on by the 2D mesh.
+ 
+    Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************************/
 -(FEMMesh * __nonnull)extrudeMesh:(FEMMesh * __nonnull)mesh inLevels:(int)inLevels model:(FEMModel * __nonnull)model {
     
-    int j, k, l, n, bcid, cnt, extrudedCoord, ind[8], ln, max_bid, max_body, nnodes;
+    int j, k, l, n, bcid, cnt, dg_n, extrudedCoord, ind[8], ln, max_body, nnodes;
     double currentCoord, w;
     double *activeCoord = NULL, *wTable;
     Element_t *elementsIn = NULL, *elementsOut = NULL;
@@ -5754,17 +5756,21 @@ jump:
     
     // TODO: Add support for parallel run
     
+    // Generate volume nodal points
     n = mesh.numberOfNodes;
     nnodes = (inLevels + 2) * n;
     
     nodesIn = mesh.getNodes;
     nodesOut = meshOut.getNodes;
     
+    nodesOut = (Nodes_t*)malloc(sizeof(Nodes_t));
+    initNodes(nodesOut);
     nodesOut->x = doublevec(0, nnodes-1);
     nodesOut->y = doublevec(0, nnodes-1);
     nodesOut->z = doublevec(0, nnodes-1);
     nodesOut->numberOfNodes = nnodes;
     
+    int gelements = mesh.numberOfBulkElements;
     // TODO: Add support for parallel run
     
     // Create the division for the 1D unit mesh
@@ -5783,6 +5789,9 @@ jump:
     } else if (extrudedCoord == 3) {
         activeCoord = nodesOut->z;
     }
+    
+    BOOL preserveBaseline = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"preserve baseline" info:&found];
+    if (found == NO) preserveBaseline = NO;
     
     double minCoord = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"extruded minimum coordinate" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) minCoord = 0.0;
@@ -5809,15 +5818,28 @@ jump:
     }
     meshOut.numberOfNodes = cnt;
     
+    // Count 101 elements:
+    // (this requires an extra layer)
+    int cnt101 = 0;
+    for (int i=mesh.numberOfBulkElements; i<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; i++) {
+        if (elementsIn[i].Type.ElementCode == 101) cnt101++;
+    }
+    
     n = mesh.numberOfElements;
     elementsOut = meshOut.getElements;
-    elementsOut = (Element_t*) malloc( sizeof(Element_t) * (n*(inLevels+3)) );
+    if (preserveBaseline == YES) {
+        elementsOut = (Element_t*) malloc( sizeof(Element_t) * (n*(inLevels+3) + mesh.numberOfBoundaryElements + cnt101) );
+        initElements(elementsOut, (n*(inLevels+3) + mesh.numberOfBoundaryElements + cnt101));
+    } else {
+        elementsOut = (Element_t*) malloc( sizeof(Element_t) * (n*(inLevels+3) + cnt101) );
+        initElements(elementsOut, (n*(inLevels+3) + cnt101));
+    }
     
     // Generate volume bulk elements
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     elementsIn = mesh.getElements;
     meshOut.maxElementNodes = 0;
-    cnt = 0;
+    cnt = 0, dg_n = 0;
     needEdges = NO;
     n = mesh.numberOfNodes;
     for (int i=0; i<=inLevels; i++) {
@@ -5839,23 +5861,40 @@ jump:
             switch (ln) {
                 case 6:
                     elmType = NULL;
-                    elmType = [elementDescription getElementType:706 inMesh:meshOut stabilization:NULL];
+                    elmType = [elementDescription getElementType:706 inMesh:mesh stabilization:NULL];
                     elementsOut[cnt].Type = *elmType;
                     break;
                 case 8:
                     elmType = NULL;
-                    elmType = [elementDescription getElementType:808 inMesh:meshOut stabilization:NULL];
+                    elmType = [elementDescription getElementType:808 inMesh:mesh stabilization:NULL];
                     elementsOut[cnt].Type = *elmType;
                     break;
             }
+            
+            elementsOut[cnt].GElementIndex = elementsIn[j].GElementIndex + gelements * i;
             
             elementsOut[cnt].ElementIndex = cnt;
             elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
             elementsOut[cnt].sizeNodeIndexes = ln;
             memcpy(elementsOut[cnt].NodeIndexes, ind, ln*sizeof(int));
+            elementsOut[cnt].DGIndexes = NULL;
             elementsOut[cnt].EdgeIndexes = NULL;
             elementsOut[cnt].FaceIndexes = NULL;
             elementsOut[cnt].BubbleIndexes = NULL;
+            
+            k = elementsOut[cnt].DGDOFs;
+            if (k > 0) {
+                elementsOut[cnt].DGDOFs = elementsOut[cnt].Type.NumberOfNodes;
+                k = elementsOut[cnt].DGDOFs;
+                elementsOut[cnt].DGIndexes = intvec(0, k-1);
+                elementsOut[cnt].sizeDGIndexes = k;
+                for (int l=0; l<k; l++) {
+                    elementsOut[cnt].DGIndexes[l] = dg_n;
+                    dg_n++;
+                }
+                needEdges = YES;
+            }
+            
             if (elementsIn[j].Pdefs != NULL) {
                 needEdges = YES;
                 elementsOut[cnt].Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
@@ -5866,8 +5905,63 @@ jump:
     }
     meshOut.numberOfBulkElements = cnt;
     
+    int max_bid = 0;
+    int max_baseline_bid = 0;
+    
+    if (preserveBaseline == YES) {
+        for (int j=0; j<mesh.numberOfBoundaryElements; j++) {
+            k = j + mesh.numberOfBulkElements;
+            
+            elementsOut[cnt] = elementsIn[k];
+            
+            elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            
+            max_bid = max(max_bid, elementsIn[k].BoundaryInfo->Constraint);
+            
+            if (elementsIn[k].BoundaryInfo->Left != NULL) {
+                l = elementsIn[k].BoundaryInfo->Left->ElementIndex-1;
+                elementsOut[cnt].BoundaryInfo->Left = &elementsOut[mesh.numberOfBulkElements*(inLevels+1) + (inLevels+2)*mesh.numberOfBoundaryElements+l];
+            }
+            if (elementsIn[k].BoundaryInfo->Right != NULL) {
+                l = elementsIn[k].BoundaryInfo->Right->ElementIndex-1;
+                elementsOut[cnt].BoundaryInfo->Right = &elementsOut[mesh.numberOfBulkElements*(inLevels+1) + (inLevels+2)*mesh.numberOfBoundaryElements+l];
+            }
+            
+            if (elementsIn[k].Type.ElementCode >= 200) {
+                elementsOut[cnt].NDOFs = 2;
+                elementsOut[cnt].NodeIndexes = intvec(0, 1);
+                elementsOut[cnt].sizeNodeIndexes = 2;
+                ind[0] = elementsIn[k].NodeIndexes[0];
+                ind[1] = elementsIn[k].NodeIndexes[1];
+                memcpy(elementsOut[cnt].NodeIndexes, ind, 2*sizeof(int));
+                elmType = NULL;
+                elmType = [elementDescription getElementType:202 inMesh:mesh stabilization:NULL];
+                elementsOut[cnt].Type = *elmType;
+            } else {
+                elementsOut[cnt].NDOFs = 1;
+                l = elementsIn[k].sizeNodeIndexes;
+                elementsOut[cnt].NodeIndexes = intvec(0, l-1);
+                elementsOut[cnt].sizeNodeIndexes = l;
+                memcpy(elementsOut[cnt].NodeIndexes, elementsIn[k].NodeIndexes, elementsIn[k].sizeNodeIndexes*sizeof(int));
+                elementsOut[cnt].Type = elementsIn[k].Type;
+            }
+            elementsOut[cnt].DGDOFs = 0;
+            elementsOut[cnt].DGIndexes = NULL;
+            elementsOut[cnt].ElementIndex = cnt + 1;
+            elementsOut[cnt].Pdefs = NULL;
+            elementsOut[cnt].EdgeIndexes = NULL;
+            elementsOut[cnt].FaceIndexes = NULL;
+            elementsOut[cnt].BubbleIndexes = NULL;
+            
+            cnt++;
+        }
+        // TODO: Add support for parallel run
+        max_baseline_bid = max_bid;
+    }
+    
     // Add side boundaries with the bottom mesh boundary id's
-    max_bid = 0;
+    // (or shift ids if preserving the baseline boundary)
     for (int i=0; i<=inLevels; i++) {
         for (j=0; j<mesh.numberOfBoundaryElements; j++) {
             k = j + mesh.numberOfBulkElements;
@@ -5875,7 +5969,9 @@ jump:
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
             elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
             
-            max_bid = max(max_bid, elementsIn[k].BoundaryInfo->Constraint);
+            elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
+            
+            max_bid = max(max_bid, max_baseline_bid + elementsIn[k].BoundaryInfo->Constraint);
             
             if (elementsIn[k].BoundaryInfo->Left != NULL) {
                 l = elementsIn[k].BoundaryInfo->Left->ElementIndex-1;
@@ -5888,7 +5984,7 @@ jump:
             
             if (elementsIn[k].Type.ElementCode >= 200) {
                 elementsOut[cnt].NDOFs = 4;
-                elementsOut[cnt].NodeIndexes = intvec(0, 4-1);
+                elementsOut[cnt].NodeIndexes = intvec(0, 3);
                 elementsOut[cnt].sizeNodeIndexes = 4;
                 
                 ind[0] = elementsIn[k].NodeIndexes[0]+i*n;
@@ -5897,7 +5993,7 @@ jump:
                 ind[3] = elementsIn[k].NodeIndexes[0]+(i+1)*n;
                 memcpy(elementsOut[cnt].NodeIndexes, ind, 4*sizeof(int));
                 elmType = NULL;
-                elmType = [elementDescription getElementType:404 inMesh:meshOut stabilization:NULL];
+                elmType = [elementDescription getElementType:404 inMesh:mesh stabilization:NULL];
                 elementsOut[cnt].Type = *elmType;
             } else {
                 elementsOut[cnt].NDOFs = 1;
@@ -5908,7 +6004,43 @@ jump:
                 }
                 elementsOut[cnt].Type = elementsIn[k].Type;
             }
-            elementsOut[cnt].ElementIndex = (cnt+1) + meshOut.numberOfBulkElements;
+            elementsOut[cnt].ElementIndex = cnt + 1;
+            elementsOut[cnt].DGDOFs = 0;
+            elementsOut[cnt].DGIndexes = NULL;
+            elementsOut[cnt].Pdefs = NULL;
+            elementsOut[cnt].EdgeIndexes = NULL;
+            elementsOut[cnt].FaceIndexes = NULL;
+            elementsOut[cnt].BubbleIndexes = NULL;
+            cnt++;
+        }
+    }
+    
+    // Take care of extra 101 elements
+    if (cnt101 > 0) {
+        for (int j=0; j<mesh.numberOfBoundaryElements; j++) {
+            k = j + mesh.numberOfBulkElements;
+            
+            if (elementsIn[k].Type.ElementCode != 101) continue;
+            
+            elementsOut[cnt] = elementsIn[k];
+            elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            
+            elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
+            
+            max_bid = max(max_bid, max_baseline_bid + elementsIn[k].BoundaryInfo->Constraint);
+            
+            elementsOut[cnt].NDOFs = 1;
+            elementsOut[cnt].NodeIndexes = intvec(0, 0);
+            elementsOut[cnt].sizeNodeIndexes = 1;
+            for (int l=0; l<elementsIn[k].sizeNodeIndexes; l++) {
+                elementsOut[cnt].NodeIndexes[l] = elementsIn[k].NodeIndexes[l]+(inLevels+1)*n;
+            }
+            elementsOut[cnt].Type = elementsIn[k].Type;
+            
+            elementsOut[cnt].ElementIndex = cnt + 1;
+            elementsOut[cnt].DGDOFs = 0;
+            elementsOut[cnt].DGIndexes = NULL;
             elementsOut[cnt].Pdefs = NULL;
             elementsOut[cnt].EdgeIndexes = NULL;
             elementsOut[cnt].FaceIndexes = NULL;
@@ -5941,7 +6073,8 @@ jump:
         bcid = max_bid + elementsOut[cnt].BodyID;
         elementsOut[cnt].BoundaryInfo->Constraint = bcid;
         
-        if (bcid <= model.numberOfBoundaryElements) {
+        elementsOut[cnt].BodyID = 0;
+        if (bcid <= model.numberOfBoundaryConditions) {
             boundaryConditionAtId = (model.boundaryConditions)[bcid-1];
             j = [listUtilities listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"body id" info:&found minValue:NULL maxValue:NULL];
             if (found == YES) elementsOut[cnt].BodyID = j;
@@ -5950,8 +6083,10 @@ jump:
         elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
         elementsOut[cnt].sizeNodeIndexes = ln;
         memcpy(elementsOut[cnt].NodeIndexes, elementsIn[i].NodeIndexes, ln*sizeof(int));
-        elementsOut[cnt].ElementIndex = cnt+1;
+        elementsOut[cnt].ElementIndex = cnt + 1;
         elementsOut[cnt].Type = elementsIn[i].Type;
+        elementsOut[cnt].DGDOFs = 0;
+        elementsOut[cnt].DGIndexes = NULL;
         elementsOut[cnt].Pdefs = NULL;
         elementsOut[cnt].EdgeIndexes = NULL;
         elementsOut[cnt].FaceIndexes = NULL;
@@ -5973,6 +6108,7 @@ jump:
         bcid = max_bid + elementsOut[cnt].BodyID + max_body;
         elementsOut[cnt].BoundaryInfo->Constraint = bcid;
         
+        elementsOut[cnt].BodyID = 0;
         if (bcid <= model.numberOfBoundaryConditions) {
             boundaryConditionAtId = (model.boundaryConditions)[bcid-1];
             j = [listUtilities listGetInteger:model inArray:boundaryConditionAtId.valuesList forVariable:@"body id" info:&found minValue:NULL maxValue:NULL];
@@ -5984,8 +6120,10 @@ jump:
         for (j=0; j<ln; j++) {
             elementsOut[cnt].NodeIndexes[j] = elementsIn[i].NodeIndexes[j] + (inLevels+1)*n;
         }
-        elementsOut[cnt].ElementIndex = cnt+1;
+        elementsOut[cnt].ElementIndex = cnt + 1;
         elementsOut[cnt].Type = elementsIn[i].Type;
+        elementsOut[cnt].DGDOFs = 0;
+        elementsOut[cnt].DGIndexes = NULL;
         elementsOut[cnt].Pdefs = NULL;
         elementsOut[cnt].EdgeIndexes = NULL;
         elementsOut[cnt].FaceIndexes = NULL;

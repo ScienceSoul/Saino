@@ -189,7 +189,8 @@ typedef struct Element_t {
         sizeDGIndexes;
     int BodyID;
     int Splitted;
-    int ElementIndex,                              // Index counted from 1 to n
+    int ElementIndex,                                          // Index counted from 1 to n
+        GElementIndex,                                         // Index counted from 1 to n
         PartIndex, NDOFs, BDOFs, DGDOFs;
     
     double StabilizationMK, hK;

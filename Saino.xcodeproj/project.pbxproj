@@ -180,6 +180,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		013C0A7F1C47867B0067C98A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 738AB9E91BC7C9220038AAEF;
+			remoteInfo = SainoCore;
+		};
 		730C42D21B2686E2009411B7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
@@ -187,21 +194,7 @@
 			remoteGlobalIDString = 7315511C13583FFD004CCD09;
 			remoteInfo = Saino;
 		};
-		7333C4D31C1ADE2400514B41 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 738AB9E91BC7C9220038AAEF;
-			remoteInfo = SainoCore;
-		};
 		738AB9EF1BC7C9220038AAEF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 738AB9E91BC7C9220038AAEF;
-			remoteInfo = SainoCore;
-		};
-		738DA07A1BCCB63C000CCE84 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
 			proxyType = 1;
@@ -1005,7 +998,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7333C4D41C1ADE2400514B41 /* PBXTargetDependency */,
+				013C0A801C47867B0067C98A /* PBXTargetDependency */,
 			);
 			name = FEMStructuredMeshMapper;
 			productName = FEMStructuredMeshMapper;
@@ -1041,7 +1034,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				738DA07B1BCCB63C000CCE84 /* PBXTargetDependency */,
 			);
 			name = "SainoCore Logic Tests";
 			productName = "SainoCore Logic Tests";
@@ -1253,25 +1245,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		013C0A801C47867B0067C98A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
+			targetProxy = 013C0A7F1C47867B0067C98A /* PBXContainerItemProxy */;
+		};
 		730C42D31B2686E2009411B7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7315511C13583FFD004CCD09 /* Saino */;
 			targetProxy = 730C42D21B2686E2009411B7 /* PBXContainerItemProxy */;
 		};
-		7333C4D41C1ADE2400514B41 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
-			targetProxy = 7333C4D31C1ADE2400514B41 /* PBXContainerItemProxy */;
-		};
 		738AB9F01BC7C9220038AAEF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
 			targetProxy = 738AB9EF1BC7C9220038AAEF /* PBXContainerItemProxy */;
-		};
-		738DA07B1BCCB63C000CCE84 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
-			targetProxy = 738DA07A1BCCB63C000CCE84 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
