@@ -683,8 +683,8 @@ static dispatch_once_t onceToken;
     mod.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3, boundaryCondition4, boundaryCondition5, boundaryCondition6];
     mod.numberOfBoundaryConditions = 6;
     
-    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP_HOM_A010"]];
-    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP_HOM_A010/rectangle"]];
+    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010"]];
+    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010/rectangle"]];
 }
 
 @end
