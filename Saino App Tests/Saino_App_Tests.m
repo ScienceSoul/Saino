@@ -63,8 +63,8 @@
     [_saino_view_controller press:[_saino_view viewWithTag: 1]];  // Heateq
     
     if (self.testApp.heatq_allDone == YES) {
-        if ( self.testApp.norm != -1 ) {
-            if ( _targetEps < 0 ) {
+        if ( self.testApp.norm != -1.0 ) {
+            if ( _targetEps < 0.0) {
                 if ( targetNorm < self.testApp.norm )
                     success = 0;
                 else
@@ -93,8 +93,8 @@
     [_saino_view_controller press:[_saino_view viewWithTag: 2]];  // Step_stokes
 
     if (self.testApp.step_stokes_allDone == YES) {
-        if ( self.testApp.norm != -1 ) {
-            if ( _targetEps < 0 ) {
+        if ( self.testApp.norm != -1.0 ) {
+            if ( _targetEps < 0.0 ) {
                 if ( targetNorm < self.testApp.norm )
                     success = 0;
                 else
@@ -122,8 +122,8 @@
     [_saino_view_controller press:[_saino_view viewWithTag: 3]];  // Natural convection
     
     if (self.testApp.natural_convection_allDone == YES) {
-        if ( self.testApp.norm != -1 ) {
-            if ( _targetEps < 0 ) {
+        if ( self.testApp.norm != -1.0 ) {
+            if ( _targetEps < 0.0 ) {
                 if ( targetNorm < self.testApp.norm )
                     success = 0;
                 else
@@ -141,6 +141,35 @@
         XCTAssertTrue(success == 0, @"Natural convection:   [FAILED].\n");
     } else {
         XCTAssertTrue(self.testApp.natural_convection_allDone == YES, @"Natural convection: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+    }
+}
+
+-(void)testISMIP_HOM_A010 {
+    int success;
+    double targetNorm = 0.0;
+    
+    [_saino_view_controller press:[_saino_view viewWithTag: 4]]; // ISMIP-HOM A010
+    
+    if (self.testApp.ismip_hom_allDone == YES) {
+        if (self.testApp.norm != -1.0) {
+            if (_targetEps < 0.0) {
+                if (targetNorm < self.testApp.norm) {
+                    success = 0;
+                } else
+                    success = -1;
+            } else if (2.0 * fabs(self.testApp.norm - targetNorm) / (self.testApp.norm + targetNorm) < _targetEps) success = 0;
+            else success = -1;
+        } else {
+            success = 0;
+        }
+        if (success != 0) {
+            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+        } else {
+            NSLog(@"ISMIP-HOM A010:   [Passed].\n");
+        }
+        XCTAssertTrue(success == 0, @"ISMIP-HOM A010:   [FAILED].\n");
+    } else {
+        XCTAssertTrue(self.testApp.natural_convection_allDone == YES, @"ISMIP-HOM A010: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
     }
 }
 

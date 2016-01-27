@@ -1874,6 +1874,8 @@ jump:
         test.step_stokes_allDone = YES;
     } else if (test.do_natural_convection == YES) {
         test.natural_convection_allDone = YES;
+    } else if (test.do_ismip_hom_A010 == YES) {
+        test.ismip_hom_allDone = YES;
     }
 #endif
 }

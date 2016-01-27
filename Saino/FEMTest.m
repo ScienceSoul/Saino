@@ -19,9 +19,11 @@
 @synthesize do_heatq = _do_heatq;
 @synthesize do_step_stokes = _do_step_stokes;
 @synthesize do_natural_convection = _do_natural_convection;
+@synthesize do_ismip_hom_A010 = _do_ismip_hom_A010;
 @synthesize heatq_allDone = _heatq_allDone;
 @synthesize step_stokes_allDone = _step_stokes_allDone;
 @synthesize natural_convection_allDone = _natural_convection_allDone;
+@synthesize ismip_hom_allDone = _ismip_hom_allDone;
 @synthesize norm = _norm;
 
 static FEMTest * __nullable sharedTest = nil;
@@ -54,9 +56,11 @@ static dispatch_once_t onceToken;
     _do_heatq = NO;
     _do_step_stokes = NO;
     _do_natural_convection = NO;
+    _do_ismip_hom_A010 = NO;
     _heatq_allDone = NO;
     _step_stokes_allDone = NO;
     _natural_convection_allDone = NO;
+    _ismip_hom_allDone = NO;
     _norm = 0.0;
 }
 
@@ -274,7 +278,7 @@ static dispatch_once_t onceToken;
     free_ivector(vector, 0, 0);
     
     NSArray *dependencies = @[@"coordinate 2"];
-    double (^block) (double *) = ^(double *t){
+    double (^block) (double *) = ^(double *t) {
         return (2.0-t[0]) * (t[0]-1.0);
     };
     [listUtilities addBlockInClassList:boundaryCondition1 theVariable:@"velocity 1" usingBlock:block dependencies:dependencies];
@@ -508,6 +512,179 @@ static dispatch_once_t onceToken;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection"]];
     mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection/square"]];
+}
+
+-(void)setUpISMIP_HOM_A010Test:(id __nonnull)model {
+    
+    FEMModel *mod = (FEMModel *)model;
+    
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    
+    double L = 10.0e3;
+    double slope = 0.5 * M_PI / 180.0;
+    
+    double yearinsec = 365.25 * 24.0 * 24.0 * 60.0 * 60.0;
+    double rhoi = 900.0 / (1.0e6 * pow(yearinsec, 2.0));
+    double gravity = -9.81 * pow(yearinsec, 2.0);
+    double n = 3.0;
+    double eta = pow((2.0 * 100.0), (-1.0/n));
+    
+    [listUtilities addStringInClassList:mod.simulation theVariable:@"coordinate system" withValue:@"cartesian 3d"];
+    
+    int *vector = intvec(0, 2);
+    vector[0] = 1; vector[1] = 2; vector[2] = 3;
+    [listUtilities addIntegerArrayInClassList:mod.simulation theVariable:@"coordinate mapping" withValues:vector size:3 orUsingBlock:nil];
+    free_ivector(vector, 0, 2);
+    
+    [listUtilities addStringInClassList:mod.simulation theVariable:@"simulaton type" withValue:@"steady state"];
+    
+    int ivalue = 16;
+    [listUtilities addIntegerInClassList:mod.simulation theVariable:@"extruded mesh levels" withValue:&ivalue orUsingBlock:nil];
+    
+    int *intervals = intvec(0, 0);
+    intervals[0] = 1;
+    [listUtilities addIntegerArrayInClassList:mod.simulation theVariable:@"output intervals" withValues:intervals size:1 orUsingBlock:nil];
+    free_ivector(intervals, 0, 0);
+    
+    ivalue = 1;
+    [listUtilities addIntegerInClassList:mod.simulation theVariable:@"steady state maximum iterations" withValue:&ivalue orUsingBlock:nil];
+        [listUtilities addIntegerInClassList:mod.simulation theVariable:@"steady state minimum iterations" withValue:&ivalue orUsingBlock:nil];
+    
+    [listUtilities addStringInClassList:mod.simulation theVariable:@"output file" withValue:@"ismip_A010_.result"];
+    [listUtilities addStringInClassList:mod.simulation theVariable:@"post file" withValue:@"ismip_A010_.ep"];
+    
+    ivalue = 4;
+    [listUtilities addIntegerInClassList:mod.simulation theVariable:@"maximum output level" withValue:&ivalue orUsingBlock:nil];
+    
+    mod.bodies = @[ @{@"equation" : @1,
+                      @"body force" : @1,
+                      @"material" : @1,
+                      @"initial condition" : @1}];
+    mod.numberOfBodies = 1;
+    
+    FEMInitialConditions *initialConditions = [[FEMInitialConditions alloc] init];
+    double value = 0.0;
+    [listUtilities addConstRealInClassList:initialConditions theVariable:@"pressure" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:initialConditions theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:initialConditions theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:initialConditions theVariable:@"velocity 3" withValue:&value orUsingBlock:nil string:nil];
+    mod.initialConditions = @[initialConditions];
+    mod.numberOfInitialConditions = 1;
+    
+    FEMBodyForce *bodyForce = [[FEMBodyForce alloc] init];
+    [listUtilities addConstRealInClassList:bodyForce theVariable:@"flow bodyforce 1" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:bodyForce theVariable:@"flow bodyforce 2" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:bodyForce theVariable:@"flow bodyforce 3" withValue:&gravity orUsingBlock:nil string:nil];
+    mod.bodyForces = @[bodyForce];
+    mod.numberOfBodyForces = 1;
+    
+    FEMMaterial *material = [[FEMMaterial alloc] init];
+    [listUtilities addConstRealInClassList:material theVariable:@"density" withValue:&rhoi orUsingBlock:nil string:nil];
+    [listUtilities addStringInClassList:material theVariable:@"viscosity model" withValue:@"power law"];
+    [listUtilities addConstRealInClassList:material theVariable:@"viscosity" withValue:&eta orUsingBlock:nil string:nil];
+    value = 1.0 / n;
+    [listUtilities addConstRealInClassList:material theVariable:@"viscosity exponent" withValue:&value orUsingBlock:nil string:nil];
+    value = 1.0e-10;
+    [listUtilities addConstRealInClassList:material theVariable:@"critical shear rate" withValue:&value orUsingBlock:nil string:nil];
+
+    [listUtilities addLogicalInClassList:material theVariable:@"cauchy" withValue:NO];
+    mod.materials = @[material];
+    mod.numberOfMaterials = 1;
+    
+    FEMSolution *solution1 = [[FEMSolution alloc] init];
+    [solution1.solutionInfo setObject:@"MapCoordinate" forKey:@"equation"];
+    [solution1.solutionInfo setObject:@3 forKey:@"active coordinate"];
+//    [solution1.solutionInfo setObject:@"dsdt" forKey:@"mesh velocity variable"];
+//    [solution1.solutionInfo setObject:@"ds" forKey:@"mesh update variable"];
+    [solution1.solutionInfo setObject:@YES forKey:@"mesh velocity first zero"];
+    
+    FEMSolution *solution2 = [[FEMSolution alloc] init];
+    [solution2.solutionInfo setObject:@"navier-stokes" forKey:@"equation"];
+    [solution2.solutionInfo setObject:@"stabilized" forKey:@"stabilization method"];
+    [solution2.solutionInfo setObject:@"stokes" forKey:@"flow model"];
+//    [solution2.solutionInfo setObject:@"-dofs 1 dsdt" forKey:@"exported variable 1"];
+//    [solution2.solutionInfo setObject:@"-dofs 1 ds" forKey:@"exported variable 1"];
+    [solution2.solutionInfo setObject:@"iterative" forKey:@"linear system solver"];
+    [solution2.solutionInfo setObject:@"bi-cgstab" forKey:@"linear system iterative method"];
+    [solution2.solutionInfo setObject:@"ilu0" forKey:@"linear system preconditioning"];
+    [solution2.solutionInfo setObject:@1.0e-8 forKey:@"linear system convergence tolerance"];
+    [solution2.solutionInfo setObject:@500 forKey:@"linear system maximum iterations"];
+    [solution2.solutionInfo setObject:@500 forKey:@"linear system residual output"];
+    [solution2.solutionInfo setValue:@YES forKey:@"linear system abort not converged"];
+    [solution2.solutionInfo setValue:@50 forKey:@"nonlinear system maximum iterations"];
+    [solution2.solutionInfo setValue:@1.0e-5 forKey:@"nonlinear system convergence tolerance"];
+    [solution2.solutionInfo setValue:@5 forKey:@"nonlinear system newton after iterations"];
+    [solution2.solutionInfo setValue:@1.0e-2 forKey:@"nonlinear system newton after tolerance"];
+    [solution2.solutionInfo setValue:@1.0 forKey:@"nonlinear system relaxation factor"];
+    [solution2.solutionInfo setValue:@1.0e-3 forKey:@"steady state convergence tolerance"];
+    
+    mod.solutions = @[solution1, solution2];
+    mod.numberOfSolutions = 2;
+    
+    FEMEquation *equation = [[FEMEquation alloc] init];
+    vector = intvec(0, 1);
+    vector[0] = 1;
+    vector[1] = 2;
+    [listUtilities addIntegerArrayInClassList:equation theVariable:@"active solvers" withValues:vector size:2 orUsingBlock:nil];
+    free_ivector(vector, 0, 1);
+    mod.equations = @[equation];
+    mod.numberOfEquations = 1;
+    
+    mod.boundaryID = @[@1, @2, @3, @4, @5, @6];
+    
+    FEMBoundaryCondition *boundaryCondition1 = [[FEMBoundaryCondition alloc] init];
+    vector = intvec(0, 0);
+    vector[0] = 1;
+    [listUtilities addIntegerArrayInClassList:boundaryCondition1 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
+    free_ivector(vector, 0, 0);
+    
+    FEMBoundaryCondition *boundaryCondition2 = [[FEMBoundaryCondition alloc] init];
+    vector = intvec(0, 0);
+    vector[0] = 2;
+    [listUtilities addIntegerArrayInClassList:boundaryCondition2 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
+    free_ivector(vector, 0, 0);
+    
+    FEMBoundaryCondition *boundaryCondition3 = [[FEMBoundaryCondition alloc] init];
+    vector = intvec(0, 0);
+    vector[0] = 3;
+    [listUtilities addIntegerArrayInClassList:boundaryCondition3 theVariable:@"target boudnaries" withValues:vector size:1 orUsingBlock:nil];
+    free_ivector(vector, 0, 0);
+    
+    FEMBoundaryCondition *boundaryCondition4 = [[FEMBoundaryCondition alloc] init];
+    vector = intvec(0, 0);
+    vector[0] = 4;
+    [listUtilities addIntegerArrayInClassList:boundaryCondition4 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
+    free_ivector(vector, 0, 0);
+    
+    FEMBoundaryCondition *boundaryCondition5 = [[FEMBoundaryCondition alloc] init];
+    value = 0.0;
+    [listUtilities addConstRealInClassList:boundaryCondition5 theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:boundaryCondition5 theVariable:@"velocity 2" withValue:&value orUsingBlock:nil string:nil];
+    [listUtilities addConstRealInClassList:boundaryCondition5 theVariable:@"velocity 3" withValue:&value orUsingBlock:nil string:nil];
+    NSArray *dependencies1 = @[@"coordinate 1", @"coordinate 2"];
+    double (^block1) (double *) = ^(double *t) {
+        return -t[0] * tan(slope) - 1000.0 + 500.0 * sin(2.0*M_PI*t[0]/L) * sin(2.0*M_PI*t[1]/L);
+    };
+    [listUtilities addBlockInClassList:boundaryCondition5 theVariable:@"bottom surface" usingBlock:block1 dependencies:dependencies1];
+    
+    FEMBoundaryCondition *boundaryCondition6 = [[FEMBoundaryCondition alloc] init];
+    NSArray *dependencies2 = @[@"coordinate 1"];
+    double (^block2) (double *) = ^(double *t) {
+        return -t[0] * tan(slope);
+    };
+    [listUtilities addBlockInClassList:boundaryCondition6 theVariable:@"top surface" usingBlock:block2 dependencies:dependencies2];
+    
+    boundaryCondition1.tag = 1;
+    boundaryCondition2.tag = 2;
+    boundaryCondition3.tag = 3;
+    boundaryCondition4.tag = 4;
+    boundaryCondition5.tag = 5;
+    boundaryCondition6.tag = 6;
+    mod.boundaryConditions = @[boundaryCondition1, boundaryCondition2, boundaryCondition3, boundaryCondition4, boundaryCondition5, boundaryCondition6];
+    mod.numberOfBoundaryConditions = 6;
+    
+    mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP_HOM_A010"]];
+    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP_HOM_A010/rectangle"]];
 }
 
 @end

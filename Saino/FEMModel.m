@@ -513,6 +513,8 @@
         [test setUpStepStokesTest:self];
     } else if (test.do_natural_convection == YES) {
         [test setUpNaturalConvectionTest:self];
+    } else if (test.do_ismip_hom_A010 == YES) {
+        [test setUpISMIP_HOM_A010Test:self];
     }
 #endif
     
