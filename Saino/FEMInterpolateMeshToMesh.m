@@ -205,8 +205,8 @@
                 *(valuesPtr + i) = *(valuesPtr + i) + eps2;
             }
             
-            oldMeshQuadrant = oldMesh.getQuadrant;
             [interpolation buildQuadrantTreeForMesh:oldMesh model:model boundingBox:boundingBox rootQuadrant:oldMeshQuadrant];
+            [oldMesh assignQuadrant:oldMeshQuadrant];
             rootQuadrant = oldMeshQuadrant;
         }
     }

@@ -88,8 +88,26 @@
 
 -(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs;
 
-//Allocations methods
+// Allocations methods
 -(void)allocatePDefinitionsForElement:(Element_t * __nonnull)element;
+
+// Assign nodes
+-(void)assignNodes:(Nodes_t * __nonnull)nodes;
+
+// Assign elements
+-(void)assignElements:(Element_t * __nonnull)elements;
+
+// Assign faces
+-(void)assignFaces:(Element_t * __nonnull)faces;
+
+// Assign edges
+-(void)assignEdges:(Element_t * __nonnull)edges;
+
+// Assign quadrants
+-(void)assignQuadrant:(Quadrant_t * __nonnull)quadrant;
+
+// Assign View Factors
+-(void)assignViewFactors:(Factors_t * __nonnull)factors;
 
 // Nodes getter
 -(Nodes_t * __nullable)getNodes;
@@ -105,6 +123,9 @@
 
 // Quadrant getter
 -(Quadrant_t * __nullable)getQuadrant;
+
+// View Factors getter
+-(Factors_t * __nullable)getViewFactors;
 
 // Color mapping getter
 -(int * __nullable)getColorMapping;

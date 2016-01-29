@@ -996,6 +996,7 @@
         i++;
     }
     
+    //TODO: don't know why this is really done....
     model.dimension = saveDim;
     
     if (isParallelAssembly == YES) {
@@ -1007,6 +1008,48 @@
     free_ivector(nodeTags, 0, self.numberOfNodes-1); // TODO: This should be not deallocated if parallel mesh is supported
     free_ivector(countByType, 0, 63);
     free_ivector(types, 0, 63);
+}
+
+#pragma mark Nodes assignment
+
+-(void)assignNodes:(Nodes_t *)nodes {
+    
+    _globalNodes = nodes;
+}
+
+#pragma mark Elements assignment
+
+-(void)assignElements:(Element_t *)elements {
+    
+    _elements = elements;
+}
+
+#pragma mark Faces assignment
+
+-(void)assignFaces:(Element_t *)faces {
+    
+    _faces = faces;
+}
+
+#pragma mark Edges assignment
+
+-(void)assignEdges:(Element_t *)edges {
+    
+    _edges = edges;
+}
+
+#pragma mark Quadrant assignment
+
+-(void)assignQuadrant:(Quadrant_t *)quadrant {
+    
+    _rootQuadrant = quadrant;
+}
+
+#pragma mark View Factors assignment
+
+-(void)assignViewFactors:(Factors_t *)factors {
+    
+    _viewFactors = factors;
 }
 
 #pragma mark Nodes getter
@@ -1038,30 +1081,42 @@
 }
 
 #pragma mark Quadrant getter
+
 -(Quadrant_t * __nullable)getQuadrant {
     
     return _rootQuadrant;
 }
 
+#pragma mark View Factors getter
+
+-(Factors_t * __nullable)getViewFactors {
+    
+    return _viewFactors;
+}
+
 #pragma mark Color mapping getter
+
 -(int * __nullable)getColorMapping {
     
     return _colorMapping;
 }
 
 #pragma mark Element permutation store getter
+
 -(int * __nullable)getElementNodeIndexesStore {
     
     return _elementNodeIndexesStore;
 }
 
 #pragma mark Discontinous permutation getter
+
 -(int * __nullable)getDiscontinousPerm {
     
     return _discontinousPerm;
 }
 
 #pragma mark Inverse permutation getter
+
 -(int * __nullable)getInvPerm {
     
     return _invPerm;

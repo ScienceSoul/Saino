@@ -3118,9 +3118,8 @@ jump:
     elementMaps = [[FEMPElementMaps alloc] init];
     
     elements = mesh.getElements;
-    edges = mesh.getEdges;
-    edges = (Element_t*)malloc(sizeof(Element_t) * (12*mesh.numberOfBulkElements) );
     faces = mesh.getFaces;
+    edges = (Element_t*)malloc(sizeof(Element_t) * (12*mesh.numberOfBulkElements) );
     
     for (i=0; i<mesh.numberOfBulkElements; i++) {
         element = &elements[i];
@@ -3300,6 +3299,7 @@ jump:
         }
     }
     
+    [mesh assignEdges:edges];
     mesh.numberOfEdges = numbOfEdges;
     
     // Delete the hash table
@@ -3395,7 +3395,6 @@ jump:
     brickFaceMap[5][6] = 19; brickFaceMap[5][7] = 15; brickFaceMap[5][8] = 23;
     
     elements = mesh.getElements;
-    faces = mesh.getFaces;
     faces = (Element_t*)malloc(sizeof(Element_t) * (6*mesh.numberOfBulkElements) );
     
     for (i=0; i<mesh.numberOfBulkElements; i++) {
@@ -3652,6 +3651,7 @@ jump:
         }
     }
     
+    [mesh assignFaces:faces];
     mesh.numberOfFaces = numbOfFaces;
     
     // Delete the hash table
@@ -5759,9 +5759,7 @@ jump:
     // Generate volume nodal points
     n = mesh.numberOfNodes;
     nnodes = (inLevels + 2) * n;
-    
     nodesIn = mesh.getNodes;
-    nodesOut = meshOut.getNodes;
     
     nodesOut = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(nodesOut);
@@ -5818,6 +5816,7 @@ jump:
     }
     meshOut.numberOfNodes = cnt;
     
+    elementsIn = mesh.getElements;
     // Count 101 elements:
     // (this requires an extra layer)
     int cnt101 = 0;
@@ -5826,7 +5825,6 @@ jump:
     }
     
     n = mesh.numberOfElements;
-    elementsOut = meshOut.getElements;
     if (preserveBaseline == YES) {
         elementsOut = (Element_t*) malloc( sizeof(Element_t) * (n*(inLevels+3) + mesh.numberOfBoundaryElements + cnt101) );
         initElements(elementsOut, (n*(inLevels+3) + mesh.numberOfBoundaryElements + cnt101));
@@ -5837,7 +5835,6 @@ jump:
     
     // Generate volume bulk elements
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
-    elementsIn = mesh.getElements;
     meshOut.maxElementNodes = 0;
     cnt = 0, dg_n = 0;
     needEdges = NO;
@@ -5873,7 +5870,7 @@ jump:
             
             elementsOut[cnt].GElementIndex = elementsIn[j].GElementIndex + gelements * i;
             
-            elementsOut[cnt].ElementIndex = cnt;
+            elementsOut[cnt].ElementIndex = cnt + 1;
             elementsOut[cnt].NodeIndexes = intvec(0, ln-1);
             elementsOut[cnt].sizeNodeIndexes = ln;
             memcpy(elementsOut[cnt].NodeIndexes, ind, ln*sizeof(int));
@@ -5915,7 +5912,11 @@ jump:
             elementsOut[cnt] = elementsIn[k];
             
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
+            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
+            elementsOut[cnt].BoundaryInfo->Left = NULL;
+            elementsOut[cnt].BoundaryInfo->Right = NULL;
+            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
             
             max_bid = max(max_bid, elementsIn[k].BoundaryInfo->Constraint);
             
@@ -5943,7 +5944,7 @@ jump:
                 l = elementsIn[k].sizeNodeIndexes;
                 elementsOut[cnt].NodeIndexes = intvec(0, l-1);
                 elementsOut[cnt].sizeNodeIndexes = l;
-                memcpy(elementsOut[cnt].NodeIndexes, elementsIn[k].NodeIndexes, elementsIn[k].sizeNodeIndexes*sizeof(int));
+                memcpy(elementsOut[cnt].NodeIndexes, elementsIn[k].NodeIndexes, l*sizeof(int));
                 elementsOut[cnt].Type = elementsIn[k].Type;
             }
             elementsOut[cnt].DGDOFs = 0;
@@ -5966,8 +5967,13 @@ jump:
         for (j=0; j<mesh.numberOfBoundaryElements; j++) {
             k = j + mesh.numberOfBulkElements;
             elementsOut[cnt] = elementsIn[k];
+
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
+            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
+            elementsOut[cnt].BoundaryInfo->Left = NULL;
+            elementsOut[cnt].BoundaryInfo->Right = NULL;
+            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
             
             elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
             
@@ -6024,7 +6030,11 @@ jump:
             
             elementsOut[cnt] = elementsIn[k];
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo = elementsIn[k].BoundaryInfo;
+            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
+            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
+            elementsOut[cnt].BoundaryInfo->Left = NULL;
+            elementsOut[cnt].BoundaryInfo->Right = NULL;
+            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
             
             elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
             
@@ -6131,12 +6141,14 @@ jump:
         cnt++;
     }
     
+    [meshOut assignNodes:nodesOut];
+    [meshOut assignElements:elementsOut];
     meshOut.numberOfBoundaryElements = cnt - meshOut.numberOfBulkElements;
     meshOut.name = mesh.name;
     meshOut.discontinuousMesh = mesh.discontinuousMesh;
     meshOut.maxElementDofs = meshOut.maxElementNodes;
     meshOut.dimension = 3;
-    model.dimension = 3;
+    if (model.dimension != 3) model.dimension = 3;
     
     if (needEdges == YES) [self setEdgeFaceDofsMesh:meshOut edgeDofs:NULL faceDofs:NULL];
     [self setMaximumDofsMesh:meshOut];
