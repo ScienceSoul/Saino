@@ -592,6 +592,8 @@ static dispatch_once_t onceToken;
     mod.numberOfMaterials = 1;
     
     FEMSolution *solution1 = [[FEMSolution alloc] init];
+    NSString *user = [@"/Users" stringByAppendingPathComponent:NSUserName()];
+    solution1.plugInName = [user stringByAppendingPathComponent:@"Documents/Saino/PlugIns/FEMStructuredMeshMapper"];
     [solution1.solutionInfo setObject:@"MapCoordinate" forKey:@"equation"];
     [solution1.solutionInfo setObject:@3 forKey:@"active coordinate"];
 //    [solution1.solutionInfo setObject:@"dsdt" forKey:@"mesh velocity variable"];

@@ -17,6 +17,7 @@
     int * __nullable _maskPerm;
     int * __nullable _topPerm;
     int * __nullable _topPointer;
+    int * __nullable _midPointer;
     double * __nullable _bottomField;
     double * __nullable _coord;
     double * __nullable _field;
@@ -40,6 +41,7 @@
         _topPerm = NULL;
         _topPointer = NULL;
         _bottomField = NULL;
+        _midPointer = NULL;
         _coord = NULL;
         _field = NULL;
         _origCoord = NULL;
@@ -53,27 +55,44 @@
     return self;
 }
 
+/**************************************************************************
+ 
+    This solution corresponds to Elmer from git on October 27 2015
+
+**************************************************************************/
+
 -(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int j, n, ibot, itop, bottomNode, topNode;
-    double at0, at1, bottomVal, bottomValue0, heps, topVal, topValue0, xLoc, x0Bot, x0Loc, x0Top, wTop;
+    int j, n, ibot, imid, itop, bottomNode, topNode;
+    int *tangleMaskPerm = NULL;
+    double at0, at1, bottomVal, bottomValue0, heps, midVal, topVal, topValue0, xLoc, x0Bot, x0Loc, x0Mid, x0Top, wTop;
+    double *tangleMask = NULL;
     NSString *varName;
     NSArray *bc;
     FEMVariable *var, *updateVar, *veloVar;
     Element_t *element;
     variableArraysContainer *meshUpdateContainers = NULL, *meshVeloContainers = NULL, *varContainers = NULL;
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    BOOL displacementMode, found, gotUpdateVar, gotVeloVar;
+    BOOL computeTangleMask = NO, displacementMode, found, gotUpdateVar, gotVeloVar, midLayerExists = NO;
     
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: performing mapping on a structured mesh.\n");
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
     
     FEMCore *core = [FEMCore sharedCore];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     
-    if (_initialized == NO) {
+    BOOL reinitialize;
+    if (solution.solutionInfo[@"always detect structure"] != nil) {
+        reinitialize = [solution.solutionInfo[@"always detect structure"] boolValue];
+    } else reinitialize = NO;
+    
+    // Initialization
+    if (_initialized == NO || reinitialize == YES) {
+        if (_bottomPointer != NULL) free_ivector(_bottomPointer, 0, _nsize-1);
+        if (_topPointer != NULL) free_ivector(_topPointer, 0, _nsize-1);
         FEMMeshUtils *meshUtilities = [[FEMMeshUtils alloc] init];
-        _pointerSize = [meshUtilities detectExtrudedStructureMesh:solution.mesh solution:solution model:model externVariable:var needExternVariable:YES isTopActive:YES topNodePointer:_topPointer isBottomActive:YES bottomNodePointer:_bottomPointer isUpActive:NO upNodePointer:NULL isDownActive:NO downNodePointer:NULL numberOfLayers:NULL nodeLayer:NULL];
+        _pointerSize = [meshUtilities detectExtrudedStructureMesh:solution.mesh solution:solution model:model externVariable:var needExternVariable:YES isTopActive:YES topNodePointer:_topPointer isBottomActive:YES bottomNodePointer:_bottomPointer isUpActive:NO upNodePointer:NULL isDownActive:NO downNodePointer:NULL numberOfLayers:NULL isMidNode:YES midNodePointer:_midPointer midLayerExists:&midLayerExists isNodeLayer:NO nodeLayer:NULL];
         varContainers = var.getContainers;
         _maskExists = (varContainers->Perm != NULL) ? YES : NO;
         if (_maskExists == YES) _maskPerm = varContainers->Perm;
@@ -81,14 +100,45 @@
         _nsize = varContainers->sizeValues;
         _initialized = YES;
         
-        if ((solution.solutionInfo)[@"mesh update variable"] != nil) {
-            _origCoord = doublevec(0, _nsize-1);
-            memcpy(_origCoord, _coord, _nsize*sizeof(double));
-        }
+        if (_origCoord != NULL) free_dvector(_origCoord, 0, _nsize-1);
+        _origCoord = doublevec(0, _nsize-1);
     }
+    memcpy(_origCoord, _coord, _nsize*sizeof(double));
     at0 = cputime();
     
-    // End of initialization
+    // Detangling stuff
+    double minHeight = 0.0;
+    BOOL deTangle = NO;
+    if (solution.solutionInfo[@"correct surface"] != nil) {
+        deTangle = [solution.solutionInfo[@"correct surface"] boolValue];
+    }
+    if (deTangle == YES) {
+        NSLog(@"FEMStructuredMeshMapper:solutionComputer: correct surface in case of of intersecting upper and lower surfaces.\n");
+        if (solution.solutionInfo[@"minimum height"] != nil) {
+            minHeight = [solution.solutionInfo[@"minimum height"] doubleValue];
+        } else if (solution.solutionInfo[@"minimum height"] == nil || minHeight <= 0.0) {
+            fatal("EMStructuredMeshMapper:solutionComputer", "Minimum height either set to negative/zero or not found.");
+        }
+        NSString *tangleMaskVarName;
+        if (solution.solutionInfo[@"correct surface mask"] != nil) {
+            tangleMaskVarName = solution.solutionInfo[@"correct surface mask"];
+            FEMUtilities *utilities = [[FEMUtilities alloc] init];
+            FEMVariable *tangleMaskVar = [utilities getVariableFrom:solution.mesh.variables model:model name:tangleMaskVarName onlySearch:NULL maskName:nil info:&found];
+            if (found == YES) {
+                computeTangleMask = YES;
+                if (tangleMaskVar.dofs != 1) fatal("EMStructuredMeshMapper:solutionComputer", "correct surface mask variable should have only 1 dof.");
+                variableArraysContainer *tangleMaskVarContainers = tangleMaskVar.getContainers;
+                tangleMask = tangleMaskVarContainers->Values;
+                for (int i=0; i<tangleMaskVarContainers->sizeValues; i++) {
+                    tangleMask[i] = 1.0;
+                }
+                tangleMaskPerm = tangleMaskVarContainers->Perm;
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: output of correct surface mask to: %@.\n", tangleMaskVarName);
+            } else {
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: ignoring the variable %@ given as correct surface mask because it was not found.\n", tangleMaskVarName);
+            }
+        }
+    }
     
     // Get either variable or constant values for top surface
     topNode = 0;
@@ -121,9 +171,12 @@
     }
     
     if (topNode == 0) {
-        FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
         if ([listUtilities listCheckPresentAnyBoundaryCondition:model name:@"top surface"] == YES) {
             topNode = 3;
+            if (reinitialize == YES) {
+                if (_field != NULL) free_dvector(_field, 0, solution.mesh.maxElementNodes-1);
+                if (_surface != NULL) free_dvector(_surface, 0, solution.mesh.maxElementNodes-1);
+            }
             if (_field == NULL) {
                 _field = doublevec(0, solution.mesh.maxElementNodes-1);
                 _surface = doublevec(0, solution.mesh.maxElementNodes-1);
@@ -178,7 +231,6 @@
     }
     
     if (bottomNode == 0) {
-        FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
         if ([listUtilities listCheckPresentAnyBodyForce:model name:@"bottom surface"] == YES) {
             bottomNode = 3;
             if (_field == NULL) {
@@ -198,6 +250,30 @@
                         for (int i=0; i<n; i++) {
                             _field[element->NodeIndexes[i]] = _surface[i];
                         }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Get either variable or constant values for mid surface
+    if (midLayerExists == YES) {
+        if (_field == NULL) {
+            _field = doublevec(0, solution.mesh.maxElementNodes-1);
+            _surface = doublevec(0, solution.mesh.maxElementNodes-1);
+            memset(_field, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+            memset(_surface, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+        }
+        for (int elem=0; elem<solution.mesh.numberOfBoundaryElements; elem++) {
+            element = [core getBoundaryElement:solution atIndex:elem];
+            bc = [core getBoundaryCondition:model forElement:element];
+            if (bc != nil) {
+                n = element->Type.NumberOfNodes;
+                found = [listUtilities listGetReal:model inArray:bc forVariable:@"mid surface" numberOfNodes:n indexes:element->NodeIndexes buffer:&vector minValue:NULL maxValue:NULL];
+                if (found == YES) memcpy(_surface, vector.vector, n*sizeof(double));
+                if (found == YES) {
+                    for (int i=0; i<n; i++) {
+                        _field[element->NodeIndexes[i]] = _surface[i];
                     }
                 }
             }
@@ -251,8 +327,11 @@
         heps = [(solution.solutionInfo)[@"minimum mesh height"] doubleValue];
     } heps = DBL_EPSILON;
     
+    int tangleCount = 0;
+    BOOL tangled = NO;
     topVal = 0.0;
     bottomVal = 0.0;
+    imid = 0;
     for (int i=0; i<_nsize; i++) {
         j = i;
         if (_maskExists) {
@@ -261,12 +340,12 @@
         }
         itop = _topPointer[i];
         ibot = _bottomPointer[i];
-        if (i == itop || i == ibot) continue;
-        x0Top = _coord[itop];
-        x0Bot = _coord[ibot];
-        x0Loc = _coord[i];
+        if (midLayerExists == YES) imid = _midPointer[i];
         
-        wTop = (x0Loc - x0Bot) / (x0Top - x0Bot);
+        // Use the previous coordinates for determining the weights
+        x0Top = _origCoord[itop];
+        x0Bot = _origCoord[ibot];
+        x0Loc = _origCoord[i];
         
         if (topNode == 1) {
             topVal = topValue0;
@@ -296,69 +375,90 @@
             }
         }
         
-        if (topVal - bottomVal < heps) {
-            Nodes_t *nodes = solution.mesh.getNodes;
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f.\n", i, _coord[i], wTop);
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: position %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal %f, botVal %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: top and bottom get tangled: %f %f.\n", topVal, bottomVal);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
-        }
-        
-        xLoc = wTop * topVal + (1.0 - wTop) * bottomVal;
-        
         if (displacementMode == YES) {
-            if (gotVeloVar == YES) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = xLoc / timeStep;
-            _coord[i] = _coord[i] + xLoc;
+            tangled = (topVal + x0Top < bottomVal + x0Bot + minHeight) ? YES : NO;
         } else {
-            if (gotVeloVar == YES) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = (xLoc - _coord[i]) / timeStep;
-            _coord[i] = xLoc;
+            tangled = (topVal < bottomVal + minHeight) ? YES :  NO;
         }
-        if (gotUpdateVar == YES) meshUpdateContainers->Values[meshUpdateContainers->Perm[i]] = _coord[i] - _origCoord[i];
-    }
-    
-    // Map to top and bottom themselves for very last
-    for (int i=0; i<_nsize; i++) {
-        if (_maskExists == YES) {
-            if (_maskPerm[i] < 0) continue;
-        }
-        xLoc = 0.0;
-        if (i == _topPointer[i]) {
-            if (topNode == 1) {
-                xLoc = topVal;
-            } else if (topNode == 2) {
-                xLoc = _topField[_topPerm[i]];
-            } else if (topNode == 3) {
-                xLoc = _field[i];
-            }
-        } else if (i == _bottomPointer[i]) {
-            if (bottomNode == 1) {
-                xLoc = bottomVal;
-            } else if (bottomNode == 2) {
-                xLoc = _bottomField[_bottomPerm[i]];
-            } else if (bottomNode == 3) {
-                xLoc = _field[i];
+        
+        if (tangled == YES) {
+            tangleCount++;
+            if (deTangle == NO) {
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: mode: %d.\n", displacementMode);
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: top val: %f %f %f.\n", topVal, x0Top, topVal+x0Top);
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: bottom val: %f %f %f.\n", bottomVal, x0Bot, bottomVal+x0Bot);
+                
+                Nodes_t *nodes = solution.mesh.getNodes;
+                //NSLog(@"FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f.\n", i, _coord[i], wTop);
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: position: %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
+                NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal: %f, botVal: %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
+
+            } else {
+                if (displacementMode == YES) {
+                    topVal = bottomVal + x0Bot + x0Top + minHeight;
+                } else {
+                    topVal = bottomVal + minHeight;
+                }
+                
+                if (computeTangleMask == YES) tangleMask[tangleMaskPerm[i]] = -1.0;
+                if (/* DISABLES CODE */ (NO)) {
+                    NSLog(@"FEMStructuredMeshMapper:solutionComputer: corrected negative height: %f = %f - %f. New upper value: %f.\n", topVal-bottomVal, topVal, bottomVal, _field[itop]);
+                }
             }
         } else {
-            continue;
+            if (computeTangleMask == YES) {
+                if (tangleMask[tangleMaskPerm[itop]] == -1.0) {
+                    tangleMask[tangleMaskPerm[i]] = -1.0;
+                } else {
+                    tangleMask[tangleMaskPerm[i]] = 1.0;
+                }
+            }
+        }
+        
+        // New coordinates location
+        if (midLayerExists == YES) {
+            // With middle layer in two parts
+            midVal = _field[imid];
+            x0Mid = _origCoord[imid];
+            if ((x0Top - x0Mid) * (x0Loc - x0Mid) > 0.0) {
+                wTop = (x0Loc - x0Mid) / (x0Top - x0Mid);
+                xLoc = wTop * topVal + (1.0 - wTop) *  midVal;
+            } else {
+                wTop = (x0Loc - x0Bot) / (x0Mid - x0Bot);
+                xLoc = wTop * midVal + (1.0 - wTop) * bottomVal;
+            }
+        } else {
+            // Otherwise in one part
+            wTop = (x0Loc - x0Bot) / (x0Top - x0Bot);
+            xLoc = wTop * topVal + (1.0 - wTop) * bottomVal;
         }
         
         if (displacementMode == YES) {
-            if (gotVeloVar == YES) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = xLoc / timeStep;
+            if (gotVeloVar == YES) {
+             if (meshVeloContainers->Perm[i] >= 0) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = xLoc / timeStep;
+            }
             _coord[i] = _coord[i] + xLoc;
         } else {
-            if (gotVeloVar == YES) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = (xLoc - _coord[i]) / timeStep;
+            if (gotVeloVar == YES) {
+                if (meshVeloContainers->Perm[i] >= 0) meshVeloContainers->Values[meshVeloContainers->Perm[i]] = (xLoc - _origCoord[i]) / timeStep;
+            }
             _coord[i] = xLoc;
         }
         if (gotUpdateVar == YES) meshUpdateContainers->Values[meshUpdateContainers->Perm[i]] = _coord[i] - _origCoord[i];
     }
     
     if (gotVeloVar == YES && _visited == NO) {
-        if ((solution.solutionInfo)[@"mesh velocity first zero"] != nil) {
-            if ([(solution.solutionInfo)[@"mesh velocity first zero"] boolValue] == YES)
+        if (solution.solutionInfo[@"mesh velocity first zero"] != nil) {
+            if ([solution.solutionInfo[@"mesh velocity first zero"] boolValue] == YES) {
                 memset(meshVeloContainers->Values, 0.0, meshVeloContainers->sizeValues*sizeof(double) );
+            }
         }
     }
+    
+    if (tangleCount > 0) {
+        NSLog(@"FEMStructuredMeshMapper:solutionComputer: there seems to be %d (out of %d) tangled nodes.\n", tangleCount, _nsize);
+    }
+    
     at1 = cputime();
     
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: active coordinate mapping time: %f.\n", at1-at0);
@@ -386,6 +486,9 @@
     }
     if (_topPointer != NULL) {
         free_ivector(_topPointer, 0, _pointerSize-1);
+    }
+    if (_midPointer != NULL) {
+        free_ivector(_midPointer, 0, _pointerSize-1);
     }
 }
 
