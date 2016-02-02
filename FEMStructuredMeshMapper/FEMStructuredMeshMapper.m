@@ -450,7 +450,7 @@
     if (gotVeloVar == YES && _visited == NO) {
         if (solution.solutionInfo[@"mesh velocity first zero"] != nil) {
             if ([solution.solutionInfo[@"mesh velocity first zero"] boolValue] == YES) {
-                memset(meshVeloContainers->Values, 0.0, meshVeloContainers->sizeValues*sizeof(double) );
+                if (gotVeloVar == YES) memset(meshVeloContainers->Values, 0.0, meshVeloContainers->sizeValues*sizeof(double) );
             }
         }
     }
