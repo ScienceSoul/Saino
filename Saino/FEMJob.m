@@ -1001,13 +1001,9 @@ jump:
     int j, k, timeSteps, savedEigenValues;
     BOOL found, lastExisting, eigenAnal=NO, append;
     NSString *outputFile, *postFile, *saveWhich;
-    FEMListUtilities *listUtilities;
-    FEMUtilities *utilities;
-    FEMMeshUtils *meshUtilities;
-    FEMPost *post;
     variableArraysContainer *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
     
     outputFile = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"output file" info:&found];
     if (found == YES) {
@@ -1019,9 +1015,9 @@ jump:
     
     // TODO: add support for parallel run
     
-    utilities = [[FEMUtilities alloc] init];
-    meshUtilities = [[FEMMeshUtils alloc] init];
-    post = [[FEMPost alloc] init];
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    FEMMeshUtils *meshUtilities = [[FEMMeshUtils alloc] init];
+    FEMPost *post = [[FEMPost alloc] init];
     
     // Loop over all meshes
     for (FEMMesh *mesh in model.meshes) {
@@ -1625,8 +1621,10 @@ jump:
                         solution.mesh = extrudedMesh;
                     }
                 }
-                // Replace the 2D mesh we extruded with the resulting 3D mesh since presumably
-                // it won't be used anymore.
+                // Deallocate and replace the 2D mesh we extruded with the resulting 3D mesh
+                // since presumably it won't be used anymore.
+                FEMMesh *mesh = self.model.meshes[0];
+                [mesh deallocation];
                 [self.model.meshes replaceObjectAtIndex:0 withObject:extrudedMesh];
                 
                 // If periodic BC given, compute the boundary mesh projector

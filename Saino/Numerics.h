@@ -178,10 +178,13 @@ inline double detJ(double * __nonnull covariantMetricTensor, double * __nonnull 
     }
     
     if (success == false) {
-        printf("detJForElement: Degenerate %d D element: %d.\n", dim, element->ElementIndex);
+        printf("detJForElement: Degenerate %dD element with element code: %d.\n", dim, element->ElementIndex);
         printf("detJForElement: detJ: %f\n", detG);
-        for (int i=0; i<cdim; i++) {
-            printf("detJForElement: Dir: %d, Coord: %f %f %f\n", cdim, nodes->x[i], nodes->y[i], nodes->z[i]);
+        for (int i=0; i<element->Type.NumberOfNodes; i++) {
+            printf("detJForElement: node: %d, Coord: %f %f %f\n", i+1, nodes->x[i], nodes->y[i], nodes->z[i]);
+        }
+        for (int i=1; i<element->Type.NumberOfNodes; i++) {
+            printf("detJForElement: node: %d, dCoord: %f %f %f\n", i+1, nodes->x[i]-nodes->x[0], nodes->y[i]-nodes->y[0], nodes->z[i]-nodes->z[0]);
         }
         if (cdim < dim) {
             printf("detJForElement: element dimension larger than mesh dimension: %d vs %d\n", dim, cdim);

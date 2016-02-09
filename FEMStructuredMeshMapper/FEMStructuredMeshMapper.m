@@ -11,13 +11,15 @@
 @implementation FEMStructuredMeshMapper {
     
     int _nsize;
-    int _pointerSize;
     int * __nullable _bottomPerm;
     int * __nullable _bottomPointer;
+    int * __nullable _downPointer;
     int * __nullable _maskPerm;
     int * __nullable _topPerm;
     int * __nullable _topPointer;
     int * __nullable _midPointer;
+    int * __nullable _nodeLayer;
+    int * __nullable _upPointer;
     double * __nullable _bottomField;
     double * __nullable _coord;
     double * __nullable _field;
@@ -33,20 +35,22 @@
 {
     self = [super init];
     if (self) {
-        _pointerSize = 0;
         _nsize = 0;
+        _bottomField = NULL;
         _bottomPerm = NULL;
         _bottomPointer = NULL;
-        _maskPerm = NULL;
-        _topPerm = NULL;
-        _topPointer = NULL;
-        _bottomField = NULL;
-        _midPointer = NULL;
         _coord = NULL;
+        _downPointer = NULL;
         _field = NULL;
+        _maskPerm = NULL;
+        _midPointer = NULL;
+        _nodeLayer = NULL;
         _origCoord = NULL;
         _surface = NULL;
         _topField = NULL;
+        _topPerm = NULL;
+        _topPointer = NULL;
+        _upPointer = NULL;
         _initialized = NO;
         _maskExists = NO;
         _visited = NO;
@@ -71,7 +75,7 @@
     NSArray *bc;
     FEMVariable *var, *updateVar, *veloVar;
     Element_t *element;
-    variableArraysContainer *meshUpdateContainers = NULL, *meshVeloContainers = NULL, *varContainers = NULL;
+    variableArraysContainer *maskVarContainers = NULL, *meshUpdateContainers = NULL, *meshVeloContainers = NULL, *varContainers = NULL;
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL computeTangleMask = NO, displacementMode, found, gotUpdateVar, gotVeloVar, midLayerExists = NO;
     
@@ -92,16 +96,41 @@
         if (_bottomPointer != NULL) free_ivector(_bottomPointer, 0, _nsize-1);
         if (_topPointer != NULL) free_ivector(_topPointer, 0, _nsize-1);
         FEMMeshUtils *meshUtilities = [[FEMMeshUtils alloc] init];
-        _pointerSize = [meshUtilities detectExtrudedStructureMesh:solution.mesh solution:solution model:model externVariable:var needExternVariable:YES isTopActive:YES topNodePointer:_topPointer isBottomActive:YES bottomNodePointer:_bottomPointer isUpActive:NO upNodePointer:NULL isDownActive:NO downNodePointer:NULL numberOfLayers:NULL isMidNode:YES midNodePointer:_midPointer midLayerExists:&midLayerExists isNodeLayer:NO nodeLayer:NULL];
-        varContainers = var.getContainers;
-        _maskExists = (varContainers->Perm != NULL) ? YES : NO;
-        if (_maskExists == YES) _maskPerm = varContainers->Perm;
+        FEMUtilities *utilities = [[FEMUtilities alloc] init];
+        if ((solution.solutionInfo)[@"mapping mask variable"] != nil) {
+            NSString *maskName = (solution.solutionInfo)[@"mapping mask variable"];
+            FEMVariable *maskVar = [utilities getVariableFrom:solution.mesh.variables model:model name:maskName onlySearch:NULL maskName:nil info:&found];
+            if (found == YES) {
+                maskVarContainers = maskVar.getContainers;
+                if (maskVarContainers != NULL) {
+                    if (maskVarContainers->Perm != NULL) _maskExists = YES;
+                }
+            }
+        }
+        if (_maskExists == YES) {
+            _nsize = maskVarContainers->sizePerm;
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: applying mask of size: %d.\n", _nsize);
+        } else {
+            _nsize = solution.mesh.numberOfNodes;
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: applying mask to the whole mesh.\n");
+        }
+        _topPointer = intvec(0, _nsize-1);
+        _bottomPointer = intvec(0, _nsize-1);
+        _upPointer = intvec(0, _nsize-1);
+        _downPointer = intvec(0, _nsize-1);
+        _midPointer = intvec(0, _nsize-1);
+        var = [meshUtilities detectExtrudedStructureMesh:solution.mesh solution:solution model:model numberofNodes:_nsize ifMask:_maskExists mask:maskVarContainers isTopActive:YES topNodePointer:_topPointer isBottomActive:YES bottomNodePointer:_bottomPointer isUpActive:NO upNodePointer:_upPointer isDownActive:NO downNodePointer:_downPointer numberOfLayers:NULL isMidNode:YES midNodePointer:_midPointer midLayerExists:&midLayerExists isNodeLayer:NO nodeLayer:NULL];
+        if (_maskExists == YES) _maskPerm = maskVarContainers->Perm;
+        if (var == nil) {
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: problem in retrieving variable used for the mapping.\n");
+            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+        } else varContainers = var.getContainers;
         _coord = varContainers->Values;
-        _nsize = varContainers->sizeValues;
-        _initialized = YES;
         
         if (_origCoord != NULL) free_dvector(_origCoord, 0, _nsize-1);
         _origCoord = doublevec(0, _nsize-1);
+        
+        _initialized = YES;
     }
     memcpy(_origCoord, _coord, _nsize*sizeof(double));
     at0 = cputime();
@@ -153,10 +182,10 @@
             varContainers = NULL;
             var = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
             if (found == YES) {
-                varContainers = var.getContainers;
                 if (var.dofs != 1) {
                     fatal("FEMStructuredMeshMapper:solutionComputer", "Top surface should have only 1 dof.");
                 } else {
+                    varContainers = var.getContainers;
                     if (varContainers != NULL) {
                         _topField = varContainers->Values;
                         _topPerm = varContainers->Perm;
@@ -213,10 +242,10 @@
             varContainers = NULL;
             var = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
             if (found == YES) {
-                varContainers = var.getContainers;
                 if (var.dofs != 1) {
                     fatal("FEMStructuredMeshMapper:solutionComputer", "Bottom surface should have only 1 dof.");
                 } else {
+                    varContainers = var.getContainers;
                     if (varContainers != NULL) {
                         _bottomField = varContainers->Values;
                         _bottomPerm = varContainers->Perm;
@@ -231,7 +260,7 @@
     }
     
     if (bottomNode == 0) {
-        if ([listUtilities listCheckPresentAnyBodyForce:model name:@"bottom surface"] == YES) {
+        if ([listUtilities listCheckPresentAnyBoundaryCondition:model name:@"bottom surface"] == YES) {
             bottomNode = 3;
             if (_field == NULL) {
                 _field = doublevec(0, solution.mesh.maxElementNodes-1);
@@ -287,14 +316,14 @@
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         veloVar = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
         if (found == YES) {
-            meshVeloContainers = veloVar.getContainers;
             if (veloVar.dofs == 1) {
+                meshVeloContainers = veloVar.getContainers;
                 gotVeloVar = YES;
             } else {
                 fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh velocity must be one.");
             }
         } else {
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: variable does not exist: %@.\n", varName);
             fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
@@ -306,14 +335,14 @@
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         updateVar = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
         if (found == YES) {
-            meshUpdateContainers = updateVar.getContainers;
             if (updateVar.dofs == 1) {
+                meshUpdateContainers = updateVar.getContainers;
                 gotUpdateVar = YES;
             } else {
                 fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh update must be one.");
             }
         } else {
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: the variable does not exist: %@.\n", varName);
+            NSLog(@"FEMStructuredMeshMapper:solutionComputer: variable does not exist: %@.\n", varName);
             fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
@@ -460,7 +489,6 @@
     }
     
     at1 = cputime();
-    
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: active coordinate mapping time: %f.\n", at1-at0);
     
     _visited = YES;
@@ -472,6 +500,24 @@
 }
 
 -(void)deallocation:(FEMSolution * __nonnull)solution {
+    if (_topPointer != NULL) {
+        free_ivector(_topPointer, 0, _nsize-1);
+    }
+    if (_bottomPointer != NULL) {
+        free_ivector(_bottomPointer, 0, _nsize-1);
+    }
+    if (_upPointer != NULL) {
+        free_ivector(_upPointer, 0, _nsize-1);
+    }
+    if (_downPointer != NULL) {
+        free_ivector(_downPointer, 0, _nsize-1);
+    }
+    if (_midPointer != NULL) {
+        free_ivector(_midPointer, 0, _nsize-1);
+    }
+    if (_nodeLayer != NULL) {
+        free_ivector(_nodeLayer, 0, _nsize-1);
+    }
     if (_origCoord != NULL) {
         free_dvector(_origCoord, 0, _nsize-1);
     }
@@ -480,15 +526,6 @@
     }
     if (_surface != NULL) {
         free_dvector(_surface, 0, solution.mesh.maxElementNodes-1);
-    }
-    if (_bottomPointer != NULL) {
-        free_ivector(_bottomPointer, 0, _pointerSize-1);
-    }
-    if (_topPointer != NULL) {
-        free_ivector(_topPointer, 0, _pointerSize-1);
-    }
-    if (_midPointer != NULL) {
-        free_ivector(_midPointer, 0, _pointerSize-1);
     }
 }
 

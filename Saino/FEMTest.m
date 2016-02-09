@@ -619,6 +619,7 @@ static dispatch_once_t onceToken;
     [solution2.solutionInfo setValue:@1.0e-2 forKey:@"nonlinear system newton after tolerance"];
     [solution2.solutionInfo setValue:@1.0 forKey:@"nonlinear system relaxation factor"];
     [solution2.solutionInfo setValue:@1.0e-3 forKey:@"steady state convergence tolerance"];
+    [solution2.solutionInfo setObject:@"never" forKey:@"invoke solution computer"];
     
     mod.solutions = @[solution1, solution2];
     mod.numberOfSolutions = 2;

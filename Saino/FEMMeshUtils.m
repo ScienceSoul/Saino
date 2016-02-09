@@ -5841,7 +5841,8 @@ jump:
     n = mesh.numberOfNodes;
     for (int i=0; i<=inLevels; i++) {
         for (j=0; j<mesh.numberOfBulkElements; j++) {
-            elementsOut[cnt] = elementsIn[j];
+            
+            memcpy(&elementsOut[cnt], &elementsIn[j], sizeof(Element_t));
             
             ln = 0;
             for (k=0; k<elementsIn[j].Type.NumberOfNodes; k++) {
@@ -5909,14 +5910,10 @@ jump:
         for (int j=0; j<mesh.numberOfBoundaryElements; j++) {
             k = j + mesh.numberOfBulkElements;
             
-            elementsOut[cnt] = elementsIn[k];
+            memcpy(&elementsOut[cnt], &elementsIn[k], sizeof(Element_t));
             
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
-            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
-            elementsOut[cnt].BoundaryInfo->Left = NULL;
-            elementsOut[cnt].BoundaryInfo->Right = NULL;
-            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
+            memcpy(elementsOut[cnt].BoundaryInfo, elementsIn[k].BoundaryInfo, sizeof(BoundaryInfo_t));
             
             max_bid = max(max_bid, elementsIn[k].BoundaryInfo->Constraint);
             
@@ -5966,14 +5963,10 @@ jump:
     for (int i=0; i<=inLevels; i++) {
         for (j=0; j<mesh.numberOfBoundaryElements; j++) {
             k = j + mesh.numberOfBulkElements;
-            elementsOut[cnt] = elementsIn[k];
-
+            
+            memcpy(&elementsOut[cnt], &elementsIn[k], sizeof(Element_t));
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
-            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
-            elementsOut[cnt].BoundaryInfo->Left = NULL;
-            elementsOut[cnt].BoundaryInfo->Right = NULL;
-            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
+            memcpy(elementsOut[cnt].BoundaryInfo, elementsIn[k].BoundaryInfo, sizeof(BoundaryInfo_t));
             
             elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
             
@@ -6028,13 +6021,9 @@ jump:
             
             if (elementsIn[k].Type.ElementCode != 101) continue;
             
-            elementsOut[cnt] = elementsIn[k];
+            memcpy(&elementsOut[cnt], &elementsIn[k], sizeof(Element_t));
             elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
-            elementsOut[cnt].BoundaryInfo->Constraint = elementsIn[k].BoundaryInfo->Constraint;
-            elementsOut[cnt].BoundaryInfo->Outbody = elementsIn[k].BoundaryInfo->Outbody;
-            elementsOut[cnt].BoundaryInfo->Left = NULL;
-            elementsOut[cnt].BoundaryInfo->Right = NULL;
-            elementsOut[cnt].BoundaryInfo->GebhardtFactors = NULL;
+            memcpy(elementsOut[cnt].BoundaryInfo, elementsIn[k].BoundaryInfo, sizeof(BoundaryInfo_t));
             
             elementsOut[cnt].BoundaryInfo->Constraint = elementsOut[cnt].BoundaryInfo->Constraint + max_baseline_bid;
             
@@ -6068,10 +6057,12 @@ jump:
         max_body = max(max_body, elementsIn[i].BodyID);
     }
     // TODO: Add support for parallel run
+    NSLog(@"FEMMeshUtils:extrudeMesh: number of new BCs for layers: %d.\n", max_body);
     
     // Add bottom boundary
     for (int i=0; i<mesh.numberOfBulkElements; i++) {
-        elementsOut[cnt] = elementsIn[i];
+
+        memcpy(&elementsOut[cnt], &elementsIn[i], sizeof(Element_t));
         
         ln = elementsIn[i].Type.NumberOfNodes;
         elementsOut[cnt].NDOFs = ln;
@@ -6106,7 +6097,8 @@ jump:
     
     // Add top boundary
     for (int i=0; i<mesh.numberOfBulkElements; i++) {
-        elementsOut[cnt] = elementsIn[i];
+
+        memcpy(&elementsOut[cnt], &elementsIn[i], sizeof(Element_t));
         
         ln = elementsIn[i].Type.NumberOfNodes;
         elementsOut[cnt].NDOFs = ln;
@@ -6168,14 +6160,14 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************************************************/
--(int)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model externVariable:(FEMVariable * __nullable)externVariable needExternVariable:(BOOL)needExternVariable isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * __nullable)midNodePointer midLayerExists:(BOOL * __nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * __nullable)nodeLayer {
+-(FEMVariable * __nullable)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * __nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * __nullable)midNodePointer midLayerExists:(BOOL * __nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * __nullable)nodeLayer {
     
-    int activeDirection, dim, ii, jj, nsize;
-    int *bottomPointer = NULL, *downPointer = NULL, *topPointer = NULL, *upPointer = NULL;
+    int activeDirection, dim, ii, jj;
     double at0, at1, dotProduct, elemVector[3], eps, length, unitVector[3], *values = NULL, vector[3], vector2[3];
-    NSString *coordTransform, *varName;
+    NSString *coordTransform;
     FEMVariable *variable;
-    variableArraysContainer *varContainers = NULL, *variableContainers = NULL;
+    variableArraysContainer *variableContainers = NULL;
+    BOOL found;
     
     NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determining extruded structure.\n");
     at0 = cputime();
@@ -6206,40 +6198,19 @@ jump:
         eps = [(solution.solutionInfo)[@"dot product tolerance"] doubleValue];
     } else eps = 1.0e-4;
     
-    BOOL found, maskExists = NO;
-    if ((solution.solutionInfo)[@"mapping mask variable"] != nil) {
-        varName = (solution.solutionInfo)[@"mapping mask variable"];
-        FEMUtilities *utilities = [[FEMUtilities alloc] init];
-        FEMVariable *var = [utilities getVariableFrom:mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
-        if (found == YES) {
-            varContainers = var.getContainers;
-            if (varContainers != NULL) {
-                if (varContainers->Perm != NULL) maskExists = YES;
-            }
-        }
-    }
-    
-    if (maskExists == YES) {
-        nsize = varContainers->sizePerm;
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: applying mask of size: %d.\n", nsize);
-    } else {
-        nsize = mesh.numberOfNodes;
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: applying mask to the whole mesh.\n");
-    }
-    
     BOOL doCoordTransform = NO;
-    if ((solution.solutionInfo)[@"mapping coordinate transformation"] != nil || maskExists == YES) {
+    if ((solution.solutionInfo)[@"mapping coordinate transformation"] != nil || ifMask == YES) {
         doCoordTransform = YES;
         coordTransform = (solution.solutionInfo)[@"mapping coordinate transformation"];
-        values = doublevec(0, nsize-1);
-        memset( values, 0.0, nsize*sizeof(double) );
+        values = doublevec(0, numberofNodes-1);
+        memset( values, 0.0, numberofNodes*sizeof(double) );
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         variableArraysContainer *addContainers = allocateVariableContainer();
         addContainers->Values = values;
-         addContainers->sizeValues = nsize;
-        if (maskExists == YES) {
-            addContainers->Perm = varContainers->Perm;
-            addContainers->sizePerm = nsize;
+        addContainers->sizeValues = numberofNodes;
+        if (ifMask == YES) {
+            addContainers->Perm = mask->Perm;
+            addContainers->sizePerm = numberofNodes;
             [utilities addVariableTo:mesh.variables mesh:mesh solution:solution name:@"extruded coordinate" dofs:1 container:addContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
         } else {
             [utilities addVariableTo:mesh.variables mesh:mesh solution:solution name:@"extruded coordinate" dofs:1 container:addContainers component:NO ifOutput:NULL ifSecondary:NULL type:NULL];
@@ -6257,12 +6228,12 @@ jump:
     }
     variableContainers = variable.getContainers;
     
-    if (maskExists == YES || doCoordTransform == YES) {
+    if (ifMask == YES || doCoordTransform == YES) {
         int j;
         Nodes_t *nodes = mesh.getNodes;
         for (int i=0; i<mesh.numberOfNodes; i++) {
             j = i;
-            if (maskExists == YES) j = varContainers->Perm[i];
+            if (ifMask == YES) j = mask->Perm[i];
             vector[0] = nodes->x[i];
             vector[1] = nodes->y[i];
             vector[2] = nodes->z[i];
@@ -6272,7 +6243,6 @@ jump:
             values[j] = vector[activeDirection-1];
         }
     }
-    if (needExternVariable == YES) externVariable = variable;
     
     // Check which direction is active
     BOOL upActive = NO, downActive = NO;
@@ -6291,19 +6261,15 @@ jump:
     
     // Allocate pointers to top and bottom, and temporary pointers up and down
     if (upActive == YES) {
-        topPointer = intvec(0, nsize-1);
-        upPointer = intvec(0, nsize-1);
-        for (int i=0; i<nsize; i++) {
-            topPointer[i] = i;
-            upPointer[i] = i;
+        for (int i=0; i<numberofNodes; i++) {
+            topNodePointer[i] = i;
+            upNodePointer[i] = i;
         }
     }
     if (downActive == YES) {
-        bottomPointer = intvec(0, nsize-1);
-        downPointer = intvec(0, nsize-1);
-        for (int i=0; i<nsize; i++) {
-            bottomPointer[i] = i;
-            downPointer[i] = i;
+        for (int i=0; i<numberofNodes; i++) {
+            bottomNodePointer[i] = i;
+            downNodePointer[i] = i;
         }
     }
     
@@ -6328,10 +6294,10 @@ jump:
         
         // TODO: add support for parrallel run
         
-        if (maskExists == YES) {
+        if (ifMask == YES) {
             BOOL any = NO;
             for (int i=0; i<n; i++) {
-                if (varContainers->Perm[meshElements[t].NodeIndexes[i]] < 0) {
+                if (mask->Perm[meshElements[t].NodeIndexes[i]] < 0) {
                     any = YES;
                     break;
                 }
@@ -6361,11 +6327,11 @@ jump:
                 dotProduct = cblas_ddot(3, elemVector, 1, unitVector, 1) / length;
                 
                 if (dotProduct > 1.0 - eps) {
-                    if (upActive == YES) upPointer[ii] = jj;
-                    if (downActive == YES) downPointer[jj] = ii;
+                    if (upActive == YES) upNodePointer[ii] = jj;
+                    if (downActive == YES) downNodePointer[jj] = ii;
                 } else if (dotProduct < eps - 1.0) {
-                    if (downActive == YES) downPointer[ii] = jj;
-                    if (upActive == YES) upPointer[jj] = ii;
+                    if (downActive == YES) downNodePointer[ii] = jj;
+                    if (upActive == YES) upNodePointer[jj] = ii;
                 }
             }
         }
@@ -6378,25 +6344,25 @@ jump:
     // Pointer to top and bottom are found recursively using up and down
     NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine top and bottom pointers.\n");
     int j, downHit, rounds, upHit;
-    for (rounds=1; rounds<=nsize; rounds++) {
+    for (rounds=1; rounds<=numberofNodes; rounds++) {
         downHit = 0;
         upHit = 0;
-        for (int i=0; i<nsize; i++) {
-            if (maskExists == YES) {
-                if (varContainers->Perm[i] < 0) continue;
+        for (int i=0; i<numberofNodes; i++) {
+            if (ifMask == YES) {
+                if (mask->Perm[i] < 0) continue;
             }
             if (upActive == YES) {
-                j = upPointer[i];
-                if (topPointer[i] != topPointer[j]) {
+                j = upNodePointer[i];
+                if (topNodePointer[i] != topNodePointer[j]) {
                     upHit++;
-                    topPointer[i] = topPointer[j];
+                    topNodePointer[i] = topNodePointer[j];
                 }
             }
             if (downActive == YES) {
-                j = downPointer[i];
-                if (bottomPointer[i] != bottomPointer[j]) {
+                j = downNodePointer[i];
+                if (bottomNodePointer[i] != bottomNodePointer[j]) {
                     downHit++;
-                    bottomPointer[i] = bottomPointer[j];
+                    bottomNodePointer[i] = bottomNodePointer[j];
                 }
             }
         }
@@ -6414,21 +6380,21 @@ jump:
     
     // Compute the number of layers. The rounds above may in some cases
     // be too small. Here just one layer is used to determine the number
-    // of layers to save time.
+    // of layers to save some time.
     if (numberOfLayers != NULL) {
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: compute the number of layers.\n");
         int i, k;
-        for (i=0; i<nsize; i++) {
-            if (maskExists == YES) {
-                if (varContainers->Perm[i] < 0) continue;
+        for (i=0; i<numberofNodes; i++) {
+            if (ifMask == YES) {
+                if (mask->Perm < 0) continue;
             }
             break;
         }
         
-        j = bottomPointer[i];
+        j = bottomNodePointer[i];
         *numberOfLayers = 0;
         while (1) {
-            k = upPointer[j];
+            k = upNodePointer[j];
             if (k == j) {
                 break;
             } else {
@@ -6448,45 +6414,40 @@ jump:
     if (isNodeLayer == YES) {
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: creating layer index.\n");
         int k;
-        int *layer = intvec(0, nsize-1);
-        memset( layer, 1, nsize*sizeof(int) );
-        if (maskExists == YES) {
-            for (int i=0; i<nsize; i++) {
-                if (varContainers->Perm[i] < 0) layer[i] = 0;
+        memset( nodeLayer, 1, numberofNodes*sizeof(int) );
+        if (ifMask == YES) {
+            for (int i=0; i<numberofNodes; i++) {
+                if (mask->Perm[i] < 0) nodeLayer[i] = 0;
             }
         }
-        
-        for (int i=0; i<nsize; i++) {
-            if (maskExists == YES) {
-                if (varContainers->Perm[i] < 0) continue;
+        for (int i=0; i<numberofNodes; i++) {
+            if (ifMask == YES) {
+                if (mask->Perm[i] < 0) continue;
             }
             rounds = 1;
-            j = bottomPointer[i];
-            layer[j] = rounds;
+            j = bottomNodePointer[i];
+            nodeLayer[j] = rounds;
             while (1) {
-                k = upPointer[j];
+                k = upNodePointer[j];
                 if (k == j) break;
                 rounds++;
                 j = k;
-                layer[j] = rounds;
+                nodeLayer[j] = rounds;
             }
         }
-        
-        nodeLayer = layer;
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layer range: ['%d', '%d'].\n", min_array(layer, nsize), max_array(layer, nsize));
+        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layer range: ['%d', '%d'].\n", min_array(nodeLayer, numberofNodes), max_array(nodeLayer, numberofNodes));
     }
     
     if (isMidNode == YES) {
         FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
-        int *midPointer = intvec(0, nsize-1);
-        memset( midPointer, -1, nsize*sizeof(int) );
+        memset( midNodePointer, -1, numberofNodes*sizeof(int) );
         *midLayerExists = NO;
         for (int t=mesh.numberOfBulkElements; t<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; t++) {
             for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
                 if (meshElements[t].BoundaryInfo->Constraint == boundary.tag) {
                     if ([listUtilities listCheckPresentVariable:@"mid surface" inArray:boundary.valuesList] == YES) {
                         for (int i=0; i<meshElements[t].sizeNodeIndexes; i++) {
-                            midPointer[meshElements[t].NodeIndexes[i]] = meshElements[t].NodeIndexes[i];
+                            midNodePointer[meshElements[t].NodeIndexes[i]] = meshElements[t].NodeIndexes[i];
                             *midLayerExists = YES;
                         }
                     }
@@ -6497,35 +6458,32 @@ jump:
         
         if (*midLayerExists == YES) {
             NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine mid pointers.\n");
-            for (rounds=1; rounds<=nsize; rounds++) {
+            for (rounds=1; rounds<=numberofNodes; rounds++) {
                 downHit = 0;
                 upHit = 0;
-                for (int i=0; i<nsize; i++) {
-                    if (maskExists == YES) {
-                        if (varContainers->Perm[i] < 0) continue;
+                for (int i=0; i<numberofNodes; i++) {
+                    if (ifMask == YES) {
+                        if (mask->Perm[i] < 0) continue;
                     }
-                    if (midPointer[i] < 0) continue;
+                    if (midNodePointer[i] < 0) continue;
                     if (upActive == YES) {
-                        j = upPointer[i];
-                        if (midPointer[j] < 0) {
+                        j = upNodePointer[i];
+                        if (midNodePointer[j] < 0) {
                             upHit++;
-                            midPointer[j] = midPointer[i];
+                            midNodePointer[j] = midNodePointer[i];
                         }
                     }
                     if (downActive == YES) {
-                        j = downPointer[i];
-                        if (midPointer[j] < 0) {
+                        j = downNodePointer[i];
+                        if (midNodePointer[j] < 0) {
                             downHit++;
-                            midPointer[j] = midPointer[i];
+                            midNodePointer[j] = midNodePointer[i];
                         }
                     }
                 }
                 if (upHit == 0 && downHit == 0) break;
             }
             NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: mid layer structure detected in %d cycles. \n", rounds-1);
-            midNodePointer = midPointer;
-        } else {
-            free_ivector(midPointer, 0, nsize-1);
         }
     }
     
@@ -6535,8 +6493,8 @@ jump:
     if (upActive == YES) {
         double minTop = HUGE_VAL;
         double maxTop = -HUGE_VAL;
-        for (int i=0; i<nsize; i++) {
-            if (topPointer[i] == i) {
+        for (int i=0; i<numberofNodes; i++) {
+            if (topNodePointer[i] == i) {
                 minTop = min(minTop, variableContainers->Values[i]);
                 maxTop = max(maxTop, variableContainers->Values[i]);
                 topNodes++;
@@ -6547,8 +6505,8 @@ jump:
     if (downActive == YES) {
         double minBot = HUGE_VAL;
         double maxBot = -HUGE_VAL;
-        for (int i=0; i<nsize; i++) {
-            if (bottomPointer[i] == i) {
+        for (int i=0; i<numberofNodes; i++) {
+            if (bottomNodePointer[i] == i) {
                 minBot = min(minBot, variableContainers->Values[i]);
                 maxBot = max(maxBot, variableContainers->Values[i]);
                 bottomNodes++;
@@ -6557,44 +6515,13 @@ jump:
         NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: bottom range: %f %f.\n", minBot, maxBot);
     }
     
-    // Return the requested pointer structures, otherwise deallocate
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: setting pointer structures.\n");
-    if (upActive == YES) {
-        if (isTopActive == YES) {
-            topNodePointer = topPointer;
-            topPointer = NULL;
-        } else {
-            free_ivector(topPointer, 0, nsize-1);
-        }
-        if (isUpActive == YES) {
-            upNodePointer = upPointer;
-            upPointer = NULL;
-        } else {
-            free_ivector(upPointer, 0, nsize-1);
-        }
-    }
-    if (downActive == YES) {
-        if (isBottomActive == YES) {
-            bottomNodePointer = bottomPointer;
-            bottomPointer = NULL;
-        } else {
-            free_ivector(bottomPointer, 0, nsize-1);
-        }
-        if (isDownActive == YES) {
-            downNodePointer = downPointer;
-            downPointer = NULL;
-        } else {
-            free_ivector(downPointer, 0, nsize-1);
-        }
-    }
-    
     at1 = cputime();
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init time: %f\n.", at1-at0);
+    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init time: %f.\n", at1-at0);
     NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init rounds: %d.\n", rounds);
-    if (upActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the top: %d\n.", topNodes);
-    if (downActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d\n.", bottomNodes);
+    if (upActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the top: %d.\n", topNodes);
+    if (downActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d.\n.", bottomNodes);
         
-    return nsize;
+    return variable;
 }
 
 /***************************************************************************************

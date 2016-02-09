@@ -605,7 +605,8 @@
             k = elements[i].BoundaryInfo->Constraint;
             if (k >= 1 && k <= model.numberOfBoundaryConditions) {
                 boundaryConditionAtId = model.boundaryConditions[k-1];
-                bodyName = [NSMutableString stringWithString:[listUtiltiies listGetString:model inArray:boundaryConditionAtId.valuesList forVariable:@"name" info:&found]];
+                NSString *name = [listUtiltiies listGetString:model inArray:boundaryConditionAtId.valuesList forVariable:@"name" info:&found];
+                if (found == YES) bodyName = [NSMutableString stringWithString:name];
             }
             if (found == YES) {
                 [bodyName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [bodyName length])];

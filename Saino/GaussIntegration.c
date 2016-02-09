@@ -483,27 +483,29 @@ void GaussQuadratureInit(void) {
 }
 
 void GaussQuadratureDeallocation(void) {
-    if (IntegStuff->u != NULL) {
-        free_dvector(IntegStuff->u, 0, MAX_INTEGRATION_POINTS-1);
-        IntegStuff->u = NULL;
+    if (IntegStuff != NULL) {
+        if (IntegStuff->u != NULL) {
+            free_dvector(IntegStuff->u, 0, MAX_INTEGRATION_POINTS-1);
+            IntegStuff->u = NULL;
+        }
+        
+        if (IntegStuff->v != NULL) {
+            free_dvector(IntegStuff->v, 0, MAX_INTEGRATION_POINTS-1);
+            IntegStuff->v = NULL;
+        }
+        
+        if (IntegStuff->w != NULL) {
+            free_dvector(IntegStuff->w, 0, MAX_INTEGRATION_POINTS-1);
+            IntegStuff->w = NULL;
+        }
+        
+        if (IntegStuff->s != NULL) {
+            free_dvector(IntegStuff->s, 0, MAX_INTEGRATION_POINTS-1);
+            IntegStuff->s = NULL;
+        }
+        free(IntegStuff);
+        IntegStuff = NULL;
     }
-    
-    if (IntegStuff->v != NULL) {
-        free_dvector(IntegStuff->v, 0, MAX_INTEGRATION_POINTS-1);
-        IntegStuff->v = NULL;
-    }
-    
-    if (IntegStuff->w != NULL) {
-        free_dvector(IntegStuff->w, 0, MAX_INTEGRATION_POINTS-1);
-        IntegStuff->w = NULL;
-    }
-    
-    if (IntegStuff->s != NULL) {
-        free_dvector(IntegStuff->s, 0, MAX_INTEGRATION_POINTS-1);
-        IntegStuff->s = NULL;
-    }
-    free(IntegStuff);
-    IntegStuff = NULL;
     GInit = false;
 }
 

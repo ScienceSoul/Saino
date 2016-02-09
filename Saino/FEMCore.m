@@ -2852,17 +2852,25 @@ static dispatch_once_t onceToken;
     free_imatrix(_wedgeEM, 0, 8, 0, 1);
     free_imatrix(_brickEM, 0, 11, 0, 1);
     
-    free_ivector(_g_Ind, 0, _size_g_Ind-1);
-    _g_Ind = NULL;
+    if (_g_Ind != NULL) {
+        free_ivector(_g_Ind, 0, _size_g_Ind-1);
+        _g_Ind = NULL;
+    }
     
-    free_ivector(_l_Ind, 0, _size_l_Ind-1);
-    _l_Ind = NULL;
+    if (_l_Ind != NULL) {
+        free_ivector(_l_Ind, 0, _size_l_Ind-1);
+        _l_Ind = NULL;
+    }
     
-    free_dmatrix(_kernStiff, 0, _size1kernStiff-1, 0, _size2kernStiff-1);
-    _kernStiff = NULL;
+    if (_kernStiff != NULL) {
+        free_dmatrix(_kernStiff, 0, _size1kernStiff-1, 0, _size2kernStiff-1);
+        _kernStiff = NULL;
+    }
     
-    free_dvector(_kernWork, 0, _sizekernWork-1);
-    _kernWork = NULL;
+    if (_kernWork != NULL) {
+        free_dvector(_kernWork, 0, _sizekernWork-1);
+        _kernWork = NULL;
+    }
     
     if (_stiff != NULL) {
         free_dmatrix(_stiff, 0, 0, 0, _n1-1);
