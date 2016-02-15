@@ -287,7 +287,7 @@ enum {
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *tempContainers = NULL;
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     FEMTimeIntegration *timeIntegration;
     

@@ -32,7 +32,7 @@ void initElements(Element_t * __nonnull elements, int n) {
 
 void initBoundaryInfo(BoundaryInfo_t * __nonnull boundaryInfo) {
     
-    *boundaryInfo = (BoundaryInfo_t){.Constraint=0, .Outbody=-1};
+    *boundaryInfo = (BoundaryInfo_t){.Constraint=0, .Outbody=-1, .GebhardtFactors=NULL, .Left=NULL, .Right=NULL};
 }
 
 variableArraysContainer * __nonnull allocateVariableContainer(void) {

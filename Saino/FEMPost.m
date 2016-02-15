@@ -94,7 +94,7 @@
     Nodes_t *nodes = NULL;
     variableArraysContainer *varContainers = NULL, *var1Containers = NULL, *maskVarContainers = NULL, *displaceVarContainers = NULL;
     
-    listUtiltiies = [[FEMListUtilities alloc] init];
+    listUtiltiies = [FEMListUtilities sharedListUtilities];
     utilities = [[FEMUtilities alloc] init];
     
     mesh = (FEMMesh *)model.mesh;
@@ -396,7 +396,7 @@
                     varName = [NSMutableString stringWithString:variable.name];
                     [varName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [varName length])];
                     char character =  (int)[varName characterAtIndex:0] - (int)'a' + (int)'A';
-                    [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithUTF8String:&character]];
+                    [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithFormat:@"%c", character]];
                     [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
                     [self FEMPost_writeString:varName toFileHandle:postFileHandle];
                     if (varContainers->CValues != NULL) {
@@ -431,7 +431,7 @@
                             varName = (NSMutableString *)[str substringToIndex:ind1.location];
                             [varName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [varName length])];
                             char character = (int)[varName characterAtIndex:0] - (int)'a' + (int)'A';
-                            [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithUTF8String:&character]];
+                            [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithFormat:@"%c", character]];
                             if (k == 1) {
                                 [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
                                 [self FEMPost_writeString:varName toFileHandle:postFileHandle];

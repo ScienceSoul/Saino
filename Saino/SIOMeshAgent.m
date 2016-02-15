@@ -313,7 +313,6 @@ static char *_parallel_extensions[] = {
     FileReader *reader;
     NSString *line, *tagstr, *typestr, *str1, *str2;
     NSRange subRange;
-    char character[2];
     
     // Used to separate strings and filter them from white spaces
     NSCharacterSet *whitespaces = [NSCharacterSet whitespaceCharacterSet];
@@ -346,32 +345,25 @@ static char *_parallel_extensions[] = {
     memset( pdofs, 0, 6*sizeof(int) );
     gotnodal = 0;
     for (i=0; i<[typestr length]; i++) {
-        character[0] = [typestr characterAtIndex:i];
-        str1 = @(character);
+        str1 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i]];
         if ([str1 isEqualToString:@"n"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[0] = [str2 intValue];
             gotnodal = 1;
         } else if ([str1 isEqualToString:@"e"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[1] = [str2 intValue];
         } else if ([str1 isEqualToString:@"f"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[2] = [str2 intValue];
         } else if ([str1 isEqualToString:@"d"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[3] = [str2 intValue];
         } else if ([str1 isEqualToString:@"b"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[4] = [str2 intValue];
         } else if ([str1 isEqualToString:@"p"]) {
-            character[0] = [typestr characterAtIndex:i+1];
-            str2 = @(character);
+            str2 = [NSString stringWithFormat:@"%c", [typestr characterAtIndex:i+1]];
             pdofs[5] = [str2 intValue];
         }
     }

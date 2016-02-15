@@ -24,7 +24,6 @@
     double * __nullable _coord;
     double * __nullable _field;
     double * __nullable _origCoord;
-    double * __nullable _surface;
     double * __nullable _topField;
     BOOL _initialized;
     BOOL _maskExists;
@@ -46,7 +45,6 @@
         _midPointer = NULL;
         _nodeLayer = NULL;
         _origCoord = NULL;
-        _surface = NULL;
         _topField = NULL;
         _topPerm = NULL;
         _topPointer = NULL;
@@ -84,7 +82,7 @@
     NSLog(@"FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
     
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     BOOL reinitialize;
     if (solution.solutionInfo[@"always detect structure"] != nil) {
@@ -203,14 +201,11 @@
         if ([listUtilities listCheckPresentAnyBoundaryCondition:model name:@"top surface"] == YES) {
             topNode = 3;
             if (reinitialize == YES) {
-                if (_field != NULL) free_dvector(_field, 0, solution.mesh.maxElementNodes-1);
-                if (_surface != NULL) free_dvector(_surface, 0, solution.mesh.maxElementNodes-1);
+                if (_field != NULL) free_dvector(_field, 0, _nsize-1);
             }
             if (_field == NULL) {
-                _field = doublevec(0, solution.mesh.maxElementNodes-1);
-                _surface = doublevec(0, solution.mesh.maxElementNodes-1);
-                memset(_field, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
-                memset(_surface, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+                _field = doublevec(0, _nsize-1);
+                memset(_field, 0.0, _nsize*sizeof(double) );
             }
             for (int elem=0; elem<solution.mesh.numberOfBoundaryElements; elem++) {
                 element = [core getBoundaryElement:solution atIndex:elem];
@@ -218,10 +213,9 @@
                 if (bc != nil) {
                     n = element->Type.NumberOfNodes;
                     found = [listUtilities listGetReal:model inArray:bc forVariable:@"top surface" numberOfNodes:n indexes:element->NodeIndexes buffer:&vector minValue:NULL maxValue:NULL];
-                    if (found == YES) memcpy(_surface, vector.vector, n*sizeof(double));
                     if (found == YES) {
                         for (int i=0; i<n; i++) {
-                            _field[element->NodeIndexes[i]] = _surface[i];
+                            _field[element->NodeIndexes[i]] = vector.vector[i];
                         }
                     }
                 }
@@ -263,10 +257,8 @@
         if ([listUtilities listCheckPresentAnyBoundaryCondition:model name:@"bottom surface"] == YES) {
             bottomNode = 3;
             if (_field == NULL) {
-                _field = doublevec(0, solution.mesh.maxElementNodes-1);
-                _surface = doublevec(0, solution.mesh.maxElementNodes-1);
-                memset(_field, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
-                memset(_surface, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+                _field = doublevec(0, _nsize-1);
+                memset(_field, 0.0, _nsize*sizeof(double) );
             }
             for (int elem=0; elem<solution.mesh.numberOfBoundaryElements; elem++) {
                 element = [core getBoundaryElement:solution atIndex:elem];
@@ -274,10 +266,9 @@
                 if (bc != nil) {
                     n = element->Type.NumberOfNodes;
                     found = [listUtilities listGetReal:model inArray:bc forVariable:@"bottom surface" numberOfNodes:n indexes:element->NodeIndexes buffer:&vector minValue:NULL maxValue:NULL];
-                    if (found == YES) memcpy(_surface, vector.vector, n*sizeof(double));
                     if (found == YES) {
                         for (int i=0; i<n; i++) {
-                            _field[element->NodeIndexes[i]] = _surface[i];
+                            _field[element->NodeIndexes[i]] = vector.vector[i];
                         }
                     }
                 }
@@ -288,10 +279,8 @@
     // Get either variable or constant values for mid surface
     if (midLayerExists == YES) {
         if (_field == NULL) {
-            _field = doublevec(0, solution.mesh.maxElementNodes-1);
-            _surface = doublevec(0, solution.mesh.maxElementNodes-1);
-            memset(_field, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
-            memset(_surface, 0.0, solution.mesh.maxElementNodes*sizeof(double) );
+            _field = doublevec(0, _nsize-1);
+            memset(_field, 0.0, _nsize*sizeof(double) );
         }
         for (int elem=0; elem<solution.mesh.numberOfBoundaryElements; elem++) {
             element = [core getBoundaryElement:solution atIndex:elem];
@@ -299,10 +288,9 @@
             if (bc != nil) {
                 n = element->Type.NumberOfNodes;
                 found = [listUtilities listGetReal:model inArray:bc forVariable:@"mid surface" numberOfNodes:n indexes:element->NodeIndexes buffer:&vector minValue:NULL maxValue:NULL];
-                if (found == YES) memcpy(_surface, vector.vector, n*sizeof(double));
                 if (found == YES) {
                     for (int i=0; i<n; i++) {
-                        _field[element->NodeIndexes[i]] = _surface[i];
+                        _field[element->NodeIndexes[i]] = vector.vector[i];
                     }
                 }
             }
@@ -522,10 +510,7 @@
         free_dvector(_origCoord, 0, _nsize-1);
     }
     if (_field != NULL) {
-        free_dvector(_field, 0, solution.mesh.maxElementNodes-1);
-    }
-    if (_surface != NULL) {
-        free_dvector(_surface, 0, solution.mesh.maxElementNodes-1);
+        free_dvector(_field, 0, _nsize-1);
     }
 }
 

@@ -26,11 +26,11 @@
 
 - (id)init
 {
-    char emptyStr = '\0';
     
     self = [super init];
     if (self) {
-        _nameSpace = &emptyStr;
+        _nameSpace = (char*)malloc(100 * sizeof(char));
+        memset(_nameSpace, 0, 100*sizeof(char));
         _nameSpaceStr = NULL;
         _nameSpaceChanged = YES;
         _timerPassive = NO;
@@ -39,6 +39,24 @@
     }
     
     return self;
+}
+
+#pragma mark Singleton method
+
+static FEMListUtilities * __nullable sharedListUtilities = nil;
+static dispatch_once_t onceToken;
+
++(id __nonnull)sharedListUtilities {
+    
+    dispatch_once(&onceToken, ^{
+        sharedListUtilities = [[self alloc] init];
+    });
+    return sharedListUtilities;
+}
+
++(void) selfDestruct {
+    sharedListUtilities = nil;
+    onceToken = 0;
 }
 
 -(void)listParseDependencies:(NSArray * __nonnull)dependencies index:(int)ind name:(NSString * __nonnull)name toValues:(double * __nonnull)t count:(int * __nonnull)count model:(FEMModel * __nonnull)model allGlobal:(BOOL * __nonnull)allGlobal {
@@ -128,15 +146,17 @@
     }
 }
 
--(void)listSetNameSpace:(NSString * __nonnull)str {
+-(void)listSetNameSpace:(NSString * __nullable)str {
     
     if (str != nil) {
-        _nameSpace = (char *)[str UTF8String];
+        memcpy(_nameSpace, (char *)[str UTF8String], strlen((char *)[str UTF8String])*sizeof(char));
         _nameSpaceChanged = YES;
+    } else {
+        memset(_nameSpace, 0, 100*sizeof(char));
     }
 }
 
--(char * __nonnull)listGetNameSpaceForVariable:(char * __nonnull)varName {
+-(char * __nonnull)listGetNameSpaceForVariable:(NSString * __nonnull)varName {
     
     char *str = NULL;
     char buffer[100];
@@ -145,9 +165,9 @@
     if ( strcmp(_nameSpace, &emptyStr) == 0) {
         str = &emptyStr;
     } else {
-        strncpy(buffer, _nameSpace, strlen(_nameSpace));
+        strncpy(buffer, _nameSpace, strlen(_nameSpace)*sizeof(char));
         strncat(buffer, " ", 1);
-        strncat(buffer, varName, strlen(varName));
+        strncat(buffer, (char *)[varName UTF8String], strlen((char *)[varName UTF8String])*sizeof(char));
         str = buffer;
     }
 
@@ -162,7 +182,7 @@
     *found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -194,7 +214,7 @@
     found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -308,7 +328,7 @@
     *found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -377,7 +397,7 @@
     found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -484,7 +504,7 @@
     *found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -539,7 +559,7 @@
     found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -591,7 +611,7 @@
     found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -635,7 +655,7 @@
     *found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -681,7 +701,7 @@
     *found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -705,7 +725,7 @@
     if (varName == nil) return nil;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -737,7 +757,7 @@
     if (prefix == nil) return nil;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[prefix UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:prefix];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[prefix UTF8String];
@@ -806,7 +826,7 @@
     found = NO;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -868,7 +888,7 @@
     char *nameStr = NULL;
     
     if (_nameSpaceChanged == YES) {
-        _nameSpaceStr = [self listGetNameSpaceForVariable:(char *)[varName UTF8String]];
+        _nameSpaceStr = [self listGetNameSpaceForVariable:varName];
         _nameSpaceChanged = NO;
     }
     char *varStr = (char *)[varName UTF8String];
@@ -1567,6 +1587,9 @@
     [self.timers removeObjectForKey:[timerName stringByAppendingString:@" real time"]];
 }
 
+-(void)deallocation {
+    free(_nameSpace);
+}
 
 
 @end

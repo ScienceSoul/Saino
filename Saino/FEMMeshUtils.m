@@ -3831,7 +3831,7 @@ jump:
     if (mbd < 0) return nil;
     
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMSolution *solution = (FEMSolution *)model.solution;
     
     dim = model.dimension;
@@ -5395,7 +5395,7 @@ jump:
     // TODO: add support for parallel run
     
     // If periodic BC given, compute boundary mesh projector
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     for (i=0; i<model.numberOfBoundaryConditions; i++) {
         boundaryConditionAtId = (model.boundaryConditions)[i];
         minVal = 1;
@@ -5751,7 +5751,7 @@ jump:
     FEMBoundaryCondition *boundaryConditionAtId;
     BOOL found, needEdges;
     
-    FEMListUtilities * listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities * listUtilities = [FEMListUtilities sharedListUtilities];
     FEMMesh *meshOut = [[FEMMesh alloc] init];
     
     // TODO: Add support for parallel run
@@ -6068,6 +6068,7 @@ jump:
         elementsOut[cnt].NDOFs = ln;
         
         elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+        initBoundaryInfo(elementsOut[cnt].BoundaryInfo);
         elementsOut[cnt].BoundaryInfo->Left = &elementsOut[i];
         elementsOut[cnt].BoundaryInfo->Right = NULL;
         
@@ -6104,6 +6105,7 @@ jump:
         elementsOut[cnt].NDOFs = ln;
         
         elementsOut[cnt].BoundaryInfo = (BoundaryInfo_t*) malloc( sizeof(BoundaryInfo_t));
+        initBoundaryInfo(elementsOut[cnt].BoundaryInfo);
         elementsOut[cnt].BoundaryInfo->Left = &elementsOut[inLevels*mesh.numberOfBulkElements+i];
         elementsOut[cnt].BoundaryInfo->Right = NULL;
         
@@ -6439,7 +6441,7 @@ jump:
     }
     
     if (isMidNode == YES) {
-        FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+        FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
         memset( midNodePointer, -1, numberofNodes*sizeof(int) );
         *midLayerExists = NO;
         for (int t=mesh.numberOfBulkElements; t<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; t++) {

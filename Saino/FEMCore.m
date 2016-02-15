@@ -328,7 +328,7 @@ static const int PRECOND_VANKA     =  560;
     dofs = solution.variable.dofs;
     
     componentsAllocated = NO;
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     found = [listUtilities listGetIntegerArray:model inArray:solution.valuesList forVariable:@"nonlinear system norm components" buffer:&normComponents]; //Those are indexes
     if (found == YES) {
         normDofs = normComponents.m;
@@ -649,7 +649,7 @@ static const int PRECOND_VANKA     =  560;
             name = [NSMutableString stringWithString:@"res: "];
             [name appendString:[solution.variable canonicalizeName]];
             [name appendString:@" energy norm"];
-            listUtilities = [[FEMListUtilities alloc] init];
+            listUtilities = [FEMListUtilities sharedListUtilities];
             [listUtilities addConstRealInClassList:model.simulation theVariable:name withValue:&energy orUsingBlock:nil string:nil];
             
             NSLog(@"FEMCore:FEMCore_solveLinearSystemMatrix: energy norm: %f.\n", energy);
@@ -770,7 +770,7 @@ static const int PRECOND_VANKA     =  560;
     body_id = element->BodyID-1;
     if (body_id < 0) return isPassive; // body_id == -1 for boundary elements
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     nbNodes = element->Type.NumberOfNodes;
     
@@ -814,7 +814,7 @@ static const int PRECOND_VANKA     =  560;
     Element_t *element = NULL;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     // Need an early initialization to average normals across partitions
     // TODO: add support for parallel runs
@@ -939,7 +939,7 @@ static const int PRECOND_VANKA     =  560;
     GaussIntegrationPoints *IP = NULL;
     
     utilities = [[FEMUtilities alloc] init];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     elementNodes->x = doublevec(0, model.maxElementNodes-1);
@@ -1310,7 +1310,7 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
     if ([simulation isEqualToString:@"transient"] == YES) {
         method = (solution.solutionInfo)[@"time stepping method"];
@@ -1342,7 +1342,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
         
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
@@ -1399,7 +1399,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
@@ -1463,7 +1463,7 @@ static const int PRECOND_VANKA     =  560;
     dim = model.dimension;
     
     NSString *str = [name stringByAppendingString:@" dofs"];
-    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
         if (stat == NO) {
@@ -1593,7 +1593,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     if (dof >= 0) {
         stat = [listUtil listGetReal:model inArray:values forVariable:name numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
     } else {
@@ -1699,7 +1699,7 @@ static const int PRECOND_VANKA     =  560;
     matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL, *aContainers = NULL;
     variableArraysContainer *varContainers = NULL, *containers = NULL;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     util = [[FEMUtilities alloc] init];
     crsMatrix = [[FEMMatrixCRS alloc] init];
     
@@ -1880,7 +1880,7 @@ static const int PRECOND_VANKA     =  560;
     FEMBoundaryCondition *boundaryConditionAtId;
     matrixArraysContainer *matContainers = NULL, *projectorContainers = NULL;
     variableArraysContainer *varContainers = NULL;
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
 
     NSString *str1 = [@"periodic bc " stringByAppendingString:name];
     NSString *str2 = [@"anti periodic bc " stringByAppendingString:name];
@@ -1957,7 +1957,7 @@ static const int PRECOND_VANKA     =  560;
     variableArraysContainer *varContainers = NULL, *loadVarContainers = NULL;
     
     utilities = [[FEMUtilities alloc] init];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     name = [NSMutableString stringWithString:solution.variable.name];
     [name appendString:@" loads"];
@@ -2175,7 +2175,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
     
     if (stat == YES) {
@@ -2531,7 +2531,7 @@ static const int PRECOND_VANKA     =  560;
         }
     }
     if (transient == YES && allDoneThis == NO) {
-        listUtilities = [[FEMListUtilities alloc] init];
+        listUtilities = [FEMListUtilities sharedListUtilities];
         if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"coupled system abort not converged" info:&found] == YES) {
             NSLog(@"FEMCore:SolveEquations: \n");
             NSLog(@"FEMCore:SolveEquations: coupled system iteration: %d.\n", i);
@@ -2565,7 +2565,7 @@ static const int PRECOND_VANKA     =  560;
             
             elements = solution.mesh.getElements;
             maxDim = 0;
-            FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+            FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
             for (i=0; i<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; i++) {
                 if ([listUtilities checkElementEquation:model forElement:&elements[i] andEquation:equationName] == YES) {
                     solContainers->activeElements[solution.numberOfActiveElements] = i;
@@ -2899,7 +2899,7 @@ static dispatch_once_t onceToken;
     
     solution.doneTime++;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     varContainers = solution.variable.getContainers;
     
     if (solution.matrix == nil || varContainers->Values == NULL) return;
@@ -4107,7 +4107,7 @@ static dispatch_once_t onceToken;
     
     varContainers = solution.variable.getContainers;
     
-    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) return;
     if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:solution.normalTangentialName info:&stat] == YES) return;
     
@@ -4212,7 +4212,7 @@ static dispatch_once_t onceToken;
     NSString *string;
     BOOL stat;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     FEMNumericIntegration *numericIntegration = [[FEMNumericIntegration alloc] init];
     if ([numericIntegration allocation:solution.mesh] == NO) fatal("FEMCore:localBoundaryIntegral", "Allocation error in FEMNumericIntegration.");
@@ -4369,7 +4369,7 @@ static dispatch_once_t onceToken;
     if ([numericIntegration allocation:solution.mesh] == NO) fatal("FEMCore:localBoundaryBDOFs", "Allocation error in FEMNumericIntegration.");
     
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     n = max(solution.mesh.maxElementNodes, solution.mesh.maxElementDofs);
     
@@ -4542,7 +4542,7 @@ static dispatch_once_t onceToken;
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     loadName = [NSMutableString stringWithString:name];
     [loadName appendString:@" load"];
@@ -4768,7 +4768,7 @@ static dispatch_once_t onceToken;
     varContainers = solution.variable.getContainers;
     solContainers = solution.getContainers;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     diagScaling = matContainers->DiagScaling;
     if (diagScaling == NULL) {
@@ -4779,10 +4779,10 @@ static dispatch_once_t onceToken;
     }
     
     // These logical vectors are used to minimize extra effort in setting up different BCs
-    n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
-    activePart = (BOOL*)malloc(sizeof(BOOL) * n );
-    activePartAll = (BOOL*)malloc(sizeof(BOOL) * n );
-    activeCond = (BOOL*)malloc(sizeof(BOOL) * n );
+    int activeSize = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
+    activePart = (BOOL*)malloc(sizeof(BOOL) * activeSize );
+    activePartAll = (BOOL*)malloc(sizeof(BOOL) * activeSize );
+    activeCond = (BOOL*)malloc(sizeof(BOOL) * activeSize );
     
     NSString *condName = [name stringByAppendingString:@" condition"];
     NSString *passName = [name stringByAppendingString:@" passive"];
@@ -4801,7 +4801,7 @@ static dispatch_once_t onceToken;
     
     // Go through the perdiodic BCs and set the linear dependence
     
-    memset( activePart, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, activeSize*sizeof(BOOL) );
     
     str1 = [@"periodic bc " stringByAppendingString:name];
     str2 = [@"anti periodic bc " stringByAppendingString:name];
@@ -4843,9 +4843,9 @@ static dispatch_once_t onceToken;
     
     // Go through the normal Dirichlet BCs applied on the boundaries
     
-    memset( activePart, NO, n*sizeof(BOOL) );
-    memset( activePartAll, NO, n*sizeof(BOOL) );
-    memset( activeCond, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, activeSize*sizeof(BOOL) );
+    memset( activePartAll, NO, activeSize*sizeof(BOOL) );
+    memset( activeCond, NO, activeSize*sizeof(BOOL) );
 
     str1 = [name stringByAppendingString:@" dofs"];
     
@@ -4991,9 +4991,9 @@ static dispatch_once_t onceToken;
     
     // Go through the Dirichlet conditions in the body force lists
     
-    memset( activePart, NO, n*sizeof(BOOL) );
-    memset( activeCond, NO, n*sizeof(BOOL) );
-    memset( activePartAll, NO, n*sizeof(BOOL) );
+    memset( activePart, NO, activeSize*sizeof(BOOL) );
+    memset( activeCond, NO, activeSize*sizeof(BOOL) );
+    memset( activePartAll, NO, activeSize*sizeof(BOOL) );
     passive = NO;
     
     bf_id = 0;
@@ -6877,7 +6877,7 @@ static dispatch_once_t onceToken;
     matrixArraysContainer *matContainers = NULL;
     
     if ([(solution.solutionInfo)[@"use global mass matrix"] boolValue] == YES) {
-        FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+        FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
         string = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
         if ([string isEqualToString:@"transient"] == YES) {
             if ((solution.solutionInfo)[@"time derivative order"] != nil) {
@@ -6919,7 +6919,7 @@ static dispatch_once_t onceToken;
     faces = solution.mesh.getFaces;
     
     FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
-    FEMListUtilities *listUtil = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     
     matContainers = solution.matrix.getContainers;
@@ -8200,7 +8200,7 @@ static dispatch_once_t onceToken;
             st = cputime() - t0;
             rst = realtime() - rt0;
             
-            FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+            FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
             [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys cpu time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&st orUsingBlock:nil string:nil];
             [listUtilities addConstRealInClassList:model.simulation theVariable:[@"res: linsys real time " stringByAppendingString:[solution.variable canonicalizeName]] withValue:&rst orUsingBlock:nil string:nil];
             
@@ -8306,7 +8306,7 @@ static dispatch_once_t onceToken;
     FEMUtilities *utilities;
     variableArraysContainer *timeVarContainers = NULL, *iterVContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     meshUtils = [[FEMMeshUtils alloc] init];
     utilities = [[FEMUtilities alloc] init];
     
@@ -8417,7 +8417,7 @@ static dispatch_once_t onceToken;
         [self FEMCore_singleSolution:solution model:model timeStep:dtScale*dt transientSimulation:timeDerivativeActive];
     }
     
-    [listUtilities listSetNameSpace:@""];
+    [listUtilities listSetNameSpace:nil];
     solution.dt = dt;
     
     // After solution register the timing if requested
@@ -8455,7 +8455,7 @@ static dispatch_once_t onceToken;
     FEMUtilities *utilities;
     variableArraysContainer *variableContainers = NULL, *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     utilities = [[FEMUtilities alloc] init];
     
     scanning = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"scanning"] == YES) ? YES : NO;

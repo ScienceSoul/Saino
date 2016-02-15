@@ -25,7 +25,7 @@
 - (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    self.listUtilities = [[FEMListUtilities alloc] init];
+    self.listUtilities = [FEMListUtilities sharedListUtilities];
     XCTAssertNotNil(self.listUtilities, @"FEMListUtilitiesTests: Could not create a FEMListUtilities object.");
     self.equation = [[FEMEquation alloc] init];
     XCTAssertNotNil(self.equation, @"FEMListUtilitiesTests: Could not create a FEMEquation object.");

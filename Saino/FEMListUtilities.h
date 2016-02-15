@@ -17,10 +17,13 @@
 
 @property(nonatomic, strong, nonnull) NSMutableDictionary <NSString *, NSNumber *> *timers;
 
++(id __nonnull)sharedListUtilities;
++(void)selfDestruct;
+
 -(void)listParseDependencies:(NSArray * __nonnull)dependencies index:(int)ind name:(NSString * __nonnull)name toValues:(double * __nonnull)t count:(int * __nonnull)count model:(FEMModel * __nonnull)model allGlobal:(BOOL * __nonnull)allGlobal;
 
--(void)listSetNameSpace:(NSString * __nonnull)str;
--(char * __nonnull)listGetNameSpaceForVariable:(char * __nonnull)varName;
+-(void)listSetNameSpace:(NSString * __nullable)str;
+-(char * __nonnull)listGetNameSpaceForVariable:(NSString * __nonnull)varName;
 -(NSString * __nullable)listGetString:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
 -(BOOL)listGetReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
 -(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
@@ -56,5 +59,7 @@
 -(void)checkTimer:(NSString * __nonnull)timerName deleteTimer:(BOOL * __nullable)deleteTimer resetTimer:(BOOL * __nullable)resetTimer model:(FEMModel * __nonnull)model;
 -(void)resetTimer:(NSString * __nonnull)timerName model:(FEMModel * __nonnull)model;
 -(void)deletTimer:(NSString * __nonnull)timerName;
+
+-(void)deallocation;
 
 @end

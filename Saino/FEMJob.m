@@ -86,6 +86,7 @@
 
 @synthesize core = _core;
 @synthesize elementDescription = _elementDescription;
+@synthesize listUtilities = _listUtilities;
 @synthesize model = _model;
 @synthesize modelName = _modelName;
 
@@ -135,7 +136,7 @@
     FEMUtilities *utilities;
     listBuffer activeSolvers = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     i = 1;
     for (FEMSolution *solution in model.solutions) {
@@ -268,7 +269,7 @@
     Element_t *elements = NULL, *edges = NULL;
     variableArraysContainer *variableContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     meshUtilities = [[FEMMeshUtils alloc] init];
     
     for (i=1; i<=model.numberOfBodies; i++) {
@@ -374,7 +375,7 @@
                                     }
                                 }
                             }
-                            [listUtilities listSetNameSpace:@""];
+                            [listUtilities listSetNameSpace:nil];
                         }
                     }
                 }
@@ -401,7 +402,7 @@
     FEMUtilities *utilities;
     variableArraysContainer *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     restartFile = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"restart file" info:&found];
     
@@ -461,7 +462,7 @@
     
     dim = model.dimension;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"restart before initial conditions" info:&found] == YES) {
         [self FEMJob_restartModel:model];
         [self FEMJob_initCondModel:model];
@@ -642,7 +643,7 @@
                         }
                     }
                     
-                    [listUtilities listSetNameSpace:@""];
+                    [listUtilities listSetNameSpace:nil];
                 }
             }
         }
@@ -668,7 +669,7 @@
     FEMListUtilities *listUtilities;
     variableArraysContainer *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     for (FEMSolution *solution in model.solutions) {
         if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
@@ -1003,7 +1004,7 @@ jump:
     NSString *outputFile, *postFile, *saveWhich;
     variableArraysContainer *varContainers = NULL;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     outputFile = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"output file" info:&found];
     if (found == YES) {
@@ -1163,7 +1164,7 @@ jump:
     NSFileHandle *outputFileHandle;
     variableArraysContainer *varContainers = NULL, *prev = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     utilities = [[FEMUtilities alloc] init];
     
     // If first time here, count the number of variables
@@ -1361,7 +1362,7 @@ jump:
     FEMListUtilities *listUtilities;
     variableArraysContainer *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     outputFile = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"output file" info:&found];
     if (found == YES) {
@@ -1444,14 +1445,16 @@ jump:
 {
     self = [super init];
     if (self) {
-        //TODO: Initialize here
-        
-        // Instanciate a kernel for this job
+
+        // Instanciate a kernel class for this job
         _core = [FEMCore sharedCore];
         
-        // Instanciate the element description for this job
+        // Instanciate an element description class for this job
         _elementDescription = [FEMElementDescription sharedElementDescription];
         
+        // Instanciate a list utilities class for this job
+        _listUtilities = [FEMListUtilities sharedListUtilities];
+
         _transient = NO;
         _outputName = [NSMutableString stringWithString:@""];
         _postName = [NSMutableString stringWithString:@""];
@@ -1484,6 +1487,9 @@ jump:
     
     [_elementDescription deallocation];
     [FEMElementDescription selfDestruct];
+    
+    [_listUtilities deallocation];
+    [FEMListUtilities selfDestruct];
     
     [_model deallocation];
     
@@ -1541,7 +1547,7 @@ jump:
     FEMMesh *extrudedMesh;
     listBuffer listBuffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     // TODO: Add support for parallel run
     

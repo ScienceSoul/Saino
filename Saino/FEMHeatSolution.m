@@ -736,7 +736,7 @@ enum {
     mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     for (t=0; t<mesh.numberOfBulkElements; t++) {
         // Check if this element belongs to a body where temperature
         // has been calculated
@@ -921,7 +921,7 @@ enum {
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];

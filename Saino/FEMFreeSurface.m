@@ -154,7 +154,7 @@
     variableArraysContainer *velocity1Containers = NULL, *velocity2Containers = NULL, *velocity3Containers = NULL;
     
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     FEMElementDescription *elementDescription = [[FEMElementDescription alloc] init];
     

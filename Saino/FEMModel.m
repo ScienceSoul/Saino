@@ -74,7 +74,7 @@
     FEMMesh *mesh;
     FEMListUtilities *listUtil;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     csys = [listUtil listGetString:self inArray:self.simulation.valuesList forVariable:@"coordinate system" info:&found];
     if (found == NO) csys = @"cartesian";
@@ -344,7 +344,7 @@
     BOOL found;
     
     core = [FEMCore sharedCore];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     core.minOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"minimum output level" info:&found minValue:NULL maxValue:NULL];
     core.maxOutputLevel = [listUtilities listGetInteger:self inArray:self.simulation.valuesList forVariable:@"maximum output level" info:&found minValue:NULL maxValue:NULL];
@@ -501,7 +501,7 @@
     solutionArraysContainer *solContainers = NULL;
     NSRange substr1;
     
-    listUtils = [[FEMListUtilities alloc] init];
+    listUtils = [FEMListUtilities sharedListUtilities];
     
     // TODO: Here comes the Model Description File (MDF) parser
     // For now we are just testing and we set manually a model

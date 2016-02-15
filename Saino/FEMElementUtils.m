@@ -47,7 +47,7 @@
     matrixArraysContainer *matContainers = NULL;
     modelArraysContainer *modelContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     listMatrix = [[FEMListMatrix alloc] init];
     list = [listMatrix allocateMatrix:localNodes];
@@ -359,7 +359,7 @@
     matrixArraysContainer *matContainers;
     listBuffer ivals = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
-    FEMListUtilities *listUtils = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtils = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utils = [[FEMUtilities alloc] init];
     
     modelContainers = model.getContainers;

@@ -237,7 +237,7 @@
 		730C42CF1B2686E2009411B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		730C42D01B2686E2009411B7 /* Saino_App_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Saino_App_Tests.m; sourceTree = "<group>"; };
 		730C42DB1B26F499009411B7 /* FEMTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMTest.h; sourceTree = "<group>"; };
-		730C42DC1B26F499009411B7 /* FEMTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMTest.m; sourceTree = "<group>"; };
+		730C42DC1B26F499009411B7 /* FEMTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMTest.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		730C42E41B3A895B009411B7 /* SainoViewControler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SainoViewControler.h; sourceTree = "<group>"; };
 		730C42E51B3A895B009411B7 /* SainoViewControler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SainoViewControler.m; sourceTree = "<group>"; };
 		7310B08913B0BCD100F5E96B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
@@ -255,7 +255,7 @@
 		7315513413583FFD004CCD09 /* SainoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SainoAppDelegate.m; sourceTree = "<group>"; };
 		7315513713583FFD004CCD09 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		7315515713586108004CCD09 /* FEMCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMCore.h; sourceTree = "<group>"; };
-		7315515813586108004CCD09 /* FEMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMCore.m; sourceTree = "<group>"; };
+		7315515813586108004CCD09 /* FEMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMCore.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		7315515B1358615D004CCD09 /* FEMMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FEMMesh.h; sourceTree = "<group>"; };
 		7315515C1358615D004CCD09 /* FEMMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73167EFC177058D8003A1A20 /* FEMDifferentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDifferentials.h; sourceTree = "<group>"; };
@@ -263,7 +263,7 @@
 		7316B30116144DC800A8C23C /* FEMInterpolation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInterpolation.h; sourceTree = "<group>"; };
 		7316B30216144DC800A8C23C /* FEMInterpolation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInterpolation.m; sourceTree = "<group>"; };
 		73206774168D7D9700BAE816 /* FEMElementUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMElementUtils.h; sourceTree = "<group>"; };
-		73206775168D7D9700BAE816 /* FEMElementUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMElementUtils.m; sourceTree = "<group>"; };
+		73206775168D7D9700BAE816 /* FEMElementUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMElementUtils.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73206778169A6EA800BAE816 /* FEMListMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMListMatrix.h; sourceTree = "<group>"; };
 		73206779169A6EA800BAE816 /* FEMListMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMListMatrix.m; sourceTree = "<group>"; };
 		7320677B169C00DE00BAE816 /* FEMBandwidthOptimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBandwidthOptimize.h; sourceTree = "<group>"; };
@@ -273,7 +273,7 @@
 		7320CC64159C6B9C0050D3B6 /* SIOMeshIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOMeshIO.h; sourceTree = "<group>"; };
 		7320CC65159C6B9D0050D3B6 /* SIOMeshIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOMeshIO.m; sourceTree = "<group>"; };
 		7323550A17F4162400AAC8CA /* FEMHeatSolution_OpenCL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMHeatSolution_OpenCL.h; sourceTree = "<group>"; };
-		7323550B17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMHeatSolution_OpenCL.m; sourceTree = "<group>"; };
+		7323550B17F4162400AAC8CA /* FEMHeatSolution_OpenCL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMHeatSolution_OpenCL.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73275A3713C2BD0D006EC4BA /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
 		73275A3813C2BD0D006EC4BA /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		73281C6214D2898100854B7D /* FEMPrecondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPrecondition.h; sourceTree = "<group>"; };
@@ -298,10 +298,10 @@
 		73505DCF13C1BD0600B1C043 /* NodalBasisFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = NodalBasisFunctions.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		736054351BCCEE3700832758 /* FEMStructuredMeshMapper.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FEMStructuredMeshMapper.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		736054371BCCEE3700832758 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7360543B1BCCEEBA00832758 /* FEMStructuredMeshMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMStructuredMeshMapper.m; sourceTree = "<group>"; };
+		7360543B1BCCEEBA00832758 /* FEMStructuredMeshMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMStructuredMeshMapper.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		7360543D1BCCEED500832758 /* FEMStructuredMeshMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMStructuredMeshMapper.h; sourceTree = "<group>"; };
 		7361A15614C69E6F006C2FA2 /* FEMModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMModel.h; sourceTree = "<group>"; };
-		7361A15714C69E6F006C2FA2 /* FEMModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMModel.m; sourceTree = "<group>"; };
+		7361A15714C69E6F006C2FA2 /* FEMModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMModel.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		7361A15914C6A084006C2FA2 /* FEMSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSolution.h; sourceTree = "<group>"; };
 		7361A15A14C6A084006C2FA2 /* FEMSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolution.m; sourceTree = "<group>"; };
 		736AFC2B1360115200144B03 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
@@ -309,7 +309,7 @@
 		736DF3BA15BD38DD00D702C7 /* FEMMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrix.h; sourceTree = "<group>"; };
 		736DF3BB15BD38DD00D702C7 /* FEMMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrix.m; sourceTree = "<group>"; };
 		73702BEA15EC5E240056C80E /* FEMMeshUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMeshUtils.h; sourceTree = "<group>"; };
-		73702BEB15EC5E240056C80E /* FEMMeshUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMeshUtils.m; sourceTree = "<group>"; };
+		73702BEB15EC5E240056C80E /* FEMMeshUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMeshUtils.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		7372925215AA879E004532B5 /* SIOInfoParallel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SIOInfoParallel.h; sourceTree = "<group>"; };
 		7372925315AA879E004532B5 /* SIOInfoParallel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SIOInfoParallel.m; sourceTree = "<group>"; };
 		7372A5F615495CF400A1D6FB /* FEMSimulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSimulation.h; sourceTree = "<group>"; };
@@ -321,7 +321,7 @@
 		73803A7913AB5EA50036350E /* FEMNumericIntegration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNumericIntegration.h; sourceTree = "<group>"; };
 		73803A7A13AB5EA50036350E /* FEMNumericIntegration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNumericIntegration.m; sourceTree = "<group>"; };
 		73844CEF175C38370002DA9D /* FEMRadiation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMRadiation.h; sourceTree = "<group>"; };
-		73844CF0175C38370002DA9D /* FEMRadiation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMRadiation.m; sourceTree = "<group>"; };
+		73844CF0175C38370002DA9D /* FEMRadiation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMRadiation.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73882CB1151C483600B11665 /* FEMMatrixCRS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixCRS.h; sourceTree = "<group>"; };
 		73882CB2151C483600B11665 /* FEMMatrixCRS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMatrixCRS.m; sourceTree = "<group>"; };
 		73882CB5151C73F000B11665 /* FEMMatrixBand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMatrixBand.h; sourceTree = "<group>"; };
@@ -332,9 +332,9 @@
 		738BC1A216F06EB800EDFA6B /* FEMInitialConditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInitialConditions.h; sourceTree = "<group>"; };
 		738BC1A316F06EB800EDFA6B /* FEMInitialConditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInitialConditions.m; sourceTree = "<group>"; };
 		738CA3CE17699396007F9ADB /* FEMMaterialModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMaterialModels.h; sourceTree = "<group>"; };
-		738CA3CF17699396007F9ADB /* FEMMaterialModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMaterialModels.m; sourceTree = "<group>"; };
+		738CA3CF17699396007F9ADB /* FEMMaterialModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMMaterialModels.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		738DA0741BCCB63C000CCE84 /* SainoCore Logic Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SainoCore Logic Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		738DA0761BCCB63C000CCE84 /* FEMListUtilitiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FEMListUtilitiesTests.m; sourceTree = "<group>"; };
+		738DA0761BCCB63C000CCE84 /* FEMListUtilitiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMListUtilitiesTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		738DA0781BCCB63C000CCE84 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		738DA07F1BCCB8A8000CCE84 /* FEMUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilitiesTests.m; sourceTree = "<group>"; };
 		738DA0811BCCEB10000CCE84 /* FEMSolutionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSolutionTests.m; sourceTree = "<group>"; };
@@ -359,7 +359,7 @@
 		73ADFAD21594560F009A83C6 /* DirectoryReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectoryReader.h; sourceTree = "<group>"; };
 		73ADFAD31594560F009A83C6 /* DirectoryReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectoryReader.m; sourceTree = "<group>"; };
 		73B1B271170570550056322B /* FEMPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPost.h; sourceTree = "<group>"; };
-		73B1B272170570550056322B /* FEMPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMPost.m; sourceTree = "<group>"; };
+		73B1B272170570550056322B /* FEMPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMPost.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73BAD5541911E1470037E58A /* FEMNavierStokes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNavierStokes.h; sourceTree = "<group>"; };
 		73BAD5551911E1470037E58A /* FEMNavierStokes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNavierStokes.m; sourceTree = "<group>"; };
 		73BBD72515DB8AC700B5735D /* FEMPElementMaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMPElementMaps.h; sourceTree = "<group>"; };
@@ -371,7 +371,7 @@
 		73C4950219359CC200F36146 /* FEMNavierStokesGeneral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMNavierStokesGeneral.h; sourceTree = "<group>"; };
 		73C4950319359CC200F36146 /* FEMNavierStokesGeneral.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMNavierStokesGeneral.m; sourceTree = "<group>"; };
 		73C495051937135D00F36146 /* FEMFreeSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMFreeSurface.h; sourceTree = "<group>"; };
-		73C495061937135D00F36146 /* FEMFreeSurface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMFreeSurface.m; sourceTree = "<group>"; };
+		73C495061937135D00F36146 /* FEMFreeSurface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMFreeSurface.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73D0F11B175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveAnisotropic.h; sourceTree = "<group>"; };
 		73D0F11C175DBC0F00CE3326 /* FEMDiffuseConvectiveAnisotropic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMDiffuseConvectiveAnisotropic.m; sourceTree = "<group>"; };
 		73D0F11E175DD03200CE3326 /* FEMDiffuseConvectiveGeneralAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMDiffuseConvectiveGeneralAnisotropic.h; sourceTree = "<group>"; };
@@ -379,13 +379,13 @@
 		73D1FAEC1745DA8700D4E5C9 /* FEMMaterial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMaterial.h; sourceTree = "<group>"; };
 		73D1FAED1745DA8700D4E5C9 /* FEMMaterial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMaterial.m; sourceTree = "<group>"; };
 		73DB203015D3A951006C5F1C /* FEMJob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMJob.h; sourceTree = "<group>"; };
-		73DB203115D3A951006C5F1C /* FEMJob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMJob.m; sourceTree = "<group>"; };
+		73DB203115D3A951006C5F1C /* FEMJob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMJob.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73DE8B1B16B2627000DA2D7D /* Constructors.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Constructors.c; sourceTree = "<group>"; };
 		73DFEE5C16F33B790081A3A4 /* SainoSolutionsComputer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SainoSolutionsComputer.h; sourceTree = "<group>"; };
 		73DFEE5D16F33D280081A3A4 /* FEMFlowSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMFlowSolution.h; sourceTree = "<group>"; };
-		73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMFlowSolution.m; sourceTree = "<group>"; };
+		73DFEE5E16F33D280081A3A4 /* FEMFlowSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMFlowSolution.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73E0685B1BF4330D00ABEAAF /* FEMInterpolateMeshToMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMInterpolateMeshToMesh.h; sourceTree = "<group>"; };
-		73E0685D1BF4333D00ABEAAF /* FEMInterpolateMeshToMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMInterpolateMeshToMesh.m; sourceTree = "<group>"; };
+		73E0685D1BF4333D00ABEAAF /* FEMInterpolateMeshToMesh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMInterpolateMeshToMesh.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = heatSolutiomAssemblyKernel.cl; sourceTree = "<group>"; };
 		73E6B57B181A556400D3AB31 /* OpenCLUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenCLUtils.h; sourceTree = "<group>"; };
 		73E6B57C181A55AE00D3AB31 /* OpenCLUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenCLUtils.c; sourceTree = "<group>"; };
@@ -399,7 +399,7 @@
 		73EE3A9A16F809A60054B7AE /* FEMMeshUpdateSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMMeshUpdateSolution.h; sourceTree = "<group>"; };
 		73EE3A9B16F809A60054B7AE /* FEMMeshUpdateSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMMeshUpdateSolution.m; sourceTree = "<group>"; };
 		73EE3A9D16F809E50054B7AE /* FEMHeatSolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMHeatSolution.h; sourceTree = "<group>"; };
-		73EE3A9E16F809E50054B7AE /* FEMHeatSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMHeatSolution.m; sourceTree = "<group>"; };
+		73EE3A9E16F809E50054B7AE /* FEMHeatSolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMHeatSolution.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		73F0090B15D90D57004B7DCE /* FEMEquation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMEquation.h; sourceTree = "<group>"; };
 		73F0090C15D90D57004B7DCE /* FEMEquation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMEquation.m; sourceTree = "<group>"; };
 		73F2105414E3D41000D52906 /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memory.c; sourceTree = "<group>"; };
@@ -412,7 +412,7 @@
 		73F70A691513247500A5B3B5 /* FEMBodyForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMBodyForce.h; sourceTree = "<group>"; };
 		73F70A6A1513247500A5B3B5 /* FEMBodyForce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMBodyForce.m; sourceTree = "<group>"; };
 		73F70A6C1513467C00A5B3B5 /* FEMUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMUtilities.h; sourceTree = "<group>"; };
-		73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMUtilities.m; sourceTree = "<group>"; };
+		73F70A6D1513467C00A5B3B5 /* FEMUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FEMUtilities.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

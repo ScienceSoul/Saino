@@ -36,20 +36,22 @@
 }
 
 -(void)deallocation {
-    if (_containers->tValues != NULL) {
-        free_dvector(_containers->tValues, 0, _containers->sizeTValues-1);
-        _containers->tValues = NULL;
+    if (_containers != NULL) {
+        if (_containers->tValues != NULL) {
+            free_dvector(_containers->tValues, 0, _containers->sizeTValues-1);
+            _containers->tValues = NULL;
+        }
+        if (_containers->iValues != NULL) {
+            free_ivector(_containers->iValues, 0, _containers->sizeIValues-1);
+            _containers->iValues = NULL;
+        }
+        if (_containers->fValues != NULL) {
+            free_d3tensor(_containers->fValues, 0, _containers->sizeFValues1-1, 0, _containers->sizeFValues2-1, 0, _containers->sizeFValues3-1);
+            _containers->fValues = NULL;
+        }
+        free(_containers);
+        _containers = NULL;
     }
-    if (_containers->iValues != NULL) {
-        free_ivector(_containers->iValues, 0, _containers->sizeIValues-1);
-        _containers->iValues = NULL;
-    }
-    if (_containers->fValues != NULL) {
-        free_d3tensor(_containers->fValues, 0, _containers->sizeFValues1-1, 0, _containers->sizeFValues2-1, 0, _containers->sizeFValues3-1);
-        _containers->fValues = NULL;
-    }
-    free(_containers);
-    _containers = NULL;
 }
 
 -(valueListArraysContainer * __nonnull)getContainers {

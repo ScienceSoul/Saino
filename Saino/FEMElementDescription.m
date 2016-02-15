@@ -1370,8 +1370,8 @@ static dispatch_once_t onceToken;
 -(void)computeStabilizationParameterInElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes mesh:(FEMMesh * __nonnull)mesh numberOfNodes:(int)n mk:(double * __nonnull)mk hk:(double * __nullable)hk {
  
     int i, j, p, q, t, dim;
-    double *eigr, s, *ddp, *ddq, ***dNodalBasisdx;
-    double u, v, w, **l, **g, *l_transpose, *g_transpose, *work, sum1, sum2;
+    double eigr[n], s, ddp[3], ddq[3], dNodalBasisdx[n][n][3];
+    double u, v, w, l[n-1][n-1], g[n-1][n-1], l_transpose[(n-1)*(n-1)], g_transpose[(n-1)*(n-1)], work[16*n], sum1, sum2;
     GaussIntegrationPoints *IP = NULL;
     FEMNumericIntegration *numericIntegration;
     BOOL stat;
@@ -1379,17 +1379,6 @@ static dispatch_once_t onceToken;
     // Used for lapack routine
     int itype, order, lda, ldb, lwork, info;
     char *jobz, *uplo;
-    
-    eigr = doublevec(0, n-1);
-    ddp = doublevec(0, 2);
-    ddq = doublevec(0, 2);
-    dNodalBasisdx = d3tensor(0, n-1, 0, n-1, 0, 2);
-    l = doublematrix(0, (n-1)-1, 0, (n-1)-1);
-    g = doublematrix(0, (n-1)-1, 0, (n-1)-1);
-    l_transpose = doublevec(0, ((n-1)*(n-1))-1);
-    g_transpose = doublevec(0, ((n-1)*(n-1))-1);
-
-    work = doublevec(0, (16*n)-1);
     
     numericIntegration = [[FEMNumericIntegration alloc] init];
     if ([numericIntegration allocation:mesh] == NO) fatal("FEMElementDescription:computeStabilizationParameter", "Allocation error in FEMNumericIntegration.");
@@ -1436,7 +1425,7 @@ static dispatch_once_t onceToken;
     
     memset( *l, 0.0, ((n-1)*(n-1))*sizeof(double) );
     memset( *g, 0.0, ((n-1)*(n-1))*sizeof(double) );
-    for (t =0; t<IP->n; t++) {
+    for (t=0; t<IP->n; t++) {
         u = IP->u[t];
         v = IP->v[t];
         w = IP->w[t];
@@ -1451,8 +1440,8 @@ static dispatch_once_t onceToken;
         
         for (p=1; p<n; p++) {
             for (q=1; q<n; q++) {
-               memset( ddp, 0.0, 3*sizeof(double) );
-               memset( ddq, 0.0, 3*sizeof(double) );
+               memset( ddp, 0.0, sizeof(ddp) );
+               memset( ddq, 0.0, sizeof(ddq) );
                for (i=0; i<dim; i++) {
                    g[p-1][q-1] = g[p-1][q-1] + s * numericIntegration.basisFirstDerivative[p][i] * numericIntegration.basisFirstDerivative[q][i];
                    sum1 = 0.0;
@@ -1534,16 +1523,6 @@ static dispatch_once_t onceToken;
         }
         *mk = min( 1.0/3.0, 2.0/(*mk) );
     }
-
-    free_dvector(eigr, 0, n-1);
-    free_dvector(ddp, 0, 2);
-    free_dvector(ddq, 0, 2);
-    free_d3tensor(dNodalBasisdx, 0, n-1, 0, n-1, 0, 2);
-    free_dmatrix(l, 0, (n-1)-1, 0, (n-1)-1);
-    free_dmatrix(g, 0, (n-1)-1, 0, (n-1)-1);
-    free_dvector(l_transpose, 0, ((n-1)*(n-1))-1);
-    free_dvector(g_transpose, 0, ((n-1)*(n-1))-1);
-    free_dvector(work, 0, (16*n)-1);
     
     [numericIntegration deallocation:mesh];
 }

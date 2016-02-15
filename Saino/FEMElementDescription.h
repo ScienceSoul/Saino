@@ -18,7 +18,6 @@
 +(id __nonnull)sharedElementDescription;
 +(void)selfDestruct;
 
--(void)deallocation;
 -(void)addDescriptionOfElement:(ElementType_t * __nonnull)element withBasisTerms:(int * __nonnull)terms;
 -(void)initElementDescriptions;
 -(int * __nonnull * __nonnull)getEdgeMap:(int)elementFamily;
@@ -39,5 +38,7 @@
 -(double)interpolate3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
 -(void)invertMatrix3x3:(double[][3])G inverted:(double[][3])GI detG:(double)detG;
 -(void)getEdgeBasisElement:(Element_t * __nonnull)element wBasis:(double * __nonnull * __nonnull)wBasis rotWBasis:(double * __nonnull * __nonnull)rotWBasis basis:(double * __nonnull)basis dBasisdx:(double * __nonnull * __nonnull)dBasisdx;
+
+-(void)deallocation;
 
 @end

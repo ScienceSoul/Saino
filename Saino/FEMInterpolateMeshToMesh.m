@@ -139,7 +139,7 @@
     Epntr_t *elementPointers = NULL;
     
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMInterpolation *interpolation = [[FEMInterpolation alloc] init];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];

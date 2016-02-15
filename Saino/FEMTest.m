@@ -68,7 +68,7 @@ static dispatch_once_t onceToken;
     
     FEMModel *mod = (FEMModel *)model;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     [listUtilities addStringInClassList:mod.simulation theVariable:@"coordinate system" withValue:@"cartesian 2d"];
     
@@ -185,7 +185,7 @@ static dispatch_once_t onceToken;
     
     FEMModel *mod = (FEMModel *)model;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     [listUtilities addStringInClassList:mod.simulation theVariable:@"coordinate system" withValue:@"cartesian 2d"];
     int ivalue = 9;
@@ -318,7 +318,7 @@ static dispatch_once_t onceToken;
     
     FEMModel *mod = (FEMModel *)model;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     [listUtilities addStringInClassList:mod.simulation theVariable:@"coordinate system" withValue:@"cartesian"];
     int ivalue = 4;
@@ -518,7 +518,7 @@ static dispatch_once_t onceToken;
     
     FEMModel *mod = (FEMModel *)model;
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     double L = 10.0e3;
     double slope = 0.5 * M_PI / 180.0;

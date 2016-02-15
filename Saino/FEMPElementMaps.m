@@ -131,7 +131,7 @@
         _tetraFaceEdgeMap2[0][0] = 2; _tetraFaceEdgeMap2[0][1] = 1; _tetraFaceEdgeMap2[0][2] = 0;
         _tetraFaceEdgeMap2[1][0] = 0; _tetraFaceEdgeMap2[1][1] = 4; _tetraFaceEdgeMap2[1][2] = 3;
         _tetraFaceEdgeMap2[2][0] = 1; _tetraFaceEdgeMap2[2][1] = 4; _tetraFaceEdgeMap2[2][2] = 5;
-        _tetraFaceEdgeMap2[3][0] = 2; _tetraFaceEdgeMap2[3][1] = 5; _tetraFaceEdgeMap2[3][3] = 3;
+        _tetraFaceEdgeMap2[3][0] = 2; _tetraFaceEdgeMap2[3][1] = 5; _tetraFaceEdgeMap2[3][2] = 3;
         
         // Wedge edge mappings
         _wedgeEdgeMap[0][0] = 0; _wedgeEdgeMap[0][1] = 1;
@@ -172,7 +172,7 @@
         _pyramidFaceMap[1][0] = 0; _pyramidFaceMap[1][1] = 1; _pyramidFaceMap[1][2] = 4; _pyramidFaceMap[1][3] = -1;
         _pyramidFaceMap[2][0] = 1; _pyramidFaceMap[2][1] = 2; _pyramidFaceMap[2][2] = 4; _pyramidFaceMap[2][3] = -1;
         _pyramidFaceMap[3][0] = 2; _pyramidFaceMap[3][1] = 3; _pyramidFaceMap[3][2] = 4; _pyramidFaceMap[3][3] = -1;
-        _pyramidFaceMap[4][0] = 3; _pyramidFaceMap[4][1] = 0; _pyramidFaceMap[4][2] = 4; _pyramidFaceMap[4][4] = -1;
+        _pyramidFaceMap[4][0] = 3; _pyramidFaceMap[4][1] = 0; _pyramidFaceMap[4][2] = 4; _pyramidFaceMap[4][3] = -1;
         
         _pyramidFaceEdgeMap[0][0] = 0; _pyramidFaceEdgeMap[0][1] = 1; _pyramidFaceEdgeMap[0][2] = 2; _pyramidFaceEdgeMap[0][3] = 3;
         _pyramidFaceEdgeMap[1][0] = 0; _pyramidFaceEdgeMap[1][1] = 5; _pyramidFaceEdgeMap[1][2] = 4; _pyramidFaceEdgeMap[1][3] = -1;

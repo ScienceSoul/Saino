@@ -39,7 +39,7 @@
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     core = [FEMCore sharedCore];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     elementUtils = [[FEMElementUtils alloc] init];
     a1 = emissivity * [elementUtils elementArea:elememt numberOfNodes:elememt->Type.NumberOfNodes mesh:mesh nodel:model];
@@ -102,7 +102,7 @@
     listBuffer buffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     core = [FEMCore sharedCore];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     currentElements = model.getElements;
     n = currentElements[element->BoundaryInfo->GebhardtFactors->Elements[k]].Type.NumberOfNodes;

@@ -96,7 +96,7 @@
     bdofs = mesh.maxBdofs;
     
     elementMaps = [[FEMPElementMaps alloc] init];
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     elements = mesh.getElements;
     edges = mesh.getEdges;
@@ -588,7 +588,7 @@
     if (pVar == nil) return var;
     
     if (*found == NO ) {
-        listUtilities = [[FEMListUtilities alloc] init];
+        listUtilities = [FEMListUtilities sharedListUtilities];
         solution = (FEMSolution *)pVar.solution;
         if ( (solution.solutionInfo)[@"bubbles in global system"] != nil ) {
             globalBubbles = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
@@ -1266,7 +1266,7 @@
     FEMElementUtils *elementUtils;
     variableArraysContainer *bufferContainers = NULL, *varContainers = NULL;
     
-    listUtilities = [[FEMListUtilities alloc] init];
+    listUtilities = [FEMListUtilities sharedListUtilities];
     
     // If there is a matrix level "Flux Corrected Transport" then it's required
     // to use global matrices for time integration
@@ -2186,7 +2186,7 @@
                 n = [(solution.solutionInfo)[@"harmonic system values"] intValue];
             }
             if (n > 1) {
-                listUtilities = [[FEMListUtilities alloc] init];
+                listUtilities = [FEMListUtilities sharedListUtilities];
                 found = [listUtilities listGetConstRealArray:model inArray:solution.valuesList forVariable:@"frequency" buffer:&freqv];
                 if (found == YES) {
                     if (freqv.m < n) {

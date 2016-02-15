@@ -135,7 +135,7 @@
     BOOL found;
     Element_t *elements;
     Nodes_t *nodes;
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
     FEMMesh *mesh = (FEMMesh *)model.mesh;
     elements = mesh.getElements;
@@ -273,7 +273,7 @@
     FEMBodyForce *bodyForceAtID = nil;
     FEMMaterial *materialAtID = nil;
     FEMCore *core = [FEMCore sharedCore];
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
     FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];

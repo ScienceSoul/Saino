@@ -14,12 +14,14 @@
     
     FEMCore *_core;
     FEMElementDescription *_elementDescription;
+    FEMListUtilities *_listUtilities;
     FEMModel *_model;
     NSString *_modelName;
 }
 
 @property(nonatomic, strong, nonnull) FEMCore *core;
 @property(nonatomic, strong, nonnull) FEMElementDescription *elementDescription;
+@property(nonatomic, strong, nonnull) FEMListUtilities *listUtilities;
 @property(nonatomic, strong, nonnull) FEMModel *model;
 @property(nonatomic, strong, nonnull) NSString *modelName;
 

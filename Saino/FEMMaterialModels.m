@@ -102,7 +102,7 @@
     k = [(model.bodies)[element->BodyID-1][@"material"] intValue];
     materialAtID = (model.materials)[k-1];
     
-    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     viscosityFlag = [listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"viscosity model" info:&found];
     if (found == NO) return mu;
     

@@ -434,7 +434,7 @@
     
     parallel = NO;
     
-    listUtil = [[FEMListUtilities alloc] init];
+    listUtil = [FEMListUtilities sharedListUtilities];
     
     countByType = intvec(0, 63);
     types = intvec(0, 63);
@@ -1313,10 +1313,11 @@
                             free_dvector(_elements[i].BoundaryInfo->GebhardtFactors->Factors, 0, _elements[i].BoundaryInfo->GebhardtFactors->sizeFactors-1);
                         }
                         free(_elements[i].BoundaryInfo->GebhardtFactors);
+                        _elements[i].BoundaryInfo->GebhardtFactors = NULL;
                     }
                     free(_elements[i].BoundaryInfo);
+                    _elements[i].BoundaryInfo = NULL;
                 }
-                _elements[i].BoundaryInfo = NULL;
             }
             
             if (_elements[i].NodeIndexes != NULL) free_ivector(_elements[i].NodeIndexes, 0, _elements[i].sizeNodeIndexes-1);
