@@ -192,6 +192,7 @@
                     gradNodal[p][i][j] = c[i][j];
                 }
             }
+            memset(yy, 0.0, sizeof(yy) );
             cblas_dgemv(CblasRowMajor, CblasNoTrans, n, dim, 1.0, *basisFirstDerivative, 3, *nodalVelo+(dim*n), 1.0, 0.0, yy, 1.0);
             for (i=0; i<dim; i++) {
                 gradNodal[p][dim][i] = yy[i];
@@ -249,21 +250,21 @@
     }
     // Arrays of pointers to matrices elements
     double ***m, ***a, ***jac;
-    m =  malloc ( (c+1) * sizeof ( double ** ));
+    m = (double ***)malloc( (c+1) * sizeof ( double ** ));
     for (i=0; i<(c+1); i++) {
-        m[i] = malloc ( (c+1) * sizeof ( double * ));
+        m[i] = (double **)malloc( (c+1) * sizeof ( double * ));
     }
-    a =  malloc ( (c+1) * sizeof ( double ** ));
+    a =  (double ***)malloc( (c+1) * sizeof ( double ** ));
     for (i=0; i<(c+1); i++) {
-        a[i] = malloc ( (c+1) * sizeof ( double * ));
+        a[i] = (double **)malloc( (c+1) * sizeof ( double * ));
     }
-    jac =  malloc ( (c+1) * sizeof ( double ** ));
+    jac =  (double ***)malloc( (c+1) * sizeof ( double ** ));
     for (i=0; i<(c+1); i++) {
-        jac[i] = malloc ( (c+1) * sizeof ( double * ));
+        jac[i] = (double **)malloc( (c+1) * sizeof ( double * ));
     }
     // Array of pointers to vector elements
     double **load;
-    load = malloc ( (c+1) * sizeof ( double * ));
+    load = (double **)malloc( (c+1) * sizeof ( double * ));
 
     // Now we start integrating
     for (t=0; t<IP->n; t++) {
@@ -588,6 +589,7 @@
             }
             
             double yy[3];
+            memset(yy, 0.0, sizeof(yy) );
             cblas_dgemv(CblasRowMajor, CblasNoTrans, 3, 3, 1.0, (double *)gmat, 3, velo, 1.0, 0.0, yy, 1.0);
             sum = 0.0;
             for (i=0; i<3; i++) {
@@ -965,7 +967,8 @@
             }
         }
         double yy[p];
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, p, p, 1.0, (double *)jacM, 8*n, sol, 1, 1.0, yy, 1);
+        memset(yy, 0.0, sizeof(yy) );
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, p, p, 1.0, (double *)jacM, 8*n, sol, 1, 0.0, yy, 1);
         for (i=0; i<p; i++) {
             forceVector[i] = forceVector[i] + yy[i];
         }

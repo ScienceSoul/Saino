@@ -112,14 +112,9 @@
     stat = [integration setMetricDeterminantForElement:element elementNodes:nodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w];
     sqrtElementMetric = integration.metricDeterminant;
     // Coordinate system dependent information
-    x = 0.0;
-    y = 0.0;
-    z = 0.0;
-    for (i=0; i<n; i++) {
-        x = x + nodes->x[i]*integration.basis[i];
-        y = y + nodes->y[i]*integration.basis[i];
-        z = z + nodes->z[i]*integration.basis[i];
-    }
+    x = cblas_ddot(n, nodes->x, 1, integration.basis, 1);
+    y = cblas_ddot(n, nodes->y, 1, integration.basis, 1);
+    z = cblas_ddot(n, nodes->z, 1, integration.basis, 1);
     FEMCoordinateSystems *coordinateSystems = [[FEMCoordinateSystems alloc] init];
     [coordinateSystems coordinateSystemInfoModel:model metric:metric sqrtMetric:&sqrtMetric symbols:symb dSymbols:dSymb coordX:x coordY:y coordZ:z];
     
@@ -133,11 +128,9 @@
     }
     
     memset( velo, 0.0, sizeof(velo) );
-    for (i=0; i<nd; i++) {
-        velo[0] = velo[0] + integration.basis[i]*ux[i];
-        velo[1] = velo[1] + integration.basis[i]*uy[i];
-        velo[2] = velo[2] + integration.basis[i]*uz[i];
-    }
+    velo[0] = cblas_ddot(nd, integration.basis, 1, ux, 1);
+    velo[1] = cblas_ddot(nd, integration.basis, 1, uy, 1);
+    velo[2] = cblas_ddot(nd, integration.basis, 1, uz, 1);
     
     // This is the square of shear rate which results to 1/2 in exponent
     // Also the derivative is taken with respect to the square
@@ -145,12 +138,10 @@
     
     if ([viscosityFlag isEqualToString:@"glen"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"glen exponent" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL]; // This is the real exponent, n, not 1/n
-        c2 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i]*buffer.vector[i];
-            }
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         } else {
+            c2 = 0.0;
             for (i=0; i<n; i++) {
                 c2 = c2 + integration.basis[i]*3.0;
             }
@@ -177,9 +168,7 @@
                     fatal("FEMMaterialModels:effectiveViscosity", "Saino will abort the simulation now...");
                 }
             } else {
-                for (i=0; i<n; i++) {
-                    temp = temp + integration.basis[i] * buffer.vector[i];
-                }
+                temp = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             }
             r = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"gas constant" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) r = 8.314;
@@ -232,51 +221,41 @@
         }
         
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"glen enhancement factor" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
-        ehf = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                ehf = ehf + integration.basis[i] * buffer.vector[i];
-            }
+            ehf = cblas_ddot(n, integration.basis, 1,  buffer.vector, 1);
         } else {
+            ehf = 0.0;
             for (i=0; i<n; i++) {
                 ehf = ehf + integration.basis[i] * 1.0;
             }
         }
         
-        if (muder != NULL) *muder = 0.5 * pow((ehf*arrheniusFactor), (-1.0/c2)) * ( (1.0/c2)-1.0 )/2.0 * pow(s, ( ((1.0/c2)-1.0)/2.0 - 1.0 ))/4.0;
+        if (muder != NULL) *muder = 0.5 * pow(ehf*arrheniusFactor, -1.0/c2) * ( (1.0/c2)-1.0 )/2.0 * pow(s, ((1.0/c2)-1.0)/2.0 - 1.0)/4.0;
         
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"critical shear rate" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         if (found == YES) {
-            c3 = 0.0;
-            for (i=0; i<n; i++) {
-                c3 = c3 + integration.basis[i]*buffer.vector[i];
-            }
+            c3 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             if (s < pow(c3, 2.0)) {
                 s = pow(c3, 2.0);
                 if (muder != NULL) *muder = 0.0;
             }
         }
         // Compute the effective viscosity
-        mu = 0.5 * pow((ehf * arrheniusFactor), (-1.0/c2)) * pow(s, ((1.0/c2)-1.0)/2.0 );
+        mu = 0.5 * pow(ehf * arrheniusFactor, -1.0/c2) * pow(s, ((1.0/c2)-1.0)/2.0 );
         
     } else if ([viscosityFlag isEqualToString:@"power law"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity exponent" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c2 = 0.0;
-        if (found == 0.0) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i] * buffer.vector[i];
-            }
+        if (found == YES) {
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         
         s = ss;
-        if (muder != NULL) *muder = viscosity * (c2-1.0)/2.0 * pow(s, ((c2-1.0)/2.0 - 1.0));
+        if (muder != NULL) *muder = viscosity * (c2-1.0)/2.0 * pow(s, (c2-1.0)/2.0 - 1.0);
         
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"critical shear rate" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         if (found == YES) {
-            c3 = 0.0;
-            for (i=0; i<n; i++) {
-                c3 = c3 + integration.basis[i] * buffer.vector[i];
-            }
+            c3 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             if (s < pow(c3, 2.0)) {
                 s = pow(c3, 2.0);
                 if (muder != NULL) *muder = 0.0;
@@ -286,106 +265,84 @@
         
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"nominal shear rate" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         if (found == YES) {
-            c4 = 0.0;
-            for (i=0; i<n; i++) {
-                c4 = c4 + integration.basis[i] * buffer.vector[i];
-            }
-            mu = mu / pow(c4, (c2-1.0));
-            if (muder != NULL) *muder = *muder / pow(c4, (c2-1.0));
+            c4 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
+            mu = mu / pow(c4, c2-1.0);
+            if (muder != NULL) *muder = *muder / pow(c4, c2-1.0);
         }
         
     } else if ([viscosityFlag isEqualToString:@"power law too"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity exponent" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c2 = 0.0;
-        if (found == 0.0) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i] * buffer.vector[i];
-            }
+        if (found == YES) {
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
-        mu = pow(viscosity, (-1.0/c2)) * pow(ss, ( -(c2-1.0)/(2.0*c2) )) / 2.0;
-        if (muder != NULL) *muder = pow(viscosity, (-1.0/c2)) * ( -(c2-1.0)/(2.0*c2) ) * pow(ss, ( -(c2-1.0)/(2.0*c2)-1.0 )) / 2.0;
+        mu = pow(viscosity, -1.0/c2) * pow(ss, -(c2-1.0)/(2.0*c2)) / 2.0;
+        if (muder != NULL) *muder = pow(viscosity, -1.0/c2) * ( -(c2-1.0)/(2.0*c2) ) * pow(ss, -(c2-1.0)/(2.0*c2)-1.0) / 2.0;
         
     } else if ([viscosityFlag isEqualToString:@"carreau"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity difference" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c1 = 0.0;
-        if (found == 0.0) {
-            for (i=0; i<n; i++) {
-                c1 = c1 + integration.basis[i]*buffer.vector[i];
-            }
+        if (found == YES) {
+            c1 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity exponent" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c2 = 0.0;
-        if (found == 0.0) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i]*buffer.vector[i];
-            }
+        if (found == YES) {
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity transition" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c3 = 0.0;
-        if (found == 0.0) {
-            for (i=0; i<n; i++) {
-                c3 = c3 + integration.basis[i]*buffer.vector[i];
-            }
+        if (found == YES) {
+            c3 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         c4 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"yasuda exponent" info:&found minValue:NULL maxValue:NULL];
         if (found == YES) {
             s = sqrt(ss);
-            mu = viscosity + c1 * pow((1.0 + pow(c3, c4) * pow(ss, (c4/2.0))), (c2-1.0)/c4);
-            if (muder != NULL) *muder = c1 * pow((1.0 + pow(c3, c4) * pow(ss, (c4/2.0))), (c2-1.0)/c4-1.0) * (c2-1.0)/2.0 * pow(c3, c4)*pow(ss, c4/2.0-1);
+            mu = viscosity + c1 * pow(1.0 + pow(c3, c4) * pow(ss, c4/2.0), (c2-1.0)/c4);
+            if (muder != NULL) *muder = c1 * pow(1.0 + pow(c3, c4) * pow(ss, c4/2.0), (c2-1.0)/c4-1.0) * (c2-1.0)/2.0 * pow(c3, c4)*pow(ss, c4/2.0-1.0);
         } else {
-            mu = viscosity + c1 * pow((1.0 + c3*c3*ss), (c2-1.0)/2.0);
-            if (muder != NULL) *muder = c1 * (c2-1.0)/2.0 * pow(c3, 2.0) * pow((1.0+pow(c3, 2.0)*ss), (c2-1.0)/2.0-1.0);
+            mu = viscosity + c1 * pow(1.0 + c3*c3*ss, (c2-1.0)/2.0);
+            if (muder != NULL) *muder = c1 * (c2-1.0)/2.0 * pow(c3, 2.0) * pow(1.0 + pow(c3, 2.0) * ss, (c2-1.0)/2.0-1.0);
         }
     } else if ([viscosityFlag isEqualToString:@"cross"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity difference" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c1 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c1 = c1 + integration.basis[i]*buffer.vector[i];
-            }
+            c1 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity exponent" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c2 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i]*buffer.vector[i];
-            }
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity transition" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c3 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c3 = c3 + integration.basis[i]*buffer.vector[i];
-            }
+            c3 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
-        mu = viscosity + c1 / (1.0 + c3*pow(ss, c2/2.0));
-        if (muder != NULL) *muder = -c1 * c3 * pow(ss, c2/2.0) * c2 / (2.0*pow((1.0+c3*pow(ss, c2/2.0)), 2.0)*ss);
+        mu = viscosity + c1 / (1.0 + c3 * pow(ss, c2/2.0));
+        if (muder != NULL) *muder = -c1 * c3 * pow(ss, c2/2.0) * c2 / (2.0*pow(1.0+c3*pow(ss, c2/2.0), 2.0) * ss);
     } else if ([viscosityFlag isEqualToString:@"powell eyring"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity difference" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c1 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c1 = c1 + integration.basis[i]*buffer.vector[i];
-            }
+            c1 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         c2 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"viscosity transition" info:&found minValue:NULL maxValue:NULL];
         s = sqrt(ss);
         if (c2*s < 1.0e-5) {
             mu = viscosity + c1;
         } else {
-            mu = viscosity + c1 * log(c2*s+sqrt(c2*c2*ss+1.0))/(c2*s);
+            mu = viscosity + c1 * log(c2 * s + sqrt(c2*c2*ss+1.0)) / (c2*s);
             if (muder != NULL) *muder = c1 * (c2/(2.0*s)+pow(c2, 2.0)/(2.0*sqrt(pow(c2, 2.0)*ss+1.0)))/((c2*s+sqrt(c2*ss+1.0))*c2*s) -
-                c1 * log(c2*s+sqrt(pow(c2, 2.0)*ss+1.0))/(c2*pow(s, 3.0))/2.0;
+                                        c1 * log(c2*s+sqrt(pow(c2, 2.0)*ss+1.0))/(c2*pow(s, 3.0))/2.0;
         }
     } else if ([viscosityFlag isEqualToString:@"smagorinsky"] == YES) {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"smagorinsky constant" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c2 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c2 = c2 + integration.basis[i]*buffer.vector[i];
-            }
+            c2 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
-        
         FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
         h = [elementDescription elementDiameter:element nodes:nodes];
         viscosity = viscosity + density * c2 * pow(h, 2.0) * sqrt(2.0*ss) / 2.0;
@@ -410,11 +367,8 @@
         }
         if (![[listUtilities listGetString:model inArray:materialAtID.valuesList forVariable:@"ke model" info:&found] isEqualToString:@"v2-f"]) {
             found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"ke cmu" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
-            cmu = 0.0;
             if (found == YES) {
-                 for (i=0; i<n; i++) {
-                     cmu = cmu + integration.basis[i]*buffer.vector[i];
-                 }
+                cmu = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             } else {
                 cmu = 0.09;
             }
@@ -433,24 +387,21 @@
             found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"v2-f ct" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
             ct = 0.0;
             if (found == YES) {
-                for (i=0; i<n; i++) {
-                    ct = ct + integration.basis[i]*buffer.vector[i];
-                }
+                ct = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             }
             timeScale = max(ke_k/ke_e, ct*sqrt(viscosity/density/ke_e));
             
             found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"ke cmu" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
             cmu = 0.0;
             if (found == YES) {
-                for (i=0; i<n; i++) {
-                    cmu = cmu + integration.basis[i]*buffer.vector[i];
-                }
+                cmu = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
             }
             mu = viscosity + cmu*density*ke_z*timeScale;
         }
     } else if ([viscosityFlag isEqualToString:@"rng k-epsilon"] == YES) {
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         FEMVariable *var = [utilities getVariableFrom:model.variables model:model name:@"effective viscosity" onlySearch:NULL maskName:nil info:&found];
+        if (var == nil) fatal("FEMMaterialModels:effectiveViscosity", "The effective viscosity variable is not defined.");
         variableArraysContainer *varContainers = var.getContainers;
         for (i=0; i<n; i++) {
             mu = mu + integration.basis[i]*varContainers->Values[varContainers->Perm[element->NodeIndexes[i]]];
@@ -524,9 +475,7 @@
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"viscosity difference" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
         c1 = 0.0;
         if (found == YES) {
-            for (i=0; i<n; i++) {
-                c1 = c1 + integration.basis[i]*buffer.vector[i];
-            }
+            c1 = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);
         }
         c2 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"levelset bandwidth" info:&found minValue:NULL maxValue:NULL];
         double temp = 0.0;

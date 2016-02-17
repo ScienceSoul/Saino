@@ -166,9 +166,9 @@ inline double detJ(double * __nonnull covariantMetricTensor, double * __nonnull 
             break;
             
         case 3: // Volume elements
-            detG = covariantMetricTensor[0] * ( covariantMetricTensor[4]*covariantMetricTensor[7] - covariantMetricTensor[5]*covariantMetricTensor[7] )
-            + covariantMetricTensor[1] * ( covariantMetricTensor[4]*covariantMetricTensor[6] - covariantMetricTensor[3]*covariantMetricTensor[8] )
-            + covariantMetricTensor[2] * ( covariantMetricTensor[3]*covariantMetricTensor[7] - covariantMetricTensor[4]*covariantMetricTensor[6] );
+            detG = covariantMetricTensor[0] * ( covariantMetricTensor[4]*covariantMetricTensor[8] - covariantMetricTensor[5]*covariantMetricTensor[7] )
+                 + covariantMetricTensor[1] * ( covariantMetricTensor[5]*covariantMetricTensor[6] - covariantMetricTensor[3]*covariantMetricTensor[8] )
+                 + covariantMetricTensor[2] * ( covariantMetricTensor[3]*covariantMetricTensor[7] - covariantMetricTensor[4]*covariantMetricTensor[6] );
             if (detG <= DBL_MIN) success = false;
             break;
             

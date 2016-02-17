@@ -621,6 +621,8 @@ inline double FirstDerivativeInV3D(Element_t * __nonnull element, double * __non
     Function return value:
         double y -> value of the quantity y = @x(u,v,w)/@w
  
+    Method corresponds to Elmer from git on October 27 2015
+ 
 *****************************************************************************************/
 inline double FirstDerivativeInW3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
     
@@ -637,10 +639,10 @@ inline double FirstDerivativeInW3D(Element_t * __nonnull element, double * __non
         s = 1.0 / (1.0-w);
         
         y = 0.0;
-        y = y + x[0] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
-        y = y + x[1] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
-        y = y + x[2] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0 ) ) / 4.0;
-        y = y + x[3] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[0] * ( -1.0 + u*v* pow(s, 2.0) ) / 4.0;
+        y = y + x[1] * ( -1.0 - u*v* pow(s, 2.0) ) / 4.0;
+        y = y + x[2] * ( -1.0 + u*v* pow(s, 2.0) ) / 4.0;
+        y = y + x[3] * ( -1.0 - u*v* pow(s, 2.0) ) / 4.0;
         y = y + x[4];
         return y;
     }
