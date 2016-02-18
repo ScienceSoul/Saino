@@ -404,6 +404,8 @@
     
     if (solution.matrix == nil) return;
     
+    NSLog(@"FEMFlowSolution:solutionComputer: solving the Navier-Stokes equations.\n");
+    
     if ((solution.solutionInfo)[@"solver coordinate system"] != nil) {
         localCoords = (solution.solutionInfo)[@"solver coordinate system"];
         useLocalCoords = YES;
@@ -1243,7 +1245,17 @@
                     break;
                     
                 default:
-                    navierStokesGeneralComposeMassMatrixIMP(navierStokesGeneral, @selector(navierStokesGeneralComposeMassMatrix:stiffMatrix:forceVector:loadVector:nodalViscosity:nodalDensity:velocityX:velocityY:velocityZ:meshVelocityX:meshVelocityY:meshVelocityZ:isStabilize:isNewtonLinearization:element:numberOfNodes:nodes:core:mesh:model:integration:elementDescription:coordinateSystems:materialModels:differentials:listUtilities:utilities:), _mass, _stiff, _force, _loadVector, _viscosity, _density, _u, _v, _w, _mu, _mv, _mw, stabilize, newtonLinearization, element, n, _elementNodes, core, solution.mesh, model, integration, elementDescription, coordinatesSystems, materialModels, differentials, listUtilities, utilities);
+                    
+                    switch (compressibilityModel) {
+                        case incompressible:
+                        case perfect_gas1:
+                            navierStokesGeneralComposeMassMatrixIMP(navierStokesGeneral, @selector(navierStokesGeneralComposeMassMatrix:stiffMatrix:forceVector:loadVector:nodalViscosity:nodalDensity:velocityX:velocityY:velocityZ:meshVelocityX:meshVelocityY:meshVelocityZ:isStabilize:isNewtonLinearization:element:numberOfNodes:nodes:core:mesh:model:integration:elementDescription:coordinateSystems:materialModels:differentials:listUtilities:utilities:), _mass, _stiff, _force, _loadVector, _viscosity, _density, _u, _v, _w, _mu, _mv, _mw, stabilize, newtonLinearization, element, n, _elementNodes, core, solution.mesh, model, integration, elementDescription, coordinatesSystems, materialModels, differentials, listUtilities, utilities);
+                            break;
+                            
+                        default:
+                            fatal("FEMFlowSolution:solutionComputer", "Missing compresibility model in general coordinates.");
+                            break;
+                    }
                     break;
             }
             

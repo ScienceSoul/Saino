@@ -13,6 +13,8 @@
 // Class computing Navier-Stokes local matrices in general coordinate system
 // (i.e. not cartesian, axisymmetric or cylindrically symmetric.
 
+// Class corresponds to Elmer from git on October 27 2015
+
 @interface FEMFlowSolution : NSObject <SainoSolutionsComputer>
 
 @end
