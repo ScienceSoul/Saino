@@ -635,30 +635,59 @@ static dispatch_once_t onceToken;
     
     mod.boundaryID = @[@1, @2, @3, @4, @5, @6];
     
+    // BC y=y0
     FEMBoundaryCondition *boundaryCondition1 = [[FEMBoundaryCondition alloc] init];
     vector = intvec(0, 0);
     vector[0] = 1;
     [listUtilities addIntegerArrayInClassList:boundaryCondition1 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
     
+    double **translate = doublematrix(0, 2, 0, 0);
+    
+    // BC x=xmax
     FEMBoundaryCondition *boundaryCondition2 = [[FEMBoundaryCondition alloc] init];
     vector = intvec(0, 0);
     vector[0] = 2;
     [listUtilities addIntegerArrayInClassList:boundaryCondition2 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
-    
+    ivalue = 4;
+    [listUtilities addIntegerInClassList:boundaryCondition2 theVariable:@"periodic bc" withValue:&ivalue orUsingBlock:nil];
+    translate[0][0] = L;
+    translate[1][0] = 0.0;
+    translate[2][0] = 0.0;
+    [listUtilities addConstRealArrayInClassList:boundaryCondition2 theVariable:@"periodic bc translate" withValues:translate size1:3 size2:1 orUsingBlock:nil string:nil];
+    [listUtilities addLogicalInClassList:boundaryCondition2 theVariable:@"periodic bc velocity 1" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition2 theVariable:@"periodic bc velocity 2" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition2 theVariable:@"periodic bc velocity 3" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition2 theVariable:@"periodic bc pressure" withValue:YES];
+
+    // BC y=ymax
     FEMBoundaryCondition *boundaryCondition3 = [[FEMBoundaryCondition alloc] init];
     vector = intvec(0, 0);
     vector[0] = 3;
     [listUtilities addIntegerArrayInClassList:boundaryCondition3 theVariable:@"target boudnaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
+    ivalue = 1;
+    [listUtilities addIntegerInClassList:boundaryCondition3 theVariable:@"periodic bc" withValue:&ivalue orUsingBlock:nil];
+    translate[0][0] = 0.0;
+    translate[1][0] = L;
+    translate[2][0] = 0.0;
+    [listUtilities addConstRealArrayInClassList:boundaryCondition3 theVariable:@"periodic bc translate" withValues:translate size1:3 size2:1 orUsingBlock:nil string:nil];
+    [listUtilities addLogicalInClassList:boundaryCondition3 theVariable:@"periodic bc velocity 1" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition3 theVariable:@"periodic bc velocity 2" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition3 theVariable:@"periodic bc velocity 3" withValue:YES];
+    [listUtilities addLogicalInClassList:boundaryCondition3 theVariable:@"periodic bc pressure" withValue:YES];
     
+    free_dmatrix(translate, 0, 2, 0, 0);
+    
+    // BC x=x0
     FEMBoundaryCondition *boundaryCondition4 = [[FEMBoundaryCondition alloc] init];
     vector = intvec(0, 0);
     vector[0] = 4;
     [listUtilities addIntegerArrayInClassList:boundaryCondition4 theVariable:@"target boundaries" withValues:vector size:1 orUsingBlock:nil];
     free_ivector(vector, 0, 0);
     
+    // BC bedrock
     FEMBoundaryCondition *boundaryCondition5 = [[FEMBoundaryCondition alloc] init];
     value = 0.0;
     [listUtilities addConstRealInClassList:boundaryCondition5 theVariable:@"velocity 1" withValue:&value orUsingBlock:nil string:nil];
@@ -670,6 +699,7 @@ static dispatch_once_t onceToken;
     };
     [listUtilities addBlockInClassList:boundaryCondition5 theVariable:@"bottom surface" usingBlock:block1 dependencies:dependencies1];
     
+    // BC free surface
     FEMBoundaryCondition *boundaryCondition6 = [[FEMBoundaryCondition alloc] init];
     NSArray *dependencies2 = @[@"coordinate 1"];
     double (^block2) (double *) = ^(double *t) {
