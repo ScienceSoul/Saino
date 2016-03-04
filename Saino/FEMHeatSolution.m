@@ -1187,6 +1187,7 @@ enum {
         _elementNodes->x = doublevec(0, n-1);
         _elementNodes->y = doublevec(0, n-1);
         _elementNodes->z = doublevec(0, n-1);
+        _elementNodes->numberOfNodes = n;
         if (_indexes == NULL || _saveIndexes == NULL || _u == NULL || _v == NULL || _w == NULL || _mu == NULL || _pressure == NULL ||
             _dPressureDt == NULL || _pressureCoeff == NULL || _density == NULL || _work == NULL || _latentHeat == NULL || _phaseVelocity == NULL ||
             _electricConductivity == NULL || _permeability == NULL || _viscosity == NULL || _c0 == NULL || _heatTransferCoeff == NULL ||

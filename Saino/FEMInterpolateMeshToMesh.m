@@ -46,7 +46,8 @@
         if (varContainers->sizeValues == variable.dofs) continue;
         if (variable.isSecondary == YES) continue;
         
-        if (variable.dofs == 1 && [variable.name isEqualToString:@"coordinate"] == YES) {
+        NSString *string = [variable.name substringToIndex:10];
+        if (variable.dofs == 1 && [string isEqualToString:@"coordinate"] == NO) {
             only = YES;
             oldSol = [utilities getVariableFrom:oldMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
             newSol = [utilities getVariableFrom:newMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
@@ -70,7 +71,7 @@
                         bf2[j] = newContainers->PrevValues[j][i];
                     }
                     [crsMatrix applyProjector:projector.matrix values:bf1 permutation:oldContainers->Perm values:bf2 permutation:newContainers->Perm transpose:NULL];
-                    for (j=0; j<oldContainers->size1PrevValues; j++) {
+                    for (j=0; j<newContainers->size1PrevValues; j++) {
                         newContainers->PrevValues[j][i] = bf2[j];
                     }
                 }
@@ -121,9 +122,9 @@
     FEMVariable *oldSol, *newSol;
     double *elementValues, *newValues, **rotBasis = NULL, **wBasis = NULL;
     Element_t *element = NULL, *oldElements = NULL;
-    Nodes_t *oldNodes= NULL, *newNodes = NULL;
-    Quadrant_t *leafQuadrant = NULL, *rootQuadrant = NULL, *oldMeshQuadrant = NULL;
-    double boundingBox[6], *valuesPtr, u, v, w;
+    Nodes_t *oldNodes= NULL, *newNodes = NULL, *nodes = NULL;
+    Quadrant_t *leafQuadrant = NULL, *rootQuadrant = NULL;
+    double boundingBox[6], *valuesPtr = NULL, u, v, w;
     BOOL edgeBasis, found, piolaT, searchOnly, stat, tryLinear, tryQtree, useQTree;
     int *rows = NULL, *cols = NULL;
     int *rInd = NULL;
@@ -132,6 +133,7 @@
     double *values = NULL, *localU = NULL, *localV = NULL, *localW = NULL;
     variableArraysContainer *varContainers = NULL, *newVarContainers = NULL, *oldVarContainers = NULL;
     matrixArraysContainer *matContainers = NULL, *tmatContainers = NULL;
+    FEMNumericIntegration *integration;
     
     typedef struct Epntr_t {
         Element_t *element;
@@ -143,6 +145,7 @@
     FEMInterpolation *interpolation = [[FEMInterpolation alloc] init];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
     
     //TODO: add support for parallel run
     BOOL parallel = NO;
@@ -205,9 +208,11 @@
                 *(valuesPtr + i) = *(valuesPtr + i) + eps2;
             }
             
-            [interpolation buildQuadrantTreeForMesh:oldMesh model:model boundingBox:boundingBox rootQuadrant:oldMeshQuadrant];
-            [oldMesh assignQuadrant:oldMeshQuadrant];
-            rootQuadrant = oldMeshQuadrant;
+             // Create mother of all quadrants
+            Quadrant_t *quadrant = (Quadrant_t*) malloc(sizeof(Quadrant_t));
+            [interpolation buildQuadrantTreeForMesh:oldMesh model:model boundingBox:boundingBox rootQuadrant:quadrant];
+            [oldMesh assignQuadrant:quadrant];
+            rootQuadrant = oldMesh.getQuadrant;
         }
     }
     
@@ -255,7 +260,7 @@
     piolaT = NO;
     if (edgeBasis == YES) {
         if ((solution.solutionInfo)[@"use piola transform"] != nil) {
-            edgeBasis = [(solution.solutionInfo)[@"use piola transform"] boolValue];
+            piolaT = [(solution.solutionInfo)[@"use piola transform"] boolValue];
         }
     }
     
@@ -269,7 +274,6 @@
     int foundCnt = 0;
     
     // Loop over all nodes in the new mesh
-    NSRange location;
     for (i=0; i<newMesh.numberOfNodes; i++) {
         
         element = NULL;
@@ -293,7 +297,7 @@
         if (tryQtree) {
             // Find the last existing quadrant that the point belongs to
             leafQuadrant = NULL;
-            [interpolation findLeafElementsForPoint:point dimension:dim rootQuadrant:rootQuadrant leafQuadrant:leafQuadrant];
+            leafQuadrant = [interpolation findLeafElementsForPoint:point dimension:dim rootQuadrant:rootQuadrant];
             
             if (leafQuadrant != NULL) {
                 FEMBodyForce *bodyForceAtID;
@@ -321,7 +325,7 @@
                             elementNodes->y[l] = oldNodes->y[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]];
                             elementNodes->z[l] = oldNodes->z[oldElements[leafQuadrant->elements[k]].NodeIndexes[l]];
                         }
-                        found = [interpolation isPointInElement:&oldElements[leafQuadrant->elements[k]] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:&eps1 localEpsilon:&eps2 numericEpsilon:&numericEps globalDistance:NULL localDistance:NULL model:model edgeBasis:&piolaT];
+                        found = [interpolation isPointInElement:&oldElements[leafQuadrant->elements[k]] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:&eps1 localEpsilon:&eps2 numericEpsilon:&numericEps globalDistance:NULL localDistance:NULL model:model elementDescription:elementDescription elementMaps:elementMaps edgeBasis:&piolaT];
                         if (found == YES) break;
                     }
                     if (found == YES) break;
@@ -346,7 +350,7 @@
                     elementNodes->z[l] = oldNodes->z[oldElements[k].NodeIndexes[l]];
                 }
                 
-                found = [interpolation isPointInElement:&oldElements[k] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:model edgeBasis:NULL];
+                found = [interpolation isPointInElement:&oldElements[k] elementNodes:elementNodes point:point localCoordinates:localCoordinates globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:model elementDescription:elementDescription elementMaps:elementMaps edgeBasis:NULL];
                 if (found == YES) {
                     if (tryQtree == YES) qTreeFails++;
                     break;
@@ -357,7 +361,7 @@
         if (found == NO) {
             element = NULL;
             if (parallel == NO) {
-                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: point %d was not found in any of the elements.\n", i);
+                NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: point %d was not found in any of the elements.\n", i);
                 totFails++;
             }
             continue;
@@ -385,8 +389,8 @@
             
             newSol = nil;
             oldSol = nil;
-            location = [variable.name rangeOfString:@"coordinate"];
-            if (variable.dofs == 1 && location.location == NSNotFound) {
+            NSString *string = [variable.name substringToIndex:10];
+            if (variable.dofs == 1 && [string isEqualToString:@"coordinate"] == NO) {
                 
                 // Interpolate variable at point in element
                 newSol = [utilities getVariableFrom:newMesh.variables model:model name:variable.name onlySearch:&searchOnly maskName:NULL info:&found];
@@ -435,15 +439,15 @@
     
     if (parallel == NO) {
         if (qTreeFails > 0) {
-            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found in quadtree: %d.", qTreeFails);
+            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: number of points not found in quadtree: %d.", qTreeFails);
             if (totFails == 0) {
-                NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: all nodes still found by N^2 dummy search.\n");
+                NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: all nodes still found by N^2 dummy search.\n");
             }
         }
         if (totFails == 0) {
-            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: found all nodes in the target nesh.\n");
+            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: found all nodes in the target nesh.\n");
         } else {
-            NSLog(@"FEMUtilities:FEMUtils_interpolateQMesh: number of points not found: %d.\n", totFails);
+            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: points not found: %d (found %d).\n", totFails, newMesh.numberOfNodes-totFails);
         }
     }
     
@@ -465,7 +469,6 @@
         
     label:
         nrow = 0;
-        
         for (i=0; i<n; i++) {
             element = NULL;
             if (edgeBasis == YES && oldMesh.parent != nil) {
@@ -496,7 +499,10 @@
                 u = localU[i];
                 v = localV[i];
                 w = localW[i];
-                Nodes_t *nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+                if (nodes == NULL) {
+                    nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+                    initNodes(nodes);
+                }
                 if (edgeBasis == YES) {
                     [core getNodes:solution model:model inElement:element resultNodes:nodes numberOfNodes:NULL mesh:nil];
                 } else {
@@ -504,6 +510,7 @@
                 }
                 
                 BOOL notDG = (solution != nil) ? YES : NO;
+                memset( indexes, -1, 100*sizeof(int) );
                 k = [core getElementDofsSolution:solution model:model forElement:element atIndexes:indexes disableDiscontinuousGalerkin:&notDG];
                 
                 np = [core getNumberOfNodesForElement:element];
@@ -516,8 +523,10 @@
                 }
                 if (any == YES) np = 0;
                 
-                FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-                if ([integration allocation:oldMesh] == NO) fatal("FEMMeshUtils:interpolateQMeshh", "Allocation error in FEMNumericIntegration.");
+                if (integration == nil) {
+                    integration = [[FEMNumericIntegration alloc] init];
+                    if ([integration allocation:oldMesh] == NO) fatal("FEMInterpolateMeshToMesh:interpolateQMesh", "Allocation error in FEMNumericIntegration.");
+                }
                 
                 if (edgeBasis == YES) {
                     wBasis = doublematrix(0, k-1, 0, 2);
@@ -537,9 +546,9 @@
                 
                 double rowSum = 0.0;
                 for (j=0; j<k; j++) {
-                    if (j <= np) rowSum = rowSum + integration.basis[j];
+                    if (j < np) rowSum = rowSum + integration.basis[j];
                     if (projectorAllocated == NO) {
-                        if (edgeBasis == NO || (edgeBasis == YES && j <= np)) {
+                        if (edgeBasis == NO || (edgeBasis == YES && j < np)) {
                             nrow++;
                         } else {
                             nrow = nrow + 3;
@@ -552,7 +561,7 @@
                         if (edgeBasis == NO) rInd[indexes[j]] = rInd[indexes[j]] + 1;
                         
                         // Always normalize the weights to one!
-                        if (edgeBasis == NO || (edgeBasis == YES && j <= np)) {
+                        if (edgeBasis == NO || (edgeBasis == YES && j < np)) {
                             cols[nrow] = indexes[j];
                             values[nrow] = integration.basis[j] / rowSum;
                             nrow++;
@@ -569,7 +578,6 @@
                         }
                     }
                 }
-                [integration deallocation:oldMesh];
                 if (edgeBasis == YES) {
                     free_dmatrix(wBasis, 0, k-1, 0, 2);
                     free_dmatrix(rotBasis, 0, k-1, 0, 2);
@@ -578,17 +586,24 @@
             rows[i+1] = nrow;
         }
         
+        free_dvector(nodes->x, 0, nodes->numberOfNodes-1);
+        free_dvector(nodes->y, 0, nodes->numberOfNodes-1);
+        free_dvector(nodes->z, 0, nodes->numberOfNodes-1);
+        free(nodes);
+        nodes = NULL;
+        [integration deallocation:oldMesh];
+        integration = nil;
+        
         if (projectorAllocated == NO) {
             cols = intvec(0, rows[n]-1);
             values = doublevec(0, rows[n]-1);
             memset( cols, 0, rows[n]*sizeof(int) );
             memset( values, 0.0, rows[n]*sizeof(double) );
 
-            projector = [[FEMProjector alloc] init];
             projector.matrix.numberOfRows = n;
             matContainers = projector.matrix.getContainers;
             matContainers->Rows = rows;
-            matContainers->sizeRows = newMesh.numberOfNodes;
+            matContainers->sizeRows = n+1;
             matContainers->Cols = cols;
             matContainers->sizeCols = rows[n];
             matContainers->Values = values;
@@ -613,7 +628,7 @@
         free_dvector(localW, 0, newMesh.numberOfNodes-1);
         
         // Store also the transpose of the projector
-        if (edgeBasis == YES) {
+        if (edgeBasis == NO) {
             if (found == YES) {
                 n = oldMesh.numberOfNodes;
                 // Needed for some matrices
@@ -660,6 +675,7 @@
     
     free_dvector(elementValues, 0, oldMesh.maxElementNodes-1);
     free_dvector(newValues, 0,  newMesh.numberOfNodes-1);
+    [elementMaps deallocation];
 }
 
 /*******************************************************************************
@@ -929,7 +945,10 @@
                 }
             }
             if (any == YES) np = 0;
-            nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+            if (nodes == NULL) {
+                nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+                initNodes(nodes);
+            }
             [core getNodes:solution model:model inElement:&faces[bMesh1Elements[i].ElementIndex-1] resultNodes:nodes numberOfNodes:NULL mesh:nil];
         } else {
             element = &bMesh1Elements[i];

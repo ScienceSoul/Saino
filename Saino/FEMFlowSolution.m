@@ -586,6 +586,7 @@
         _elementNodes->x = doublevec(0, n-1);
         _elementNodes->y = doublevec(0, n-1);
         _elementNodes->z = doublevec(0, n-1);
+        _elementNodes->numberOfNodes = n;
         if (_u == NULL || _v == NULL || _w == NULL || _mu == NULL || _mv == NULL || _mw == NULL || _indexes == NULL || _pressure == NULL ||
             _prevPressure == NULL || _pseudoCompressibility == NULL || _prevDensity == NULL || _density == NULL || _layerThickness == NULL ||
             _surfaceRoughness == NULL || _permeability == NULL || _mx == NULL || _my == NULL || _mz == NULL || _slipCoeff == NULL ||

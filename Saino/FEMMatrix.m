@@ -190,43 +190,71 @@
         _dgMatrix = NO;
         
         _containers = (matrixArraysContainer*)malloc(sizeof(matrixArraysContainer));
+        _containers->sizePerm = 0;
+        _containers->sizeInvPerm = 0;
+        _containers->sizeRowOwner = 0;
+        _containers->sizeGRows = 0;
+        _containers->sizeGOrder = 0;
+        _containers->sizeRows = 0;
+        _containers->sizeCols = 0;
+        _containers->sizeDiag = 0;
+        _containers->sizeRHS = 0;
+        _containers->sizeBulkRHS = 0;
+        _containers->sizeRHS_im = 0;
+        _containers->size1force = 0;
+        _containers->size2Force = 0;
+        _containers->sizeValues = 0;
+        _containers->sizeILUValues = 0;
+        _containers->sizeMassValues = 0;
+        _containers->sizeDampValues = 0;
+        _containers->sizeBulkValues = 0;
+        _containers->sizeDiagScaling = 0;
+        _containers->sizeILURows = 0;
+        _containers->sizeILUCols = 0;
+        _containers->sizeILUDiag = 0;
+        _containers->sizeCRHS = 0;
+        _containers->sizeCForce = 0;
+        _containers->sizeCValues = 0;
+        _containers->sizeCILUValues = 0;
+        _containers->sizeCMassValues = 0;
+        _containers->sizeCDampValues = 0;
+        _containers->sizeFct = 0;
+        _containers->sizeCDampValues = 0;
+        
+        _containers->ListMatrix = NULL;
+        
         _containers->Perm = NULL;
         _containers->InvPerm = NULL;
-        
-        _containers->Cols = NULL;
-        _containers->Rows = NULL;
-        _containers->Diag = NULL;
+        _containers->RowOwner = NULL;
         _containers->GRows = NULL;
+        _containers->GOrder = NULL;
+        
+        _containers->Rows = NULL;
+        _containers->Cols = NULL;
+        _containers->Diag = NULL;
         
         _containers->RHS = NULL;
-        _containers->Force = NULL;
+        _containers->BulkRHS = NULL;
         _containers->RHS_im = NULL;
+        _containers->Force = NULL;
         
         _containers->Values = NULL;
         _containers->ILUValues = NULL;
         _containers->MassValues = NULL;
         _containers->DampValues = NULL;
-        
-        _containers->BulkRHS = NULL;
         _containers->BulkValues = NULL;
         _containers->DiagScaling = NULL;
         
-        _containers->ILUCols = NULL;
         _containers->ILURows = NULL;
+        _containers->ILUCols = NULL;
         _containers->ILUDiag = NULL;
         
         _containers->CRHS = NULL;
         _containers->CForce = NULL;
-        
-        _containers->RowOwner = NULL;
-        
         _containers->CValues = NULL;
         _containers->CILUValues = NULL;
         _containers->CMassValues = NULL;
         _containers->CDampValues = NULL;
-        
-        _containers->GRows = NULL;
-        _containers->GOrder = NULL;
         
         _containers->FCT_D = NULL;
         _containers->MassValuesLumped = NULL;
@@ -256,6 +284,221 @@
 -(matrixArraysContainer * __nonnull)getContainers {
     
     return _containers;
+}
+
+// Retruns an ummutable copy of a FEMMatrix class
+
+-(FEMMatrix * __nonnull)copyWithZone:(NSZone *)zone {
+    
+    FEMMatrix *matrix = [[FEMMatrix allocWithZone:zone] init];
+    
+    // We don't try to copy these objects from the original matrix.
+    // Instead just assign them to nil since anyway they were only
+    // references in the original matrix.
+    matrix.child = nil;
+    matrix.parent = nil;
+    matrix.constraint = nil;
+    matrix.ematrix = nil;
+    
+    matrix.numberOfRows = self.numberOfRows;
+    matrix.subband = self.subband;
+    matrix.format = self.format;
+    matrix.solveCount = self.solveCount;
+    matrix.comm = self.comm;
+    matrix.umfPackNumeric = self.umfPackNumeric;
+    matrix.projectorBC = self.projectorBC;
+    matrix.projectorType = self.projectorType;
+    matrix.rhsScaling = self.rhsScaling;
+    matrix.cholesky = self.cholesky;
+    matrix.ordered = self.ordered;
+    matrix.lumped = self.lumped;
+    matrix.symmetric = self.symmetric;
+    matrix.complexMatrix = self.complexMatrix;
+    matrix.dgMatrix = self.dgMatrix;
+    
+    matrixArraysContainer *matrixContainers = matrix.getContainers;
+    
+    if (_containers->ListMatrix != NULL) {
+        matrixContainers->ListMatrix = (ListMatrix_t*)malloc(sizeof(ListMatrix_t));
+        memcpy(matrixContainers->ListMatrix, _containers->ListMatrix, sizeof(ListMatrix_t));
+    }
+    
+    if (_containers->Perm != NULL) {
+        matrixContainers->Perm = intvec(0, _containers->sizePerm-1);
+        matrixContainers->sizePerm = _containers->sizePerm;
+        memcpy(matrixContainers->Perm, _containers->Perm, _containers->sizePerm*sizeof(int));
+    }
+    
+    if (_containers->InvPerm != NULL) {
+        matrixContainers->InvPerm = intvec(0, _containers->sizeInvPerm-1);
+        matrixContainers->sizeInvPerm = _containers->sizeInvPerm;
+        memcpy(matrixContainers->InvPerm, _containers->InvPerm, _containers->sizeInvPerm*sizeof(int));
+    }
+    
+    if (_containers->RowOwner != NULL) {
+        matrixContainers->RowOwner = intvec(0, _containers->sizeRowOwner-1);
+        matrixContainers->sizeRowOwner = _containers->sizeRowOwner;
+        memcpy(matrixContainers->RowOwner, _containers->RowOwner, _containers->sizeRowOwner*sizeof(int));
+    }
+    
+    if (_containers->GRows != NULL) {
+        matrixContainers->GRows = intvec(0, _containers->sizeGRows-1);
+        matrixContainers->sizeGRows = _containers->sizeGRows;
+        memcpy(matrixContainers->GRows, _containers->GRows, _containers->sizeGRows*sizeof(int));
+    }
+    
+    if (_containers->GOrder != NULL) {
+        matrixContainers->GOrder = intvec(0, _containers->sizeGOrder-1);
+        matrixContainers->sizeGOrder = _containers->sizeGOrder;
+        memcpy(matrixContainers->GOrder, _containers->GOrder, _containers->sizeGOrder*sizeof(int));
+    }
+    
+    if (_containers->Rows != NULL) {
+        matrixContainers->Rows = intvec(0, _containers->sizeRows-1);
+        matrixContainers->sizeRows = _containers->sizeRows;
+        memcpy(matrixContainers->Rows, _containers->Rows, _containers->sizeRows*sizeof(int));
+    }
+    
+    if (_containers->Cols != NULL) {
+        matrixContainers->Cols = intvec(0, _containers->sizeCols-1);
+        matrixContainers->sizeCols = _containers->sizeCols;
+        memcpy(matrixContainers->Cols, _containers->Cols, _containers->sizeCols*sizeof(int));
+    }
+    
+    if (_containers->Diag != NULL) {
+        matrixContainers->Diag = intvec(0, _containers->sizeDiag-1);
+        matrixContainers->sizeDiag = _containers->sizeDiag;
+        memcpy(matrixContainers->Diag, _containers->Diag, _containers->sizeDiag*sizeof(int));
+    }
+    
+    if (_containers->RHS != NULL) {
+        matrixContainers->RHS = doublevec(0, _containers->sizeRHS-1);
+        matrixContainers->sizeRHS = _containers->sizeRHS;
+        memcpy(matrixContainers->RHS, _containers->RHS, _containers->sizeRHS*sizeof(double));
+    }
+    
+    if (_containers->BulkRHS != NULL) {
+        matrixContainers->BulkRHS = doublevec(0, _containers->sizeBulkRHS-1);
+        matrixContainers->sizeBulkRHS = _containers->sizeBulkRHS;
+        memcpy(matrixContainers->BulkRHS, _containers->BulkRHS, _containers->sizeBulkRHS*sizeof(double));
+    }
+    
+    if (_containers->RHS_im != NULL) {
+        matrixContainers->RHS_im = doublevec(0, _containers->sizeRHS_im-1);
+        matrixContainers->sizeRHS_im = _containers->sizeRHS_im;
+        memcpy(matrixContainers->RHS_im, _containers->RHS_im, _containers->sizeRHS_im*sizeof(double));
+    }
+    
+    if (_containers->Force != NULL) {
+        matrixContainers->Force = doublematrix(0, _containers->size1force-1, 0, _containers->size2Force-1);
+        matrixContainers->size1force = _containers->size1force;
+        matrixContainers->size2Force = _containers->size2Force;
+        memcpy(*matrixContainers->Force, *_containers->Force, (_containers->size1force*_containers->size2Force)*sizeof(double));
+    }
+    
+    if (_containers->Values != NULL) {
+        matrixContainers->Values = doublevec(0, _containers->sizeValues-1);
+        matrixContainers->sizeValues = _containers->sizeValues;
+        memcpy(matrixContainers->Values, _containers->Values, _containers->sizeValues*sizeof(double));
+    }
+    
+    if (_containers->ILUValues != NULL) {
+        matrixContainers->ILUValues = doublevec(0, _containers->sizeILUValues-1);
+        matrixContainers->sizeILUValues = _containers->sizeILUValues;
+        memcpy(matrixContainers->ILUValues, _containers->ILUValues, _containers->sizeILUValues*sizeof(double));
+    }
+    
+    if (_containers->MassValues != NULL) {
+        matrixContainers->MassValues = doublevec(0, _containers->sizeMassValues-1);
+        matrixContainers->sizeMassValues = _containers->sizeMassValues;
+        memcpy(matrixContainers->MassValues, _containers->MassValues, _containers->sizeMassValues*sizeof(double));
+    }
+    
+    if (_containers->DampValues != NULL) {
+        matrixContainers->DampValues = doublevec(0, _containers->sizeDampValues-1);
+        matrixContainers->sizeDampValues = _containers->sizeDampValues;
+        memcpy(matrixContainers->DampValues, _containers->DampValues, _containers->sizeDampValues*sizeof(double));
+    }
+    
+    if (_containers->BulkValues != NULL) {
+        matrixContainers->BulkValues = doublevec(0, _containers->sizeBulkValues-1);
+        matrixContainers->sizeBulkValues = _containers->sizeBulkValues;
+        memcpy(matrixContainers->BulkValues, _containers->BulkValues, _containers->sizeBulkValues*sizeof(double));
+    }
+    
+    if (_containers->DiagScaling != NULL) {
+        matrixContainers->DiagScaling = doublevec(0, _containers->sizeDiagScaling-1);
+        matrixContainers->sizeDiagScaling = _containers->sizeDiagScaling;
+        memcpy(matrixContainers->DiagScaling, _containers->DiagScaling, _containers->sizeDiagScaling*sizeof(double));
+    }
+    
+    if (_containers->ILURows != NULL) {
+        matrixContainers->ILURows = intvec(0, _containers->sizeILURows-1);
+        matrixContainers->sizeILURows = _containers->sizeILURows;
+        memcpy(matrixContainers->ILURows, _containers->ILURows, _containers->sizeILURows*sizeof(int));
+    }
+    
+    if (_containers->ILUCols != NULL) {
+        matrixContainers->ILUCols = intvec(0, _containers->sizeILUCols-1);
+        matrixContainers->sizeILUCols = _containers->sizeILUCols;
+        memcpy(matrixContainers->ILUCols, _containers->ILUCols, _containers->sizeILUCols*sizeof(int));
+    }
+    
+    if (_containers->ILUDiag != NULL) {
+        matrixContainers->ILUDiag = intvec(0, _containers->sizeILUDiag-1);
+        matrixContainers->sizeILUDiag = _containers->sizeILUDiag;
+        memcpy(matrixContainers->ILUDiag, _containers->ILUDiag, _containers->sizeILUDiag*sizeof(int));
+    }
+    
+    if (_containers->CRHS != NULL) {
+        matrixContainers->CRHS = cdoublevec(0, _containers->sizeCRHS-1);
+        matrixContainers->sizeCRHS = _containers->sizeCRHS;
+        memcpy(matrixContainers->CRHS, _containers->CRHS, _containers->sizeCRHS*sizeof(double complex));
+    }
+    
+    if (_containers->CForce != NULL) {
+        matrixContainers->CForce = cdoublevec(0, _containers->sizeCForce-1);
+        matrixContainers->sizeCForce = _containers->sizeCForce;
+        memcpy(matrixContainers->CForce, _containers->CForce, _containers->sizeCForce*sizeof(double complex));
+    }
+    
+    if (_containers->CValues != NULL) {
+        matrixContainers->CValues = cdoublevec(0, _containers->sizeCValues-1);
+        matrixContainers->sizeCValues = _containers->sizeCValues;
+        memcpy(matrixContainers->CValues, _containers->CValues, _containers->sizeCValues*sizeof(double complex));
+    }
+    
+    if (_containers->CILUValues != NULL) {
+        matrixContainers->CILUValues = cdoublevec(0, _containers->sizeCILUValues-1);
+        matrixContainers->sizeCILUValues = _containers->sizeCILUValues;
+        memcpy(matrixContainers->CILUValues, _containers->CILUValues, _containers->sizeCILUValues*sizeof(double complex));
+    }
+    
+    if (_containers->CMassValues != NULL) {
+        matrixContainers->CMassValues = cdoublevec(0, _containers->sizeCMassValues-1);
+        matrixContainers->sizeCMassValues = _containers->sizeCMassValues;
+        memcpy(matrixContainers->CMassValues, _containers->CMassValues, _containers->sizeCMassValues*sizeof(double complex));
+    }
+    
+    if (_containers->CDampValues != NULL) {
+        matrixContainers->CDampValues = cdoublevec(0, _containers->sizeCDampValues-1);
+        matrixContainers->sizeCDampValues = _containers->sizeCDampValues;
+        memcpy(matrixContainers->CDampValues, _containers->CDampValues, _containers->sizeCDampValues*sizeof(double complex));
+    }
+    
+    if (_containers->FCT_D != NULL) {
+        matrixContainers->FCT_D = doublevec(0, _containers->sizeFct-1);
+        matrixContainers->sizeFct = _containers->sizeFct;
+        memcpy(matrixContainers->FCT_D, _containers->FCT_D, _containers->sizeFct*sizeof(double));
+    }
+    
+    if (_containers->MassValuesLumped != NULL) {
+        matrixContainers->MassValuesLumped = doublevec(0, _containers->sizeMassValuesLumped-1);
+        matrixContainers->sizeMassValuesLumped = _containers->sizeMassValuesLumped;
+        memcpy(matrixContainers->MassValuesLumped, _containers->MassValuesLumped, _containers->sizeMassValuesLumped*sizeof(double));
+    }
+    
+    return matrix;
 }
 
 @end

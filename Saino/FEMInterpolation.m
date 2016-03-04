@@ -12,7 +12,7 @@
 #import "Utils.h"
 
 @interface FEMInterpolation ()
--(void)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother;
+-(Quadrant_t * __nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother;
 @end
 
 @implementation FEMInterpolation
@@ -24,12 +24,12 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(void)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother {
+-(Quadrant_t * __nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother {
     
     int i, k;
-    double bbox[6], eps3, *valuesPtr, maxVal;
+    double bbox[6], eps3, *valuesPtr = NULL, maxVal;
     double const eps2 = 0.0;
-    Quadrant_t *childQuadrant = NULL;
+    Quadrant_t *childQuadrant = NULL, *returnedQuadrant = NULL;
     
     // Loop over child quadrants
     for (i=0; i<(int)pow(2.0, dim); i++) {
@@ -41,18 +41,18 @@
         maxVal = -HUGE_VAL;
         k = 3;
         valuesPtr = &bbox[0];
-        for (i=0; i<3; i++) {
-            if ( (*(valuesPtr + k) - *(valuesPtr + i)) > maxVal ) {
-                maxVal = *(valuesPtr + k) - *(valuesPtr + i);
+        for (int j=0; j<3; j++) {
+            if ( (*(valuesPtr + k) - *(valuesPtr + j)) > maxVal ) {
+                maxVal = *(valuesPtr + k) - *(valuesPtr + j);
             }
             k++;
         }
         eps3 = eps2 * maxVal;
-        for (i=0; i<3; i++) {
-            bbox[i] = bbox[i] - eps3;
+        for (int j=0; j<3; j++) {
+            bbox[j] = bbox[j] - eps3;
         }
-        for (i=3; i<6; i++) {
-            bbox[i] = bbox[i] + eps3;
+        for (int j=3; j<6; j++) {
+            bbox[j] = bbox[j] + eps3;
         }
         
         // Is the point in childQuadrant[i]
@@ -61,18 +61,20 @@
     }
     
     if ( i >= (int)pow(2.0, dim)) {
-        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants.\n");
-        mother = NULL;
-        return;
+        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants?\n");
+        return NULL;
     }
     
     mother = childQuadrant;
+    returnedQuadrant = childQuadrant;
     
     // Are we already in the leaf quadrant?
     // If not, search for the next generation child quadrants for the point
     if (mother->childQuadrants != NULL) {
-        [self FEMInterpolation_findPointsQuadrantForPoint:point dimension:dim motherQuadrant:mother];
+        returnedQuadrant = [self FEMInterpolation_findPointsQuadrantForPoint:point dimension:dim motherQuadrant:mother];
     }
+    
+    return returnedQuadrant;
 }
 
 #pragma mark Public methods
@@ -87,12 +89,12 @@
     return self;
 }
 
--(void)findLeafElementsForPoint:(double * __nonnull)point dimension:(int)dim rootQuadrant:(Quadrant_t * __nonnull)root leafQuadrant:(Quadrant_t * __nonnull)leaf {
+-(Quadrant_t * __nullable)findLeafElementsForPoint:(double * __nonnull)point dimension:(int)dim rootQuadrant:(Quadrant_t * __nonnull)root {
     
-    leaf = root;
+    Quadrant_t *leaf = root;
     
     // Find recursively the last generation quadrant the point belongs to
-    [self FEMInterpolation_findPointsQuadrantForPoint:point dimension:dim motherQuadrant:leaf];
+    return [self FEMInterpolation_findPointsQuadrantForPoint:point dimension:dim motherQuadrant:leaf];
 }
 
 /*********************************************************************************************
@@ -113,17 +115,12 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************/
--(BOOL)isPointInElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes point:(double * __nonnull)aPoint localCoordinates:(double * __nonnull)localCoords globalEpsilon:(double * __nullable)globaleps localEpsilon:(double * __nullable)localeps numericEpsilon:(double * __nullable)numericeps globalDistance:(double * __nullable)globaldist localDistance:(double * __nullable)localdist model:(FEMModel * __nonnull)model edgeBasis:(BOOL * __nullable)edgeBasis {
+-(BOOL)isPointInElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes point:(double * __nonnull)point localCoordinates:(double * __nonnull)localCoords globalEpsilon:(double * __nullable)globaleps localEpsilon:(double * __nullable)localeps numericEpsilon:(double * __nullable)numericeps globalDistance:(double * __nullable)globaldist localDistance:(double * __nullable)localdist model:(FEMModel * __nonnull)model elementDescription:(FEMElementDescription * __nonnull)elementDescription elementMaps:(FEMPElementMaps * __nonnull)elementMaps edgeBasis:(BOOL * __nullable)edgeBasis {
     
     int n;
     double ug, vg, wg, xdist, ydist, zdist, sumdist, eps0, eps1, eps2, minx,
            maxx, miny, maxy, minz, maxz;
-    FEMPElementMaps *elementMaps;
-    FEMElementDescription *elementDescription;
     BOOL isInElement;
-    
-    elementMaps = [[FEMPElementMaps alloc] init];
-    elementDescription = [FEMElementDescription sharedElementDescription];
     
     // Initialize
     isInElement = NO;
@@ -168,9 +165,9 @@
         vDSP_minvD(nodes->z, 1, &minz, n);
         vDSP_maxvD(nodes->z, 1, &maxz, n);
         
-        xdist = max(max(aPoint[0] - maxx, 0.0), minx - aPoint[0]);
-        ydist = max(max(aPoint[1] - maxy, 0.0), miny - aPoint[1]);
-        zdist = max(max(aPoint[2] - maxz, 0.0), minz - aPoint[2]);
+        xdist = max(max(point[0] - maxx, 0.0), minx - point[0]);
+        ydist = max(max(point[1] - maxy, 0.0), miny - point[1]);
+        zdist = max(max(point[2] - maxz, 0.0), minz - point[2]);
         
         *globaldist = sqrt(pow(xdist, 2.0) + pow(ydist, 2.0) + pow(zdist, 2.0));
         
@@ -181,22 +178,22 @@
         // Otherwise make decision independently after each coordinate direction
         vDSP_minvD(nodes->x, 1, &minx, n);
         vDSP_maxvD(nodes->x, 1, &maxx, n);
-        xdist = max(max(aPoint[0] - maxx, 0.0), minx - aPoint[0]);
+        xdist = max(max(point[0] - maxx, 0.0), minx - point[0]);
         if (xdist > eps0 + eps1 * (maxx - minx)) return isInElement;
         
-        vDSP_minvD(nodes->y, 1, &miny, 1);
-        vDSP_maxvD(nodes->y, 1, &maxy, 1);
-        ydist = max(max(aPoint[1] - maxy, 0.0), miny - aPoint[1]);
+        vDSP_minvD(nodes->y, 1, &miny, n);
+        vDSP_maxvD(nodes->y, 1, &maxy, n);
+        ydist = max(max(point[1] - maxy, 0.0), miny - point[1]);
         if (ydist > eps0 + eps1 * (maxy - miny)) return isInElement;
         
         vDSP_minvD(nodes->z, 1, &minz, n);
         vDSP_maxvD(nodes->z, 1, &maxz, n);
-        zdist = max(max(aPoint[2] - maxz, 0.0), minz - aPoint[2]);
+        zdist = max(max(point[2] - maxz, 0.0), minz - point[2]);
         if (zdist > eps0 + eps1 * (maxz - minz)) return isInElement;
     }
     
     // Get element local coordinates from global coordinates of the point
-    [elementDescription globalToLocalFromElement:element elementNodes:nodes localU:&ug localV:&vg localW:&wg x:aPoint[0] y:aPoint[1] z:aPoint[2] model:model];
+    [elementDescription globalToLocalFromElement:element elementNodes:nodes localU:&ug localV:&vg localW:&wg x:point[0] y:point[1] z:point[2] model:model];
     
     // Currently the eps of global coordinates is mixed with the eps of local
     // coordinates which is not totally satisfying. There could be a sloppier
@@ -264,7 +261,7 @@
                 
             case 5:
                 ug = 2.0 * ug + vg + wg - 1.0;
-                vg = sqrt(3.0) * vg + 1/sqrt(3.0) * wg;
+                vg = sqrt(3.0) * vg + 1.0/sqrt(3.0) * wg;
                 wg = 2.0 * sqrt(2.0/3.0) * wg;
                 break;
                 
@@ -283,10 +280,13 @@
     localCoords[1] = vg;
     localCoords[2] = wg;
     
-    [elementMaps deallocation];
     return isInElement;
 }
 
+/***************************************************************
+    Loop over all elements in the MotherQuadrant, placing them
+    in one of the 2^dim child quadrants.
+***************************************************************/
 -(void)putElementsInChildQuadrants:(QuadrantPointer_t * __nonnull)childQuadrants motherQuadrant:(Quadrant_t * __nonnull)mother mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim {
     
     int i, j, t, n;
@@ -294,8 +294,8 @@
     double eps3, maxval, minval;
     double const eps2 = 2.5e-2;
     double bbox[6], xmin, xmax, ymin, ymax, zmin, zmax, elementSize;
-    Element_t *elements;
-    Nodes_t *nodes;
+    Element_t *elements = NULL;
+    Nodes_t *nodes = NULL;
     BOOL elementInQuadrant;
     
     for (i=0; i<(int)pow(2.0, dim); i++) {
@@ -382,7 +382,7 @@
             
             elementInQuadrant = YES;
             if (xmax < bbox[0] || xmin > bbox[3] || ymax < bbox[1] || ymin > bbox[4] ||
-                zmax < bbox[2] || zmin > bbox[5]) elementInQuadrant = FALSE;
+                zmax < bbox[2] || zmin > bbox[5]) elementInQuadrant = NO;
             
             if (elementInQuadrant == YES) {
                 childQuadrants[i].quadrant->minElementSize = min(elementSize, childQuadrants[i].quadrant->minElementSize);
@@ -394,7 +394,6 @@
             }
         }
     }
-    
     for (i=0; i<(int)pow(2.0, dim); i++) {
         if (childQuadrants[i].quadrant->nElementsInQuadrant != 0) {
             childQuadrants[i].quadrant->elements = intvec(0, childQuadrants[i].quadrant->nElementsInQuadrant-1);
@@ -409,7 +408,6 @@
 -(void)createChildQuadrantFromMother:(Quadrant_t * __nonnull)quadrant mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int * __nonnull)gen {
     
     int i, n;
-    QuadrantPointer_t childQuadrant[8];
     double xmin, xmax, ymin, ymax, zmin, zmax;
     
     // Create 2^dim child quadrants
@@ -418,10 +416,9 @@
     quadrant->numberOfchildQuadrants = n;
     for (i=0; i<n; i++) {
         quadrant->childQuadrants[i].quadrant = (Quadrant_t*) malloc( sizeof(Quadrant_t));
-        childQuadrant[i].quadrant = quadrant->childQuadrants[i].quadrant;
-        childQuadrant[i].quadrant->nElementsInQuadrant = 0;
-        childQuadrant[i].quadrant->elements = NULL;
-        childQuadrant[i].quadrant->childQuadrants = NULL;
+        quadrant->childQuadrants[i].quadrant->nElementsInQuadrant = 0;
+        quadrant->childQuadrants[i].quadrant->elements = NULL;
+        quadrant->childQuadrants[i].quadrant->childQuadrants = NULL;
     }
     
     xmin = quadrant->boundingBox[0];
@@ -434,80 +431,77 @@
     
     quadrant->size = max(max(xmax-xmin, ymax-ymin), zmax-zmin);
     
-    childQuadrant[0].quadrant->boundingBox[0] = xmin;
-    childQuadrant[0].quadrant->boundingBox[1] = ymin;
-    childQuadrant[0].quadrant->boundingBox[2] = zmin;
-    childQuadrant[0].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
-    childQuadrant[0].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
-    childQuadrant[0].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
+    quadrant->childQuadrants[0].quadrant->boundingBox[0] = xmin;
+    quadrant->childQuadrants[0].quadrant->boundingBox[1] = ymin;
+    quadrant->childQuadrants[0].quadrant->boundingBox[2] = zmin;
+    quadrant->childQuadrants[0].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
+    quadrant->childQuadrants[0].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
+    quadrant->childQuadrants[0].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
     
-    childQuadrant[1].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
-    childQuadrant[1].quadrant->boundingBox[1] = ymin;
-    childQuadrant[1].quadrant->boundingBox[2] = zmin;
-    childQuadrant[1].quadrant->boundingBox[3] = xmax;
-    childQuadrant[1].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
-    childQuadrant[1].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
+    quadrant->childQuadrants[1].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
+    quadrant->childQuadrants[1].quadrant->boundingBox[1] = ymin;
+    quadrant->childQuadrants[1].quadrant->boundingBox[2] = zmin;
+    quadrant->childQuadrants[1].quadrant->boundingBox[3] = xmax;
+    quadrant->childQuadrants[1].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
+    quadrant->childQuadrants[1].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
     
     if (dim >= 2) {
-        childQuadrant[2].quadrant->boundingBox[0] = xmin;
-        childQuadrant[2].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
-        childQuadrant[2].quadrant->boundingBox[2] = zmin;
-        childQuadrant[2].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
-        childQuadrant[2].quadrant->boundingBox[4] = ymax;
-        childQuadrant[2].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[2].quadrant->boundingBox[0] = xmin;
+        quadrant->childQuadrants[2].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[2].quadrant->boundingBox[2] = zmin;
+        quadrant->childQuadrants[2].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[2].quadrant->boundingBox[4] = ymax;
+        quadrant->childQuadrants[2].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
         
-        childQuadrant[3].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
-        childQuadrant[3].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
-        childQuadrant[3].quadrant->boundingBox[2] = zmin;
-        childQuadrant[3].quadrant->boundingBox[3] = xmax;
-        childQuadrant[3].quadrant->boundingBox[4] = ymax;
-        childQuadrant[3].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[3].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[3].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[3].quadrant->boundingBox[2] = zmin;
+        quadrant->childQuadrants[3].quadrant->boundingBox[3] = xmax;
+        quadrant->childQuadrants[3].quadrant->boundingBox[4] = ymax;
+        quadrant->childQuadrants[3].quadrant->boundingBox[5] = (zmin + zmax) / 2.0;
     }
     
     if (dim == 3) {
-        childQuadrant[4].quadrant->boundingBox[0] = xmin;
-        childQuadrant[4].quadrant->boundingBox[1] = ymin;
-        childQuadrant[4].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
-        childQuadrant[4].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
-        childQuadrant[4].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
-        childQuadrant[4].quadrant->boundingBox[5] = zmax;
+        quadrant->childQuadrants[4].quadrant->boundingBox[0] = xmin;
+        quadrant->childQuadrants[4].quadrant->boundingBox[1] = ymin;
+        quadrant->childQuadrants[4].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[4].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[4].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[4].quadrant->boundingBox[5] = zmax;
         
+        quadrant->childQuadrants[5].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[5].quadrant->boundingBox[1] = ymin;
+        quadrant->childQuadrants[5].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[5].quadrant->boundingBox[3] = xmax;
+        quadrant->childQuadrants[5].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[5].quadrant->boundingBox[5] = zmax;
         
-        childQuadrant[5].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
-        childQuadrant[5].quadrant->boundingBox[1] = ymin;
-        childQuadrant[5].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
-        childQuadrant[5].quadrant->boundingBox[3] = xmax;
-        childQuadrant[5].quadrant->boundingBox[4] = (ymin + ymax) / 2.0;
-        childQuadrant[5].quadrant->boundingBox[5] = zmax;
+        quadrant->childQuadrants[6].quadrant->boundingBox[0] = xmin;
+        quadrant->childQuadrants[6].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[6].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[6].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[6].quadrant->boundingBox[4] = ymax;
+        quadrant->childQuadrants[6].quadrant->boundingBox[5] = zmax;
         
-        childQuadrant[6].quadrant->boundingBox[0] = xmin;
-        childQuadrant[6].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
-        childQuadrant[6].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
-        childQuadrant[6].quadrant->boundingBox[3] = (xmin + xmax) / 2.0;
-        childQuadrant[6].quadrant->boundingBox[4] = ymax;
-        childQuadrant[6].quadrant->boundingBox[5] = zmax;
-        
-        childQuadrant[7].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
-        childQuadrant[7].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
-        childQuadrant[7].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
-        childQuadrant[7].quadrant->boundingBox[3] = xmax;
-        childQuadrant[7].quadrant->boundingBox[4] = ymax;
-        childQuadrant[7].quadrant->boundingBox[5] = zmax;
+        quadrant->childQuadrants[7].quadrant->boundingBox[0] = (xmin + xmax) / 2.0;
+        quadrant->childQuadrants[7].quadrant->boundingBox[1] = (ymin + ymax) / 2.0;
+        quadrant->childQuadrants[7].quadrant->boundingBox[2] = (zmin + zmax) / 2.0;
+        quadrant->childQuadrants[7].quadrant->boundingBox[3] = xmax;
+        quadrant->childQuadrants[7].quadrant->boundingBox[4] = ymax;
+        quadrant->childQuadrants[7].quadrant->boundingBox[5] = zmax;
     }
     
-    
-    // Loop over all elements in the mother quadrant, placing them in
-    // one of the 2^dim quadrants
-    [self putElementsInChildQuadrants:childQuadrant motherQuadrant:quadrant mesh:mesh dimension:dim];
+    // Loop over all elements in the mother quadrant, placing them in one of the 2^dim quadrants
+    [self putElementsInChildQuadrants:quadrant->childQuadrants motherQuadrant:quadrant mesh:mesh dimension:dim];
     
     // Check whether we need to branch for the next level
     for (i=0; i<n; i++) {
-        childQuadrant[i].quadrant->size = quadrant->size / 2;
-        if (childQuadrant[i].quadrant->nElementsInQuadrant > maxLeafElems) {
-            if (childQuadrant[i].quadrant->size > childQuadrant[i].quadrant->minElementSize) {
-                if (*gen <= 8) {
+        quadrant->childQuadrants[i].quadrant->size = quadrant->size / 2;
+        if (quadrant->childQuadrants[i].quadrant->nElementsInQuadrant > maxLeafElems) {
+            if (quadrant->childQuadrants[i].quadrant->size > quadrant->childQuadrants[i].quadrant->minElementSize) {
+                if (*gen < 8) {
                     *gen = *gen + 1;
-                    [self createChildQuadrantFromMother:childQuadrant[i].quadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElems generation:gen];
+                    [self createChildQuadrantFromMother:quadrant->childQuadrants[i].quadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElems generation:gen];
                     *gen = *gen - 1;
                 }
             }
@@ -532,7 +526,6 @@
     
     int dim, generation, i;
     double xmin, xmax, ymin, ymax, zmin, zmax;
-    Quadrant_t *motherQuadrant;
     int maxLeafElements;
     
     dim = model.dimension;
@@ -562,9 +555,6 @@
         zmax = 0.0;
     }
     
-    // Create mother of all quadrants
-     quadrant = (Quadrant_t*) malloc(sizeof(Quadrant_t));
-    
     quadrant->boundingBox[0] = xmin;
     quadrant->boundingBox[1] = ymin;
     quadrant->boundingBox[2] = zmin;
@@ -579,8 +569,7 @@
     }
     
     NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Start...\n");
-    motherQuadrant = quadrant;
-    [self createChildQuadrantFromMother:motherQuadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElements generation:&generation];
+    [self createChildQuadrantFromMother:quadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElements generation:&generation];
     NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Ready.\n");
 }
 

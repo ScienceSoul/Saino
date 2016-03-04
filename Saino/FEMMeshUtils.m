@@ -746,6 +746,7 @@
     // Create the projector also for edge dofs if they exist and are
     // requested
     if (doEdges == YES) {
+        FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
         parentMissing = 0;
         parentFound = 0;
         n = mesh.numberOfNodes;
@@ -859,7 +860,7 @@
                     elementNodes->z[i] = nodes->z[newFace->NodeIndexes[i]];
                 }
                 
-                found = [interpolation isPointInElement:newFace elementNodes:elementNodes point:point localCoordinates:uvw globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:model edgeBasis:NULL];
+                found = [interpolation isPointInElement:newFace elementNodes:elementNodes point:point localCoordinates:uvw globalEpsilon:NULL localEpsilon:NULL numericEpsilon:NULL globalDistance:NULL localDistance:NULL model:model elementDescription:elementDescription elementMaps:elementMaps edgeBasis:NULL];
                 u = uvw[0]; v = uvw[1]; w = uvw[2];
                 stat = [integration setBasisForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
                 stat = [integration setBasisFirstDerivativeForElement:newFace elementNodes:elementNodes inMesh:mesh firstEvaluationPoint:u secondEvaluationPoint:v thirdEvaluationPoint:w withBubbles:NO basisDegree:NULL];
@@ -935,6 +936,7 @@
             //TODO: add support for parallel run
         }
         NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous edges.\n", indp-noDiscontNodes);
+        [elementMaps deallocation];
     }
     
     // Convert from list matrix to CRS matrix format
@@ -1160,6 +1162,7 @@ jump:
     }
     
     if (n1 <= 0 || n2 <= 0) {
+        // This is too conservative in parallel
         return success = NO;
     }
     
@@ -1168,8 +1171,6 @@ jump:
     bMesh1.parent = mesh;
     bMesh2.parent = mesh;
     
-    bMesh1Elements = bMesh1.getElements;
-    bMesh2Elements = bMesh2.getElements;
     bMesh1Elements = (Element_t*) malloc( sizeof(Element_t) * n1 );
     bMesh2Elements = (Element_t*) malloc( sizeof(Element_t) * n2 );
     
@@ -1259,7 +1260,7 @@ jump:
             
             if (face->Pdefs != NULL) {
                 pMeshElements[ind].Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
-                pMeshElements[ind].Pdefs = face->Pdefs;
+                memcpy(pMeshElements[ind].Pdefs, face->Pdefs, sizeof(PElementDefs_t));
             }
             
             en = face->Type.NumberOfEdges;
@@ -1295,23 +1296,23 @@ jump:
     NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
     
     Nodes_t *meshNodes = mesh.getNodes;
-    Nodes_t *mesh1Nodes = bMesh1.getNodes;
-    Nodes_t *mesh2Nodes = bMesh2.getNodes;
     
-    mesh1Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    Nodes_t *mesh1Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     mesh1Nodes->x = doublevec(0, bMesh1.numberOfNodes-1);
     mesh1Nodes->y = doublevec(0, bMesh1.numberOfNodes-1);
     mesh1Nodes->z = doublevec(0, bMesh1.numberOfNodes-1);
+    mesh1Nodes->numberOfNodes =  bMesh1.numberOfNodes;
     
-    mesh2Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    Nodes_t *mesh2Nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     mesh2Nodes->x = doublevec(0, bMesh2.numberOfNodes-1);
     mesh2Nodes->y = doublevec(0, bMesh2.numberOfNodes-1);
     mesh2Nodes->z = doublevec(0, bMesh2.numberOfNodes-1);
+    mesh2Nodes->numberOfNodes = bMesh2.numberOfNodes;
     
-    int *invPermMesh1 = bMesh1.getInvPerm;
-    int *invPermMesh2 = bMesh2.getInvPerm;
-    invPermMesh1 = intvec(0, bMesh1.numberOfNodes-1);
-    invPermMesh2 = intvec(0, bMesh2.numberOfNodes-1);
+    int *invPermMesh1 = intvec(0, bMesh1.numberOfNodes-1);
+    int *invPermMesh2 = intvec(0, bMesh2.numberOfNodes-1);
+    memset(invPermMesh1, -1, bMesh1.numberOfNodes*sizeof(int));
+    memset(invPermMesh2, -1, bMesh2.numberOfNodes*sizeof(int));
     
     // Now create the master and target meshes that only include the active elements
     k1 = 0; k2 = 0;
@@ -1350,6 +1351,14 @@ jump:
             bMesh2Elements[i].NodeIndexes[j] = perm2[bMesh2Elements[i].NodeIndexes[j]];
         }
     }
+    
+    [bMesh1 assignElements:bMesh1Elements];
+    [bMesh1 assignNodes:mesh1Nodes];
+    [bMesh1 assignInvPerm:invPermMesh1];
+    
+    [bMesh2 assignElements:bMesh2Elements];
+    [bMesh2 assignNodes:mesh2Nodes];
+    [bMesh2 assignInvPerm:invPermMesh2];
     
     free_ivector(perm1, 0, mesh.numberOfNodes-1);
     free_ivector(perm2, 0, mesh.numberOfNodes-1);
@@ -2463,12 +2472,12 @@ jump:
     if (constantNormals == YES) {
         NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: master normal: \n");
         for (int i=0; i<3; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: %f\n", normal1[i]);
+            NSLog(@"%f\n", normal1[i]);
         }
         
         NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: initial target normal: \n");
         for (int i=0; i<3; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: %f\n", normal2[i]);
+            NSLog(@"%f\n", normal2[i]);
         }
         
         // The full angle between the two normals
@@ -2511,7 +2520,7 @@ jump:
 ******************************************************************/
 -(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
     
-    double alpha, angles[3], scl[3], x[4], x1_min[3], x1_max[3], x2_min[3], x2_max[3], x2r_min[3], x2r_max[3];
+    double alpha, angles[3], scl[3], x[4], x1_min[3], x1_max[3], x2_min[3], x2_max[3], x2r_min[3], x2r_max[3], y[4];
     Nodes_t *bMesh1Nodes = NULL, *bMesh2Nodes = NULL;
     listBuffer pArray = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL found;
@@ -2528,14 +2537,8 @@ jump:
     vDSP_maxvD(bMesh1Nodes->y, 1, &x1_max[1], bMesh1.numberOfNodes);
     vDSP_maxvD(bMesh1Nodes->z, 1, &x1_max[2], bMesh1.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for this periodic BC: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x1_min[i]);
-    }
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for this periodic BC: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x1_max[i]);
-    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for this periodic BC: %e %e %e\n", x1_min[0], x1_min[1], x1_min[2]);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for this periodic BC: %e %e %e\n", x1_max[0], x1_max[1], x1_max[2]);
     
     vDSP_minvD(bMesh2Nodes->x, 1, &x2_min[0], bMesh2.numberOfNodes);
     vDSP_minvD(bMesh2Nodes->y, 1, &x2_min[1], bMesh2.numberOfNodes);
@@ -2545,14 +2548,8 @@ jump:
     vDSP_maxvD(bMesh2Nodes->y, 1, &x2_max[1], bMesh2.numberOfNodes);
     vDSP_maxvD(bMesh2Nodes->z, 1, &x2_max[2], bMesh2.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for taget periodic BC: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2_min[i]);
-    }
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for target periodic BC: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2_max[i]);
-    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for target periodic BC: %e %e %e\n", x2_min[0], x2_min[1], x2_min[2]);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for target periodic BC: %e %e %e\n", x2_max[0], x2_max[1], x2_max[2]);
     
     double **trfMatrix = doublematrix(0, 3, 0, 3);
     
@@ -2597,10 +2594,8 @@ jump:
         }
         
         if (gotRotate == YES) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: rotating target with: \n");
-            for (int i=0; i<3; i++) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", angles[i]);
-            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
+            double **C = doublematrix(0, 3, 0, 3);
             for (int i=0; i<3; i++) {
                 alpha = angles[i] * M_PI / 180.0;
                 if (fabs(alpha) < DBL_MIN) continue;
@@ -2625,17 +2620,20 @@ jump:
                         trfMatrix[1][1] = cos(alpha);
                         break;
                 }
-                cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *rotMatrix, 4, *trfMatrix, 4, 0.0, *rotMatrix, 4);
+                memset( *C, 0.0, (4*4)*sizeof(double) );
+                cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *rotMatrix, 4, *trfMatrix, 4, 0.0, *C, 4);
+                memcpy(*rotMatrix, *C, (4*4)*sizeof(double));
             }
             for (int i=0; i<bMesh2.numberOfNodes; i++) {
                 x[0] = bMesh2Nodes->x[i];
                 x[1] = bMesh2Nodes->y[i];
                 x[2] = bMesh2Nodes->z[i];
                 x[3] = 1.0;
-                cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, *rotMatrix, 4, x, 1, 0.0, x, 1);
-                bMesh2Nodes->x[i] = x[0];
-                bMesh2Nodes->y[i] = x[1];
-                bMesh2Nodes->z[i] = x[2];
+                memset(y, 0.0, sizeof(y) );
+                cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, *rotMatrix, 4, x, 1, 0.0, y, 1);
+                bMesh2Nodes->x[i] = y[0];
+                bMesh2Nodes->y[i] = y[1];
+                bMesh2Nodes->z[i] = y[2];
             }
             vDSP_minvD(bMesh2Nodes->x, 1, &x2r_min[0], bMesh2.numberOfNodes);
             vDSP_minvD(bMesh2Nodes->y, 1, &x2r_min[1], bMesh2.numberOfNodes);
@@ -2645,14 +2643,9 @@ jump:
             vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
             vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
             
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for rotated target: \n");
-            for (int i=0; i<3; i++) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_min[i]);
-            }
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for rotated target: \n");
-            for (int i=0; i<3; i++) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_max[i]);
-            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for rotated target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for rotated target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
+            free_dmatrix(C, 0, 3, 0, 3);
         } else {
             memcpy(x2r_min, x2_min, sizeof(x2_min));
             memcpy(x2r_max, x2_max, sizeof(x2_max));
@@ -2686,10 +2679,7 @@ jump:
                     scl[i] = 1.0;
                 }
             }
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: scaling with: \n");
-            for (int i=0; i<3; i++) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", scl[i]);
-            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: scaling with: %e %e %e\n", scl[0], scl[1], scl[2]);
             for (int i=0; i<3; i++) {
                 sclMatrix[i][i] = scl[i];
             }
@@ -2707,10 +2697,7 @@ jump:
             for (int i=0; i<3; i++) {
                 trsMatrix[3][i] = x1_min[i] - sclMatrix[i][i] * x2r_min[i];
             }
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: translation: \n");
-            for (int i=0; i<3; i++) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", trsMatrix[3][i]);
-            }
+            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: translation: %e %e %e\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
         }
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *sclMatrix, 4, *trsMatrix, 4, 0.0, *trfMatrix, 4);
         
@@ -2726,10 +2713,12 @@ jump:
         x[1] = bMesh2Nodes->y[i];
         x[2] = bMesh2Nodes->z[i];
         x[3] = 1.0;
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, 4, 4, 1.0, *trfMatrix, 4, x, 1, 0.0, x, 1);
-        bMesh2Nodes->x[i] = x[0] / x[3];
-        bMesh2Nodes->y[i] = x[1] / x[3];
-        bMesh2Nodes->z[i] = x[2] / x[3];
+        memset(y, 0.0, sizeof(y) );
+        // The following does MATMUL(x,trfMatrix)
+        cblas_dgemv(CblasRowMajor, CblasTrans, 4, 4, 1.0, *trfMatrix, 4, x, 1, 0.0, y, 1);
+        bMesh2Nodes->x[i] = y[0] / y[3];
+        bMesh2Nodes->y[i] = y[1] / y[3];
+        bMesh2Nodes->z[i] = y[2] / y[3];
     }
     
     vDSP_minvD(bMesh2Nodes->x, 1, &x2r_min[0], bMesh2.numberOfNodes);
@@ -2740,14 +2729,8 @@ jump:
     vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
     vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for transformed target: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_min[i]);
-    }
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for transformed target: \n");
-    for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: %f\n", x2r_max[i]);
-    }
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for transformed target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
+    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for transformed target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
 
     free_dmatrix(trfMatrix, 0, 3, 0, 3);
     
@@ -3828,6 +3811,7 @@ jump:
     BOOL antiradial, antirotational, antisliding, cylindrical, doEdges, doNodes, flat, found, intGalerkin, levelProj, plane, radial, rotational,
          sliding, success, useExtProjector;
     
+    // BCs index should start from 0
     if (mbd < 0) return nil;
     
     FEMCore *core = [FEMCore sharedCore];
@@ -3864,7 +3848,7 @@ jump:
     }
     
     // BCs index should start from 0
-    if (mbd < 0) return nil;
+    if (trgt < 0) return nil;
     
     // Create the mesh projector, and if needed also eliminate the ghost nodes.
     // There are two choices of projector: a nodal P in x = PX, and a Galerkin projector
@@ -4062,6 +4046,7 @@ jump:
         if (projector.child != nil) {
             [self saveProjector:projector.child saveRowSum:YES prefix:[@"pb" stringByAppendingString:[NSString stringWithFormat:@"%d",mbd+1]] invPerm:projectorContainers->InvPerm];
         }
+        NSLog(@"FEMMeshUtils:periodicProjectorInModel: save projector and stop.\n");
     }
     
     BOOL deleteTimer = YES;
@@ -5510,7 +5495,7 @@ jump:
     
     elementUtils = [[FEMElementUtils alloc] init];
     str = (solution.solutionInfo)[@"equation"];
-    matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:mesh dofs:dofs permutation:permutation sizeOfPermutation:varContainers->sizePerm matrixFormat:MATRIX_CRS optimizeBandwidth:optimizeBandwidth equationName:str discontinuousGalerkinSolution:NULL globalBubbles:NULL];
+    matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:mesh dofs:dofs permutation:permutation sizeOfPermutation:varContainers->sizePerm matrixFormat:MATRIX_CRS optimizeBandwidth:optimizeBandwidth equationName:str discontinuousGalerkinSolution:NULL globalBubbles:NULL nodalDofsOnly:NULL projectorDofs:NULL];
     
     if ((solution.solutionInfo)[@"linear system symmetric"] != nil) {
         matrix.symmetric = [(solution.solutionInfo)[@"linear system symmetric"] boolValue];
@@ -5896,7 +5881,7 @@ jump:
             if (elementsIn[j].Pdefs != NULL) {
                 needEdges = YES;
                 elementsOut[cnt].Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
-                elementsOut[cnt].Pdefs = elementsIn[j].Pdefs;
+                memcpy(elementsOut[cnt].Pdefs, elementsIn[j].Pdefs, sizeof(PElementDefs_t));
             }
             cnt++;
         }

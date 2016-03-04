@@ -973,7 +973,7 @@
     return f;
 }
 
--(void)solveLinearSystem2x2:(double * __nonnull * __nonnull)a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem2x2:(double[][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
     
     double detA;
     
@@ -989,13 +989,9 @@
     x[1] = detA * ( a[0][0] * b[1] - a[1][0] * b[0] );
 }
 
--(void)solveLinearSystem3x3:(double * __nonnull * __nonnull)a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem3x3:(double[][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
     
-    double **c, *y, *g, s, t, q;
-    
-    c = doublematrix(0, 1, 0, 1);
-    y = doublevec(0, 1);
-    g = doublevec(0, 1);
+    double c[2][2], y[2], g[2], s, t, q;
     
     if ( (fabs(a[0][0]) > fabs(a[0][1])) && (fabs(a[0][0]) > fabs(a[0][2])) ) {
         q = 1.0 / a[0][0];
@@ -1046,10 +1042,6 @@
         x[1] = y[1];
         x[2] = q * ( b[0] - a[0][0] * x[0] - a[0][1] * x[1] );
     }
-    
-    free_dmatrix(c, 0, 1, 0, 1);
-    free_dvector(y, 0, 1);
-    free_dvector(g, 0, 1);
 }
 
 -(FEMMatrix * __nonnull)meshProjectorMesh1:(FEMMesh * __nonnull)mesh1 mesh2:(FEMMesh * __nonnull)mesh2 model:(FEMModel * __nonnull)model useQuadrantTree:(BOOL * __nullable)quadrantTree transpose:(BOOL * __nullable)trans {
@@ -1059,16 +1051,17 @@
     
     FEMInterpolateMeshToMesh *interpolateMesh = [[FEMInterpolateMeshToMesh alloc] init];
     
+    projector = [[FEMProjector alloc] init];
     if (quadrantTree != NULL) {
         [interpolateMesh interpolateQMesh:mesh1 toMesh:mesh2 oldVariables:nil newVariables:nil model:model quadrantTree:quadrantTree projector:projector mask:nil nodesPresent:NULL newMaskPerm:NULL];
     } else {
         [interpolateMesh interpolateQMesh:mesh1 toMesh:mesh2 oldVariables:nil newVariables:nil model:model quadrantTree:NULL projector:projector mask:nil nodesPresent:NULL newMaskPerm:NULL];
     }
     
-    projectorMatrix = projector.matrix;
+    projectorMatrix = projector.matrix.copy;
     if (trans != NULL) {
         if (*trans == YES) {
-            projectorMatrix = projector.tMatrix;
+            projectorMatrix = projector.tMatrix.copy;
         }
     }
     
@@ -1625,7 +1618,7 @@
             if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
                 discontinuousGalerkin = [(solution.solutionInfo)[@"discontinuous galerkin"] boolValue];
             } else discontinuousGalerkin = NO;
-            solution.matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:dofs permutation:perm sizeOfPermutation:ndeg matrixFormat:matrixFormat optimizeBandwidth:bandwidthOptimize equationName:eq discontinuousGalerkinSolution:&discontinuousGalerkin globalBubbles:&globalBubbles];
+            solution.matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:dofs permutation:perm sizeOfPermutation:ndeg matrixFormat:matrixFormat optimizeBandwidth:bandwidthOptimize equationName:eq discontinuousGalerkinSolution:&discontinuousGalerkin globalBubbles:&globalBubbles nodalDofsOnly:NULL projectorDofs:NULL];
             nrows = dofs * ndeg;
             if (solution.matrix != nil) nrows = solution.matrix.numberOfRows;
             

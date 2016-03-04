@@ -10,7 +10,7 @@
 
 #import "Constructors.h"
 
-@interface FEMMatrix : NSObject {
+@interface FEMMatrix : NSObject <NSCopying> {
     
     FEMMatrix *_child;
     FEMMatrix *_parent;

@@ -53,7 +53,7 @@
     cPerm = intvec(0, model.numberOfNodes-1);
     
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
-    cMatrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:1 permutation:cPerm sizeOfPermutation:model.numberOfNodes matrixFormat:MATRIX_CRS optimizeBandwidth:NO equationName:nil discontinuousGalerkinSolution:NULL globalBubbles:NULL];
+    cMatrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:1 permutation:cPerm sizeOfPermutation:model.numberOfNodes matrixFormat:MATRIX_CRS optimizeBandwidth:NO equationName:nil discontinuousGalerkinSolution:NULL globalBubbles:NULL nodalDofsOnly:NULL projectorDofs:NULL];
     if (cMatrix == nil) fatal("FEMFreeSurface_poissonSolveModel", "Can't create matrix.");
     
     localMatrix = doublematrix(0, model.maxElementNodes-1, 0, model.maxElementNodes-1);
@@ -213,6 +213,10 @@
         if ([listUtilities listGetLogical:model inArray:bc forVariable:@"free surface" info:&found] == NO) continue;
         
         n = boundary->Type.NumberOfNodes;
+        if (boundaryNodes == NULL) {
+            boundaryNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+            initNodes(boundaryNodes);
+        }
         [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL mesh:nil];
         
         // Go through boundary element nodes
@@ -302,6 +306,10 @@
             }
         }
     }
+    free_dvector(boundaryNodes->x, 0, boundaryNodes->numberOfNodes-1);
+    free_dvector(boundaryNodes->y, 0, boundaryNodes->numberOfNodes-1);
+    free_dvector(boundaryNodes->z, 0, boundaryNodes->numberOfNodes-1);
+    free(boundaryNodes);
     
     // Iterate until convergence
     for (ii=1; ii<=fiter; ii++) {
@@ -331,6 +339,10 @@
             }
             
             n = boundary->Type.NumberOfNodes;
+            if (boundaryNodes == NULL) {
+                boundaryNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+                initNodes(boundaryNodes);
+            }
             [core getNodes:solution model:model inElement:boundary resultNodes:boundaryNodes numberOfNodes:NULL mesh:nil];
             
             for (i=0; i<n; i++) {
@@ -471,7 +483,13 @@
         
         s = sqrt(s);
         NSLog(@"FEMFreeSurface:moveBoundaryModel: iter: %d, free surface residual: %f.\n", ii, s);
-        if (s < feps) break;
+        if (s < feps) {
+            free_dvector(boundaryNodes->x, 0, boundaryNodes->numberOfNodes-1);
+            free_dvector(boundaryNodes->y, 0, boundaryNodes->numberOfNodes-1);
+            free_dvector(boundaryNodes->z, 0, boundaryNodes->numberOfNodes-1);
+            free(boundaryNodes);
+            break;
+        }
     }
     
     if (xMoved == YES) {

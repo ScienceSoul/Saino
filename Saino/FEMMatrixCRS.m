@@ -24,25 +24,25 @@
     
     int lower, upper, lou, index;
     
-    index = 0;
-    upper = n-1;
-    lower = 0;
+    index = -1;
+    upper = n;
+    lower = 1;
     
     // Handle the special case returns -1
-    if (upper < 0) return -1;
+    if (upper == 0) return index;
     
     while (1) {
-        if (array[lower] == value) {
-            index = lower;
+        if (array[lower-1] == value) {
+            index = lower-1;
             break;
-        } else if (array[upper] == value) {
-            index = upper;
+        } else if (array[upper-1] == value) {
+            index = upper-1;
             break;
         }
         
-        if ( (upper-lower) > 0 ) {
+        if ( (upper-lower) > 1 ) {
             lou = (upper+lower) >> 1;
-            if (array[lou] < value) {
+            if (array[lou-1] < value) {
                 lower = lou;
             } else {
                 upper = lou;

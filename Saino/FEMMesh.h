@@ -106,8 +106,11 @@
 // Assign quadrants
 -(void)assignQuadrant:(Quadrant_t * __nonnull)quadrant;
 
-// Assign View Factors
+// Assign view factors
 -(void)assignViewFactors:(Factors_t * __nonnull)factors;
+
+// Assign inverse permutation getter
+-(void)assignInvPerm:(int * __nonnull)perm;
 
 // Nodes getter
 -(Nodes_t * __nullable)getNodes;

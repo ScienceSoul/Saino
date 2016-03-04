@@ -249,7 +249,8 @@
     cperm = intvec(0, solution.mesh.numberOfNodes-1);
     
     elementUtils = [[FEMElementUtils alloc] init];
-    matrix = [elementUtils createMatrixInModel:self forSolution:solution mesh:solution.mesh dofs:1 permutation:cperm sizeOfPermutation:solution.mesh.numberOfNodes matrixFormat:MATRIX_CRS optimizeBandwidth:NO equationName:nil discontinuousGalerkinSolution:NULL globalBubbles:NULL];
+    BOOL nodalDofsOnly = YES;
+    matrix = [elementUtils createMatrixInModel:self forSolution:solution mesh:solution.mesh dofs:1 permutation:cperm sizeOfPermutation:solution.mesh.numberOfNodes matrixFormat:MATRIX_CRS optimizeBandwidth:NO equationName:nil discontinuousGalerkinSolution:NULL globalBubbles:NULL nodalDofsOnly:&nodalDofsOnly projectorDofs:NULL];
     
     // TODO: Assign here matrix field (Comm, ParMatrix) for parallel run
     
@@ -527,6 +528,8 @@
     
     for (FEMSolution *solution in self.solutions) {
         
+        self.solution = solution;
+        
         // TODO: Here Elmer calls a procedure post-fixed with "_Init0" for a given solver.
         // Do we need to do that?
         
@@ -722,7 +725,7 @@
         }
     }
     
-    for (FEMSolution *solution in self.solution) {
+    for (FEMSolution *solution in self.solutions) {
         
         if ((solution.solutionInfo)[@"mesh"] != nil) {
             aString = (solution.solutionInfo)[@"mesh"];

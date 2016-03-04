@@ -146,7 +146,7 @@
 
 -(void)testISMIP_HOM_A010 {
     int success;
-    double targetNorm = 0.0;
+    double targetNorm = 9.8237320560;
     
     [_saino_view_controller press:[_saino_view viewWithTag: 4]]; // ISMIP-HOM A010
     
@@ -167,7 +167,7 @@
         } else {
             NSLog(@"ISMIP-HOM A010:   [Passed].\n");
         }
-        //XCTAssertTrue(success == 0, @"ISMIP-HOM A010:   [FAILED].\n");
+        XCTAssertTrue(success == 0, @"ISMIP-HOM A010:   [FAILED].\n");
     } else {
         XCTAssertTrue(self.testApp.natural_convection_allDone == YES, @"ISMIP-HOM A010: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
     }

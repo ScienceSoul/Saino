@@ -19,7 +19,7 @@
 #import "Utils.h"
 
 @interface FEMElementUtils ()
--(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles;
+-(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs;
 -(void)FEMElementUtils_initializeMatrix:(FEMMatrix * __nonnull)matrix size:(int)n list:(ListMatrix_t * __nonnull)list reorder:(int * __nonnull)reorder invInitialReorder:(int * __nonnull)invInitialReorder dofs:(int)dofs;
 @end
 
@@ -28,16 +28,20 @@
 #pragma mark Private methods
 
 /************************************************************************************************************************
+ 
     Create a list matrix given the mesh, the active domains and the element type related to the solver. The list
     matrix is flexible since it can account for any entries. Also constraints and periodic BCs may give rise to 
     entries in the list matrix topology.
+ 
+    Method corresponds partially to Elmer from git on October 27 2015
+ 
 ************************************************************************************************************************/
--(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles {
+-(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {
     
     int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs;
     int indexSize, numberOfFactors;
     int invPerm[localNodes], *indexes = NULL;
-    BOOL foundDG, found, radiation;
+    BOOL doProjectors, foundDG, found, radiation;
     FEMMatrix *projector;
     FEMListUtilities *listUtilities;
     FEMListMatrix *listMatrix;
@@ -56,6 +60,17 @@
     edofs = mesh.maxEdgeDofs;
     fdofs = mesh.maxFaceDofs;
     
+    if (nodalDofsOnly != NULL) {
+        if (*nodalDofsOnly == YES) {
+            edofs = 0;
+            fdofs = 0;
+        }
+    }
+    
+    if (projectorDofs != NULL) {
+        doProjectors = *projectorDofs;
+    } else doProjectors = YES;
+    
     indexSize = 128;
     indexes = intvec(0, indexSize-1);
     
@@ -63,6 +78,16 @@
     faces = mesh.getFaces;
     edges = mesh.getEdges;
     
+    if (edofs > 0 && edges == NULL) {
+        NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: edge dofs requested but no edges exist in mesh.\n");
+        edofs = 0;
+    }
+    if (fdofs > 0 && faces == NULL) {
+        NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: face dofs requested but no faces exist in mesh.\n");
+        fdofs = 0;
+    }
+    
+    // Create the permutation for the Discontinuous Galerkin solver
     foundDG = NO;
     if (*dgSolver == YES && equation != nil) {
         for (t=0; t<mesh.numberOfEdges; t++) {
@@ -241,33 +266,45 @@
                 }
             }
             
+            // This is a connection element, make a matrix connection for that
             if (elements[i].Type.ElementCode == 102) {
                 k2 = reorder[elements[i].NodeIndexes[1]];
                 if (k2 >= 0) lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k2 andIndex:k2];
             }
         }
         
-        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-            projector = boundaryCondition.pMatrix;
-            if (projector == nil) continue;
-            
-            if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
-            
-            matContainers = projector.getContainers;
-            for (i=0; i<projector.numberOfRows; i++) {
-                k = reorder[matContainers->InvPerm[i]];
-                if (k >= 0) {
-                    for (l=matContainers->Rows[i]; l<=matContainers->Rows[i+1]-1; l++) {
-                        if (matContainers->Cols[l] < 0) continue;
-                        m = reorder[matContainers->Cols[l]];
-                        if (m >= 0) {
-                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k andIndex:m];
-                            lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:k]; // Keep structure symmetric
-                            cList = list[k].Head;
-                            while (cList != NULL) {
-                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:cList->Index];
-                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:cList->Index andIndex:m]; // Keep structure symmetric
-                                cList = cList->Next;
+        
+        // Add connection from projectors. These are only needed if the projector is treated
+        // implicitly. For explicit projectors or when using Lagrange coefficients, the
+        // connections are not needed.
+        if (doProjectors == YES) {
+            int bd = 0;
+            for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+                bd++;
+                projector = boundaryCondition.pMatrix;
+                if (projector == nil) continue;
+                
+                if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
+                if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc use lagrange coefficient" info:&found] == YES) continue;
+                
+                NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: adding matrix topology for BC: %d.", bd);
+                
+                matContainers = projector.getContainers;
+                for (i=0; i<projector.numberOfRows; i++) {
+                    k = reorder[matContainers->InvPerm[i]];
+                    if (k >= 0) {
+                        for (l=matContainers->Rows[i]; l<=matContainers->Rows[i+1]-1; l++) {
+                            if (matContainers->Cols[l] < 0) continue;
+                            m = reorder[matContainers->Cols[l]];
+                            if (m >= 0) {
+                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:k andIndex:m];
+                                lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:k]; // Keep structure symmetric
+                                cList = list[k].Head;
+                                while (cList != NULL) {
+                                    lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:m andIndex:cList->Index];
+                                    lptr = [listMatrix getMatrixIndexInListMatrix:list atIndex:cList->Index andIndex:m]; // Keep structure symmetric
+                                    cList = cList->Next;
+                                }
                             }
                         }
                     }
@@ -276,7 +313,6 @@
         }
     }
 
-    
     k = 0;
     for (i=0; i<sizeOfReorder; i++) {
         if (reorder[i] >= 0) {
@@ -343,7 +379,14 @@
     return self;
 }
 
--(FEMMatrix * __nonnull)createMatrixInModel:(FEMModel * __nonnull)model forSolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh dofs:(int)dofs permutation:(int * __nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * __nullable)equation discontinuousGalerkinSolution:(BOOL * __nullable)dgSolution globalBubbles:(BOOL * __nullable)gbBubbles {
+/********************************************************************************************
+ 
+    Creates and return a matrix
+ 
+    Method corresponds partially to Elmer from git on October 27 2015
+ 
+********************************************************************************************/
+-(FEMMatrix * __nonnull)createMatrixInModel:(FEMModel * __nonnull)model forSolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh dofs:(int)dofs permutation:(int * __nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * __nullable)equation discontinuousGalerkinSolution:(BOOL * __nullable)dgSolution globalBubbles:(BOOL * __nullable)gbBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {
     
     int i, j, k, l, m, n, p, k1, edofs, fdofs, bdofs, cols;
     int *invInitialReorder;
@@ -404,6 +447,9 @@
     }
     
     if (k == permSize) {
+        if (nodalDofsOnly != NULL) {
+            if (*nodalDofsOnly == YES) k = mesh.numberOfNodes;
+        }
         for (i=0; i<k; i++) {
             perm[i] = i;
         }
@@ -429,10 +475,10 @@
     optimizeBW = [[FEMBandwidthOptimize alloc] init];
     
     if (equation != nil) {
-        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:equation dgSolver:&dg globalBubbles:&gb];
+        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:equation dgSolver:&dg globalBubbles:&gb nodalDofsOnly:nodalDofsOnly projectorDofs:projectorDofs];
         n = [optimizeBW optimizeBandwidthInListMatrix:listMatrix permutation:perm sizeOfPerm:permSize invInitialReorder:invInitialReorder localNodes:k optimize:optimizeBandwidth useOptimized:useOptimized equation:equation];
     } else {
-        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:nil dgSolver:&dg globalBubbles:&gb];
+        listMatrix = [self FEMElementUtils_makeListMatrixInModel:model solution:solution mesh:mesh reorder:perm sizeOfReorder:permSize localNodes:k equation:nil dgSolver:&dg globalBubbles:&gb nodalDofsOnly:nodalDofsOnly projectorDofs:projectorDofs];
         n = [optimizeBW optimizeBandwidthInListMatrix:listMatrix permutation:perm sizeOfPerm:permSize invInitialReorder:invInitialReorder localNodes:k optimize:optimizeBandwidth useOptimized:useOptimized equation:@"[empty field]"];
     }
     

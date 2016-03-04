@@ -1714,39 +1714,39 @@ static dispatch_once_t onceToken;
     double *coeff;
     
     if (element->Type.ElementCode == 605) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
         y = y + x[0] * ( -(1.0-v) + v*w * s) / 4.0;
-        y = y + x[1] * ( (1.0-v) - v*w * s) / 4.0;
-        y = y + x[2] * ( (1.0+v) + v*w * s) / 4.0;
+        y = y + x[1] * (  (1.0-v) - v*w * s) / 4.0;
+        y = y + x[2] * (  (1.0+v) + v*w * s) / 4.0;
         y = y + x[3] * ( -(1.0+v) - v*w * s) / 4.0;
         return  y;
     } else if (element->Type.ElementCode == 613) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
         y = y + x[0] * ( -( (1.0-u) * (1.0-v) - w + u*v*w * s ) + (-u-v-1.0) * ( -(1.0-v) + v*w *s ) ) / 4.0;
         
-        y = y + x[1] * ( ( (1.0+u) * (1.0-v) - w - u*v*w * s ) + (u-v-1.0) * ( (1.0-v) - v*w *s ) ) / 4.0;
+        y = y + x[1] * (  ( (1.0+u) * (1.0-v) - w - u*v*w * s ) + (u-v-1.0) * ( (1.0-v) - v*w *s ) ) / 4.0;
         
-        y = y + x[2] * ( ( (1.0+u) * (1.0+v) - w + u*v*w * s ) + (u+v-1.0) * ( (1.0+v) + v*w *s ) ) / 4.0;
+        y = y + x[2] * (  ( (1.0+u) * (1.0+v) - w + u*v*w * s ) + (u+v-1.0) * ( (1.0+v) + v*w *s ) ) / 4.0;
         
         y = y + x[3] * ( -( (1.0-u) * (1.0+v) - w - u*v*w * s ) + (-u+v-1.0) * ( -(1.0+v) - v*w *s ) ) / 4.0;
         
         y = y + x[4] * 0.0;
         
-        y = y + x[5] * ( (1.0-u-w)*(1.0-v-w) - (1.0+u-w)*(1.0-v-w) * s ) / 2.0;
-        y = y + x[6] * ( (1.0+v-w)*(1.0-v-w) * s ) / 2.0;
-        y = y + x[7] * ( (1.0-u-w)*(1.0+v-w) - (1.0+u-w)*(1.0+v-w) * s ) / 2.0;
-        y = y + x[8] * ( -(1.0+v-w)*(1.0-v-w) * s ) / 2.0;
+        y = y + x[5] * ( (1.0-u-w)*(1.0-v-w) - (1.0+u-w)*(1.0-v-w) ) * s / 2.0;
+        y = y + x[6] * ( (1.0+v-w)*(1.0-v-w) ) * s / 2.0;
+        y = y + x[7] * ( (1.0-u-w)*(1.0+v-w) - (1.0+u-w)*(1.0+v-w) ) * s  / 2.0;
+        y = y + x[8] * ( -(1.0+v-w)*(1.0-v-w) ) * s / 2.0;
         
-        y = y - x[9] * w * (1.0-v-w) * s;
+        y = y - x[9]  * w * (1.0-v-w) * s;
         y = y + x[10] * w * (1.0-v-w) * s;
         y = y + x[11] * w * (1.0+v-w) * s;
-        y = y + x[12] * w * (1.0+v-w) * s;
+        y = y - x[12] * w * (1.0+v-w) * s;
         
         return y;
     }
@@ -1793,27 +1793,27 @@ static dispatch_once_t onceToken;
     double *coeff;
     
     if (element->Type.ElementCode == 605) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
         y = y + x[0] * ( -(1.0-u) + u*w *s ) / 4.0;
         y = y + x[1] * ( -(1.0+u) - u*w *s ) / 4.0;
-        y = y + x[2] * ( (1.0+u) + u*w *s ) / 4.0;
-        y = y + x[3] * ( (1.0-u) - u*w *s ) / 4.0;
+        y = y + x[2] * (  (1.0+u) + u*w *s ) / 4.0;
+        y = y + x[3] * (  (1.0-u) - u*w *s ) / 4.0;
         return y;
     } else if (element->Type.ElementCode == 613) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
-        y = y + x[0] * ( -( (1.0-u) * (1.0-v) - w + u*v*w *s ) + (-u-v-1.0) * ( -(1.0-u) + u*w *s ) ) / 4.0;
+        y = y + x[0] * ( -( (1.0-u) * (1.0-v) - w + u*v*w * s ) + (-u-v-1.0) * ( -(1.0-u) + u*w *s ) ) / 4.0;
         
-        y = y + x[1] * ( -( (1.0+u) * (1.0-v) - w - u*v*w *s ) + (u-v-1.0) * ( -(1.0+u) - u*w *s ) ) / 4.0;
+        y = y + x[1] * ( -( (1.0+u) * (1.0-v) - w - u*v*w * s ) + (u-v-1.0) * ( -(1.0+u) - u*w *s ) ) / 4.0;
         
-        y = y + x[2] * ( ( (1.0+u) * (1.0+v) - w + u*v*w *s ) + (u+v-1.0) * ( (1.0+u) + u*w *s ) ) / 4.0;
+        y = y + x[2] * (  ( (1.0+u) * (1.0+v) - w + u*v*w * s ) + (u+v-1.0) * ( (1.0+u) + u*w *s ) ) / 4.0;
         
-        y = y + x[3] * ( ( (1.0-u) * (1.0+v) - w - u*v*w *s ) + (-u+v-1.0) * ( (1.0-u) - u*w *s ) ) / 4.0;
+        y = y + x[3] * (  ( (1.0-u) * (1.0+v) - w - u*v*w * s ) + (-u+v-1.0) * ( (1.0-u) - u*w *s ) ) / 4.0;
         
         y = y + x[4] * 0.0;
         
@@ -1822,7 +1822,7 @@ static dispatch_once_t onceToken;
         y = y + x[7] * (1.0+u-w)*(1.0-u-w) * s / 2.0;
         y = y + x[8] * ( (1.0-v-w)*(1.0-u-w) - (1.0+v-w)*(1.0-u-w) ) * s / 2.0;
         
-        y = y - x[9] * w * (1.0-u-w) * s;
+        y = y - x[9]  * w * (1.0-u-w) * s;
         y = y - x[10] * w * (1.0+u-w) * s;
         y = y + x[11] * w * (1.0+u-w) * s;
         y = y + x[12] * w * (1.0-u-w) * s;
@@ -1853,15 +1853,17 @@ static dispatch_once_t onceToken;
 
 /**********************************************************************************************
  
- Given element structure, return value of the first partial derivative with respect to
- local coordinate v of a quantity x given at element nodes at local coordinate point
- u, v, w inside the element. Element basis functions are used to compute the value.
+    Given element structure, return value of the first partial derivative with respect to
+    local coordinate v of a quantity x given at element nodes at local coordinate point
+    u, v, w inside the element. Element basis functions are used to compute the value.
  
- Element_t *element  ->  element struncture
- double *x:          ->  nodal values of the quantity whose partial derivative is required
- double u,v, w       ->  points at which to evaluate the partial derivative
+    Element_t *element  ->  element struncture
+    double *x:          ->  nodal values of the quantity whose partial derivative is required
+    double u,v, w       ->  points at which to evaluate the partial derivative
  
- Return first partial derivative in w of quantity x at point u,v,w y = @x(u,v,w)/@w
+    Return first partial derivative in w of quantity x at point u,v,w y = @x(u,v,w)/@w
+ 
+    Method corresponds to Elmer from git on October 27 2015
  
 **********************************************************************************************/
 -(double)firstDerivativeW3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
@@ -1872,25 +1874,25 @@ static dispatch_once_t onceToken;
     double *coeff;
     
     if (element->Type.ElementCode == 605) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
-        y = y + x[0] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
-        y = y + x[1] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
-        y = y + x[2] * ( -1.0 + u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
-        y = y + x[3] * ( -1.0 - u*v*(2.0-w) * pow(s, 2.0) ) / 4.0;
+        y = y + x[0] * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[1] * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[2] * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[3] * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
         y = y + x[4];
         return y;
     } else if (element->Type.ElementCode == 613) {
-        if (w == 1) w = 1.0-1.0e-12;
+        if (w == 1) w = 1.0 - 1.0e-12;
         s = 1.0 / (1.0-w);
         
         y = 0.0;
         y = y + x[0] * (-u-v-1.0) * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
-        y = y + x[1] * (u-v-1.0) * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
-        y = y + x[2] * (u+v-1.0) * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
-        y = y + x[3] * (-u+v-1.0) * ( -1.0 - u*v*pow(s, 2.0) ) /4.0;
+        y = y + x[1] * (u-v-1.0)  * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[2] * (u+v-1.0)  * ( -1.0 + u*v*pow(s, 2.0) ) / 4.0;
+        y = y + x[3] * (-u+v-1.0) * ( -1.0 - u*v*pow(s, 2.0) ) / 4.0;
         
         y = y + x[4] * (4.0*w-1.0);
         
@@ -2200,12 +2202,14 @@ static dispatch_once_t onceToken;
     Convert global coordinates x, y, z, inside element to local coordinates u, v, w, of the element
     TODO: Needs support for p elements
  
+    Method corresponds to Elmer from git on October 27 2015
+ 
 ***************************************************************************************************/
 -(void)globalToLocalFromElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes localU:(double * __nonnull)u localV:(double * __nonnull)v localW:(double * __nonnull)w x:(double)x y:(double)y z:(double)z model:(FEMModel * __nonnull)model {
     
     int i, j, n;
     int const maxIter = 50;
-    double r=0.0, s=0.0, t=0.0, delta[3], prevdelta[3], **J, bf[3], det, acc, err=0.0, sum;
+    double r=0.0, s=0.0, t=0.0, buffer[3], delta[3], prevdelta[3], J[3][3], JJ[2][2], bf[3], det, acc, err=0.0, sum, yy[3];
     BOOL converged;
     FEMUtilities *utilities;
 
@@ -2216,13 +2220,12 @@ static dispatch_once_t onceToken;
     
     utilities = [[FEMUtilities alloc] init];
     
-    J = doublematrix(0, 2, 0, 2);
-    
     n = element->Type.NumberOfNodes;
     acc = DBL_EPSILON;
     converged = NO;
     
-    for (i=0; i<maxIter; i++) {
+    double alpha = 0.5;
+    for (i=1; i<=maxIter; i++) {
         
         r = [self interpolateInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - x;
         s = [self interpolateInElement:element nodalValues:nodes->y evaluatedAt:*u andAt:*v andAt:*w withBasis:NULL] - y;
@@ -2237,19 +2240,18 @@ static dispatch_once_t onceToken;
         
         memcpy(prevdelta, delta, sizeof(delta));
         memset( delta, 0.0, sizeof(delta) );
+        memset( *J, 0.0, (3*3)*sizeof(double) );
         
-        double buffer[3];
         switch (element->Type.dimension) {
             case 1:
                 J[0][0] = [self firstDerivative1DInElement:element nodalValues:nodes->x evalutationPoint:*u];
                 J[1][0] = [self firstDerivative1DInElement:element nodalValues:nodes->y evalutationPoint:*u];
                 J[2][0] = [self firstDerivative1DInElement:element nodalValues:nodes->z evalutationPoint:*u];
                 
-                sum = 0.0;
+                det = 0.0;
                 for (j=0; j<3; j++) {
-                    sum = sum + pow(J[j][0], 2.0);
+                    det = det + pow(J[j][0], 2.0);
                 }
-                det = sum;
                 delta[0] = (r * J[0][0] + s * J[1][0] + t * J[2][0]) / det;
                 break;
                 
@@ -2267,20 +2269,20 @@ static dispatch_once_t onceToken;
                         delta[0] = r;
                         delta[1] = s;
                         delta[2] = t;
-                        cblas_dgemv(CblasRowMajor, CblasTrans, 3, 3, 1.0, *J, 3, delta, 1, 0.0, delta, 1);
-                        r = delta[0];
-                        s = delta[1];
-                        
-                        cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, 3, 3, 2, 1.0, *J, 3, *J, 3, 0.0, *J, 3);
+                        memset( yy, 0.0, sizeof(yy) );
+                        cblas_dgemv(CblasRowMajor, CblasTrans, 3, 3, 1.0, (double *)J, 3, delta, 1, 0.0, yy, 1);
+                        r = yy[0];
+                        s = yy[1];
+                        memset( *JJ, 0.0, (2*2)*sizeof(double) );
+                        cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, 2, 2, 3, 1.0, (double *)J, 3, (double *)J, 3, 0.0, (double *)JJ, 2);
                         delta[2] = 0.0;
                         break;
                 }
-            
                 bf[0] = r;
                 bf[1] = s;
                 bf[2] = 0.0;
-                
-                [utilities solveLinearSystem2x2:J afterSolve:delta rightHandSide:bf];
+                [utilities solveLinearSystem2x2:JJ afterSolve:delta rightHandSide:bf];
+                break;
                 
             case 3:
                 J[0][0] = [self firstDerivativeU3DInElement:element nodalValues:nodes->x evaluatedAt:*u andAt:*v andAt:*w];
@@ -2298,40 +2300,43 @@ static dispatch_once_t onceToken;
                 bf[0] = r;
                 bf[1] = s;
                 bf[2] = t;
-                
                 [utilities solveLinearSystem3x3:J afterSolve:delta rightHandSide:bf];
+                break;
         }
         
-        // If the iteration does not proceed, try with some relaxation
-        if (i > 9) {
-            for (j=0; j<3; j++) {
-                delta[j] = 0.5 * delta[j];
+        if (i > 10) {
+            // If some values is suggested over and over again, then exit.
+            // This may be a sign that the node is off-plane and can not
+            // be described within the element.
+            memset(buffer, 0.0, sizeof(buffer));
+            vDSP_vsubD(prevdelta, 1, delta, 1, buffer, 1, 3);
+            vDSP_vabsD(buffer, 1, buffer, 1, 3);
+            vDSP_sveD(buffer, 1, &sum, 3);
+            if (sum < acc) break;
+            
+            // Use sloppier criteria when iteration still unsuccesfull
+            if (i > 20) {
+                if (sum < sqrt(acc)) break;
             }
+            
+            // If the iteration does not proceed try with some relaxation
+            vDSP_vsmulD(delta, 1, &alpha, delta, 1, 3);
         }
         
         *u = *u - delta[0];
         *v = *v - delta[1];
         *w = *w - delta[2];
-        
-        // If some values is suggested over and over again, then exit.
-        // This may be a sign that the node is off-plane and can not
-        // be described within the element.
-        memset(buffer, 0.0, sizeof(buffer));
-        vDSP_vsubD(prevdelta, 1, delta, 1, buffer, 1, 3);
-        vDSP_vabsD(buffer, 1, buffer, 1, 3);
-        vDSP_sveD(buffer, 1, &sum, 3);
-        if (sum < DBL_MIN) break;
     }
     
     if (converged == NO) {
         if (err > sqrt(acc)) {
-            if (i >= maxIter) {
+            if (i > maxIter) {
                 NSLog(@"FEMElementDescription:globalToLocalFromElement: did not converge.\n");
-                NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
+                NSLog(@"rst, %d %f, %f, %f\n", i, r, s, t);
                 NSLog(@"err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
                 NSLog(@"delta, %f %f %f\n", delta[0], delta[1], delta[2]);
                 NSLog(@"prevdelta, %f %f %f\n", prevdelta[0], prevdelta[1], prevdelta[2]);
-                NSLog(@"dim, %d, delta, %f %f %f, uvw, %f, %f, %f\n", element->Type.dimension, delta[0], delta[1], delta[2], *u,*v,*w);
+                NSLog(@"code, %d\n", element->Type.ElementCode);
                 NSLog(@"x: %f\n", x);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
                     NSLog(@"%f ", nodes->x[i]);
@@ -2353,8 +2358,6 @@ static dispatch_once_t onceToken;
             }
         }
     }
-    
-    free_dmatrix(J, 0, 2, 0, 2);
 }
 
 /************************************************************************************************
@@ -2417,7 +2420,7 @@ static dispatch_once_t onceToken;
     
     if (element->Type.ElementCode == 605) {
         s = 0.0;
-        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        if (w == 1.0) w = 1.0 - 1.0e-12;
         s = 1.0 / (1-w);
         
         y = 0.0;
@@ -2428,14 +2431,14 @@ static dispatch_once_t onceToken;
         y = y + x[4] * w;
         return y;
     } else if (element->Type.ElementCode == 613) {
-        if (w == 1.0) w = 1.0e-1 - 1.0e-12;
+        if (w == 1.0) w = 1.0 - 1.0e-12;
         s = 1.0 / (1-w);
         
         y = 0.0;
-        y = y + x[0] * (-u-v-1.0) * ( (1.0-u) * (1.0-v) - w + u*v*w *s ) / 4.0;
-        y = y + x[1] * (u-v-1.0) * ( (1.0+u) * (1.0-v) - w - u*v*w *s ) / 4.0;
-        y = y + x[2] * (u+v-1.0) * ( (1.0+u) * (1.0+v) - w + u*v*w *s ) / 4.0;
-        y = y + x[3] * (-u+v-1.0) * ( (1.0-u) * (1.0+v) - w - u*v*w *s ) / 4.0;
+        y = y + x[0] * (-u-v-1.0) * ( (1.0-u) * (1.0-v) - w + u*v*w * s ) / 4.0;
+        y = y + x[1] * (u-v-1.0) * ( (1.0+u) * (1.0-v) - w - u*v*w * s ) / 4.0;
+        y = y + x[2] * (u+v-1.0) * ( (1.0+u) * (1.0+v) - w + u*v*w * s ) / 4.0;
+        y = y + x[3] * (-u+v-1.0) * ( (1.0-u) * (1.0+v) - w - u*v*w * s ) / 4.0;
         y = y + x[4] * w*(2.0*w-1.0);
         y = y + x[5] * (1.0+u-w) * (1.0-u-w) * (1.0-v-w) * s /2.0;
         y = y + x[6] * (1.0+v-w) * (1.0-v-w) * (1.0+u-w) * s /2.0;

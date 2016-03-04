@@ -124,9 +124,13 @@
     [fileHandle writeData:buffer];
 }
 
-/***********************************
+/**********************************************************************
+ 
     Add flags for active solutions
-***********************************/
+    
+    Method corresponds partially to Elmer from git on October 27 2015
+
+**********************************************************************/
 -(void)FEMJob_addSolutionsModel:(FEMModel * __nonnull)model {
     
     int i, j;
@@ -137,6 +141,8 @@
     listBuffer activeSolvers = { NULL, NULL, NULL, NULL, 0, 0, 0};
     
     listUtilities = [FEMListUtilities sharedListUtilities];
+    
+    NSLog(@"FEMJob:FEMJob_addSolutionsModel: setting up %d solvers.\n", model.numberOfSolutions);
     
     i = 1;
     for (FEMSolution *solution in model.solutions) {
@@ -167,9 +173,11 @@
     
     utilities = [[FEMUtilities alloc] init];
     initSolution = NO;
+    i = 1;
     for (FEMSolution *solution in model.solutions) {
         if ((solution.solutionInfo)[@"equation"] != nil) {
             eq = (solution.solutionInfo)[@"equation"];
+            NSLog(@"FEMJob:FEMJob_addSolutionsModel: setting up solver %d : %@.\n", i, eq);
         }
         if ((solution.solutionInfo)[@"initialize"] != nil) {
             if ([(solution.solutionInfo)[@"initialize"] boolValue] == YES) {
@@ -187,6 +195,7 @@
             [utilities addEquationBasicsToSolution:solution name:eq model:model transient:_transient];
             [utilities addEquationToSolution:solution model:model transient:_transient];
         }
+        i++;
     }
 }
 
@@ -1636,8 +1645,6 @@ jump:
                 // If periodic BC given, compute the boundary mesh projector
                 i = 0;
                 for (FEMBoundaryCondition *boundary in self.model.boundaryConditions) {
-                    if (boundary.pMatrix != nil) [boundary.pMatrix deallocation];
-                    boundary.pMatrix = nil;
                     k = [listUtilities listGetInteger:self.model inArray:boundary.valuesList forVariable:@"periodic bc" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) {
                         boundary.pMatrix = [meshUtils periodicProjectorInModel:self.model forMesh:extrudedMesh masterBoundary:i targetBoundary:k-1 galerking:NULL];
