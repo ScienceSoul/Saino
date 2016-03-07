@@ -928,7 +928,6 @@ static const int PRECOND_VANKA     =  560;
     
     int i, j, k, l, m, n, t, tt;
     double bu, bv, detJ, *lrnm, *nrm, s, sum;
-    double *buffer1, *buffer2, *buffer3;
     bool *done;
     BOOL any, check, conditional, found, gotIt, massConsistent, stat;
     Element_t *elements;
@@ -1134,9 +1133,9 @@ static const int PRECOND_VANKA     =  560;
     
     // Normalize
     if (self.normalTangentialNumberOfNodes > 0) {
-        buffer1 = doublevec(0, self.size2boundaryNormals-1);
-        buffer2 = doublevec(0, self.size2boundaryTangent1-1);
-        buffer3 = doublevec(0, self.size2boundaryTangent2-1);
+        double buffer1[self.size2boundaryNormals];
+        double buffer2[self.size2boundaryNormals];
+        double buffer3[self.size2boundaryNormals];
         elementUtils = [[FEMElementUtils alloc] init];
         for (i=0; i<model.numberOfNodes; i++) {
             k = self.boundaryReorder[i];
@@ -1163,9 +1162,6 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
         }
-        free_dvector(buffer1, 0, self.size2boundaryNormals-1);
-        free_dvector(buffer2, 0, self.size2boundaryTangent1-1);
-        free_dvector(buffer3, 0, self.size2boundaryTangent2-1);
     }
     free_dvector(elementNodes->x, 0, model.maxElementNodes-1);
     free_dvector(elementNodes->y, 0, model.maxElementNodes-1);
