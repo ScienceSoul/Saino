@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 Institute of Low Temperature Science. All rights reserved.
 //
 
+#import <Accelerate/Accelerate.h>
 #import "FEMMatrixCRS.h"
 #import "Utils.h"
 
@@ -167,9 +168,7 @@
 ************************************************************************************************/
 -(void)sortGlobal:(FEMSolution * __nonnull)solution alsoValues:(BOOL * __nullable)alsoValues {
     
-    int i, j, k, n;
-    int *buffer1;
-    double *buffer2;
+    int i, j, n;
     BOOL sortValues;
     matrixArraysContainer *matContainers = NULL;
     
@@ -182,45 +181,13 @@
     
     if (solution.matrix.isOrdered == NO) {
         if (sortValues == YES) {
-            buffer1 = intvec(0, matContainers->sizeValues-1);
-            buffer2 = doublevec(0, matContainers->sizeValues-1);
-            memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
-            memset( buffer2, 0.0, matContainers->sizeValues*sizeof(double) );
             for (i=0; i<n; i++) {
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = matContainers->Cols[j];
-                    buffer2[k] = matContainers->Values[j];
-                    k++;
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i],  matContainers->Cols+(matContainers->Rows[i]-1), matContainers->Values+(matContainers->Rows[i]-1));
                 }
-                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1, buffer2-1);
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    matContainers->Cols[j] = buffer1[k];
-                    matContainers->Values[j] = buffer2[k];
-                    k++;
-                }
-            }
-            free_ivector(buffer1, 0, matContainers->sizeValues-1);
-            free_dvector(buffer2, 0, matContainers->sizeValues-1);
-            
         } else {
-            buffer1 = intvec(0, matContainers->sizeValues-1);
-            memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
             for (i=0; i<n; i++) {
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = matContainers->Cols[j];
-                    k++;
-                }
-                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1);
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    matContainers->Cols[j] = buffer1[k];
-                    k++;
-                }
+                vDSP_vsort((float *)matContainers->Cols+matContainers->Rows[i], matContainers->Rows[i+1]-matContainers->Rows[i], 1);
             }
-            free_ivector(buffer1, 0, matContainers->sizeValues-1);
         }
         
         if (matContainers->Diag != NULL) {
@@ -248,21 +215,13 @@
 *********************************************************************************************************/
 -(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
-    int ii, jj, k, l;
+    int k;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
-        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
-        int buffer[jj];
-        memset( buffer, 0, sizeof(buffer) );
-        l = 0;
-        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
-            buffer[l] = matContainers->Cols[ii];
-            l++;
-        }
-        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
         if (k < 0) {
             NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
@@ -284,21 +243,13 @@
 ************************************************************************************************************/
 -(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
-    int ii, jj, k, l;
+    int k;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
-        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
-        int buffer[jj];
-        memset( buffer, 0, sizeof(buffer) );
-        l = 0;
-        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
-            buffer[l] = matContainers->Cols[ii];
-            l++;
-        }
-        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
         if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f.\n", i, j, value);
         if (k < 0) return;
         k = k + matContainers->Rows[i];
@@ -398,7 +349,7 @@
 ************************************************************************************************************/
 -(void)setSymmetricDirichletInGlobal:(FEMSolution * __nonnull)solution atIndex:(int)n value:(double)value {
     
-    int i, j, k, l, m, k1, k2;
+    int i, j, k, l, k1, k2;
     BOOL isMass, isDamp;
     matrixArraysContainer *matContainers = NULL;
     
@@ -435,14 +386,7 @@
                 }
             }
         } else {
-            int buffer[k];
-            memset( buffer, 0, sizeof(buffer) );
-            m = 0;
-            for (int ii=k1; ii<=k2; ii++) {
-                buffer[m] = matContainers->Cols[ii];
-                m++;
-            }
-            j = [self FEMMatrixCRS_SearchWithinLength:k inArray:buffer theValue:n];
+            j = [self FEMMatrixCRS_SearchWithinLength:k inArray:matContainers->Cols+k1 theValue:n];
             if (j >= 0) {
                 j = j + k1;
                 matContainers->RHS[i] = matContainers->RHS[i] - matContainers->Values[j] * value;
@@ -765,66 +709,28 @@
         BOOL *alsoValues        ->  whether values are sorted
 ************************************************************************************************/
 -(void)sortMatrix:(FEMMatrix * __nonnull)matrix alsoValues:(BOOL * __nullable)alsoValues {
+        
+    matrixArraysContainer *matContainers = matrix.getContainers;
     
-    int i, j, k, n;
-    int *buffer1;
-    double *buffer2;
-    BOOL sortValues;
-    matrixArraysContainer *matContainers = NULL;
-    
-    matContainers = matrix.getContainers;
-    
-    sortValues = NO;
+    BOOL sortValues = NO;
     if (alsoValues != NULL) sortValues = *alsoValues;
     
-    n = matrix.numberOfRows;
+    int n = matrix.numberOfRows;
     
     if (matrix.isOrdered == NO) {
         if (sortValues == YES) {
-            buffer1 = intvec(0, matContainers->sizeValues-1);
-            buffer2 = doublevec(0, matContainers->sizeValues-1);
-            for (i=0; i<n; i++) {
-                memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
-                memset( buffer2, 0.0, matContainers->sizeValues*sizeof(double) );
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = matContainers->Cols[j];
-                    buffer2[k] = matContainers->Values[j];
-                    k++;
-                }
-                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1, buffer2-1);
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    matContainers->Cols[j] = buffer1[k];
-                    matContainers->Values[j] = buffer2[k];
-                    k++;
-                }
+            for (int i=0; i<n; i++) {
+                sort(matContainers->Rows[i+1]-matContainers->Rows[i],  matContainers->Cols+(matContainers->Rows[i]-1), matContainers->Values+(matContainers->Rows[i]-1));
             }
-            free_ivector(buffer1, 0, matContainers->sizeValues-1);
-            free_dvector(buffer2, 0, matContainers->sizeValues-1);
-            
         } else {
-            buffer1 = intvec(0, matContainers->sizeValues-1);
-            for (i=0; i<n; i++) {
-                memset( buffer1, 0, matContainers->sizeValues*sizeof(int) );
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    buffer1[k] = matContainers->Cols[j];
-                    k++;
-                }
-                sort(matContainers->Rows[i+1]-matContainers->Rows[i], buffer1-1);
-                k = 0;
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
-                    matContainers->Cols[j] = buffer1[k];
-                    k++;
-                }
+            for (int i=0; i<n; i++) {
+                vDSP_vsort((float *)matContainers->Cols+matContainers->Rows[i], matContainers->Rows[i+1]-matContainers->Rows[i], 1);
             }
-            free_ivector(buffer1, 0, matContainers->sizeValues-1);
         }
         
         if (matContainers->Diag != NULL) {
-            for (i=0; i<n; i++) {
-                for (j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
+            for (int i=0; i<n; i++) {
+                for (int j=matContainers->Rows[i]; j<=matContainers->Rows[i+1]-1; j++) {
                     if (matContainers->Cols[j] == i) {
                         matContainers->Diag[i] = j;
                         break;
@@ -848,21 +754,13 @@
 ************************************************************************************************/
 -(void)setElementInMatrix:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j value:(double)value {
     
-    int ii, jj, k, l;
+    int k;
     matrixArraysContainer *matContainers = NULL;
     
     matContainers = matrix.getContainers;
     
     if (matContainers->Diag != NULL || i != j || matrix.isOrdered == NO) {
-        jj = matContainers->Rows[i+1]-matContainers->Rows[i];
-        int buffer[jj];
-        memset( buffer, 0, sizeof(buffer) );
-        l = 0;
-        for (ii=matContainers->Rows[i]; ii<=matContainers->Rows[i+1]-1; ii++) {
-            buffer[l] = matContainers->Cols[ii];
-            l++;
-        }
-        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:buffer theValue:j];
+        k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
         if (k < 0) {
             NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;

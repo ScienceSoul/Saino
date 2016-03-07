@@ -3436,7 +3436,7 @@ jump:
                     for (j=0; j<3; j++) {
                         nf[j] = element->NodeIndexes[faceMap[k][j]];
                     }
-                    sort(3, nf-1);
+                    vDSP_vsort((float *)nf, 3, 1);
                     break;
                     
                 case 6:
@@ -3447,12 +3447,12 @@ jump:
                         for (j=0; j<4; j++) {
                             nf[j] = element->NodeIndexes[faceMap[k][j]];
                         }
-                        sort(4, nf-1);
+                        vDSP_vsort((float *)nf, 4, 1);
                     } else {
                         for (j=0; j<3; j++) {
                             nf[j] = element->NodeIndexes[faceMap[k][j]];
                         }
-                        sort(3, nf-1);
+                        vDSP_vsort((float *)nf, 3, 1);
                     }
                     break;
                     
@@ -3464,12 +3464,12 @@ jump:
                         for (j=0; j<3; j++) {
                             nf[j] = element->NodeIndexes[faceMap[k][j]];
                         }
-                        sort(3, nf-1);
+                        vDSP_vsort((float *)nf, 3, 1);
                     } else {
                         for (j=0; j<4; j++) {
                             nf[j] = element->NodeIndexes[faceMap[k][j]];
                         }
-                        sort(4, nf-1);
+                        vDSP_vsort((float *)nf, 4, 1);
                     }
                     break;
                     
@@ -3480,7 +3480,7 @@ jump:
                     for (j=0; j<4; j++) {
                         nf[j] = element->NodeIndexes[faceMap[k][j]];
                     }
-                    sort(4, nf-1);
+                    vDSP_vsort((float *)nf, 4, 1);
                     break;
                     
                 default:
@@ -4988,13 +4988,13 @@ jump:
                 for (j=0; j<3; j++) {
                     eoldNodes[j] = elements[i+mesh.numberOfBulkElements].NodeIndexes[j];
                 }
-                sort(3, eoldNodes-1);
+                vDSP_vsort((float *)eoldNodes, 3, 1);
                 
                 for (faceNumber=0; faceNumber<eParent->sizeFaceIndexes; faceNumber++) {
                     for (j=0; j<3; j++) {
                         faceNodes[j] = faces[eParent->FaceIndexes[faceNumber]].NodeIndexes[j];
                     }
-                    sort(3, faceNodes-1);
+                    vDSP_vsort((float *)faceNodes, 3, 1);
                     
                     if (eoldNodes[0] == faceNodes[0] && eoldNodes[1] == faceNodes[1] && eoldNodes[2] == faceNodes[2]) break;
                 }
@@ -5167,13 +5167,13 @@ jump:
                 for (j=0; j<4; j++) {
                     eoldNodes[j] = elements[i+mesh.numberOfNodes].NodeIndexes[j];
                 }
-                sort(4, eoldNodes-1);
+                vDSP_vsort((float *)eoldNodes, 4, 1);
                 
                 for (faceNumber=0; faceNumber<eParent->sizeFaceIndexes; faceNumber++) {
                     for (j=0; j<4; j++) {
                         faceNodes[j] = faces[eParent->FaceIndexes[faceNumber]].NodeIndexes[j];
                     }
-                    sort(4, faceNodes-1);
+                    vDSP_vsort((float *)faceNodes, 4, 1);
                     
                     if (eoldNodes[0] == faceNodes[0] && eoldNodes[1] == faceNodes[1] && eoldNodes[2] == faceNodes[2]) break;
                 }
