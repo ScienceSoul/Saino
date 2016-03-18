@@ -1410,6 +1410,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
     if ([integration allocation:mesh] == NO) fatal("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration.");
     
+    // Check if we do the assembly in parallel on the GPU
+    BOOL parallelAssembly = NO;
+    if (solution.solutionInfo[@"parallel assembly"] != nil) {
+        parallelAssembly = [solution.solutionInfo[@"parallel assembly"] boolValue];
+    }
+    
     for (iter=1; iter<=nonLinearIter; iter++) {
         
         if (pseudoPressureExists == YES && pseudoPressureUpdate == YES) {
@@ -1438,13 +1444,6 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         startAdvanceOutput((char *)[@"FEMFlowSolution" UTF8String], (char *)[@"Assembly:" UTF8String]);
         
         // Bulk elements
-        
-        // Check if we do the assembly in parallel on the GPU
-        BOOL parallelAssembly = NO;
-        if (solution.solutionInfo[@"parallel assembly"] != nil) {
-            parallelAssembly = [solution.solutionInfo[@"parallel assembly"] boolValue];
-        }
-        
         if (parallelAssembly == YES) {
             
         } else {
