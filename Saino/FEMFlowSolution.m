@@ -1442,7 +1442,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         // Check if we do the assembly in parallel on the GPU
         BOOL parallelAssembly = NO;
         if (solution.solutionInfo[@"parallel assembly"] != nil) {
-            parallelAssembly = YES;
+            parallelAssembly = [solution.solutionInfo[@"parallel assembly"] boolValue];
         }
         
         if (parallelAssembly == YES) {
