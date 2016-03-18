@@ -272,7 +272,7 @@ __kernel void heatSolutionAssembly(__global double *values, __global double *rhs
         // Surface element
         detJ = (covariantMetricTensor[0][0]*covariantMetricTensor[1][1] - covariantMetricTensor[0][1]*covariantMetricTensor[1][0]);
         if (detJ <= FLT_MIN) {
-            // Don't do anything in the OpenCL kernel but dangerous is something goes wrong
+            // Don't do anything in the OpenCL kernel but dangerous if something goes wrong
         };
         
         // Two dimensional element
