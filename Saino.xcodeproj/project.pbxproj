@@ -228,6 +228,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = NavierStokesAssemblyKernel.cl; sourceTree = "<group>"; };
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		73059E42186BD5F8008B5E44 /* Numerics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Numerics.c; sourceTree = "<group>"; };
@@ -490,6 +491,7 @@
 			isa = PBXGroup;
 			children = (
 				73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */,
+				014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */,
 			);
 			name = "OpenCL kernels";
 			path = Saino;

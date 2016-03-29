@@ -7,6 +7,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 
 #include "OpenCLUtils.h"
@@ -62,21 +63,21 @@ int device_stats(cl_device_id __nonnull device_id)
 	printf("Profile: %s\n", device_profile);
 	printf("Supported Extensions: %s\n\n", device_extensions);
 	
-	printf("Local Mem Type (Local=1, Global=2): %i\n", (int)local_mem_type);
-	printf("Global Mem Size (MB): %i\n", (int)global_mem_size/(1024*1024));
-	printf("Global Mem Cache Size (KB): %i\n", (int)global_mem_cache_size/1024);
-	printf("Local Mem Size (KB): %i\n", (int)local_mem_size/1024);
-	printf("Max Mem Alloc Size (MB): %ld\n", (long int)max_mem_alloc_size/(1024*1024));
+	printf("Local Mem Type (Local=1, Global=2): %d\n", (int)local_mem_type);
+	printf("Global Mem Size (MB): %llu\n", global_mem_size/(1024*1024));
+	printf("Global Mem Cache Size (KB): %llu\n", global_mem_cache_size/1024);
+	printf("Local Mem Size (KB): %llu\n", local_mem_size/1024);
+	printf("Max Mem Alloc Size (MB): %llu\n", max_mem_alloc_size/(1024*1024));
 	
-	printf("Clock Frequency (MHz): %i\n\n", clock_frequency);
+	printf("Clock Frequency (MHz): %u\n\n", clock_frequency);
 	
 	for(int i=0;i<6;i++) {
-		err |= clGetDeviceInfo(device_id, vector_types[i], sizeof(clock_frequency), &vector_width, &returned_size);
-		printf("Vector type width for: %s = %i\n", vector_type_names[i], vector_width);
+		err |= clGetDeviceInfo(device_id, vector_types[i], sizeof(vector_width), &vector_width, &returned_size);
+		printf("Vector type width for: %s = %u\n", vector_type_names[i], vector_width);
 	}
 	
 	printf("\nMax Work Group Size: %lu\n", max_work_group_size);
-	printf("Max Compute Units: %i\n", max_compute_units);
+	printf("Max Compute Units: %u\n", max_compute_units);
 	printf("\n");
 	
 	return CL_SUCCESS;
