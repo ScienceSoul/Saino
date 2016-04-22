@@ -18,6 +18,8 @@
 #import "FEMFreeSurface.h"
 #import "Utils.h"
 #import "TimeProfile.h"
+#import "GaussIntegration.h"
+#import "OpenCLUtils.h"
 
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
@@ -142,6 +144,17 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     double * __nullable _viscosity;
     double * __nullable _w;
     Nodes_t * __nullable _elementNodes;
+    
+    // The following definitions are used the
+    // for assembly on the GPU
+    cl_device_id _device;
+    cl_context _context;
+    cl_command_queue _cmd_queue;
+    cl_program _program;
+    cl_int _err;
+    char *_kernel_source;
+    size_t _src_len;
+    BOOL _initializeGPU;
 }
 
 -(void)FEMFlowSolution_nullify {
@@ -869,7 +882,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _pseudoPressure = NULL;
         _pDensity0 = NULL;
         _pDensity1 = NULL;
-    }
+        
+        _device = NULL;
+        _initializeGPU = NO;
+}
     
     return self;
 }
@@ -1407,13 +1423,71 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         if (found == NO) pseudoPressureUpdate = NO;
     }
     
-    FEMNumericIntegration *integration = [[FEMNumericIntegration alloc] init];
-    if ([integration allocation:mesh] == NO) fatal("FEMDiffuseConvectiveAnisotropic:diffuseConvectiveComposeyMassMatrix", "Allocation error in FEMNumericIntegration.");
-    
     // Check if we do the assembly in parallel on the GPU
     BOOL parallelAssembly = NO;
     if (solution.solutionInfo[@"parallel assembly"] != nil) {
         parallelAssembly = [solution.solutionInfo[@"parallel assembly"] boolValue];
+    }
+    
+    FEMNumericIntegration *integration;
+    if (parallelAssembly == NO) {
+        integration = [[FEMNumericIntegration alloc] init];
+        if ([integration allocation:mesh] == NO) fatal("FEMFlowSolution:solutionComputer", "Allocation error in FEMNumericIntegration.");
+    }
+    
+    // If we do the matrix assembly on the GPU, prepare everything here
+    if (parallelAssembly == YES) {
+        if (_initializeGPU == NO) {
+            // Get the GPU device
+            _device = find_single_device();
+            device_stats(_device);
+            
+            // Create the context of the command queue
+            _context = clCreateContext(0, 1, &_device, NULL, NULL, &_err);
+            _cmd_queue = clCreateCommandQueue(_context, _device, 0, NULL);
+            
+            NSString *kernelfile;
+            if (solution.solutionInfo[@"gpu kernel source file"] != nil) {
+                NSString *source = solution.solutionInfo[@"gpu kernel source file"];
+                if ([source containsString:@".cl"] == YES) {
+                    kernelfile = [NSString stringWithString:source];
+                } else {
+                    kernelfile = [source stringByAppendingPathExtension:@"cl"];
+                }
+            } else {
+                fatal("FEMFlowSolution:solutionComputer", "Parallel assembly requires a kernel source file.");
+            }
+            
+            int success = LoadFileIntoString((char *)[kernelfile UTF8String], &_kernel_source, &_src_len);
+            if (success < 0) {
+                fatal("FEMFlowSolution:solutionComputer", "Can't load kernel source.");
+            }
+            
+            // Allocate memory for program and kernels
+            // Create the program .cl file
+            _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &_err);
+            if (_err) {
+                fatal("FEMFlowSolution:solutionComputer", "Can't create program. Error number: ", _err);
+            }
+            
+            // Build the program (compile it)
+            const char options[] = "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+            _err = clBuildProgram(_program, 1, &_device, options, NULL, &_err);
+            if (_err < 0) {
+                size_t log_size;
+                clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+                char *program_log = (char *)malloc(log_size+1);
+                program_log[log_size] = '\0';
+                clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
+                NSLog(@"FEMFlowSolution:solutionComputer: %s\n", program_log);
+                free(program_log);
+                fatal("FEMFlowSolution:solutionComputer", "Saino will abort the simulation now...");
+            }
+            
+            
+            
+            _initializeGPU = YES;
+        }
     }
     
     for (iter=1; iter<=nonLinearIter; iter++) {
@@ -1445,6 +1519,17 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         // Bulk elements
         if (parallelAssembly == YES) {
+            
+            GaussIntegrationPoints *IP = NULL;
+            int elementCode, gaussPoints;
+            
+            // Figure out the element code and the number of Gauss points for the active elements
+            element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
+            elementCode = element->Type.ElementCode;
+            gaussPoints = element->Type.GaussPoints;
+            IP = GaussQuadratureGPU(elementCode, gaussPoints);
+            
+            // Get the element basis functions
             
         } else {
             [self FEMFlowSolution_doAssembly:solution
@@ -1812,7 +1897,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         model.dimension = modelDim;
     }
     
-    [integration deallocation:mesh];
+    if (parallelAssembly == NO) {
+        [integration deallocation:mesh];
+    }
     
     if (ifTransient == YES) {
         if (tempPrev != NULL) free_dvector(tempPrev, 0, tempSolContainers->size1PrevValues-1);

@@ -108,7 +108,9 @@
         }
     }
     
-    laplaceDiscretization = [(solution.solutionInfo)[@"laplace discretization"] boolValue];
+    if ((solution.solutionInfo)[@"laplace discretization"] != nil) {
+        laplaceDiscretization = [(solution.solutionInfo)[@"laplace discretization"] boolValue];
+    } else laplaceDiscretization = NO;
     
     if (vms == YES && transient == YES) {
         dt = solution.dt;

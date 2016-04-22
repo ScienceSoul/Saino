@@ -20,10 +20,12 @@
 @synthesize do_step_stokes = _do_step_stokes;
 @synthesize do_natural_convection = _do_natural_convection;
 @synthesize do_ismip_hom_A010 = _do_ismip_hom_A010;
+@synthesize do_ismip_hom_A010_gpu = _do_ismip_hom_A010_gpu;
 @synthesize heatq_allDone = _heatq_allDone;
 @synthesize step_stokes_allDone = _step_stokes_allDone;
 @synthesize natural_convection_allDone = _natural_convection_allDone;
-@synthesize ismip_hom_allDone = _ismip_hom_allDone;
+@synthesize ismip_hom_A010_allDone = _ismip_hom_A010_allDone;
+@synthesize ismip_hom_A010_gpu_allDone = _ismip_hom_A010_gpu_allDone;
 @synthesize norm = _norm;
 
 static FEMTest * __nullable sharedTest = nil;
@@ -57,10 +59,12 @@ static dispatch_once_t onceToken;
     _do_step_stokes = NO;
     _do_natural_convection = NO;
     _do_ismip_hom_A010 = NO;
+    _do_ismip_hom_A010_gpu = NO;
     _heatq_allDone = NO;
     _step_stokes_allDone = NO;
     _natural_convection_allDone = NO;
-    _ismip_hom_allDone = NO;
+    _ismip_hom_A010_allDone = NO;
+    _ismip_hom_A010_gpu_allDone = NO;
     _norm = 0.0;
 }
 
@@ -718,6 +722,21 @@ static dispatch_once_t onceToken;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010"]];
     mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010/rectangle"]];
+}
+
+-(void)setUpISMIP_HOM_A010Test_GPU:(id __nonnull)model {
+    
+    [self setUpISMIP_HOM_A010Test:model];
+    
+    FEMModel *mod = (FEMModel *)model;
+    
+    for (FEMSolution *solution in mod.solutions) {
+        if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@"/Users/hakimeseddik/Documents/Saino/Saino/NavierStokesAssemblyKernel" forKey:@"gpu kernel source file"];
+            [solution.solutionInfo setObject:@"ice flow" forKey:@"target application for gpu stokes"];
+        }
+    }
 }
 
 @end

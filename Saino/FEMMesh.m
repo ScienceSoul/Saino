@@ -302,7 +302,7 @@
     _elementNodeIndexesStore = intvec(0, (self.numberOfBulkElements*self.maxElementDofs)-1);
     indx = 0;
     for (int t=0; t<self.numberOfBulkElements; t++) {
-        for (int i=0; i<_elements[t].Type.NumberOfNodes; i++) {
+        for (int i=0; i<_elements[t].NDOFs; i++) {
             _elementNodeIndexesStore[indx] = _elements[t].NodeIndexes[i];
             indx++;
         }

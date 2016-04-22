@@ -380,7 +380,7 @@ void __attribute__((overloadable)) fatal(char head[], char message[], int n)
     fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
     fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %s %d.\n", head, message, n);
+    fprintf(stderr, "%s: %s %d\n", head, message, n);
     fprintf(stderr, "\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
@@ -396,7 +396,7 @@ void __attribute__((overloadable)) fatal(char head[], char message[], double n)
     fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
     fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %s %f.\n", head, message, n);
+    fprintf(stderr, "%s: %s %f\n", head, message, n);
     fprintf(stderr, "\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
@@ -410,10 +410,10 @@ void __attribute__((overloadable)) warning(char head[], char message[])
 
 void __attribute__((overloadable)) warning(char head[], char message[], int n)
 {
-    printf("%s: %s %d.\n", head, message, n);
+    printf("%s: %s %d\n", head, message, n);
 }
 
 void __attribute__((overloadable)) warning(char head[], char message[], double n)
 {
-    printf("%s: %s %f.\n", head, message, n);
+    printf("%s: %s %f\n", head, message, n);
 }

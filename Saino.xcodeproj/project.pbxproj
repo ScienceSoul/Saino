@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01B39C6B1CC5E0B300E62601 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01B39C6A1CC5E0B300E62601 /* OpenGL.framework */; };
 		73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
 		730C42E21B27EDF1009411B7 /* Saino_App_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42D01B2686E2009411B7 /* Saino_App_Tests.m */; };
 		730C42E61B3A895B009411B7 /* SainoViewControler.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42E51B3A895B009411B7 /* SainoViewControler.m */; };
@@ -229,6 +230,7 @@
 
 /* Begin PBXFileReference section */
 		014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = NavierStokesAssemblyKernel.cl; sourceTree = "<group>"; };
+		01B39C6A1CC5E0B300E62601 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		73059E42186BD5F8008B5E44 /* Numerics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Numerics.c; sourceTree = "<group>"; };
@@ -448,6 +450,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01B39C6B1CC5E0B300E62601 /* OpenGL.framework in Frameworks */,
 				738ABA891BC7CFF30038AAEF /* Accelerate.framework in Frameworks */,
 				738ABA8A1BC7CFF30038AAEF /* OpenCL.framework in Frameworks */,
 			);
@@ -542,6 +545,7 @@
 		7315512013583FFD004CCD09 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				01B39C6A1CC5E0B300E62601 /* OpenGL.framework */,
 				739B4140189F7DF700F3F266 /* Accelerate.framework */,
 				73051E2D17F2B582001861D8 /* OpenCL.framework */,
 				7315512113583FFD004CCD09 /* Cocoa.framework */,

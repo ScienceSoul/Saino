@@ -908,3 +908,4 @@ GaussIntegrationPoints * __nonnull GaussQuadratureBrick(int np) {
 }
 
 extern inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull element, int * __nullable np, int * __nullable relOrder);
+extern inline GaussIntegrationPoints * __nonnull GaussQuadratureGPU(int ElementCode, int NumberOfGaussPoints);

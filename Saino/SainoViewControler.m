@@ -39,6 +39,8 @@
             test.do_natural_convection = YES;
         } else if ([[sender title] isEqualToString:@"ISMIP-A010"]) {
             test.do_ismip_hom_A010 = YES;
+        } else if ([[sender title] isEqualToString:@"ISMIP-A010 GPU"]) {
+            test.do_ismip_hom_A010_gpu = YES;
         }
         _job = [[FEMJob alloc] init];
         [_job runWithInitialize:initialize];

@@ -158,3 +158,57 @@ inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull 
     return IntegPoint;
 }
 
+/****************************************************************************************************
+ 
+    This function is similar to GaussQuadrature() but uses directly the arguments that define the
+    the element code used by the bulk elements and the number of GaussPoints. This routine is used
+    for the implementation in GPU since we need to compute the integration points before sending
+    them to the OpenCL kernel.
+ 
+****************************************************************************************************/
+inline GaussIntegrationPoints * __nonnull GaussQuadratureGPU(int ElementCode, int NumberOfGaussPoints) {
+    
+    GaussIntegrationPoints *IntegPoint = NULL;
+    
+    switch (ElementCode / 100) {
+            
+        case 1:
+            IntegPoint = GaussQuadrature0D(NumberOfGaussPoints);
+            break;
+            
+        case 2:
+            IntegPoint = GaussQuadrature1D(NumberOfGaussPoints);
+            break;
+            
+        case 3:
+            // TODO: add support for p element
+            IntegPoint = GaussQuadratureTriangle(NumberOfGaussPoints);
+            break;
+            
+        case 4:
+            IntegPoint = GaussQuadratureQuad(NumberOfGaussPoints);
+            break;
+            
+        case 5:
+            // TODO: add support for p element
+            IntegPoint = GaussQuadratureTetra(NumberOfGaussPoints);
+            break;
+            
+        case 6:
+            // TODO: add support for p element
+            IntegPoint = GaussQuadraturePyramid(NumberOfGaussPoints);
+            break;
+            
+        case 7:
+            // TODO: add support for p element
+            IntegPoint = GaussQuadratureWedge(NumberOfGaussPoints);
+            break;
+            
+        case 8:
+            IntegPoint = GaussQuadratureBrick(NumberOfGaussPoints);
+            break;
+    }
+    
+    return IntegPoint;
+}
+
