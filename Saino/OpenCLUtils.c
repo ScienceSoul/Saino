@@ -25,7 +25,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
     err = clGetPlatformIDs(1, NULL, &num_platforms);
     if (err < 0) {
         fprintf(stderr, "find_platforms: could not find any plateform.\n");
-        fatal("find_platforms", "Saino will abort the simulation now...");
+        fatal("find_platforms");
     }
     
     platForms = (cl_platform_id *)malloc(sizeof(cl_platform_id) * num_platforms);
@@ -38,7 +38,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
         err = clGetPlatformInfo(platForms[i], CL_PLATFORM_EXTENSIONS, 0, NULL, &ext_size);
         if (err < 0) {
             fprintf(stderr, "find_platforms: could not read extension data.\n");
-            fatal("find_platforms", "Saino will abort the simulation now...");
+            fatal("find_platforms");
         }
         
         ext_data = (char *)malloc(ext_size);
@@ -49,7 +49,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
         err = clGetDeviceIDs(platForms[i], CL_DEVICE_TYPE_GPU, 1, NULL, &num_devices);
         if (err < 0) {
             fprintf(stderr, "find_platforms: could not find any device.\n");
-            fatal("find_platforms", "Saino will abort the simulation now...");
+            fatal("find_platforms");
         }
         fprintf(stdout, "Platform %d built with %d device(s):\n", i, num_devices);
         tot_devices = tot_devices + num_devices;

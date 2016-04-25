@@ -79,7 +79,7 @@ static dispatch_once_t onceToken;
             variable = [utilities getVariableFrom:model.variables model:model name:variableName onlySearch:NULL maskName:NULL info:&found];
             if (variable == nil) {
                 fprintf(stderr, "FEMListUtilities:listParseStrToValues: can't find indpendent variable: %s for dependent variable %s.\n", [variableName UTF8String], [name UTF8String]);
-                fatal("FEMListUtilities:listParseStrToValues", "Abort program now...");
+                fatal("FEMListUtilities:listParseStrToValues");
             }
             varContainers = variable.getContainers;
             if (varContainers->sizeValues > 1) *allGlobal = NO;
@@ -234,7 +234,7 @@ static dispatch_once_t onceToken;
             if (list.type == LIST_TYPE_CONSTANT_SCALAR || list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 if (containers->fValues == NULL) {
                     fprintf(stderr, "FEMListUtilities:listGetReal: fValues not allocated in list: %s.\n", [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetReal");
                 }
             }
             
@@ -246,7 +246,7 @@ static dispatch_once_t onceToken;
             } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 if (containers->tValues == NULL) {
                     fprintf(stderr, "FEMListUtilities:listGetReal: tValues not allocated in list: %s\n", [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetReal");
                 }
                 FEMUtilities *utilities = [[FEMUtilities alloc] init];
                 buffer = doublevec(0, containers->sizeFValues3-1);
@@ -292,7 +292,7 @@ static dispatch_once_t onceToken;
                 if (minVal < *minv) {
                     fprintf(stderr, "FEMListUtilities:listGetReal: value smaller than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", minVal, *minv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetReal");
                 }
             }
             
@@ -302,7 +302,7 @@ static dispatch_once_t onceToken;
                 if (maxValue > *maxv) {
                     fprintf(stderr, "FEMListUtilities:listGetReal: value greater than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", maxValue, *maxv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetReal");
                 }
             }
             break;
@@ -344,7 +344,7 @@ static dispatch_once_t onceToken;
                 
                 if (containers->tValues == NULL) {
                     fprintf(stderr, "FEMListUtilities:listGetValueParameter: tValues not allocated in list: %s.\n", [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetValueParameter");
                 }
                 FEMUtilities *utilities = [[FEMUtilities alloc] init];
                 double *buffer = doublevec(0, containers->sizeFValues3-1);
@@ -358,14 +358,14 @@ static dispatch_once_t onceToken;
                 f = list.block(t);
             } else {
                 fprintf(stderr, "FEMListUtilities:listGetValueParameter: list type not supported.\n");
-                fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetValueParameter");
             }
             *found = YES;
             if (minv != NULL) {
                 if (f < *minv) {
                     fprintf(stderr, "FEMListUtilities:listGetValueParameter: value smaller than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *minv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetValueParameter");
                 }
             }
             
@@ -373,7 +373,7 @@ static dispatch_once_t onceToken;
                 if (f > *maxv) {
                     fprintf(stderr, "FEMListUtilities:listGetValueParameter: value greater than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *maxv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetValueParameter");
                 }
             }
             break;
@@ -410,7 +410,7 @@ static dispatch_once_t onceToken;
             if (list.type == LIST_TYPE_CONSTANT_TENSOR || list.type == LIST_TYPE_VARIABLE_TENSOR) {
                 if (containers->fValues == NULL) {
                     fprintf(stderr, "FEMListUtilities:listGetRealArray: fValues not allocated in list: %s.\n", [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetRealArray", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetRealArray");
                 }
             }
             
@@ -515,7 +515,7 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 fprintf(stderr, "FEMListUtilities:listGetConstReal: fValues not allocated in list: %s.\n", [varName UTF8String]);
-                fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetConstReal");
             }
             
             // In contrary to Elmer, we don't call any function or use MATC because even if we
@@ -528,7 +528,7 @@ static dispatch_once_t onceToken;
                 if (f < *minv) {
                     fprintf(stderr, "FEMListUtilities:listGetConstReal: value smaller than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *minv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetConstReal");
                 }
             }
             
@@ -536,7 +536,7 @@ static dispatch_once_t onceToken;
                 if (f > *maxv) {
                     fprintf(stderr, "FEMListUtilities:listGetConstReal: value greater than given value: \n");
                     fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *maxv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetConstReal");
                 }
             }
             break;
@@ -570,7 +570,7 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 fprintf(stderr, "FEMListUtilities:listGetConstRealArray: fValues not allocated in list: %s.\n", [varName UTF8String]);
-                fatal("FEMListUtilities:listGetConstRealArray", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetConstRealArray");
             }
             n1 = containers->sizeFValues1;
             n2 = containers->sizeFValues2;
@@ -622,7 +622,7 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (containers->iValues == NULL) {
                 fprintf(stderr, "FEMListUtilities:listGetIntegerArray: iValues not allocated in list: %s.\n", [varName UTF8String]);
-                fatal("FEMListUtilities:listGetIntegerArray", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetIntegerArray");
             }
             n = containers->sizeIValues;
             
@@ -666,7 +666,7 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (containers->iValues == NULL) {
                 fprintf(stderr, "FEMListUtilities:listGetInteger: iValues not allocated in list: %s.\n", [varName UTF8String]);
-                fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetInteger");
             }
             l = containers->iValues[0];
             *found = YES;
@@ -675,7 +675,7 @@ static dispatch_once_t onceToken;
                 if (l < *minv) {
                     fprintf(stderr, "FEMListUtilities:listGetInteger: value smaller than given value: \n");
                     fprintf(stderr, "Value: %d / Given value: %d / Property: %s.\n", l, *minv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetInteger");
                 }
             }
             
@@ -683,7 +683,7 @@ static dispatch_once_t onceToken;
                 if (l > *maxv) {
                     fprintf(stderr, "FEMListUtilities:listGetInteger: value greater than given value: \n");
                     fprintf(stderr, "Value: %d / Given value: %d / Property: %s.\n", l, *maxv, [varName UTF8String]);
-                    fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
+                    fatal("FEMListUtilities:listGetInteger");
                 }
             }
             break;
@@ -845,13 +845,13 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (containers->fValues == NULL) {
                 fprintf(stderr, "FEMListUtilities:listGetDerivativeValue: fValues not allocated in list: %s.\n", [varName UTF8String]);
-                fatal("FEMListUtilities:listGetDerivativeValue", "Saino will abort the simulation now...");
+                fatal("FEMListUtilities:listGetDerivativeValue");
             }
             
             if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                  if (containers->tValues == NULL) {
                      fprintf(stderr, "FEMListUtilities:listGetDerivativeValue: tValues not allocated in list: %s.\n", [varName UTF8String]);
-                     fatal("FEMListUtilities:listGetDerivativeValue", "Saino will abort the simulation now...");
+                     fatal("FEMListUtilities:listGetDerivativeValue");
                  }
                 utilities = [[FEMUtilities alloc] init];
                 // Apparently this routine assumes that there is only one associated dependency
@@ -1102,12 +1102,12 @@ static dispatch_once_t onceToken;
     
     if (value == NULL && block == nil) {
         fprintf(stderr, "FEMListUtilities:addIntegerInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addIntegerInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addIntegerInClassList");
         
     }
     if (value != NULL && block != nil) {
         fprintf(stderr, "FEMListUtilities:addIntegerInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addIntegerInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addIntegerInClassList");
     }
     if (value != NULL) {
         containers->iValues[0] = *value;
@@ -1183,12 +1183,12 @@ static dispatch_once_t onceToken;
     containers->sizeIValues = n;
     if (values == NULL && block == nil) {
         fprintf(stderr, "FEMListUtilities:addIntegerArrayInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addIntegerArrayInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addIntegerArrayInClassList");
         
     }
     if (values != NULL && block != nil) {
         fprintf(stderr, "FEMListUtilities:addIntegerArrayInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addIntegerArrayInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addIntegerArrayInClassList");
     }
     if (values != NULL) {
         memcpy(containers->iValues, values, n*sizeof(int));
@@ -1269,12 +1269,12 @@ static dispatch_once_t onceToken;
     
     if (value == NULL && block == nil) {
         fprintf(stderr, "FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addConstRealInClassList");
 
     }
     if (value != NULL && block != nil) {
         fprintf(stderr, "FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addConstRealInClassList");
     }
     if (value != NULL) {
         containers->fValues[0][0][0] = *value;
@@ -1355,12 +1355,12 @@ static dispatch_once_t onceToken;
     
     if (fvalues == NULL && block == nil) {
         fprintf(stderr, "FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addConstRealInClassList");
         
     }
     if (fvalues != NULL && block != nil) {
         fprintf(stderr, "FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
-        fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
+        fatal("FEMListUtilities:addConstRealInClassList");
     }
     if (fvalues != NULL) {
         for (i=0; i<m; i++) {

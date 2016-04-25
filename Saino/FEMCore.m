@@ -2573,7 +2573,7 @@ static const int PRECOND_VANKA     =  560;
             fprintf(stderr, "FEMCore:SolveEquations: \n");
             fprintf(stderr, "FEMCore:SolveEquations: coupled system iteration: %d.\n", i);
             fprintf(stderr, "FEMCore:SolveEquations: \n");
-            fatal("FEMCore:SolveEquations", "Saino will abort the simulation now...");
+            fatal("FEMCore:SolveEquations");
         }
     }
 }
@@ -2669,7 +2669,7 @@ static const int PRECOND_VANKA     =  560;
             [solution.builtInSolution solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
         } else {
             fprintf(stderr, "FEMCore:FEMCore_singleSolution: can't proceed further because there is no class implementation for %s.\n", [(solution.solutionInfo)[@"equation"] UTF8String]);
-            fatal("FEMCore:FEMCore_singleSolution", "Saino will abort the simulation now...");
+            fatal("FEMCore:FEMCore_singleSolution");
         }
 
     } else if (solution.plugInPrincipalClassInstance != nil) { // Otherwise call the user-provided plug-in, it will also be deallocated with its asssociated solution
@@ -2677,7 +2677,7 @@ static const int PRECOND_VANKA     =  560;
         [_instance solutionComputer:solution model:model timeStep:dt transientSimulation:transient];
     } else {
         fprintf(stderr, "FEMCore:FEMCore_singleSolution: can't proceed further because there is built-in computer or plug-in associated with the equation %s.\n", [(solution.solutionInfo)[@"equation"] UTF8String]);
-        fatal("FEMCore:FEMCore_singleSolution", "Saino will abort the simulation now...");
+        fatal("FEMCore:FEMCore_singleSolution");
     }
 }
 
@@ -2993,7 +2993,7 @@ static dispatch_once_t onceToken;
             }
         } else {
             fprintf(stderr, "FEMCore:FEMCore_initializeTimeStepInSolution: unknown time stepping method: %s.\n", [method UTF8String]);
-            fatal("FEMCore:FEMCore_initializeTimeStepInSolution", "Saino will abort the simulation now...");
+            fatal("FEMCore:FEMCore_initializeTimeStepInSolution");
         }
     }
     
@@ -3595,7 +3595,7 @@ static dispatch_once_t onceToken;
         currentElement = element;
     } else {
         fprintf(stderr, "FEMCore:getActiveElement: invalid element number requested: %d\n", t);
-        fatal("FEMCore:getActiveElement", "Saino will abort the simulation now...");
+        fatal("FEMCore:getActiveElement");
     }
     return element;
 }
@@ -4541,7 +4541,7 @@ static dispatch_once_t onceToken;
     dgetrf_(&n, &n, a, &lda, ipiv, &info);
     if (info < 0 || info > 0) {
         fprintf(stderr, "FEMCore:solveWithLapackMatrix: error in lapack routine dgetrf. Error code: %d.\n", info);
-        fatal("FEMCore:solveWithLapackMatrix", "Saino will abort the simulation now...");
+        fatal("FEMCore:solveWithLapackMatrix");
     }
     
     trans = "N";
@@ -4549,7 +4549,7 @@ static dispatch_once_t onceToken;
     dgetrs_(trans, &n, &nhrs, a, &lda, ipiv, x, &n, &info);
     if (info < 0 || info > 0) {
         fprintf(stderr, "FEMCore:solveWithLapackMatrix: error in lapack routine dgetrs. Error code: %d.\n", info);
-        fatal("FEMCore:solveWithLapackMatrix", "Saino will abort the simulation now...");
+        fatal("FEMCore:solveWithLapackMatrix");
     }
     
     free_ivector(ipiv, 0, n-1);
@@ -7724,12 +7724,12 @@ static dispatch_once_t onceToken;
             FEMVariable *weightVar = [utilities getVariableFrom:solution.mesh.variables model:aModel name:str onlySearch:NULL maskName:NULL info:&stat];
             if (weightVar == nil) {
                 fprintf(stderr, "FEMCore:computeChange: average solution weight missing: %s.\n", [str UTF8String]);
-                fatal("FEMCore:computeChange", "Saino will abort the simulation now...");
+                fatal("FEMCore:computeChange");
             }
             variableArraysContainer *weightVarContainers = weightVar.getContainers;
             if (n != weightVarContainers->sizeValues) {
                 fprintf(stderr, "FEMCore:computeChange: field and weight mismatch: %s.\n", [str UTF8String]);
-                fatal("FEMCore:computeChange", "Saino will abort the simulation now...");
+                fatal("FEMCore:computeChange");
             }
     
             double sum;
@@ -8794,7 +8794,7 @@ static dispatch_once_t onceToken;
     } else if ([deviceType isEqualToString:@"cpu"] == YES) {
         queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);
     } else {
-        fatal("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported. Saino will abort the simulation now...");
+        fatal("FEMCore:getDispatchQueueAndInfoForDeviceType", "OpenCL device not supported.");
     }
     
     cl_uint vectorTypes[] = {CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE};

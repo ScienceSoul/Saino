@@ -1481,7 +1481,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
                 fprintf(stderr, "FEMFlowSolution:solutionComputer: %s\n", program_log);
                 free(program_log);
-                fatal("FEMFlowSolution:solutionComputer", "Saino will abort the simulation now...");
+                fatal("FEMFlowSolution:solutionComputer");
             }
             
             

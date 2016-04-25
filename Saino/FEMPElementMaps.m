@@ -298,7 +298,7 @@
     
     if (localEdge < 0) {
         fprintf(stderr, "FEMPElementMaps:getBrickFaceEdgeMap: unknown combination node for (face,node): %d %d.\n", face, node);
-        fatal("FEMPElementMaps:getBrickFaceEdgeMap", "Terminating now...");
+        fatal("FEMPElementMaps:getBrickFaceEdgeMap");
     }    
     return localEdge;
 }

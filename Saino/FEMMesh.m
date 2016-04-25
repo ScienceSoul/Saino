@@ -453,13 +453,13 @@
     [meshIO openMeshAtPath:name];
     if (meshIO.info != 0) {
         fprintf(stderr, "FEMMesh:loadMeshForModel: unable to load mesh: %s.\n", [name UTF8String]);
-        fatal("FEMMesh:loadMeshForModel", "Saino will abort the simulation now...");
+        fatal("FEMMesh:loadMeshForModel");
     }
     
     [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
         fprintf(stderr, "FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %s.\n", [name UTF8String]);
-        fatal("FEMMesh:loadMeshForModel", "Saino will abort the simulation now...");
+        fatal("FEMMesh:loadMeshForModel");
     }
     
     if (bd == YES) self.numberOfBulkElements = 0;

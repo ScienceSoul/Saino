@@ -189,7 +189,7 @@ inline double detJ(double * __nonnull covariantMetricTensor, double * __nonnull 
         if (cdim < dim) {
             printf("detJForElement: element dimension larger than mesh dimension: %d vs %d\n", dim, cdim);
         }
-        fatal("detJForElement", "Programm terminating now...");
+        fatal("detJForElement");
     }
     return detG;
 }

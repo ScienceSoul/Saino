@@ -12,6 +12,9 @@
 #define FI_END 1
 #define FREE_ARG char*
 
+static int formatType;
+void format(char * __nullable head, char * __nullable message, int *iValue, double *dValue);
+
 bool * __nonnull boolvec(long nl, long nh) {
     
     bool *v;
@@ -355,65 +358,67 @@ void free_i3tensor(int * __nonnull * __nonnull * __nonnull t, long nrl, long nrh
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[])
-{
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
-    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %s\n", head, message);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    exit(-1);
+void __attribute__((overloadable)) fatal(char head[]) {
+    
+    formatType = 1;
+    format(head, NULL, NULL, NULL);
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[], int n)
-{
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
-    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %s %d\n", head, message, n);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    exit(-1);
+void __attribute__((overloadable)) fatal(char head[], char message[]) {
+    
+    formatType = 2;
+    format(head, message, NULL, NULL);
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[], double n)
-{
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "######################### SAINO Program ########################\n");
-    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
-    fprintf(stderr, "##        Please read the error message for diagnostic        ##\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %s %f\n", head, message, n);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "################################################################\n");
-    exit(-1);
+void __attribute__((overloadable)) fatal(char head[], char message[], int n) {
+    
+    formatType = 3;
+    format(head, message, &n, NULL);
+}
+
+void __attribute__((overloadable)) fatal(char head[], char message[], double n) {
+    
+    formatType = 4;
+    format(head, message, NULL, &n);
 }
 
 void __attribute__((overloadable)) warning(char head[], char message[])
 {
-    printf("%s: %s\n", head, message);
+    fprintf(stdout, "%s: %s\n", head, message);
 }
 
 void __attribute__((overloadable)) warning(char head[], char message[], int n)
 {
-    printf("%s: %s %d\n", head, message, n);
+    fprintf(stdout, "%s: %s %d\n", head, message, n);
 }
 
 void __attribute__((overloadable)) warning(char head[], char message[], double n)
 {
-    printf("%s: %s %f\n", head, message, n);
+    fprintf(stdout, "%s: %s %f\n", head, message, n);
+}
+
+void format(char * __nullable head, char * __nullable message, int *iValue, double *dValue) {
+    
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "######################### SAINO Program ########################\n");
+    fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
+    fprintf(stderr, "##        Please look at the error log for diagnostic         ##\n");
+    fprintf(stderr, "\n");
+    if (formatType == 1) {
+        fprintf(stderr, "%s: Saino will abort the simulation now...\n", head);
+    } else if (formatType == 2) {
+        fprintf(stderr, "%s: %s\n", head, message);
+    } else if (formatType == 3) {
+        fprintf(stderr, "%s: %s %d\n", head, message, *iValue);
+    } else if (formatType == 4) {
+        fprintf(stderr, "%s: %s %f\n", head, message, *dValue);
+    }
+    if (formatType == 2 || formatType == 3 || formatType == 4)
+        fprintf(stderr, "Saino will abort the simulation now...\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "################################################################\n");
+    fprintf(stderr, "################################################################\n");
+    exit(-1);
 }

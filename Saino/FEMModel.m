@@ -154,7 +154,7 @@
         self.coordinates = polar;
     } else {
         fprintf(stderr, "FEMModel:FEMModel_setCoordinateSystem: unknown global coordinate system: %s.\n", [csys UTF8String]);
-        fatal("FEMModel:FEMModel_setCoordinateSystem", "Saino will abort the simulation now...");
+        fatal("FEMModel:FEMModel_setCoordinateSystem");
     }
 }
 

@@ -1622,7 +1622,7 @@ jump:
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
                 fprintf(stderr, "FEMJob:runWithInitialize: Unable to find model description file [' %s '].\n", [self.modelName UTF8String]);
-                fatal("FEMJob:runWithInitialize","Saino will abort the simulation now...");
+                fatal("FEMJob:runWithInitialize");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             

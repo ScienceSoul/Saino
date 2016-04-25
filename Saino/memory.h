@@ -15,6 +15,7 @@
 
 #include "Constructors.h"
 
+void __attribute__((overloadable)) fatal(char head[]);
 void __attribute__((overloadable)) fatal(char head[], char message[]);
 void __attribute__((overloadable)) fatal(char head[], char message[], int n);
 void __attribute__((overloadable)) fatal(char head[], char message[], double n);

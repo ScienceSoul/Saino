@@ -165,7 +165,7 @@
                     }
                 } else {
                     fprintf(stderr, "FEMMaterialModels:effectiveViscosity: can't find variable %s to inquire temperature field for Glen.\n", [temperatureName UTF8String]);
-                    fatal("FEMMaterialModels:effectiveViscosity", "Saino will abort the simulation now...");
+                    fatal("FEMMaterialModels:effectiveViscosity");
                 }
             } else {
                 temp = cblas_ddot(n, integration.basis, 1, buffer.vector, 1);

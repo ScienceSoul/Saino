@@ -121,7 +121,7 @@
         if (_maskExists == YES) _maskPerm = maskVarContainers->Perm;
         if (var == nil) {
             fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: problem in retrieving variable used for the mapping.\n");
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer");
         } else varContainers = var.getContainers;
         _coord = varContainers->Values;
         
@@ -192,7 +192,7 @@
                 }
             } else {
                 fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: top surface variable is missing: %s.\n", [varName UTF8String]);
-                fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer");
             }
         }
     }
@@ -248,7 +248,7 @@
                 }
             } else {
                 fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: bottom surface variable is missing: %s.\n", [varName UTF8String]);
-                fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+                fatal("FEMStructuredMeshMapper:solutionComputer");
             }
         }
     }
@@ -312,7 +312,7 @@
             }
         } else {
             fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: variable does not exist: %s.\n", [varName UTF8String]);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer");
         }
     }
     
@@ -331,7 +331,7 @@
             }
         } else {
             fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: variable does not exist: %s.\n", [varName UTF8String]);
-            fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
+            fatal("FEMStructuredMeshMapper:solutionComputer");
         }
     }
     
