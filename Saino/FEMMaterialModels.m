@@ -164,7 +164,7 @@
                         temp = temp + integration.basis[i] * tempContainers->Values[tempContainers->Perm[element->NodeIndexes[i]]];
                     }
                 } else {
-                    NSLog(@"FEMMaterialModels:effectiveViscosity: can't find variable %@ to inquire temperature field for Glen.\n", temperatureName);
+                    fprintf(stderr, "FEMMaterialModels:effectiveViscosity: can't find variable %s to inquire temperature field for Glen.\n", [temperatureName UTF8String]);
                     fatal("FEMMaterialModels:effectiveViscosity", "Saino will abort the simulation now...");
                 }
             } else {
@@ -177,31 +177,31 @@
             tLimit = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"limit temperature" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
                 tLimit = -10.0;
-                NSLog(@"FEMMaterialModels:effectiveViscosity: limit temperature not found. Setting -10.0.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: limit temperature not found. Setting -10.0.\n");
             }
             
             a1 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"rate factor 1" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
                 a1 = 3.985e-13;
-                NSLog(@"FEMMaterialModels:effectiveViscosity: rate factor 1 not found. Setting 3.985e-13.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: rate factor 1 not found. Setting 3.985e-13.\n");
             }
             
             a2 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"rate factor 2" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
                 a2 = 1.916e03;
-                NSLog(@"FEMMaterialModels:effectiveViscosity: rate factor 2 not found. Setting 1.916e03.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: rate factor 2 not found. Setting 1.916e03.\n");
             }
             
             q1 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"activation energy 1" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
                 a1 = 60.0e03;
-                NSLog(@"FEMMaterialModels:effectiveViscosity: activation energy 1 not found. Setting 60.0e03.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: activation energy 1 not found. Setting 60.0e03.\n");
             }
             
             q2 = [listUtilities listGetConstReal:model inArray:materialAtID.valuesList forVariable:@"activation energy 2" info:&found minValue:NULL maxValue:NULL];
             if (found == NO) {
                 a2 = 139.0e03;
-                NSLog(@"FEMMaterialModels:effectiveViscosity: activation energy 2 not found. Setting 139.0e03.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: activation energy 2 not found. Setting 139.0e03.\n");
             }
 
             if (temp <= tLimit) {
@@ -210,7 +210,7 @@
                 arrheniusFactor = a2 * exp( -q2/(r * (273.15 + temp)) );
             } else {
                 arrheniusFactor = a2 * exp( -q2/(r * 273.15) );
-                NSLog(@"FEMMaterialModels:effectiveViscosity: positive temperature detected in Glen - limiting to zero.\n");
+                fprintf(stdout, "FEMMaterialModels:effectiveViscosity: positive temperature detected in Glen - limiting to zero.\n");
             }
             
         } else {
@@ -494,7 +494,7 @@
     } else if ([viscosityFlag isEqualToString:@"user function"] == YES) {
         // TODO: implement this later if we need it
     } else {
-        NSLog(@"FEMMaterialModels:effectiveViscosity: unknown material model.\n");
+        fprintf(stdout, "FEMMaterialModels:effectiveViscosity: unknown material model.\n");
     }
     
     if (buffer.vector != NULL) {
@@ -573,7 +573,7 @@
         // TODO: implement this later if we need it
         // In that case change the method argument temperature from __nullable to __nonnull
     } else {
-        NSLog(@"FEMMaterialModels:effectiveConductivity: unknown material model.\n");
+        fprintf(stdout, "FEMMaterialModels:effectiveConductivity: unknown material model.\n");
     }
     
     return pCond;

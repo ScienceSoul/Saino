@@ -52,7 +52,7 @@
         _pyramidFaceMap = intmatrix(0, 4, 0, 3);
         _pyramidFaceEdgeMap = intmatrix(0, 4, 0, 3);
         
-        NSLog(@"FEMPElementMaps:FEMPElementMaps: initalizing mappings for elements...\n");
+        fprintf(stdout, "FEMPElementMaps:FEMPElementMaps: initalizing mappings for elements...\n");
         
         // Quad edge mappings
         _quadEdgeMap[0][0] = 0; _quadEdgeMap[0][1] = 1;
@@ -245,7 +245,7 @@
             if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
             break;
         default:
-            NSLog(@"FEMPElementMaps:bubbleDofsForElement: unsupported p element type.\n");
+            fprintf(stdout, "FEMPElementMaps:bubbleDofsForElement: unsupported p element type.\n");
             bubbleDofs = p;
             break;
     }
@@ -297,7 +297,7 @@
     localEdge = _brickFaceEdgeMap[face][node];
     
     if (localEdge < 0) {
-        NSLog(@"FEMPElementMaps:getBrickFaceEdgeMap: unknown combination node for (face,node): %d %d.\n", face, node);
+        fprintf(stderr, "FEMPElementMaps:getBrickFaceEdgeMap: unknown combination node for (face,node): %d %d.\n", face, node);
         fatal("FEMPElementMaps:getBrickFaceEdgeMap", "Terminating now...");
     }    
     return localEdge;
@@ -410,7 +410,7 @@
     int n;
     
     if ([self isPElement:element] == NO) {
-        NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: element given not a p element.\n");
+        fprintf(stdout, "FEMPElementMaps:getRefPElementNodesForElement: element given not a p element.\n");
         return;
     }
     
@@ -452,7 +452,7 @@
             w[0] = -1.0; w[1] = -1.0; w[2] = -1.0; w[3] = -1.0; w[4] = 1.0; w[5] = 1.0; w[6] = 1.0; w[7] = 1.0;
             break;
         default:
-            NSLog(@"FEMPElementMaps:getRefPElementNodesForElement: unknown element type.\n");
+            fprintf(stdout, "FEMPElementMaps:getRefPElementNodesForElement: unknown element type.\n");
             break;
     }
 }
@@ -471,7 +471,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getFaceMapForElement: element is not a p element.");
+        fprintf(stdout, "FEMPElementMaps:getFaceMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -519,7 +519,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getEdgeMapForElement: element is not a p element.");
+        fprintf(stdout, "FEMPElementMaps:getEdgeMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -573,7 +573,7 @@
     
     // Not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getFaceEdgeMapForElement: element is not a p element.");
+        fprintf(stdout, "FEMPElementMaps:getFaceEdgeMapForElement: element is not a p element.");
         map = NULL;
         return;
     }
@@ -629,7 +629,7 @@
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getBoundaryMapForElement: element not p element.");
+        fprintf(stdout, "FEMPElementMaps:getBoundaryMapForElement: element not p element.");
         return;
     }
     
@@ -673,7 +673,7 @@
     
     // Method not defined for non p elements
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getFaceEdgeMapForElement: element not p element.");
+        fprintf(stdout, "FEMPElementMaps:getFaceEdgeMapForElement: element not p element.");
         return;
     }
     
@@ -770,7 +770,7 @@
             if (p >= 4) faceDofs = (p-2)*(p-3)/2;
             break;
         default:
-            NSLog(@"FEMPElementMaps:getFaceDofsForElement: unsupported p element type.");
+            fprintf(stdout, "FEMPElementMaps:getFaceDofsForElement: unsupported p element type.");
             faceDofs = p;
             break;
     }
@@ -809,7 +809,7 @@
     Element_t *edges;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getEdgePForElement: element not p element.\n");
+        fprintf(stdout, "FEMPElementMaps:getEdgePForElement: element not p element.\n");
         return edgep = 0;
     }
     
@@ -835,7 +835,7 @@
     Element_t *faces;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"getEdgePForElement: element not p element.\n");
+        fprintf(stdout, "getEdgePForElement: element not p element.\n");
         return facep = 0;
     }
     
@@ -859,7 +859,7 @@
     int edgep, facep, bubblep, nb, maxp;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getNumberOfGaussPointsForElement: element not p element.\n");
+        fprintf(stdout, "FEMPElementMaps:getNumberOfGaussPointsForElement: element not p element.\n");
         return 0;
     }
     
@@ -929,7 +929,7 @@
     int bubbleDofs;
     
     if (element->Pdefs == NULL) {
-        NSLog(@"FEMPElementMaps:getBubbleDofsForElement: element not p element.\n");
+        fprintf(stdout, "FEMPElementMaps:getBubbleDofsForElement: element not p element.\n");
         return bubbleDofs = 0;
     }
     
@@ -957,7 +957,7 @@
             if (p >= 6) bubbleDofs = (p-3)*(p-4)*(p-5)/6;
             break;
         default:
-            NSLog(@"getBubbleDofsForElement: unsupported p element type.\n");
+            fprintf(stdout, "getBubbleDofsForElement: unsupported p element type.\n");
             bubbleDofs = p;
             break;
     }

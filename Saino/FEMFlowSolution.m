@@ -249,7 +249,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
     
     if (l > 0) {
-        NSLog(@"FEMFlowSolution:FEMFlowSolution_checkCircleBoundaryModel: number of elements on circle: %d.\n", l);
+        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_checkCircleBoundaryModel: number of elements on circle: %d.\n", l);
     }
 }
 
@@ -711,7 +711,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                             tDiff = 1.0 - _heatExpansionCoeff[i] * (temperature[k] - _referenceTemperature[i]);
                             
                             if (tDiff <= 0.0) {
-                                NSLog(@"FEMFlowSolution:solutionComputer: zero or negative density.\n");
+                                fprintf(stdout, "FEMFlowSolution:solutionComputer: zero or negative density.\n");
                             }
                         } else {
                             tDiff = -_heatExpansionCoeff[i] * (temperature[k] - _referenceTemperature[i]);
@@ -1094,7 +1094,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     if (solution.matrix == nil) return;
     
-    NSLog(@"FEMFlowSolution:solutionComputer: solving the Navier-Stokes equations.\n");
+    fprintf(stdout, "FEMFlowSolution:solutionComputer: solving the Navier-Stokes equations.\n");
     
     if ((solution.solutionInfo)[@"solver coordinate system"] != nil) {
         localCoords = (solution.solutionInfo)[@"solver coordinate system"];
@@ -1106,21 +1106,21 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         if ([localCoords isEqualToString:@"cartesian 2d"] == YES) {
             coordinatesSystems.coordinates = 1;
             model.dimension = 2;
-            NSLog(@"FEMFlowSolution:solutionComputer: Solution coordinate system is cartesian 2D.\n");
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: Solution coordinate system is cartesian 2D.\n");
         } else if ([localCoords isEqualToString:@"cartesian 3d"] == YES) {
             coordinatesSystems.coordinates = 1;
             model.dimension = 3;
-            NSLog(@"FEMFlowSolution:solutionComputer: Solution coordinate system is cartesian 3D.\n");
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: Solution coordinate system is cartesian 3D.\n");
         } else if ([localCoords isEqualToString:@"axi symmetric"] == YES) {
             coordinatesSystems.coordinates = 4;
             model.dimension = 2;
-            NSLog(@"FEMFlowSolution:solutionComputer: Solution coordinate system is axi symmetric.\n");
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: Solution coordinate system is axi symmetric.\n");
         } else if ([localCoords isEqualToString:@"cylindric symmetric"] == YES) {
             coordinatesSystems.coordinates = 3;
             model.dimension = 3;
-            NSLog(@"FEMFlowSolution:solutionComputer: Solution coordinate system is cylindric symmetric.\n");
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: Solution coordinate system is cylindric symmetric.\n");
         } else {
-            NSLog(@"FEMFlowSolution:solutionComputer: Solution coordinate system not recognized, using original.\n");
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: Solution coordinate system not recognized, using original.\n");
         }
     }
     
@@ -1412,7 +1412,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             _pseudoPressure[i] = flowContainers->Values[i];
         }
         vDSP_sveD(_pseudoPressure, 1, &sum, _sizePseudoPressure);
-        NSLog(@"FEMFlowSolution:solutionComputer: pseudoPressure mean: %f.\n", sum/_sizePseudoPressure);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: pseudoPressure mean: %f.\n", sum/_sizePseudoPressure);
         
         pseudoCompressibilityScale = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"artificial compressibility scaling" info:&found minValue:NULL maxValue:NULL];
         if (found == NO) pseudoCompressibilityScale = 1.0;
@@ -1479,7 +1479,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 char *program_log = (char *)malloc(log_size+1);
                 program_log[log_size] = '\0';
                 clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-                NSLog(@"FEMFlowSolution:solutionComputer: %s\n", program_log);
+                fprintf(stderr, "FEMFlowSolution:solutionComputer: %s\n", program_log);
                 free(program_log);
                 fatal("FEMFlowSolution:solutionComputer", "Saino will abort the simulation now...");
             }
@@ -1502,13 +1502,13 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         at0 = realtime();
         at1 = realtime();
         
-        NSLog(@"FEMFlowSolution:solutionComputer:\n");
-        NSLog(@"FEMFlowSolution:solutionComputer:\n");
-        NSLog(@"FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
-        NSLog(@"FEMFlowSolution:solutionComputer: NAVIER-STOKES ITERATION %d.\n", iter);
-        NSLog(@"FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
-        NSLog(@"FEMFlowSolution:solutionComputer:\n");
-        NSLog(@"FEMFlowSolution:solutionComputer: Starting Assembly...\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer:\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer:\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: NAVIER-STOKES ITERATION %d.\n", iter);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: -----------------------------------------------------------\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer:\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: Starting Assembly...\n");
 
         [core initializeToZeroMatrix:solution.matrix forceVector: matContainers->RHS sizeForceVector:matContainers->sizeRHS model:model solution:solution];
         
@@ -1599,7 +1599,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
         
         [core defaultFinishBulkAssemblySolution:solution bulkUpdate:NULL];
-        NSLog(@"FEMFlowSolution:solutionComputer: Assembly done.\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: Assembly done.\n");
         
         // Newmann and Newton boundary conditions
         NSString *normalTangentialName = [@"normal-tangential " stringByAppendingString:[solution.variable canonicalizeName]];
@@ -1805,7 +1805,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         // Dirichlet boundary conditions
         [core dirichletBoundaryConditions:model inSolution:solution usingOffset:NULL offDiaginalMatrix:NULL];
-        NSLog(@"FEMFlowSolution:solutionComputer: Dirichlet conditions done.\n");
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: Dirichlet conditions done.\n");
         
         // Solve the system and check for convergence
         at = cputime() - at;
@@ -1817,8 +1817,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         st = cputime() -  st;
         totat = totat + at;
         totst = totst + st;
-        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Assembly (s): %f %f.\n", iter, at, totat);
-        NSLog(@"FEMFlowSolution:solutionComputer: iter: %d, Solve (s): %f %f.\n", iter, st, totst);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: iter: %d, Assembly (s): %f %f.\n", iter, at, totat);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: iter: %d, Solve (s): %f %f.\n", iter, st, totst);
         
         n = _nsdofs * _localNodes;
         
@@ -1857,8 +1857,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
         
         relativeChange = solution.variable.nonLinChange;
-        NSLog(@"FEMFlowSolution:solutionComputer: result norm: %e.\n", solution.variable.norm);
-        NSLog(@"FEMFlowSolution:solutionComputer: relative change: %e.\n", relativeChange);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: result norm: %e.\n", solution.variable.norm);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: relative change: %e.\n", relativeChange);
         
         if (relativeChange < newtonTol || iter > newtonIter) newtonLinearization = YES;
         if (relativeChange < nonLinearTol && iter < nonLinearIter) break;

@@ -45,7 +45,7 @@
 		m_currentInset = m_totalFileLength;						
 		m_prevDelimiterRange = NSMakeRange(m_currentInset, 1);			
 		
-		NSLog(@"FileReader:initWithFilePath: %qu characters in %@.\n", m_totalFileLength, [filePath lastPathComponent]); /* DEBUG LOG */
+		fprintf(stdout, "FileReader:initWithFilePath: %qu characters in %s.\n", m_totalFileLength, [[filePath lastPathComponent] UTF8String]); /* DEBUG LOG */
 	}
 	return self;
 }

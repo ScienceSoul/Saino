@@ -36,7 +36,7 @@
                 return 0;
                 break;
             default:
-                NSLog(@"SIOModelManager:SIOModelManager_mkdir: unexpected error at mkdir.\n");
+                fprintf(stdout, "SIOModelManager:SIOModelManager_mkdir: unexpected error at mkdir.\n");
                 break;
         }
         return -1;
@@ -55,19 +55,19 @@
     if (rc == -1) {
         switch (errno) {
             case EACCES:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: permissions denied for directory:%@.\n", dir);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: permissions denied for directory:%s.\n", [dir UTF8String]);
                 break;
             case EIO:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: i/o error in directory:%@.\n", dir);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: i/o error in directory:%s.\n", [dir UTF8String]);
                 break;
             case ENOENT:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: no such directory:%@.\n", dir);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: no such directory:%s.\n", [dir UTF8String]);
                 break;
             case ENOTDIR:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: not a directory:%@.\n", dir);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: not a directory:%s.\n", [dir UTF8String]);
                 break;
             default:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: unexpected error at chdir.\n");
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: unexpected error at chdir.\n");
                 break;
         }
         return -1;
@@ -88,19 +88,19 @@
     if (rc == -1) {
         switch (errno) {
             case EACCES:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: permissions denied for:%@.\n", model);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: permissions denied for:%s.\n", [model UTF8String]);
                 break;
             case EIO:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: i/o error in:%@.\n", model);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: i/o error in:%s.\n", [model UTF8String]);
                 break;
             case ENOENT:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: no such model:%@.\n", model);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: no such model:%s.\n", [model UTF8String]);
                 break;
             case ENOTDIR:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: not a directory:%@.\n", model);
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: not a directory:%s.\n", [model UTF8String]);
                 break;
             default:
-                NSLog(@"SIOModelManager:SIOModelManager_chdir: unexpected error at chdir.\n");
+                fprintf(stdout, "SIOModelManager:SIOModelManager_chdir: unexpected error at chdir.\n");
                 break;
         }
         return -1;
@@ -114,11 +114,11 @@
     if (rc) {
         // We need read/write/exec permissions, however, since we could stat, we can search
         if (rc_access == -1) {
-            NSLog(@"SIOModelManager:SIOModelManager_checkModel: no permission to operate in %@.\n", model);
+            fprintf(stdout, "SIOModelManager:SIOModelManager_checkModel: no permission to operate in %s.\n", [model UTF8String]);
             return -1;
         }
     } else {
-        NSLog(@"SIOModelManager:SIOModelManager_checkModel: %@ is not a directory.\n", model);
+        fprintf(stdout, "SIOModelManager:SIOModelManager_checkModel: %s is not a directory.\n", [model UTF8String]);
         return -1;
     }
     
@@ -200,12 +200,12 @@
     } else if ([mode isEqualToString:@"write"]) {
         fstr = [NSFileHandle fileHandleForWritingAtPath:name];
     } else {
-        NSLog(@"SIOModelManager:openStream: error, operation not supported.\n");
+        fprintf(stdout, "SIOModelManager:openStream: error, operation not supported.\n");
         return -1;
     }
     
     if (fstr == nil) {
-        NSLog(@"SIOModelManager:openStream: could not open %@.\n", name);
+        fprintf(stdout, "SIOModelManager:openStream: could not open %s.\n", [name UTF8String]);
         return -1;
     }
     

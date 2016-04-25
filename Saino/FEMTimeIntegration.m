@@ -22,7 +22,7 @@
     if (rows != NULL) {
         nb = *rows;
     } else {
-        NSLog(@"fractionalStepInSolution: dimension(s) missing.");
+        fprintf(stdout, "fractionalStepInSolution: dimension(s) missing.");
         return;
     }
     
@@ -88,7 +88,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"bdfLocalInSolution: dimension(s) missing.");
+        fprintf(stdout, "bdfLocalInSolution: dimension(s) missing.");
         return;
     }
     
@@ -176,7 +176,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"vbdfLocalInSolution: dimension(s) missing.");
+        fprintf(stdout, "vbdfLocalInSolution: dimension(s) missing.");
         return;
     }
 
@@ -196,7 +196,7 @@
         a[3] = -(dts[0]/dts[2]) * (dts[0]+dts[1]) / (dts[1]+dts[2]) / (dts[0]+dts[1]+dts[2]);
     }
     if (order > 3) {
-        NSLog(@"FEMTimeIntegration:vbdfLocalInSolution: variable time step BDF implemented only up to order 3.\n");
+        fprintf(stdout, "FEMTimeIntegration:vbdfLocalInSolution: variable time step BDF implemented only up to order 3.\n");
     }
     
     for (i=0; i<nb1; i++) {
@@ -227,7 +227,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"newMarkBetaInSolution: dimension(s) missing.");
+        fprintf(stdout, "newMarkBetaInSolution: dimension(s) missing.");
         return;
     }
 
@@ -255,7 +255,7 @@
         nb1 = *rows;
         nb2 = *cols;
     } else {
-        NSLog(@"bossakSecondOrder: dimension(s) missing.");
+        fprintf(stdout, "bossakSecondOrder: dimension(s) missing.");
         return;
     }
     

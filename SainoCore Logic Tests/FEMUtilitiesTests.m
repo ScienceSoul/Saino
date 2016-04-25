@@ -35,7 +35,7 @@
     int dofs = 3;
     for (int i=1; i<=dofs; i++) {
         NSString *varName = [self.utilities appendNameFromString:testString2D component:&i];
-        NSLog(@"%@\n", varName);
+        fprintf(stdout, "%s\n", [varName UTF8String]);
         if (i == 1) {
             XCTAssertTrue([varName isEqualToString:@"velocity 1"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 2D. Should give 'velocity 1'");
         } else if (i == 2) {
@@ -49,7 +49,7 @@
     dofs = 4;
     for (int i=1; i<=dofs; i++) {
         NSString *varName = [self.utilities appendNameFromString:testString3D component:&i];
-        NSLog(@"%@\n", varName);
+        fprintf(stdout, "%s\n", [varName UTF8String]);
         if (i == 1) {
             XCTAssertTrue([varName isEqualToString:@"velocity 1"], @"FEMUtilitiesTests: Method appendNameFromString:component: failed to retrieve correct variable name in 3D. Should give 'velocity 1'");
         } else if (i == 2) {

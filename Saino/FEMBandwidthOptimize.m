@@ -133,19 +133,19 @@
     int *permLocal, *doneIndex;
     BOOL newRoot, *doneAlready;
     
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: computing matrix structure for %@...\n", equation);
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: computing matrix structure for %s...\n", [equation UTF8String]);
     
     halfBandwidth = [self computeBandWidthInListMatrix:listMatrix size:localNodes reorder:NULL invInitialReorder:NULL] + 1;
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: done.\n");
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth without optimization: %d.\n", halfBandwidth);
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: done.\n");
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth without optimization: %d.\n", halfBandwidth);
     if (optimize == NO) {
-        NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
+        fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
         return halfBandwidth;
     }
     
     halfBandwidthBefore = halfBandwidth;
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: bandwidth optimization...\n");
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: bandwidth optimization...\n");
     
     // Search for node to start
     startNode = 0;
@@ -231,15 +231,15 @@
     free_ivector(doneIndex, 0, localNodes-1);
 
     halfBandwidthAfter = [self computeBandWidthInListMatrix:listMatrix size:localNodes reorder:perm invInitialReorder:invInitialReorder] + 1;
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: ...done.\n");
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth after optimization: %d.\n", halfBandwidthAfter);
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: ...done.\n");
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: half bandwidth after optimization: %d.\n", halfBandwidthAfter);
     halfBandwidth = halfBandwidthAfter;
     if (halfBandwidthBefore < halfBandwidth && useOptimized == NO) {
-        NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix: optimization rejected, using original ordering.");
+        fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix: optimization rejected, using original ordering.");
         halfBandwidth = halfBandwidthBefore;
         memcpy(perm, permLocal, sizeOfPerm*sizeof(int));
     }
-    NSLog(@"FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
+    fprintf(stdout, "FEMBandwidthOptimize:optimizeBandwidthInListMatrix:---------------------------------------------------------------------------\n");
 
     free_ivector(permLocal, 0, sizeOfPerm-1);
     free(doneAlready);

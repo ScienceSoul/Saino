@@ -161,7 +161,7 @@
     ListMatrixEntry_t *p = NULL;
     
     if (matrix.format != MATRIX_LIST) {
-        NSLog(@"FEMListMatrix:convertToCRSMatrix: the initial matrix type is not a list matrix.\n");
+        fprintf(stdout, "FEMListMatrix:convertToCRSMatrix: the initial matrix type is not a list matrix.\n");
         return;
     }
     matrixArraysContainer *containers = matrix.getContainers;
@@ -187,7 +187,7 @@
         rows[i+1] = rows[i] + l[i].Degree;
     }
     
-    NSLog(@"FEMListMatrix:convertToCRSMatrix: number of entries in CRS matrix: %d.\n", rows[n]);
+    fprintf(stdout, "FEMListMatrix:convertToCRSMatrix: number of entries in CRS matrix: %d.\n", rows[n]);
     
     cols = intvec(0, rows[n]-1);
     containers->sizeCols = rows[n];
@@ -218,7 +218,7 @@
     [self freeMatrix:l size:l->sizeOfContainer];
     containers->ListMatrix = NULL;
     matrix.format = MATRIX_CRS;
-    NSLog(@"FEMListMatrix:convertToCRSMatrix: matrix format changed from List to CRS.\n");
+    fprintf(stdout, "FEMListMatrix:convertToCRSMatrix: matrix format changed from List to CRS.\n");
 }
 
 @end

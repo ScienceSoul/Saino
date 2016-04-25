@@ -35,7 +35,7 @@
         }
         
         if (fabs(a[i][j]) == 0.0) {
-            NSLog(@"FEMLinearAlgebra:LUDecompositionOfMatrix: matrix is singular.\n");
+            fprintf(stdout, "FEMLinearAlgebra:LUDecompositionOfMatrix: matrix is singular.\n");
             return;
         }
         
@@ -67,7 +67,7 @@
     }
     pivot[n-1] = n-1;
     if (fabs(a[n-1][n-1]) == 0.0) {
-        NSLog(@"FEMLinearAlgebra:LUDecompositionOfMatrix: matrix is (at least almost) singular.\n");
+        fprintf(stdout, "FEMLinearAlgebra:LUDecompositionOfMatrix: matrix is (at least almost) singular.\n");
     }
 }
 
@@ -83,7 +83,7 @@
     
     for (i=0; i<n; i++) {
         if (fabs(a[i][i]) == 0.0) {
-            NSLog(@"FEMLinearAlgebra:invertMatrix: matrix is singular.\n");
+            fprintf(stdout, "FEMLinearAlgebra:invertMatrix: matrix is singular.\n");
             return;
         }
         a[i][i] = 1.0 / a[i][i];

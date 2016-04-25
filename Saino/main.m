@@ -34,10 +34,10 @@ int main(int argc, char *argv[])
     [job deallocation];
     
     // TODO: add support for parallel run
-    NSLog(@"SAINO: JOB TOTAL TIME (CPU,REAL): %lf %lf.\n", cputime()-cp, realtime()-rt);
+    fprintf(stdout, "SAINO: JOB TOTAL TIME (CPU,REAL): %lf %lf.\n", cputime()-cp, realtime()-rt);
     
     NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
-    NSLog(@"SAINO JOB FINISHED AT: %@.\n", dateString);
+    fprintf(stdout, "SAINO JOB FINISHED AT: %@.\n", dateString);
     
     return 0;
     

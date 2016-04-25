@@ -77,9 +77,9 @@
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL computeTangleMask = NO, displacementMode, found, gotUpdateVar, gotVeloVar, midLayerExists = NO;
     
-    NSLog(@"FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
-    NSLog(@"FEMStructuredMeshMapper:solutionComputer: performing mapping on a structured mesh.\n");
-    NSLog(@"FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
+    fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
+    fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: performing mapping on a structured mesh.\n");
+    fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: ----------------------------------------------\n");
     
     FEMCore *core = [FEMCore sharedCore];
     FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
@@ -107,10 +107,10 @@
         }
         if (_maskExists == YES) {
             _nsize = maskVarContainers->sizePerm;
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: applying mask of size: %d.\n", _nsize);
+            fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: applying mask of size: %d.\n", _nsize);
         } else {
             _nsize = solution.mesh.numberOfNodes;
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: applying mask to the whole mesh.\n");
+            fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: applying mask to the whole mesh.\n");
         }
         _topPointer = intvec(0, _nsize-1);
         _bottomPointer = intvec(0, _nsize-1);
@@ -120,7 +120,7 @@
         var = [meshUtilities detectExtrudedStructureMesh:solution.mesh solution:solution model:model numberofNodes:_nsize ifMask:_maskExists mask:maskVarContainers isTopActive:YES topNodePointer:_topPointer isBottomActive:YES bottomNodePointer:_bottomPointer isUpActive:NO upNodePointer:_upPointer isDownActive:NO downNodePointer:_downPointer numberOfLayers:NULL isMidNode:YES midNodePointer:_midPointer midLayerExists:&midLayerExists isNodeLayer:NO nodeLayer:NULL];
         if (_maskExists == YES) _maskPerm = maskVarContainers->Perm;
         if (var == nil) {
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: problem in retrieving variable used for the mapping.\n");
+            fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: problem in retrieving variable used for the mapping.\n");
             fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         } else varContainers = var.getContainers;
         _coord = varContainers->Values;
@@ -140,7 +140,7 @@
         deTangle = [solution.solutionInfo[@"correct surface"] boolValue];
     }
     if (deTangle == YES) {
-        NSLog(@"FEMStructuredMeshMapper:solutionComputer: correct surface in case of of intersecting upper and lower surfaces.\n");
+        fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: correct surface in case of of intersecting upper and lower surfaces.\n");
         if (solution.solutionInfo[@"minimum height"] != nil) {
             minHeight = [solution.solutionInfo[@"minimum height"] doubleValue];
         } else if (solution.solutionInfo[@"minimum height"] == nil || minHeight <= 0.0) {
@@ -160,9 +160,9 @@
                     tangleMask[i] = 1.0;
                 }
                 tangleMaskPerm = tangleMaskVarContainers->Perm;
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: output of correct surface mask to: %@.\n", tangleMaskVarName);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: output of correct surface mask to: %@.\n", tangleMaskVarName);
             } else {
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: ignoring the variable %@ given as correct surface mask because it was not found.\n", tangleMaskVarName);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: ignoring the variable %@ given as correct surface mask because it was not found.\n", tangleMaskVarName);
             }
         }
     }
@@ -191,7 +191,7 @@
                     topNode = 2;
                 }
             } else {
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: top surface variable is missing: %@.\n", varName);
+                fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: top surface variable is missing: %s.\n", [varName UTF8String]);
                 fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
             }
         }
@@ -247,7 +247,7 @@
                     bottomNode = 2;
                 }
             } else {
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: bottom surface variable is missing: %@.\n", varName);
+                fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: bottom surface variable is missing: %s.\n", [varName UTF8String]);
                 fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
             }
         }
@@ -311,7 +311,7 @@
                 fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh velocity must be one.");
             }
         } else {
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: variable does not exist: %@.\n", varName);
+            fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: variable does not exist: %s.\n", [varName UTF8String]);
             fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
@@ -330,7 +330,7 @@
                 fatal("FEMStructuredMeshMapper:solutionComputer", "The size of mesh update must be one.");
             }
         } else {
-            NSLog(@"FEMStructuredMeshMapper:solutionComputer: variable does not exist: %@.\n", varName);
+            fprintf(stderr, "FEMStructuredMeshMapper:solutionComputer: variable does not exist: %s.\n", [varName UTF8String]);
             fatal("FEMStructuredMeshMapper:solutionComputer", "Saino will abort the simulation now...");
         }
     }
@@ -401,14 +401,14 @@
         if (tangled == YES) {
             tangleCount++;
             if (deTangle == NO) {
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: mode: %d.\n", displacementMode);
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: top val: %f %f %f.\n", topVal, x0Top, topVal+x0Top);
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: bottom val: %f %f %f.\n", bottomVal, x0Bot, bottomVal+x0Bot);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: mode: %d.\n", displacementMode);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: top val: %f %f %f.\n", topVal, x0Top, topVal+x0Top);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: bottom val: %f %f %f.\n", bottomVal, x0Bot, bottomVal+x0Bot);
                 
                 Nodes_t *nodes = solution.mesh.getNodes;
-                //NSLog(@"FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f.\n", i, _coord[i], wTop);
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: position: %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
-                NSLog(@"FEMStructuredMeshMapper:solutionComputer: topVal: %f, botVal: %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
+                //fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: node %d, height %f, w %f.\n", i, _coord[i], wTop);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: position: %f %f %f.\n", nodes->x[i], nodes->y[i], nodes->z[i]);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: topVal: %f, botVal: %f, dVal %f.\n", topVal, bottomVal, topVal-bottomVal);
 
             } else {
                 if (displacementMode == YES) {
@@ -419,7 +419,7 @@
                 
                 if (computeTangleMask == YES) tangleMask[tangleMaskPerm[i]] = -1.0;
                 if (/* DISABLES CODE */ (NO)) {
-                    NSLog(@"FEMStructuredMeshMapper:solutionComputer: corrected negative height: %f = %f - %f. New upper value: %f.\n", topVal-bottomVal, topVal, bottomVal, _field[itop]);
+                    fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: corrected negative height: %f = %f - %f. New upper value: %f.\n", topVal-bottomVal, topVal, bottomVal, _field[itop]);
                 }
             }
         } else {
@@ -473,11 +473,11 @@
     }
     
     if (tangleCount > 0) {
-        NSLog(@"FEMStructuredMeshMapper:solutionComputer: there seems to be %d (out of %d) tangled nodes.\n", tangleCount, _nsize);
+        fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: there seems to be %d (out of %d) tangled nodes.\n", tangleCount, _nsize);
     }
     
     at1 = cputime();
-    NSLog(@"FEMStructuredMeshMapper:solutionComputer: active coordinate mapping time: %f.\n", at1-at0);
+    fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: active coordinate mapping time: %f.\n", at1-at0);
     
     _visited = YES;
     

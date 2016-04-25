@@ -99,7 +99,7 @@
     
     mesh = (FEMMesh *)model.mesh;
     if (mesh.savesDone == 0) {
-        NSLog(@"FEMPost:writeElmerPostFile: saving results in ElmerPost format to file %@.\n", postFile);
+        fprintf(stdout, "FEMPost:writeElmerPostFile: saving results in ElmerPost format to file %s.\n", [postFile UTF8String]);
     }
     
     fileManager = [NSFileManager defaultManager];
@@ -224,7 +224,7 @@
         }
     }
     if (maskExists == YES) {
-        NSLog(@"FEMPost:writeElmerPostFile: using %@ as mask variable.\n", str);
+        fprintf(stdout, "FEMPost:writeElmerPostFile: using %s as mask variable.\n", [str UTF8String]);
         numberOfNodes = max_array(maskVarContainers->Perm, maskVarContainers->sizePerm);
         maskOrder = intvec(0, numberOfNodes);
         for (i=0; maskVarContainers->sizePerm; i++) {

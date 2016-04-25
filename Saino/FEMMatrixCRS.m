@@ -223,7 +223,7 @@
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
         if (k < 0) {
-            NSLog(@"FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f.\n", i, j, value);
+            fprintf(stdout, "FEMMatrixCRS:setMatrixElementInGlobal: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
         }
         k = k + matContainers->Rows[i];
@@ -250,7 +250,7 @@
     
     if (matContainers->Diag == NULL || i != j || solution.matrix.isOrdered == NO) {
         k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
-        if (k < 0 && value != 0) NSLog(@"FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f.\n", i, j, value);
+        if (k < 0 && value != 0) fprintf(stdout, "FEMMatrixCRS:addToMatrixElementInGlobal: trying to add value to non existent element: %d %d %f.\n", i, j, value);
         if (k < 0) return;
         k = k + matContainers->Rows[i];
     } else {
@@ -485,11 +485,11 @@
     matrixArraysContainer *matContainers = NULL;
     
     if (solution == nil && matrix == nil) {
-        NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least one the method argumens should be non-nil.\n");
+        fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: no matrix available. At least one the method argumens should be non-nil.\n");
         return;
     }
     
-    NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: making low order FCT correction to matrix.\n");
+    fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: making low order FCT correction to matrix.\n");
     
     if (solution != nil) {
         matContainers = solution.matrix.getContainers;
@@ -528,7 +528,7 @@
             }
             
             if (found == NO) {
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: entry not found, matrix might not be symmetric.\n");
+                fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: entry not found, matrix might not be symmetric.\n");
                 continue;
             }
             
@@ -544,9 +544,9 @@
             }
             
             if (/* DISABLES CODE */ (NO)) {
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d.\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d.\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
-                NSLog(@"FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f.\n", aij, aji, aii, dij);
+                fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: ij: %d %d %d %d.\n", i, j, matContainers->Cols[k2], matContainers->Cols[k]);
+                fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: Diag: %d %d.\n", matContainers->Cols[matContainers->Diag[i]], matContainers->Cols[matContainers->Diag[j]]);
+                fprintf(stdout, "FEMMatrixCRS:fctlLowOrderInSolution: A: %f %f %f %f.\n", aij, aji, aii, dij);
             }
             
             // Equation (32) in Kuzmin's paper
@@ -666,7 +666,7 @@
     }
     
     if (matContainers->Cols[n] >= 0) {
-        NSLog(@"FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, matContainers->Cols[n]);
+        fprintf(stderr, "FEMMatrixCRS:makeMatrixIndex: trying to access non-existent column: %d, %d.\n", n, matContainers->Cols[n]);
         fatal("FEMMatrixCRS:makeMatrixIndex", "Programm terminating now...\n");
     }
     
@@ -762,7 +762,7 @@
     if (matContainers->Diag != NULL || i != j || matrix.isOrdered == NO) {
         k = [self FEMMatrixCRS_SearchWithinLength:matContainers->Rows[i+1]-matContainers->Rows[i] inArray:matContainers->Cols+matContainers->Rows[i] theValue:j];
         if (k < 0) {
-            NSLog(@"FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f.\n", i, j, value);
+            fprintf(stdout, "FEMMatrixCRS:setMatrixElementInMatrix: trying to set value to non existent element: %d %d %f.\n", i, j, value);
             return;
         }
         k = k + matContainers->Rows[i];

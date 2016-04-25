@@ -53,7 +53,7 @@
         NSDictionary *env = [processIngo environment];
         bundleName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/PlugIns/FEMStructuredMeshMapper"];
     } else {
-        NSLog(@"User name not supported for testing.\n");
+        fprintf(stderr, "User name not supported for testing.\n");
     }
     
     NSBundle *bundle = [self.utilities loadBundle:bundleName useApplicationSupportPath:&useAppSupportPath];
@@ -63,7 +63,7 @@
             validBundle = [self.utilities plugInClassIsValid:currPrincipalClass];
         }
     } else {
-        NSLog(@"Can't load bundle.\n");
+        fprintf(stderr, "Can't load bundle.\n");
     }
     XCTAssertTrue(validBundle, @"FEMSolutionTests: problem loading a bundle");
 

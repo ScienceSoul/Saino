@@ -79,11 +79,11 @@
     edges = mesh.getEdges;
     
     if (edofs > 0 && edges == NULL) {
-        NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: edge dofs requested but no edges exist in mesh.\n");
+        fprintf(stdout, "FEMElementUtils:FEMElementUtils_makeListMatrixInModel: edge dofs requested but no edges exist in mesh.\n");
         edofs = 0;
     }
     if (fdofs > 0 && faces == NULL) {
-        NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: face dofs requested but no faces exist in mesh.\n");
+        fprintf(stdout, "FEMElementUtils:FEMElementUtils_makeListMatrixInModel: face dofs requested but no faces exist in mesh.\n");
         fdofs = 0;
     }
     
@@ -287,7 +287,7 @@
                 if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc explicit" info:&found] == YES) continue;
                 if ([listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc use lagrange coefficient" info:&found] == YES) continue;
                 
-                NSLog(@"FEMElementUtils:FEMElementUtils_makeListMatrixInModel: adding matrix topology for BC: %d.", bd);
+                fprintf(stdout, "FEMElementUtils:FEMElementUtils_makeListMatrixInModel: adding matrix topology for BC: %d.", bd);
                 
                 matContainers = projector.getContainers;
                 for (i=0; i<projector.numberOfRows; i++) {

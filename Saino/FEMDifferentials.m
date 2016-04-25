@@ -434,7 +434,7 @@
     
     found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"electrical conductivity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
     if (found == YES) {
-        NSLog(@"FEMDifferentials:jouleHeatElement: use electrical conductivity instead of electric.\n");
+        fprintf(stdout, "FEMDifferentials:jouleHeatElement: use electrical conductivity instead of electric.\n");
     } else {
         found = [listUtilities listGetReal:model inArray:materialAtID.valuesList forVariable:@"electric conductivity" numberOfNodes:n indexes:element->NodeIndexes buffer:&buffer minValue:NULL maxValue:NULL];
     }

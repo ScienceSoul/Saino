@@ -174,7 +174,7 @@
             entity = &faces[element->FaceIndexes[number]];
             break;
         default:
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_getEntityForElement: unsupported dimension.");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_getEntityForElement: unsupported dimension.");
             return entity;
             break;
     }
@@ -201,7 +201,7 @@
     // Geometric division
     double q = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"extruded mesh ratio" info:&gotRatio minValue:NULL maxValue:NULL];
     if (gotRatio) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating geometric division.");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating geometric division.");
         
         double h1 = (1.0 - pow(q, (1.0/n))) / (1.0 - q);
         w[0] = 0.0;
@@ -214,7 +214,7 @@
     }
     // Generic division given by a function
     else if ([listUtilities listCheckPresentVariable:@"extruded mesh density" inArray:model.simulation.valuesList] == YES) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating functional division.");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating functional division.");
         
         // Initial guess is an even distribution
         for (int i=0; i<=n; i++) {
@@ -266,23 +266,23 @@
             }
             err = max/minhn;
             if (err < err_eps) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: convergence obtained in %d iterations.\n", iter);
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: convergence obtained in %d iterations.\n", iter);
                 break;
             }
         }
         if (iter > maxiter) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: no convergence obtained for the unit mesh division.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: no convergence obtained for the unit mesh division.\n");
         }
         free_dvector(wold, 0, n);
         free_dvector(h, 0, n-1);
     } else { // Uniform division
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating linear division.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: creating linear division.\n");
         for (int i=0; i<=n; i++) {
             w[i] = i/(1.0 * n);
         }
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: mesh division ready.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: mesh division ready.\n");
         for (int i=0; i<=n; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: w(%d): %f\n", i, w[i]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_unitSegmentDivisionTable: w(%d): %f\n", i, w[i]);
         }
     }
 }
@@ -310,7 +310,7 @@
         rtmp[1] = sin(vector[1] / coeff) * vector[0];
         rtmp[2] = vector[2];
     } else {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType: unknown transformation: %@.\n", type);
+        fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType: unknown transformation: %s.\n", [type UTF8String]);
         fatal("FEMMeshUtils:FEMMeshUtils_coordinateTransformationNodalType", "Saino will abort the simulation now...");
     }
     memcpy(vector, rtmp, sizeof(rtmp));
@@ -383,10 +383,10 @@
     BOOL all, allLeft, allRight, axisSym, checkHaloNodes=NO, doEdges, doNodes, found, localConstraints=NO, nodalJump=NO, noHalo=NO, setDiag,
          setDiagEdges, stat;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: creating projector for discontinous boundary %d.\n", bc);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: creating projector for discontinous boundary %d.\n", bc);
     
     if (mesh.isDiscontinuousMesh == NO) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: discontinuous mesh not created.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: discontinuous mesh not created.\n");
         return nil;
     }
     
@@ -394,7 +394,7 @@
     for (FEMBoundaryCondition *boundary in model.boundaryConditions) {
         if ([listUtilities listGetLogical:model inArray:boundary.valuesList forVariable:@"discontinuous boundary" info:&found] == YES) j++;
     }
-    if (j > 1) NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: only one BC (not %d) for discontinuous boundary.\n", j);
+    if (j > 1) fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: only one BC (not %d) for discontinuous boundary.\n", j);
     
     bcParams = (model.boundaryConditions)[bc];
     double scale = [listUtilities listGetConstReal:model inArray:bcParams.valuesList forVariable:@"mortar bc scaling" info:&found minValue:NULL maxValue:NULL];
@@ -444,7 +444,7 @@
         doEdges = (mesh.numberOfEdges > 0) ? YES : NO;
     }
     if (doEdges == YES && mesh.numberOfEdges == 0) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: edge basis requested but mesh has no edges.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: edge basis requested but mesh has no edges.\n");
         doEdges = NO;
     }
     
@@ -471,7 +471,7 @@
             }
         }
         if (setDiag == YES) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: setting > use biorthogonal basis < to YES to enable elimination.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: setting > use biorthogonal basis < to YES to enable elimination.\n");
         }
     }
     
@@ -488,7 +488,7 @@
                 axisSym = [(solution.solutionInfo)[@"projector metrics"] boolValue];
             }
         }
-        if (axisSym == YES) NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: projector will be weighted for axi-symmetry.\n");
+        if (axisSym == YES) fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: projector will be weighted for axi-symmetry.\n");
     }
     
     Nodes_t *elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
@@ -569,7 +569,7 @@
             } else if (allRight == YES) {
                 oldFace = right;
             } else {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: neither face is purely old.\n");
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: neither face is purely old.\n");
                 continue;
             }
             
@@ -590,7 +590,7 @@
             }
         }
         invPermSize = indp;
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: size of invPerm estimated to be %d.\n", invPermSize);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: size of invPerm estimated to be %d.\n", invPermSize);
         free_bvector(edgeDone, 0, mesh.numberOfEdges-1);
     }
     
@@ -740,7 +740,7 @@
         if (parentMissing > 0) {
             //TODO: add support for parallel run
         }
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous nodes.\n", noDiscontNodes);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous nodes.\n", noDiscontNodes);
     }
     
     // Create the projector also for edge dofs if they exist and are
@@ -935,7 +935,7 @@
         if (doNodes == NO && parentMissing > 0) {
             //TODO: add support for parallel run
         }
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous edges.\n", indp-noDiscontNodes);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: created projector for %d discontinuous edges.\n", indp-noDiscontNodes);
         [elementMaps deallocation];
     }
     
@@ -946,7 +946,7 @@
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
         BOOL sortValues = YES;
         [crsMatrix sortMatrix:projector alsoValues:&sortValues];
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: number of entries in projector matrix: %d.\n", matrixContainers->sizeCols);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: number of entries in projector matrix: %d.\n", matrixContainers->sizeCols);
     } else {
         [projector deallocation];
         projector = nil;
@@ -982,10 +982,10 @@ jump:
     
     BOOL found;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: creating nodal projector for discontinous boudnary.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: creating nodal projector for discontinous boudnary.\n");
     
     if (mesh.discontinuousMesh == YES) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: discontinous mesh not created.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: discontinous mesh not created.\n");
         return nil;
     }
     
@@ -995,7 +995,7 @@ jump:
     }
     // This is a temporal limitation
     if (j > 1) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: only one BC (not %d) for discontinuous boundary.\n", j);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_nodalProjectorDiscontinuousMesh: only one BC (not %d) for discontinuous boundary.\n", j);
     }
     
     int *nodePerm = mesh.getDiscontinousPerm;
@@ -1053,7 +1053,7 @@ jump:
     bool *activeNodes = NULL;
     BOOL any, checkForHalo, narrowHalo, noHalo, onTheFlyBC, success, targetActive, thisActive;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: making a list of elements at interface.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: making a list of elements at interface.\n");
     
     // BCs index should start from 0
     if (mbd < 0 || trgt < 0) {
@@ -1077,7 +1077,7 @@ jump:
     elements = mesh.getElements;
     
     if (checkForHalo == YES) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: checking for halo elements.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: checking for halo elements.\n");
         activeNodes = boolvec(0, mesh.numberOfNodes-1);
         haloCount = 0;
         memset(activeNodes, 0, mesh.numberOfNodes*sizeof(bool));
@@ -1095,11 +1095,11 @@ jump:
         }
         // No halo element found on the boundary so no need to check them later
         if (haloCount == 0) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: found no halo elements to eliminate.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: found no halo elements to eliminate.\n");
             free_bvector(activeNodes, 0, mesh.numberOfNodes-1);
             checkForHalo = NO;
         } else {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo to eliminate: %d.\n", haloCount);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo to eliminate: %d.\n", haloCount);
         }
     }
     
@@ -1158,7 +1158,7 @@ jump:
     }
     
     if (checkForHalo == YES) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo elements eliminated: %d.\n", haloCount);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of halo elements eliminated: %d.\n", haloCount);
     }
     
     if (n1 <= 0 || n2 <= 0) {
@@ -1290,10 +1290,10 @@ jump:
     // As there were some active boundary elements, this consition should
     // really never be possible
     if (bMesh1.numberOfNodes == 0 || bMesh2.numberOfNodes == 0) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: no active nodes on periodic boundary.\n");
+        fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: no active nodes on periodic boundary.\n");
         fatal("FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel", "Saino will abort the simulation now...");
     }
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_createInterfaceMeshesModel: number of periodic nodes: %d, %d.\n", bMesh1.numberOfNodes, bMesh2.numberOfNodes);
     
     Nodes_t *meshNodes = mesh.getNodes;
     
@@ -1388,7 +1388,7 @@ jump:
     found = [listUtilities listGetIntegerArray:model inArray:bcParams.valuesList forVariable:@"projector coordinate mapping" buffer:&coordMap];
     if (found == NO) return;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: performing coordinate mapping.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: performing coordinate mapping.\n");
     
     // Check if all values are different than 1
     all1 = YES;
@@ -1416,11 +1416,11 @@ jump:
     }
     
     if (coordMap.m != 3 || (all1 == YES || all2 == YES || all3 == YES)) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: inconsistent coordinate mapping: \n");
+        fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: inconsistent coordinate mapping: \n");
         for (int i=0; i<coordMap.m; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: %d\n", coordMap.ivector[i]);
+            fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: %d\n", coordMap.ivector[i]);
         }
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: coordinate mapping should be a permutation of 1, 2 and 3.\n");
+        fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1: coordinate mapping should be a permutation of 1, 2 and 3.\n");
         fatal("FEMMeshUtils:FEMMeshUtils_mapInterfaceCoordinateMesh1", "Saino will abort the simulation now...");
     }
     
@@ -1484,7 +1484,7 @@ jump:
     double **a, axisNormal[3], coord[3], dist, d1, d2, circleCoord[3][3], ninj[3][3], maxDist, minDist, normals[3], sum, tangent1[3], tangent2[3];
     BOOL check;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: trying to fit a cylinder to the surface patch.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: trying to fit a cylinder to the surface patch.\n");
     
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
@@ -1542,7 +1542,7 @@ jump:
         if (ninj[i][i < ninj[axisI][axisI]]) axisI = i;
     }
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: axis coordinate set to be: %d.\n", axisI);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: axis coordinate set to be: %d.\n", axisI);
     
     // Keep the dominating direction fixed and iteratively solve the two other directories
     memset(axisNormal, 0.0, sizeof(axisNormal));
@@ -1570,7 +1570,7 @@ jump:
         axisNormal[i] = axisNormal[i] /  sqrt(sum);
     }
     if (1.0 - fabs(axisNormal[2]) > 1.0e-5) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: the cylinder axis is not aligned with z-axis.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_cylinderFitMesh: the cylinder axis is not aligned with z-axis.\n");
     }
     
 jump:
@@ -1811,12 +1811,12 @@ jump:
         vDSP_maxvD(pMeshNodes->z, 1, &x2_max[2], pMesh.numberOfNodes);
         
         if (k == 1) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for this bondary (x, ,y ,z).\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for this bondary (x, ,y ,z).\n");
         } else if (k == 2) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for target bondary (x, ,y ,z).\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: initial extrema for target bondary (x, ,y ,z).\n");
         }
         for (int i=0; i<3; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
         }
         
         // Memorize the bounding box of the master mesh
@@ -1865,7 +1865,7 @@ jump:
         // For cyclindrical projector, follow exactly the same logic salve and master
         if (cylindrical == YES && k == 2) {
             if (moveAngle == YES) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving the second discontinuity to same angle.\n");
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving the second discontinuity to same angle.\n");
                 for (int i=0; i<pMesh.numberOfNodes; i++) {
                     if (pMeshNodes->x[i] < fii0) pMeshNodes->x[i] = pMeshNodes->x[i] + 360.0;
                 }
@@ -1898,7 +1898,7 @@ jump:
             // Elininate the problematic discontinuity in case we have no full circle
             // The discontinuity will be moved to some of angles (-90, 0, 90)
             if (*fullCircle ==YES) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: cylindrical interface seems to be a full circle.\n");
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: cylindrical interface seems to be a full circle.\n");
             } else if (hit180 == YES) {
                 moveAngle = YES;
                 if (hit0 == NO) {
@@ -1911,7 +1911,7 @@ jump:
                 for (int i=0; i<pMesh.numberOfNodes; i++) {
                     if (pMeshNodes->x[i] < fii) pMeshNodes->x[i] = pMeshNodes->x[i] + 360.0;
                 }
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving discontinuity of angle to: %f.\n", fii);
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: moving discontinuity of angle to: %f.\n", fii);
                 fii0 = fii;
             }
         }
@@ -1926,12 +1926,12 @@ jump:
         vDSP_maxvD(pMeshNodes->z, 1, &x2r_max[2], pMesh.numberOfNodes);
         
         if (k == 1) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for this boundary (phi, z, r).\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for this boundary (phi, z, r).\n");
         } else if (k == 2) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for target boundary (phi, z, r).\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: transformed extrema for target boundary (phi, z, r).\n");
         }
         for (int i=0; i<3; i++) {
-             NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2r_min[i], x2r_max[i]);
+             fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2r_min[i], x2r_max[i]);
         }
         
         if (x2r_min[2] < DBL_EPSILON) {
@@ -1953,10 +1953,10 @@ jump:
     err1 = (x1r_max[2] - x1r_min[2]) / radius;
     err2 = (x2r_max[2] - x2r_min[2]) / radius;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err1);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err2);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err1);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant radius: %f.\n", err2);
     if (err1 > eps_rad || err2 > eps_rad) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius is rather large.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius is rather large.\n");
     }
     
     // Ok, so we have concluded that the interface has constant radius
@@ -1970,13 +1970,13 @@ jump:
     err2 = (x2r_max[1] - x2r_min[1]) / radius;
     
     if (err1 < eps_rad || err2 < eps_rad) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 1D.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 1D.\n");
         Nodes_t *bMesh1Nodes = bMesh1.getNodes;
         Nodes_t *bMesh2Nodes = bMesh2.getNodes;
         memset(bMesh1Nodes->y, 0.0, bMesh1.numberOfNodes*sizeof(double) );
         memset(bMesh2Nodes->y, 0.0, bMesh2.numberOfNodes*sizeof(double) );
     } else {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 2D.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: the effective interface meshes are 2D.\n");
     }
     
     // Some pieces of the code can not ork with 1D meshes, this choice is ok for all steps
@@ -1993,28 +1993,28 @@ jump:
     dfii1 = x1r_max[0] - x1r_min[0];
     dfii2 = x2r_max[0] - x2r_min[0];
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f.\n", dfii1);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f.\n", dfii2);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f.\n", dfii1);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: this boundary dfii: %f.\n", dfii2);
     
     err1 = 2.0 * fabs(dfii1 - dfii2) / (dfii1 + dfii2);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in dfii: %f.\n", err1);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in dfii: %f.\n", err1);
     
     int i = [listUtilities listGetInteger:model inArray:bcParams.valuesList forVariable:@"rotational projector periods" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) {
         nSymmetry = 360.0 / dfii2;
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested sections in target: %f.\n", nSymmetry);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested sections in target: %f.\n", nSymmetry);
         if (fabs(nSymmetry - round(nSymmetry)) > 0.01) {
             if (dfii1 < dfii2) {
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: you might try to switch master and target.\n");
+                fprintf(stderr, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: you might try to switch master and target.\n");
             }
             fatal("FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1", "Check your settings, this can not be periodic.");
         }
         int value = round(nSymmetry);
         [listUtilities addIntegerInClassList:bcParams.valuesList theVariable:@"rotational projector periods" withValue:&value orUsingBlock:NULL];
     } else {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: using enforced number of periods: %d.\n", i);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: using enforced number of periods: %d.\n", i);
         nSymmetry = 360.0 / dfii2;
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested number of periods: %f.\n", nSymmetry);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: suggested number of periods: %f.\n", nSymmetry);
     }
     
     free_dvector(angles, 0, maxElementNodes-1);
@@ -2089,16 +2089,16 @@ jump:
         }
         
         if (k == 1) {
-            NSLog(@"EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for this boundary (phi,r,z).\n");
+            fprintf(stdout, "EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for this boundary (phi,r,z).\n");
         } else if (k == 2) {
-            NSLog(@"EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for target boundary (phi,r,z).\n");
+            fprintf(stdout, "EMMeshUtils:FEMMeshUtils_radiusInterfaceMesh1: transformed extrema for target boundary (phi,r,z).\n");
         }
         for (int i=0; i<3; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: coordinate: %d: %f, %f.\n", i+1, x2_min[i], x2_max[i]);
         }
         
         phierr = x2_max[1] - x2_min[1];
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant angle (degs): %f.\n", phierr);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy from constant angle (degs): %f.\n", phierr);
     }
     
     // Error in radius
@@ -2107,12 +2107,12 @@ jump:
     double err1 = fabs(x1_max[0] - x2_max[0]) / rad;
     double err2 = fabs(x1_min[0] - x2_min[0]) / rad;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in maximum radius: %f.\n", err1);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in minimum radius: %f.\n", err2);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in maximum radius: %f.\n", err1);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy in minimum radius: %f.\n", err2);
     
     double eps_rad = 1.0e-3;
     if (err1 > eps_rad || err2 > eps_rad) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius may be too large.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_rotationInterfaceMesh1: discrepancy of radius may be too large.\n");
     }
     
     // Some pieces of the code can not work with 1D meshes, this choice is ok for all steps
@@ -2136,7 +2136,7 @@ jump:
     
     BOOL found;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flattening interface meshes to 2D.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flattening interface meshes to 2D.\n");
     
     int meshDim = model.dimension;
     int flatDim = [listUtilities listGetInteger:model inArray:bcParams.valuesList forVariable:@"flat projector coordinate" info:&found minValue:NULL maxValue:NULL];
@@ -2182,7 +2182,7 @@ jump:
                 if (relDiff < relDiff1) flatDim = minDiffI;
             }
         }
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flat projector coordinate set to: %d.\n", flatDim);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_flatInterfaceMesh1: flat projector coordinate set to: %d.\n", flatDim);
         [listUtilities addIntegerInClassList:bcParams theVariable:@"flat projector coordinate" withValue:&flatDim orUsingBlock:nil];
     }
     
@@ -2238,7 +2238,7 @@ jump:
     GaussIntegrationPoints *IP = NULL;
     BOOL found, normal0Set, stat;
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: flattening interface meshes to a place.\n");
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: flattening interface meshes to a place.\n");
     
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
@@ -2248,7 +2248,7 @@ jump:
     
     // If the projector normal is not given, determine it first
     if (found == NO) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: could not find place projector normal, so determining it.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: could not find place projector normal, so determining it.\n");
         Nodes_t *elementNodes = (Nodes_t*)malloc(sizeof(Nodes_t));
         elementNodes->x = doublevec(0, MAX_ELEMENT_NODES-1);
         elementNodes->y = doublevec(0, MAX_ELEMENT_NODES-1);
@@ -2334,16 +2334,16 @@ jump:
         
         // Choose the mesh for which is close to a plane
         if (planeLess1 > planeLess) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting slave normal.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting slave normal.\n");
             memcpy(*planeNormal, *planeNormal1, (3*1)*sizeof(double));
         } else {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting master normal.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: selecting master normal.\n");
             for (int i=0; i<3; i++) {
                planeNormal[i][0] = -planeNormal[i][0];
             }
         }
         for (int i=0; i<3; i++) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: plane normal selected: %f.\n", planeNormal[i][0]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: plane normal selected: %f.\n", planeNormal[i][0]);
         }
         [listUtilities addConstRealArrayInClassList:bcParams theVariable:@"plane projector normal" withValues:planeNormal size1:3 size2:1 orUsingBlock:nil string:nil];
         
@@ -2387,16 +2387,16 @@ jump:
             bMeshNodes->z[i] = cblas_ddot(3, coord, 1, normals, 1);
         }
         
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: range for mesh: %d\n", j);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: range for mesh: %d\n", j);
         vDSP_minvD(bMeshNodes->x, 1, &minVal, bMesh.numberOfNodes);
         vDSP_maxvD(bMeshNodes->x, 1, &maxVal, bMesh.numberOfNodes);
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: x: %f %f\n", minVal, maxVal);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: x: %f %f\n", minVal, maxVal);
         vDSP_minvD(bMeshNodes->y, 1, &minVal, bMesh.numberOfNodes);
         vDSP_maxvD(bMeshNodes->y, 1, &maxVal, bMesh.numberOfNodes);
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: y: %f %f\n", minVal, maxVal);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: y: %f %f\n", minVal, maxVal);
         vDSP_minvD(bMeshNodes->z, 1, &minVal, bMesh.numberOfNodes);
         vDSP_maxvD(bMeshNodes->z, 1, &maxVal, bMesh.numberOfNodes);
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: z: %f %f\n", minVal, maxVal);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_planeInterfaceMesh1: z: %f %f\n", minVal, maxVal);
         
         bMesh.dimension = 2;
     }
@@ -2470,37 +2470,37 @@ jump:
     
     BOOL constantNormals = ((1.0 - dot1Min < 1.0e-6) && (1.0 - dot2Min < 1.0e-6)) ? YES : NO;
     if (constantNormals == YES) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: master normal: \n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: master normal: \n");
         for (int i=0; i<3; i++) {
-            NSLog(@"%f\n", normal1[i]);
+            fprintf(stdout, "%f\n", normal1[i]);
         }
         
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: initial target normal: \n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: initial target normal: \n");
         for (int i=0; i<3; i++) {
-            NSLog(@"%f\n", normal2[i]);
+            fprintf(stdout, "%f\n", normal2[i]);
         }
         
         // The full angle between the two normals
         alpha = acos(cblas_ddot(3, normal1, 1, normal2, 1)) * 180.0 / M_PI;
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: suggested angle between two normals in degs (+/- 180): %f.\n", alpha);
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: suggested angle between two normals in degs (+/- 180): %f.\n", alpha);
     } else {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not suggest angle.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not suggest angle.\n");
     }
     
     *gotAngles = NO;
     if (constantNormals == NO) {
-        NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: normals are not constant, can not test for rotation.\n");
+        fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: normals are not constant, can not test for rotation.\n");
     } else if (alpha > DBL_EPSILON) {
         for (int i=0; i<3; i++) {
             if (fabs(normal1[i] - normal2[i]) < DBL_EPSILON) {
                 *gotAngles = YES;
-                NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: rotation around axis %i in degs: %f\n", i+1, alpha);
+                fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: rotation around axis %i in degs: %f\n", i+1, alpha);
                 angles[i] = alpha;
                 break;
             }
         }
         if (*gotAngles == NO) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not define axis, improve algorithm.\n");
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_checkInterfaceAngleMesh1: could not define axis, improve algorithm.\n");
         }
     }
     
@@ -2537,8 +2537,8 @@ jump:
     vDSP_maxvD(bMesh1Nodes->y, 1, &x1_max[1], bMesh1.numberOfNodes);
     vDSP_maxvD(bMesh1Nodes->z, 1, &x1_max[2], bMesh1.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for this periodic BC: %e %e %e\n", x1_min[0], x1_min[1], x1_min[2]);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for this periodic BC: %e %e %e\n", x1_max[0], x1_max[1], x1_max[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for this periodic BC: %e %e %e\n", x1_min[0], x1_min[1], x1_min[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for this periodic BC: %e %e %e\n", x1_max[0], x1_max[1], x1_max[2]);
     
     vDSP_minvD(bMesh2Nodes->x, 1, &x2_min[0], bMesh2.numberOfNodes);
     vDSP_minvD(bMesh2Nodes->y, 1, &x2_min[1], bMesh2.numberOfNodes);
@@ -2548,8 +2548,8 @@ jump:
     vDSP_maxvD(bMesh2Nodes->y, 1, &x2_max[1], bMesh2.numberOfNodes);
     vDSP_maxvD(bMesh2Nodes->z, 1, &x2_max[2], bMesh2.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for target periodic BC: %e %e %e\n", x2_min[0], x2_min[1], x2_min[2]);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for target periodic BC: %e %e %e\n", x2_max[0], x2_max[1], x2_max[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for target periodic BC: %e %e %e\n", x2_min[0], x2_min[1], x2_min[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for target periodic BC: %e %e %e\n", x2_max[0], x2_max[1], x2_max[2]);
     
     double **trfMatrix = doublematrix(0, 3, 0, 3);
     
@@ -2594,7 +2594,7 @@ jump:
         }
         
         if (gotRotate == YES) {
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: rotating target with: %f %f %f\n", angles[0], angles[1], angles[2]);
             double **C = doublematrix(0, 3, 0, 3);
             for (int i=0; i<3; i++) {
                 alpha = angles[i] * M_PI / 180.0;
@@ -2643,8 +2643,8 @@ jump:
             vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
             vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
             
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for rotated target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for rotated target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for rotated target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for rotated target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
             free_dmatrix(C, 0, 3, 0, 3);
         } else {
             memcpy(x2r_min, x2_min, sizeof(x2_min));
@@ -2679,7 +2679,7 @@ jump:
                     scl[i] = 1.0;
                 }
             }
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: scaling with: %e %e %e\n", scl[0], scl[1], scl[2]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: scaling with: %e %e %e\n", scl[0], scl[1], scl[2]);
             for (int i=0; i<3; i++) {
                 sclMatrix[i][i] = scl[i];
             }
@@ -2697,7 +2697,7 @@ jump:
             for (int i=0; i<3; i++) {
                 trsMatrix[3][i] = x1_min[i] - sclMatrix[i][i] * x2r_min[i];
             }
-            NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: translation: %e %e %e\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
+            fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: translation: %e %e %e\n", trsMatrix[3][0], trsMatrix[3][1], trsMatrix[3][2]);
         }
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 4, 4, 4, 1.0, *sclMatrix, 4, *trsMatrix, 4, 0.0, *trfMatrix, 4);
         
@@ -2729,8 +2729,8 @@ jump:
     vDSP_maxvD(bMesh2Nodes->y, 1, &x2r_max[1], bMesh2.numberOfNodes);
     vDSP_maxvD(bMesh2Nodes->z, 1, &x2r_max[2], bMesh2.numberOfNodes);
     
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for transformed target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
-    NSLog(@"FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for transformed target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: minimum values for transformed target: %e %e %e\n", x2r_min[0], x2r_min[1], x2r_min[2]);
+    fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_overlayInterfaceMesh1: maximum values for transformed target: %e %e %e\n", x2r_max[0], x2r_max[1], x2r_max[2]);
 
     free_dmatrix(trfMatrix, 0, 3, 0, 3);
     
@@ -3148,7 +3148,7 @@ jump:
                     faceEdgeMap = brickFaceEdgeMap;
                     break;
                 default:
-                    NSLog(@"FEMMeshUtils:findEdges3DInMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                    fprintf(stderr, "FEMMeshUtils:findEdges3DInMesh: element type %d not implemented.\n", element->Type.ElementCode);
                     fatal("FEMMeshUtils:findEdges3DInMesh", "Saino will abort the simulation now...");
                     break;
             }
@@ -3484,7 +3484,7 @@ jump:
                     break;
                     
                 default:
-                    NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                    fprintf(stderr, "FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
                     fatal("FEMMeshUtils:findFaces3DForMesh", "Saino will abort the simulation now...");
                     break;
             }
@@ -3589,7 +3589,7 @@ jump:
                         break;
                         
                     default:
-                        NSLog(@"FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
+                        fprintf(stderr, "FEMMeshUtils:findFaces3DForMesh: element type %d not implemented.\n", element->Type.ElementCode);
                         fatal("FEMMeshUtils:findFaces3DForMesh", "Saino will abort the simulation now...");
                         break;
                 }
@@ -3715,7 +3715,7 @@ jump:
             numbEdges = element->Type.NumberOfFaces;
             break;
         default:
-            NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: unsupported dimension.");
+            fprintf(stdout, "FEMMeshUtils:assignLocalNumberToEdgeElement: unsupported dimension.");
             return;
             break;
     }
@@ -3724,7 +3724,7 @@ jump:
     for (edgeNumber=0; edgeNumber<numbEdges; edgeNumber++) {
         // If edges have been created, stop search. Actually, this should not happen
         if (element->EdgeIndexes == NULL) {
-             NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: edges have not been creates. Returning now.");
+            fprintf(stdout, "FEMMeshUtils:assignLocalNumberToEdgeElement: edges have not been creates. Returning now.");
             return;
         }
         
@@ -3733,7 +3733,7 @@ jump:
         // Edge element not found. This should not be possible, unless there is
         // an error in the mesh read in process
         if (entity == NULL) {
-            NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: edge element not found.");
+            fprintf(stdout, "FEMMeshUtils:assignLocalNumberToEdgeElement: edge element not found.");
             return;
         }
         
@@ -3791,7 +3791,7 @@ jump:
     }
     
     // If we are here, local number not found
-    NSLog(@"FEMMeshUtils:assignLocalNumberToEdgeElement: unable to find local edge.");
+    fprintf(stdout, "FEMMeshUtils:assignLocalNumberToEdgeElement: unable to find local edge.");
 }
 
 /************************************************************************************************************
@@ -3854,9 +3854,9 @@ jump:
     // There are two choices of projector: a nodal P in x = PX, and a Galerkin projector
     // [Q-P] in Qx = Px. The projector is assumed to be either a rotational projector with no
     // translation and roration, or a generic one with possible cooridinate mapping
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: creating projector between BCs %d and %d.\n", mbd+1, trgt+1);
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
+    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
+    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: creating projector between BCs %d and %d.\n", mbd+1, trgt+1);
+    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: -----------------------------------------------------------\n");
     
     // Create temporal mesh structures that are utilized when making the
     // projector between the two boundaries
@@ -3900,12 +3900,12 @@ jump:
     flat = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"flat projector" info:&found];
     plane = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"plane projector" info:&found];
     
-    if (radial == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcig radial projector.\n");
-    if (sliding == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing sliding projector.\n");
-    if (cylindrical == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing cyclindrical projector.\n");
-    if (rotational == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing rotational projector.\n");
-    if (flat == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing flat projector.\n");
-    if (plane == YES) NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing plane projector.\n");
+    if (radial == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcig radial projector.\n");
+    if (sliding == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing sliding projector.\n");
+    if (cylindrical == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing cyclindrical projector.\n");
+    if (rotational == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing rotational projector.\n");
+    if (flat == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing flat projector.\n");
+    if (plane == YES) fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing plane projector.\n");
     
     double nodeScale = [listUtilities listGetConstReal:model inArray:boundaryConditionAtId.valuesList forVariable:@"mortar bc scaling" info:&found minValue:NULL maxValue:NULL];
     if (found == NO) {
@@ -3927,13 +3927,13 @@ jump:
     if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"stride projector" info:&found] == YES) {
         [listUtilities addLogicalInClassList:boundaryConditionAtId theVariable:@"level projector" withValue:YES];
         [listUtilities addLogicalInClassList:boundaryConditionAtId theVariable:@"level projector strong" withValue:YES];
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing level projector instead of old stride projector.\n");
+        fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing level projector instead of old stride projector.\n");
     }
     
     levelProj = [listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"level projector" info:&found];
     if (rotational == YES || cylindrical == YES || radial == YES || flat == YES || plane == YES ) {
         if (found == NO) {
-            NSLog(@"FEMMeshUtils:periodicProjectorInModel: enforcing level projector to YES with dimensional reduction.\n");
+            fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: enforcing level projector to YES with dimensional reduction.\n");
             levelProj = YES;
         } else if (levelProj == NO) {
             // If we have dimensionally reduced projector but don't use level projector to
@@ -3969,7 +3969,7 @@ jump:
                 if (doEdges == YES) {
                     if ([core isPElement:&elements[0]] == YES) {
                         doEdges = NO;
-                        NSLog(@"FEMMeshUtils:periodicProjectorInModel: edge projector will not be created for p-element mesh.\n");
+                        fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: edge projector will not be created for p-element mesh.\n");
                     }
                 }
             }
@@ -4046,12 +4046,12 @@ jump:
         if (projector.child != nil) {
             [self saveProjector:projector.child saveRowSum:YES prefix:[@"pb" stringByAppendingString:[NSString stringWithFormat:@"%d",mbd+1]] invPerm:projectorContainers->InvPerm];
         }
-        NSLog(@"FEMMeshUtils:periodicProjectorInModel: save projector and stop.\n");
+        fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: save projector and stop.\n");
     }
     
     BOOL deleteTimer = YES;
     [listUtilities checkTimer:@"periodicProjector" deleteTimer:&deleteTimer resetTimer:NULL model:model];
-    NSLog(@"FEMMeshUtils:periodicProjectorInModel: projector created, now exiting...\n");
+    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: projector created, now exiting...\n");
     
     return projector;
 }
@@ -4088,12 +4088,12 @@ jump:
     
     [self findEdgesForMesh:mesh findEdges:NULL];
     
-    NSLog(@"FEMMeshUtils:splitMeshEqual: ********** Old mesh **********\n");
-    NSLog(@"FEMMeshUtils:splitMeshEqual: nodes: %d.\n", mesh.numberOfNodes);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: bulk elements: %d.\n", mesh.numberOfBulkElements);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: boundary elements: %d.\n", mesh.numberOfBoundaryElements);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: edges: %d.\n", mesh.numberOfEdges);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: faces: %d.\n", mesh.numberOfFaces);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: ********** Old mesh **********\n");
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: nodes: %d.\n", mesh.numberOfNodes);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: bulk elements: %d.\n", mesh.numberOfBulkElements);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: boundary elements: %d.\n", mesh.numberOfBoundaryElements);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: edges: %d.\n", mesh.numberOfEdges);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: faces: %d.\n", mesh.numberOfFaces);
     
     // Update nodal coordinates
     nodeCnt = mesh.numberOfNodes + mesh.numberOfEdges;
@@ -4862,7 +4862,7 @@ jump:
                 break;
                 
             default:
-                NSLog(@"FEMMeshUtils:splitMeshEqual: element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
+                fprintf(stderr, "FEMMeshUtils:splitMeshEqual: element type %d not supported by the multigrid solver.\n", elements[i].Type.ElementCode);
                 fatal("FEMMeshUtils:splitMeshEqual", "Saino will abort the simulation now...");
         }
     }
@@ -5372,10 +5372,10 @@ jump:
         newElements[i].FaceIndexes = NULL;
     }
     
-    NSLog(@"FEMMeshUtils:splitMeshEqual: ********** New mesh **********\n");
-    NSLog(@"FEMMeshUtils:splitMeshEqual: nodes: %d.\n", newMesh.numberOfNodes);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: bulk elements: %d.\n", newMesh.numberOfBulkElements);
-    NSLog(@"FEMMeshUtils:splitMeshEqual: boundary elements: %d.\n", newMesh.numberOfBoundaryElements);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: ********** New mesh **********\n");
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: nodes: %d.\n", newMesh.numberOfNodes);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: bulk elements: %d.\n", newMesh.numberOfBulkElements);
+    fprintf(stdout, "FEMMeshUtils:splitMeshEqual: boundary elements: %d.\n", newMesh.numberOfBoundaryElements);
     
     // TODO: add support for parallel run
     
@@ -6035,14 +6035,14 @@ jump:
     
     // TODO: Add support for parallel run
     
-    NSLog(@"FEMMeshUtils:extrudeMesh: first extruded BC set to: %d.\n", max_bid+1);
+    fprintf(stdout, "FEMMeshUtils:extrudeMesh: first extruded BC set to: %d.\n", max_bid+1);
     
     max_body = 0;
     for (int i=0; i<mesh.numberOfBulkElements; i++) {
         max_body = max(max_body, elementsIn[i].BodyID);
     }
     // TODO: Add support for parallel run
-    NSLog(@"FEMMeshUtils:extrudeMesh: number of new BCs for layers: %d.\n", max_body);
+    fprintf(stdout, "FEMMeshUtils:extrudeMesh: number of new BCs for layers: %d.\n", max_body);
     
     // Add bottom boundary
     for (int i=0; i<mesh.numberOfBulkElements; i++) {
@@ -6156,7 +6156,7 @@ jump:
     variableArraysContainer *variableContainers = NULL;
     BOOL found;
     
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determining extruded structure.\n");
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: determining extruded structure.\n");
     at0 = cputime();
     
     dim = mesh.dimension;
@@ -6177,7 +6177,7 @@ jump:
         }
     }
     for (int i=0; i<3; i++) {
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: unit vector of direction: %f\n", unitVector[i]);
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: unit vector of direction: %f\n", unitVector[i]);
     }
     
     // Set the dot product tolerance
@@ -6242,7 +6242,7 @@ jump:
     }
     
     if (!(upActive == YES || downActive == YES)) {
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: either up or down direction should be active.\n");
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: either up or down direction should be active.\n");
         return 0;
     }
     
@@ -6261,7 +6261,7 @@ jump:
     }
     
     // Determine the up and down pointers using dot product as criterian
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine the up and down pointers.\n");
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: determine the up and down pointers.\n");
     int n = mesh.maxElementNodes;
     Nodes_t *nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
     initNodes(nodes);
@@ -6329,7 +6329,7 @@ jump:
     free(nodes);
     
     // Pointer to top and bottom are found recursively using up and down
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine top and bottom pointers.\n");
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: determine top and bottom pointers.\n");
     int j, downHit, rounds, upHit;
     for (rounds=1; rounds<=numberofNodes; rounds++) {
         downHit = 0;
@@ -6358,10 +6358,10 @@ jump:
     // The last round is always a check
     rounds--;
     
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layered structure detected in %d cycles.\n", rounds);
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: layered structure detected in %d cycles.\n", rounds);
     if (rounds == 0) {
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: try to increase value for > dot product tolerance <.\n");
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: zero rounds implies unsuccessfull operations.\n");
+        fprintf(stderr, "FEMMeshUtils:detectExtrudedStructureMesh: try to increase value for > dot product tolerance <.\n");
+        fprintf(stderr, "FEMMeshUtils:detectExtrudedStructureMesh: zero rounds implies unsuccessfull operations.\n");
         fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Saino will abort the simulation now...");
     }
     
@@ -6369,7 +6369,7 @@ jump:
     // be too small. Here just one layer is used to determine the number
     // of layers to save some time.
     if (numberOfLayers != NULL) {
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: compute the number of layers.\n");
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: compute the number of layers.\n");
         int i, k;
         for (i=0; i<numberofNodes; i++) {
             if (ifMask == YES) {
@@ -6391,15 +6391,15 @@ jump:
         }
         
         if (*numberOfLayers < rounds) {
-            NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: there seems to be varying number of layers: %d vs. %d.\n", *numberOfLayers, rounds);
+            fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: there seems to be varying number of layers: %d vs. %d.\n", *numberOfLayers, rounds);
             *numberOfLayers = rounds;
         }
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: extruded structure layers: %d.\n", *numberOfLayers);
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: extruded structure layers: %d.\n", *numberOfLayers);
     }
     
     // Create layer index if requested
     if (isNodeLayer == YES) {
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: creating layer index.\n");
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: creating layer index.\n");
         int k;
         memset( nodeLayer, 1, numberofNodes*sizeof(int) );
         if (ifMask == YES) {
@@ -6422,7 +6422,7 @@ jump:
                 nodeLayer[j] = rounds;
             }
         }
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: layer range: ['%d', '%d'].\n", min_array(nodeLayer, numberofNodes), max_array(nodeLayer, numberofNodes));
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: layer range: ['%d', '%d'].\n", min_array(nodeLayer, numberofNodes), max_array(nodeLayer, numberofNodes));
     }
     
     if (isMidNode == YES) {
@@ -6444,7 +6444,7 @@ jump:
         }
         
         if (*midLayerExists == YES) {
-            NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: determine mid pointers.\n");
+            fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: determine mid pointers.\n");
             for (rounds=1; rounds<=numberofNodes; rounds++) {
                 downHit = 0;
                 upHit = 0;
@@ -6470,12 +6470,12 @@ jump:
                 }
                 if (upHit == 0 && downHit == 0) break;
             }
-            NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: mid layer structure detected in %d cycles. \n", rounds-1);
+            fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: mid layer structure detected in %d cycles. \n", rounds-1);
         }
     }
     
     // Count the numer of top and bottom nodes, for information only
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: counting top and bottom nodes.\n");
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: counting top and bottom nodes.\n");
     int topNodes = 0, bottomNodes = 0;
     if (upActive == YES) {
         double minTop = HUGE_VAL;
@@ -6487,7 +6487,7 @@ jump:
                 topNodes++;
             }
         }
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top range: %f %f.\n", minTop, maxTop);
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: top range: %f %f.\n", minTop, maxTop);
     }
     if (downActive == YES) {
         double minBot = HUGE_VAL;
@@ -6499,14 +6499,14 @@ jump:
                 bottomNodes++;
             }
         }
-        NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: bottom range: %f %f.\n", minBot, maxBot);
+        fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: bottom range: %f %f.\n", minBot, maxBot);
     }
     
     at1 = cputime();
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init time: %f.\n", at1-at0);
-    NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init rounds: %d.\n", rounds);
-    if (upActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the top: %d.\n", topNodes);
-    if (downActive == YES) NSLog(@"FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d.\n.", bottomNodes);
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init time: %f.\n", at1-at0);
+    fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: top and bottom pointer init rounds: %d.\n", rounds);
+    if (upActive == YES) fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the top: %d.\n", topNodes);
+    if (downActive == YES) fprintf(stdout, "FEMMeshUtils:detectExtrudedStructureMesh: number of nodes at the bottom: %d.\n.", bottomNodes);
         
     return variable;
 }
@@ -6538,7 +6538,7 @@ jump:
     double dFii2 = f2Max - f2Min;
     int sectorMax = ceil(360.0 / dFii2);
     
-    NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: maximum number of sectors: %d.\n", sectorMax);
+    fprintf(stdout, "FEMMeshUtils:preRotationalProjectorMesh1: maximum number of sectors: %d.\n", sectorMax);
     
     int *sectorCount = intvec(-sectorMax, sectorMax);
     for (int i=-sectorMax; i<=sectorMax; i++) {
@@ -6558,10 +6558,10 @@ jump:
     }
     
     if (sectorCount[0] < bMesh1.numberOfNodes) {
-        NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: number of nodes by sectors: \n");
+        fprintf(stdout, "FEMMeshUtils:preRotationalProjectorMesh1: number of nodes by sectors: \n");
         for (int i=-sectorMax; i<=sectorMax; i++) {
             if (sectorCount[i] > 0) {
-                NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: sector: %d, nodes: %d\n", i, sectorCount[i]);
+                fprintf(stdout, "FEMMeshUtils:preRotationalProjectorMesh1: sector: %d, nodes: %d\n", i, sectorCount[i]);
             }
         }
         if (antiPeriodic == YES) {
@@ -6569,10 +6569,10 @@ jump:
             for (int i=0; i<*sizeMirrorNode; i++) {
                 if (mirrorNode[i] == YES) count++;
             }
-            NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: number of mirror nodes: %d.\n", count);
+            fprintf(stdout, "FEMMeshUtils:preRotationalProjectorMesh1: number of mirror nodes: %d.\n", count);
         }
     } else {
-        NSLog(@"FEMMeshUtils:preRotationalProjectorMesh1: no nodes needed mapping.\n");
+        fprintf(stdout, "FEMMeshUtils:preRotationalProjectorMesh1: no nodes needed mapping.\n");
     }
     free_ivector(sectorCount, -sectorMax, sectorMax);
 }

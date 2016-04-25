@@ -142,7 +142,7 @@
     
     listUtilities = [FEMListUtilities sharedListUtilities];
     
-    NSLog(@"FEMJob:FEMJob_addSolutionsModel: setting up %d solvers.\n", model.numberOfSolutions);
+    fprintf(stdout, "FEMJob:FEMJob_addSolutionsModel: setting up %d solvers.\n", model.numberOfSolutions);
     
     i = 1;
     for (FEMSolution *solution in model.solutions) {
@@ -177,7 +177,7 @@
     for (FEMSolution *solution in model.solutions) {
         if ((solution.solutionInfo)[@"equation"] != nil) {
             eq = (solution.solutionInfo)[@"equation"];
-            NSLog(@"FEMJob:FEMJob_addSolutionsModel: setting up solver %d : %@.\n", i, eq);
+            fprintf(stdout, "FEMJob:FEMJob_addSolutionsModel: setting up solver %d : %s.\n", i, [eq UTF8String]);
         }
         if ((solution.solutionInfo)[@"initialize"] != nil) {
             if ([(solution.solutionInfo)[@"initialize"] boolValue] == YES) {
@@ -729,38 +729,38 @@
             
             // TODO: When we will support parallel run, we need to be sure that the code below
             // is only executed by only one processor
-            NSLog(@"JOB: \n");
-            NSLog(@"JOB: ----------------------------------------------------------------------\n");
+            fprintf(stdout, "JOB: \n");
+            fprintf(stdout, "JOB: ----------------------------------------------------------------------\n");
             
             if (transient == YES || scanning == YES) {
-                NSLog(@"JOB: Time: %d / %d %f.\n", cumTimeStep, stepCount, _sTime[0]);
+                fprintf(stdout, "JOB: Time: %d / %d %f.\n", cumTimeStep, stepCount, _sTime[0]);
                 
                 newTime = realtime();
                 
                 if (cumTimeStep > 1) {
                     maxTime = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"real time max" info:&found minValue:NULL maxValue:NULL];
                     if (found == YES) {
-                        NSLog(@"JOB: Fraction of real time left: %f.\n", 1.0-realtime()/maxTime);
+                        fprintf(stdout, "JOB: Fraction of real time left: %f.\n", 1.0-realtime()/maxTime);
                     } else {
                         timeLeft = round((stepCount-(cumTimeStep-1))*(newTime-prevTime)/60.0);
                         if (timeLeft > 120) {
-                            NSLog(@"JOB: Estimated time left: %d hours.\n", timeLeft/60);
+                            fprintf(stdout, "JOB: Estimated time left: %d hours.\n", timeLeft/60);
                         } else if (timeLeft > 60) {
-                            NSLog(@"JOB: Estimated time left: 1 hour %d minutes.\n", timeLeft % 60);
+                            fprintf(stdout, "JOB: Estimated time left: 1 hour %d minutes.\n", timeLeft % 60);
                         } else if (timeLeft >= 1) {
-                            NSLog(@"JOB: Estimated time left: %d minutes.\n", timeLeft);
+                            fprintf(stdout, "JOB: Estimated time left: %d minutes.\n", timeLeft);
                         } else {
-                            NSLog(@"JOB: Estimated time left: less than a minute.\n");
+                            fprintf(stdout, "JOB: Estimated time left: less than a minute.\n");
                         }
                     }
                 }
                 prevTime = newTime;
             } else {
-                NSLog(@"JOB: Steady state iteration: %d.\n", cumTimeStep);
+                fprintf(stdout, "JOB: Steady state iteration: %d.\n", cumTimeStep);
             }
             
-            NSLog(@"JOB: ----------------------------------------------------------------------\n");
-            NSLog(@"JOB: \n"); // End of code that should only be executed by one processor if parallel run
+            fprintf(stdout, "JOB: ----------------------------------------------------------------------\n");
+            fprintf(stdout, "JOB: \n"); // End of code that should only be executed by one processor if parallel run
             
             // Solve any and all governing equations in the system
             adaptiveTime = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"adaptive time stepping" info:&found];
@@ -907,7 +907,7 @@
                         ddt = ddt / 2.0;
                         stepControl = -1;
                     }
-                    NSLog(@"FEMJob:FEMJob_runSimulation: adaptive(cum, ddt, err): %f, %f, %f.\n", cumTime, ddt, maxErr);
+                    fprintf(stdout, "FEMJob:FEMJob_runSimulation: adaptive(cum, ddt, err): %f, %f, %f.\n", cumTime, ddt, maxErr);
                 }
                 
                 _sSize[0] = dt;
@@ -957,13 +957,13 @@
             
             maxTime = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"real time max" info:&found minValue:NULL maxValue:NULL];
             if (found == YES && realtime() > maxTime) {
-                NSLog(@"JOB: Reached allowed maximum real time, exiting...");
+                fprintf(stdout, "JOB: Reached allowed maximum real time, exiting...");
                 goto jump;
             }
             
             exitCond = [listUtilities listGetConstReal:model inArray:model.simulation.valuesList forVariable:@"exit condition" info:&found minValue:NULL maxValue:NULL];
             if (found == YES && exitCond > 0.0) {
-                NSLog(@"JOB: Found a positive exit condition, exiting...");
+                fprintf(stdout, "JOB: Found a positive exit condition, exiting...");
                 goto jump;
             }
             
@@ -1570,15 +1570,15 @@ jump:
         }
         
         if (_silent == NO) {
-            NSLog(@"JOB: \n");
-            NSLog(@"JOB: =====================================================================\n");
-            NSLog(@"JOB: Saino finite element software, Welcome.\n");
-            NSLog(@"JOB: Saino is an object oriented, GPU based implementation of ElmerSolver.\n");
-            NSLog(@"JOB: This program is free software under (L)GPL.\n");
-            NSLog(@"JOB: Copyright 15 April 2011 - ScienceSoul Hakime Seddik.\n");
-            NSLog(@"JOB: Copyright 1st April 1995 - CSC IT Center for Science Ltd.\n");
+            fprintf(stdout, "JOB: \n");
+            fprintf(stdout, "JOB: =====================================================================\n");
+            fprintf(stdout, "JOB: Saino finite element software, Welcome.\n");
+            fprintf(stdout, "JOB: Saino is an object oriented, GPU based implementation of ElmerSolver.\n");
+            fprintf(stdout, "JOB: This program is free software under (L)GPL.\n");
+            fprintf(stdout, "JOB: Copyright 15 April 2011 - ScienceSoul Hakime Seddik.\n");
+            fprintf(stdout, "JOB: Copyright 1st April 1995 - CSC IT Center for Science Ltd.\n");
             // TODO: Add support for parallel info output
-            NSLog(@"JOB: =====================================================================\n");
+            fprintf(stdout, "JOB: =====================================================================\n");
         }
         
         if (_version == YES) return;
@@ -1612,16 +1612,16 @@ jump:
         
         if (_firstLoad == YES) {
             if (_silent == NO) {
-                NSLog(@"JOB: \n");
-                NSLog(@"JOB: \n");
-                NSLog(@"JOB: ---------------------------------------------------------------------\n");
-                NSLog(@"JOB: Reading model: %@.\n", self.modelName);
+                fprintf(stdout, "JOB: \n");
+                fprintf(stdout, "JOB: \n");
+                fprintf(stdout, "JOB: ---------------------------------------------------------------------\n");
+                fprintf(stdout, "JOB: Reading model: %s.\n", [self.modelName UTF8String]);
             }
             
             self.model = [[FEMModel alloc] init];
             self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             if (self.model.mdf == nil) {
-                NSLog(@"FEMJob:runWithInitialize: Unable to find model description file [' %@ '].\n", self.modelName);
+                fprintf(stderr, "FEMJob:runWithInitialize: Unable to find model description file [' %s '].\n", [self.modelName UTF8String]);
                 fatal("FEMJob:runWithInitialize","Saino will abort the simulation now...");
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
@@ -1654,7 +1654,7 @@ jump:
                 
             }
             if (_silent == NO) {
-                NSLog(@"JOB: ---------------------------------------------------------------------\n");
+                fprintf(stdout, "JOB: ---------------------------------------------------------------------\n");
             }
         } else {
             if (initialize == 3) {
@@ -1874,10 +1874,10 @@ jump:
     // -----------------------------------------------------------------------
     // THIS IS THE END LITTLE APPRENTICE, SAY GOOD BYE TO THE DARK SAMOURAI...
     // -----------------------------------------------------------------------
-    if (initialize != 1) NSLog(@"JOB: *** ALL DONE ***\n");
+    if (initialize != 1) fprintf(stdout, "JOB: *** ALL DONE ***\n");
     
     // TODO: add support for parallel runs
-    NSLog(@"JOB: The end.\n");
+    fprintf(stdout, "JOB: The end.\n");
     
 #ifdef TEST
     FEMTest *test = [FEMTest sharedTest];

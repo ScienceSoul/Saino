@@ -482,7 +482,7 @@
         }
         
         s = sqrt(s);
-        NSLog(@"FEMFreeSurface:moveBoundaryModel: iter: %d, free surface residual: %f.\n", ii, s);
+        fprintf(stdout, "FEMFreeSurface:moveBoundaryModel: iter: %d, free surface residual: %f.\n", ii, s);
         if (s < feps) {
             free_dvector(boundaryNodes->x, 0, boundaryNodes->numberOfNodes-1);
             free_dvector(boundaryNodes->y, 0, boundaryNodes->numberOfNodes-1);

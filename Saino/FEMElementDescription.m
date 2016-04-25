@@ -1497,7 +1497,7 @@ static dispatch_once_t onceToken;
     lwork = 12*n;
     dsygv_(&itype, jobz, uplo, &order, l_transpose, &lda, g_transpose, &ldb, eigr, work, &lwork, &info);
     if (info < 0 || info > 0) {
-        NSLog(@"FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d.\n", info);
+        fprintf(stderr, "FEMElementDescription:computeStabilizationParameterInElement: error in lapack routine dsygv. Error code: %d.\n", info);
         fatal("FEMElementDescription:computeStabilizationParameterInElement", "Saino will abort the simulation now...");
     }
     *mk = eigr[n-2];
@@ -1541,8 +1541,8 @@ static dispatch_once_t onceToken;
     }
         
     if (element == NULL) {
-        NSLog(@"FEMElementDescription:getElementType: element type code not found: %d.\n", code);
-        NSLog(@"FEMElementDescription:getElementType: ignoring element.\n");
+        fprintf(stdout, "FEMElementDescription:getElementType: element type code not found: %d.\n", code);
+        fprintf(stdout, "FEMElementDescription:getElementType: ignoring element.\n");
         return NULL;
     }
         
@@ -2331,30 +2331,30 @@ static dispatch_once_t onceToken;
     if (converged == NO) {
         if (err > sqrt(acc)) {
             if (i > maxIter) {
-                NSLog(@"FEMElementDescription:globalToLocalFromElement: did not converge.\n");
-                NSLog(@"rst, %d %f, %f, %f\n", i, r, s, t);
-                NSLog(@"err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
-                NSLog(@"delta, %f %f %f\n", delta[0], delta[1], delta[2]);
-                NSLog(@"prevdelta, %f %f %f\n", prevdelta[0], prevdelta[1], prevdelta[2]);
-                NSLog(@"code, %d\n", element->Type.ElementCode);
-                NSLog(@"x: %f\n", x);
+                fprintf(stdout, "FEMElementDescription:globalToLocalFromElement: did not converge.\n");
+                fprintf(stdout, "rst, %d %f, %f, %f\n", i, r, s, t);
+                fprintf(stdout, "err, %d, %f, %f, %f\n", i, err, acc, sqrt(acc));
+                fprintf(stdout, "delta, %f %f %f\n", delta[0], delta[1], delta[2]);
+                fprintf(stdout, "prevdelta, %f %f %f\n", prevdelta[0], prevdelta[1], prevdelta[2]);
+                fprintf(stdout, "code, %d\n", element->Type.ElementCode);
+                fprintf(stdout, "x: %f\n", x);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes->x[i]);
+                    fprintf(stdout, "%f ", nodes->x[i]);
                 }
-                NSLog(@"\n");
-                NSLog(@"y: %f\n", y);
+                fprintf(stdout, "\n");
+                fprintf(stdout, "y: %f\n", y);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes->y[i]);
+                    fprintf(stdout, "%f ", nodes->y[i]);
                 }
-                NSLog(@"\n");
-                NSLog(@"y: %f\n", z);
+                fprintf(stdout, "\n");
+                fprintf(stdout, "y: %f\n", z);
                 for (i=0; i<element->Type.NumberOfNodes; i++) {
-                    NSLog(@"%f ", nodes->z[i]);
+                    fprintf(stdout, "%f ", nodes->z[i]);
                 }
-                NSLog(@"\n");
+                fprintf(stdout, "\n");
             } else {
-                NSLog(@"FEMElementDescription:globalToLocalFromElement: node may be out of element.");
-                NSLog(@"rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
+                fprintf(stdout, "FEMElementDescription:globalToLocalFromElement: node may be out of element.");
+                fprintf(stdout, "rst, %f, %f, %f, %f\n", r, s, t, DBL_EPSILON);
             }
         }
     }
@@ -2509,7 +2509,7 @@ static dispatch_once_t onceToken;
     //TODO: add support for parallel run
     
     if (element->Type.BasisFunctionDegree > 1) {
-        NSLog(@"FEMElementDescription:getEdgeBasisElement: can only handle linear elements, sorry.\n");
+        fprintf(stderr, "FEMElementDescription:getEdgeBasisElement: can only handle linear elements, sorry.\n");
         fatal("FEMElementDescription:getEdgeBasisElement", "Saino will abort the simulation now...");
     }
     
@@ -2917,7 +2917,7 @@ static dispatch_once_t onceToken;
                 break;
                 
             default:
-                NSLog(@"FEMElementDescription:getEdgeBasisElement: not implemented for this element type: %d.\n", element->Type.ElementCode/100);
+                fprintf(stderr, "FEMElementDescription:getEdgeBasisElement: not implemented for this element type: %d.\n", element->Type.ElementCode/100);
                 fatal("FEMElementDescription:getEdgeBasisElement", "Saino will abort the simulation now...");
                 break;
         }

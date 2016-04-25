@@ -78,7 +78,7 @@ static dispatch_once_t onceToken;
         if ([variableName isEqualToString:@"coordinate"] == NO) {
             variable = [utilities getVariableFrom:model.variables model:model name:variableName onlySearch:NULL maskName:NULL info:&found];
             if (variable == nil) {
-                NSLog(@"FEMListUtilities:listParseStrToValues: can't find indpendent variable: %@ for dependent variable %@.\n", variableName, name);
+                fprintf(stderr, "FEMListUtilities:listParseStrToValues: can't find indpendent variable: %s for dependent variable %s.\n", [variableName UTF8String], [name UTF8String]);
                 fatal("FEMListUtilities:listParseStrToValues", "Abort program now...");
             }
             varContainers = variable.getContainers;
@@ -233,7 +233,7 @@ static dispatch_once_t onceToken;
             containers = list.getContainers;
             if (list.type == LIST_TYPE_CONSTANT_SCALAR || list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 if (containers->fValues == NULL) {
-                    NSLog(@"FEMListUtilities:listGetReal: fValues not allocated in list: %@.\n", varName);
+                    fprintf(stderr, "FEMListUtilities:listGetReal: fValues not allocated in list: %s.\n", [varName UTF8String]);
                     fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
                 }
             }
@@ -245,7 +245,7 @@ static dispatch_once_t onceToken;
                 }
             } else if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                 if (containers->tValues == NULL) {
-                    NSLog(@"FEMListUtilities:listGetReal: tValues not allocated in list: %@\n", varName);
+                    fprintf(stderr, "FEMListUtilities:listGetReal: tValues not allocated in list: %s\n", [varName UTF8String]);
                     fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
                 }
                 FEMUtilities *utilities = [[FEMUtilities alloc] init];
@@ -290,8 +290,8 @@ static dispatch_once_t onceToken;
                 double minVal;
                 vDSP_minvD(result->vector, 1, &minVal, n);
                 if (minVal < *minv) {
-                    NSLog(@"FEMListUtilities:listGetReal: value smaller than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", minVal, *minv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetReal: value smaller than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", minVal, *minv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
                 }
             }
@@ -300,8 +300,8 @@ static dispatch_once_t onceToken;
                 double maxValue;
                 vDSP_maxvD(result->vector, 1, &maxValue, n);
                 if (maxValue > *maxv) {
-                    NSLog(@"FEMListUtilities:listGetReal: value greater than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", maxValue, *maxv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetReal: value greater than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", maxValue, *maxv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetReal", "Saino will abort the simulation now...");
                 }
             }
@@ -343,7 +343,7 @@ static dispatch_once_t onceToken;
                 // TODO: implement the call of a user function if given
                 
                 if (containers->tValues == NULL) {
-                    NSLog(@"FEMListUtilities:listGetValueParameter: tValues not allocated in list: %@.\n", varName);
+                    fprintf(stderr, "FEMListUtilities:listGetValueParameter: tValues not allocated in list: %s.\n", [varName UTF8String]);
                     fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
                 }
                 FEMUtilities *utilities = [[FEMUtilities alloc] init];
@@ -357,22 +357,22 @@ static dispatch_once_t onceToken;
                 t[0] = value;
                 f = list.block(t);
             } else {
-                NSLog(@"FEMListUtilities:listGetValueParameter: list type not supported.\n");
+                fprintf(stderr, "FEMListUtilities:listGetValueParameter: list type not supported.\n");
                 fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
             }
             *found = YES;
             if (minv != NULL) {
                 if (f < *minv) {
-                    NSLog(@"FEMListUtilities:listGetValueParameter: value smaller than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", f, *minv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetValueParameter: value smaller than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *minv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
                 }
             }
             
             if (maxv != NULL) {
                 if (f > *maxv) {
-                    NSLog(@"FEMListUtilities:listGetValueParameter: value greater than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", f, *maxv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetValueParameter: value greater than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *maxv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetValueParameter", "Saino will abort the simulation now...");
                 }
             }
@@ -409,7 +409,7 @@ static dispatch_once_t onceToken;
             
             if (list.type == LIST_TYPE_CONSTANT_TENSOR || list.type == LIST_TYPE_VARIABLE_TENSOR) {
                 if (containers->fValues == NULL) {
-                    NSLog(@"FEMListUtilities:listGetRealArray: fValues not allocated in list: %@.\n", varName);
+                    fprintf(stderr, "FEMListUtilities:listGetRealArray: fValues not allocated in list: %s.\n", [varName UTF8String]);
                     fatal("FEMListUtilities:listGetRealArray", "Saino will abort the simulation now...");
                 }
             }
@@ -514,7 +514,7 @@ static dispatch_once_t onceToken;
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetConstReal: fValues not allocated in list: %@.\n", varName);
+                fprintf(stderr, "FEMListUtilities:listGetConstReal: fValues not allocated in list: %s.\n", [varName UTF8String]);
                 fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
             }
             
@@ -526,16 +526,16 @@ static dispatch_once_t onceToken;
             
             if (minv != NULL) {
                 if (f < *minv) {
-                    NSLog(@"FEMListUtilities:listGetConstReal: value smaller than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", f, *minv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetConstReal: value smaller than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *minv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
                 }
             }
             
             if (maxv != NULL) {
                 if (f > *maxv) {
-                    NSLog(@"FEMListUtilities:listGetConstReal: value greater than given value: \n");
-                    NSLog(@"Value: %f / Given value: %f / Property: %@.\n", f, *maxv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetConstReal: value greater than given value: \n");
+                    fprintf(stderr, "Value: %f / Given value: %f / Property: %s.\n", f, *maxv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetConstReal", "Saino will abort the simulation now...");
                 }
             }
@@ -569,7 +569,7 @@ static dispatch_once_t onceToken;
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetConstRealArray: fValues not allocated in list: %@.\n", varName);
+                fprintf(stderr, "FEMListUtilities:listGetConstRealArray: fValues not allocated in list: %s.\n", [varName UTF8String]);
                 fatal("FEMListUtilities:listGetConstRealArray", "Saino will abort the simulation now...");
             }
             n1 = containers->sizeFValues1;
@@ -621,7 +621,7 @@ static dispatch_once_t onceToken;
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetIntegerArray: iValues not allocated in list: %@.\n", varName);
+                fprintf(stderr, "FEMListUtilities:listGetIntegerArray: iValues not allocated in list: %s.\n", [varName UTF8String]);
                 fatal("FEMListUtilities:listGetIntegerArray", "Saino will abort the simulation now...");
             }
             n = containers->sizeIValues;
@@ -665,7 +665,7 @@ static dispatch_once_t onceToken;
         if (strcmp(varStr, nameStr) == 0 || strcmp(_nameSpaceStr, nameStr) == 0) {
             containers = list.getContainers;
             if (containers->iValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetInteger: iValues not allocated in list: %@.\n", varName);
+                fprintf(stderr, "FEMListUtilities:listGetInteger: iValues not allocated in list: %s.\n", [varName UTF8String]);
                 fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
             }
             l = containers->iValues[0];
@@ -673,16 +673,16 @@ static dispatch_once_t onceToken;
             
             if (minv != NULL) {
                 if (l < *minv) {
-                    NSLog(@"FEMListUtilities:listGetInteger: value smaller than given value: \n");
-                    NSLog(@"Value: %d / Given value: %d / Property: %@.\n", l, *minv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetInteger: value smaller than given value: \n");
+                    fprintf(stderr, "Value: %d / Given value: %d / Property: %s.\n", l, *minv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
                 }
             }
             
             if (maxv != NULL) {
                 if (l > *maxv) {
-                    NSLog(@"FEMListUtilities:listGetInteger: value greater than given value: \n");
-                    NSLog(@"Value: %d / Given value: %d / Property: %@.\n", l, *maxv, varName);
+                    fprintf(stderr, "FEMListUtilities:listGetInteger: value greater than given value: \n");
+                    fprintf(stderr, "Value: %d / Given value: %d / Property: %s.\n", l, *maxv, [varName UTF8String]);
                     fatal("FEMListUtilities:listGetInteger", "Saino will abort the simulation now...");
                 }
             }
@@ -791,7 +791,7 @@ static dispatch_once_t onceToken;
     if (valueList != nil) {
         *found = YES;
     } else {
-        NSLog(@"FEMListUtilities:listFindPrefix: requested prefix [%@] not found.\n", prefix);
+        fprintf(stdout, "FEMListUtilities:listFindPrefix: requested prefix [%s] not found.\n", [prefix UTF8String]);
     }
 
     return valueList;
@@ -844,13 +844,13 @@ static dispatch_once_t onceToken;
             
             containers = list.getContainers;
             if (containers->fValues == NULL) {
-                NSLog(@"FEMListUtilities:listGetDerivativeValue: fValues not allocated in list: %@.\n", varName);
+                fprintf(stderr, "FEMListUtilities:listGetDerivativeValue: fValues not allocated in list: %s.\n", [varName UTF8String]);
                 fatal("FEMListUtilities:listGetDerivativeValue", "Saino will abort the simulation now...");
             }
             
             if (list.type == LIST_TYPE_VARIABLE_SCALAR) {
                  if (containers->tValues == NULL) {
-                     NSLog(@"FEMListUtilities:listGetDerivativeValue: tValues not allocated in list: %@.\n", varName);
+                     fprintf(stderr, "FEMListUtilities:listGetDerivativeValue: tValues not allocated in list: %s.\n", [varName UTF8String]);
                      fatal("FEMListUtilities:listGetDerivativeValue", "Saino will abort the simulation now...");
                  }
                 utilities = [[FEMUtilities alloc] init];
@@ -873,7 +873,7 @@ static dispatch_once_t onceToken;
                 }
                 free_dvector(buffer, 0, containers->sizeTValues-1);
             } else {
-                NSLog(@"FEMListUtilities:listGetDerivativeValue: no automated derivation possible for %@.\n", varName);
+                fprintf(stdout, "FEMListUtilities:listGetDerivativeValue: no automated derivation possible for %s.\n", [varName UTF8String]);
             }
             
             found = YES;
@@ -1101,12 +1101,12 @@ static dispatch_once_t onceToken;
     containers->sizeIValues = 1;
     
     if (value == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addIntegerInClassList: no valid (value or block) input for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addIntegerInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addIntegerInClassList", "Saino will abort the simulation now...");
         
     }
     if (value != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addIntegerInClassList: value and block are both non-null for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addIntegerInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addIntegerInClassList", "Saino will abort the simulation now...");
     }
     if (value != NULL) {
@@ -1182,12 +1182,12 @@ static dispatch_once_t onceToken;
     containers->iValues = intvec(0, n-1);
     containers->sizeIValues = n;
     if (values == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addIntegerArrayInClassList: no valid (value or block) input for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addIntegerArrayInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addIntegerArrayInClassList", "Saino will abort the simulation now...");
         
     }
     if (values != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addIntegerArrayInClassList: value and block are both non-null for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addIntegerArrayInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addIntegerArrayInClassList", "Saino will abort the simulation now...");
     }
     if (values != NULL) {
@@ -1268,12 +1268,12 @@ static dispatch_once_t onceToken;
     containers->sizeFValues3 = 1;
     
     if (value == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
 
     }
     if (value != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
     }
     if (value != NULL) {
@@ -1354,12 +1354,12 @@ static dispatch_once_t onceToken;
     containers->sizeFValues3 = 1;
     
     if (fvalues == NULL && block == nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addConstRealInClassList: no valid (value or block) input for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
         
     }
     if (fvalues != NULL && block != nil) {
-        NSLog(@"FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %@.\n", varName);
+        fprintf(stderr, "FEMListUtilities:addConstRealInClassList: value and block are both non-null for variable %s.\n", [varName UTF8String]);
         fatal("FEMListUtilities:addConstRealInClassList", "Saino will abort the simulation now...");
     }
     if (fvalues != NULL) {
@@ -1523,7 +1523,7 @@ static dispatch_once_t onceToken;
         ct = cputime() - ct0;
         rt = realtime() - rt0;
         
-        NSLog(@"FEMListUtilities:checkTimer: elapsed time (CPU, REAL): %f %f.\n", ct, rt);
+        fprintf(stdout, "FEMListUtilities:checkTimer: elapsed time (CPU, REAL): %f %f.\n", ct, rt);
         if (_timerResults == YES) {
             NSString *string = [timerName stringByAppendingString:@" cpu time"];
             [self addConstRealInClassList:model.simulation theVariable:[@"res: " stringByAppendingString:string] withValue:&ct orUsingBlock:nil string:nil];
@@ -1531,7 +1531,7 @@ static dispatch_once_t onceToken;
             [self addConstRealInClassList:model.simulation theVariable:[@"res: " stringByAppendingString:string] withValue:&rt orUsingBlock:nil string:nil];
         }
     } else {
-        NSLog(@"FEMListUtilities:checkTimer: requesting time from non-existing timer: %@.\n", timerName);
+        fprintf(stdout, "FEMListUtilities:checkTimer: requesting time from non-existing timer: %s.\n", [timerName UTF8String]);
     }
     
     if (resetTimer != NULL) {

@@ -46,7 +46,7 @@
         NSDictionary *env = [processIngo environment];
         dirName = [env[@"XCS_SOURCE_DIR"] stringByAppendingPathComponent:@"Saino/Tests"];
     } else {
-        NSLog(@"User name not supported for testing.\n");
+        fprintf(stderr, "User name not supported for testing.\n");
     }
     self.testApp.path = [NSMutableString stringWithString:dirName];
 }
@@ -75,9 +75,9 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            NSLog(@"heateq:   [Passed].\n");
+            fprintf(stdout, "heateq:   [Passed].\n");
         }
         XCTAssertTrue(success == 0, @"heateq:   [FAILED].\n");
     } else {
@@ -105,9 +105,9 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            NSLog(@"Step_Stokes:   [Passed].\n");
+            fprintf(stdout, "Step_Stokes:   [Passed].\n");
         }
         XCTAssertTrue(success == 0, @"Step_Stokes:   [FAILED].\n");
     } else {
@@ -134,9 +134,9 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            NSLog(@"Natural convection:   [Passed].\n");
+            fprintf(stdout, "Natural convection:   [Passed].\n");
         }
         XCTAssertTrue(success == 0, @"Natural convection:   [FAILED].\n");
     } else {
@@ -163,9 +163,9 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            NSLog(@"ISMIP-HOM A010:   [Passed].\n");
+            fprintf(stdout, "ISMIP-HOM A010:   [Passed].\n");
         }
         XCTAssertTrue(success == 0, @"ISMIP-HOM A010:   [FAILED].\n");
     } else {
@@ -192,9 +192,9 @@
             success = 0;
         }
         if (success != 0) {
-            NSLog(@"Computed norm: %e.\n", self.testApp.norm);
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            NSLog(@"ISMIP-HOM A010 GPU:   [Passed].\n");
+            fprintf(stdout, "ISMIP-HOM A010 GPU:   [Passed].\n");
         }
         XCTAssertTrue(success == 0, @"ISMIP-HOM A010 GPU:   [FAILED].\n");
     } else {

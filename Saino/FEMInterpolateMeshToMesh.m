@@ -361,7 +361,7 @@
         if (found == NO) {
             element = NULL;
             if (parallel == NO) {
-                NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: point %d was not found in any of the elements.\n", i);
+                fprintf(stdout, "FEMInterpolateMeshToMesh:interpolateQMesh: point %d was not found in any of the elements.\n", i);
                 totFails++;
             }
             continue;
@@ -439,15 +439,15 @@
     
     if (parallel == NO) {
         if (qTreeFails > 0) {
-            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: number of points not found in quadtree: %d.", qTreeFails);
+            fprintf(stdout, "FEMInterpolateMeshToMesh:interpolateQMesh: number of points not found in quadtree: %d.", qTreeFails);
             if (totFails == 0) {
-                NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: all nodes still found by N^2 dummy search.\n");
+                fprintf(stdout, "FEMInterpolateMeshToMesh:interpolateQMesh: all nodes still found by N^2 dummy search.\n");
             }
         }
         if (totFails == 0) {
-            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: found all nodes in the target nesh.\n");
+            fprintf(stdout, "FEMInterpolateMeshToMesh:interpolateQMesh: found all nodes in the target nesh.\n");
         } else {
-            NSLog(@"FEMInterpolateMeshToMesh:interpolateQMesh: points not found: %d (found %d).\n", totFails, newMesh.numberOfNodes-totFails);
+            fprintf(stdout, "FEMInterpolateMeshToMesh:interpolateQMesh: points not found: %d (found %d).\n", totFails, newMesh.numberOfNodes-totFails);
         }
     }
     
@@ -727,7 +727,7 @@
     GaussIntegrationPoints *IP = NULL;
     BOOL axisSym, stat;
     
-    NSLog(@"FEMInterpolateMeshToMesh:weightedProjectorMesh2: creating Galerkin projector between two boundaries.\n");
+    fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: creating Galerkin projector between two boundaries.\n");
     
     FEMCore *core = [FEMCore sharedCore];
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
@@ -753,7 +753,7 @@
         if ((solution.solutionInfo)[@"use piola transform"] != nil) {
             piolaT = [(solution.solutionInfo)[@"use piola transform"] boolValue];
         }
-        NSLog(@"FEMInterpolateMeshToMesh:weightedProjectorMesh2: accounting for edge elements in projector.\n");
+        fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: accounting for edge elements in projector.\n");
     }
     
     int relOrder = 0;
@@ -779,7 +779,7 @@
         IP = GaussQuadrature(&bMesh1Elements[i], NULL, &relOrder);
         nbGaussPoints = nbGaussPoints + IP->n;
     }
-    NSLog(@"FEMInterpolateMeshToMesh:weightedProjectorMesh2: number of nodes and Gauss points: %d %d.\n", nbNodes, nbGaussPoints);
+    fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: number of nodes and Gauss points: %d %d.\n", nbNodes, nbGaussPoints);
     
     gaussNodes->x = doublevec(0, nbGaussPoints-1);
     gaussNodes->y = doublevec(0, nbGaussPoints-1);
@@ -811,7 +811,7 @@
                 axisSym = [(solution.solutionInfo)[@"projector metrics"] boolValue];
             }
         }
-        if (axisSym == YES) NSLog(@"FEMInterpolateMeshToMesh:weightedProjectorMesh2: projector will be weighted for axi-symmetry.\n");
+        if (axisSym == YES) fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: projector will be weighted for axi-symmetry.\n");
     }
     
     int totSize = bMesh1.parent.numberOfNodes + bMesh1.parent.numberOfEdges;

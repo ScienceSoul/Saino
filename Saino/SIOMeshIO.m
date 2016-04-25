@@ -60,8 +60,7 @@
 -(void)openMeshAtPath:(NSString * __nonnull)directory {
     
     if (directory == nil) {
-        NSLog(@"SIOMeshIO:openMeshAtPath: no assignment to directory name (empty object pointer).\n");
-        fatal("SIOMeshIO:openMeshAtPath", "Saino will abort the simulation now...");
+        fatal("SIOMeshIO:openMeshAtPath", "No assignment to directory name (empty object pointer).");
     }
     _meshAgent = [[SIOMeshAgent alloc] initWithManager:self.modelManager split:self.parallelState.numProc part:self.parallelState.myProc];
     

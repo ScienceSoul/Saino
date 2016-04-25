@@ -962,7 +962,7 @@
     NSNumber *order = @(ilun);
     NSMutableString *orderStr = [NSMutableString stringWithString:@"ILU"];
     [orderStr appendString:[order stringValue]];
-    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: %@ (Real), Starting factorization with order: %d.\n", orderStr, ilun);
+    fprintf(stdout, "FEMPrecondition:CRSIncompleteLUMatrix: %s (Real), Starting factorization with order: %d.\n", [orderStr UTF8String], ilun);
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -1016,7 +1016,7 @@
             if (S[i] <= AEPS) {
                 S[i] = 1.0;
                 if (warned == NO) {
-                    NSLog(@"CRSIncompleteLUMatrix:Cholesky factorization: negative diagonal: not pos.def. or badly conditioned matrix.\n");
+                    fprintf(stdout, "CRSIncompleteLUMatrix:Cholesky factorization: negative diagonal: not pos.def. or badly conditioned matrix.\n");
                     warned = YES;
                 }
             } else {
@@ -1086,9 +1086,9 @@
         }
     }
     
-    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: %@ (Real), NOF nonzeros: %d.\n", orderStr, matContainers->ILURows[(n+1)-1]);
-    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: %@ (Real), Filling (%%): %f.\n", orderStr, floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    NSLog(@"FEMPrecondition:CRSIncompleteLUMatrix: %@ (Real), Factorization ready at (s): %f.\n", orderStr, cputime() - t);
+    fprintf(stdout, "FEMPrecondition:CRSIncompleteLUMatrix: %s (Real), NOF nonzeros: %d.\n", [orderStr UTF8String], matContainers->ILURows[(n+1)-1]);
+    fprintf(stdout, "FEMPrecondition:CRSIncompleteLUMatrix: %s (Real), Filling (%%): %f.\n", [orderStr UTF8String], floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    fprintf(stdout, "FEMPrecondition:CRSIncompleteLUMatrix: %s (Real), Factorization ready at (s): %f.\n", [orderStr UTF8String], cputime() - t);
     
     free_bvector(C, 0, n-1);
     free_dvector(S, 0, n-1);
@@ -1124,7 +1124,7 @@
     NSNumber *order = @(ilun);
     NSMutableString *orderStr = [NSMutableString stringWithString:@"ILU"];
     [orderStr appendString:[order stringValue]];
-    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: %@ (Complex), Starting factorization with order: %d.\n", orderStr, ilun);
+    fprintf(stdout, "FEMPrecondition:CRSComplexIncompleteLUMatrix: %s (Complex), Starting factorization with order: %d.\n", [orderStr UTF8String], ilun);
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -1234,9 +1234,9 @@
         }
     }
     
-    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: %@ (Complex), NOF nonzeros: %d.\n", orderStr, matContainers->ILURows[(n/2+1)-1]);
-    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: %@ (Complex), Filling (%%): %f.\n", orderStr, floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
-    NSLog(@"FEMPrecondition:CRSComplexIncompleteLUMatrix: %@ (Complex), Factorization ready at (s): %f.\n", orderStr, cputime() - t);
+    fprintf(stdout, "FEMPrecondition:CRSComplexIncompleteLUMatrix: %s (Complex), NOF nonzeros: %d.\n", [orderStr UTF8String], matContainers->ILURows[(n/2+1)-1]);
+    fprintf(stdout, "FEMPrecondition:CRSComplexIncompleteLUMatrix: %s (Complex), Filling (%%): %f.\n", [orderStr UTF8String], floor(matContainers->ILURows[(n/2+1)-1]) * (400.0 / matContainers->Rows[(n+1)-1]));
+    fprintf(stdout, "FEMPrecondition:CRSComplexIncompleteLUMatrix: %s (Complex), Factorization ready at (s): %f.\n", [orderStr UTF8String], cputime() - t);
     
     free_bvector(C, 0,  n/2-1);
     free_cdvector(S, 0, n/2-1);
@@ -1268,7 +1268,7 @@
     
     matContainers = matrix.getContainers;
     
-    NSLog(@"FEMPrecondition:CRSIlutMatrix: Starting factorization: \n");
+    fprintf(stdout, "FEMPrecondition:CRSIlutMatrix: Starting factorization: \n");
     t = cputime();
     
     n = matrix.numberOfRows;
@@ -1282,9 +1282,9 @@
     
     [self FEMPrecondition_computeIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), NOF nonzeros: %d.\n", matContainers->ILURows[(n+1)-1]);
-    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Filling (%%): %f.\n", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
-    NSLog(@"FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Factorization ready at (s): %f.\n", cputime() - t);
+    fprintf(stdout, "FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), NOF nonzeros: %d.\n", matContainers->ILURows[(n+1)-1]);
+    fprintf(stdout, "FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Filling (%%): %f.\n", floor(matContainers->ILURows[(n+1)-1]) * (100.0 / matContainers->Rows[(n+1)-1]));
+    fprintf(stdout, "FEMPrecondition:CRSIlutMatrix: ILU(T) (Real), Factorization ready at (s): %f.\n", cputime() - t);
     
     return YES;
 }
@@ -1313,7 +1313,7 @@
     
     matContainers = matrix.getContainers;
     
-    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: Starting factorization: \n");
+    fprintf(stdout, "FEMPrecondition:CRSComplexIlutMatrix: Starting factorization: \n");
     t = cputime();
     
     n = matrix.numberOfRows / 2;
@@ -1327,9 +1327,9 @@
     
     [self FEMPrecondition_computeComplexIlutMatrix:matrix numberOfRows:n tolerance:tol];
     
-    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), NOF nonzeros: %d.\n", matContainers->ILURows[(n+1)-1]);
-    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Filling (%%): %f.\n", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
-    NSLog(@"FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Factorization ready at (s): %f.\n", cputime() - t);
+    fprintf(stdout, "FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), NOF nonzeros: %d.\n", matContainers->ILURows[(n+1)-1]);
+    fprintf(stdout, "FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Filling (%%): %f.\n", floor(matContainers->ILURows[(n+1)-1]) * (400.0 / matContainers->Rows[(2*n+1)-1]));
+    fprintf(stdout, "FEMPrecondition:CRSComplexIlutMatrix: ILU(T) (Complex), Factorization ready at (s): %f.\n", cputime() - t);
     
     return YES;
 }

@@ -61,7 +61,7 @@
     }
     
     if ( i >= (int)pow(2.0, dim)) {
-        NSLog(@"FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants?\n");
+        fprintf(stdout, "FEMInterpolation:FEMInterpolation_findPointsQuadrantForPoint: point not found in any of the quadrants?\n");
         return NULL;
     }
     
@@ -236,7 +236,7 @@
             break;
             
         default:
-            NSLog(@"FEMInterpolation:isPointInElement: element code %d not implemented.", element->Type.ElementCode);
+            fprintf(stdout, "FEMInterpolation:isPointInElement: element code %d not implemented.", element->Type.ElementCode);
             break;
     }
     
@@ -568,9 +568,9 @@
         quadrant->elements[i] = i;
     }
     
-    NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Start...\n");
+    fprintf(stdout, "FEMInterpolation:buildQuadrantTreeForMesh: Start...\n");
     [self createChildQuadrantFromMother:quadrant mesh:mesh dimension:dim maxLeafElements:maxLeafElements generation:&generation];
-    NSLog(@"FEMInterpolation:buildQuadrantTreeForMesh: Ready.\n");
+    fprintf(stdout, "FEMInterpolation:buildQuadrantTreeForMesh: Ready.\n");
 }
 
 @end
