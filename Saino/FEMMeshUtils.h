@@ -31,4 +31,7 @@
 -(void)preRotationalProjectorMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 mirrorNode:(BOOL * __nullable)mirrorNode sizeMirrorNode:(int * __nullable)sizeMirrorNode;
 -(void)postRotationalProjector:(FEMMatrix * __nonnull)projector mirrorNode:(BOOL * __nonnull)mirrorNode sizeMirrorNode:(int * __nonnull)sizeMirrorNode;
 -(void)saveProjector:(FEMMatrix * __nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * __nonnull)prefix invPerm:(int * __nullable)invPerm;
+-(void)colorMesh:(FEMMesh * __nonnull)mesh;
+-(void)saveColoredMesh:(FEMMesh * __nonnull)mesh meshdir:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name elementsFileName:(NSString * __nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * __nonnull)colorFileName;
+-(void)readColoredMesh:(FEMMesh * __nonnull)mesh name:(NSString * __nonnull)name directory:(NSString * __nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile;
 @end

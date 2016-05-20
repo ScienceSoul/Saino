@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		010ACFB31CCF686400CA1D9F /* GPUData.h in Headers */ = {isa = PBXBuildFile; fileRef = 010ACFB21CCF686400CA1D9F /* GPUData.h */; };
+		017309C31CE5E6F7000FA8C0 /* GPUUtils.c in Sources */ = {isa = PBXBuildFile; fileRef = 017309C11CE5E6F7000FA8C0 /* GPUUtils.c */; };
+		017309C41CE5E6F7000FA8C0 /* GPUUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 017309C21CE5E6F7000FA8C0 /* GPUUtils.h */; };
 		01B39C6B1CC5E0B300E62601 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01B39C6A1CC5E0B300E62601 /* OpenGL.framework */; };
 		73051E2E17F2B582001861D8 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73051E2D17F2B582001861D8 /* OpenCL.framework */; };
 		730C42E21B27EDF1009411B7 /* Saino_App_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 730C42D01B2686E2009411B7 /* Saino_App_Tests.m */; };
@@ -229,7 +232,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		010ACFB21CCF686400CA1D9F /* GPUData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUData.h; sourceTree = "<group>"; };
 		014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = NavierStokesAssemblyKernel.cl; sourceTree = "<group>"; };
+		017309C11CE5E6F7000FA8C0 /* GPUUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GPUUtils.c; sourceTree = "<group>"; };
+		017309C21CE5E6F7000FA8C0 /* GPUUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUUtils.h; sourceTree = "<group>"; };
 		01B39C6A1CC5E0B300E62601 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -490,13 +496,16 @@
 			name = "Saino Constructor classes";
 			sourceTree = "<group>";
 		};
-		73051E2F17F2D4E4001861D8 /* OpenCL kernels */ = {
+		73051E2F17F2D4E4001861D8 /* OpenCL */ = {
 			isa = PBXGroup;
 			children = (
 				73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */,
 				014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */,
+				010ACFB21CCF686400CA1D9F /* GPUData.h */,
+				017309C21CE5E6F7000FA8C0 /* GPUUtils.h */,
+				017309C11CE5E6F7000FA8C0 /* GPUUtils.c */,
 			);
-			name = "OpenCL kernels";
+			name = OpenCL;
 			path = Saino;
 			sourceTree = "<group>";
 		};
@@ -688,7 +697,7 @@
 				73456ED114ECF82C00ECD602 /* Docs */,
 				7315515A1358610F004CCD09 /* FEM Classes */,
 				7323550917F3D67F00AAC8CA /* OpenCL Based Solutions */,
-				73051E2F17F2D4E4001861D8 /* OpenCL kernels */,
+				73051E2F17F2D4E4001861D8 /* OpenCL */,
 				73155155135848B4004CCD09 /* Low level C routines */,
 				738AB9EB1BC7C9220038AAEF /* Supporting Files */,
 			);
@@ -911,6 +920,7 @@
 				738ABA611BC7CEDD0038AAEF /* FEMCoordinateSystems.h in Headers */,
 				738ABA621BC7CEDD0038AAEF /* FEMPost.h in Headers */,
 				738ABA631BC7CEDD0038AAEF /* FEMRadiation.h in Headers */,
+				010ACFB31CCF686400CA1D9F /* GPUData.h in Headers */,
 				738ABA641BC7CEDD0038AAEF /* FEMIterativeMethods.h in Headers */,
 				738ABA651BC7CEDD0038AAEF /* FEMMaterialModels.h in Headers */,
 				738ABA661BC7CEDD0038AAEF /* FEMDifferentials.h in Headers */,
@@ -937,6 +947,7 @@
 				738ABA7A1BC7CEE00038AAEF /* FEMFlowSolution.h in Headers */,
 				738ABA7B1BC7CEE00038AAEF /* FEMMagneticInductionSolution.h in Headers */,
 				738ABA7C1BC7CEE10038AAEF /* FEMStressAnalysisSolution.h in Headers */,
+				017309C41CE5E6F7000FA8C0 /* GPUUtils.h in Headers */,
 				738ABA7D1BC7CEE10038AAEF /* FEMMeshUpdateSolution.h in Headers */,
 				738ABA7E1BC7CEE10038AAEF /* FEMHeatSolution.h in Headers */,
 				738ABA7F1BC7CEE10038AAEF /* FEMHeatSolution_OpenCL.h in Headers */,
@@ -1019,6 +1030,7 @@
 				738AB9E61BC7C9220038AAEF /* Frameworks */,
 				738AB9E71BC7C9220038AAEF /* Headers */,
 				738AB9E81BC7C9220038AAEF /* Resources */,
+				01C8EAA81CEC11C6000C372F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1132,6 +1144,22 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		01C8EAA81CEC11C6000C372F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp -r /Users/${USER}/Library/Developer/Xcode/DerivedData/Saino-dhmmipahhpzdukcangkfxcvvpbrg/Build/Products/Debug/SainoCore.framework /Users/${USER}/Documents/MyDevLibs";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		730C42C81B2686E2009411B7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1208,6 +1236,7 @@
 				738ABA201BC7CC6B0038AAEF /* FEMSolution.m in Sources */,
 				738ABA211BC7CC6B0038AAEF /* FEMMatrixCRS.m in Sources */,
 				738ABA221BC7CC6B0038AAEF /* FEMMatrixBand.m in Sources */,
+				017309C31CE5E6F7000FA8C0 /* GPUUtils.c in Sources */,
 				738ABA231BC7CC6B0038AAEF /* FEMPrecondition.m in Sources */,
 				738ABA241BC7CC6B0038AAEF /* FEMMesh.m in Sources */,
 				738ABA251BC7CC6B0038AAEF /* FEMElementDescription.m in Sources */,

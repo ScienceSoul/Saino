@@ -57,7 +57,7 @@
 #define UNROLL_DEPTH 4
 #endif
 
-void basis3D(__local REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w) {
+void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w) {
     
     REAL s;
     for(int n=0; n<numberOfNodes+OFFSET; n++) {
@@ -70,7 +70,7 @@ void basis3D(__local REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w)
     }
 }
 
-REAL dBasisdx3D(__local REAL *BasisFunctions,
+REAL dBasisdx3D(__global REAL *BasisFunctions,
                 __global int *elementNodeIndexesStore,
                 __global REAL *nodesX,
                 __global REAL *nodesY,
@@ -191,9 +191,9 @@ REAL dBasisdx3D(__local REAL *BasisFunctions,
     return sqrt(detJ);
 }
 
-__kernel void NavierStokesCompose(__local REAL *BasisFunctions,
-                                  __local REAL *NodesUVW,
-                                  __local REAL *GaussPoints,
+__kernel void NavierStokesCompose(__global REAL *BasisFunctions,
+                                  __global REAL *NodesUVW,
+                                  __global REAL *GaussPoints,
                                   __global REAL *values,
                                   __global REAL *rhs,
                                   __global int *diag,
@@ -204,12 +204,12 @@ __kernel void NavierStokesCompose(__local REAL *BasisFunctions,
                                   __global REAL *nodesX,
                                   __global REAL *nodesY,
                                   __global REAL *nodesZ,
-                                  __global REAL *varSol,
-                                  __global REAL *varPerm,
+                                  __global REAL *varSolution,
+                                  __global int *varPermutation,
                                   __global int *newtonLinearization,      // Just an integer pointer, 1 for true, 0 for false
                                   __constant REAL density,
                                   __constant REAl viscosity,
-                                  __constant REAL load,                   // load = flow bodyforce 2 or 3
+                                  __constant REAL load,                   // load = Flow bodyforce 2 or 3
                                   __constant REAL hk,
                                   __constant REAL mk
                                   __constant int positionInColorMapping,
@@ -275,16 +275,16 @@ __kernel void NavierStokesCompose(__local REAL *BasisFunctions,
         
         // TODO: mesh velocity not accounted yet
         for (int i=0; i<numberOfNodes; i++) {
-            velo[0] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * basis[i];
-            velo[1] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * basis[i];
-            if (MDIM > 2) velo[2] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * basis[i];
+            velo[0] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * basis[i];
+            velo[1] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * basis[i];
+            if (MDIM > 2) velo[2] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * basis[i];
         }
         
         for (int i=0; i<3; i++) {
             for (int j=0; j<n; j++) {
-                grad[0][i] = grad[0][i] + varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * dBasisdx[j][i];
-                grad[1][i] = grad[1][i] + varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * dBasisdx[j][i];
-                if (MDIM > 2)  grad[2][i] = grad[2][i] + varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * dBasisdx[j][i];
+                grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * dBasisdx[j][i];
+                grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * dBasisdx[j][i];
+                if (MDIM > 2)  grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * dBasisdx[j][i];
             }
         }
         
@@ -470,18 +470,18 @@ __kernel void NavierStokesCompose(__local REAL *BasisFunctions,
         REAL sol[varDofs*numberOfNodes] = {};
         int kk = 0;
         for (int i=0; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
-            sol[i] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]];
+            sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]];
             kk++;
         }
         kk = 0;
         for (int i=1; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
-            sol[i] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+1];
+            sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+1];
             kk++;
         }
         if (MDIM > 2) {
             kk = 0;
             for (int i=2; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
-                sol[i] = varSol[varDofs*varPerm[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
+                sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
                 kk++;
             }
         }
@@ -508,12 +508,12 @@ __kernel void NavierStokesCompose(__local REAL *BasisFunctions,
     // Only for DOF > 1
     for (i=0; i<numberElementDofs; i++) {
         for (k=1; k<=varDofs; k++) {
-            if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] < 0) continue;
-            row = varDofs * (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1) - k;
+            if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] < 0) continue;
+            row = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1) - k;
             for (j=0; j<numberElementDofs; j++) {
                 for (l=1; l<=varDofs; l++) {
-                    if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+j] < 0) continue;
-                    col = varDofs * (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1) - l;
+                    if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+j] < 0) continue;
+                    col = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1) - l;
                     if (col >= row) {
                         for (c=diag[row]; c<=rows[row+1]-1; c++) {
                             if (cols[c] == col) {
@@ -536,9 +536,9 @@ __kernel void NavierStokesCompose(__local REAL *BasisFunctions,
     
     // The right-hand side
     for (i=0; i<numberElementDofs; i++) {
-        if (permutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+i] >= 0) {
+        if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+i] >= 0) {
             for (j=0; j<varDofs; j++) {
-                k = varDofs * permutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
+                k = varDofs * varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
                 rhs[k] = rhs[k] + forceVector[varDofs*i+j];
             }
         }

@@ -20,6 +20,8 @@
 #import "TimeProfile.h"
 #import "GaussIntegration.h"
 #import "OpenCLUtils.h"
+#import "GPUData.h"
+#import "GPUUtils.h"
 
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
@@ -88,11 +90,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             defaultFirstOrderTime:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))defaultFirstOrderTimeIMP
                 nsCondensateStiff:(void (* __nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
            defaultUpdateEquations:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP;
+-(ice_flow_gpu *)FEMFlowSolution_allocate_ice_flow_gpu:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution;
+-(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 @end
 
 @implementation FEMFlowSolution {
     
     BOOL _allocationDone;
+    BOOL _newtonLinearization;
     int _cols;
     int _localNodes;
     int _nsdofs;
@@ -145,16 +152,43 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     double * __nullable _w;
     Nodes_t * __nullable _elementNodes;
     
-    // The following definitions are used the
-    // for assembly on the GPU
+    // --------------------------------------------------
+    // The following definitions are used for
+    // the assembly on the GPU
+    // --------------------------------------------------
     cl_device_id _device;
     cl_context _context;
     cl_command_queue _cmd_queue;
     cl_program _program;
+    cl_kernel _kernel;
     cl_int _err;
-    char *_kernel_source;
     size_t _src_len;
+    char *_kernel_source;
     BOOL _initializeGPU;
+    
+    // Ice flow data on the GPU
+    ice_flow_gpu *_gpuData;
+    
+    // GPU buffers
+    cl_mem _basisFunctions;
+    cl_mem _nodesUVW;
+    cl_mem _gaussPoints;
+    cl_mem _matDiag;
+    cl_mem _matRows;
+    cl_mem _matCols;
+    cl_mem _matValues;
+    cl_mem _matRHS;
+    cl_mem _colorMapping;
+    cl_mem _elementNodeIndexesStore;
+    cl_mem _nodesX;
+    cl_mem _nodesY;
+    cl_mem _nodesZ;
+    cl_mem _varSolution;
+    cl_mem _varPermutation;
+    cl_mem _gpuNewtonLinear;
+    void *_mapped_matValues;
+    void *_mapped_matRHS;
+    void *_mapped_gpuNewton;
 }
 
 -(void)FEMFlowSolution_nullify {
@@ -866,11 +900,327 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
+-(ice_flow_gpu *)FEMFlowSolution_allocate_ice_flow_gpu:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+    
+    int indx, elementCode, gaussPoints;
+    ice_flow_gpu *gpuData = NULL;
+    GaussIntegrationPoints *IP = NULL;
+    
+    gpuData = (ice_flow_gpu *)malloc(sizeof(ice_flow_gpu));
+    
+    Element_t *element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
+    
+    // Figure out the element code and the number of Gauss points for the active elements
+    elementCode = element->Type.ElementCode;
+    gaussPoints = element->Type.GaussPoints;
+    IP = GaussQuadratureGPU(elementCode, gaussPoints);
+
+    gpuData->gaussPoints = (double *)malloc(sizeof(double) * 32);
+    indx = 0;
+    for (int i=0; i<IP->n; i++) {
+        gpuData->gaussPoints[indx] = IP->u[i];
+        indx++;
+    }
+    for (int i=0; i<IP->n; i++) {
+        gpuData->gaussPoints[indx] = IP->v[i];
+        indx++;
+    }
+    for (int i=0; i<IP->n; i++) {
+        gpuData->gaussPoints[indx] = IP->w[i];
+        indx++;
+    }
+    for (int i=0; i<IP->n; i++) {
+        gpuData->gaussPoints[indx] = IP->s[i];
+        indx++;
+    }
+   
+    // Get the element basis functions
+    gpuData->basisFunctions = (double *)malloc(sizeof(double) * 256);
+    indx = 0;
+    for(int i=0; i<element->Type.NumberOfNodes; i++) {
+        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+            gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].p[j];
+            indx++;
+        }
+        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+            gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].q[j];
+            indx++;
+        }
+        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+            gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].r[j];
+            indx++;
+        }
+        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+            gpuData->basisFunctions[indx] = element->Type.BasisFunctions[i].coeff[j];
+            indx++;
+        }
+    }
+    
+    // Get the element nodal U, W, W
+    gpuData->nodesUVW = (double *)malloc(sizeof(double) * 24);
+    indx = 0;
+    for (int i=0; i<element->Type.NumberOfNodes; i++) {
+        gpuData->nodesUVW[indx] = element->Type.NodeU[i];
+        indx++;
+    }
+    for (int i=0; i<element->Type.NumberOfNodes; i++) {
+        gpuData->nodesUVW[indx] = element->Type.NodeV[i];
+        indx++;
+    }
+    for (int i=0; i<element->Type.NumberOfNodes; i++) {
+        gpuData->nodesUVW[indx] = element->Type.NodeW[i];
+        indx++;
+    }
+    
+    return gpuData;
+}
+
+-(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution {
+    
+    int *colorMapping = NULL, *elementNodeIndexesStore = NULL;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *flowContainers = NULL;
+    Nodes_t *meshNodes = NULL;
+    cl_int err;
+    
+    flowContainers = solution.variable.getContainers;
+    matContainers = solution.matrix.getContainers;
+    meshNodes = mesh.getNodes;
+    colorMapping = mesh.getColorMapping;
+    elementNodeIndexesStore = mesh.getElementNodeIndexesStore;
+    
+    // ------------------------ Create the buffers on the device
+    
+    _basisFunctions = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 256, _gpuData->basisFunctions, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _basisFunctions.");
+    }
+    
+    _nodesUVW = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 24, _gpuData->nodesUVW, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesUVW.");
+    }
+    
+    _gaussPoints = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 32, _gpuData->gaussPoints, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _gaussPoints.");
+    }
+    
+    _matDiag = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matDiag.");
+    }
+    _matRows = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRows.");
+    }
+    _matCols = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matCols.");
+    }
+    
+    _matValues = createDeviceBuffer(precision(), _context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, matContainers->sizeValues, matContainers->Values, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matValues.");
+    }
+    
+    _matRHS = createDeviceBuffer(precision(), _context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, matContainers->sizeRHS, matContainers->RHS, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRHS.");
+    }
+    
+    _colorMapping = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*mesh.numberOfBulkElements, colorMapping, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _colorMapping.");
+    }
+    
+    _elementNodeIndexesStore = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), elementNodeIndexesStore, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _elementNodeIndexesStore.");
+    }
+    
+    _nodesX = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, meshNodes->x, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesX.");
+    }
+    
+    _nodesY = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, meshNodes->y, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesY.");
+    }
+    
+    _nodesZ = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, meshNodes->z, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesZ.");
+    }
+    
+    _varSolution = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, flowContainers->sizeValues, _flowSolution, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varSolution.");
+    }
+    
+    _varPermutation = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*flowContainers->sizePerm, _flowPerm, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varPermutation.");
+    }
+    
+    _gpuNewtonLinear = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(cl_char), &_newtonLinearization, &err);
+    
+    // ------------------------ Map the written buffers to the host memory
+    
+    _mapped_matValues = enqueueDeviceMapBuffer(precision(), _cmd_queue, _matValues, CL_TRUE, CL_MAP_READ, 0, matContainers->sizeValues, 0, NULL, NULL, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_matValues.");
+    }
+    
+    _mapped_matRHS = enqueueDeviceMapBuffer(precision(), _cmd_queue, _matRHS, CL_TRUE, CL_MAP_READ, 0, matContainers->sizeRHS, 0, NULL, NULL, err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_matRHS.");
+    }
+    
+    _mapped_gpuNewton = clEnqueueMapBuffer(_cmd_queue, _gpuNewtonLinear, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(cl_char), 0, NULL, NULL, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_gpuNewton.");
+    }
+}
+
+-(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+    
+    BOOL singlePrecision=NO, doublePrecision=NO;
+    cl_int err;
+    
+    if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"single"] == YES) {
+        singlePrecision = YES;
+    } else if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"double"] == YES) {
+        doublePrecision = YES;
+    } else {
+        fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "GPU precision mode not supported.");
+    }
+    
+    err  = clSetKernelArg(_kernel, 0, sizeof(cl_mem), &_basisFunctions);
+    err |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &_nodesUVW);
+    err |= clSetKernelArg(_kernel, 2, sizeof(cl_mem), &_gaussPoints);
+    err |= clSetKernelArg(_kernel, 3, sizeof(cl_mem), &_matValues);
+    err |= clSetKernelArg(_kernel, 4, sizeof(cl_mem), &_matRHS);
+    err |= clSetKernelArg(_kernel, 5, sizeof(cl_mem), &_matDiag);
+    err |= clSetKernelArg(_kernel, 6, sizeof(cl_mem), &_matRows);
+    err |= clSetKernelArg(_kernel, 7, sizeof(cl_mem), &_matCols);
+    err |= clSetKernelArg(_kernel, 8, sizeof(cl_mem), &_colorMapping);
+    err |= clSetKernelArg(_kernel, 9, sizeof(cl_mem), &_elementNodeIndexesStore);
+    err |= clSetKernelArg(_kernel, 10, sizeof(cl_mem), &_nodesX);
+    err |= clSetKernelArg(_kernel, 11, sizeof(cl_mem), &_nodesY);
+    err |= clSetKernelArg(_kernel, 12, sizeof(cl_mem), &_nodesZ);
+    err |= clSetKernelArg(_kernel, 13, sizeof(cl_mem), &_varSolution);
+    err |= clSetKernelArg(_kernel, 14, sizeof(cl_mem), &_varPermutation);
+    err |= clSetKernelArg(_kernel, 15, sizeof(cl_mem), &_gpuNewtonLinear);
+    
+    if (solution.solutionInfo[@"gpu ice density"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice density value for gpu execution.");
+    _gpuData->density = [solution.solutionInfo[@"gpu ice density"] doubleValue];
+    err |= setDeviceKernelArg(precision(), _kernel, 16, 1, _gpuData->density);
+    
+    if (solution.solutionInfo[@"gpu ice viscosity"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice viscosity value for gpu execution.");
+    _gpuData->viscosity = [solution.solutionInfo[@"gpu ice viscosity"] doubleValue];
+    err |= setDeviceKernelArg(precision(), _kernel, 17, 1, _gpuData->viscosity);
+
+    if (solution.solutionInfo[@"gpu ice gravity"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing gravity value for gpu execution.");
+    _gpuData->gravity = [solution.solutionInfo[@"gpu ice gravity"] doubleValue];
+    err |= setDeviceKernelArg(precision(), _kernel, 18, 1, _gpuData->gravity);
+    
+    Element_t *element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
+    double hScale;
+    if ((solution.solutionInfo)[@"h scale"] != nil) {
+        hScale = [(solution.solutionInfo)[@"h scale"] doubleValue];
+    } else {
+        hScale = 1.0;
+    }
+    _gpuData->hk = element->hK * hScale;
+    _gpuData->mk = element->StabilizationMK;
+    err |= setDeviceKernelArg(precision(), _kernel, 19, 1, _gpuData->hk);
+    err |= setDeviceKernelArg(precision(), _kernel, 20, 1, _gpuData->mk);
+    
+    int n = element->Type.NumberOfNodes;
+    int nBasis = element->Type.NumberOfNodes;
+    err |= clSetKernelArg(_kernel, 22, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel, 23, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel, 24, sizeof(cl_int), &nBasis);
+    
+    int varDofs = solution.variable.dofs;
+    err |= clSetKernelArg(_kernel, 25, sizeof(cl_int), &varDofs);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Error in setting kernel arguments.");
+    }
+}
+
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+    
+    // Get the GPU device
+    _device = find_single_device();
+    device_stats(_device);
+    
+    // Create the context of the command queue
+    _context = clCreateContext(0, 1, &_device, NULL, NULL, &_err);
+    _cmd_queue = clCreateCommandQueue(_context, _device, 0, NULL);
+    
+    NSString *kernelfile;
+    if (solution.solutionInfo[@"gpu kernel source file"] != nil) {
+        NSString *source = solution.solutionInfo[@"gpu kernel source file"];
+        if ([source containsString:@".cl"] == YES) {
+            kernelfile = [NSString stringWithString:source];
+        } else {
+            kernelfile = [source stringByAppendingPathExtension:@"cl"];
+        }
+    } else {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Parallel assembly requires a kernel source file.");
+    }
+    
+    int success = LoadFileIntoString((char *)[kernelfile UTF8String], &_kernel_source, &_src_len);
+    if (success < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't load kernel source.");
+    }
+    
+    // Allocate memory for program and kernels
+    // Create the program .cl file
+    _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &_err);
+    if (_err) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create program. Error number: ", _err);
+    }
+    
+    // Build the program (compile it)
+    const char options[] = "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+    _err = clBuildProgram(_program, 1, &_device, options, NULL, &_err);
+    if (_err < 0) {
+        size_t log_size;
+        clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        char *program_log = (char *)malloc(log_size+1);
+        program_log[log_size] = '\0';
+        clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
+        fprintf(stderr, "FEMFlowSolution:FEMFlowSolution_setGPUCore: %s\n", program_log);
+        free(program_log);
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore");
+    }
+    
+    // Create the kernel
+    _kernel = clCreateKernel(_program, "NavierStokesCompose", &_err);
+    if (_err) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error number: ", _err);
+    }
+    
+    // Create data structures needed by the GPU
+    _gpuData = [self FEMFlowSolution_allocate_ice_flow_gpu:core solution:solution model:model mesh:mesh getActiveElement:getActiveElementIMP];
+    
+    // Allocate the GPU buffers and map the written buffers to the host
+    [self FEMFlowSolution_createMapGPUBuffersMesh:mesh solution:solution];
+    
+    // Set kernel arguments
+    [self FEMFlowSolution_setKernelArgumentsCore:core model:model solution:solution getActiveElement:getActiveElementIMP];
+}
+
 - (id)init
 {
     self = [super init];
     if (self) {
         _allocationDone = NO;
+        _newtonLinearization = NO;
         _cols = 0;
         _rows = 0;
         
@@ -884,7 +1234,32 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _pDensity1 = NULL;
         
         _device = NULL;
+        _context = NULL;
+        _cmd_queue = NULL;
+        _program = NULL;
+        _kernel = NULL;
+        _kernel_source = NULL;
         _initializeGPU = NO;
+        _gpuData = NULL;
+        _basisFunctions = NULL;
+        _nodesUVW = NULL;
+        _gaussPoints = NULL;
+        _matDiag = NULL;
+        _matRows = NULL;
+        _matCols = NULL;
+        _matValues = NULL;
+        _matRHS = NULL;
+        _colorMapping = NULL;
+        _elementNodeIndexesStore = NULL;
+        _nodesX = NULL;
+        _nodesY = NULL;
+        _nodesZ = NULL;
+        _varSolution = NULL;
+        _varPermutation = NULL;
+        _gpuNewtonLinear = NULL;
+        _mapped_matValues = NULL;
+        _mapped_matRHS = NULL;
+        _mapped_gpuNewton = NULL;
 }
     
     return self;
@@ -941,6 +1316,46 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (_pseudoPressure != NULL) free_dvector(_pseudoPressure, 0, _sizePseudoPressure-1);
     if (_pDensity0 != NULL) free_dvector(_pDensity0, 0, _sizePDensity0);
     if (_pDensity1 != NULL) free_dvector(_pDensity1, 0, _sizePDensity1);
+    
+    if ((solution.solutionInfo)[@"parallel assembly"] != nil) {
+        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+            
+            if (_mapped_matValues != NULL) clEnqueueUnmapMemObject(_cmd_queue, _matValues, _mapped_matValues, 0, NULL, NULL);
+            if (_mapped_matRHS != NULL) clEnqueueUnmapMemObject(_cmd_queue, _matRHS, _mapped_matRHS, 0, NULL, NULL);
+            if (_mapped_gpuNewton != NULL) clEnqueueUnmapMemObject(_cmd_queue, _gpuNewtonLinear, _mapped_gpuNewton, 0, NULL, NULL);
+                
+            if (_kernel != NULL) clReleaseKernel(_kernel);
+            if (_context != NULL) clReleaseContext(_context);
+            if (_cmd_queue != NULL) clReleaseCommandQueue(_cmd_queue);
+            if (_program != NULL) clReleaseProgram(_program);
+            
+            if (_basisFunctions != NULL) clReleaseMemObject(_basisFunctions);
+            if (_nodesUVW != NULL) clReleaseMemObject(_nodesUVW);
+            if (_gaussPoints != NULL) clReleaseMemObject(_gaussPoints);
+            if (_matDiag != NULL) clReleaseMemObject(_matDiag);
+            if (_matRows != NULL) clReleaseMemObject(_matRows);
+            if (_matCols != NULL) clReleaseMemObject(_matCols);
+            if (_matValues != NULL) clReleaseMemObject(_matValues);
+            if (_matRHS != NULL) clReleaseMemObject(_matRHS);
+            if (_colorMapping != NULL) clReleaseMemObject(_colorMapping);
+            if (_elementNodeIndexesStore != NULL) clReleaseMemObject(_elementNodeIndexesStore);
+            if (_nodesX != NULL) clReleaseMemObject(_nodesX);
+            if (_nodesY != NULL) clReleaseMemObject(_nodesY);
+            if (_nodesZ != NULL) clReleaseMemObject(_nodesZ);
+            if (_varSolution != NULL) clReleaseMemObject(_varSolution);
+            if (_varPermutation != NULL) clReleaseMemObject(_varPermutation);
+            if (_gpuNewtonLinear != NULL) clReleaseMemObject(_gpuNewtonLinear);
+            
+            if (_gpuData != NULL) {
+                if (_gpuData->gaussPoints != NULL) free(_gpuData->gaussPoints);
+                if (_gpuData->basisFunctions != NULL) free(_gpuData->basisFunctions);
+                if (_gpuData->nodesUVW != NULL) free(_gpuData->nodesUVW);
+                free(_gpuData);
+            }
+            
+            if (_kernel_source != NULL) free(_kernel_source);
+        }
+    }
 }
 
 -(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
@@ -951,7 +1366,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     double *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;
     double at, at0, at1, freeSTol, gravity[3], nonLinearRelax, nonLinearTol, newtonTol, pseudoCompressibilityScale, relativeChange, relaxation, st, sum, totat, totst, uNorm;
     NSString *compressibilityFlag, *flowModel, *localCoords, *stabilizeFlag, *varName;
-    BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, ifTransient, mbFlag, newtonLinearization = NO, normalTangential, pseudoPressureExists=NO, pseudoPressureUpdate=NO, relaxBefore, stabilize, useLocalCoords = NO;
+    BOOL bubbles, convect, computeFree = NO, divDiscretization, found, freeSurfaceFlag, gradPDiscretization, gotForceBC, ifTransient, mbFlag, normalTangential, pseudoPressureExists=NO, pseudoPressureUpdate=NO, relaxBefore, stabilize, useLocalCoords = NO;
     NSArray *bc = nil;
     Element_t * element = NULL, *parent = NULL;
     matrixArraysContainer *matContainers = NULL;
@@ -1359,9 +1774,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (newtonTol < 0.0) newtonTol = 0.0;
     
     newtonIter = [(solution.solutionInfo)[@"nonlinear system newton after iterations"] intValue];
-    if (newtonIter == 0) newtonLinearization = YES;
+    if (newtonIter == 0) _newtonLinearization = YES;
     
-    if ([(solution.solutionInfo)[@"nonlinear system reset newton"] boolValue] == YES) newtonLinearization = NO;
+    if ([(solution.solutionInfo)[@"nonlinear system reset newton"] boolValue] == YES) _newtonLinearization = NO;
     
     nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
     if (nonLinearIter < 0) nonLinearIter = 0;
@@ -1435,57 +1850,18 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         if ([integration allocation:mesh] == NO) fatal("FEMFlowSolution:solutionComputer", "Allocation error in FEMNumericIntegration.");
     }
     
-    // If we do the matrix assembly on the GPU, prepare everything here
+    // If we do the matrix assembly on the GPU, set-up everything now (only once)
     if (parallelAssembly == YES) {
+        if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"single"] == YES) {
+            setPrecision(true);
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: single precision mode used in GPU solver.\n");
+        } else if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"double"] == YES) {
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: double precision mode used in GPU solver.\n");
+        } else {
+            fatal("FEMFlowSolution:solutionComputer", "GPU precision mode not supported.");
+        }
         if (_initializeGPU == NO) {
-            // Get the GPU device
-            _device = find_single_device();
-            device_stats(_device);
-            
-            // Create the context of the command queue
-            _context = clCreateContext(0, 1, &_device, NULL, NULL, &_err);
-            _cmd_queue = clCreateCommandQueue(_context, _device, 0, NULL);
-            
-            NSString *kernelfile;
-            if (solution.solutionInfo[@"gpu kernel source file"] != nil) {
-                NSString *source = solution.solutionInfo[@"gpu kernel source file"];
-                if ([source containsString:@".cl"] == YES) {
-                    kernelfile = [NSString stringWithString:source];
-                } else {
-                    kernelfile = [source stringByAppendingPathExtension:@"cl"];
-                }
-            } else {
-                fatal("FEMFlowSolution:solutionComputer", "Parallel assembly requires a kernel source file.");
-            }
-            
-            int success = LoadFileIntoString((char *)[kernelfile UTF8String], &_kernel_source, &_src_len);
-            if (success < 0) {
-                fatal("FEMFlowSolution:solutionComputer", "Can't load kernel source.");
-            }
-            
-            // Allocate memory for program and kernels
-            // Create the program .cl file
-            _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &_err);
-            if (_err) {
-                fatal("FEMFlowSolution:solutionComputer", "Can't create program. Error number: ", _err);
-            }
-            
-            // Build the program (compile it)
-            const char options[] = "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
-            _err = clBuildProgram(_program, 1, &_device, options, NULL, &_err);
-            if (_err < 0) {
-                size_t log_size;
-                clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-                char *program_log = (char *)malloc(log_size+1);
-                program_log[log_size] = '\0';
-                clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-                fprintf(stderr, "FEMFlowSolution:solutionComputer: %s\n", program_log);
-                free(program_log);
-                fatal("FEMFlowSolution:solutionComputer");
-            }
-            
-            
-            
+            [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh getActiveElement:getActiveElementIMP];
             _initializeGPU = YES;
         }
     }
@@ -1519,17 +1895,29 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         // Bulk elements
         if (parallelAssembly == YES) {
+            int position;
+            cl_int err;
             
-            GaussIntegrationPoints *IP = NULL;
-            int elementCode, gaussPoints;
-            
-            // Figure out the element code and the number of Gauss points for the active elements
-            element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
-            elementCode = element->Type.ElementCode;
-            gaussPoints = element->Type.GaussPoints;
-            IP = GaussQuadratureGPU(elementCode, gaussPoints);
-            
-            // Get the element basis functions
+            for (NSMutableArray *color in mesh.colors) {
+                position = 0;
+                for (i=0; i<[color[1] intValue]; i++) {
+                    NSMutableArray *cc = mesh.colors[i];
+                    position = position + [cc[0] intValue];
+                }
+                
+                size_t global_work__size = [color[0] intValue];
+                // TODO: Define work group size here
+                err = clSetKernelArg(_kernel, 21, sizeof(cl_int), &position);
+                if (err < 0) {
+                    fatal("FEMFlowSolution:solutionComputer", "Error in setting kernel arguments.");
+                }
+                
+                // Queue up the kernels
+                err |= clEnqueueNDRangeKernel(_cmd_queue, _kernel, 1, NULL, &global_work__size, NULL, 0, NULL, NULL);
+                
+                // Finish the calculation
+                clFinish(_cmd_queue);
+            }
             
         } else {
             [self FEMFlowSolution_doAssembly:solution
@@ -1570,7 +1958,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                                           dt:dt
                                      gravity:gravity
                                     timeStep:timeStep
-                         newtonLinearization:newtonLinearization
+                         newtonLinearization:_newtonLinearization
                                    transient:transient
                                stabilizeFlag:stabilizeFlag
                            divDiscretization:divDiscretization
@@ -1860,7 +2248,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fprintf(stdout, "FEMFlowSolution:solutionComputer: result norm: %e.\n", solution.variable.norm);
         fprintf(stdout, "FEMFlowSolution:solutionComputer: relative change: %e.\n", relativeChange);
         
-        if (relativeChange < newtonTol || iter > newtonIter) newtonLinearization = YES;
+        if (relativeChange < newtonTol || iter > newtonIter) _newtonLinearization = YES;
         if (relativeChange < nonLinearTol && iter < nonLinearIter) break;
         
         // If free surface in model, this will move the nodal points

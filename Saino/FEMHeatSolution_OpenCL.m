@@ -632,7 +632,7 @@ enum {
             int varDofs = solution.variable.dofs;
             
             // Set kernel arguments
-            err |= clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matValues);
+            err  = clSetKernelArg(CLkernel, 0, sizeof(cl_mem), &matValues);
             err |= clSetKernelArg(CLkernel, 1, sizeof(cl_mem), &matRhs);
             err |= clSetKernelArg(CLkernel, 2, sizeof(cl_mem), &matDiag);
             err |= clSetKernelArg(CLkernel, 3, sizeof(cl_mem), &matRows);

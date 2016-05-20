@@ -14,50 +14,7 @@
 #import "FileReader.h"
 #import "Utils.h"
 
-@interface FEMPost ()
--(void)FEMPost_writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle * __nonnull)fileHandle;
--(void)FEMPost_writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle;
--(void)FEMPost_writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle;
--(void)FEMPost_writeBytes:(const void * __nonnull)bytes length:(int)length toFileHandle:(NSFileHandle * __nonnull)fileHandle;
-@end
-
 @implementation FEMPost
-
-#pragma mark Private methods
-
--(void)FEMPost_writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle * __nonnull)fileHandle {
-    
-    NSData *buffer;
-    buffer = (NSMutableData *)[string dataUsingEncoding:NSUTF8StringEncoding];
-    [fileHandle writeData:buffer];
-}
-
--(void)FEMPost_writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
-    
-    NSData *buffer;
-    NSString *strBuffer;
-    strBuffer = [NSString stringWithFormat:@"%d", number];
-    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
-    [fileHandle writeData:buffer];
-}
-
--(void)FEMPost_writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
-    
-    NSData *buffer;
-    NSString *strBuffer;
-    strBuffer = [NSString stringWithFormat:@"%17.8e", number];
-    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
-    [fileHandle writeData:buffer];
-}
-
--(void)FEMPost_writeBytes:(const void * __nonnull)bytes length:(int)length toFileHandle:(NSFileHandle * __nonnull)fileHandle {
-    
-    NSData *buffer;
-    buffer = [NSData dataWithBytes:bytes length:length];
-    [fileHandle writeData:buffer];
-}
-
-#pragma mark Public methods
 
 - (id)init
 {
@@ -67,6 +24,38 @@
     }
     
     return self;
+}
+
+-(void)writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+    
+    NSData *buffer;
+    buffer = (NSMutableData *)[string dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+    
+    NSData *buffer;
+    NSString *strBuffer;
+    strBuffer = [NSString stringWithFormat:@"%d", number];
+    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+    
+    NSData *buffer;
+    NSString *strBuffer;
+    strBuffer = [NSString stringWithFormat:@"%17.8e", number];
+    buffer = (NSMutableData *)[strBuffer dataUsingEncoding:NSUTF8StringEncoding];
+    [fileHandle writeData:buffer];
+}
+
+-(void)writeBytes:(const void * __nonnull)bytes length:(int)length toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+    
+    NSData *buffer;
+    buffer = [NSData dataWithBytes:bytes length:length];
+    [fileHandle writeData:buffer];
 }
 
 /*********************************************************
@@ -339,10 +328,10 @@
     // Write header to output
     if (append == NO || mesh.savesDone == 0) {
 
-        [self FEMPost_writeInteger:numberOfNodes toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-        [self FEMPost_writeInteger:numberOfElements toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-        [self FEMPost_writeInteger:dofs toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-        [self FEMPost_writeInteger:timeCount toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeInteger:numberOfNodes toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeInteger:numberOfElements toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeInteger:dofs toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeInteger:timeCount toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
         
         for (FEMVariable *variable in model.variables) {
             if (variable.output == NO) continue;
@@ -361,7 +350,7 @@
                     }
                 }
                 if (found == NO) {
-                    [self FEMPost_writeString: @"vector: Mesh.update" toFileHandle:postFileHandle];
+                    [self writeString: @"vector: Mesh.update" toFileHandle:postFileHandle];
                     displacement = variable;
                 } else {
                     meshUpdate = variable;
@@ -370,21 +359,21 @@
                        [[variable canonicalizeName] isEqualToString:@"mesh update 3"] == YES) {
                 // No ops
             } else if ([[variable canonicalizeName] isEqualToString:@"displacement"] == YES) {
-                [self FEMPost_writeString:@" vector: Displacement" toFileHandle:postFileHandle];
+                [self writeString:@" vector: Displacement" toFileHandle:postFileHandle];
                 if (varContainers->CValues != NULL) {
-                    [self FEMPost_writeString:@" vector: Displacement.im" toFileHandle:postFileHandle];
+                    [self writeString:@" vector: Displacement.im" toFileHandle:postFileHandle];
                 }
                 displacement = variable;
             } else if ([[variable canonicalizeName] isEqualToString:@"displacement 1"] == YES || [[variable canonicalizeName] isEqualToString:@"displacement 2"] == YES ||
                        [[variable canonicalizeName] isEqualToString:@"displacement 3"] == YES) {
                 // No ops
             } else if ([[variable canonicalizeName] isEqualToString:@"flow solution"] == YES) {
-                [self FEMPost_writeString:@" vector: Velocity scalar: Pressure" toFileHandle:postFileHandle];
+                [self writeString:@" vector: Velocity scalar: Pressure" toFileHandle:postFileHandle];
             } else if ([[variable canonicalizeName] isEqualToString:@"velocity 1"] == YES || [[variable canonicalizeName] isEqualToString:@"velocity 2"] == YES ||
                        [[variable canonicalizeName] isEqualToString:@"velocity 3"] == YES || [[variable canonicalizeName] isEqualToString:@"pressure"] == YES) {
                 // No ops
             } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field"] == YES) {
-                [self FEMPost_writeString:@" vector: Magfield" toFileHandle:postFileHandle];
+                [self writeString:@" vector: Magfield" toFileHandle:postFileHandle];
             } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field 1"] == YES || [[variable canonicalizeName] isEqualToString:@"magnetic field 2"] == YES ||
                        [[variable canonicalizeName] isEqualToString:@"magnetic field 3"] == YES) {
                 // No ops
@@ -397,11 +386,11 @@
                     [varName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [varName length])];
                     char character =  (int)[varName characterAtIndex:0] - (int)'a' + (int)'A';
                     [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithFormat:@"%c", character]];
-                    [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                    [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                    [self writeString:@" scalar: " toFileHandle:postFileHandle];
+                    [self writeString:varName toFileHandle:postFileHandle];
                     if (varContainers->CValues != NULL) {
-                        [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                        [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
+                        [self writeString:@" scalar: " toFileHandle:postFileHandle];
+                        [self writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                     }
                 } else {
                     ind = [variable.name rangeOfString:@"["];
@@ -433,31 +422,31 @@
                             char character = (int)[varName characterAtIndex:0] - (int)'a' + (int)'A';
                             [varName replaceCharactersInRange:NSMakeRange(0, 1) withString:[NSString stringWithFormat:@"%c", character]];
                             if (k == 1) {
-                                [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                                [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                [self writeString:@" scalar: " toFileHandle:postFileHandle];
+                                [self writeString:varName toFileHandle:postFileHandle];
                                 if (varContainers->CValues != NULL) {
-                                    [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
-                                    [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
+                                    [self writeString:@" scalar: " toFileHandle:postFileHandle];
+                                    [self writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                 }
                             } else if (k <= 3) {
-                                [self FEMPost_writeString:@" vector: " toFileHandle:postFileHandle];
-                                [self FEMPost_writeString:varName toFileHandle:postFileHandle];
+                                [self writeString:@" vector: " toFileHandle:postFileHandle];
+                                [self writeString:varName toFileHandle:postFileHandle];
                                 if (varContainers->CValues != NULL) {
-                                    [self FEMPost_writeString:@" vector: " toFileHandle:postFileHandle];
-                                    [self FEMPost_writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
+                                    [self writeString:@" vector: " toFileHandle:postFileHandle];
+                                    [self writeString:[varName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                 }
                             } else {
                                 for (l=1; l<=k; l++) {
-                                    [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
+                                    [self writeString:@" scalar: " toFileHandle:postFileHandle];
                                     NSMutableString *componentName = [NSMutableString stringWithString:varName];
                                     [componentName appendString:@"."];
-                                    [self FEMPost_writeString:[componentName stringByAppendingString:[NSString stringWithFormat:@"%d",l]] toFileHandle:postFileHandle];
+                                    [self writeString:[componentName stringByAppendingString:[NSString stringWithFormat:@"%d",l]] toFileHandle:postFileHandle];
                                     if (varContainers->CValues != NULL) {
-                                        [self FEMPost_writeString:@" scalar: " toFileHandle:postFileHandle];
+                                        [self writeString:@" scalar: " toFileHandle:postFileHandle];
                                         NSMutableString *componentName = [NSMutableString stringWithString:varName];
                                         [componentName appendString:@"."];
                                         [componentName appendString:[NSString stringWithFormat:@"%d",l]];
-                                        [self FEMPost_writeString:[componentName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
+                                        [self writeString:[componentName stringByAppendingString:@".im"] toFileHandle:postFileHandle];
                                     }
                                 }
                             }
@@ -473,14 +462,14 @@
         }
         
         if (freeSurfaceFlag == YES) {
-            [self FEMPost_writeString:@" vector: Coordinates" toFileHandle:postFileHandle];
+            [self writeString:@" vector: Coordinates" toFileHandle:postFileHandle];
         }
         
         [postFileHandle writeData:newLineBuff];
         
-        [self FEMPost_writeString:@"#File started at: " toFileHandle:postFileHandle];
+        [self writeString:@"#File started at: " toFileHandle:postFileHandle];
         NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
-        [self FEMPost_writeString:dateString toFileHandle:postFileHandle];
+        [self writeString:dateString toFileHandle:postFileHandle];
         [postFileHandle writeData:newLineBuff];
         
         // Coordinates
@@ -529,23 +518,23 @@
             
             if (meshDim == 3) {
                 for (j=0; j<meshDim; j++) {
-                    [self FEMPost_writeDouble:coord[j] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                    [self writeDouble:coord[j] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 }
             } else if (meshDim == 2) {
                 for (j=0; j<meshDim; j++) {
-                    [self FEMPost_writeDouble:coord[j] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                    [self writeDouble:coord[j] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 }
-                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle];
+                [self writeDouble:0.0 toFileHandle:postFileHandle];
             } else {
-                [self FEMPost_writeDouble:coord[0] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle];
+                [self writeDouble:coord[0] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeDouble:0.0 toFileHandle:postFileHandle];
             }
             [postFileHandle writeData:newLineBuff];
         }
         
         // Elements
-        [self FEMPost_writeString:@"#group all" toFileHandle:postFileHandle];
+        [self writeString:@"#group all" toFileHandle:postFileHandle];
         [postFileHandle writeData:newLineBuff];
         
         elements = model.getElements;
@@ -567,22 +556,22 @@
                 if ((model.bodies)[k-1][@"name"] != nil) {
                     bodyName = [NSMutableString stringWithString:(model.bodies)[k-1][@"name"]];
                     [bodyName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [bodyName length])];
-                    [self FEMPost_writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                    [self writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 } else {
                     bodyName = [NSMutableString stringWithString:@"body"];
                     [bodyName appendString:[NSString stringWithFormat:@"%d", k]];
-                    [self FEMPost_writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                    [self writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 }
             }
             
-            [self FEMPost_writeInteger:elements[i].Type.ElementCode toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+            [self writeInteger:elements[i].Type.ElementCode toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             n = 0;
             for (j=0; j<elements[i].Type.NumberOfNodes; j+=4) {
                 l = min(4, elements[i].Type.NumberOfNodes-n);
                 for (k=0; k<l; k++) {
                     index = elements[i].NodeIndexes[n];
                     if (maskExists == YES) index = maskVarContainers->Perm[index];
-                    [self FEMPost_writeInteger:index toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                    [self writeInteger:index toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                     n++;
                 }
                 [postFileHandle writeData:newLineBuff];
@@ -610,22 +599,22 @@
             }
             if (found == YES) {
                 [bodyName replaceOccurrencesOfString:@" " withString:@"." options:NSLiteralSearch range:NSMakeRange(0, [bodyName length])];
-                [self FEMPost_writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             } else {
                 bodyName = [NSMutableString stringWithString:@"Constraint"];
                 [bodyName appendString:[NSString stringWithFormat:@"%d", k]];
-                [self FEMPost_writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeString:bodyName toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             }
-            [self FEMPost_writeInteger: elements[i].Type.ElementCode toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+            [self writeInteger: elements[i].Type.ElementCode toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             for (k=0; k<elements[i].Type.NumberOfNodes; k++) {
                 index = elements[i].NodeIndexes[k];
                 if (maskExists == YES) index = maskVarContainers->Perm[index];
-                [self FEMPost_writeInteger:index toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeInteger:index toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             }
             [postFileHandle writeData:newLineBuff];
         }
         
-        [self FEMPost_writeString:@"#endgroup all" toFileHandle:postFileHandle];
+        [self writeString:@"#endgroup all" toFileHandle:postFileHandle];
         [postFileHandle writeData:newLineBuff];
     }
     
@@ -667,10 +656,10 @@
             time = [filteredArray[3] doubleValue];
         }
         
-        [self FEMPost_writeString:@"#time " toFileHandle:postFileHandle];
-        [self FEMPost_writeInteger:savedCount toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-        [self FEMPost_writeInteger:timeStep toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-        [self FEMPost_writeDouble:time toFileHandle:postFileHandle];
+        [self writeString:@"#time " toFileHandle:postFileHandle];
+        [self writeInteger:savedCount toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeInteger:timeStep toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+        [self writeDouble:time toFileHandle:postFileHandle];
         [postFileHandle writeData:newLineBuff];
         
         if (*append == NO) {
@@ -728,17 +717,17 @@
                         if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                         if (k >= 0) {
                             for (j=0; j<variable.dofs; j++) {
-                                [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
+                                [self writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             }
                             if (variable.dofs == 2) {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
 
                             }
                         } else {
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
                     }
                 } else if ([[variable canonicalizeName] isEqualToString:@"mesh update 1"] == YES || [[variable canonicalizeName] isEqualToString:@"mesh update 2"] == YES ||
@@ -750,26 +739,26 @@
                     if (k >= 0) {
                         if (varContainers->CValues != NULL) {
                             for (j=0; j<variable.dofs; j++) {
-                                [self FEMPost_writeDouble:creal(*(varContainers->CValues[variable.dofs*k+j])) toFileHandle:postFileHandle];
+                                [self writeDouble:creal(*(varContainers->CValues[variable.dofs*k+j])) toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             }
                             if (variable.dofs == 2) {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                             }
                             for (j=0; j<variable.dofs; j++) {
-                                [self FEMPost_writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+j])) toFileHandle:postFileHandle];
+                                [self writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+j])) toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             }
                             if (variable.dofs == 2) {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                             }
                         } else {
                             for (j=0; j<variable.dofs; j++) {
-                                [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
+                                [self writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             }
                             if (variable.dofs == 2) {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                             }
                         }
                     } else {
@@ -781,16 +770,16 @@
                                 if (var1Containers->Perm != NULL) k = var1Containers->Perm[k];
                                 if (k >= 0) {
                                     for (j=0; j<var1.dofs; j++) {
-                                        [self FEMPost_writeDouble:var1Containers->Values[var1.dofs*k+j] toFileHandle:postFileHandle];
+                                        [self writeDouble:var1Containers->Values[var1.dofs*k+j] toFileHandle:postFileHandle];
                                         [postFileHandle writeData:spaceBuff];
                                     }
                                     if (var1.dofs == 2) {
-                                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                     }
                                 } else {
-                                    [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                    [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                    [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                    [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                    [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                    [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                 }
                                 found = YES;
                                 break;
@@ -798,16 +787,16 @@
                         }
                         if (found == NO) {
                             if (varContainers->CValues != NULL) {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                             } else {
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                             }
                         }
                     }
@@ -820,19 +809,19 @@
                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                     if (k >= 0) {
                         for (j=0; j<variable.dofs-1; j++) {
-                            [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
+                            [self writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
                             [postFileHandle writeData:spaceBuff];
                         }
                         if (variable.dofs < 4) {
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
-                        [self FEMPost_writeDouble:varContainers->Values[variable.dofs*(k+1)-1] toFileHandle:postFileHandle];
+                        [self writeDouble:varContainers->Values[variable.dofs*(k+1)-1] toFileHandle:postFileHandle];
                         [postFileHandle writeData:spaceBuff];
                     } else {
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                     }
                 } else if ([[variable canonicalizeName] isEqualToString:@"velocity 1"] == YES || [[variable canonicalizeName] isEqualToString:@"velocity 2"] == YES ||
                            [[variable canonicalizeName] isEqualToString:@"velocity 3"] == YES || [[variable canonicalizeName] isEqualToString:@"pressure"] == YES) {
@@ -842,16 +831,16 @@
                     if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                     if (k >= 0) {
                         for (j=0; j<variable.dofs; j++) {
-                            [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
+                            [self writeDouble:varContainers->Values[variable.dofs*k+j] toFileHandle:postFileHandle];
                             [postFileHandle writeData:spaceBuff];
                         }
                         if (variable.dofs == 2) {
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
                     } else {
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
-                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                     }
                 } else if ([[variable canonicalizeName] isEqualToString:@"magnetic field 1"] == YES || [[variable canonicalizeName] isEqualToString:@"magnetic field 2"] == YES ||
                            [[variable canonicalizeName] isEqualToString:@"magnetic field 3"] == YES) {
@@ -865,19 +854,19 @@
                         if (varContainers->Perm != NULL) k = varContainers->Perm[k];
                         if (k >= 0) {
                             if (varContainers->CValues != NULL) {
-                                [self FEMPost_writeDouble:creal(*(varContainers->CValues[k])) toFileHandle:postFileHandle];
+                                [self writeDouble:creal(*(varContainers->CValues[k])) toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
-                                [self FEMPost_writeDouble:cimag(*(varContainers->CValues[k])) toFileHandle:postFileHandle];
+                                [self writeDouble:cimag(*(varContainers->CValues[k])) toFileHandle:postFileHandle];
                                 [postFileHandle writeData:spaceBuff];
                             } else {
                                 if (variable.isComponentVariable == YES) {
-                                    [self FEMPost_writeDouble:*(varContainers->ComponentValues[k]) toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                    [self writeDouble:*(varContainers->ComponentValues[k]) toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                 } else {
-                                     [self FEMPost_writeDouble:varContainers->Values[k] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                     [self writeDouble:varContainers->Values[k] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                 }
                             }
                         } else {
-                            [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                            [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                         }
                     } else {
                         ind = [variable.name rangeOfString:@"["];
@@ -910,37 +899,37 @@
                                     if (q == 2 || q == 3) {
                                         if (varContainers->CValues != NULL) {
                                             for (jj=dofs; jj<dofs+q; jj++) {
-                                                [self FEMPost_writeDouble:creal(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
+                                                [self writeDouble:creal(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
                                             }
                                             if (q == 2) {
-                                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                             }
                                             for (jj=dofs; jj<dofs+q; jj++) {
-                                                [self FEMPost_writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
+                                                [self writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
                                             }
                                             if (q == 2) {
-                                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                             }
                                         } else {
                                             for (jj=dofs; jj<dofs+q; jj++) {
-                                                [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+jj] toFileHandle:postFileHandle];
+                                                [self writeDouble:varContainers->Values[variable.dofs*k+jj] toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
                                             }
                                             if (q == 2) {
-                                                [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];                                                
+                                                [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                             }
                                         }
                                     } else {
                                         for (jj=dofs; jj<dofs+q; jj++) {
                                             if (varContainers->CValues != NULL) {
-                                                [self FEMPost_writeDouble:creal(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
+                                                [self writeDouble:creal(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
-                                                [self FEMPost_writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
+                                                [self writeDouble:cimag(*(varContainers->CValues[variable.dofs*k+jj])) toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
                                             } else {
-                                                [self FEMPost_writeDouble:varContainers->Values[variable.dofs*k+jj] toFileHandle:postFileHandle];
+                                                [self writeDouble:varContainers->Values[variable.dofs*k+jj] toFileHandle:postFileHandle];
                                                 [postFileHandle writeData:spaceBuff];
                                             }
                                         }
@@ -953,7 +942,7 @@
                                     }
                                     if (varContainers->CValues != NULL) nZeros = 2 * nZeros;
                                     for (jj=0; jj<nZeros; jj++) {
-                                        [self FEMPost_writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                                        [self writeDouble:0.0 toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                                     }
                                 }
                                 dofs = dofs + q;
@@ -971,15 +960,15 @@
             if (freeSurfaceFlag == YES) {
                 var = [utilities getVariableFrom:model.variables model:model name:@"coordinate 1" onlySearch:NULL maskName:NULL info:&found];
                 varContainers = var.getContainers;
-                [self FEMPost_writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 
                 var = [utilities getVariableFrom:model.variables model:model name:@"coordinate 2" onlySearch:NULL maskName:NULL info:&found];
                 varContainers = var.getContainers;
-                [self FEMPost_writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
                 
                 var = [utilities getVariableFrom:model.variables model:model name:@"coordinate 3" onlySearch:NULL maskName:NULL info:&found];
                 varContainers = var.getContainers;
-                [self FEMPost_writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
+                [self writeDouble:varContainers->Values[i] toFileHandle:postFileHandle]; [postFileHandle writeData:spaceBuff];
             }
             
             [postFileHandle writeData:newLineBuff];

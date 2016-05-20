@@ -2490,4 +2490,15 @@
     return NO;
 }
 
+-(void)generateColor:(RGBColors * __nonnull)color {
+    
+    int red = arc4random() % 256;
+    int green = arc4random() % 256;
+    int blue = arc4random() % 256;
+    
+    color->red = (float)red / 255.0;
+    color->green = (float)green / 255.0;
+    color->blue = (float)blue / 255.0;
+}
+
 @end

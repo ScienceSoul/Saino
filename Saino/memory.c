@@ -1,6 +1,6 @@
 /*
  *  memory.c
- *  FlowErosModel alpha 3.
+ *  Saino
  *
  *  Created by Hakime SEDDIK on Thu Mar 11 2004.
  *  Copyright (c) 2004 Institute of Low Temperature Science. All rights reserved.
@@ -402,12 +402,12 @@ void format(char * __nullable head, char * __nullable message, int *iValue, doub
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
     fprintf(stderr, "################################################################\n");
-    fprintf(stderr, "######################### SAINO Program ########################\n");
+    fprintf(stderr, "########################     SAINO CORE    #####################\n");
     fprintf(stderr, "##                    A FATAL ERROR occured                   ##\n");
     fprintf(stderr, "##        Please look at the error log for diagnostic         ##\n");
     fprintf(stderr, "\n");
     if (formatType == 1) {
-        fprintf(stderr, "%s: Saino will abort the simulation now...\n", head);
+        fprintf(stderr, "%s: SainoCore will abort the simulation now...\n", head);
     } else if (formatType == 2) {
         fprintf(stderr, "%s: %s\n", head, message);
     } else if (formatType == 3) {

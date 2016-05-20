@@ -21,8 +21,6 @@
 -(void)FEMMesh_getMaxdefs:(FEMModel *)model element:(Element_t *)element elementDef:(NSString *)elementDef solverID:(int)solverID bodyID:(int)bodyID defDofs:(int *)defDofs;
 -(void)FEMMesh_convertToACTetra:(Element_t *)tetra;
 -(void)FEMMesh_deallocateQuadrantTree:(Quadrant_t *)root;
--(void)FEMMesh_generateColor:(RGBColors *)color;
--(void)FEMMesh_readColoredMesh:(NSString *)name;
 @end
 
 @implementation FEMMesh
@@ -237,78 +235,6 @@
     free(root);
 }
 
--(void)FEMMesh_generateColor:(RGBColors *)color {
-    
-    int red = arc4random() % 256;
-    int green = arc4random() % 256;
-    int blue = arc4random() % 256;
-    
-    color->red = (float)red / 255.0;
-    color->green = (float)green / 255.0;
-    color->blue = (float)blue / 255.0;
-}
-
--(void)FEMMesh_readColoredMesh:(NSString *)name {
-    
-    int j, isLineBreak, lineCount = 0;
-    NSString *line;
-    
-    NSString *colorFile = [name stringByAppendingString:@"/mesh.colors"];
-
-    FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
-    if (!reader) {
-        fprintf(stdout, "FEMMesh:FEMMesh_readColoredMesh: file color not found in mesh directory.\n");
-    }
-    
-    // Used to separate strings and filter them from white spaces
-    NSCharacterSet *whitespaces = [NSCharacterSet whitespaceCharacterSet];
-    NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
-    
-    line = nil;
-    j = 0;
-    while ((line = [reader readLine])) {
-        lineCount++;
-        fprintf(stdout, "FEMMEsh:FEMMesh_readColoredMesh: %3.d: %s.\n", lineCount, [line UTF8String]);
-        // Parse the line
-        NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
-        NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
-        isLineBreak = 0;
-        for (NSString *string in filteredArray) {
-            if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
-        }
-        if (([filteredArray count]-isLineBreak) == 1) { // First line of header file, three elements
-            self.numberOfColors = [filteredArray[0] intValue];
-        } else if (([filteredArray count]-isLineBreak) == 5) { // Store given color
-            NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:filteredArray[0], @([filteredArray[1] intValue]-1), filteredArray[2], filteredArray[3], filteredArray[4], nil];
-            [self.colors addObject:color];
-        }
-    }
-    
-    [reader closeHandle];
-    
-    // Build the element color mapping
-    _colorMapping = intvec(0, self.numberOfBulkElements-1);
-    int indx = 0;
-    for (NSMutableArray *color in self.colors) {
-        for (int i=0; i<self.numberOfBulkElements; i++) {
-            if (_elements[i].color.colorIndex-1 == [color[1] intValue]) {
-                _colorMapping[indx] = _elements[i].ElementIndex-1;
-                indx++;
-            }
-        }
-    }
-    
-    // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:
-    _elementNodeIndexesStore = intvec(0, (self.numberOfBulkElements*self.maxElementDofs)-1);
-    indx = 0;
-    for (int t=0; t<self.numberOfBulkElements; t++) {
-        for (int i=0; i<_elements[t].NDOFs; i++) {
-            _elementNodeIndexesStore[indx] = _elements[t].NodeIndexes[i];
-            indx++;
-        }
-    }
-}
-
 #pragma mark Public methods
 
 @synthesize dimension = _dimension;
@@ -423,7 +349,6 @@
     SIOMeshIO *meshIO;
     FEMElementDescription *elementDescription;
     FEMPElementMaps *pMaps;
-    FEMMeshUtils *meshUtils;
     FEMEquation *equationConditionAtId;
     ElementType_t *elmType;
     NSArray *bList;
@@ -450,15 +375,15 @@
     }
     
     // Mesh
-    [meshIO openMeshAtPath:name];
+    [meshIO openMeshAtPath:[dir stringByAppendingPathComponent:name]];
     if (meshIO.info != 0) {
-        fprintf(stderr, "FEMMesh:loadMeshForModel: unable to load mesh: %s.\n", [name UTF8String]);
+        fprintf(stderr, "FEMMesh:loadMeshForModel: unable to load mesh: %s.\n", [[dir stringByAppendingPathComponent:name] UTF8String]);
         fatal("FEMMesh:loadMeshForModel");
     }
     
     [meshIO getMeshDescriptionNodeCount:&_numberOfNodes elementCount:&_numberOfBulkElements boundaryElementCount:&_numberOfBoundaryElements usedElementTypes:&typeCount elementTypeTags:types elementCountByType:countByType];
     if (meshIO.info != 0) {
-        fprintf(stderr, "FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %s.\n", [name UTF8String]);
+        fprintf(stderr, "FEMMesh:loadMeshForModel: unable to read mesh header for mesh: %s.\n", [[dir stringByAppendingPathComponent:name] UTF8String]);
         fatal("FEMMesh:loadMeshForModel");
     }
     
@@ -621,7 +546,15 @@
     // We have a colored mesh if parallel assembly is required by a solution computer
     for (FEMSolution *solution in model.solutions) {
         if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
-            isParallelAssembly = YES;
+            if ((solution.solutionInfo)[@"color mesh"] == nil) {
+                fprintf(stderr, "FEMMesh:loadMeshForModel: parallel assembly in equation %s but missing indication whether the mesh needs to be colored.\n", [(solution.solutionInfo)[@"equation"] UTF8String]);
+                fatal("FEMMesh:loadMeshForModel");
+            }
+            if ([(solution.solutionInfo)[@"color mesh"] boolValue] == NO) {
+                // The mesh should be already colored
+                isParallelAssembly = YES;
+                fprintf(stdout, "FEMMesh:loadMeshForModel: parallel assembly but assumes that the mesh is already colored.\n");
+            }
             break;
         }
     }
@@ -931,7 +864,7 @@
     }
     free_ivector(localEPerm, 0, (maxEIndex-minEIndex+1)-1);
     
-    meshUtils = [[FEMMeshUtils alloc] init];
+    FEMMeshUtils *meshUtils = [[FEMMeshUtils alloc] init];
     if (needEdges == YES) [meshUtils setEdgeFaceDofsMesh:self edgeDofs:edgeDofs faceDofs:faceDofs];
     [meshUtils setMaximumDofsMesh:self];
     
@@ -998,7 +931,7 @@
     
     if (isParallelAssembly == YES) {
         fprintf(stdout, "FEMMesh:loadMeshForModel: Load colors...\n");
-        [self FEMMesh_readColoredMesh:name];
+        [meshUtils readColoredMesh:self name:name directory:dir readElementsFromFile:NO];
     }
     
     [pMaps deallocation];
@@ -1054,6 +987,20 @@
 -(void)assignInvPerm:(int * __nonnull)perm {
     
     _invPerm = perm;
+}
+
+#pragma  mark Color mapping assignment
+
+-(void)assignColorMapping:(int * __nonnull)colorMap {
+    
+    _colorMapping = colorMap;
+}
+
+#pragma  mark Indexes Store assignment
+
+-(void)assignElementNodeIndexesStore:(int * __nonnull)elementNodeIndexesStore {
+    
+    _elementNodeIndexesStore = elementNodeIndexesStore;
 }
 
 #pragma mark Nodes getter

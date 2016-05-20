@@ -51,4 +51,7 @@
 // Plug-in validation
 -(BOOL)plugInClassIsValid:(Class __nonnull)plugInClass;
 
+// Generate the colors to color a mesh
+-(void)generateColor:(RGBColors * __nonnull)color;
+
 @end

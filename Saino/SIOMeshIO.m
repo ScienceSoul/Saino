@@ -100,7 +100,7 @@
 -(void)getMeshElementConnection:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly {
     
     int part;
-    if ([self.meshAgent readNextElementConnections:tag part:&part body:body type:type pdofs:pdofs nodes:nodes colorIndex:colorIndex parallelAssembly:(BOOL *)parallelAssembly] != -1) {
+    if ([self.meshAgent readNextElementConnections:tag part:&part body:body type:type pdofs:pdofs nodes:nodes colorIndex:colorIndex parallelAssembly:parallelAssembly] != -1) {
         self.info = 0;
     } else self.info = -1;
 }

@@ -1,6 +1,6 @@
 /*
  *  memory.h
- *  FlowErosModel alpha 3.
+ *  Saino
  *
  *  Created by Hakime SEDDIK on Thu Mar 11 2004.
  *  Copyright (c) 2004 Institute of Low Temperature Science. All rights reserved.

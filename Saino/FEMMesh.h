@@ -109,8 +109,14 @@
 // Assign view factors
 -(void)assignViewFactors:(Factors_t * __nonnull)factors;
 
-// Assign inverse permutation getter
+// Assign inverse permutation
 -(void)assignInvPerm:(int * __nonnull)perm;
+
+// Assign color mapping
+-(void)assignColorMapping:(int * __nonnull)colorMap;
+
+// Assign indexes store
+-(void)assignElementNodeIndexesStore:(int * __nonnull)elementNodeIndexesStore;
 
 // Nodes getter
 -(Nodes_t * __nullable)getNodes;

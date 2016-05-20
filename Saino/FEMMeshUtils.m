@@ -20,6 +20,7 @@
 #import "FEMElementUtils.h"
 #import "FEMLinearAlgebra.h"
 #import "FEMInterpolateMeshToMesh.h"
+#import "FEMPost.h"
 #import "Utils.h"
 #import "TimeProfile.h"
 #import "GaussIntegration.h"
@@ -6668,6 +6669,354 @@ jump:
             fprintf(f1, "%d %d %lf %lf\n", intInvPerm[i], projectorContainers->Rows[i+1]-projectorContainers->Rows[i], dia, rowsum);
         }
         fclose(f1);
+    }
+}
+
+/************************************************************************************************
+ 
+        Color a mesh using the First Fit (FF) algorithm (also called greedy algorithm)
+ 
+************************************************************************************************/
+-(void)colorMesh:(FEMMesh * __nonnull)mesh {
+    
+    int i, j, numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
+    BOOL isShared;
+    RGBColors currentColor;
+    
+    FEMUtilities *utilities = [[FEMUtilities alloc] init];
+    Element_t *elements = mesh.getElements;
+    
+    double at = cputime();
+    
+    // Color the elements
+    while (numberOfColoredElements != mesh.numberOfBulkElements) {
+        [utilities generateColor:&currentColor];
+        numberOfElementsWithCurrentColor = 0;
+        
+        for (i=0; i<mesh.numberOfBulkElements; i++) {
+            if (!elements[i].colored) {
+                // Check if neighbors do not have current color
+                numberOfSameColors = 0;
+                for (j=0; j<mesh.numberOfBulkElements; j++) {
+                    if (j == i) continue;
+                    isShared = NO;
+                    for (int k=0; k<elements[j].Type.NumberOfNodes; k++) {
+                        for (int l=0; l<elements[i].Type.NumberOfNodes; l++) {
+                            if (elements[j].NodeIndexes[k] == elements[i].NodeIndexes[l]) {
+                                isShared = YES;
+                                break;
+                            }
+                        }
+                        if (isShared == YES) break;
+                    }
+                    
+                    if (isShared == YES) {
+                        if (elements[j].color.red == currentColor.red && elements[j].color.green == currentColor.green && elements[j].color.blue == currentColor.blue) numberOfSameColors++;
+                    }
+                }
+                if (numberOfSameColors == 0) { // No neighbors with current color so color the element with current color
+                    elements[i].color.red = currentColor.red;
+                    elements[i].color.green = currentColor.green;
+                    elements[i].color.blue = currentColor.blue;
+                    elements[i].color.colorIndex = mesh.numberOfColors;
+                    elements[i].colored = true;
+                    numberOfColoredElements++;
+                    numberOfElementsWithCurrentColor++;
+                }
+            }
+        }
+        NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:@(numberOfElementsWithCurrentColor), @(mesh.numberOfColors), @(currentColor.red), @(currentColor.green), @(currentColor.blue), nil];
+        [mesh.colors addObject:color];
+        mesh.numberOfColors++;
+    }
+    
+    fprintf(stdout, "FEMMeshUtils:colorMesh:Timing (s): %f\n", cputime() - at);
+    
+    fprintf(stdout, "FEMMeshUtils:FEMMesh_colorMesh: number of colors: %d\n", mesh.numberOfColors);
+    fprintf(stdout, "FEMMeshUtils:FEMMesh_colorMesh: number of elements for each color set before optimization: \n");
+    i = 1;
+    for (NSMutableArray *color in mesh.colors) {
+        fprintf(stdout, "color %d : number of elements: %d\n", i, [color[0] intValue]);
+        i++;
+    }
+    
+    // The FF algorithm produces an unbalanced distribution of elements per color set since the initial sets
+    // are the first to get the elements. The following optimization redistributes elements from "rish" sets to "poor" sets
+    int meanValue = mesh.numberOfBulkElements/mesh.numberOfColors;
+    int kk = mesh.numberOfColors-1; // Start with the poorest set and then up to the richest set
+    for (NSMutableArray *color in mesh.colors) {
+        if ([color[0] intValue] > meanValue) {
+            int k = [color[1] intValue];
+            while ([color[0] intValue] > meanValue) {
+                for (i=0; i<mesh.numberOfBulkElements; i++) {
+                    if (elements[i].color.colorIndex == k) {
+                        numberOfSameColors = 0;
+                        for (j=0; j<mesh.numberOfBulkElements; j++) {
+                            if (j == i) continue;
+                            if (elements[j].color.colorIndex == kk) {
+                                isShared = NO;
+                                for (int l=0; l<elements[j].Type.NumberOfNodes; l++) {
+                                    for (int ll=0; ll<elements[i].Type.NumberOfNodes; ll++) {
+                                        if (elements[j].NodeIndexes[l] == elements[i].NodeIndexes[ll]) {
+                                            isShared = YES;
+                                            break;
+                                        }
+                                    }
+                                    if (isShared == YES) break;
+                                }
+                                if (isShared == YES) numberOfSameColors++;
+                            }
+                        }
+                        NSMutableArray *poorColor = mesh.colors[kk];
+                        if (numberOfSameColors == 0) {
+                            elements[i].color.red = [poorColor[2] doubleValue];
+                            elements[i].color.green = [poorColor[3] doubleValue];
+                            elements[i].color.blue = [poorColor[4] doubleValue];
+                            elements[i].color.colorIndex = [poorColor[1] intValue];
+                            color[0] = @([color[0] intValue]-1);
+                            poorColor[0] = @([poorColor[0] intValue]+1);
+                        }
+                        if ([poorColor[0] intValue] >= (meanValue-DBL_EPSILON) && [poorColor[0] intValue] <= (meanValue+DBL_EPSILON)) {
+                            kk--;
+                            break;
+                        }
+                        if ([color[0] intValue] <= meanValue) break;
+                    }
+                }
+                if (i == mesh.numberOfBulkElements) break; // Already done all elements for given color set so go to next set
+            }
+        }
+    }
+    
+    fprintf(stdout, "FEMMeshUtils:colorMesh: number of elements for each color set after optimization: \n");
+    i = 1;
+    for (NSMutableArray *color in mesh.colors) {
+        fprintf(stdout, "color %d : number of elements: %d\n", i, [color[0] intValue]);
+        i++;
+    }
+    
+    // Build the element color mapping
+    int *colorMapping = intvec(0, mesh.numberOfBulkElements-1);
+    int indx = 0;
+    for (NSMutableArray *color in mesh.colors) {
+        for (i=0; i<mesh.numberOfBulkElements; i++) {
+            if (elements[i].color.colorIndex == [color[1] intValue]) {
+                colorMapping[indx] = elements[i].ElementIndex-1;
+                indx++;
+            }
+        }
+    }
+    [mesh assignColorMapping:colorMapping];
+    
+    // Make a last check to be sure...
+    //    for (NSMutableArray *color in self.colors) {
+    //         for (i=0; i<self.numberOfBulkElements; i++) {
+    //             if (_elements[i].color.colorIndex == [color[1] intValue]) {
+    //                 for (j=0; j<self.numberOfBulkElements; j++) {
+    //                     if (j == i) continue;
+    //                     isShared = NO;
+    //                     for (int k=0; k<_elements[j].Type.NumberOfNodes; k++) {
+    //                         for (int l=0; l<_elements[i].Type.NumberOfNodes; l++) {
+    //                             if (_elements[j].NodeIndexes[k] == _elements[i].NodeIndexes[l]) {
+    //                                 isShared = YES;
+    //                                 break;
+    //                             }
+    //                         }
+    //                         if (isShared == YES) break;
+    //                     }
+    //                     if (isShared == YES) {
+    //                         if (_elements[i].color.colorIndex == _elements[j].color.colorIndex) {
+    //                             NSLog(@"FEMMesh:FEMMesh_colorMesh: elements %d and %d have similar color but share nodes.\n", i, j);
+    //                             errorfunct("FEMMesh:FEMMesh_colorMesh", "Programm terminating now...");
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //    }
+}
+
+-(void)saveColoredMesh:(FEMMesh * __nonnull)mesh meshdir:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name elementsFileName:(NSString * __nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * __nonnull)colorFileName {
+    
+    NSFileHandle *fileHandle;
+    
+    FEMPost *post = [[FEMPost alloc] init];
+    Element_t *elements = mesh.getElements;
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *elementFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:elementsFileName];
+    if ([fileManager createFileAtPath:elementFile contents:nil attributes:nil] == YES) {
+        fileHandle = [NSFileHandle fileHandleForWritingAtPath:elementFile];
+    } else {
+        fprintf(stderr, "FEMMeshUtils:saveColoredMesh: can't create the file %s.", [elementFile UTF8String]);
+        fatal("FEMMeshUtils:saveColoredMesh");
+    }
+    
+    char space = ' ';
+    char newLine = '\n';
+    NSData *spaceBuff = [NSMutableData dataWithBytes:&space length:sizeof(space)];
+    NSData *newLineBuff = [NSMutableData dataWithBytes:&newLine length:sizeof(newLine)];
+    
+    fprintf(stdout, "FEMMeshUtils:saveColoredMesh: write file with colored elements: %s...\n", [elementFile UTF8String]);
+    if (saveAllElementData == YES) {
+        for (int i=0; i<mesh.numberOfBulkElements; i++) {
+            [post writeInteger:elements[i].ElementIndex toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [post writeInteger:elements[i].BodyID toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [post writeInteger:elements[i].Type.ElementCode toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            for (int j=0; j<elements[i].Type.NumberOfNodes; j++) {
+                [post writeInteger:elements[i].NodeIndexes[j]+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            }
+            [post writeInteger:elements[i].color.colorIndex+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [fileHandle writeData:newLineBuff];
+        }
+    } else {
+        for (int i=0; i<mesh.numberOfBulkElements; i++) {
+            [post writeInteger:elements[i].ElementIndex toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [post writeInteger:elements[i].color.colorIndex+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [fileHandle writeData:newLineBuff];
+        }
+    }
+    [fileHandle closeFile];
+    fprintf(stdout, "FEMMeshUtils:saveColoredMesh: done.\n");
+    
+    NSString *colorFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:colorFileName];
+    if ([fileManager createFileAtPath:colorFile contents:nil attributes:nil] == YES) {
+        fileHandle = [NSFileHandle fileHandleForWritingAtPath:colorFile];
+    } else {
+        fprintf(stderr, "FEMMeshUtils:saveColoredMesh: can't create the file %s.", [colorFile UTF8String]);
+        fatal("FEMMeshUtils:saveColoredMesh");
+    }
+    
+    fprintf(stdout, "FEMMeshUtils:saveColoredMesh: write color file: %s...\n", [colorFile UTF8String]);
+    [post writeInteger:mesh.numberOfColors toFileHandle:fileHandle]; [fileHandle writeData:newLineBuff];
+    for (NSMutableArray *color in mesh.colors) {
+        [post writeInteger:[color[0] intValue] toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+        [post writeInteger:[color[1] intValue]+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+        [post writeDouble:[color[2] doubleValue] toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+        [post writeDouble:[color[3] doubleValue] toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+        [post writeDouble:[color[4] doubleValue] toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+        [fileHandle writeData:newLineBuff];
+    }
+    [fileHandle closeFile];
+    fprintf(stdout, "FEMMeshUtils:saveColoredMesh: done.\n");
+}
+
+-(void)readColoredMesh:(FEMMesh * __nonnull)mesh name:(NSString * __nonnull)name directory:(NSString * __nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile {
+    
+    int isLineBreak, lineCount = 0, nb;
+    NSString *line;
+    
+    NSString *colorFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"mesh.colors"];
+    
+    FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
+    if (!reader) {
+        fprintf(stderr, "FEMMeshUtils:readColoredMesh: file %s not found in mesh directory.\n", [colorFile UTF8String]);
+        fatal("FEMMeshUtils:readColoredMesh");
+    }
+    
+    // Used to separate strings and filter them from white spaces
+    NSCharacterSet *whitespaces = [NSCharacterSet whitespaceCharacterSet];
+    NSPredicate *noEmptyStrings = [NSPredicate predicateWithFormat:@"SELF != ''"];
+    
+    line = nil;
+    while ((line = [reader readLine])) {
+        lineCount++;
+        fprintf(stdout, "FEMMeshUtils:readColoredMesh: %3.d: %s.\n", lineCount, [line UTF8String]);
+        // Parse the line
+        NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
+        NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
+        isLineBreak = 0;
+        for (NSString *string in filteredArray) {
+            if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
+        }
+        if (lineCount == 1) {
+            if (([filteredArray count]-isLineBreak) < 1 || ([filteredArray count]-isLineBreak) > 1) {
+                fprintf(stderr, "FEMMeshUtils:readColoredMesh: not properlly formatted data in file %s at line %d.\n", [colorFile UTF8String], lineCount);
+                fatal("FEMMeshUtils:readColoredMesh");
+            }
+        } else {
+            if (([filteredArray count]-isLineBreak) < 5 || ([filteredArray count]-isLineBreak) > 5) {
+                fprintf(stderr, "FEMMeshUtils:readColoredMesh: not properlly formatted data in file %s at line %d.\n", [colorFile UTF8String], lineCount);
+                fatal("FEMMeshUtils:readColoredMesh");
+            }
+        }
+        if (([filteredArray count]-isLineBreak) == 1) { // First line of color file
+            mesh.numberOfColors = [filteredArray[0] intValue];
+        } else if (([filteredArray count]-isLineBreak) == 5) {
+            NSMutableArray *color = [[NSMutableArray alloc] initWithObjects:filteredArray[0], @([filteredArray[1] intValue]-1), filteredArray[2], filteredArray[3], filteredArray[4], nil];
+            [mesh.colors addObject:color];
+        }
+    }
+    
+    [reader closeHandle];
+    
+    // Build the element color mapping
+    Element_t *elements = NULL;
+    if (readElementsFromFile == YES) {
+        elements = (Element_t*) malloc( sizeof(Element_t) * mesh.numberOfBulkElements );
+        initElements(elements, mesh.numberOfBulkElements );
+        
+        NSString *elementsFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"mesh.colored_elements"];
+        
+        FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
+        if (!reader) {
+            fprintf(stderr, "FEMMeshUtils:readColoredMesh: file %s not found in mesh directory.\n", [elementsFile UTF8String]);
+            fatal("FEMMeshUtils:readColoredMesh");
+        }
+        line = nil;
+        lineCount = 0;
+        nb = 0;
+        while ((line = [reader readLine])) {
+            lineCount++;
+            fprintf(stdout, "FEMMeshUtils:readColoredMesh: %3.d: %s.\n", lineCount, [line UTF8String]);
+            // Parse the line
+            NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
+            NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
+            isLineBreak = 0;
+            for (NSString *string in filteredArray) {
+                if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
+            }
+            if (([filteredArray count]-isLineBreak) < 2 || ([filteredArray count]-isLineBreak) > 2) {
+                fprintf(stderr, "FEMMeshUtils:readColoredMesh: not properlly formatted data in file %s at line %d.\n", [elementsFile UTF8String], lineCount);
+                fatal("FEMMeshUtils:readColoredMesh");
+            }
+            elements[nb].ElementIndex = [filteredArray[0] intValue];
+            elements[nb].color.colorIndex = [filteredArray[1] intValue];
+            nb++;
+        }
+        [reader closeHandle];
+        
+    } else elements = mesh.getElements;
+    
+    int indx;
+    int *meshColorMapping = mesh.getColorMapping;
+    if (meshColorMapping == NULL) {
+        int *colorMapping = intvec(0, mesh.numberOfBulkElements-1);
+        indx = 0;
+        for (NSMutableArray *color in mesh.colors) {
+            for (int i=0; i<mesh.numberOfBulkElements; i++) {
+                if (elements[i].color.colorIndex-1 == [color[1] intValue]) {
+                    colorMapping[indx] = elements[i].ElementIndex-1;
+                    indx++;
+                }
+            }
+        }
+        [mesh assignColorMapping:colorMapping];
+    }
+    
+    // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:
+    int *elementNodeIndexesStore = intvec(0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
+    indx = 0;
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        for (int i=0; i<elements[t].NDOFs; i++) {
+            elementNodeIndexesStore[indx] = elements[t].NodeIndexes[i];
+            indx++;
+        }
+    }
+    [mesh assignElementNodeIndexesStore:elementNodeIndexesStore];
+    
+    if (readElementsFromFile == YES) {
+        free(elements);
     }
 }
 

@@ -182,7 +182,7 @@ static dispatch_once_t onceToken;
     mod.numberOfBoundaryConditions = 1;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"heateq"]];
-    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"heateq/Mesh"]];
+    mod.meshName = [NSMutableString stringWithString:@"Mesh"];
 }
 
 -(void)setUpStepStokesTest:(id __nonnull)model {
@@ -315,7 +315,7 @@ static dispatch_once_t onceToken;
     mod.numberOfBoundaryConditions = 3;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"Step_stokes"]];
-    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"Step_stokes/Step"]];
+    mod.meshName = [NSMutableString stringWithString:@"Step"];
 }
 
 -(void)setUpNaturalConvectionTest:(id __nonnull)model {
@@ -515,7 +515,7 @@ static dispatch_once_t onceToken;
     mod.numberOfBoundaryConditions = 4;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection"]];
-    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"NaturalConvection/square"]];
+    mod.meshName = [NSMutableString stringWithString:@"square"];
 }
 
 -(void)setUpISMIP_HOM_A010Test:(id __nonnull)model {
@@ -721,7 +721,7 @@ static dispatch_once_t onceToken;
     mod.numberOfBoundaryConditions = 6;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010"]];
-    mod.meshName = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-A010/rectangle"]];
+    mod.meshName = [NSMutableString stringWithString:@"rectangle"];
 }
 
 -(void)setUpISMIP_HOM_A010Test_GPU:(id __nonnull)model {
@@ -730,13 +730,25 @@ static dispatch_once_t onceToken;
     
     FEMModel *mod = (FEMModel *)model;
     
+    double yearinsec = 365.25 * 24.0 * 24.0 * 60.0 * 60.0;
+    double rhoi = 900.0 / (1.0e6 * pow(yearinsec, 2.0));
+    double gravity = -9.81 * pow(yearinsec, 2.0);
+    double n = 3.0;
+    double eta = pow((2.0 * 100.0), (-1.0/n));
+    
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:@"/Users/hakimeseddik/Documents/Saino/Saino/NavierStokesAssemblyKernel" forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"target application for gpu stokes"];
+            [solution.solutionInfo setObject:@"single" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
+            [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
+            [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
         }
     }
+    mod.meshName = [NSMutableString stringWithString:@"rectangle2-colored"];
 }
 
 @end
