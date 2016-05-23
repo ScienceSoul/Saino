@@ -93,7 +93,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 -(ice_flow_gpu *)FEMFlowSolution_allocate_ice_flow_gpu:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution;
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precision:(NSString * __nonnull)precision getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 @end
 
 @implementation FEMFlowSolution {
@@ -1151,7 +1151,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precision:(NSString * __nonnull)precision getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
     // Get the GPU device
     _device = find_single_device();
@@ -1186,7 +1186,20 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
     
     // Build the program (compile it)
-    const char options[] = "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+    
+    // So far we only supports 3D problems
+    if (mesh.dimension < 3 || model.dimension < 3) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unsupported mesh or model dimension for GPU assembly.");
+    }
+    
+    // Options passed to the compilation of the kernel
+    const char *options;
+    if ([precision isEqualToString:@"single"] == YES) {
+        options= "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+    } else if ([precision isEqualToString:@"double"] == YES) {
+        options= "-KERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+    } else fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unknow GPU preicion mode.");
+    
     _err = clBuildProgram(_program, 1, &_device, options, NULL, &_err);
     if (_err < 0) {
         size_t log_size;
@@ -1852,16 +1865,19 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     // If we do the matrix assembly on the GPU, set-up everything now (only once)
     if (parallelAssembly == YES) {
+        NSString *precision;
         if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"single"] == YES) {
             setPrecision(true);
             fprintf(stdout, "FEMFlowSolution:solutionComputer: single precision mode used in GPU solver.\n");
+            precision = @"single";
         } else if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"double"] == YES) {
             fprintf(stdout, "FEMFlowSolution:solutionComputer: double precision mode used in GPU solver.\n");
+            precision = @"double";
         } else {
             fatal("FEMFlowSolution:solutionComputer", "GPU precision mode not supported.");
         }
         if (_initializeGPU == NO) {
-            [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh getActiveElement:getActiveElementIMP];
+            [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh precision:precision getActiveElement:getActiveElementIMP];
             _initializeGPU = YES;
         }
     }
