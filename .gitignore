@@ -9,6 +9,10 @@ Saino.xcodeproj/xcuserdata/*
 Tests/**/*.ep
 Tests/**/*.result
 
+# Tests generated mesh color files
+Tests/**/*.colors
+Tests/**/*.colored*
+
 # Extras
 Extras/
 docs/

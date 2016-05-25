@@ -1642,6 +1642,7 @@ jump:
                 NSString *file2 = [[self.model.meshDir stringByAppendingPathComponent:self.model.meshName] stringByAppendingPathComponent:@"mesh.colored_elements"];
                 if ([fileManager fileExistsAtPath:file1] == YES && [fileManager fileExistsAtPath:file2] == YES) alreadyColored = YES;
                 if (alreadyColored == NO) {
+                    // Color the mesh
                     [meshUtils colorMesh:mesh];
                     // Save the coloring
                     [meshUtils saveColoredMesh:mesh meshdir:self.model.meshDir meshName:self.model.meshName elementsFileName:@"mesh.colored_elements" saveAllElementData:NO colorFileName:@"mesh.colors"];

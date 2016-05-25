@@ -160,9 +160,9 @@
                     tangleMask[i] = 1.0;
                 }
                 tangleMaskPerm = tangleMaskVarContainers->Perm;
-                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: output of correct surface mask to: %@.\n", tangleMaskVarName);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: output of correct surface mask to: %s.\n", [tangleMaskVarName UTF8String]);
             } else {
-                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: ignoring the variable %@ given as correct surface mask because it was not found.\n", tangleMaskVarName);
+                fprintf(stdout, "FEMStructuredMeshMapper:solutionComputer: ignoring the variable %s given as correct surface mask because it was not found.\n", [tangleMaskVarName UTF8String]);
             }
         }
     }

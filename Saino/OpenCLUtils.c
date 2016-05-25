@@ -31,7 +31,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
     platForms = (cl_platform_id *)malloc(sizeof(cl_platform_id) * num_platforms);
     clGetPlatformIDs(num_platforms, platForms, NULL);
     
-    fprintf(stdout, "System is built with %d platform(s) :.\n", num_platforms);
+    fprintf(stdout, "find_platforms: %d platform(s) available in system.\n", num_platforms);
     
     for (int i=0; i<num_platforms; i++) {
         
@@ -43,7 +43,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
         
         ext_data = (char *)malloc(ext_size);
         clGetPlatformInfo(platForms[i], CL_PLATFORM_EXTENSIONS, ext_size, ext_data, NULL);
-        fprintf(stdout, "Platforms %d supports extensions: %s\n", i, ext_data);
+        fprintf(stdout, "find_platforms: platform id:%d supports extensions: %s\n", i, ext_data);
         free(ext_data);
         
         err = clGetDeviceIDs(platForms[i], CL_DEVICE_TYPE_GPU, 1, NULL, &num_devices);
@@ -51,7 +51,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
             fprintf(stderr, "find_platforms: could not find any device.\n");
             fatal("find_platforms");
         }
-        fprintf(stdout, "Platform %d built with %d device(s):\n", i, num_devices);
+        fprintf(stdout, "find_platforms: %d built-in device(s) in platform id:%d.\n", num_devices, i);
         tot_devices = tot_devices + num_devices;
     }
     
@@ -116,15 +116,34 @@ cl_device_id __nullable find_single_device(void) {
     return device;
 }
 
+int device_info(cl_device_id __nonnull device_id) {
+    
+    cl_uint err;
+    
+    cl_char vendor_name[1024] = {0};
+    cl_char device_name[1025] = {0};
+    cl_char device_profile[1024] = {0};
+    cl_char device_driver_version[1024] = {0};
+    
+    err = clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendor_name), vendor_name, NULL);
+    err |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(device_name), device_name, NULL);
+    
+    err |= clGetDeviceInfo(device_id, CL_DRIVER_VERSION, sizeof(device_driver_version), device_driver_version, NULL);
+    err |= clGetDeviceInfo(device_id, CL_DEVICE_PROFILE, sizeof(device_profile), device_profile, NULL);
+    
+    printf("device_info: vendor: %s.\n", vendor_name);
+    printf("device_info: device name: %s.\n", device_name);
+    printf("device_info: OpenCL (driver) version: %s.\n", device_driver_version);
+    printf("device_info: supported profile: %s.\n", device_profile);
+    
+    return CL_SUCCESS;
+}
+
 int device_stats(cl_device_id __nonnull device_id) {
     
     cl_uint err, addr_size, clock_frequency, max_compute_units;
     
-	cl_char vendor_name[1024] = {0};
-	cl_char device_name[1025] = {0};
-	cl_char device_profile[1024] = {0};
 	cl_char device_extensions[1024] = {0};
-    cl_char device_driver_version[1024] = {0};
     cl_uint vector_width_native, vector_width_prefered;
 	
 	cl_ulong global_mem_size, global_mem_cache_size, local_mem_size;
@@ -138,12 +157,7 @@ int device_stats(cl_device_id __nonnull device_id) {
     
 	char *vector_type_names[] = {"char", "short", "int", "long", "float", "double"};
     
-    err |= clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendor_name), vendor_name, NULL);
-    err |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(device_name), device_name, NULL);
-    
-    err |= clGetDeviceInfo(device_id, CL_DRIVER_VERSION, sizeof(device_driver_version), device_driver_version, NULL);
-    err |= clGetDeviceInfo(device_id, CL_DEVICE_PROFILE, sizeof(device_profile), device_profile, NULL);
-    err |= clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, sizeof(device_extensions), device_extensions, NULL);
+    err = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, sizeof(device_extensions), device_extensions, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS, sizeof(addr_size), &addr_size, NULL);
     
     err |= clGetDeviceInfo(device_id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(global_mem_size), &global_mem_size, NULL);
@@ -156,16 +170,25 @@ int device_stats(cl_device_id __nonnull device_id) {
     err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(max_work_item_sizes), max_work_item_sizes, NULL);
     
-    printf("VENDOR: %s\nNAME: %s\nVERSION: %s\nPROFILE: %s\nEXTENSIONS: %s\nADDRESS_WIDTH: %u\nGLOBAL_MEMORY_SIZE(MB): %llu\nLOCAL_MEMORY_SIZE(KB): %llu\nGLOBAL_MEM_CHACHE_LINE_SIZE: %llu\nMAX_MEM_ALLOC_SIZE: %llu\nMAX_COMPUTE_UNITS: %u\nCLOCK_FREQUENCY(MHz): %u\n", vendor_name, device_name, device_driver_version, device_profile, device_extensions, addr_size, global_mem_size/(1024*1024), local_mem_size/1024, global_mem_cache_size, max_mem_alloc_size, max_compute_units, clock_frequency);
-    printf("MAX_WORK_GROUP_SIZE: %zu\nMAX_WORK_ITEM_SIZES: %zu %zu %zu\n", max_work_group_size, max_work_item_sizes[0], max_work_item_sizes[1], max_work_item_sizes[2]);
+    printf("device_stats: supported OpenCL extensions: %s.\n",device_extensions);
+    printf("device_stats: address width: %u.\n",addr_size);
+    printf("device_stats: global memory size (MB): %llu.\n", global_mem_size/(1024*1024));
+    printf("device_stats: local memory size (KB): %llu.\n",local_mem_size/1024);
+    printf("device_stats: global memory cache line size (KB): %llu.\n", global_mem_cache_size/1024);
+    printf("device_stats: maximum memory allocation size (MB): %llu.\n", max_mem_alloc_size/(1024*1024));
+    printf("device_stats: maximum compute units: %u.\n", max_compute_units);
+    printf("device_stats: clock frequency (MHz): %u.\n", clock_frequency);
+    
+    printf("device_stats: maximum work group size: %zu.\n", max_work_group_size);
+    printf("device_stats: maximum work item size (each dimension): %zu %zu %zu.\n", max_work_item_sizes[0], max_work_item_sizes[1], max_work_item_sizes[2]);
 	
     for(int k=0;k<6;k++) {
         err |= clGetDeviceInfo(device_id, vector_width_types_native[k], sizeof(vector_width_native), &vector_width_native, NULL);
-        printf("Native vector type width for: %s = %u\n", vector_type_names[k], vector_width_native);
+        printf("device_stats: native vector type width for: %s = %u.\n", vector_type_names[k], vector_width_native);
     }
     for(int k=0;k<6;k++) {
         err |= clGetDeviceInfo(device_id, vector_width_types_prefered[k], sizeof(vector_width_prefered), &vector_width_prefered, NULL);
-        printf("Prefered vector type width for: %s = %u\n", vector_type_names[k], vector_width_prefered);
+        printf("device_stats: prefered vector type width for: %s = %u.\n", vector_type_names[k], vector_width_prefered);
     }
 	
 	return CL_SUCCESS;

@@ -6686,6 +6686,8 @@ jump:
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     Element_t *elements = mesh.getElements;
     
+    startAdvanceOutput((char *)[@"FEMMeshUtils:colorMesh" UTF8String], (char *)[@"coloring..." UTF8String]);
+    
     double at = cputime();
     
     // Color the elements
@@ -6714,7 +6716,7 @@ jump:
                         if (elements[j].color.red == currentColor.red && elements[j].color.green == currentColor.green && elements[j].color.blue == currentColor.blue) numberOfSameColors++;
                     }
                 }
-                if (numberOfSameColors == 0) { // No neighbors with current color so color the element with current color
+                if (numberOfSameColors == 0) { // No neighbors with the current color so color the element with it
                     elements[i].color.red = currentColor.red;
                     elements[i].color.green = currentColor.green;
                     elements[i].color.blue = currentColor.blue;
@@ -6722,6 +6724,8 @@ jump:
                     elements[i].colored = true;
                     numberOfColoredElements++;
                     numberOfElementsWithCurrentColor++;
+                    // TODO: make this better?
+                    advanceOutput(numberOfColoredElements, mesh.numberOfBulkElements, NULL, NULL);
                 }
             }
         }
@@ -6730,7 +6734,7 @@ jump:
         mesh.numberOfColors++;
     }
     
-    fprintf(stdout, "FEMMeshUtils:colorMesh:Timing (s): %f\n", cputime() - at);
+    fprintf(stdout, "FEMMeshUtils:colorMesh: CPU time (s): %f\n", cputime() - at);
     
     fprintf(stdout, "FEMMeshUtils:FEMMesh_colorMesh: number of colors: %d\n", mesh.numberOfColors);
     fprintf(stdout, "FEMMeshUtils:FEMMesh_colorMesh: number of elements for each color set before optimization: \n");
@@ -6783,7 +6787,7 @@ jump:
                         if ([color[0] intValue] <= meanValue) break;
                     }
                 }
-                if (i == mesh.numberOfBulkElements) break; // Already done all elements for given color set so go to next set
+                if (i == mesh.numberOfBulkElements) break; // Already done all elements for a given color set, so go to next set
             }
         }
     }
@@ -6921,7 +6925,9 @@ jump:
     line = nil;
     while ((line = [reader readLine])) {
         lineCount++;
-        fprintf(stdout, "FEMMeshUtils:readColoredMesh: %3.d: %s.\n", lineCount, [line UTF8String]);
+        if (/* DISABLES CODE */ (NO)) {
+            fprintf(stdout, "FEMMeshUtils:readColoredMesh: %d: %s\n", lineCount, [line UTF8String]);
+        }
         // Parse the line
         NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
         NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
@@ -6947,7 +6953,7 @@ jump:
             [mesh.colors addObject:color];
         }
     }
-    
+    fprintf(stdout, "FEMMeshUtils:readColoredMesh: read %d lines in %s.\n", lineCount, [@"mesh.colors" UTF8String]);
     [reader closeHandle];
     
     // Build the element color mapping
@@ -6958,7 +6964,7 @@ jump:
         
         NSString *elementsFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"mesh.colored_elements"];
         
-        FileReader * reader = [[FileReader alloc] initWithFilePath:colorFile];
+        FileReader * reader = [[FileReader alloc] initWithFilePath:elementsFile];
         if (!reader) {
             fprintf(stderr, "FEMMeshUtils:readColoredMesh: file %s not found in mesh directory.\n", [elementsFile UTF8String]);
             fatal("FEMMeshUtils:readColoredMesh");
@@ -6968,7 +6974,9 @@ jump:
         nb = 0;
         while ((line = [reader readLine])) {
             lineCount++;
-            fprintf(stdout, "FEMMeshUtils:readColoredMesh: %3.d: %s.\n", lineCount, [line UTF8String]);
+            if (/* DISABLES CODE */ (NO)) {
+                fprintf(stdout, "FEMMeshUtils:readColoredMesh: %d: %s.\n", lineCount, [line UTF8String]);
+            }
             // Parse the line
             NSArray *stringParts = [line componentsSeparatedByCharactersInSet:whitespaces];
             NSArray *filteredArray = [stringParts filteredArrayUsingPredicate:noEmptyStrings];
@@ -6984,6 +6992,7 @@ jump:
             elements[nb].color.colorIndex = [filteredArray[1] intValue];
             nb++;
         }
+        fprintf(stdout, "FEMMeshUtils:readColoredMesh: read %d lines in %s.\n", lineCount, [@"mesh.colored_elements" UTF8String]);
         [reader closeHandle];
         
     } else elements = mesh.getElements;

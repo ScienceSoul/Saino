@@ -736,11 +736,13 @@ static dispatch_once_t onceToken;
     double n = 3.0;
     double eta = pow((2.0 * 100.0), (-1.0/n));
     
+    NSString *kernelPath = [self.path stringByReplacingOccurrencesOfString:@"Tests" withString:@"Saino/NavierStokesAssemblyKernel"];
+    
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
-            [solution.solutionInfo setObject:@"/Users/hakimeseddik/Documents/Saino/Saino/NavierStokesAssemblyKernel" forKey:@"gpu kernel source file"];
+            [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"target application for gpu stokes"];
             [solution.solutionInfo setObject:@"single" forKey:@"gpu floating-point precision"];
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
@@ -749,6 +751,11 @@ static dispatch_once_t onceToken;
         }
     }
     mod.meshName = [NSMutableString stringWithString:@"rectangle2-colored"];
+    
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
+    
+    int ivalue = 2;
+    [listUtilities addIntegerInClassList:mod.simulation theVariable:@"extruded mesh levels" withValue:&ivalue orUsingBlock:nil];
 }
 
 @end

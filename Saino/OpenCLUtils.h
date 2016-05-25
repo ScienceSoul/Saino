@@ -11,6 +11,7 @@
 
 cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numberofPlatforms, cl_uint * __nullable numberOfDevices);
 cl_device_id __nullable find_single_device(void);
+int device_info(cl_device_id __nonnull device_id);
 int device_stats(cl_device_id __nonnull device_id);
 int LoadFileIntoString(const char * __nonnull filename, char * __nonnull * __nullable text, size_t * __nonnull len);
 

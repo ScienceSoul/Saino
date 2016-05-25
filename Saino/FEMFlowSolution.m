@@ -161,7 +161,6 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_command_queue _cmd_queue;
     cl_program _program;
     cl_kernel _kernel;
-    cl_int _err;
     size_t _src_len;
     char *_kernel_source;
     BOOL _initializeGPU;
@@ -1153,12 +1152,18 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 
 -(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precision:(NSString * __nonnull)precision getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
+    cl_int err;
+    
     // Get the GPU device
     _device = find_single_device();
-    device_stats(_device);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: parrallel assembly computed on device: \n");
+    device_info(_device);
     
     // Create the context of the command queue
-    _context = clCreateContext(0, 1, &_device, NULL, NULL, &_err);
+    _context = clCreateContext(0, 1, &_device, NULL, NULL, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create context for device. Error number: ", err);
+    }
     _cmd_queue = clCreateCommandQueue(_context, _device, 0, NULL);
     
     NSString *kernelfile;
@@ -1180,9 +1185,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     // Allocate memory for program and kernels
     // Create the program .cl file
-    _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &_err);
-    if (_err) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create program. Error number: ", _err);
+    _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create program. Error number: ", err);
     }
     
     // Build the program (compile it)
@@ -1200,22 +1205,23 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         options= "-KERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
     } else fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unknow GPU preicion mode.");
     
-    _err = clBuildProgram(_program, 1, &_device, options, NULL, &_err);
-    if (_err < 0) {
+    err = clBuildProgram(_program, 1, &_device, options, NULL, &err);
+    if (err < 0) {
         size_t log_size;
         clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
         char *program_log = (char *)malloc(log_size+1);
         program_log[log_size] = '\0';
         clGetProgramBuildInfo(_program, _device, CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-        fprintf(stderr, "FEMFlowSolution:FEMFlowSolution_setGPUCore: %s\n", program_log);
+        fprintf(stderr, "FEMFlowSolution:FEMFlowSolution_setGPUCore: error when buiding the GPU kernel.\n");
+        fprintf(stderr, "FEMFlowSolution:FEMFlowSolution_setGPUCore: log: %s\n", program_log);
         free(program_log);
         fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore");
     }
     
     // Create the kernel
-    _kernel = clCreateKernel(_program, "NavierStokesCompose", &_err);
-    if (_err) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error number: ", _err);
+    _kernel = clCreateKernel(_program, "NavierStokesCompose", &err);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error number: ", err);
     }
     
     // Create data structures needed by the GPU
