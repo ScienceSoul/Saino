@@ -752,10 +752,10 @@ static dispatch_once_t onceToken;
     }
     mod.meshName = [NSMutableString stringWithString:@"rectangle2-colored"];
     
-    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
+    //FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
-    int ivalue = 2;
-    [listUtilities addIntegerInClassList:mod.simulation theVariable:@"extruded mesh levels" withValue:&ivalue orUsingBlock:nil];
+    //int ivalue = 2;
+    //[listUtilities addIntegerInClassList:mod.simulation theVariable:@"extruded mesh levels" withValue:&ivalue orUsingBlock:nil];
 }
 
 @end

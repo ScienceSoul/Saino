@@ -937,19 +937,19 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     gpuData->basisFunctions = (double *)malloc(sizeof(double) * 256);
     indx = 0;
     for(int i=0; i<element->Type.NumberOfNodes; i++) {
-        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+        for(int j=0;j<element->Type.BasisFunctions[i].n;j++) {
             gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].p[j];
             indx++;
         }
-        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+        for(int j=0;j<element->Type.BasisFunctions[i].n;j++) {
             gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].q[j];
             indx++;
         }
-        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+        for(int j=0;j<element->Type.BasisFunctions[i].n;j++) {
             gpuData->basisFunctions[indx] = (double)element->Type.BasisFunctions[i].r[j];
             indx++;
         }
-        for(int j=0;i<element->Type.BasisFunctions[i].n;j++) {
+        for(int j=0;j<element->Type.BasisFunctions[i].n;j++) {
             gpuData->basisFunctions[indx] = element->Type.BasisFunctions[i].coeff[j];
             indx++;
         }
@@ -1081,20 +1081,30 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (err < 0) {
         fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_gpuNewton.");
     }
+    
+    GlobalMemoryAllocationSize_t *globalAllocation = (GlobalMemoryAllocationSize_t *)malloc(sizeof(GlobalMemoryAllocationSize_t));
+    initGlobalMemoryAllocation(globalAllocation);
+    
+    int nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS + mesh.numberOfNodes
+    + mesh.numberOfNodes +  mesh.numberOfNodes + flowContainers->sizeValues;
+    if (precision() == 1) {
+       globalAllocation->nb_float = nbOfReals;
+    } else {
+        globalAllocation->nb_double = nbOfReals;
+    }
+    
+    globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements
+                               + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
+    
+    globalAllocation->nb_char = 1;
+    
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: %lu MBytes will be allocated on the device global address space.\n",
+            computeGlobalMemoryAllocation(globalAllocation)/(1024*1024));
 }
 
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
-    BOOL singlePrecision=NO, doublePrecision=NO;
     cl_int err;
-    
-    if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"single"] == YES) {
-        singlePrecision = YES;
-    } else if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"double"] == YES) {
-        doublePrecision = YES;
-    } else {
-        fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "GPU precision mode not supported.");
-    }
     
     err  = clSetKernelArg(_kernel, 0, sizeof(cl_mem), &_basisFunctions);
     err |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &_nodesUVW);
@@ -1162,7 +1172,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Create the context of the command queue
     _context = clCreateContext(0, 1, &_device, NULL, NULL, &err);
     if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create context for device. Error number: ", err);
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create context for device. Error: ", err);
     }
     _cmd_queue = clCreateCommandQueue(_context, _device, 0, NULL);
     
@@ -1187,7 +1197,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Create the program .cl file
     _program = clCreateProgramWithSource(_context, 1, (const char**)&_kernel_source, NULL, &err);
     if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create program. Error number: ", err);
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create program. Error: ", err);
     }
     
     // Build the program (compile it)
@@ -1200,11 +1210,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Options passed to the compilation of the kernel
     const char *options;
     if ([precision isEqualToString:@"single"] == YES) {
-        options= "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+        options = "-DKERNEL_FP_32 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
     } else if ([precision isEqualToString:@"double"] == YES) {
-        options= "-KERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
-    } else fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unknow GPU preicion mode.");
+        options = "-KERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
+    } else fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unknown GPU precision mode.");
     
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: compile GPU program...\n");
     err = clBuildProgram(_program, 1, &_device, options, NULL, &err);
     if (err < 0) {
         size_t log_size;
@@ -1217,11 +1228,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         free(program_log);
         fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore");
     }
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: done.\n");
     
     // Create the kernel
     _kernel = clCreateKernel(_program, "NavierStokesCompose", &err);
     if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error number: ", err);
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error: ", err);
     }
     
     // Create data structures needed by the GPU
@@ -1884,6 +1896,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
         if (_initializeGPU == NO) {
             [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh precision:precision getActiveElement:getActiveElementIMP];
+            char *nonLinNewton = (char *)&_newtonLinearization;
+            memcpy(_mapped_gpuNewton, nonLinNewton, sizeof(cl_char));
             _initializeGPU = YES;
         }
     }
@@ -1935,10 +1949,17 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 }
                 
                 // Queue up the kernels
-                err |= clEnqueueNDRangeKernel(_cmd_queue, _kernel, 1, NULL, &global_work__size, NULL, 0, NULL, NULL);
-                
+                err = clEnqueueNDRangeKernel(_cmd_queue, _kernel, 1, NULL, &global_work__size, NULL, 0, NULL, NULL);
+                if (err < 0) {
+                    fatal("FEMFlowSolution:solutionComputer", "Can't enqueue kernel. Error: ", err);
+                }
+
                 // Finish the calculation
                 clFinish(_cmd_queue);
+                
+                // Read data from the device
+                mapmemcpy(precision(), matContainers->Values, _mapped_matValues, matContainers->sizeValues);
+                mapmemcpy(precision(), matContainers->RHS, _mapped_matRHS, matContainers->sizeRHS);
             }
             
         } else {
@@ -2270,7 +2291,13 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fprintf(stdout, "FEMFlowSolution:solutionComputer: result norm: %e.\n", solution.variable.norm);
         fprintf(stdout, "FEMFlowSolution:solutionComputer: relative change: %e.\n", relativeChange);
         
-        if (relativeChange < newtonTol || iter > newtonIter) _newtonLinearization = YES;
+        if (relativeChange < newtonTol || iter > newtonIter) {
+            _newtonLinearization = YES;
+            if (parallelAssembly) {
+                char *nonLinNewton = (char *)&_newtonLinearization;
+                memcpy(_mapped_gpuNewton, nonLinNewton, sizeof(cl_char));
+            }
+        };
         if (relativeChange < nonLinearTol && iter < nonLinearIter) break;
         
         // If free surface in model, this will move the nodal points

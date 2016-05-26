@@ -27,5 +27,26 @@ static int precisionMode = 0;
                 clSetKernelArg(kern, idx, sizeof(cl_float)*size, (float *)&val) : \
                 clSetKernelArg(kern, idx, sizeof(cl_double)*size, &val) )
 
+#define mapmemcpy(t, target, source, size) ((t) == 1 ? \
+                memcpy(target, source, size*sizeof(cl_float)) : \
+                memcpy(target, source, size*sizeof(cl_double)) )
+
 void setPrecision(bool single);
 int precision(void);
+
+typedef struct GlobalMemoryAllocationSize_t {
+    
+    int nb_char;
+    int nb_uchar;
+    int nb_short;
+    int nb_ushort;
+    int nb_int;
+    int nb_uint;
+    int nb_long;
+    int nb_ulong;
+    int nb_float;
+    int nb_double;
+} GlobalMemoryAllocationSize_t;
+
+void initGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize);
+size_t computeGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize);
