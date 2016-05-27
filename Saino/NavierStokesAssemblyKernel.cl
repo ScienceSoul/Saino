@@ -74,8 +74,9 @@ void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w
     for(int n=0; n<numberOfNodes+OFFSET; n++) {
         s = ZERO;
         for(int i=0; i<numberOfNodes+OFFSET; i++) {
-            s = s + BasisFunctions[(i+stride*3)+(n*(4*stride))] * pow(u, BasisFunctions[i+(n*(4*stride))]) * pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
-            * pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
+            s = s + BasisFunctions[(i+stride*3)+(n*(4*stride))] * pow(u, BasisFunctions[i+(n*(4*stride))])
+                * pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
+                * pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
         }
         basis[n] = s;
     }
@@ -105,20 +106,23 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
         t = ZERO;
         z = ZERO;
         for(int i=0; i<numberOfNodes+OFFSET; i++) {
-            if(BasisFunctions[i+(n*(4*stride))] >= ONE) s = s + BasisFunctions[i+(n*(4*stride))]*BasisFunctions[(i+stride*3)+(n*(4*stride))]
-                *pow(u, (BasisFunctions[i+(n*(4*stride))]-1))
-                *pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
-                *pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
-            if(BasisFunctions[(i+stride)+(n*(4*stride))] >= ONE) t = t + BasisFunctions[(i+stride)+(n*(4*stride))]
-                *BasisFunctions[(i+stride*3)+(n*(4*stride))]
-                *pow(u, BasisFunctions[i+(n*(4*stride))])
-                *pow(v, (BasisFunctions[(i+stride)+(n*(4*stride))]-1))
-                *pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
-            if(BasisFunctions[(i+stride*2)+(n*(4*stride))] >= ONE) z = z + BasisFunctions[(i+stride*2)+(n*(4*stride))]
-                *BasisFunctions[(i+stride*3)+(n*(4*stride))]
-                *pow(u, BasisFunctions[i+(n*(4*stride))])
-                *pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
-                *pow(w, (BasisFunctions[(i+stride*2)+(n*(4*stride))]-1));
+            if(BasisFunctions[i+(n*(4*stride))] >= ONE) s = s
+                + BasisFunctions[i+(n*(4*stride))]*BasisFunctions[(i+stride*3)+(n*(4*stride))]
+                * pow(u, (BasisFunctions[i+(n*(4*stride))]-1))
+                * pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
+                * pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
+            if(BasisFunctions[(i+stride)+(n*(4*stride))] >= ONE) t = t
+                + BasisFunctions[(i+stride)+(n*(4*stride))]
+                * BasisFunctions[(i+stride*3)+(n*(4*stride))]
+                * pow(u, BasisFunctions[i+(n*(4*stride))])
+                * pow(v, (BasisFunctions[(i+stride)+(n*(4*stride))]-1))
+                * pow(w, BasisFunctions[(i+stride*2)+(n*(4*stride))]);
+            if(BasisFunctions[(i+stride*2)+(n*(4*stride))] >= ONE) z = z
+                + BasisFunctions[(i+stride*2)+(n*(4*stride))]
+                * BasisFunctions[(i+stride*3)+(n*(4*stride))]
+                * pow(u, BasisFunctions[i+(n*(4*stride))])
+                * pow(v, BasisFunctions[(i+stride)+(n*(4*stride))])
+                * pow(w, (BasisFunctions[(i+stride*2)+(n*(4*stride))]-1));
         }
         dLBasisdx[3*n]   = s;
         dLBasisdx[3*n+1] = t;
@@ -150,6 +154,7 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
     }
     
      // Volume elements
+    detJ = ZERO;
     detJ = covariantMetricTensor[0] * ( covariantMetricTensor[4]*covariantMetricTensor[8] - covariantMetricTensor[5]*covariantMetricTensor[7] )
     + covariantMetricTensor[1] * ( covariantMetricTensor[5]*covariantMetricTensor[6] - covariantMetricTensor[3]*covariantMetricTensor[8] )
     + covariantMetricTensor[2] * ( covariantMetricTensor[3]*covariantMetricTensor[7] - covariantMetricTensor[4]*covariantMetricTensor[6] );
@@ -221,10 +226,11 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
                                   __global REAL *nodesZ,
                                   __global REAL *varSolution,
                                   __global int *varPermutation,
-                                  __global char *newtonLinearization,      // Just an integer pointer, 1 for true, 0 for false
+                                  __global char *newtonLinearization,      // Just a pointer to an interger value,
+                                                                           // 1 for true, 0 for false
                                   REAL density,
                                   REAL viscosity,
-                                  REAL load,                              // load = Flow bodyforce 2 or 3
+                                  REAL load,                               // load = Flow bodyforce 2 or 3
                                   REAL hk,
                                   REAL mk,
                                   int positionInColorMapping,
@@ -237,8 +243,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     // c= MDIM = dim = model.dimension (see the original implementation)
     // Model dimension and mesh dimension are the same
     
-    int k, globalID;
-    int workItemID = get_global_id(0);
+    int k;
     int stride = numberOfNodes + OFFSET;
     int col, row;
     REAL basis[numberOfNodes];
@@ -254,7 +259,8 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     REAL criticalShearRate=1.0e-10;
     bool viscNewtonLin;
     
-    globalID = colorMapping[positionInColorMapping+workItemID];
+    int workItemID = get_global_id(0);
+    int globalID = colorMapping[positionInColorMapping+workItemID];
     
     for(int i=0; i<numberOfNodes; i++) {
         basis[i] = ZERO;
@@ -324,12 +330,13 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     }
     
     // Now we start integrating
-    for (int t=0; t<numberOfNodes; t++) { // Nb of Gauss points is equal to the number of nodes
+    // Assume that number of Gauss points is equal to the number of nodes
+    for (int t=0; t<numberOfNodes; t++) {
         u = GaussPoints[t];
         v = GaussPoints[t+stride];
         w = GaussPoints[t+(stride*2)];
         
-        basis3D (BasisFunctions, basis, u, v, w, numberOfNodes);
+        basis3D(BasisFunctions, basis, u, v, w, numberOfNodes);
         detJ = dBasisdx3D(BasisFunctions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                    u, v, w, numberOfNodes, numberElementDofs, globalID);
         s = detJ * GaussPoints[t+(stride*3)];
@@ -348,9 +355,9 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         
         for (int i=0; i<3; i++) {
             for (int j=0; j<numberOfNodes; j++) {
-                grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * dBasisdx[j][i];
-                grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * dBasisdx[j][i];
-                if (MDIM > 2)  grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * dBasisdx[j][i];
+                grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]] * dBasisdx[j][i];
+                grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
+                if (MDIM > 2)  grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
             }
         }
         
@@ -361,7 +368,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
             if (MDIM == 3 ) force[2] = force[2] + load * basis[i];
         }
 
-        // Assume always isotropic material
+        // Always assume isotropic material
         mu = ZERO;
         for (int i=0; i<numberOfNodes; i++) {
             mu = mu + viscosity * basis[i];
@@ -568,7 +575,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         for (int i=0; i<p; i++) {
             sum = ZERO;
             for (int j=0; j<p; j++) {
-                sum = sum + jacM[i][j] + sol[j];
+                sum = sum + jacM[i][j] * sol[j];
             }
             yy[i] = sum;
         }
