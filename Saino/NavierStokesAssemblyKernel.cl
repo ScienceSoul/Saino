@@ -240,7 +240,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
                                   int varDofs) {
     
     // DIM=3, the only model dimension we support (given by MDIM) so that
-    // c= MDIM = dim = model.dimension (see the original implementation)
+    // c = MDIM = dim = model.dimension (see the original implementation)
     // Model dimension and mesh dimension are the same
     
     int k;
@@ -350,21 +350,21 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         for (int i=0; i<numberOfNodes; i++) {
             velo[0] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * basis[i];
             velo[1] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * basis[i];
-            if (MDIM > 2) velo[2] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * basis[i];
+            velo[2] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * basis[i];
         }
         
         for (int i=0; i<3; i++) {
             for (int j=0; j<numberOfNodes; j++) {
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]] * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
-                if (MDIM > 2)  grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
+                grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
             }
         }
         
         // Force at integration point
         // Only flow bodyforce 2 if MDIM=2 or flow bodyforce 3 if MDIM=3
         for (int i=0; i<numberOfNodes; i++) {
-            if (MDIM == 2 ) force[1] = force[1] + load * basis[i];
+            // if (MDIM == 2 ) force[1] = force[1] + load * basis[i];
             if (MDIM == 3 ) force[2] = force[2] + load * basis[i];
         }
 
@@ -555,13 +555,12 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+1];
             kk++;
         }
-        if (MDIM > 2) {
-            kk = 0;
-            for (int i=2; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
-                sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
-                kk++;
-            }
+        kk = 0;
+        for (int i=2; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
+            sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
+            kk++;
         }
+        
         int p = (MDIM+1) * nBasis;
         for (int i=0; i<p; i++) {
             for (int j=0; j<p; j++) {

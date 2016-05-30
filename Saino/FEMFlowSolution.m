@@ -1881,6 +1881,13 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         if ([integration allocation:mesh] == NO) fatal("FEMFlowSolution:solutionComputer", "Allocation error in FEMNumericIntegration.");
     }
     
+    // Check whether we support the type of flow we wan to compute on GPU
+    if (solution.solutionInfo[@"gpu flow type"] != nil) {
+        if ([solution.solutionInfo[@"gpu flow type"] isEqualToString:@"ice flow"] == NO) {
+            fatal("FEMFlowSolution:solutionComputer", "Currently only the value <ice flow > for the < gpu flow type> parameter is supported for parallel assembly.");
+        }
+    } else fatal("FEMFlowSolution:solutionComputer", "Parameter < gpu flow type > not given.");
+    
     // If we do the matrix assembly on the GPU, set-up everything now (only once)
     if (parallelAssembly == YES) {
         NSString *precision;
