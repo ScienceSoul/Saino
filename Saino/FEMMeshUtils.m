@@ -4052,7 +4052,7 @@ jump:
     
     BOOL deleteTimer = YES;
     [listUtilities checkTimer:@"periodicProjector" deleteTimer:&deleteTimer resetTimer:NULL model:model];
-    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: projector created, now exiting...\n");
+    fprintf(stdout, "FEMMeshUtils:periodicProjectorInModel: projector created, now exiting.\n");
     
     return projector;
 }

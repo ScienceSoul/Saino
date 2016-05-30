@@ -1098,7 +1098,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     globalAllocation->nb_char = 1;
     
-    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: %lu MBytes will be allocated on the device global address space.\n",
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: %lu MBytes allocated on the device global address space.\n",
             computeGlobalMemoryAllocation(globalAllocation)/(1024*1024));
 }
 
@@ -1215,7 +1215,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         options = "-KERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3";
     } else fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore: unknown GPU precision mode.");
     
-    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: compile GPU program...\n");
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: build GPU program...\n");
     err = clBuildProgram(_program, 1, &_device, options, NULL, &err);
     if (err < 0) {
         size_t log_size;
