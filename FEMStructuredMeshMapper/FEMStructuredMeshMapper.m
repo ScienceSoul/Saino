@@ -95,8 +95,8 @@
         if (_topPointer != NULL) free_ivector(_topPointer, 0, _nsize-1);
         FEMMeshUtils *meshUtilities = [[FEMMeshUtils alloc] init];
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
-        if ((solution.solutionInfo)[@"mapping mask variable"] != nil) {
-            NSString *maskName = (solution.solutionInfo)[@"mapping mask variable"];
+        if (solution.solutionInfo[@"mapping mask variable"] != nil) {
+            NSString *maskName = solution.solutionInfo[@"mapping mask variable"];
             FEMVariable *maskVar = [utilities getVariableFrom:solution.mesh.variables model:model name:maskName onlySearch:NULL maskName:nil info:&found];
             if (found == YES) {
                 maskVarContainers = maskVar.getContainers;
@@ -170,12 +170,12 @@
     // Get either variable or constant values for top surface
     topNode = 0;
     topValue0 = 0.0;
-    if ((solution.solutionInfo)[@"top surface level"] != nil) {
-        topValue0 = [(solution.solutionInfo)[@"top surface level"] doubleValue];
+    if (solution.solutionInfo[@"top surface level"] != nil) {
+        topValue0 = [solution.solutionInfo[@"top surface level"] doubleValue];
         topNode = 1;
     } else {
-        if ((solution.solutionInfo)[@"top surface variable name"] != nil) {
-            varName = (solution.solutionInfo)[@"top surface variable name"];
+        if (solution.solutionInfo[@"top surface variable name"] != nil) {
+            varName = solution.solutionInfo[@"top surface variable name"];
             FEMUtilities *utilities = [[FEMUtilities alloc] init];
             varContainers = NULL;
             var = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
@@ -226,12 +226,12 @@
     // Get either variable or constant values for bottom surface
     bottomNode = 0;
     bottomValue0 = 0.0;
-    if ((solution.solutionInfo)[@"bottom surface level"] != nil) {
-        bottomValue0 = [(solution.solutionInfo)[@"bottom surface level"] doubleValue];
+    if (solution.solutionInfo[@"bottom surface level"] != nil) {
+        bottomValue0 = [solution.solutionInfo[@"bottom surface level"] doubleValue];
         bottomNode = 1;
     } else {
-        if ((solution.solutionInfo)[@"bottom surface variable name"] != nil) {
-            varName = (solution.solutionInfo)[@"bottom surface variable name"];
+        if (solution.solutionInfo[@"bottom surface variable name"] != nil) {
+            varName = solution.solutionInfo[@"bottom surface variable name"];
             FEMUtilities *utilities = [[FEMUtilities alloc] init];
             varContainers = NULL;
             var = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
@@ -299,8 +299,8 @@
     
     // Get the velocity variable component
     gotVeloVar = NO;
-    if ((solution.solutionInfo)[@"mesh velocity variable"] != nil) {
-        varName = (solution.solutionInfo)[@"mesh velocity variable"];
+    if (solution.solutionInfo[@"mesh velocity variable"] != nil) {
+        varName = solution.solutionInfo[@"mesh velocity variable"];
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         veloVar = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
         if (found == YES) {
@@ -318,8 +318,8 @@
     
     // Get the mesh update variable component
     gotUpdateVar = NO;
-    if ((solution.solutionInfo)[@"mesh update variable"] != nil) {
-        varName = (solution.solutionInfo)[@"mesh update variable"];
+    if (solution.solutionInfo[@"mesh update variable"] != nil) {
+        varName = solution.solutionInfo[@"mesh update variable"];
         FEMUtilities *utilities = [[FEMUtilities alloc] init];
         updateVar = [utilities getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:nil info:&found];
         if (found == YES) {
@@ -335,13 +335,13 @@
         }
     }
     
-    if ((solution.solutionInfo)[@"displacement mode"] != nil) {
-        displacementMode = [(solution.solutionInfo)[@"displacement mode"] boolValue];
+    if (solution.solutionInfo[@"displacement mode"] != nil) {
+        displacementMode = [solution.solutionInfo[@"displacement mode"] boolValue];
     } displacementMode = NO;
     
     // Get the new mapping using linear interpolation from bottom to top
-    if ((solution.solutionInfo)[@"minimum mesh height"] != nil) {
-        heps = [(solution.solutionInfo)[@"minimum mesh height"] doubleValue];
+    if (solution.solutionInfo[@"minimum mesh height"] != nil) {
+        heps = [solution.solutionInfo[@"minimum mesh height"] doubleValue];
     } heps = DBL_EPSILON;
     
     int tangleCount = 0;

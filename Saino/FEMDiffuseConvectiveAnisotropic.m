@@ -70,7 +70,7 @@
     GaussIntegrationPoints *IP = NULL;
     listBuffer gwrk = { NULL, NULL, NULL, NULL, 0, 0, 0};
         
-    stabilizationFlag = (solution.solutionInfo)[@"stabilization method"];
+    stabilizationFlag = solution.solutionInfo[@"stabilization method"];
     vms = ([stabilizationFlag isEqualToString:@"vms"] == YES) ? YES : NO;
     if (transientCheck == NO) {
         transient = ([[listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found] isEqualToString:@"transient"] == YES) ? YES : NO;

@@ -424,16 +424,16 @@ enum {
     
     // Do some additional initialization and go for it
     _dt = timeStep;
-    if ((solution.solutionInfo)[@"stabilize"] != nil) {
-        stabilize = [(solution.solutionInfo)[@"stabilize"] boolValue];
+    if (solution.solutionInfo[@"stabilize"] != nil) {
+        stabilize = [solution.solutionInfo[@"stabilize"] boolValue];
     }
     
-    if ((solution.solutionInfo)[@"bubbles"] != nil) {
-        useBubbles = [(solution.solutionInfo)[@"bubbles"] boolValue];
+    if (solution.solutionInfo[@"bubbles"] != nil) {
+        useBubbles = [solution.solutionInfo[@"bubbles"] boolValue];
     } else useBubbles = YES;
     
-    if ((solution.solutionInfo)[@"stabilization method"] != nil) {
-        stabilizeFlag = (solution.solutionInfo)[@"stabilization method"];
+    if (solution.solutionInfo[@"stabilization method"] != nil) {
+        stabilizeFlag = solution.solutionInfo[@"stabilization method"];
     }
     if ([stabilizeFlag isEqualToString:@"vms"] == YES) {
         stabilize = NO;
@@ -446,13 +446,13 @@ enum {
         useBubbles = YES;
     }
     
-    if ((solution.solutionInfo)[@"nonlinear system maximum iterations"] != nil) {
-        nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
+    if (solution.solutionInfo[@"nonlinear system maximum iterations"] != nil) {
+        nonLinearIter = [solution.solutionInfo[@"nonlinear system maximum iterations"] intValue];
     } else nonLinearIter = 1;
     
     nonLinearTol = 0.0;
-    if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
-        nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
+    if (solution.solutionInfo[@"nonlinear system convergence tolerance"] != nil) {
+        nonLinearTol = [solution.solutionInfo[@"nonlinear system convergence tolerance"] doubleValue];
     }
     
     newtonTol = 1.0;
@@ -460,15 +460,15 @@ enum {
     
     if (newtonIter == 0) _newtonLinearization = YES;
     
-    if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
-        relax = [(solution.solutionInfo)[@"nonlinear system relaxation factor"] doubleValue];
+    if (solution.solutionInfo[@"nonlinear system relaxation factor"] != nil) {
+        relax = [solution.solutionInfo[@"nonlinear system relaxation factor"] doubleValue];
     } else relax = 1.0;
     
     _transientAssembly = transient;
     found = NO;
     dt0 = 0.0;
-    if ((solution.solutionInfo)[@"steady state transition time step"] != nil) {
-        dt0 = [(solution.solutionInfo)[@"steady state transition time step"] doubleValue];
+    if (solution.solutionInfo[@"steady state transition time step"] != nil) {
+        dt0 = [solution.solutionInfo[@"steady state transition time step"] doubleValue];
         found = YES;
     }
     if (found == YES && _dt > dt0) _transientAssembly = NO;

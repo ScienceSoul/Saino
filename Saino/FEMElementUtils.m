@@ -510,8 +510,8 @@
     matrix.complexMatrix = NO;
     matrix.format = matrixFormat;
     
-    if ((solution.solutionInfo)[@"constraint dofs"] != nil) {
-        n = [(solution.solutionInfo)[@"constraint dofs"] intValue];
+    if (solution.solutionInfo[@"constraint dofs"] != nil) {
+        n = [solution.solutionInfo[@"constraint dofs"] intValue];
     } n = 0;
     
     if (n > 0) {

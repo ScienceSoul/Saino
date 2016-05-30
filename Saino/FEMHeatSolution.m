@@ -1080,8 +1080,8 @@ enum {
     }
     if (_localNodes <= 0) return;
     
-    if ((solution.solutionInfo)[@"temperature convection field"] != nil) {
-        convectionField = (solution.solutionInfo)[@"temperature convection field"];
+    if (solution.solutionInfo[@"temperature convection field"] != nil) {
+        convectionField = solution.solutionInfo[@"temperature convection field"];
         flowSol = [utilities getVariableFrom:solution.mesh.variables model:model name:convectionField onlySearch:NULL maskName:nil info:&found];
     } else {
         flowSol = [utilities getVariableFrom:solution.mesh.variables model:model name:@"flow solution" onlySearch:NULL maskName:nil info:&found];
@@ -1265,16 +1265,16 @@ enum {
         _stefanBoltzmann = [listUtilities listGetConstReal:model inArray:model.constants.valuesList forVariable:@"stefan boltzmann" info:&found minValue:NULL maxValue:NULL];
     }
     
-    if ((solution.solutionInfo)[@"stabilize"] != nil) {
-        stabilize = [(solution.solutionInfo)[@"stabilize"] boolValue];
+    if (solution.solutionInfo[@"stabilize"] != nil) {
+        stabilize = [solution.solutionInfo[@"stabilize"] boolValue];
     }
     
-    if ((solution.solutionInfo)[@"bubbles"] != nil) {
-        useBubbles = [(solution.solutionInfo)[@"bubbles"] boolValue];
+    if (solution.solutionInfo[@"bubbles"] != nil) {
+        useBubbles = [solution.solutionInfo[@"bubbles"] boolValue];
     } else useBubbles = YES;
     
-    if ((solution.solutionInfo)[@"stabilization method"] != nil) {
-        stabilizeFlag = (solution.solutionInfo)[@"stabilization method"];
+    if (solution.solutionInfo[@"stabilization method"] != nil) {
+        stabilizeFlag = solution.solutionInfo[@"stabilization method"];
     }
     if ([stabilizeFlag isEqualToString:@"vms"] == YES) {
         stabilize = NO;
@@ -1287,22 +1287,22 @@ enum {
         useBubbles = YES;
     }
     
-    if ((solution.solutionInfo)[@"nonlinear system maximum iterations"] != nil) {
-        nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
+    if (solution.solutionInfo[@"nonlinear system maximum iterations"] != nil) {
+        nonLinearIter = [solution.solutionInfo[@"nonlinear system maximum iterations"] intValue];
     } else nonLinearIter = 1;
     
     nonLinearTol = 0.0;
-    if ((solution.solutionInfo)[@"nonlinear system convergence tolerance"] != nil) {
-        nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
+    if (solution.solutionInfo[@"nonlinear system convergence tolerance"] != nil) {
+        nonLinearTol = [solution.solutionInfo[@"nonlinear system convergence tolerance"] doubleValue];
     }
     
     // Newton linearization option is only needed when there is radiation
     if (isRadiation == YES) {
-        if ((solution.solutionInfo)[@"nonlinear system newton after tolerance"] != nil) {
-            newtonTol = [(solution.solutionInfo)[@"nonlinear system newton after tolerance"] doubleValue];
+        if (solution.solutionInfo[@"nonlinear system newton after tolerance"] != nil) {
+            newtonTol = [solution.solutionInfo[@"nonlinear system newton after tolerance"] doubleValue];
         } else newtonTol = 1.0;
-        if ((solution.solutionInfo)[@"nonlinear system newton after iterations"] != nil) {
-            newtonIter = [(solution.solutionInfo)[@"nonlinear system newton after iterations"] intValue];
+        if (solution.solutionInfo[@"nonlinear system newton after iterations"] != nil) {
+            newtonIter = [solution.solutionInfo[@"nonlinear system newton after iterations"] intValue];
         } else newtonIter = 0;
     } else {
         newtonTol = 1.0;
@@ -1310,19 +1310,19 @@ enum {
     }
     if (newtonIter == 0) _newtonLinearization = YES;
     
-    if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
-        relax = [(solution.solutionInfo)[@"nonlinear system relaxation factor"] doubleValue];
+    if (solution.solutionInfo[@"nonlinear system relaxation factor"] != nil) {
+        relax = [solution.solutionInfo[@"nonlinear system relaxation factor"] doubleValue];
     } else relax = 1.0;
     
     _transientAssembly = transient;
     found = NO;
     dt0 = 0.0;
-    if ((solution.solutionInfo)[@"steady state transition time step"] != nil) {
-        dt0 = [(solution.solutionInfo)[@"steady state transition time step"] doubleValue];
+    if (solution.solutionInfo[@"steady state transition time step"] != nil) {
+        dt0 = [solution.solutionInfo[@"steady state transition time step"] doubleValue];
         found = YES;
     } else {
-        if ((solution.solutionInfo)[@"smart heater time scale"] != nil) {
-            dt0 = [(solution.solutionInfo)[@"smart heater time scale"] doubleValue];
+        if (solution.solutionInfo[@"smart heater time scale"] != nil) {
+            dt0 = [solution.solutionInfo[@"smart heater time scale"] doubleValue];
             found = YES;
         }
     }
@@ -1423,8 +1423,8 @@ enum {
             }
             
             // Find the node related to temperature control
-            if ((solution.solutionInfo)[@"smart heater average"] != nil) {
-                smartHeaterAverage = [(solution.solutionInfo)[@"smart heater average"] boolValue];
+            if (solution.solutionInfo[@"smart heater average"] != nil) {
+                smartHeaterAverage = [solution.solutionInfo[@"smart heater average"] boolValue];
             }
             if (smartHeaterAverage == NO) {
                 jx = -DBL_MAX;
@@ -1443,16 +1443,16 @@ enum {
             }
         }
         
-        if ((solution.solutionInfo)[@"smart heater control after tolerance"] != nil) {
-            smartTol = [(solution.solutionInfo)[@"smart heater control after tolerance"] doubleValue];
+        if (solution.solutionInfo[@"smart heater control after tolerance"] != nil) {
+            smartTol = [solution.solutionInfo[@"smart heater control after tolerance"] doubleValue];
         } else {
             smartTolReached = YES;
             smartTol = 1.0;
         }
     
         powerTimeScale = 0.0;
-        if ((solution.solutionInfo)[@"smart heater time scale"] != nil) {
-            powerTimeScale = [(solution.solutionInfo)[@"smart heater time scale"] doubleValue];
+        if (solution.solutionInfo[@"smart heater time scale"] != nil) {
+            powerTimeScale = [solution.solutionInfo[@"smart heater time scale"] doubleValue];
         }
     
         if (transient == YES && _dt < powerTimeScale) {
@@ -1481,8 +1481,8 @@ enum {
         }
     }
     
-    if ((solution.solutionInfo)[@"constant bulk system"] != nil) {
-        _constantBulk = [(solution.solutionInfo)[@"constant bulk system"] boolValue];
+    if (solution.solutionInfo[@"constant bulk system"] != nil) {
+        _constantBulk = [solution.solutionInfo[@"constant bulk system"] boolValue];
     }
     
     saveRelax = relax;
@@ -2037,8 +2037,8 @@ enum {
                     
                      [solution.solutionInfo setObject:@YES forKey:@"skip compute nonlinear change"];
                     
-                    if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
-                        relax = [(solution.solutionInfo)[@"nonlinear system relaxation factor"] doubleValue];
+                    if (solution.solutionInfo[@"nonlinear system relaxation factor"] != nil) {
+                        relax = [solution.solutionInfo[@"nonlinear system relaxation factor"] doubleValue];
                         if (relax != 1.0) {
                             [solution.solutionInfo setValue:@(1.0) forKey:@"nonlinear system relaxation factor"];
                         }
@@ -2171,14 +2171,14 @@ enum {
         } // Non linear iteration loop
         
         if (transientHeaterControl == YES) {
-            if ((solution.solutionInfo)[@"smart heater relaxation factor"] != nil) {
-                powerRelax = [(solution.solutionInfo)[@"smart heater relaxation factor"] doubleValue];
+            if (solution.solutionInfo[@"smart heater relaxation factor"] != nil) {
+                powerRelax = [solution.solutionInfo[@"smart heater relaxation factor"] doubleValue];
             } else powerRelax = 1.0;
-            if ((solution.solutionInfo)[@"smart heater power sensitivity"] != nil) { 
-                powerSensitivity = [(solution.solutionInfo)[@"smart heater power sensitivity"] doubleValue];
+            if (solution.solutionInfo[@"smart heater power sensitivity"] != nil) {
+                powerSensitivity = [solution.solutionInfo[@"smart heater power sensitivity"] doubleValue];
             } powerSensitivity = 4.0;
             _powerScaling = _powerScaling * (1.0 + powerSensitivity * powerRelax * (meltPoint/yave - 1.0));
-            if ([(solution.solutionInfo)[@"smart heater transient speedup"] boolValue] == YES) {
+            if ([solution.solutionInfo[@"smart heater transient speedup"] boolValue] == YES) {
                 for (i=0; i<tempContainers->sizeValues; i++) {
                     _temperature[i] = _temperature[i] * ( 1.0 + powerRelax *(meltPoint/yave - 1.0) );
                 }
@@ -2210,7 +2210,7 @@ enum {
     free_dvector(_prevSolution, 0, _localNodes-1);
     [integration deallocation:mesh];
     
-    if ([(solution.solutionInfo)[@"adaptive mesh refinement"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"adaptive mesh refinement"] boolValue] == YES) {
         // TODO: implement mesh refinement
     }
 }

@@ -80,8 +80,8 @@
     basis = integration.basis;
     basisFirstDerivative = integration.basisFirstDerivative;
     
-    if ((solution.solutionInfo)[@"h scale"] != nil) {
-        hScale = [(solution.solutionInfo)[@"h scale"] doubleValue];
+    if (solution.solutionInfo[@"h scale"] != nil) {
+        hScale = [solution.solutionInfo[@"h scale"] doubleValue];
     } else {
         hScale = 1.0;
     }
@@ -102,14 +102,14 @@
     }
     
     if (viscNonnewtonian == YES) {
-        if ((solution.solutionInfo)[@"newtonian viscosity condition"] != nil) {
-            viscConstantCondition = [(solution.solutionInfo)[@"newtonian viscosity condition"] doubleValue];
+        if (solution.solutionInfo[@"newtonian viscosity condition"] != nil) {
+            viscConstantCondition = [solution.solutionInfo[@"newtonian viscosity condition"] doubleValue];
             if (viscConstantCondition > 0.0) viscNonnewtonian = NO;
         }
     }
     
-    if ((solution.solutionInfo)[@"laplace discretization"] != nil) {
-        laplaceDiscretization = [(solution.solutionInfo)[@"laplace discretization"] boolValue];
+    if (solution.solutionInfo[@"laplace discretization"] != nil) {
+        laplaceDiscretization = [solution.solutionInfo[@"laplace discretization"] boolValue];
     } else laplaceDiscretization = NO;
     
     if (vms == YES && transient == YES) {

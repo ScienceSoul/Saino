@@ -242,8 +242,8 @@
     FEMSolution *solution = (FEMSolution *)model.solution;
     passiveCoordinate = 0;
     if (solution != nil) {
-        if ((solution.solutionInfo)[@"interpolation passive coordinate"] != nil) {
-            passiveCoordinate = [(solution.solutionInfo)[@"interpolation passive coordinate"] intValue];
+        if (solution.solutionInfo[@"interpolation passive coordinate"] != nil) {
+            passiveCoordinate = [solution.solutionInfo[@"interpolation passive coordinate"] intValue];
         }
     }
     
@@ -252,15 +252,15 @@
     
     edgeBasis = NO;
     if (solution != nil) {
-        if ((solution.solutionInfo)[@"edge basis"] != nil) {
-            edgeBasis = [(solution.solutionInfo)[@"edge basis"] boolValue];
+        if (solution.solutionInfo[@"edge basis"] != nil) {
+            edgeBasis = [solution.solutionInfo[@"edge basis"] boolValue];
         }
     }
     
     piolaT = NO;
     if (edgeBasis == YES) {
-        if ((solution.solutionInfo)[@"use piola transform"] != nil) {
-            piolaT = [(solution.solutionInfo)[@"use piola transform"] boolValue];
+        if (solution.solutionInfo[@"use piola transform"] != nil) {
+            piolaT = [solution.solutionInfo[@"use piola transform"] boolValue];
         }
     }
     
@@ -743,23 +743,23 @@
     BOOL edgeBasis = NO;
     FEMSolution *solution = (FEMSolution *)model.solution;
     if (solution != nil) {
-        if ((solution.solutionInfo)[@"edge basis"] != nil) {
-            edgeBasis = [(solution.solutionInfo)[@"edge basis"] boolValue];
+        if (solution.solutionInfo[@"edge basis"] != nil) {
+            edgeBasis = [solution.solutionInfo[@"edge basis"] boolValue];
         }
     }
     
     BOOL piolaT = NO;
     if (edgeBasis == YES) {
-        if ((solution.solutionInfo)[@"use piola transform"] != nil) {
-            piolaT = [(solution.solutionInfo)[@"use piola transform"] boolValue];
+        if (solution.solutionInfo[@"use piola transform"] != nil) {
+            piolaT = [solution.solutionInfo[@"use piola transform"] boolValue];
         }
         fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: accounting for edge elements in projector.\n");
     }
     
     int relOrder = 0;
     if (solution != nil) {
-        if((solution.solutionInfo)[@"projector relative integration order"] != nil) {
-            relOrder = [(solution.solutionInfo)[@"projector relative integration order"] intValue];
+        if(solution.solutionInfo[@"projector relative integration order"] != nil) {
+            relOrder = [solution.solutionInfo[@"projector relative integration order"] intValue];
         }
     }
     if (relOrder > 1) relOrder = 1;
@@ -807,8 +807,8 @@
         if (nodalJump == YES) {
             axisSym = YES;
         } else if (solution != nil) {
-            if ((solution.solutionInfo)[@"projector metrics"] != nil) {
-                axisSym = [(solution.solutionInfo)[@"projector metrics"] boolValue];
+            if (solution.solutionInfo[@"projector metrics"] != nil) {
+                axisSym = [solution.solutionInfo[@"projector metrics"] boolValue];
             }
         }
         if (axisSym == YES) fprintf(stdout, "FEMInterpolateMeshToMesh:weightedProjectorMesh2: projector will be weighted for axi-symmetry.\n");

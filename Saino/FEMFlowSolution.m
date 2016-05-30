@@ -1137,8 +1137,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     Element_t *element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
     double hScale;
-    if ((solution.solutionInfo)[@"h scale"] != nil) {
-        hScale = [(solution.solutionInfo)[@"h scale"] doubleValue];
+    if (solution.solutionInfo[@"h scale"] != nil) {
+        hScale = [solution.solutionInfo[@"h scale"] doubleValue];
     } else {
         hScale = 1.0;
     }
@@ -1348,8 +1348,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (_pDensity0 != NULL) free_dvector(_pDensity0, 0, _sizePDensity0);
     if (_pDensity1 != NULL) free_dvector(_pDensity1, 0, _sizePDensity1);
     
-    if ((solution.solutionInfo)[@"parallel assembly"] != nil) {
-        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+    if (solution.solutionInfo[@"parallel assembly"] != nil) {
+        if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
             
             if (_mapped_matValues != NULL) clEnqueueUnmapMemObject(_cmd_queue, _matValues, _mapped_matValues, 0, NULL, NULL);
             if (_mapped_matRHS != NULL) clEnqueueUnmapMemObject(_cmd_queue, _matRHS, _mapped_matRHS, 0, NULL, NULL);
@@ -1542,8 +1542,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     fprintf(stdout, "FEMFlowSolution:solutionComputer: solving the Navier-Stokes equations.\n");
     
-    if ((solution.solutionInfo)[@"solver coordinate system"] != nil) {
-        localCoords = (solution.solutionInfo)[@"solver coordinate system"];
+    if (solution.solutionInfo[@"solver coordinate system"] != nil) {
+        localCoords = solution.solutionInfo[@"solver coordinate system"];
         useLocalCoords = YES;
     }
     if (useLocalCoords == YES) {
@@ -1573,8 +1573,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Check for flow model. one of 'full', 'no convection', 'stokes'
     ifTransient = transient;
     convect = YES;
-    if ((solution.solutionInfo)[@"flow model"] != nil) {
-        flowModel = (solution.solutionInfo)[@"flow model"];
+    if (solution.solutionInfo[@"flow model"] != nil) {
+        flowModel = solution.solutionInfo[@"flow model"];
     }
     
     if ([flowModel isEqualToString:@"no convection"] == YES) {
@@ -1780,11 +1780,11 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         gravity[1] = -9.81;
     }
     
-    bubbles = [(solution.solutionInfo)[@"bubbles"] boolValue];
+    bubbles = [solution.solutionInfo[@"bubbles"] boolValue];
     stabilize = [(solution.solutionInfo[@"stabilize"]) boolValue];
     
-    if ((solution.solutionInfo)[@"stabilization method"] != nil) {
-        stabilizeFlag = (solution.solutionInfo)[@"stabilization method"];
+    if (solution.solutionInfo[@"stabilization method"] != nil) {
+        stabilizeFlag = solution.solutionInfo[@"stabilization method"];
     } else {
         if (stabilize == YES) {
             stabilizeFlag = @"stabilized";
@@ -1797,39 +1797,39 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     if ([stabilizeFlag isEqualToString:@"bubbles"] == YES) bubbles = YES;
     
-    divDiscretization = [(solution.solutionInfo)[@"div dicretization"] boolValue];
-    gradPDiscretization = [(solution.solutionInfo)[@"gradp discretization"] boolValue];
-    nonLinearTol = [(solution.solutionInfo)[@"nonlinear system convergence tolerance"] doubleValue];
+    divDiscretization = [solution.solutionInfo[@"div dicretization"] boolValue];
+    gradPDiscretization = [solution.solutionInfo[@"gradp discretization"] boolValue];
+    nonLinearTol = [solution.solutionInfo[@"nonlinear system convergence tolerance"] doubleValue];
     if (nonLinearTol < 0.0) nonLinearTol = 0.0;
-    newtonTol = [(solution.solutionInfo)[@"nonlinear system newton after tolerance"] boolValue];
+    newtonTol = [solution.solutionInfo[@"nonlinear system newton after tolerance"] boolValue];
     if (newtonTol < 0.0) newtonTol = 0.0;
     
-    newtonIter = [(solution.solutionInfo)[@"nonlinear system newton after iterations"] intValue];
+    newtonIter = [solution.solutionInfo[@"nonlinear system newton after iterations"] intValue];
     if (newtonIter == 0) _newtonLinearization = YES;
     
-    if ([(solution.solutionInfo)[@"nonlinear system reset newton"] boolValue] == YES) _newtonLinearization = NO;
+    if ([solution.solutionInfo[@"nonlinear system reset newton"] boolValue] == YES) _newtonLinearization = NO;
     
-    nonLinearIter = [(solution.solutionInfo)[@"nonlinear system maximum iterations"] intValue];
+    nonLinearIter = [solution.solutionInfo[@"nonlinear system maximum iterations"] intValue];
     if (nonLinearIter < 0) nonLinearIter = 0;
     
-    if ((solution.solutionInfo)[@"nonlinear system norm dofs"] == nil) {
+    if (solution.solutionInfo[@"nonlinear system norm dofs"] == nil) {
         [solution.solutionInfo setObject:@(_nsdofs-1) forKey:@"nonlinear system norm dofs"];
     }
     
-    if ((solution.solutionInfo)[@"free surface after tolerance"] != nil) {
-        freeSTol = [(solution.solutionInfo)[@"free surface after tolerance"] doubleValue];
+    if (solution.solutionInfo[@"free surface after tolerance"] != nil) {
+        freeSTol = [solution.solutionInfo[@"free surface after tolerance"] doubleValue];
     } else {
         freeSTol = DBL_MAX;
     }
     
-    if ((solution.solutionInfo)[@"free surface after iterations"] != nil) {
-        freeSIter = [(solution.solutionInfo)[@"free surface after iterations"] intValue];
+    if (solution.solutionInfo[@"free surface after iterations"] != nil) {
+        freeSIter = [solution.solutionInfo[@"free surface after iterations"] intValue];
     } else {
         freeSIter = 0;
     }
     
     // We do our own relaxation
-    if ((solution.solutionInfo)[@"nonlinear system relaxation factor"] != nil) {
+    if (solution.solutionInfo[@"nonlinear system relaxation factor"] != nil) {
         nonLinearRelax = [solution.solutionInfo[@"nonlinear system relaxation factor"] doubleValue];
     } else {
         nonLinearRelax = 1.0;
@@ -1881,15 +1881,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         if ([integration allocation:mesh] == NO) fatal("FEMFlowSolution:solutionComputer", "Allocation error in FEMNumericIntegration.");
     }
     
-    // Check whether we support the type of flow we wan to compute on GPU
-    if (solution.solutionInfo[@"gpu flow type"] != nil) {
-        if ([solution.solutionInfo[@"gpu flow type"] isEqualToString:@"ice flow"] == NO) {
-            fatal("FEMFlowSolution:solutionComputer", "Currently only the value <ice flow > for the < gpu flow type> parameter is supported for parallel assembly.");
-        }
-    } else fatal("FEMFlowSolution:solutionComputer", "Parameter < gpu flow type > not given.");
-    
     // If we do the matrix assembly on the GPU, set-up everything now (only once)
     if (parallelAssembly == YES) {
+        
+        // Check whether we support the type of flow we want to compute on GPU
+        if (solution.solutionInfo[@"gpu flow type"] != nil) {
+            if ([solution.solutionInfo[@"gpu flow type"] isEqualToString:@"ice flow"] == NO) {
+                fatal("FEMFlowSolution:solutionComputer", "Currently only the value <ice flow > for the < gpu flow type> parameter is supported for parallel assembly.");
+            }
+        } else fatal("FEMFlowSolution:solutionComputer", "Parameter < gpu flow type > not given.");
+        
         NSString *precision;
         if ([solution.solutionInfo[@"gpu floating-point precision"] isEqualToString:@"single"] == YES) {
             setPrecision(true);
@@ -2284,8 +2285,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             
             found = NO;
             relaxBefore = NO;
-            if ((solution.solutionInfo)[@"nonlinear system relaxation before"] != nil) {
-                relaxBefore = [(solution.solutionInfo)[@"nonlinear system relaxation before"] boolValue];
+            if (solution.solutionInfo[@"nonlinear system relaxation before"] != nil) {
+                relaxBefore = [solution.solutionInfo[@"nonlinear system relaxation before"] boolValue];
                 found = YES;
             }
             if (found == NO || relaxBefore == YES) {
@@ -2312,15 +2313,15 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             FEMFreeSurface *freeSurface = [[FEMFreeSurface alloc] init];
             if (relativeChange < freeSTol || iter > freeSIter) computeFree = YES;
             if (computeFree == YES) {
-                if ((solution.solutionInfo)[@"free surface relaxation factor"] != nil) {
-                    relaxation = [(solution.solutionInfo)[@"free surface relaxation factor"] doubleValue];
+                if (solution.solutionInfo[@"free surface relaxation factor"] != nil) {
+                    relaxation = [solution.solutionInfo[@"free surface relaxation factor"] doubleValue];
                 } else {
                     relaxation = 1.0;
                 }
                 found = NO;
                 mbFlag = NO;
-                if ((solution.solutionInfo)[@"internal move boundary"] != nil) {
-                    mbFlag = [(solution.solutionInfo)[@"internal move boundary"] boolValue];
+                if (solution.solutionInfo[@"internal move boundary"] != nil) {
+                    mbFlag = [solution.solutionInfo[@"internal move boundary"] boolValue];
                     found = YES;
                 }
                 if (mbFlag == YES || found == NO) [freeSurface moveBoundaryModel:model integration:integration relax:relaxation];
@@ -2330,7 +2331,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     [solution.solutionInfo setObject:@(nonLinearRelax) forKey:@"nonlinear system relaxation factor"];
     
-    if ([(solution.solutionInfo)[@"adaptive mesh refinement"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"adaptive mesh refinement"] boolValue] == YES) {
         // TODO: implement mesh refinement
     }
     

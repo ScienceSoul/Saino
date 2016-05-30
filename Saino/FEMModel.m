@@ -535,7 +535,7 @@
         // TODO: Here Elmer calls a procedure post-fixed with "_Init0" for a given solver.
         // Do we need to do that?
         
-        gotMesh = ((solution.solutionInfo)[@"mesh"] != nil) ? YES : NO;
+        gotMesh = (solution.solutionInfo[@"mesh"] != nil) ? YES : NO;
         
         solContainers = solution.getContainers;
         if (solContainers->defDofs == NULL) {
@@ -553,8 +553,8 @@
         }
         
         // Define what kind of element we are working with this solver
-        if ((solution.solutionInfo)[@"element"] == nil) {
-            if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
+        if (solution.solutionInfo[@"element"] == nil) {
+            if ([solution.solutionInfo[@"discontinuous galerkin"] boolValue] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
@@ -564,7 +564,7 @@
                 elementDef = @"n:1";
             }
         } else {
-            elementDef = (solution.solutionInfo)[@"element"];
+            elementDef = solution.solutionInfo[@"element"];
         }
         
         substr1 = [elementDef rangeOfString:@"n:"];
@@ -602,7 +602,7 @@
             }
             if (gotMesh == NO) defDofs[2] = max(defDofs[3], l);
         } else {
-            if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
+            if ([solution.solutionInfo[@"discontinuous galerkin"] boolValue] == YES) {
                 for (i=0; i<self.numberOfBodies; i++) {
                     solContainers->defDofs[i][3] = 0;
                 }
@@ -729,8 +729,8 @@
     
     for (FEMSolution *solution in self.solutions) {
         
-        if ((solution.solutionInfo)[@"mesh"] != nil) {
-            aString = (solution.solutionInfo)[@"mesh"];
+        if (solution.solutionInfo[@"mesh"] != nil) {
+            aString = solution.solutionInfo[@"mesh"];
             single = NO;
             if ([[aString substringToIndex:8] isEqualToString:@"-single "] == YES) {
                 single = YES;
@@ -806,12 +806,12 @@
                 [solution.mesh loadMeshForModel:self meshDirectory:self.meshDir meshName:self.meshName boundariesOnly:bd numberOfPartitions:NULL partitionID:NULL definitions:defDofs];
             }
             
-            if ((solution.solutionInfo)[@"mesh levels"] != nil) {
-                meshLevels = [(solution.solutionInfo)[@"mesh levels"] intValue];
+            if (solution.solutionInfo[@"mesh levels"] != nil) {
+                meshLevels = [solution.solutionInfo[@"mesh levels"] intValue];
             } else meshLevels = 1;
             
-            if ((solution.solutionInfo)[@"mesh keep"] != nil) {
-                meshKeep = [(solution.solutionInfo)[@"mesh keep"] intValue];
+            if (solution.solutionInfo[@"mesh keep"] != nil) {
+                meshKeep = [solution.solutionInfo[@"mesh keep"] intValue];
             } else meshKeep = meshLevels;
             
             meshPower = [listUtils listGetConstReal:self inArray:self.simulation.valuesList forVariable:@"mesh grading power" info:&found minValue:NULL maxValue:NULL];

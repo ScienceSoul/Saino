@@ -313,7 +313,7 @@
         t++;
     }
     
-    radiation = [(solution.solutionInfo)[@"radiation solver"] boolValue];
+    radiation = [solution.solutionInfo[@"radiation solver"] boolValue];
     if (radiation == YES || [str isEqualToString:@"heat equation"]) {
         t = mesh.numberOfBulkElements;
         n = mesh.numberOfBulkElements + mesh.numberOfBoundaryElements;
@@ -590,8 +590,8 @@
     if (*found == NO ) {
         listUtilities = [FEMListUtilities sharedListUtilities];
         solution = (FEMSolution *)pVar.solution;
-        if ( (solution.solutionInfo)[@"bubbles in global system"] != nil ) {
-            globalBubbles = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
+        if ( solution.solutionInfo[@"bubbles in global system"] != nil ) {
+            globalBubbles = [solution.solutionInfo[@"bubbles in global system"] boolValue];
         } else {
             globalBubbles = YES;
         }
@@ -612,7 +612,7 @@
             varContainers->sizePerm = dofs/pVar.dofs;
             memset( varContainers->Perm, -1, (dofs/pVar.dofs)*sizeof(int) );
             
-            n = [self initialPermutationInMesh:mesh model:model solution:solution equation:(solution.solutionInfo)[@"equation"] permutation:varContainers->Perm DGSolution:NULL globalBubbles:&globalBubbles];
+            n = [self initialPermutationInMesh:mesh model:model solution:solution equation:solution.solutionInfo[@"equation"] permutation:varContainers->Perm DGSolution:NULL globalBubbles:&globalBubbles];
             
             if (n == 0) n = mesh.numberOfNodes;
             
@@ -1202,12 +1202,12 @@
     
     NSString *str;
     
-    if ((solution.solutionInfo)[@"linear system solver"] != nil) {
-        str = (solution.solutionInfo)[@"linear system solver"];
+    if (solution.solutionInfo[@"linear system solver"] != nil) {
+        str = solution.solutionInfo[@"linear system solver"];
         
         if ([str isEqualToString:@"direct"] == YES) {
-            if ((solution.solutionInfo)[@"linear system direct method"] != nil) {
-                str = (solution.solutionInfo)[@"linear system direct method"];
+            if (solution.solutionInfo[@"linear system direct method"] != nil) {
+                str = solution.solutionInfo[@"linear system direct method"];
                 
                 //TODO: app support for parallel run where in case of a parallel run
                 // the direct solver must be MUMPS
@@ -1263,12 +1263,12 @@
     
     // If there is a matrix level "Flux Corrected Transport" then it's required
     // to use global matrices for time integration
-    if ([(solution.solutionInfo)[@"linear system fct"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"linear system fct"] boolValue] == YES) {
         [listUtilities addLogicalInClassList:solution theVariable:@"use global mass matrix" withValue:YES];
     }
     
-    if ((solution.solutionInfo)[@"equation"] != nil) {
-        eq = (solution.solutionInfo)[@"equation"];
+    if (solution.solutionInfo[@"equation"] != nil) {
+        eq = solution.solutionInfo[@"equation"];
         elements = solution.mesh.getElements;
         maxDim = 0;
         for (i=0; i<solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements; i++) {
@@ -1283,14 +1283,14 @@
     // Do we need to do that?
     
     solution.solutionMode = SOLUTION_MODE_DEFAULT;
-    if ([(solution.solutionInfo)[@"auxiliary solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_AUXILIARY;
-    if ([(solution.solutionInfo)[@"coupled solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_COUPLED;
-    if ([(solution.solutionInfo)[@"block solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_BLOCK;
-    if ([(solution.solutionInfo)[@"assembly solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_ASSEMBLY;
+    if ([solution.solutionInfo[@"auxiliary solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_AUXILIARY;
+    if ([solution.solutionInfo[@"coupled solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_COUPLED;
+    if ([solution.solutionInfo[@"block solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_BLOCK;
+    if ([solution.solutionInfo[@"assembly solution"] boolValue] == YES) solution.solutionMode = SOLUTION_MODE_ASSEMBLY;
     
     if (solution.solutionMode == SOLUTION_MODE_DEFAULT) {
-        if ((solution.solutionInfo)[@"equation"] != nil) {
-            eq = (solution.solutionInfo)[@"equation"];
+        if (solution.solutionInfo[@"equation"] != nil) {
+            eq = solution.solutionInfo[@"equation"];
         } else {
             solution.solutionMode = SOLUTION_MODE_AUXILIARY;
         }
@@ -1307,8 +1307,8 @@
     
     found = NO;
     if (transient == YES) {
-        if ((solution.solutionInfo)[@"time stepping method"] != nil) {
-            str = (solution.solutionInfo)[@"time stepping method"];
+        if (solution.solutionInfo[@"time stepping method"] != nil) {
+            str = solution.solutionInfo[@"time stepping method"];
             found = YES;
         } else {
             str = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"time stepping method" info:&found];
@@ -1319,8 +1319,8 @@
         
         if (found == YES) {
             if ([str isEqualToString:@"bdf"] == YES) {
-                if ((solution.solutionInfo)[@"bdf order"] != nil) {
-                    solution.order = [(solution.solutionInfo)[@"bdf order"] intValue];
+                if (solution.solutionInfo[@"bdf order"] != nil) {
+                    solution.order = [solution.solutionInfo[@"bdf order"] intValue];
                     if (solution.order < 1) solution.order = 1;
                     if (solution.order > 5) solution.order = 5;
                 } else {
@@ -1352,7 +1352,7 @@
     // TODO: we may migrate them to plug-ins?
     
     if ([name isEqualToString:@"navier-stokes"] == YES) {
-        if ((solution.solutionInfo)[@"variable"] == nil) {
+        if (solution.solutionInfo[@"variable"] == nil) {
             dofs = model.dimension;
             if (model.coordinates == cylindric_symmetric) dofs++;
             if (dofs == 3) {
@@ -1363,13 +1363,13 @@
         }
         initValue = 1.0e-6;
     } else if ([name isEqualToString:@"magnetic induction"] == YES) {
-        if ((solution.solutionInfo)[@"variable"] == nil) {
+        if (solution.solutionInfo[@"variable"] == nil) {
             [solution.solutionInfo setObject:@"-dofs 3 magnetic field" forKey:@"variable"];
             [solution.solutionInfo setObject:@"electric current[electric current:3]"
                                       forKey:[self nextFreeKeyword:@"exported variable" dictionary:solution.solutionInfo]];
         }
     } else if ([name isEqualToString:@"stress analysis"] == YES) {
-        if ((solution.solutionInfo)[@"variable"] == nil) {
+        if (solution.solutionInfo[@"variable"] == nil) {
             if (dofs == 2) {
                 [solution.solutionInfo setObject:@"-dofs 2 displacement" forKey:@"variable"];
             } else {
@@ -1377,7 +1377,7 @@
             }
         }
     } else if ([name isEqualToString:@"mesh update"] == YES) {
-        if ((solution.solutionInfo)[@"variable"] == nil) {
+        if (solution.solutionInfo[@"variable"] == nil) {
             if (dofs == 2) {
                 [solution.solutionInfo setObject:@"-dofs 2 mesh update" forKey:@"variable"];
             } else {
@@ -1395,11 +1395,11 @@
             }
         }
     } else if ([name isEqualToString:@"heat equation"] == YES) {
-        if ((solution.solutionInfo)[@"variable"] == nil) {
+        if (solution.solutionInfo[@"variable"] == nil) {
             [solution.solutionInfo setObject:@"temperature" forKey:@"variable"];
         }
         
-        if ((solution.solutionInfo)[@"radiation solver"] == nil) {
+        if (solution.solutionInfo[@"radiation solver"] == nil) {
             [solution.solutionInfo setObject:@YES forKey:@"radiation solver"];
         }
     }
@@ -1427,7 +1427,7 @@
     solution.timeOrder = 0;
     solution.matrix = nil;
     
-    if ((solution.solutionInfo)[@"variable"] == nil) {
+    if (solution.solutionInfo[@"variable"] == nil) {
         //Variable does not exist
         variable = [[FEMVariable alloc] init];
         solution.variable = variable;
@@ -1438,17 +1438,17 @@
         // Block solver may inherit the matrix only if procedure is given
 
     } else {
-        varName = (solution.solutionInfo)[@"variable"];
+        varName = solution.solutionInfo[@"variable"];
         
         // It may be a normal field variable or a global (0D) variable
-        variableGlobal = [(solution.solutionInfo)[@"variable global"] boolValue];
+        variableGlobal = [solution.solutionInfo[@"variable global"] boolValue];
         
-        if ((solution.solutionInfo)[@"variable output"] != nil) {
-            variableOutput = [(solution.solutionInfo)[@"variable output"] boolValue];
+        if (solution.solutionInfo[@"variable output"] != nil) {
+            variableOutput = [solution.solutionInfo[@"variable output"] boolValue];
         } else variableOutput = YES;
         
-        if ((solution.solutionInfo)[@"variable dofs"] != nil) {
-            dofs = [(solution.solutionInfo)[@"variable dofs"] intValue];
+        if (solution.solutionInfo[@"variable dofs"] != nil) {
+            dofs = [solution.solutionInfo[@"variable dofs"] intValue];
             if (dofs < 1) dofs = 1;
         } else {
             j = 0;
@@ -1538,8 +1538,8 @@
             free(bufferContainers);
         } else {
             // If variable is a field variable create a permutation and matrix related to it
-            if ((solution.solutionInfo)[@"equation"] != nil) {
-                eq = (solution.solutionInfo)[@"equation"];
+            if (solution.solutionInfo[@"equation"] != nil) {
+                eq = solution.solutionInfo[@"equation"];
             } else {
                 fatal("FEMUtilities:addEquationBasicsToSolution", "Variable exists but the equation is not defined.");
             }
@@ -1558,7 +1558,7 @@
             // Compute the size of the permutation vector
             ndeg = 0;
             if (YES) {
-                eq = (solution.solutionInfo)[@"equation"];
+                eq = solution.solutionInfo[@"equation"];
                 maxNDOFs = 0;
                 maxDGDOFs = 0;
                 elements = solution.mesh.getElements;
@@ -1584,29 +1584,29 @@
                     maxBDOFs = max(maxBDOFs, elements[i].BDOFs);
                 }
                 
-                if ((solution.solutionInfo)[@"bubbles in global system"] != nil) {
-                    globalBubbles = [(solution.solutionInfo)[@"bubbles in global system"] boolValue];
+                if (solution.solutionInfo[@"bubbles in global system"] != nil) {
+                    globalBubbles = [solution.solutionInfo[@"bubbles in global system"] boolValue];
                 } else globalBubbles = YES;
                 
                 ndeg = ndeg + solution.mesh.numberOfNodes;
                 if (maxEDOFs > 0) ndeg = ndeg + maxEDOFs * solution.mesh.numberOfEdges;
                 if (maxFDOFs > 0) ndeg = ndeg + maxFDOFs * solution.mesh.numberOfFaces;
                 if (globalBubbles == YES) ndeg = ndeg + maxBDOFs * solution.mesh.numberOfBulkElements;
-                if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
-                    if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) {
+                if (solution.solutionInfo[@"discontinuous galerkin"] != nil) {
+                    if ([solution.solutionInfo[@"discontinuous galerkin"] boolValue] == YES) {
                         ndeg = max( ndeg, maxDGDOFs * (solution.mesh.numberOfBulkElements+solution.mesh.numberOfBoundaryElements) );
                     }
                 }
             }
             
-            if ((solution.solutionInfo)[@"radiation solution"] != nil) {
-                if ([(solution.solutionInfo)[@"radiation solution"] boolValue] == YES) {
+            if (solution.solutionInfo[@"radiation solution"] != nil) {
+                if ([solution.solutionInfo[@"radiation solution"] boolValue] == YES) {
                     //TODO: Need to implement this
                 }
             }
             
-            if ((solution.solutionInfo)[@"optimize bandwidth"] != nil) {
-                bandwidthOptimize = [(solution.solutionInfo)[@"optimize bandwidth"] boolValue];
+            if (solution.solutionInfo[@"optimize bandwidth"] != nil) {
+                bandwidthOptimize = [solution.solutionInfo[@"optimize bandwidth"] boolValue];
             } else bandwidthOptimize = YES;
             [self checkOptionsInSolution:solution];
             
@@ -1615,8 +1615,8 @@
             
             elementUtils = [[FEMElementUtils alloc] init];
             matrixFormat = MATRIX_CRS;
-            if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
-                discontinuousGalerkin = [(solution.solutionInfo)[@"discontinuous galerkin"] boolValue];
+            if (solution.solutionInfo[@"discontinuous galerkin"] != nil) {
+                discontinuousGalerkin = [solution.solutionInfo[@"discontinuous galerkin"] boolValue];
             } else discontinuousGalerkin = NO;
             solution.matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:solution.mesh dofs:dofs permutation:perm sizeOfPermutation:ndeg matrixFormat:matrixFormat optimizeBandwidth:bandwidthOptimize equationName:eq discontinuousGalerkinSolution:&discontinuousGalerkin globalBubbles:&globalBubbles nodalDofsOnly:NULL projectorDofs:NULL];
             nrows = dofs * ndeg;
@@ -1624,8 +1624,8 @@
             
             // Basically the solution could be matrix free but still the matrix is used
             // here temporarily since it's needed when making the permutation vector
-            if ((solution.solutionInfo)[@"no matrix"] != nil) {
-                if ([(solution.solutionInfo)[@"no matrix"] boolValue] == YES) {
+            if (solution.solutionInfo[@"no matrix"] != nil) {
+                if ([solution.solutionInfo[@"no matrix"] boolValue] == YES) {
                     solution.solutionMode = SOLUTION_MODE_MATRIXFREE;
                     [solution.matrix deallocation];
                     solution.matrix = nil;
@@ -1661,8 +1661,8 @@
             }
             
             //TODO: add support for parallel run here
-            if ((solution.solutionInfo)[@"discontinuous galerkin"] != nil) {
-                if ([(solution.solutionInfo)[@"discontinuous galerkin"] boolValue] == YES) solution.variable.type = VARIABLE_ON_NODES_ON_ELEMENTS;
+            if (solution.solutionInfo[@"discontinuous galerkin"] != nil) {
+                if ([solution.solutionInfo[@"discontinuous galerkin"] boolValue] == YES) solution.variable.type = VARIABLE_ON_NODES_ON_ELEMENTS;
             }
         }
     }
@@ -1673,19 +1673,19 @@
     while (1) {
         l++;
         str = [self appendNameFromString:@"exported variable" component:&l];
-        if ((solution.solutionInfo)[str] == nil) break;
-        varName = (solution.solutionInfo)[str];
+        if (solution.solutionInfo[str] == nil) break;
+        varName = solution.solutionInfo[str];
         
         string = (NSMutableString *)[self appendNameFromString:@"exported variable" component:&l];
         [string appendString:@" output"];
-        if ((solution.solutionInfo)[string] != nil) {
-            variableOutput = [(solution.solutionInfo)[string] boolValue];
+        if (solution.solutionInfo[string] != nil) {
+            variableOutput = [solution.solutionInfo[string] boolValue];
         } else variableOutput = YES;
         
         string = (NSMutableString *)[self appendNameFromString:@"exported variable" component:&l];
         [string appendString:@" dofs"];
-        if ((solution.solutionInfo)[string] != nil) {
-            dofs = [(solution.solutionInfo)[string] intValue];
+        if (solution.solutionInfo[string] != nil) {
+            dofs = [solution.solutionInfo[string] intValue];
         } else {
             j = 0;
             dofs = 0;
@@ -1810,58 +1810,58 @@
     // a certain instances during simulation
     solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
     
-    if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-        if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"never"] == YES) {
+    if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+        if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"never"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_NEVER;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"always"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"always"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after all"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"after all"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before all"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"before all"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before time step"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"before time step"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_TIME;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after time step"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"after time step"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_TIME;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"before saving"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"before saving"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_SAVE;
-        } else if ([(solution.solutionInfo)[@"invoke solution computer"] isEqualToString:@"after saving"] == YES) {
+        } else if ([solution.solutionInfo[@"invoke solution computer"] isEqualToString:@"after saving"] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_SAVE;
         } else {
             solution.solutionSolveWhen = SOLUTION_SOLVE_ALWAYS;
         }
     }
     
-    if ((solution.solutionInfo)[@"before all"] != nil) {
-        if ([(solution.solutionInfo)[@"before all"] boolValue] == YES) {
+    if (solution.solutionInfo[@"before all"] != nil) {
+        if ([solution.solutionInfo[@"before all"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
         }
-    } else if ((solution.solutionInfo)[@"before simulation"] != nil) {
-        if ([(solution.solutionInfo)[@"before simulation"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"before simulation"] != nil) {
+        if ([solution.solutionInfo[@"before simulation"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_ALL;
         }
-    } else if ((solution.solutionInfo)[@"after all"] != nil) {
-        if ([(solution.solutionInfo)[@"after all"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"after all"] != nil) {
+        if ([solution.solutionInfo[@"after all"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
         }
-    } else if ((solution.solutionInfo)[@"after simulation"] != nil) {
-        if ([(solution.solutionInfo)[@"after simulation"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"after simulation"] != nil) {
+        if ([solution.solutionInfo[@"after simulation"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_ALL;
         }
-    } else if ((solution.solutionInfo)[@"before time step"] != nil) {
-        if ([(solution.solutionInfo)[@"before time step"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"before time step"] != nil) {
+        if ([solution.solutionInfo[@"before time step"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_TIME;
         }
-    } else if ((solution.solutionInfo)[@"after time step"] != nil) {
-        if ([(solution.solutionInfo)[@"after time step"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"after time step"] != nil) {
+        if ([solution.solutionInfo[@"after time step"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_TIME;
         }
-    } else if ((solution.solutionInfo)[@"before saving"] != nil) {
-        if ([(solution.solutionInfo)[@"before saving"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"before saving"] != nil) {
+        if ([solution.solutionInfo[@"before saving"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AHEAD_SAVE;
         }
-    } else if ((solution.solutionInfo)[@"after saving"] != nil) {
-        if ([(solution.solutionInfo)[@"after saving"] boolValue] == YES) {
+    } else if (solution.solutionInfo[@"after saving"] != nil) {
+        if ([solution.solutionInfo[@"after saving"] boolValue] == YES) {
             solution.solutionSolveWhen = SOLUTION_SOLVE_AFTER_SAVE;
         }
     }
@@ -1896,12 +1896,12 @@
     if (variableContainers->Values == NULL) return;
     
     // If soft limiters are applied then also loads must be calculated
-    if ([(solution.solutionInfo)[@"apply limiter"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"apply limiter"] boolValue] == YES) {
         [solution.solutionInfo setObject:@YES forKey:@"calculate loads"];
     }
     
     // Create the variable needed for this computation of nodal loads: r = b-Ax
-    if ([(solution.solutionInfo)[@"calculate loads"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"calculate loads"] boolValue] == YES) {
         varName = [NSMutableString stringWithString:[solution.variable canonicalizeName]];
         [varName appendString:@" loads"];
         var = [self getVariableFrom:solution.mesh.variables model:model name:varName onlySearch:NULL maskName:NULL info:&found];
@@ -1943,7 +1943,7 @@
     solution.multigridSolution = NO;
     solution.multigridEqualPlit = NO;
     
-    harmonicAnal = [(solution.solutionInfo)[@"harmonic analysis"] boolValue];
+    harmonicAnal = [solution.solutionInfo[@"harmonic analysis"] boolValue];
     
     if (solution.matrix != nil) {
         matContainers = solution.matrix.getContainers;
@@ -1960,12 +1960,12 @@
         }
     }
     
-    eigenAnal = [(solution.solutionInfo)[@"eigen analysis"] boolValue];
+    eigenAnal = [solution.solutionInfo[@"eigen analysis"] boolValue];
     
     if (transient == YES && eigenAnal == NO && harmonicAnal == NO) {
         solution.timeOrder = 1;
-        if ((solution.solutionInfo)[@"time derivative order"] != nil) {
-            k = [(solution.solutionInfo)[@"time derivative order"] intValue];
+        if (solution.solutionInfo[@"time derivative order"] != nil) {
+            k = [solution.solutionInfo[@"time derivative order"] intValue];
             if (k < 0) k = 0;
             if (k > 2) k = 2;
             solution.timeOrder = min(max(1, k), 2);
@@ -2057,7 +2057,7 @@
             }
         }
         
-        if ([(solution.solutionInfo)[@"calculate velocity"] boolValue] == YES || [(solution.solutionInfo)[@"nonlinear calculate velocity"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"calculate velocity"] boolValue] == YES || [solution.solutionInfo[@"nonlinear calculate velocity"] boolValue] == YES) {
             if (solution.timeOrder < 1) {
                 fprintf(stdout, "FEMUtilities:addEquationToSolution: velocity computation implemented only for time-dependent equations.\n");
             } else if (solution.timeOrder == 1) {
@@ -2087,7 +2087,7 @@
             }
         }
         
-        if ([(solution.solutionInfo)[@"calculate acceleration"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"calculate acceleration"] boolValue] == YES) {
             if (solution.timeOrder == 1) {
                 fprintf(stdout, "FEMUtilities:addEquationToSolution: acceleration computation implemented only for 2nd order time equations\n");
             } else if (solution.timeOrder >= 2) {
@@ -2110,7 +2110,7 @@
     } else {
         solution.timeOrder = 0;
         
-        if ([(solution.solutionInfo)[@"calculate derivative"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"calculate derivative"] boolValue] == YES) {
             str = [NSMutableString stringWithString:solution.variable.name];
             [str appendString:@" derivative"];
             bufferContainers = allocateVariableContainer();
@@ -2122,12 +2122,12 @@
         }
         
         if (eigenAnal == YES) {
-            if ((solution.solutionInfo)[@"eigen system complex"] != nil) {
-                complexFlag = [(solution.solutionInfo)[@"eigen system complex"] boolValue];
+            if (solution.solutionInfo[@"eigen system complex"] != nil) {
+                complexFlag = [solution.solutionInfo[@"eigen system complex"] boolValue];
             } else complexFlag = NO;
             
-            if ((solution.solutionInfo)[@"eigen system values"] != nil) {
-                n = [(solution.solutionInfo)[@"eigen system values"] intValue];
+            if (solution.solutionInfo[@"eigen system values"] != nil) {
+                n = [solution.solutionInfo[@"eigen system values"] intValue];
                 if (n > 0) {
                     solution.nOfEigenValues = n;
                     if (variableContainers->EigenValues == NULL) {
@@ -2175,8 +2175,8 @@
             }
         } else if (harmonicAnal == YES) {
             n = 0;
-            if ((solution.solutionInfo)[@"harmonic system values"] != nil) {
-                n = [(solution.solutionInfo)[@"harmonic system values"] intValue];
+            if (solution.solutionInfo[@"harmonic system values"] != nil) {
+                n = [solution.solutionInfo[@"harmonic system values"] intValue];
             }
             if (n > 1) {
                 listUtilities = [FEMListUtilities sharedListUtilities];
@@ -2238,42 +2238,42 @@
     }
     
     if (solution.matrix != nil) {
-        if ((solution.solutionInfo)[@"linear system symmetric"] != nil) {
-            solution.matrix.symmetric = [(solution.solutionInfo)[@"linear system symmetric"] boolValue];
+        if (solution.solutionInfo[@"linear system symmetric"] != nil) {
+            solution.matrix.symmetric = [solution.solutionInfo[@"linear system symmetric"] boolValue];
         }
         
-        if ((solution.solutionInfo)[@"lumped mass matrix"] != nil) {
-            solution.matrix.lumped = [(solution.solutionInfo)[@"lumped mass matrix"] boolValue];
+        if (solution.solutionInfo[@"lumped mass matrix"] != nil) {
+            solution.matrix.lumped = [solution.solutionInfo[@"lumped mass matrix"] boolValue];
         }
         
-        multigridActive = ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"] == YES
-                           || [(solution.solutionInfo)[@"linear system preconditioning"] isEqualToString:@"multigrid"] == YES) ? YES : NO;
+        multigridActive = ([solution.solutionInfo[@"linear system solver"] isEqualToString:@"multigrid"] == YES
+                           || [solution.solutionInfo[@"linear system preconditioning"] isEqualToString:@"multigrid"] == YES) ? YES : NO;
         
         // Check for multigrid solver
         if (multigridActive == YES) {
             meshUtilities = [[FEMMeshUtils alloc] init];
             
             // Multigrid may be either solver or preconditioner, is it solver?
-            if ((solution.solutionInfo)[@"linear system solver"] != nil) {
-                solution.multigridSolution = ([(solution.solutionInfo)[@"linear system solver"] isEqualToString:@"multigrid"] == YES) ? YES : NO;
+            if (solution.solutionInfo[@"linear system solver"] != nil) {
+                solution.multigridSolution = ([solution.solutionInfo[@"linear system solver"] isEqualToString:@"multigrid"] == YES) ? YES : NO;
             }
             
             // There are four different methods: algebraic, cluster, p and geometric
-            if ((solution.solutionInfo)[@"mg method"] != nil) {
-                methodName = (solution.solutionInfo)[@"mg method"];
+            if (solution.solutionInfo[@"mg method"] != nil) {
+                methodName = solution.solutionInfo[@"mg method"];
                 mgAlgebraic = ([methodName isEqualToString:@"algebraic"] == YES || [methodName isEqualToString:@"cluster"] == YES
                                || [methodName isEqualToString:@"p"] == YES) ? YES : NO;
             } else {
-                mgAlgebraic = ([(solution.solutionInfo)[@"mg algebraic"] boolValue] == YES || [(solution.solutionInfo)[@"mg cluster"] boolValue] == YES
-                               || [(solution.solutionInfo)[@"mg pelement"] boolValue] == YES) ? YES : NO;
+                mgAlgebraic = ([solution.solutionInfo[@"mg algebraic"] boolValue] == YES || [solution.solutionInfo[@"mg cluster"] boolValue] == YES
+                               || [solution.solutionInfo[@"mg pelement"] boolValue] == YES) ? YES : NO;
             }
             
-            if ((solution.solutionInfo)[@"mg levels"] != nil) {
-                mgLevels = [(solution.solutionInfo)[@"mg levels"] intValue];
+            if (solution.solutionInfo[@"mg levels"] != nil) {
+                mgLevels = [solution.solutionInfo[@"mg levels"] intValue];
                 if (mgLevels < 1) mgLevels = 1;
             } else {
-                if ((solution.solutionInfo)[@"multigrid levels"] != nil) {
-                    mgLevels = [(solution.solutionInfo)[@"multigrid levels"] intValue];
+                if (solution.solutionInfo[@"multigrid levels"] != nil) {
+                    mgLevels = [solution.solutionInfo[@"multigrid levels"] intValue];
                     if (mgLevels < 1) mgLevels = 1;
                 } else {
                     if (mgAlgebraic == YES) {
@@ -2288,8 +2288,8 @@
             // In case of geometric multigrid, make the hierarchical meshes
             if (mgAlgebraic == NO) {
                 // Check if h/2 splitting of mesh requested
-                if ((solution.solutionInfo)[@"mg equal split"] != nil) {
-                    solution.multigridEqualPlit = [(solution.solutionInfo)[@"mg equal split"] boolValue];
+                if (solution.solutionInfo[@"mg equal split"] != nil) {
+                    solution.multigridEqualPlit = [solution.solutionInfo[@"mg equal split"] boolValue];
                 }
                 
                 if (solution.multigridEqualPlit == YES) {
@@ -2359,7 +2359,7 @@
         }
         
         // Set the default verbosity of the iterative solvers accordingly with the global verbosity
-        if ((solution.solutionInfo)[@"linear system residual output"] == nil) {
+        if (solution.solutionInfo[@"linear system residual output"] == nil) {
             core = [FEMCore sharedCore];
             k = 1;
             if ([core.outputLevelMask[4] boolValue] == NO) {

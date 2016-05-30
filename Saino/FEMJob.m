@@ -113,8 +113,8 @@
         // This is a hack that sets Equation flags true for the active solvers.
         // The equation flag is the legacy way of setting a solution active and
         // is still used internally.
-        if ((solution.solutionInfo)[@"equation"] != nil) {
-            eq = (solution.solutionInfo)[@"equation"];
+        if (solution.solutionInfo[@"equation"] != nil) {
+            eq = solution.solutionInfo[@"equation"];
             for (FEMEquation *equation in model.equations) {
                 found = [listUtilities listGetIntegerArray:model inArray:equation.valuesList forVariable:@"active solvers" buffer:&activeSolvers];
                 if (found == YES) {
@@ -138,12 +138,12 @@
     initSolution = NO;
     i = 1;
     for (FEMSolution *solution in model.solutions) {
-        if ((solution.solutionInfo)[@"equation"] != nil) {
-            eq = (solution.solutionInfo)[@"equation"];
+        if (solution.solutionInfo[@"equation"] != nil) {
+            eq = solution.solutionInfo[@"equation"];
             fprintf(stdout, "FEMJob:FEMJob_addSolutionsModel: setting up solver %d : %s.\n", i, [eq UTF8String]);
         }
-        if ((solution.solutionInfo)[@"initialize"] != nil) {
-            if ([(solution.solutionInfo)[@"initialize"] boolValue] == YES) {
+        if (solution.solutionInfo[@"initialize"] != nil) {
+            if ([solution.solutionInfo[@"initialize"] boolValue] == YES) {
                 [solution.matrix deallocation];
                 solution.matrix = nil;
                 [solution.solutionInfo setObject:@YES forKey:@"initialize"];
@@ -269,8 +269,8 @@
                             solution = (FEMSolution *)variable.solution;
                             if (solution == nil) solution = (FEMSolution *)model.solution;
                             
-                            if ((solution.solutionInfo)[@"namespace"] != nil) {
-                                str = (solution.solutionInfo)[@"namespace"];
+                            if (solution.solutionInfo[@"namespace"] != nil) {
+                                str = solution.solutionInfo[@"namespace"];
                                 [listUtilities listSetNameSpace:str];
                             }
                             
@@ -470,8 +470,8 @@
                     solution = (FEMSolution *)variable.solution;
                     if (solution == nil) solution = (FEMSolution *)model.solution;
                     
-                    if ((solution.solutionInfo)[@"namespace"] != nil) {
-                        str = (solution.solutionInfo)[@"namespace"];
+                    if (solution.solutionInfo[@"namespace"] != nil) {
+                        str = solution.solutionInfo[@"namespace"];
                         [listUtilities listSetNameSpace:str];
                     }
                     
@@ -895,8 +895,8 @@
                     for (FEMSolution *solution in model.solutions) {
                         if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
-                        if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                             _when = (solution.solutionInfo)[@"invoke solution computer"];
+                        if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                             _when = solution.solutionInfo[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
                         }
                         if (execThis) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
@@ -909,8 +909,8 @@
                     for (FEMSolution *solution in model.solutions) {
                         if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                         execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
-                        if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                            _when = (solution.solutionInfo)[@"invoke solution computer"];
+                        if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                            _when = solution.solutionInfo[@"invoke solution computer"];
                             execThis = ([_when isEqualToString:@"after saving"] == YES) ? YES : NO;
                         }
                         if (execThis == YES) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
@@ -939,8 +939,8 @@
 jump:
     for (FEMSolution *solution in model.solutions) {
         if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
-        if ( (solution.solutionInfo)[@"invoke solution computer"] != nil) {
-            _when = (solution.solutionInfo)[@"invoke solution computer"];
+        if ( solution.solutionInfo[@"invoke solution computer"] != nil) {
+            _when = solution.solutionInfo[@"invoke solution computer"];
             if ([_when isEqualToString:@"after simulation"] == YES || [_when isEqualToString:@"after all"] == YES) {
                 [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
                 _lastSaved = NO;
@@ -957,8 +957,8 @@ jump:
         for (FEMSolution *solution in model.solutions) {
             if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
             execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
-            if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                _when = (solution.solutionInfo)[@"invoke solution computer"];
+            if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                _when = solution.solutionInfo[@"invoke solution computer"];
                 execThis = ([_when isEqualToString:@"before saving"] == YES) ? YES : NO;
             }
             if (execThis == YES) [self.core activateSolution:solution model:model timeStep:dt transientSimulation:transient];
@@ -1029,21 +1029,21 @@ jump:
             timeSteps = _totalTimeSteps;
             for (FEMSolution *solution in model.solutions) {
                 if (solution.mesh == mesh) {
-                    if ((solution.solutionInfo)[@"eigen analysis"] != nil) {
-                        eigenAnal = [(solution.solutionInfo)[@"eigen analysis"] boolValue];
+                    if (solution.solutionInfo[@"eigen analysis"] != nil) {
+                        eigenAnal = [solution.solutionInfo[@"eigen analysis"] boolValue];
                     }
-                    eigenAnal = (eigenAnal == YES || [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
+                    eigenAnal = (eigenAnal == YES || [solution.solutionInfo[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
                     if (eigenAnal == YES) timeSteps = max(timeSteps, solution.nOfEigenValues);
                 }
             }
             
             for (FEMSolution *solution in model.solutions) {
                 if (solution.mesh == mesh) {
-                    eigenAnal = [(solution.solutionInfo)[@"eigen analysis"] boolValue];
-                    eigenAnal = (eigenAnal == YES || [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
+                    eigenAnal = [solution.solutionInfo[@"eigen analysis"] boolValue];
+                    eigenAnal = (eigenAnal == YES || [solution.solutionInfo[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
                     if (eigenAnal == YES) {
-                        if ((solution.solutionInfo)[@"eigen and harmonic solution output"] != nil) {
-                            saveWhich = (solution.solutionInfo)[@"eigen and harmonic solution output"];
+                        if (solution.solutionInfo[@"eigen and harmonic solution output"] != nil) {
+                            saveWhich = solution.solutionInfo[@"eigen and harmonic solution output"];
                         }
                         savedEigenValues = solution.nOfEigenValues;
                         for (j=0; j<savedEigenValues; j++) {
@@ -1357,8 +1357,8 @@ jump:
                 
                 for (FEMSolution *solution in model.solutions) {
                     if (solution.mesh == mesh) {
-                        eigenAnal = [(solution.solutionInfo)[@"eigen analysis"] boolValue];
-                        eigenAnal = (eigenAnal == YES|| [(solution.solutionInfo)[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
+                        eigenAnal = [solution.solutionInfo[@"eigen analysis"] boolValue];
+                        eigenAnal = (eigenAnal == YES|| [solution.solutionInfo[@"harmonic analysis"] boolValue] == YES) ? YES : NO;
                         
                         if (eigenAnal == YES) {
                             varContainers = solution.variable.getContainers;
@@ -1591,9 +1591,9 @@ jump:
             // Check whether we need to color the mesh if parallel assembly is required
             
             for (FEMSolution *solution in self.model.solutions) {
-                if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
+                if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
                     parallelAssembly = YES;
-                    colorMesh = [(solution.solutionInfo)[@"color mesh"] boolValue];
+                    colorMesh = [solution.solutionInfo[@"color mesh"] boolValue];
                     break;
                 }
             }
@@ -1814,8 +1814,8 @@ jump:
         }
         
         for (FEMSolution *solution in self.model.solutions) {
-            if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                when = (solution.solutionInfo)[@"invoke solution computer"];
+            if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                when = solution.solutionInfo[@"invoke solution computer"];
                 if ([when isEqualToString:@"after simulation"] == YES || [when isEqualToString:@"after all"] == YES) {
                     _lastSaved = NO;
                 }
@@ -1843,8 +1843,8 @@ jump:
             for (FEMSolution *solution in self.model.solutions) {
                 if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                 execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AHEAD_SAVE) ? YES : NO;
-                if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                    when = (solution.solutionInfo)[@"invoke solution computer"];
+                if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                    when = solution.solutionInfo[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"before saving"] == YES) ? YES : NO;
                 }
                 if (execThis == YES) [self.core activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];
@@ -1856,8 +1856,8 @@ jump:
             for (FEMSolution *solution in self.model.solutions) {
                 if (solution.hasBuiltInSolution == NO && solution.plugInPrincipalClassInstance == nil) continue;
                  execThis = (solution.solutionSolveWhen == SOLUTION_SOLVE_AFTER_SAVE) ? YES : NO;
-                if ((solution.solutionInfo)[@"invoke solution computer"] != nil) {
-                    when = (solution.solutionInfo)[@"invoke solution computer"];
+                if (solution.solutionInfo[@"invoke solution computer"] != nil) {
+                    when = solution.solutionInfo[@"invoke solution computer"];
                     execThis = ([when isEqualToString:@"after saving"] == YES) ? YES : NO;
                 }
                 if (execThis == YES) [self.core activateSolution:solution model:self.model timeStep:_dt transientSimulation:_transient];

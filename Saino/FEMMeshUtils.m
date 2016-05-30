@@ -294,7 +294,7 @@
     static BOOL visited = NO;
     
     if (visited == NO) {
-        if ([(solution.solutionInfo)[@"angles in degrees"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"angles in degrees"] boolValue] == YES) {
             coeff = 180.0 / M_PI;
         } else {
             coeff = 1.0;
@@ -408,26 +408,26 @@
     // not be communicated
     if (model.solution != nil) solution = (FEMSolution *)model.solution;
     if (solution != nil) {
-        if ((solution.solutionInfo)[@"partition local projector"] != nil) {
-            localConstraints = [(solution.solutionInfo)[@"partition local projector"] boolValue];
+        if (solution.solutionInfo[@"partition local projector"] != nil) {
+            localConstraints = [solution.solutionInfo[@"partition local projector"] boolValue];
         } else {
-            if ((solution.solutionInfo)[@"partition local constraints"] != nil) {
-                localConstraints = [(solution.solutionInfo)[@"partition local constraints"] boolValue];
+            if (solution.solutionInfo[@"partition local constraints"] != nil) {
+                localConstraints = [solution.solutionInfo[@"partition local constraints"] boolValue];
             }
         }
     }
     
     // Don't consider halo when creating discontinuity
     if (solution != nil) {
-        if((solution.solutionInfo)[@"projector no halo"] != nil) {
-            noHalo = [(solution.solutionInfo)[@"projector no halo"] boolValue];
+        if(solution.solutionInfo[@"projector no halo"] != nil) {
+            noHalo = [solution.solutionInfo[@"projector no halo"] boolValue];
         }
     }
     
     // Don't consider single halo nodes when creating discontinuity
     if (solution != nil) {
-        if ((solution.solutionInfo)[@"projector no halo nodes"] != nil) {
-            checkHaloNodes = [(solution.solutionInfo)[@"projector no halo nodes"] boolValue];
+        if (solution.solutionInfo[@"projector no halo nodes"] != nil) {
+            checkHaloNodes = [solution.solutionInfo[@"projector no halo nodes"] boolValue];
         }
     }
     if (checkHaloNodes == YES) {
@@ -436,7 +436,7 @@
     
     doEdges = NO;
     if (solution != nil) {
-        if([(solution.solutionInfo)[@"projector skip edges"] boolValue] == YES) {
+        if([solution.solutionInfo[@"projector skip edges"] boolValue] == YES) {
             doEdges = NO;
         }
     } else if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"projector skip edges" info:&found] == YES) {
@@ -451,7 +451,7 @@
     
     doNodes = NO;
     if (solution != nil) {
-        if ([(solution.solutionInfo)[@"projector skip nodes"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"projector skip nodes"] boolValue] == YES) {
             doNodes = NO;
         }
     } else if ([listUtilities listGetLogical:model inArray:bcParams.valuesList forVariable:@"projector skip nodes" info:&found] == YES) {
@@ -467,8 +467,8 @@
     // If we want to eliminate the constraints, we have to hava a biorthogonal basis
     if (found == NO) {
         if (solution != nil) {
-            if ((solution.solutionInfo)[@"eliminate linear constraints"] != nil) {
-                setDiag = [(solution.solutionInfo)[@"eliminate linear constraints"] boolValue];
+            if (solution.solutionInfo[@"eliminate linear constraints"] != nil) {
+                setDiag = [solution.solutionInfo[@"eliminate linear constraints"] boolValue];
             }
         }
         if (setDiag == YES) {
@@ -485,8 +485,8 @@
         if (nodalJump == YES) {
             axisSym = YES;
         } else if (solution != nil) {
-            if ((solution.solutionInfo)[@"projector metrics"] != nil) {
-                axisSym = [(solution.solutionInfo)[@"projector metrics"] boolValue];
+            if (solution.solutionInfo[@"projector metrics"] != nil) {
+                axisSym = [solution.solutionInfo[@"projector metrics"] boolValue];
             }
         }
         if (axisSym == YES) fprintf(stdout, "FEMMeshUtils:FEMMeshUtils_weightedProjectorDiscontinousMesh: projector will be weighted for axi-symmetry.\n");
@@ -3945,8 +3945,8 @@ jump:
     }
     
     if (levelProj == YES) {
-        if ((solution.solutionInfo)[@"projector skip nodes"] != nil) {
-            if ([(solution.solutionInfo)[@"projector skip nodes"] boolValue] == YES) doNodes = NO;
+        if (solution.solutionInfo[@"projector skip nodes"] != nil) {
+            if ([solution.solutionInfo[@"projector skip nodes"] boolValue] == YES) doNodes = NO;
         } else {
             if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector skip nodes" info:&found] == YES) {
                 doNodes = NO;
@@ -3955,8 +3955,8 @@ jump:
             }
         }
         
-        if ((solution.solutionInfo)[@"projector skip edges"] != nil) {
-            if ([(solution.solutionInfo)[@"projector skip edges"] boolValue] == YES) doEdges = NO;
+        if (solution.solutionInfo[@"projector skip edges"] != nil) {
+            if ([solution.solutionInfo[@"projector skip edges"] boolValue] == YES) doEdges = NO;
         } else {
             if ([listUtilities listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:@"projector skip edges" info:&found] == YES) {
                 doEdges = NO;
@@ -5407,9 +5407,9 @@ jump:
     
     for (FEMSolution *solution in model.solutions) {
         if (mesh == solution.mesh) {
-            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilize"] boolValue] == YES) ? YES : NO;
-            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilization method"] isEqualToString:@"vms"] == YES) ? YES : NO;
-            mesh.stabilize = (mesh.stabilize == YES || [(solution.solutionInfo)[@"stabilization method"] isEqualToString:@"stabilized"] == YES) ? YES : NO;
+            mesh.stabilize = (mesh.stabilize == YES || [solution.solutionInfo[@"stabilize"] boolValue] == YES) ? YES : NO;
+            mesh.stabilize = (mesh.stabilize == YES || [solution.solutionInfo[@"stabilization method"] isEqualToString:@"vms"] == YES) ? YES : NO;
+            mesh.stabilize = (mesh.stabilize == YES || [solution.solutionInfo[@"stabilization method"] isEqualToString:@"stabilized"] == YES) ? YES : NO;
         }
     }
     
@@ -5490,20 +5490,20 @@ jump:
     varContainers = solution.variable.getContainers;
     permutation = intvec(0, varContainers->sizePerm-1);
     
-    if ((solution.solutionInfo)[@"optimize bandwidth"] != nil) {
-        optimizeBandwidth = [(solution.solutionInfo)[@"optimize bandwidth"] boolValue];
+    if (solution.solutionInfo[@"optimize bandwidth"] != nil) {
+        optimizeBandwidth = [solution.solutionInfo[@"optimize bandwidth"] boolValue];
     } else optimizeBandwidth = YES;
     
     elementUtils = [[FEMElementUtils alloc] init];
-    str = (solution.solutionInfo)[@"equation"];
+    str = solution.solutionInfo[@"equation"];
     matrix = [elementUtils createMatrixInModel:model forSolution:solution mesh:mesh dofs:dofs permutation:permutation sizeOfPermutation:varContainers->sizePerm matrixFormat:MATRIX_CRS optimizeBandwidth:optimizeBandwidth equationName:str discontinuousGalerkinSolution:NULL globalBubbles:NULL nodalDofsOnly:NULL projectorDofs:NULL];
     
-    if ((solution.solutionInfo)[@"linear system symmetric"] != nil) {
-        matrix.symmetric = [(solution.solutionInfo)[@"linear system symmetric"] boolValue];
+    if (solution.solutionInfo[@"linear system symmetric"] != nil) {
+        matrix.symmetric = [solution.solutionInfo[@"linear system symmetric"] boolValue];
     }
     
-    if ((solution.solutionInfo)[@"lumped mass matrix"] != nil) {
-        matrix.lumped = [(solution.solutionInfo)[@"lumped mass matrix"] boolValue];
+    if (solution.solutionInfo[@"lumped mass matrix"] != nil) {
+        matrix.lumped = [solution.solutionInfo[@"lumped mass matrix"] boolValue];
     }
     
     work = doublevec(0, varContainers->sizeValues-1);
@@ -6161,8 +6161,8 @@ jump:
     at0 = cputime();
     
     dim = mesh.dimension;
-    if ((solution.solutionInfo)[@"active coordinate"] != nil) {
-        activeDirection = [(solution.solutionInfo)[@"active coordinate"] intValue];
+    if (solution.solutionInfo[@"active coordinate"] != nil) {
+        activeDirection = [solution.solutionInfo[@"active coordinate"] intValue];
     }
     if (activeDirection < 1 || activeDirection > 3) {
         fatal("FEMMeshUtils:detectExtrudedStructureMesh", "Invalid value for active coordinate.");
@@ -6170,8 +6170,8 @@ jump:
     memset( unitVector, 0.0, sizeof(unitVector) );
     unitVector[activeDirection-1] = 1.0;
     
-    if ((solution.solutionInfo)[@"project to bottom"] != nil) {
-        if ([(solution.solutionInfo)[@"project to bottom"] boolValue] == YES) {
+    if (solution.solutionInfo[@"project to bottom"] != nil) {
+        if ([solution.solutionInfo[@"project to bottom"] boolValue] == YES) {
             for (int i=0; i<3; i++) {
                 unitVector[i] = -1.0 * unitVector[i];
             }
@@ -6182,14 +6182,14 @@ jump:
     }
     
     // Set the dot product tolerance
-    if ((solution.solutionInfo)[@"dot product tolerance"] != nil) {
-        eps = [(solution.solutionInfo)[@"dot product tolerance"] doubleValue];
+    if (solution.solutionInfo[@"dot product tolerance"] != nil) {
+        eps = [solution.solutionInfo[@"dot product tolerance"] doubleValue];
     } else eps = 1.0e-4;
     
     BOOL doCoordTransform = NO;
-    if ((solution.solutionInfo)[@"mapping coordinate transformation"] != nil || ifMask == YES) {
+    if (solution.solutionInfo[@"mapping coordinate transformation"] != nil || ifMask == YES) {
         doCoordTransform = YES;
-        coordTransform = (solution.solutionInfo)[@"mapping coordinate transformation"];
+        coordTransform = solution.solutionInfo[@"mapping coordinate transformation"];
         values = doublevec(0, numberofNodes-1);
         memset( values, 0.0, numberofNodes*sizeof(double) );
         FEMUtilities *utilities = [[FEMUtilities alloc] init];

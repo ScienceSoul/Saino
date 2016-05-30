@@ -545,12 +545,12 @@
     
     // We have a colored mesh if parallel assembly is required by a solution computer
     for (FEMSolution *solution in model.solutions) {
-        if ([(solution.solutionInfo)[@"parallel assembly"] boolValue] == YES) {
-            if ((solution.solutionInfo)[@"color mesh"] == nil) {
-                fprintf(stderr, "FEMMesh:loadMeshForModel: parallel assembly in equation %s but missing indication whether the mesh needs to be colored.\n", [(solution.solutionInfo)[@"equation"] UTF8String]);
+        if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
+            if (solution.solutionInfo[@"color mesh"] == nil) {
+                fprintf(stderr, "FEMMesh:loadMeshForModel: parallel assembly in equation %s but missing indication whether the mesh needs to be colored.\n", [solution.solutionInfo[@"equation"] UTF8String]);
                 fatal("FEMMesh:loadMeshForModel");
             }
-            if ([(solution.solutionInfo)[@"color mesh"] boolValue] == NO) {
+            if ([solution.solutionInfo[@"color mesh"] boolValue] == NO) {
                 // The mesh should be already colored
                 isParallelAssembly = YES;
                 fprintf(stdout, "FEMMesh:loadMeshForModel: parallel assembly but assumes that the mesh is already colored.\n");

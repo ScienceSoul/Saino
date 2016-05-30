@@ -162,12 +162,12 @@
     elements = model.getElements;
     nodes = model.getNodes;
     
-    if ((solution.solutionInfo)[@"free surface convergence tolerance"] != nil) {
-        feps = [(solution.solutionInfo)[@"free surface convergence tolerance"] doubleValue];
+    if (solution.solutionInfo[@"free surface convergence tolerance"] != nil) {
+        feps = [solution.solutionInfo[@"free surface convergence tolerance"] doubleValue];
     } else feps = 1.0e-12;
 
-    if ((solution.solutionInfo)[@"free surface maximum iterations"] != nil) {
-        fiter = [(solution.solutionInfo)[@"free surface maximum iterations"] intValue];
+    if (solution.solutionInfo[@"free surface maximum iterations"] != nil) {
+        fiter = [solution.solutionInfo[@"free surface maximum iterations"] intValue];
     } else fiter = 100;
     
     velocity1 = [utilities getVariableFrom:model.variables model:model name:@"velocity 1" onlySearch:NULL maskName:nil info:&found];

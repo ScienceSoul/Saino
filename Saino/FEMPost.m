@@ -475,11 +475,11 @@
         // Coordinates
         meshScale = 1.0;
         for (FEMSolution *solution in model.solutions) {
-            if ((solution.solutionInfo)[@"displace mesh"] != nil) {
-                if ([(solution.solutionInfo)[@"displace mesh"] boolValue] == NO) meshScale = 0.0;
+            if (solution.solutionInfo[@"displace mesh"] != nil) {
+                if ([solution.solutionInfo[@"displace mesh"] boolValue] == NO) meshScale = 0.0;
             } else {
-                if ((solution.solutionInfo)[@"output mesh deformation"] != nil) {
-                    if ([(solution.solutionInfo)[@"output mesh deformation"] boolValue] == YES) meshScale = 0.0;
+                if (solution.solutionInfo[@"output mesh deformation"] != nil) {
+                    if ([solution.solutionInfo[@"output mesh deformation"] boolValue] == YES) meshScale = 0.0;
                 } else {
                     if (solution.nOfEigenValues > 0) meshScale = 0.0;
                 }
