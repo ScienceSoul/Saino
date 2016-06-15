@@ -359,7 +359,7 @@
         velo[0] = cblas_ddot(n, diffux, 1, basis, 1);
         velo[1] = cblas_ddot(n, diffuy, 1, basis, 1);
         if (dim > 2) velo[2] = cblas_ddot(n, diffuz, 1, basis, 1);
-        
+
         memset( *grad, 0.0, (3*3)*sizeof(double) );
         for (i=0; i<3; i++) {
             for (j=0; j<n; j++) {

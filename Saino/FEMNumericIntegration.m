@@ -123,7 +123,7 @@
     
     if (element->Type.ElementCode == 101) {
         for (i=0; i<2; i++) {
-            self.basisFirstDerivative[0][i] = 0.0;
+            _basisFirstDerivative[0][i] = 0.0;
         }
         return YES;
     }

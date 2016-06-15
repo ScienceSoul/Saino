@@ -6870,13 +6870,17 @@ jump:
             for (int j=0; j<elements[i].Type.NumberOfNodes; j++) {
                 [post writeInteger:elements[i].NodeIndexes[j]+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
             }
-            [post writeInteger:elements[i].color.colorIndex+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [post writeInteger:elements[i].color.colorIndex+1 toFileHandle:fileHandle];
             [fileHandle writeData:newLineBuff];
         }
     } else {
         for (int i=0; i<mesh.numberOfBulkElements; i++) {
             [post writeInteger:elements[i].ElementIndex toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
             [post writeInteger:elements[i].color.colorIndex+1 toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            [post writeInteger:elements[i].NDOFs toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            for (int j=0; j<elements[i].Type.NumberOfNodes; j++) {
+                [post writeInteger:elements[i].NodeIndexes[j] toFileHandle:fileHandle]; [fileHandle writeData:spaceBuff];
+            }
             [fileHandle writeData:newLineBuff];
         }
     }
@@ -6907,7 +6911,7 @@ jump:
 
 -(void)readColoredMesh:(FEMMesh * __nonnull)mesh name:(NSString * __nonnull)name directory:(NSString * __nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile {
     
-    int isLineBreak, lineCount = 0, nb;
+    int isLineBreak, j, lineCount = 0, nb=0;
     NSString *line;
     
     NSString *colorFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"mesh.colors"];
@@ -6971,7 +6975,6 @@ jump:
         }
         line = nil;
         lineCount = 0;
-        nb = 0;
         while ((line = [reader readLine])) {
             lineCount++;
             if (/* DISABLES CODE */ (NO)) {
@@ -6984,12 +6987,19 @@ jump:
             for (NSString *string in filteredArray) {
                 if ([string isEqualToString:@"\n"] == YES) isLineBreak++;
             }
-            if (([filteredArray count]-isLineBreak) < 2 || ([filteredArray count]-isLineBreak) > 2) {
+            if ((([filteredArray count]-isLineBreak)-[filteredArray[2] intValue]) < 3 || (3+[filteredArray[2] intValue]) > ([filteredArray count]-isLineBreak)) {
                 fprintf(stderr, "FEMMeshUtils:readColoredMesh: not properlly formatted data in file %s at line %d.\n", [elementsFile UTF8String], lineCount);
                 fatal("FEMMeshUtils:readColoredMesh");
             }
             elements[nb].ElementIndex = [filteredArray[0] intValue];
             elements[nb].color.colorIndex = [filteredArray[1] intValue];
+            elements[nb].NDOFs = [filteredArray[2] intValue];
+            elements[nb].NodeIndexes = (int *)malloc([filteredArray[2] intValue] * sizeof(int));
+            j = 3;
+            for (int i=0; i<[filteredArray[2] intValue]; i++) {
+                elements[nb].NodeIndexes[i] = [filteredArray[j] intValue];
+                j++;
+            }
             nb++;
         }
         fprintf(stdout, "FEMMeshUtils:readColoredMesh: read %d lines in %s.\n", lineCount, [@"mesh.colored_elements" UTF8String]);
@@ -7014,6 +7024,7 @@ jump:
     }
     
     // Build the element permutation store. This is for the simplest form of getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:
+    // That is assume that element NDOFs = element number of nodes
     int *elementNodeIndexesStore = intvec(0, (mesh.numberOfBulkElements*mesh.maxElementDofs)-1);
     indx = 0;
     for (int t=0; t<mesh.numberOfBulkElements; t++) {
@@ -7025,6 +7036,9 @@ jump:
     [mesh assignElementNodeIndexesStore:elementNodeIndexesStore];
     
     if (readElementsFromFile == YES) {
+        for (int i=0; i<nb; i++) {
+            free(elements[i].NodeIndexes);
+        }
         free(elements);
     }
 }

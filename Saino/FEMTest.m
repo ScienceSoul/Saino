@@ -744,7 +744,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
-            [solution.solutionInfo setObject:@"single" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
             [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];

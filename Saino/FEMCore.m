@@ -1,4 +1,4 @@
-//
+
 //  FEMCore.m
 //  Saino
 //
@@ -1317,7 +1317,7 @@ static const int PRECOND_VANKA     =  560;
     }
     
     FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
-    [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
+    simulation = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:@"simulation type" info:&found];
     if ([simulation isEqualToString:@"transient"] == YES) {
         method = solution.solutionInfo[@"time stepping method"];
         order = min(solution.doneTime, solution.order);
@@ -3334,7 +3334,7 @@ static dispatch_once_t onceToken;
         }
     }
     
-    // Default for nodal nodes if no solution active
+    // Default to nodal nodes if no solution active
     if (solution.mesh == nil) return nb;
     
     BOOL all = YES;

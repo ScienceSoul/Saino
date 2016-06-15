@@ -51,7 +51,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
             fprintf(stderr, "find_platforms: could not find any device.\n");
             fatal("find_platforms");
         }
-        fprintf(stdout, "find_platforms: %d built-in device(s) in platform id:%d.\n", num_devices, i);
+        fprintf(stdout, "find_platforms: %d built-in GPUs in platform id:%d.\n", num_devices, i);
         tot_devices = tot_devices + num_devices;
     }
     
@@ -73,6 +73,7 @@ cl_device_id __nullable find_single_device(void) {
         clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
     } else {
         // Only use the offline GPU
+        fprintf(stdout, "find_platforms: by default use the offline GPU.\n");
         
         // Look for the GPU not associated to the display to use a compute device
         CGLRendererInfoObj rend = NULL;

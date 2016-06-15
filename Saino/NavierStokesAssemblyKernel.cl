@@ -57,8 +57,8 @@
 #define UNROLL_DEPTH 4
 #endif
 
-void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes);
-REAL dBasisdx3D(__global REAL *BasisFunctions,
+inline void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes);
+inline REAL dBasisdx3D(__global REAL *BasisFunctions,
                 __global int *elementNodeIndexesStore,
                 __global REAL *nodesX,
                 __global REAL *nodesY,
@@ -66,7 +66,7 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
                 REAL dBasisdx[][3],
                 REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID);
 
-void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes) {
+inline void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes) {
     
     REAL s;
     int stride = numberOfNodes + OFFSET;
@@ -82,7 +82,7 @@ void basis3D(__global REAL *BasisFunctions, REAL basis[], REAL u, REAL v, REAL w
     }
 }
 
-REAL dBasisdx3D(__global REAL *BasisFunctions,
+inline REAL dBasisdx3D(__global REAL *BasisFunctions,
                 __global int *elementNodeIndexesStore,
                 __global REAL *nodesX,
                 __global REAL *nodesY,
@@ -91,14 +91,13 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
                 REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID) {
     
     int stride = numberOfNodes + OFFSET;
-    REAL dLBasisdx[numberOfNodes*3];
-    REAL covariantMetricTensor[9] = {}, dx[9] = {}, elementMetric[9] = {}, GI[9] = {};
+    REAL dLBasisdx[24] = {};
+    REAL dx[9] = {};
+    REAL covariantMetricTensor[9] = {};
+    REAL elementMetric[9] = {};
+    REAL GI[9] = {};
     REAL ltoGMap[9] = {};
     REAL accum1, accum2, accum3, detJ, s, t, z;
-    
-    for(int i=0; i<numberOfNodes*3; i++) {
-        dLBasisdx[i] = ZERO;
-    }
     
     // Nodal derivatives for 3D element
     for(int n=0; n<numberOfNodes+OFFSET; n++) {
@@ -183,6 +182,7 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
     GI[5] = -s * ( covariantMetricTensor[0]*covariantMetricTensor[5] - covariantMetricTensor[3]*covariantMetricTensor[2] );
     GI[8] =  s * ( covariantMetricTensor[0]*covariantMetricTensor[4] - covariantMetricTensor[3]*covariantMetricTensor[1] );
     
+    // Only for 3D element
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
             elementMetric[3*i+j] = GI[3*i+j];
@@ -201,6 +201,11 @@ REAL dBasisdx3D(__global REAL *BasisFunctions,
     }
     
     // dBasisdx
+    for(int i=0; i<8; i++) {
+        for (int j=0; j<3; j++) {
+            dBasisdx[i][j] = ZERO;
+        }
+    }
     for (int i=0; i<numberOfNodes; i++) {
         for (int j=0; j<CDIM; j++) {
             for (int k=0; k<DIM; k++) {
@@ -226,7 +231,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
                                   __global REAL *nodesZ,
                                   __global REAL *varSolution,
                                   __global int *varPermutation,
-                                  __global char *newtonLinearization,      // Just a pointer to an interger value,
+                                  __global char *newtonLinearization,      // Just a pointer to an integer value,
                                                                            // 1 for true, 0 for false
                                   REAL density,
                                   REAL viscosity,
@@ -246,51 +251,28 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     int k;
     int stride = numberOfNodes + OFFSET;
     int col, row;
-    REAL basis[numberOfNodes];
-    REAL dBasisdx[numberOfNodes][3];
-    REAL dNodalBasisdx[numberOfNodes][numberOfNodes][3];
-    REAL dmudx[3] = {}, velo[3] = {}, force[4] = {}, grad[3][3] = {}, gradT[3][3] = {}, strain[3][3] = {},
-    su[numberOfNodes][4][4], sw[numberOfNodes][4][4];
-    REAL stiff[varDofs*numberOfNodes][varDofs*numberOfNodes], mass[varDofs*numberOfNodes][varDofs*numberOfNodes];
-    REAL forceVector[varDofs*numberOfNodes];
-    REAL cc[MDIM+1][MDIM+1];
+    REAL basis[8] = {};
+    REAL dBasisdx[8][3] = {};
+    REAL dNodalBasisdx[8][8][3] = {};
+    REAL dmudx[3] = {};
+    REAL force[4] = {};
+    REAL grad[3][3] = {};
+    REAL gradT[3][3] = {};
+    REAL strain[3][3] = {};
+    REAL su[8][4][4] = {};
+    REAL sw[8][4][4] = {};
+    REAL cc[4][4];
+    REAL stiff[32][32];
+    REAL mass[32][32];
+    REAL forceVector[32];
+    REAL jacM[32][32];
     REAL c2, c3, delta, detJ, mu, muder0, muder, rho, u, v, w, s, ss, sum, tau;
-    REAL jacM[varDofs*numberOfNodes][varDofs*numberOfNodes];
     REAL criticalShearRate=1.0e-10;
     bool viscNewtonLin;
     
     int workItemID = get_global_id(0);
     int globalID = colorMapping[positionInColorMapping+workItemID];
     
-    for(int i=0; i<numberOfNodes; i++) {
-        basis[i] = ZERO;
-    }
-    for(int i=0; i<numberOfNodes; i++) {
-        for(int j=0; j<3; j++) {
-            dBasisdx[i][j] = ZERO;
-        }
-    }
-    for(int i=0; i<numberOfNodes; i++) {
-        for(int j=0; j<numberOfNodes; j++) {
-            for(k=0; k<3; k++) {
-                dNodalBasisdx[i][j][k] = ZERO;
-            }
-        }
-    }
-    for(int i=0; i<numberOfNodes; i++) {
-        for(int j=0; j<4; j++) {
-            for(k=0; k<4; k++) {
-                su[i][j][k] = ZERO;
-            }
-        }
-    }
-    for(int i=0; i<numberOfNodes; i++) {
-        for(int j=0; j<4; j++) {
-            for(k=0; k<4; k++) {
-                sw[i][j][k] = ZERO;
-            }
-        }
-    }
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
             stiff[i][j] = ZERO;
@@ -304,11 +286,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         forceVector[i] = ZERO;
     }
-    for(int i=0; i<MDIM+1; i++) {
-        for(int j=0; j<MDIM+1; j++) {
-            cc[i][j] = ZERO;
-        }
-    }
+
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
             jacM[i][j] = ZERO;
@@ -346,14 +324,10 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
             rho = rho + density * basis[i];
         }
         
-        // TODO: mesh velocity not accounted yet
-        for (int i=0; i<numberOfNodes; i++) {
-            velo[0] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]] * basis[i];
-            velo[1] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1] * basis[i];
-            velo[2] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2] * basis[i];
-        }
-        
         for (int i=0; i<3; i++) {
+            grad[0][i] = ZERO;
+            grad[1][i] = ZERO;
+            grad[2][i] = ZERO;
             for (int j=0; j<numberOfNodes; j++) {
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]] * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
@@ -362,13 +336,15 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         }
         
         // Force at integration point
-        // Only flow bodyforce 2 if MDIM=2 or flow bodyforce 3 if MDIM=3
+        // Flow bodyforce 3 for MDIM=3
+        force[2] = ZERO;
         for (int i=0; i<numberOfNodes; i++) {
-            // if (MDIM == 2 ) force[1] = force[1] + load * basis[i];
-            if (MDIM == 3 ) force[2] = force[2] + load * basis[i];
+            force[2] = force[2] + load * basis[i];
         }
 
         // Always assume isotropic material
+        // --------------------------------
+        
         mu = ZERO;
         for (int i=0; i<numberOfNodes; i++) {
             mu = mu + viscosity * basis[i];
@@ -379,15 +355,18 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         for (int i=0; i<numberOfNodes; i++) {
             c2 = c2 + viscoExponent * basis[i];
         }
+        
         // Second invariant for Cartesian coordinate
         ss = ZERO;
         for (int i=0; i<3; i++) {
             for (int j=0; j<3; j++) {
-                s = grad[i][j] + grad[j][i];
-                ss = ss + s * s;
+                ss = ss + (grad[i][j] + grad[j][i]) * (grad[i][j] + grad[j][i]);
             }
         }
+        ss = ss / TWO;
+        
         muder0 = mu * (c2-ONE)/TWO * pow(ss, (c2-ONE)/TWO - ONE);
+        
         // Critical Shear Rate
         c3 = ZERO;
         for (int i=0; i<numberOfNodes; i++) {
@@ -397,10 +376,11 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
             ss = pow(c3, TWO);
             muder0 = ZERO;
         }
+        
         // The effective viscosity
         mu = mu * pow(ss, (c2-ONE)/TWO);
         
-        viscNewtonLin = (newtonLinearization && muder0 != ZERO) ? true : false;
+        viscNewtonLin = (*newtonLinearization && muder0 != ZERO) ? true : false;
         if (viscNewtonLin) {
             // Transpose
             for (int i=0; i<3; i++) {
@@ -416,7 +396,10 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         }
         
         // Always do the stabilization
+        // ---------------------------
+        
         for (int i=0; i<3; i++) {
+            dmudx[i] = ZERO;
             for (int j=0; j<numberOfNodes; j++) {
                 dmudx[i] = dmudx[i] + viscosity * dBasisdx[j][i];
             }
@@ -425,6 +408,14 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
         delta = ZERO;
         tau = mk * pow(hk, TWO) / (EIGHT * mu);
         
+        for(int i=0; i<numberOfNodes; i++) {
+            for(int j=0; j<4; j++) {
+                for(k=0; k<4; k++) {
+                    su[i][j][k] = ZERO;
+                    sw[i][j][k] = ZERO;
+                }
+            }
+        }
         for (int p=0; p<numberOfNodes; p++) {
             for (int i=0; i<MDIM; i++) {
                 su[p][i][MDIM] = su[p][i][MDIM] + dBasisdx[p][i];
@@ -487,7 +478,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
                 
                 for (int i=0; i<MDIM; i++) {
                     for (int j=0; j<MDIM; j++) {
-                        // Isotropic and Laplace discretization
+                        // Isotropic and no Laplace discretization
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * dBasisdx[q][j] * dBasisdx[p][j];
                         
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * dBasisdx[q][i] * dBasisdx[p][j];
@@ -540,7 +531,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     }
     
     if (viscNewtonLin) {
-        REAL sol[varDofs*numberOfNodes];
+        REAL sol[32];
         for(int i=0; i<varDofs*numberOfNodes; i++) {
             sol[i] = ZERO;
         }
@@ -567,7 +558,7 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
                 stiff[i][j] = stiff[i][j] + jacM[i][j];
             }
         }
-        REAL yy[p];
+        REAL yy[32];
         for (int i=0; i<p; i++) {
             yy[i] = ZERO;
         }
