@@ -69,7 +69,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMCore_checkNormalTangentialBoundaryModel:(FEMModel * __nonnull)model variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
 
 // Average boundary normals
--(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
+-(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
 
 // Rotate matrix
 -(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix solution:(FEMSolution * __nonnull)solution vector:(double * __nonnull)vector size:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes;
@@ -923,8 +923,10 @@ static const int PRECOND_VANKA     =  560;
     Average boundary normals for nodes. The average boundary normals may be beneficial
     as they provide more continuous definition of normal curved boundaries
  
+    Method corresponds partially to Elmer from git on October 27 2015
+ 
 **************************************************************************************/
--(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model variableName:(NSString * __nonnull)variableName dimension:(int)dimension {
+-(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)variableName dimension:(int)dimension {
     
     int i, j, k, l, m, n, t, tt;
     double bu, bv, detJ, *lrnm, *nrm, s, sum;
@@ -973,7 +975,7 @@ static const int PRECOND_VANKA     =  560;
         // Compute sum of element-wise normals for nodes on boundaries
         elementDescription = [FEMElementDescription sharedElementDescription];
         integration = [[FEMNumericIntegration alloc] init];
-        if ([integration allocation:mesh] == NO) fatal("FEMCore:FEMCore_localMatrix", "Allocation error in FEMNumericIntegration.");
+        if ([integration allocation:mesh] == NO) fatal("FEMCore:FEMCore_averageBoundaryNormalsModel", "Allocation error in FEMNumericIntegration.");
         elements = mesh.getElements;
         nodes = mesh.getNodes;
         nrm = doublevec(0, 2);
@@ -1038,6 +1040,7 @@ static const int PRECOND_VANKA     =  560;
                 if (boundaryCondition.pMatrix == nil) continue;
                 
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
+                // TODO: consitent normals, if rotations given
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
                 if (found == YES && rot.matrix != NULL) {
                     any = NO;
@@ -1092,6 +1095,7 @@ static const int PRECOND_VANKA     =  560;
                 if (boundaryCondition.pMatrix == nil) continue;
                 
                 projectorContainers = boundaryCondition.pMatrix.getContainers;
+                // TODO: consitent normals, if rotations given
                 found = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"periodic bc rotate" buffer:&rot];
                 if (found == YES && rot.matrix != NULL) {
                     any = NO;
@@ -1133,6 +1137,93 @@ static const int PRECOND_VANKA     =  560;
     
     // Normalize
     if (self.normalTangentialNumberOfNodes > 0) {
+        
+        BOOL lhsSystem = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"use lhs system" info:&found];
+        if (found == NO) lhsSystem = (dimension == 3) ? YES : NO;
+        
+        BOOL *ntMasterBC = NULL, *ntSlaveBC = NULL;
+        if (lhsSystem == YES) {
+            ntMasterBC = (BOOL *)malloc(sizeof(BOOL) * model.numberOfBoundaryConditions);
+            ntSlaveBC = (BOOL *)malloc(sizeof(BOOL) * model.numberOfBoundaryConditions);
+            memset(ntMasterBC, 0, sizeof(BOOL) * model.numberOfBoundaryConditions);
+            memset(ntSlaveBC, 0, sizeof(BOOL) * model.numberOfBoundaryConditions);
+            
+            i = 0;
+            for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+                if ([listUtilities listCheckPrefix:@"normal-tangential" inArray:boundaryCondition.valuesList] == NO) continue;
+                
+                j = [listUtilities listGetInteger:model inArray:boundaryCondition.valuesList forVariable:@"mortar bc" info:&found minValue:NULL maxValue:NULL];
+                if (found == NO) {
+                    j = [listUtilities listGetInteger:model inArray:boundaryCondition.valuesList forVariable:@"contact bc" info:&found minValue:NULL maxValue:NULL];
+                }
+                if (j == 0 || j > model.numberOfBoundaryConditions) continue;
+                
+                ntSlaveBC[i] = YES;
+                ntMasterBC[j-1] = YES;
+                i++;
+            }
+            any = NO;
+            for (i=0; i<model.numberOfBoundaryConditions; i++) {
+                if (ntMasterBC[i] == YES) {
+                    any = YES;
+                    break;
+                }
+            }
+            lhsSystem = (any == YES) ? YES : NO;
+        }
+        
+        BOOL *lhsTangent = NULL, *rhsTangent = NULL;
+        if (lhsSystem == YES) {
+            for (i=0; i<model.numberOfBoundaryConditions; i++) {
+                if (ntSlaveBC[i] == YES && ntMasterBC[i] == YES) {
+                    fprintf(stdout, "FEMCore:FEMCore_averageBoundaryNormalsModel: bc %d is both n-t master and slave.\n", i+1);
+                }
+            }
+            
+            lhsTangent = (BOOL *)malloc(sizeof(BOOL) * model.numberOfNodes);
+            memset(lhsTangent, 0, sizeof(BOOL)*model.numberOfNodes);
+            
+            rhsTangent = (BOOL *)malloc(sizeof(BOOL) * model.numberOfNodes);
+            memset(rhsTangent, 0, sizeof(BOOL)*model.numberOfNodes);
+            
+            elements = model.getElements;
+            for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryConditions; t++) {
+                if (elements[t].Type.ElementCode < 200) continue;
+                
+                n = elements[t].Type.NumberOfNodes;
+                i = 0;
+                for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+                    if(elements[t].BoundaryInfo->Constraint == boundaryCondition.tag) {
+                        if (ntMasterBC[i] == YES) {
+                            for (j=0; j<n; j++) {
+                                lhsTangent[elements[t].NodeIndexes[j]] = YES;
+                            }
+                        }
+                        if (ntSlaveBC[i] == YES) {
+                            for (j=0; j<n; j++) {
+                                rhsTangent[elements[t].NodeIndexes[j]] = YES;
+                            }
+                        }
+                        break;
+                    }
+                    i++;
+                }
+            }
+            
+            int lhsConflitcs = 0;
+            for (i=0; i<model.numberOfNodes; i++) {
+                if (lhsTangent[i] == YES && rhsTangent[i] == YES) {
+                    lhsConflitcs++;
+                }
+            }
+            if (lhsConflitcs > 0) {
+                fprintf(stdout, "FEMCore:FEMCore_averageBoundaryNormalsModel: there are %d nodes that could be both rhs and lhs.\n", lhsConflitcs);
+            }
+            free(ntMasterBC);
+            free(ntSlaveBC);
+        }
+        
+        
         double buffer1[self.size2boundaryNormals];
         double buffer2[self.size2boundaryNormals];
         double buffer3[self.size2boundaryNormals];
@@ -1150,7 +1241,7 @@ static const int PRECOND_VANKA     =  560;
                         self.boundaryNormals[k][j] = self.boundaryNormals[k][j] / s;
                     }
                 }
-                if (model.dimension > 2) {
+                if (dimension > 2) {
                     for (j=0; j<self.size2boundaryNormals; j++) {
                         buffer1[j] = self.boundaryNormals[k][j];
                     }
@@ -1159,8 +1250,69 @@ static const int PRECOND_VANKA     =  560;
                         self.boundaryTangent1[k][j] = buffer2[j];
                         self.boundaryTangent2[k][j] = buffer3[j];
                     }
+                    if (lhsSystem == YES) {
+                        if (lhsTangent[i] == YES) {
+                            for (j=0; j<self.size2boundaryNormals; j++) {
+                                self.boundaryTangent2[k][j] = -self.boundaryTangent2[k][j];
+                            }
+                        }
+                    }
                 }
             }
+        }
+        
+        if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"save averaged normals" info:&found] == YES) {
+            fprintf(stdout, "FEMCore:FEMCore_averageBoundaryNormalsModel: saving averaged boundary normals to variable: averaged normals.\n");
+            nrmVar = [utilities getVariableFrom:mesh.variables model:model name:@"averaged normals" onlySearch:NULL maskName:nil info:&found];
+            
+            if (nrmVar == nil) {
+                variableArraysContainer *bufferContainers = allocateVariableContainer();
+                bufferContainers->Perm = self.boundaryReorder;
+                bufferContainers->sizePerm = self.sizeBoundaryReorder;
+                int dofs = 3;
+                [utilities addVectorTo:mesh.variables mesh:mesh solution:solution name:@"averaged normals" dofs:&dofs container:bufferContainers ifOutput:NULL ifSecondary:NULL global:NULL initValue:NULL];
+                free(bufferContainers);
+                nrmVar = [utilities getVariableFrom:mesh.variables model:model name:@"averaged normals" onlySearch:NULL maskName:nil info:&found];
+            }
+            variableArraysContainer *varContainers = nrmVar.getContainers;
+            for (i=0; i<model.numberOfNodes; i++) {
+                k = self.boundaryReorder[i];
+                if (k >= 0) {
+                    for (l=0; l<nrmVar.dofs; l++) {
+                        varContainers->Values[nrmVar.dofs*varContainers->Perm[i]+l] = self.boundaryNormals[k][l];
+                    }
+                }
+            }
+            
+            if (dimension > 2 && [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"save averaged tangents" info:&found] == YES) {
+                FEMVariable *tan1Var = [utilities getVariableFrom:mesh.variables model:model name:@"averaged first tangent" onlySearch:NULL maskName:nil info:&found];
+                FEMVariable *tan2Var = [utilities getVariableFrom:mesh.variables model:model name:@"averaged second tangent" onlySearch:NULL maskName:nil info:&found];
+                
+                if (tan1Var == NULL) {
+                    variableArraysContainer *bufferContainers = allocateVariableContainer();
+                    bufferContainers->Perm = self.boundaryReorder;
+                    bufferContainers->sizePerm = self.sizeBoundaryReorder;
+                    int dofs = 3;
+                    [utilities addVectorTo:mesh.variables mesh:mesh solution:solution name:@"averaged first tangent" dofs:&dofs container:bufferContainers ifOutput:NULL ifSecondary:NULL global:NULL initValue:NULL];
+                    [utilities addVectorTo:mesh.variables mesh:mesh solution:solution name:@"averaged second tangent" dofs:&dofs container:bufferContainers ifOutput:NULL ifSecondary:NULL global:NULL initValue:NULL];
+                    free(bufferContainers);
+                    tan1Var = [utilities getVariableFrom:mesh.variables model:model name:@"averaged first tangent" onlySearch:NULL maskName:nil info:&found];
+                    tan2Var = [utilities getVariableFrom:mesh.variables model:model name:@"averaged second tangent" onlySearch:NULL maskName:nil info:&found];
+                }
+                variableArraysContainer *tan1varContainers = tan1Var.getContainers;
+                variableArraysContainer *tan2varContainers = tan2Var.getContainers;
+                for (i=0; i<model.numberOfNodes; i++) {
+                    k = self.boundaryReorder[i];
+                    if (k >= 0) {
+                        for (l=0; l<tan1Var.dofs; l++) {
+                            tan1varContainers->Values[tan1Var.dofs*tan1varContainers->Perm[i]+l] = self.boundaryTangent1[k][l];
+                            tan2varContainers->Values[tan2Var.dofs*tan2varContainers->Perm[i]+l] = self.boundaryTangent2[k][l];
+                        }
+                    }
+                }
+            }
+            if (lhsTangent != NULL) free(lhsTangent);
+            if (rhsTangent != NULL) free(rhsTangent);
         }
     }
     free_dvector(elementNodes->x, 0, model.maxElementNodes-1);
@@ -3048,14 +3200,16 @@ static dispatch_once_t onceToken;
     }
 }
 
-/*************************************************************************
+/***********************************************************************************************
  
     Initialize matrix structure and vector to zero intial value
  
     (FEMMatrix *)matrix    ->  Matrix to be initialized
     (double *)forceVector  ->  Vector to be initialized
  
-*************************************************************************/
+     Method corresponds partially to Elmer from git on October 27 2015 (but not completed yet)
+ 
+***********************************************************************************************/
 -(void)initializeToZeroMatrix:(FEMMatrix * __nonnull)matrix forceVector:(double * __nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution {
     
     int i, dim;
@@ -3102,9 +3256,36 @@ static dispatch_once_t onceToken;
         [self.normalTangentialName appendString:[solution.variable canonicalizeName]];
     }
     
-    dim = model.dimension;
-    [self FEMCore_checkNormalTangentialBoundaryModel:model variableName:self.normalTangentialName dimension:dim];
-    [self FEMCore_averageBoundaryNormalsModel:model variableName:self.normalTangentialName dimension:dim];
+    FEMListUtilities *listUtilities = [[FEMListUtilities alloc] init];
+    
+    BOOL anyNT = [listUtilities listGetLogicalAnyBoundaryCondition:model name:self.normalTangentialName];
+    BOOL anyProj = [listUtilities listGetLogicalAnyBoundaryCondition:model name:@"mortar bc nonlinear"];
+    if (!(anyNT == YES || anyProj == YES)) return;
+    
+    BOOL doDisplaceMesh = NO;
+    if (solution.solutionInfo[@"displace mesh at init"] != nil) {
+        doDisplaceMesh = [solution.solutionInfo[@"displace mesh at init"] boolValue];
+        if (doDisplaceMesh == YES) {
+            fprintf(stdout, "FEMCore:initializeToZeroMatrix: displacing mesh for nonlinear projectors.\n");
+            // TODO: implement this, until then we fatal if we happen to reach here
+            fatal("FEMCore:initializeToZeroMatrix: displacement mesh not supported yet.");
+        }
+    }
+    
+    if (anyNT == YES) {
+        dim = model.dimension;
+        [self FEMCore_checkNormalTangentialBoundaryModel:model variableName:self.normalTangentialName dimension:dim];
+        [self FEMCore_averageBoundaryNormalsModel:model solution:solution variableName:self.normalTangentialName dimension:dim];
+    }
+    
+    if (anyProj == YES) {
+        // TODO: implement this, until then we fatal if we happen to reach here
+        fatal("FEMCore:initializeToZeroMatrix: mortar projector not supported yet.");
+    }
+    
+    if (doDisplaceMesh == YES) {
+         // TODO: implement this
+    }
 }
 
 /*******************************************************************************

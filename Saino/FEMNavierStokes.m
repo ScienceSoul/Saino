@@ -1097,7 +1097,6 @@
         }
         
         alpha = cblas_ddot(n, nodalAlpha, 1, basis, 1);
-        
         massFlux = 0.0;
         for (i=0; i<n; i++) {
             massFlux = massFlux + loadVector[3][i] * basis[i];

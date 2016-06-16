@@ -55,6 +55,7 @@
 
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
+-(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
 
 -(void)checkTimer:(NSString * __nonnull)timerName deleteTimer:(BOOL * __nullable)deleteTimer resetTimer:(BOOL * __nullable)resetTimer model:(FEMModel * __nonnull)model;
 -(void)resetTimer:(NSString * __nonnull)timerName model:(FEMModel * __nonnull)model;

@@ -200,8 +200,10 @@ static dispatch_once_t onceToken;
 }
 
 /*************************************************************************************
+ 
     Gets a real valued parameter in each node of an element.
-************************************************************************************/
+ 
+*************************************************************************************/
 -(BOOL)listGetReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
 
     int i, j, k;
@@ -313,12 +315,14 @@ static dispatch_once_t onceToken;
 }
 
 /*************************************************************************
+ 
     Gets a real valued parameter in one single point with value x.
     Note that this uses same logical in MDF as ListGetReal
     but the variable is just a dummy as the dependent function is
     assumed to be set inside the code. This should be used with caution
     is it sets some confusing limitations to the user.
-**************************************************************************/
+ 
+*************************************************************************/
 -(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
     
     double f, t[1];
@@ -383,7 +387,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Gets a real array from the list by its name
+ 
 **********************************************************************************/
 -(BOOL)listGetRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result {
 
@@ -493,7 +499,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Gets a constant real from the list by its name
+ 
 **********************************************************************************/
 -(double)listGetConstReal:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
 
@@ -547,7 +555,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Gets a constant real array from the list by its name
+ 
 **********************************************************************************/
 -(BOOL)listGetConstRealArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
 
@@ -599,7 +609,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Gets an integer array from the list by its name
+ 
 **********************************************************************************/
 -(BOOL)listGetIntegerArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
     
@@ -741,10 +753,12 @@ static dispatch_once_t onceToken;
 }
 
 /*******************************************************************************
+ 
     Finds an entry in the list by its name and returns a handle to it.
     This one just finds a keyword with the same start as specified by 'prefix'.
     
     Method corresponds to Elmer from git on October 27 2015
+ 
 *******************************************************************************/
 -(FEMValueList * __nullable)listFindPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array info:(BOOL * __nonnull)found {
     
@@ -797,11 +811,13 @@ static dispatch_once_t onceToken;
     return valueList;
 }
 
-/************************************************************
+/**************************************************************
+ 
     Just checks if a prefix is present in the list.
  
     Method corresponds to Elmer from git on October 27 2015
-************************************************************/
+ 
+**************************************************************/
 
 -(BOOL)listCheckPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array {
     
@@ -904,7 +920,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Adds a string to a given class list of values
+ 
 **********************************************************************************/
 -(void)addStringInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(NSString * __nonnull)value {
     
@@ -972,7 +990,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Adds a logical entry to a given class list of values
+ 
 **********************************************************************************/
 -(void)addLogicalInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(BOOL)value {
     
@@ -1039,7 +1059,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Adds an integer to a given class list of values
+ 
 **********************************************************************************/
 -(void)addIntegerInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(int * __nullable)value orUsingBlock:(double (^ __nullable)())block {
     
@@ -1121,7 +1143,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Adds an integer array to a given class list of values
+ 
 **********************************************************************************/
 -(void)addIntegerArrayInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValues:(int * __nullable)values size:(int)n orUsingBlock:(double (^ __nullable)())block {
     
@@ -1203,7 +1227,9 @@ static dispatch_once_t onceToken;
 }
 
 /**********************************************************************************
+ 
     Adds an constant real value to a given class list of values
+ 
 **********************************************************************************/
 -(void)addConstRealInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(double * __nullable)value orUsingBlock:(double (^ __nullable)())block string:(NSString * __nullable)str {
     
@@ -1450,7 +1476,9 @@ static dispatch_once_t onceToken;
 }
 
 /*****************************************************************************************
+ 
     Check if given element belongs to a body for which a given equation should be solved
+ 
 *****************************************************************************************/
 -(BOOL)checkElementEquation:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element andEquation:(NSString * __nonnull)equation {
     
@@ -1472,7 +1500,9 @@ static dispatch_once_t onceToken;
 }
 
 /*****************************************************************************
+ 
     Check if the keyword is present in any boundary condition
+ 
 *****************************************************************************/
 -(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
     
@@ -1488,7 +1518,9 @@ static dispatch_once_t onceToken;
 }
 
 /*****************************************************************************
+ 
     Check if the keyword is present in any body force
+ 
 *****************************************************************************/
 -(BOOL)listCheckPresentAnyBodyForce:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
     
@@ -1503,11 +1535,31 @@ static dispatch_once_t onceToken;
     return found;
 }
 
-/************************************************************
+/*****************************************************************************
+ 
+    Check if the keyword is YES in any boundary condition
+ 
+*****************************************************************************/
+-(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
+    
+    BOOL found, gotIt;
+    
+    found = NO;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        found = [self listGetLogical:model inArray:boundaryCondition.valuesList forVariable:name info:&gotIt];
+        if (found == YES) break;
+    }
+    
+    return found;
+}
+
+/**************************************************************
+ 
     Check current time of the timer
     
     Method corresponds to Elmer from git on October 27 2015
-************************************************************/
+ 
+**************************************************************/
 -(void)checkTimer:(NSString * __nonnull)timerName deleteTimer:(BOOL * __nullable)deleteTimer resetTimer:(BOOL * __nullable)resetTimer model:(FEMModel * __nonnull)model {
     
     if (_timerPassive == YES) return;
@@ -1547,11 +1599,13 @@ static dispatch_once_t onceToken;
 }
 
 /******************************************************************************
+ 
     A timer that uses a list structure to store the times making in
     generally applicable without any upper limit on the number of timers.
     This resets the timer.
  
     Method corresponds to Elmer from git on October 27 2015
+ 
 ******************************************************************************/
 -(void)resetTimer:(NSString * __nonnull)timerName model:(FEMModel * __nonnull)model {
     
@@ -1575,9 +1629,11 @@ static dispatch_once_t onceToken;
 }
 
 /*************************************************************
+ 
     Delete an existing timer
  
     Method corresponds to Elmer from git on October 27 2015
+ 
 *************************************************************/
 -(void)deletTimer:(NSString * __nonnull)timerName {
     
