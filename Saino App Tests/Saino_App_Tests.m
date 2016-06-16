@@ -173,6 +173,39 @@
     }
 }
 
+-(void)testISMIP_HOM_B010 {
+    int success;
+    double targetNorm = 11.5756923657;
+    
+    _targetEps = 1.0e-4;
+    
+    [_saino_view_controller press:[_saino_view viewWithTag: 5]]; // ISMIP-HOM B010
+    
+    if (self.testApp.ismip_hom_B010_allDone == YES) {
+        if (self.testApp.norm != -1.0) {
+            if (_targetEps < 0.0) {
+                if (targetNorm < self.testApp.norm) {
+                    success = 0;
+                } else
+                    success = -1;
+            } else if (2.0 * fabs(self.testApp.norm - targetNorm) / (self.testApp.norm + targetNorm) < _targetEps) success = 0;
+            else success = -1;
+        } else {
+            success = 0;
+        }
+        if (success != 0) {
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
+        } else {
+            fprintf(stdout, "ISMIP-HOM B010:   [Passed].\n");
+        }
+        XCTAssertTrue(success == 0, @"ISMIP-HOM B010:   [FAILED].\n");
+    } else {
+        XCTAssertTrue(self.testApp.ismip_hom_B010_allDone == YES, @"ISMIP-HOM B010: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+    }
+
+
+}
+
 -(void)testISMIP_HOM_A010_GPU {
     int success;
     double targetNorm = 9.8237320560;

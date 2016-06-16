@@ -1885,6 +1885,8 @@ jump:
         test.natural_convection_allDone = YES;
     } else if (test.do_ismip_hom_A010 == YES) {
         test.ismip_hom_A010_allDone = YES;
+    } else if (test.do_ismip_hom_B010 == YES) {
+        test.ismip_hom_B010_allDone = YES;
     } else if (test.do_ismip_hom_A010_gpu == YES) {
         test.ismip_hom_A010_gpu_allDone = YES;
     }

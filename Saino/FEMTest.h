@@ -15,11 +15,13 @@
 @property(nonatomic, assign) BOOL do_step_stokes;
 @property(nonatomic, assign) BOOL do_natural_convection;
 @property(nonatomic, assign) BOOL do_ismip_hom_A010;
+@property(nonatomic, assign) BOOL do_ismip_hom_B010;
 @property(nonatomic, assign) BOOL do_ismip_hom_A010_gpu;
 @property(nonatomic, assign) BOOL heatq_allDone;
 @property(nonatomic, assign) BOOL step_stokes_allDone;
 @property(nonatomic, assign) BOOL natural_convection_allDone;
 @property(nonatomic, assign) BOOL ismip_hom_A010_allDone;
+@property(nonatomic, assign) BOOL ismip_hom_B010_allDone;
 @property(nonatomic, assign) BOOL ismip_hom_A010_gpu_allDone;
 @property(nonatomic, assign) double norm;
 
@@ -32,6 +34,7 @@
 -(void)setUpStepStokesTest:(id __nonnull)model;
 -(void)setUpNaturalConvectionTest:(id __nonnull)model;
 -(void)setUpISMIP_HOM_A010Test:(id __nonnull)model;
+-(void)setUpISMIP_HOM_B010Test:(id __nonnull)model;
 -(void)setUpISMIP_HOM_A010Test_GPU:(id __nonnull)model;
 
 @end
