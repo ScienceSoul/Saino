@@ -654,7 +654,7 @@
             
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
-                s = s + coeff[i] * pow(u, p[i]);
+                s = s + coeff[i] * pow(u, (double)p[i]);
             }
             y = y + s * x[n];
         }
@@ -1603,7 +1603,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (p[i] >= 1) {
-                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1));
+                    s = s + p[i] * coeff[i] * pow(u, (double)(p[i]-1));
                 }
             }
             y = y + s * x[n];
@@ -1643,7 +1643,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (p[i] >= 1) {
-                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1)) * pow(v, q[i]);
+                    s = s + p[i] * coeff[i] * pow(u, (double)(p[i]-1)) * pow(v, (double)q[i]);
                 }
             }
             y = y + s * x[n];
@@ -1683,7 +1683,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (q[i] >= 1) {
-                    s = s + q[i] * coeff[i] * pow(u, p[i]) * pow(v, (q[i]-1));
+                    s = s + q[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)(q[i]-1));
                 }
             }
             y = y + s * x[n];
@@ -1762,7 +1762,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (p[i] >= 1) {
-                    s = s + p[i] * coeff[i] * pow(u, (p[i]-1.0)) * pow(v, q[i]) * pow(w, r[i]);
+                    s = s + p[i] * coeff[i] * pow(u, (double)(p[i]-1.0)) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
                 }
             }
             y = y + s * x[n];
@@ -1841,7 +1841,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (q[i] >= 1) {
-                    s = s + q[i] * coeff[i] * pow(u, p[i]) * pow(v, (q[i]-1.0)) * pow(w, r[i]);
+                    s = s + q[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)(q[i]-1.0)) * pow(w, (double)r[i]);
                 }
             }
             y = y + s * x[n];
@@ -1926,7 +1926,7 @@ static dispatch_once_t onceToken;
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
                 if (r[i] >= 1) {
-                    s = s + r[i] * coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, (r[i]-1.0));
+                    s = s + r[i] * coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)(r[i]-1.0));
                 }
             }
             y = y + s * x[n];
@@ -2389,7 +2389,7 @@ static dispatch_once_t onceToken;
             
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
-                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]);
+                s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]);
             }
             y = y + s * x[n];
         }
@@ -2461,7 +2461,7 @@ static dispatch_once_t onceToken;
             
             s = 0.0;
             for (i=0; i<element->Type.BasisFunctions[n].n; i++) {
-                s = s + coeff[i] * pow(u, p[i]) * pow(v, q[i]) * pow(w, r[i]);
+                s = s + coeff[i] * pow(u, (double)p[i]) * pow(v, (double)q[i]) * pow(w, (double)r[i]);
             }
             y = y + s * x[n];
         }

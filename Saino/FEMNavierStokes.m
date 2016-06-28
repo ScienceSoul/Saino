@@ -1087,6 +1087,7 @@
         // Add to load: given force in normal direction
         BOOL check = YES;
         [elementDescription normalVectorForBDElement:element boundaryNodes:nodes mesh:mesh paraU:&u paraV:&v check:&check normals:normals];
+        
         alpha = cblas_ddot(n, nodalExtPressure, 1, basis, 1);
         if (normalTangential == YES) {
             force[0] = force[0] + alpha;

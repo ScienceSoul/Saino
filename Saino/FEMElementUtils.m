@@ -33,7 +33,7 @@
     matrix is flexible since it can account for any entries. Also constraints and periodic BCs may give rise to 
     entries in the list matrix topology.
  
-    Method corresponds partially to Elmer from git on October 27 2015
+    Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************************************************************************/
 -(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {
@@ -383,7 +383,7 @@
  
     Creates and return a matrix
  
-    Method corresponds partially to Elmer from git on October 27 2015
+    Method corresponds to Elmer from git on October 27 2015
  
 ********************************************************************************************/
 -(FEMMatrix * __nonnull)createMatrixInModel:(FEMModel * __nonnull)model forSolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh dofs:(int)dofs permutation:(int * __nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * __nullable)equation discontinuousGalerkinSolution:(BOOL * __nullable)dgSolution globalBubbles:(BOOL * __nullable)gbBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {

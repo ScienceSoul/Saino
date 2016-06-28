@@ -206,11 +206,40 @@
 
 }
 
+-(void)testISMIP_HOM_C010 {
+    int success;
+    double targetNorm = 9.1726234962;
+    
+    [_saino_view_controller press:[_saino_view viewWithTag: 6]]; // ISMIP-HOM C010
+    
+    if (self.testApp.ismip_hom_C010_allDone == YES) {
+        if (self.testApp.norm != -1.0) {
+            if (_targetEps < 0.0) {
+                if (targetNorm < self.testApp.norm) {
+                    success = 0;
+                } else
+                    success = -1;
+            } else if (2.0 * fabs(self.testApp.norm - targetNorm) / (self.testApp.norm + targetNorm) < _targetEps) success = 0;
+            else success = -1;
+        } else {
+            success = 0;
+        }
+        if (success != 0) {
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
+        } else {
+            fprintf(stdout, "ISMIP-HOM C010:   [Passed].\n");
+        }
+        XCTAssertTrue(success == 0, @"ISMIP-HOM C010:   [FAILED].\n");
+    } else {
+        XCTAssertTrue(self.testApp.ismip_hom_C010_allDone == YES, @"ISMIP-HOM C010: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+    }
+}
+
 -(void)testISMIP_HOM_A010_GPU {
     int success;
     double targetNorm = 9.8237320560;
     
-    [_saino_view_controller press:[_saino_view viewWithTag: 8]]; // ISMIP-HOM A010 GPU
+    [_saino_view_controller press:[_saino_view viewWithTag: 7]]; // ISMIP-HOM A010 GPU
     
     if (self.testApp.ismip_hom_A010_gpu_allDone == YES) {
         if (self.testApp.norm != -1.0) {

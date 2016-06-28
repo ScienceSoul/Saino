@@ -520,6 +520,8 @@
         [test setUpISMIP_HOM_B010Test:self];
     } else if (test.do_ismip_hom_A010_gpu == YES) {
         [test setUpISMIP_HOM_A010Test_GPU:self];
+    } else if (test.do_ismip_hom_C010 == YES) {
+        [test setUpISMIP_HOM_C010Test:self];
     }
 #endif
     

@@ -415,19 +415,17 @@
 ******************************************/
 -(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model {
     
-    int i, j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
+    int j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
     double udot, parU, parV, *nrm, *t1, *t2, *vec, *tmp;
     BOOL found, ntBoundary, pointed=NO, check;
     listBuffer vector = { NULL, NULL, NULL, NULL, 0, 0, 0};
     listBuffer tensor = { NULL, NULL, NULL, NULL, 0, 0, 0};
     NSArray *bc;
-    NSString *str = nil;
-    NSMutableString *varName;
+    NSString *str, *varName;
     FEMVariable *vectVariable = nil;
     FEMSolution *solution = nil;
     FEMListUtilities *listUtilities;
     FEMMeshUtils *meshUtilities;
-    FEMElementUtils *elementUtils;
     Element_t *elements = NULL;
     Nodes_t *nodes = NULL;
     variableArraysContainer *variableContainers = NULL, *vectVarContainers = NULL;
@@ -450,6 +448,7 @@
     
     if (_initDirichlet == YES) {
         FEMElementDescription * elementDescription = [FEMElementDescription sharedElementDescription];
+        FEMElementUtils *elementUtils = [[FEMElementUtils alloc] init];
         nrm = doublevec(0, 2);
         t1 = doublevec(0, 2);
         t2 = doublevec(0, 2);
@@ -464,6 +463,7 @@
             for (t=mesh.numberOfBulkElements; t<mesh.numberOfBulkElements+mesh.numberOfBoundaryElements; t++) {
                 n = elements[t].Type.NumberOfNodes;
                 bc = [self.core getBoundaryCondition:model forElement:&elements[t]];
+                if (bc == nil) continue;
                 
                 for (FEMVariable *variable in mesh.variables) {
                     variableContainers = variable.getContainers;
@@ -483,8 +483,7 @@
                                 k = (int)(variable.name.length);
                                 vectDof = [variable.name characterAtIndex:k-1] - '0';
                                 if (vectDof >= 1 && vectDof <= 3) {
-                                    varName = [NSMutableString stringWithString:@"normal-tangential "];
-                                    [varName appendString:[variable.name substringToIndex:k-1]];
+                                    varName = [@"normal-tangential " stringByAppendingString:[variable.name substringToIndex:k-2]];
                                     ntBoundary = [listUtilities listGetLogical:model inArray:bc forVariable:varName info:&found];
                                     
                                     if (ntBoundary == YES) {
@@ -514,7 +513,7 @@
                                     }
                                     
                                     if (ntBoundary == YES) {
-                                        nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+                                        if (nodes == NULL) nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
                                         initNodes(nodes);
                                         [self.core getNodes:solution model:model inElement:&elements[t] resultNodes:nodes numberOfNodes:NULL mesh:nil];
                                         parU = 0.0;
@@ -527,7 +526,6 @@
                                                 t1[1] = -nrm[0];
                                                 break;
                                             case 2:
-                                                elementUtils = [[FEMElementUtils alloc] init];
                                                 [elementUtils tangentDirectionsForNormal:nrm tangent1:t1 tangent2:t2];
                                                 break;
                                         }
@@ -543,10 +541,6 @@
                                                 memcpy(vec, t2, 3*sizeof(double));
                                                 break;
                                         }
-                                        free_dvector(nodes->x, 0, nodes->numberOfNodes-1);
-                                        free_dvector(nodes->y, 0, nodes->numberOfNodes-1);
-                                        free_dvector(nodes->z, 0, nodes->numberOfNodes-1);
-                                        free(nodes);
                                     }
                                 }
                             }
@@ -556,16 +550,17 @@
                                 if (variableContainers->Perm != NULL) k = variableContainers->Perm[k];
                                 if (k >= 0) {
                                     if (ntBoundary == YES) {
+                                        vectVarContainers = vectVariable.getContainers;
                                         for (l=0; l<dim; l++) {
-                                            m = l + realDof - (--vectDof);
+                                            m = l + realDof - (vectDof - 1);
                                             tmp[l] = vectVarContainers->Values[vectVariable.dofs*k+m];
                                         }
                                         udot = cblas_ddot(dim, vec, 1, tmp, 1);
-                                        for (i=0; i<dim; i++) {
-                                            tmp[i] = tmp[i]+(vector.vector[j]-udot)*vec[i];
+                                        for (l=0; l<dim; l++) {
+                                            tmp[l] = tmp[l]+(vector.vector[j]-udot)*vec[l];
                                         }
                                         for (l=0; l<dim; l++) {
-                                            m = l + realDof - (--vectDof);
+                                            m = l + realDof - (vectDof - 1);
                                             vectVarContainers->Values[vectVariable.dofs*k+m] = tmp[l];
                                         }
                                     } else {
@@ -580,8 +575,7 @@
                         }
                         
                         if (_transient == YES && solution.timeOrder == 2) {
-                            varName = [NSMutableString stringWithString:variable.name];
-                            [varName appendString:@" velocity"];
+                            varName = [variable.name stringByAppendingString:@" velocity"];
                             found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&vector listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
@@ -590,9 +584,7 @@
                                     if (k >= 0) variableContainers->PrevValues[k][0] = vector.vector[j];
                                 }
                             }
-                            
-                            varName = [NSMutableString stringWithString:variable.name];
-                            [varName appendString:@" acceleration"];
+                            varName = [variable.name stringByAppendingString:@" acceleration"];
                             found = [self.core getReal:model forElement:&elements[t] inArray:bc variableName:varName buffer:&vector listUtilities:listUtilities];
                             if (found == YES) {
                                 for (j=0; j<n; j++) {
@@ -624,6 +616,19 @@
         free_dvector(t2, 0, 2);
         free_dvector(vec, 0, 2);
         free_dvector(tmp, 0, 2);
+        
+        if (nodes != NULL) {
+            if (nodes->x != NULL) {
+                free_dvector(nodes->x, 0, nodes->numberOfNodes-1);
+            }
+            if (nodes->y != NULL) {
+                free_dvector(nodes->y, 0, nodes->numberOfNodes-1);
+            }
+            if (nodes->z != NULL) {
+                free_dvector(nodes->z, 0, nodes->numberOfNodes-1);
+            }
+            free(nodes);
+        }
     }
     
     if (vector.vector != NULL) free_dvector(vector.vector, 0, vector.m-1);
@@ -1889,6 +1894,8 @@ jump:
         test.ismip_hom_B010_allDone = YES;
     } else if (test.do_ismip_hom_A010_gpu == YES) {
         test.ismip_hom_A010_gpu_allDone = YES;
+    } else if (test.do_ismip_hom_C010 == YES) {
+        test.ismip_hom_C010_allDone = YES;
     }
 #endif
 }

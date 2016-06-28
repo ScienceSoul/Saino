@@ -238,7 +238,6 @@ static const int PRECOND_VANKA     =  560;
         vec[0] = self.boundaryNormals[k][0]*bu + self.boundaryNormals[k][1]*bv;
         vec[1] = -self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
     } else {
-        
         bu = vec[0];
         bv = vec[1];
         bw = vec[2];
@@ -271,17 +270,15 @@ static const int PRECOND_VANKA     =  560;
         if (j < 0) continue;
         
         if (dim < 3) {
+            bu = solution[ndofs*j];
+            bv = solution[ndofs*j+1];
             
-            bu = solution[(ndofs*j)];
-            bv = solution[(ndofs*j+1)];
-            
-            solution[(ndofs*j)] = self.boundaryNormals[k][0]*bu - self.boundaryNormals[k][1]*bv;
-            solution[(ndofs*j+1)] = self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
+            solution[ndofs*j]   = self.boundaryNormals[k][0]*bu - self.boundaryNormals[k][1]*bv;
+            solution[ndofs*j+1] = self.boundaryNormals[k][1]*bu + self.boundaryNormals[k][0]*bv;
         } else {
-                        
-            bu = solution[(ndofs*j)];
-            bv = solution[(ndofs*j+1)];
-            bw = solution[(ndofs*j+2)];
+            bu = solution[ndofs*j];
+            bv = solution[ndofs*j+1];
+            bw = solution[ndofs*j+2];
             
             for (l=0; l<3; l++) {
                 rm[0][l] = self.boundaryNormals[k][l];
@@ -289,9 +286,9 @@ static const int PRECOND_VANKA     =  560;
                 rm[2][l] = self.boundaryTangent2[k][l];
             }
             
-            solution[(ndofs*j)] = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
-            solution[(ndofs*j+1)] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
-            solution[(ndofs*j+2)] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
+            solution[ndofs*j]   = rm[0][0]*bu + rm[1][0]*bv + rm[2][0]*bw;
+            solution[ndofs*j+1] = rm[0][1]*bu + rm[1][1]*bv + rm[2][1]*bw;
+            solution[ndofs*j+2] = rm[0][2]*bu + rm[1][2]*bv + rm[2][2]*bw;
         }
     }
 }
@@ -981,7 +978,7 @@ static const int PRECOND_VANKA     =  560;
         nrm = doublevec(0, 2);
         lrnm = doublevec(0, 2);
         
-        if (_normalTangentialNumberOfNodes > 0) {
+        if (self.normalTangentialNumberOfNodes > 0) {
             memset( *self.boundaryNormals, 0.0, (self.size1boundaryNormals*self.size2boundaryNormals)*sizeof(double) );
             for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
                 if (elements[t].Type.ElementCode < 200) continue;
@@ -1246,13 +1243,13 @@ static const int PRECOND_VANKA     =  560;
                         buffer1[j] = self.boundaryNormals[k][j];
                     }
                     [elementUtils tangentDirectionsForNormal:buffer1 tangent1:buffer2 tangent2:buffer3];
-                    for (j=0; j<self.size2boundaryNormals; j++) {
+                    for (j=0; j<self.size2boundaryTangent1; j++) {
                         self.boundaryTangent1[k][j] = buffer2[j];
                         self.boundaryTangent2[k][j] = buffer3[j];
                     }
                     if (lhsSystem == YES) {
                         if (lhsTangent[i] == YES) {
-                            for (j=0; j<self.size2boundaryNormals; j++) {
+                            for (j=0; j<self.size2boundaryTangent2; j++) {
                                 self.boundaryTangent2[k][j] = -self.boundaryTangent2[k][j];
                             }
                         }
@@ -1315,6 +1312,7 @@ static const int PRECOND_VANKA     =  560;
             if (rhsTangent != NULL) free(rhsTangent);
         }
     }
+
     free_dvector(elementNodes->x, 0, model.maxElementNodes-1);
     free_dvector(elementNodes->y, 0, model.maxElementNodes-1);
     free_dvector(elementNodes->z, 0, model.maxElementNodes-1);
@@ -1331,7 +1329,7 @@ static const int PRECOND_VANKA     =  560;
     
     for (i=0; i<n; i++) {
         
-        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 >= _size1boundaryNormals) continue;
+        if (nodeIndexes[i] < 0 || nodeIndexes[i]+1 > _size1boundaryNormals) continue;
         
         memset( *r, 0.0, ((n*dofs)*(n*dofs))*sizeof(double) );
         for (j=0; j<n*dofs; j++) {
@@ -1358,15 +1356,15 @@ static const int PRECOND_VANKA     =  560;
                     t2[j] = _boundaryTangent2[nodeIndexes[i]][j];
                 }
                 
-                r[dofs*i][dofs*i] = n1[0];
+                r[dofs*i][dofs*i]   = n1[0];
                 r[dofs*i][dofs*i+1] = n1[1];
                 r[dofs*i][dofs*i+2] = n1[2];
                 
-                r[dofs*i+1][dofs*i] = t1[0];
+                r[dofs*i+1][dofs*i]   = t1[0];
                 r[dofs*i+1][dofs*i+1] = t1[1];
                 r[dofs*i+1][dofs*i+2] = t1[2];
                 
-                r[dofs*i+2][dofs*i] = t2[0];
+                r[dofs*i+2][dofs*i]   = t2[0];
                 r[dofs*i+2][dofs*i+1] = t2[1];
                 r[dofs*i+2][dofs*i+2] = t2[2];
                 break;
@@ -1599,9 +1597,14 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Element and point values
 
+/****************************************************************************
+ 
+    Method corresponds mostly to Elmer from git on October 27 2015
+ 
+****************************************************************************/
 -(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal {
     
-    int i, j, k, l, m, dim, k1;
+    int i, j, k, l, m, dim, k1, kmax, lmax;
     BOOL checkNT, stat, all;
     double *rotvec;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
@@ -1652,7 +1655,7 @@ static const int PRECOND_VANKA     =  560;
                 }
             }
             if (all == YES) checkNT = NO;
-            if ([listUtil listGetLogical:model inArray:values forVariable:solution.normalTangentialName info:&stat] == YES) checkNT = NO;
+            if ([listUtil listGetLogical:model inArray:values forVariable:self.normalTangentialName info:&stat] == YES) checkNT = NO;
         }
         
         for (j=0; j<n; j++) {
@@ -1669,17 +1672,28 @@ static const int PRECOND_VANKA     =  560;
                             memset( rotvec, 0.0, 3*sizeof(double) );
                             rotvec[dof] = 1.0;
                             [self FEMCore_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
-                            for (k=0; k<dim; k++) {
-                                if (fabs(rotvec[k]) > 1.0e-8) {
-                                    if (self.ntElement[m][k] == elno) {
+                            
+                            // When cartesian component "DOF" is defined, set the N-T component
+                            // closest to its direction
+                            kmax = 0;
+                            for (k=1; k<dim; k++) {
+                                if (fabs(rotvec[k]) > fabs(rotvec[kmax])) kmax = k;
+                            }
+                            
+                            lmax = solution.variable.dofs * varContainers->Perm[indexes[j]] + kmax;
+                            if (self.ntZeroingDone[m][kmax] == false) {
+                                matContainers->RHS[lmax] = 0.0;
+                                [self zeroTheNumberOfRows:lmax inSolutionMatrix:solution];
+                                self.ntZeroingDone[m][kmax] = true;
+                                if (offDiaginal == NO) matContainers->RHS[lmax] = matContainers->RHS[lmax] +
+                                                       work.vector[j]/diagScaling[lmax];
+                                
+                                // Consider all components of the Cartesian vector mapped to the
+                                // N-T coordinate system. Should this perhaps have scaling included?
+                                if (offDiaginal == NO) {
+                                    for (k=0; k<dim; k++) {
                                         l = solution.variable.dofs * varContainers->Perm[indexes[j]] + k;
-                                        if (self.ntZeroingDone[m][k] == false) {
-                                            matContainers->RHS[l] = 0.0;
-                                            [self zeroTheNumberOfRows:l inSolutionMatrix:solution];
-                                            if (offDiaginal == NO) [self setMatrixElementForSolution:solution atIndex:l andIndex:l value:1.0];
-                                            self.ntZeroingDone[m][k] = true;
-                                        }
-                                        if (offDiaginal == NO) matContainers->RHS[l] = matContainers->RHS[l] + rotvec[k] * work.vector[j]/diagScaling[l];
+                                        [self setMatrixElementForSolution:solution atIndex:lmax andIndex:l value:rotvec[k]];
                                     }
                                 }
                             }
@@ -1693,6 +1707,7 @@ static const int PRECOND_VANKA     =  560;
                                 [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
                             } else {
                                 [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                                // Add support for parallel run
                                 if (offDiaginal == NO) {
                                     [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
                                     matContainers->RHS[k] = work.vector[j]/diagScaling[k];
@@ -2034,7 +2049,7 @@ static const int PRECOND_VANKA     =  560;
     The permutation (node reordoring info) is contained in the class solution and has been generated at the
     beginning of the simulation by the bandwidth optimization
  
-    Method corresponds partially to Elmer from git on October 27 2015 (but not entirely completed yet)
+    Method corresponds to Elmer from git on October 27 2015 (but not entirely completed yet)
  
 *****************************************************************************************************************/
 -(void)FEMCore_setPeriodicBoundariesPass2Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling {
@@ -3207,7 +3222,7 @@ static dispatch_once_t onceToken;
     (FEMMatrix *)matrix    ->  Matrix to be initialized
     (double *)forceVector  ->  Vector to be initialized
  
-     Method corresponds partially to Elmer from git on October 27 2015 (but not completed yet)
+     Method corresponds to Elmer from git on October 27 2015 (but not completed yet)
  
 ***********************************************************************************************/
 -(void)initializeToZeroMatrix:(FEMMatrix * __nonnull)matrix forceVector:(double * __nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution {
@@ -4347,10 +4362,12 @@ static dispatch_once_t onceToken;
  
     Check n-t node setting element
  
+    Method corresponds to Elmer from git on October 27 2015
+ 
 ********************************************************************************************************************/
 -(void)checkNormalTangential:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int * __nonnull)indexes atBoundary:(int)bc variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset {
     
-    int i, j, k, m, dim;
+    int i, j, k, m, dim, kmax;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     double *rotvec;
     BOOL stat, all;
@@ -4382,7 +4399,7 @@ static dispatch_once_t onceToken;
     
     FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
     if ([listUtil listCheckPresentVariable:name inArray:boundaryConditionAtId.valuesList] == NO) return;
-    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:solution.normalTangentialName info:&stat] == YES) return;
+    if ([listUtil listGetLogical:model inArray:boundaryConditionAtId.valuesList forVariable:self.normalTangentialName info:&stat] == YES) return;
     
     if (conditional == YES) {
         stat = [listUtil listGetReal:model inArray:boundaryConditionAtId.valuesList forVariable:condName numberOfNodes:n indexes:indexes buffer:&condition minValue:NULL maxValue:NULL];
@@ -4400,9 +4417,11 @@ static dispatch_once_t onceToken;
                 memset( rotvec, 0.0, 3*sizeof(double) );
                 rotvec[dof] = 1.0;
                 [self FEMCore_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
+                kmax = 0;
                 for (k=0; k<dim; k++) {
-                    if (fabs(rotvec[k]) > 1.0e-8) self.ntElement[m][k] = elno;
+                    if (fabs(rotvec[k]) > fabs(rotvec[kmax])) kmax = k;
                 }
+                self.ntElement[m][kmax] = elno;
             }
         }
     }
@@ -6982,14 +7001,15 @@ static dispatch_once_t onceToken;
         rotate = *rotateNT;
     }
     
-    if (rotate == YES && _normalTangentialNumberOfNodes > 0) {
-        dim = model.dimension;
+    dim = model.dimension;
+    if (rotate == YES && _normalTangentialNumberOfNodes > 0 && dofs>=dim) {
         memset( indexes, -1, sizeof(indexes) );
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
         rotateMatrixIMP(self, @selector(FEMCore_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:), localStiffMatrix, solution, localForce, n, dim, dofs, indexes);
     }
+
     
     switch (solution.matrix.format) {
         case MATRIX_CRS:
@@ -7037,6 +7057,8 @@ static dispatch_once_t onceToken;
             [self methodForSelector: @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:)];
         }
     });
+    
+    // TODO: add support for parallel run
     
     memset( _indexStore, -1, _sizeIndexStore*sizeof(int) );
     n = getElementDofsIMP(self, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, _indexStore, NULL);

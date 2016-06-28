@@ -665,51 +665,6 @@
                             <color key="backgroundColor" red="0.86420660999999999" green="1" blue="0.46303802999999999" alpha="1" colorSpace="calibratedRGB"/>
                         </textFieldCell>
                     </textField>
-                    <box title="Ice:" borderType="line" id="8oj-Nl-9my">
-                        <rect key="frame" x="17" y="125" width="440" height="106"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <view key="contentView" id="W8e-4a-iVB">
-                            <rect key="frame" x="1" y="1" width="438" height="90"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <button verticalHuggingPriority="750" tag="4" id="pEk-AW-Yyk">
-                                    <rect key="frame" x="14" y="42" width="132" height="32"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="ISMIP-A010" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="zdg-JG-aQA">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="system"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="press:" target="533" id="gR6-UK-vrM"/>
-                                    </connections>
-                                </button>
-                                <button verticalHuggingPriority="750" tag="8" id="b2q-mV-3bo">
-                                    <rect key="frame" x="9" y="14" width="143" height="32"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="ISMIP-A010 GPU" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ofU-oa-Tp9">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="system"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="press:" target="533" id="DOU-Is-RIr"/>
-                                    </connections>
-                                </button>
-                                <button verticalHuggingPriority="750" tag="5" id="7VU-gh-9Yt">
-                                    <rect key="frame" x="146" y="42" width="132" height="32"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="ISMIP-B010" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="vtM-9J-e3t">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="system"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="press:" target="533" id="OSH-08-rn8"/>
-                                    </connections>
-                                </button>
-                            </subviews>
-                        </view>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                    </box>
                     <box title="General:" borderType="line" id="mAn-gg-YE1">
                         <rect key="frame" x="17" y="244" width="440" height="73"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -750,6 +705,62 @@
                                     </buttonCell>
                                     <connections>
                                         <action selector="press:" target="533" id="554"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </view>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    </box>
+                    <box title="Ice:" borderType="line" id="8oj-Nl-9my">
+                        <rect key="frame" x="17" y="125" width="440" height="106"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <view key="contentView" id="W8e-4a-iVB">
+                            <rect key="frame" x="1" y="1" width="438" height="90"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <button verticalHuggingPriority="750" tag="4" id="pEk-AW-Yyk">
+                                    <rect key="frame" x="2" y="42" width="143" height="32"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="ISMIP-A010" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="zdg-JG-aQA">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="press:" target="533" id="gR6-UK-vrM"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" tag="5" id="7VU-gh-9Yt">
+                                    <rect key="frame" x="145" y="42" width="145" height="32"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="ISMIP-B010" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="vtM-9J-e3t">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="press:" target="533" id="OSH-08-rn8"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" tag="6" id="m4j-dy-0ex">
+                                    <rect key="frame" x="290" y="42" width="143" height="32"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="ISMIP-C010" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="pas-0T-sXB">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="press:" target="533" id="PsX-KQ-GTi"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" tag="7" id="b2q-mV-3bo">
+                                    <rect key="frame" x="2" y="9" width="143" height="32"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="ISMIP-A010 GPU" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ofU-oa-Tp9">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="press:" target="533" id="DOU-Is-RIr"/>
                                     </connections>
                                 </button>
                             </subviews>
