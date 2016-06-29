@@ -72,7 +72,7 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
 
 // Rotate matrix
--(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix solution:(FEMSolution * __nonnull)solution vector:(double * __nonnull)vector size:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes;
+-(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix vector:(double * __nonnull)vector rows:(int * __nonnull)rows cols:(int * __nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes;
 
 // Update global force
 -(void)FEMCore_updateGlobalForceModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element forceVector:(double * __nonnull * __nonnull)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double * __nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rotateNT:(BOOL * __nullable)rotateNT;
@@ -1323,10 +1323,14 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Manipulate matrix
 
--(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix solution:(FEMSolution * __nonnull)solution vector:(double * __nonnull)vector size:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes {
+-(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix vector:(double * __nonnull)vector rows:(int * __nonnull)rows cols:(int * __nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes {
     
-    int i, j, k, l;
-    double s, r[n*dofs][n*dofs], q[n*dofs][n*dofs], n1[3], t1[3], t2[3];
+    int i, j;
+    double n1[3], r[n*dofs][n*dofs], q[n*dofs][n*dofs], t1[3], t2[3], vect[n*dofs];
+    
+    memset(*r, 0.0, (n*dofs)*(n*dofs)*sizeof(double));
+    memset(*q, 0.0, (n*dofs)*(n*dofs)*sizeof(double));
+    memset(vect, 0.0, sizeof(vect));
     
     for (i=0; i<n; i++) {
         
@@ -1371,37 +1375,13 @@ static const int PRECOND_VANKA     =  560;
                 break;
         }
         
-        for (j=0; j<n*dofs; j++) {
-            for (k=0; k<n*dofs; k++) {
-                s = 0.0;
-                for (l=0; l<n*dofs; l++) {
-                    s = s + r[j][l] * matrix[l][k];
-                }
-                q[j][k] = s;
-            }
-        }
+        // Compute the matrix rotation R*M*Trans(R)
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, n*dofs, n*dofs, n*dofs, 1.0, (double *)r, n*dofs, *matrix, *cols, 0.0, (double *)q, n*dofs);
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, n*dofs, n*dofs, n*dofs, 1.0, (double *)q, n*dofs, (double *)r, n*dofs, 0.0, *matrix, *cols);
         
-        for (j=0; j<n*dofs; j++) {
-            for (k=0; k<n*dofs; k++) {
-                s = 0.0;
-                for (l=0; l<n*dofs; l++) {
-                    s = s + q[j][l] * r[k][l];
-                }
-                matrix[j][k] = s;
-            }
-        }
-        
-        for (j=0; j<n*dofs; j++) {
-            s = 0.0;
-            for (k=0; k<n*dofs; k++) {
-                s = s + r[j][k] * vector[k];
-            }
-            q[j][0] = s;
-        }
-        
-        for (j=0; j<n*dofs; j++) {
-            vector[j] = q[j][0];
-        }
+        // Compute the vector rotation R*V
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, n*dofs, n*dofs, 1.0, (double *)r, n*dofs, vector, 1, 0.0, vect, 1);
+        memcpy(vector, vect, sizeof(vect));
     }
 }
 
@@ -1424,7 +1404,8 @@ static const int PRECOND_VANKA     =  560;
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
-        [self FEMCore_rotateMatrix:localStiffMatrix solution:solution vector:localForce size:n dimension:dim dofs:dofs nodeIndexes:indexes];
+        int rows = n*dofs;
+        [self FEMCore_rotateMatrix:localStiffMatrix vector:localForce rows:&rows cols:&rows numberOfNodes:n dimension:dim dofs:dofs nodeIndexes:indexes];
         free_dmatrix(localStiffMatrix, 0, (n*dofs)-1, 0, (n*dofs)-1);
     }
     
@@ -6923,7 +6904,7 @@ static dispatch_once_t onceToken;
     BOOL rotate;
     
     static BOOL (*checkPassiveElementIMP)(id, SEL, Element_t *, FEMModel *, FEMSolution *) = nil;
-    static void (*rotateMatrixIMP)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*) = nil;
+    static void (*rotateMatrixIMP)(id, SEL, double **, double*, int*, int*, int, int, int, int*) = nil;
     static void (*crsGlueLocalMatrixInGlobalIMP)(id, SEL, double **, FEMSolution *, int, int, int*) = nil;
     static void (*bandGlueLocalMatrixInGlobalIMP)(id, SEL, double **, FEMSolution *, int, int, int*) = nil;
     static dispatch_once_t onceToken;
@@ -6933,8 +6914,8 @@ static dispatch_once_t onceToken;
             [self methodForSelector: @selector(FEMCore_checkPassiveElement:model:solution:)];
         }
         if (!rotateMatrixIMP) {
-            rotateMatrixIMP = (void (*)(id, SEL, double **, FEMSolution*, double*, int, int, int, int*))
-            [self methodForSelector: @selector(FEMCore_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:)];
+            rotateMatrixIMP = (void (*)(id, SEL, double **, double*, int*, int*, int, int, int, int*))
+            [self methodForSelector: @selector(FEMCore_rotateMatrix:vector:rows:cols:numberOfNodes:dimension:dofs:nodeIndexes:)];
         }
         if (!crsGlueLocalMatrixInGlobalIMP) {
             crsGlueLocalMatrixInGlobalIMP = (void (*)(id, SEL, double **, FEMSolution *, int, int, int*))
@@ -6960,10 +6941,9 @@ static dispatch_once_t onceToken;
         for (i=0; i<element->Type.NumberOfNodes; i++) {
             indexes[i] = _boundaryReorder[element->NodeIndexes[i]];
         }
-        rotateMatrixIMP(self, @selector(FEMCore_rotateMatrix:solution:vector:size:dimension:dofs:nodeIndexes:), localStiffMatrix, solution, localForce, n, dim, dofs, indexes);
+        rotateMatrixIMP(self, @selector(FEMCore_rotateMatrix:vector:rows:cols:numberOfNodes:dimension:dofs:nodeIndexes:), localStiffMatrix, localForce, rows, cols, n, dim, dofs, indexes);
     }
 
-    
     switch (solution.matrix.format) {
         case MATRIX_CRS:
             crsGlueLocalMatrixInGlobalIMP(crsMatrix, @selector(glueLocalMatrix:inGlobal:numberOfNodes:dofs:indexes:), localStiffMatrix, solution, n, dofs, nodeIndexes);
