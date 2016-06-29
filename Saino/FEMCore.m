@@ -81,12 +81,13 @@ static const int PRECOND_VANKA     =  560;
 -(void)FEMCore_finishAssemblyModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution forceVector:(double * __nonnull)forceVector sizeForceVector:(int)n;
 
 // Loads
+-(void)FEMCore_setNodalLoads:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * __nonnull)listUtilities;
 -(void)FEMCore_setElementLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes doneLoad:(BOOL * __nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling;
 -(void)FEMCore_setPointLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling;
 
 // Element and point values
--(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal;
--(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal;
+-(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
+-(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
 
 // Periodic
 -(void)FEMCore_setPeriodicBoundariesPass1Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling;
@@ -94,7 +95,7 @@ static const int PRECOND_VANKA     =  560;
 
 // Limiter
 -(void)FEMCore_determineSoftLimiterInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal;
+-(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * __nonnull)listUtilities crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
 
 // Rows equilibration
 -(void)FEMCore_rowEquilibrationMatrix:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)f parallel:(BOOL)parallel;
@@ -1485,6 +1486,211 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Loads
 
+/*****************************************************************************************************************
+ 
+ Sets nodal loads directly to the matrix structure. The intended use for this, is for example,
+ in multiphysics coupling where the nodal loads may have been computed by another solver.
+ 
+ FEMModel *model           -> class containing the model
+ FEMSolution *solution     -> solution class containing the matrix and variable
+ NSMutableString *name     -> name of the dof to be set
+ int dof                   -> the order number of the dof
+ 
+ The permutation (node reordoring info) is contained in the class solution and has been generated at the
+ beginning of the simulation by the bandwidth optimization
+ 
+ *****************************************************************************************************************/
+-(void)FEMCore_setNodalLoads:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+    
+    int i, j, n, bc, t, bf_id, noNodes=0, noDims=0;
+    int indexes[solution.mesh.maxElementDofs];
+    double minDist, dist, *diagScaling = NULL;
+    listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
+    BOOL anyActive;
+    Element_t *elements = NULL;
+    Nodes_t *globalNodes = NULL;
+    FEMBodyForce *bodyForceAtId;
+    NSString *loadName, *str;
+    matrixArraysContainer *matContainers = NULL;
+    variableArraysContainer *varContainers = NULL;
+    BOOL stat, nodesFound;
+    
+    matContainers = solution.matrix.getContainers;
+    varContainers = solution.variable.getContainers;
+    
+    loadName = [name stringByAppendingString:@" load"];
+    
+    fprintf(stdout, "setNodalLoads: checking load for: %s.\n", [name UTF8String]);
+    
+    n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
+    BOOL activePart[n];
+    BOOL activePartAll[n];
+    
+    elements = solution.mesh.getElements;
+    globalNodes = solution.mesh.getNodes;
+    
+    // Go through the boundaries
+    
+    diagScaling = matContainers->DiagScaling;
+    if (diagScaling == NULL) {
+        diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
+        for (i=0; i<solution.matrix.numberOfRows; i++) {
+            diagScaling[i] = 1.0;
+        }
+    }
+    
+    memset( activePart, NO, sizeof(activePart) );
+    memset( activePartAll, NO, sizeof(activePartAll) );
+    
+    str = [loadName stringByAppendingString:@" dofs"];
+    
+    bc = 0;
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        if ([listUtilities listCheckPresentVariable:@"target boundaries" inArray:boundaryCondition.valuesList] == NO) continue;
+        activePart[bc] = [listUtilities listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList];
+        activePartAll[bc] = [listUtilities listCheckPresentVariable:str inArray:boundaryCondition.valuesList];
+        bc++;
+    }
+    
+    anyActive = NO;
+    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
+        if (activePart[bc] == YES || activePartAll[bc] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+    if (anyActive == YES) {
+        fprintf(stdout, "setNodalLoads: settings nodals on boundaries: %s.\n", [name UTF8String]);
+        BOOL doneLoad[matContainers->sizeRHS/solution.variable.dofs];
+        memset( doneLoad, NO, sizeof(doneLoad) );
+        
+        bc = 0;
+        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+            if (activePart[bc] == NO && activePartAll[bc] == NO) {
+                bc++;
+                continue;
+            };
+            
+            for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
+                
+                if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
+                
+                if (activePart[bc] == YES) {
+                    n = elements[t].Type.NumberOfNodes;
+                    memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
+                } else {
+                    n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
+                }
+                
+                [self FEMCore_setElementLoadsModel:model solution:solution element:&elements[t] values:boundaryCondition.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
+            }
+            bc++;
+        }
+    }
+    
+    // Go though the nodal load conditions for the body force list
+    
+    memset( activePart, NO, sizeof(activePart) );
+    memset( activePartAll, NO, sizeof(activePartAll) );
+    
+    bf_id = 0;
+    for (FEMBodyForce *bodyForce in model.bodyForces) {
+        activePart[bf_id] = [listUtilities listCheckPresentVariable:loadName inArray:bodyForce.valuesList];
+        activePartAll[bf_id] = [listUtilities listCheckPresentVariable:str inArray:bodyForce.valuesList];
+        bf_id++;
+    }
+    
+    anyActive = NO;
+    for (bf_id=0; bf_id<model.numberOfBodyForces; bf_id++) {
+        if (activePart[bf_id] == YES || activePartAll[bf_id] == YES) {
+            anyActive = YES;
+            break;
+        }
+    }
+    
+    if (anyActive == YES) {
+        fprintf(stdout, "setNodalLoads: settings nodals on bulk: %s.\n", [name UTF8String]);
+        BOOL doneLoad[matContainers->sizeRHS/solution.variable.dofs];
+        memset( doneLoad, NO, sizeof(doneLoad) );
+        for (t=0; t<model.numberOfBulkElements; t++) {
+            
+            if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
+            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
+            
+            if (activePart[bf_id] == NO && activePartAll[bf_id] == NO) continue;
+            
+            
+            if (activePart[bf_id] == YES) {
+                n = elements[t].Type.NumberOfNodes;
+                memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
+            } else {
+                n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
+            }
+            
+            bodyForceAtId = (model.bodyForces)[bf_id];
+            [self FEMCore_setElementLoadsModel:model solution:solution element:&elements[t] values:bodyForceAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
+        }
+    }
+    
+    // Go through the point loads which are created on the fly
+    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
+        if ([listUtilities listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList] == NO) continue;
+        nodesFound = [listUtilities listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
+        
+        // At the first calling, the list of coordinates is transformed to list of nodes
+        if (nodesFound == NO) {
+            
+            stat = [listUtilities listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
+            
+            if (stat == YES) {
+                
+                noNodes = coordNodes.m;
+                noDims = coordNodes.n;
+                
+                if (noNodes > 0) {
+                    int inNodes[noNodes];
+                    for (j=0; j<noNodes; j++) {
+                        minDist = HUGE_VAL;
+                        for (i=0; i<model.numberOfNodes; i++) {
+                            if (varContainers->Perm[i] < 0) continue;
+                            
+                            dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
+                            if (noDims >= 2) dist = dist + pow((globalNodes->y[i]-coordNodes.matrix[j][1]), 2.0);
+                            if (noDims == 3) dist = dist + pow((globalNodes->z[i]-coordNodes.matrix[j][2]), 2.0);
+                            
+                            if (dist<minDist) {
+                                minDist = dist;
+                                inNodes[j] = i;
+                            }
+                        }
+                    }
+                    // Add the found nodes to the list values
+                    [listUtilities addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:noNodes orUsingBlock:nil];
+                    nodesFound = YES;
+                }
+            }
+        }
+        
+        if (coordNodes.matrix != NULL) {
+            free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
+        }
+        
+        if (nodesFound == YES) {
+            fprintf(stdout, "setNodalLoads: settings nodal nodals on target nodes: %s.\n", [name UTF8String]);
+            [listUtilities listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            n = nodeIndexes.m;
+            [self FEMCore_setPointLoadsModel:model solution:solution element:elements values:boundaryCondition.valuesList name:loadName indexes:nodeIndexes.ivector size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
+            if (nodeIndexes.ivector != NULL) {
+                free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
+            }
+        }
+    }
+    
+    if (diagScaling != matContainers->DiagScaling) free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
+}
+
 -(void)FEMCore_setElementLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes doneLoad:(BOOL * __nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling {
     
     int j, k, l, k1;
@@ -1602,7 +1808,7 @@ static const int PRECOND_VANKA     =  560;
     Method corresponds mostly to Elmer from git on October 27 2015
  
 ****************************************************************************/
--(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal {
+-(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
     
     int i, j, k, l, m, dim, k1, kmax, lmax;
     BOOL checkNT, stat, all;
@@ -1610,8 +1816,6 @@ static const int PRECOND_VANKA     =  560;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     solutionArraysContainer *solContainers = NULL;
@@ -1660,77 +1864,71 @@ static const int PRECOND_VANKA     =  560;
         
         for (j=0; j<n; j++) {
             
-            @autoreleasepool {
-                if (conditional == YES && condition.vector[j] < 0.0) continue;
-                k = varContainers->Perm[indexes[j]];
-                
-                if (k >= 0) {
-                    if (dof >= 0) {
-                        m = 0;
-                        if (self.normalTangentialNumberOfNodes > 0) m = self.boundaryReorder[indexes[j]];
-                        if (m >= 0 && checkNT == YES) {
-                            memset( rotvec, 0.0, 3*sizeof(double) );
-                            rotvec[dof] = 1.0;
-                            [self FEMCore_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
+            if (conditional == YES && condition.vector[j] < 0.0) continue;
+            k = varContainers->Perm[indexes[j]];
+            
+            if (k >= 0) {
+                if (dof >= 0) {
+                    m = 0;
+                    if (self.normalTangentialNumberOfNodes > 0) m = self.boundaryReorder[indexes[j]];
+                    if (m >= 0 && checkNT == YES) {
+                        memset( rotvec, 0.0, 3*sizeof(double) );
+                        rotvec[dof] = 1.0;
+                        [self FEMCore_rotateNTSystem:rotvec nodeNumber:indexes[j] model:model];
+                        
+                        // When cartesian component "DOF" is defined, set the N-T component
+                        // closest to its direction
+                        kmax = 0;
+                        for (k=1; k<dim; k++) {
+                            if (fabs(rotvec[k]) > fabs(rotvec[kmax])) kmax = k;
+                        }
+                        
+                        lmax = solution.variable.dofs * varContainers->Perm[indexes[j]] + kmax;
+                        if (self.ntZeroingDone[m][kmax] == false) {
+                            matContainers->RHS[lmax] = 0.0;
+                            [self zeroTheNumberOfRows:lmax inSolutionMatrix:solution];
+                            self.ntZeroingDone[m][kmax] = true;
+                            if (offDiaginal == NO) matContainers->RHS[lmax] = matContainers->RHS[lmax] +
+                                work.vector[j]/diagScaling[lmax];
                             
-                            // When cartesian component "DOF" is defined, set the N-T component
-                            // closest to its direction
-                            kmax = 0;
-                            for (k=1; k<dim; k++) {
-                                if (fabs(rotvec[k]) > fabs(rotvec[kmax])) kmax = k;
-                            }
-                            
-                            lmax = solution.variable.dofs * varContainers->Perm[indexes[j]] + kmax;
-                            if (self.ntZeroingDone[m][kmax] == false) {
-                                matContainers->RHS[lmax] = 0.0;
-                                [self zeroTheNumberOfRows:lmax inSolutionMatrix:solution];
-                                self.ntZeroingDone[m][kmax] = true;
-                                if (offDiaginal == NO) matContainers->RHS[lmax] = matContainers->RHS[lmax] +
-                                                       work.vector[j]/diagScaling[lmax];
-                                
-                                // Consider all components of the Cartesian vector mapped to the
-                                // N-T coordinate system. Should this perhaps have scaling included?
-                                if (offDiaginal == NO) {
-                                    for (k=0; k<dim; k++) {
-                                        l = solution.variable.dofs * varContainers->Perm[indexes[j]] + k;
-                                        [self setMatrixElementForSolution:solution atIndex:lmax andIndex:l value:rotvec[k]];
-                                    }
-                                }
-                            }
-                        } else {
-                            k = offset + solution.variable.dofs * k + dof;
-                            if (solution.matrix.format == MATRIX_SBAND) {
-                                bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
-                            } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                                crsMatrix = [[FEMMatrixCRS alloc] init];
-                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
-                            } else {
-                                [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
-                                // Add support for parallel run
-                                if (offDiaginal == NO) {
-                                    [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
-                                    matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                            // Consider all components of the Cartesian vector mapped to the
+                            // N-T coordinate system. Should this perhaps have scaling included?
+                            if (offDiaginal == NO) {
+                                for (k=0; k<dim; k++) {
+                                    l = solution.variable.dofs * varContainers->Perm[indexes[j]] + k;
+                                    [self setMatrixElementForSolution:solution atIndex:lmax andIndex:l value:rotvec[k]];
                                 }
                             }
                         }
                     } else {
-                        for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
-                            k1 = offset + solution.variable.dofs * k + l;
-                            if (solution.matrix.format == MATRIX_SBAND) {
-                                bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
-                            } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                                if (offDiaginal == NO) {
-                                    crsMatrix = [[FEMMatrixCRS alloc] init];
-                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
-                                }
-                            } else {
-                                [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
-                                if (offDiaginal == NO) {
-                                    [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
-                                    matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
-                                }
+                        k = offset + solution.variable.dofs * k + dof;
+                        if (solution.matrix.format == MATRIX_SBAND) {
+                            [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
+                        } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
+                        } else {
+                            [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                            // Add support for parallel run
+                            if (offDiaginal == NO) {
+                                [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                                matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                            }
+                        }
+                    }
+                } else {
+                    for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
+                        k1 = offset + solution.variable.dofs * k + l;
+                        if (solution.matrix.format == MATRIX_SBAND) {
+                            [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
+                        } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                            if (offDiaginal == NO) {
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
+                            }
+                        } else {
+                            [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
+                            if (offDiaginal == NO) {
+                                [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
                             }
                         }
                     }
@@ -1751,15 +1949,13 @@ static const int PRECOND_VANKA     =  560;
     free_dvector(rotvec, 0, 2);
 }
 
--(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal {
+-(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
     
     int j, k, l, k1;
     BOOL stat;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer workA = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
@@ -1782,49 +1978,43 @@ static const int PRECOND_VANKA     =  560;
         
         for (j=0; j<n; j++) {
             
-            @autoreleasepool {
-                if (conditional == YES && condition.vector[j] < 0.0) continue;
-                if (indexes[j] >= varContainers->sizePerm || indexes[j] < 0) {
-                    fprintf(stdout, "FEMCore:FEMCore_setPointValues: invalid node number.\n");
-                    continue;
-                }
-                
-                k = varContainers->Perm[indexes[j]];
-                
-                if (k >= 0) {
-                    if (dof >= 0) {
-                        k = offset + solution.variable.dofs*k + dof;
-                        if (solution.matrix.format == MATRIX_SBAND) {
-                            bandMatrix = [[FEMMatrixBand alloc] init];
-                            [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
-                        } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                            crsMatrix = [[FEMMatrixCRS alloc] init];
-                            [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
-                        } else {
-                            [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
-                            if (offDiaginal == NO) {
-                                [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
-                                matContainers->RHS[k] = work.vector[j]/diagScaling[k];
-                            }
-                        }
+            if (conditional == YES && condition.vector[j] < 0.0) continue;
+            if (indexes[j] >= varContainers->sizePerm || indexes[j] < 0) {
+                fprintf(stdout, "FEMCore:FEMCore_setPointValues: invalid node number.\n");
+                continue;
+            }
+            
+            k = varContainers->Perm[indexes[j]];
+            
+            if (k >= 0) {
+                if (dof >= 0) {
+                    k = offset + solution.variable.dofs*k + dof;
+                    if (solution.matrix.format == MATRIX_SBAND) {
+                        [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
+                    } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                        [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
                     } else {
-                        for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
-                            k1 = offset + solution.variable.dofs*k + l;
-                            if (solution.matrix.format== MATRIX_SBAND) {
-                                bandMatrix = [[FEMMatrixBand alloc] init];
-                                [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
-                            } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                                if (offDiaginal == NO) {
-                                    crsMatrix = [[FEMMatrixCRS alloc] init];
-                                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
-                                }
-                            } else {
-                                [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
-                                if (offDiaginal == NO) {
-                                    [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
-                                    matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
-                                }
-                            }                        
+                        [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                        if (offDiaginal == NO) {
+                            [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                            matContainers->RHS[k] = work.vector[j]/diagScaling[k];
+                        }
+                    }
+                } else {
+                    for (l=0; l<min(solution.variable.dofs, workA.m); l++) {
+                        k1 = offset + solution.variable.dofs*k + l;
+                        if (solution.matrix.format== MATRIX_SBAND) {
+                            [bandMatrix sBand_setDirichlet:solution orderedNumber:k1 value:workA.tensor[l][0][j]];
+                        } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                            if (offDiaginal == NO) {
+                                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k1 value:workA.tensor[l][0][j]/diagScaling[k1]];
+                            }
+                        } else {
+                            [self zeroTheNumberOfRows:k1 inSolutionMatrix:solution];
+                            if (offDiaginal == NO) {
+                                [self setMatrixElementForSolution:solution atIndex:k1 andIndex:k1 value:1.0];
+                                matContainers->RHS[k1] = workA.tensor[l][0][j]/diagScaling[k1];
+                            }
                         }
                     }
                 }
@@ -2361,44 +2551,37 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal {
+-(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * __nonnull)listUtilities crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
     
     int j, k;
     BOOL stat;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    FEMMatrixCRS *crsMatrix;
-    FEMMatrixBand *bandMatrix;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *varContainers = NULL;
     
     matContainers = solution.matrix.getContainers;
     varContainers = solution.variable.getContainers;
     
-    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
-    stat = [listUtil listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
+    stat = [listUtilities listGetReal:model inArray:values forVariable:condName numberOfNodes:n indexes:indexes buffer:&work minValue:NULL maxValue:NULL];
     
     if (stat == YES) {
         
         for (j=0; j<n; j++) {
             
-            @autoreleasepool {
-                k = varContainers->Perm[indexes[j]];
-                if (k < 0) continue;
-                if (!limitActive[solution.variable.dofs*k+dof]) continue;
-                
-                k = offset + solution.variable.dofs*k + dof;
-                if (solution.matrix.format == MATRIX_SBAND) {
-                    bandMatrix = [[FEMMatrixBand alloc] init];
-                    [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
-                } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
-                    crsMatrix = [[FEMMatrixCRS alloc] init];
-                    [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
-                } else {
-                    [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
-                    if (offDiaginal == NO) {
-                        [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
-                        matContainers->RHS[k] = work.vector[j]/diagScaling[k];
-                    }
+            k = varContainers->Perm[indexes[j]];
+            if (k < 0) continue;
+            if (!limitActive[solution.variable.dofs*k+dof]) continue;
+            
+            k = offset + solution.variable.dofs*k + dof;
+            if (solution.matrix.format == MATRIX_SBAND) {
+                [bandMatrix sBand_setDirichlet:solution orderedNumber:k value:work.vector[j]];
+            } else if (solution.matrix.format == MATRIX_CRS && solution.matrix.isSymmetric == YES) {
+                [crsMatrix setSymmetricDirichletInGlobal:solution atIndex:k value:work.vector[j]/diagScaling[k]];
+            } else {
+                [self zeroTheNumberOfRows:k inSolutionMatrix:solution];
+                if (offDiaginal == NO) {
+                    [self setMatrixElementForSolution:solution atIndex:k andIndex:k value:1.0];
+                    matContainers->RHS[k] = work.vector[j]/diagScaling[k];
                 }
             }
         }
@@ -4800,225 +4983,6 @@ static dispatch_once_t onceToken;
 
 /*****************************************************************************************************************
  
-    Set nodel load for given dof
- 
-    FEMModel *model           -> class containing the model
-    FEMSolution *solution     -> solution class containing the matrix and variable
-    NSMutableString *name     -> name of the dof to be set
-    int dof                   -> the order number of the dof
- 
-    The permutation (node reordoring info) is contained in the class solution and has been generated at the
-    beginning of the simulation by the bandwidth optimization
-
-*****************************************************************************************************************/
--(void)setNodalLoads:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)name orderOfDofs:(int)dof {
-    
-    int i, j, n, bc, t, bf_id, noNodes=0, noDims=0;
-    int *indexes, *inNodes;
-    double minDist, dist, *diagScaling = NULL;
-    listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    BOOL *activePart, *activePartAll, *doneLoad = NULL, anyActive;
-    Element_t *elements = NULL;
-    Nodes_t *globalNodes = NULL;
-    FEMListUtilities *listUtil;
-    FEMBodyForce *bodyForceAtId;
-    NSMutableString *loadName, *str;
-    matrixArraysContainer *matContainers = NULL;
-    variableArraysContainer *varContainers = NULL;
-    BOOL stat, nodesFound;
-    
-    matContainers = solution.matrix.getContainers;
-    varContainers = solution.variable.getContainers;
-    
-    listUtil = [FEMListUtilities sharedListUtilities];
-    
-    loadName = [NSMutableString stringWithString:name];
-    [loadName appendString:@" load"];
-    
-    fprintf(stdout, "setNodalLoads: checking load for: %s.\n", [name UTF8String]);
-    
-    n = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
-    activePart = (BOOL*)malloc(sizeof(BOOL) * n );
-    activePartAll = (BOOL*)malloc(sizeof(BOOL) * n );
-    
-    elements = solution.mesh.getElements;
-    globalNodes = solution.mesh.getNodes;
-    
-    indexes = intvec(0, solution.mesh.maxElementDofs-1);
-    
-    // Go through the boundaries
-    
-    diagScaling = matContainers->DiagScaling;
-    if (diagScaling == NULL) {
-        diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
-        for (i=0; i<solution.matrix.numberOfRows; i++) {
-            diagScaling[i] = 1.0;
-        }
-    }
-    
-    memset( activePart, NO, n*sizeof(BOOL) );
-    memset( activePartAll, NO, n*sizeof(BOOL) );
-    
-    str = [NSMutableString stringWithString:loadName];
-    [str appendString:@" dofs"];
-    
-    bc = 0;
-    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        if ([listUtil listCheckPresentVariable:@"target boundaries" inArray:boundaryCondition.valuesList] == NO) continue;
-        activePart[bc] = [listUtil listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList];
-        activePartAll[bc] = [listUtil listCheckPresentVariable:str inArray:boundaryCondition.valuesList];
-        bc++;
-    }
-    
-    anyActive = NO;
-    for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
-        if (activePart[bc] == YES || activePartAll[bc] == YES) {
-            anyActive = YES;
-            break;
-        }
-    }
-    
-    if (anyActive == YES) {
-        fprintf(stdout, "setNodalLoads: settings nodals on boundaries: %s.\n", [name UTF8String]);
-        doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
-        memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
-
-        bc = 0;
-        for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-            if (activePart[bc] == NO && activePartAll[bc] == NO) {
-                bc++;
-                continue;
-            };
-        
-            for (t=model.numberOfBulkElements; t<model.numberOfBulkElements+model.numberOfBoundaryElements; t++) {
-                
-                if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
-                
-                if (activePart[bc] == YES) {
-                    n = elements[t].Type.NumberOfNodes;
-                    for (i=0; i<n; i++) {
-                        indexes[i] = elements[t].NodeIndexes[i];
-                    }
-                } else {
-                    n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
-                }
-                
-                [self FEMCore_setElementLoadsModel:model solution:solution element:&elements[t] values:boundaryCondition.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
-            }
-            bc++;
-        }
-    }
-    
-    // Go though the nodal load conditions for the body force list
-        
-    memset( activePart, NO, n*sizeof(BOOL) );
-    memset( activePartAll, NO, n*sizeof(BOOL) );
-    
-    bf_id = 0;
-    for (FEMBodyForce *bodyForce in model.bodyForces) {
-        activePart[bf_id] = [listUtil listCheckPresentVariable:loadName inArray:bodyForce.valuesList];
-        activePartAll[bf_id] = [listUtil listCheckPresentVariable:str inArray:bodyForce.valuesList];
-        bf_id++;
-    }
-    
-    anyActive = NO;
-    for (bf_id=0; bf_id<model.numberOfBodyForces; bf_id++) {
-        if (activePart[bf_id] == YES || activePartAll[bf_id] == YES) {
-            anyActive = YES;
-            break;
-        }
-    }
-    
-    if (anyActive == YES) {
-        fprintf(stdout, "setNodalLoads: settings nodals on bulk: %s.\n", [name UTF8String]);
-        if (doneLoad == NULL) doneLoad = (BOOL*)malloc(sizeof(BOOL) *  (matContainers->sizeRHS/solution.variable.dofs) );
-        memset( doneLoad, NO, (matContainers->sizeRHS/solution.variable.dofs)*sizeof(BOOL) );
-        for (t=0; t<model.numberOfBulkElements; t++) {
-            
-            if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
-            bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
-            
-            if (activePart[bf_id] == NO && activePartAll[bf_id] == NO) continue;
-            
-            
-            if (activePart[bf_id] == YES) {
-                n = elements[t].Type.NumberOfNodes;
-                memcpy(indexes, elements[t].NodeIndexes, n*sizeof(int));
-            } else {
-                n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
-            }
-            
-            bodyForceAtId = (model.bodyForces)[bf_id];
-            [self FEMCore_setElementLoadsModel:model solution:solution element:&elements[t] values:bodyForceAtId.valuesList name:loadName indexes:indexes doneLoad:doneLoad size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
-        }
-    }
-    
-    free(activePart);
-    free(activePartAll);
-    if (doneLoad != NULL) free(doneLoad);
-    
-    // Go through the point loads which are created on the fly
-    for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        if ([listUtil listCheckPresentVariable:loadName inArray:boundaryCondition.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
-        
-        // At the first calling, the list of coordinates is transformed to list of nodes
-        if (nodesFound == NO) {
-            
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
-            
-            if (stat == YES) {
-                
-                noNodes = coordNodes.m;
-                noDims = coordNodes.n;
-                
-                if (noNodes > 0) {
-                    inNodes = intvec(0, noNodes-1);
-                    for (j=0; j<noNodes; j++) {
-                        minDist = HUGE_VAL;
-                        for (i=0; i<model.numberOfNodes; i++) {
-                            if (varContainers->Perm[i] < 0) continue;
-                            
-                            dist = pow((globalNodes->x[i]-coordNodes.matrix[j][0]), 2.0);
-                            if (noDims >= 2) dist = dist + pow((globalNodes->y[i]-coordNodes.matrix[j][1]), 2.0);
-                            if (noDims == 3) dist = dist + pow((globalNodes->z[i]-coordNodes.matrix[j][2]), 2.0);
-                            
-                            if (dist<minDist) {
-                                minDist = dist;
-                                inNodes[j] = i;
-                            }
-                        }
-                    }
-                    // Add the found nodes to the list values
-                    [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:inNodes size:noNodes orUsingBlock:nil];
-                    free_ivector(inNodes, 0, noNodes-1);
-                    nodesFound = YES;
-                }
-            }
-        }
-        
-        if (coordNodes.matrix != NULL) {
-            free_dmatrix(coordNodes.matrix, 0, coordNodes.m-1, 0, coordNodes.n-1);
-        }
-        
-        if (nodesFound == YES) {
-            fprintf(stdout, "setNodalLoads: settings nodal nodals on target nodes: %s.\n", [name UTF8String]);
-            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
-            n = nodeIndexes.m;
-            [self FEMCore_setPointLoadsModel:model solution:solution element:elements values:boundaryCondition.valuesList name:loadName indexes:nodeIndexes.ivector size:n dof:dof ndofs:solution.variable.dofs diagonalScaling:diagScaling];
-            if (nodeIndexes.ivector != NULL) {
-                free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
-            }
-        }
-    }
-    
-    free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
-    if (diagScaling != matContainers->DiagScaling) free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
-}
-
-/*****************************************************************************************************************
- 
     Set dirichlet boundary condition for given dof. The conditions are set based on the given name and applied 
     directly to the matrix structure so that a row is zeroed execpt for the diagonal which is set to one. Then 
     the RHS balue determines the value of the field variable in the solution of the linear system.
@@ -5036,17 +5000,16 @@ static dispatch_once_t onceToken;
     beginning of the simulation by the bandwidth optimization
  
 *****************************************************************************************************************/
--(void)setDirichletBoundaries:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof permutationOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix {
+-(void)setDirichletBoundaries:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof permutationOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix listUtilites:(FEMListUtilities * __nonnull)listUtilites crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
     
     int i, j, k, n, bc, t, bf_id, bndry_start, bndry_end, noNodes, noDims, permOffset, numberOfNodesFound;
-    int *indexes;
+    int indexes[solution.mesh.maxElementDofs];
     double dist, eps, *diagScaling = NULL;
     listBuffer nodeIndexes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
     listBuffer coordNodes = { NULL, NULL, NULL, NULL, 0, 0, 0 };
-    BOOL *activePart, *activePartAll, *activeCond, *donePeriodic, anyActive, offDiaginal, passive;
+    BOOL anyActive, offDiaginal, passive;
     Element_t *elements = NULL;
     Nodes_t *globalNodes = NULL;
-    FEMListUtilities *listUtil;
     FEMBodyForce *bodyForceAtId;
     NSString *str1, *str2;
     matrixArraysContainer *matContainers = NULL;
@@ -5058,8 +5021,6 @@ static dispatch_once_t onceToken;
     varContainers = solution.variable.getContainers;
     solContainers = solution.getContainers;
     
-    listUtil = [FEMListUtilities sharedListUtilities];
-    
     diagScaling = matContainers->DiagScaling;
     if (diagScaling == NULL) {
         diagScaling = doublevec(0, solution.matrix.numberOfRows-1);
@@ -5070,9 +5031,9 @@ static dispatch_once_t onceToken;
     
     // These logical vectors are used to minimize extra effort in setting up different BCs
     int activeSize = max(model.numberOfBoundaryConditions, model.numberOfBodyForces);
-    activePart = (BOOL*)malloc(sizeof(BOOL) * activeSize );
-    activePartAll = (BOOL*)malloc(sizeof(BOOL) * activeSize );
-    activeCond = (BOOL*)malloc(sizeof(BOOL) * activeSize );
+    BOOL activePart[activeSize];
+    BOOL activePartAll[activeSize];
+    BOOL activeCond[activeSize];
     
     NSString *condName = [name stringByAppendingString:@" condition"];
     NSString *passName = [name stringByAppendingString:@" passive"];
@@ -5086,20 +5047,18 @@ static dispatch_once_t onceToken;
     
     elements = solution.mesh.getElements;
     globalNodes = solution.mesh.getNodes;
-
-    indexes = intvec(0, solution.mesh.maxElementDofs-1);
     
     // Go through the perdiodic BCs and set the linear dependence
     
-    memset( activePart, NO, activeSize*sizeof(BOOL) );
+    memset( activePart, NO, sizeof(activePart) );
     
     str1 = [@"periodic bc " stringByAppendingString:name];
     str2 = [@"anti periodic bc " stringByAppendingString:name];
 
     bc = 0;
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str1 info:&stat] == YES) activePart[bc] = YES;
-        if ([listUtil listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str2 info:&stat] == YES) activePart[bc] = YES;
+        if ([listUtilites listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str1 info:&stat] == YES) activePart[bc] = YES;
+        if ([listUtilites listGetLogical:model inArray:boundaryCondition.valuesList forVariable:str2 info:&stat] == YES) activePart[bc] = YES;
         bc++;
     }
     
@@ -5115,38 +5074,36 @@ static dispatch_once_t onceToken;
         
         if (permOffset > 0) fatal("setDirichletBoundaries", "Periodicity not supported with offset.");
         
-        donePeriodic = (BOOL*)malloc(sizeof(BOOL) * solution.mesh.numberOfNodes );
-        memset( donePeriodic, NO, solution.mesh.numberOfNodes*sizeof(BOOL) );
+        BOOL donePeriodic[solution.mesh.numberOfNodes];
+        memset( donePeriodic, NO, sizeof(donePeriodic) );
         
         for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
             if (activePart[bc] == YES) [self FEMCore_setPeriodicBoundariesPass1Model:model solution:solution name:name dof:dof this:bc done:donePeriodic diaginalScaling:diagScaling];
         }
         
-        memset( donePeriodic, NO, solution.mesh.numberOfNodes*sizeof(BOOL) );
+        memset( donePeriodic, NO, sizeof(donePeriodic) );
         for (bc=0; bc<model.numberOfBoundaryConditions; bc++) {
             if (activePart[bc] == YES) [self FEMCore_setPeriodicBoundariesPass2Model:model solution:solution name:name dof:dof this:bc done:donePeriodic diaginalScaling:diagScaling];
         }
-        
-        free(donePeriodic);
     }
     
     // Go through the normal Dirichlet BCs applied on the boundaries
     
-    memset( activePart, NO, activeSize*sizeof(BOOL) );
-    memset( activePartAll, NO, activeSize*sizeof(BOOL) );
-    memset( activeCond, NO, activeSize*sizeof(BOOL) );
+    memset( activePart, NO, sizeof(activePart) );
+    memset( activePartAll, NO, sizeof(activePartAll) );
+    memset( activeCond, NO, sizeof(activeCond) );
 
     str1 = [name stringByAppendingString:@" dofs"];
     
     bc = 0;
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-        activePartAll[bc] = [listUtil listCheckPresentVariable:str1 inArray:boundaryCondition.valuesList];
-        activePart[bc] = [listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
-        activeCond[bc] = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
+        activePartAll[bc] = [listUtilites listCheckPresentVariable:str1 inArray:boundaryCondition.valuesList];
+        activePart[bc] = [listUtilites listCheckPresentVariable:name inArray:boundaryCondition.valuesList];
+        activeCond[bc] = [listUtilites listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
         bc++;
     }
     
-    orderByBCNumbering = [listUtil listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
+    orderByBCNumbering = [listUtilites listGetLogical:model inArray:model.simulation.valuesList forVariable:@"set dirichlet boundaries by boundary numbering" info:&stat];
     
     bndry_start = model.numberOfBulkElements;
     bndry_end = bndry_start + model.numberOfBoundaryElements;
@@ -5246,7 +5203,7 @@ static dispatch_once_t onceToken;
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                    [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal crsMatrix:crsMatrix bandMatrix:bandMatrix];
                 }
                 bc++;
             }
@@ -5271,7 +5228,7 @@ static dispatch_once_t onceToken;
                     } else {
                         n = [self sgetElementDofsSolution:solution model:model forElement:&elements[t] atIndexes:indexes];
                     }
-                    [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                    [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal crsMatrix:crsMatrix bandMatrix:bandMatrix];
                     bc++;
                 }
             }
@@ -5280,17 +5237,17 @@ static dispatch_once_t onceToken;
     
     // Go through the Dirichlet conditions in the body force lists
     
-    memset( activePart, NO, activeSize*sizeof(BOOL) );
-    memset( activeCond, NO, activeSize*sizeof(BOOL) );
-    memset( activePartAll, NO, activeSize*sizeof(BOOL) );
+    memset( activePart, NO, sizeof(activePart) );
+    memset( activeCond, NO, sizeof(activeCond) );
+    memset( activePartAll, NO, sizeof(activePartAll) );
     passive = NO;
     
     bf_id = 0;
     for (FEMBodyForce *bodyForce in model.bodyForces) {
-        activePartAll[bf_id] = [listUtil listCheckPresentVariable:str1 inArray:bodyForce.valuesList];
-        activeCond[bf_id] = [listUtil listCheckPresentVariable:condName inArray:bodyForce.valuesList];
-        activePart[bf_id] = [listUtil listCheckPresentVariable:name inArray:bodyForce.valuesList ];
-        passive = (passive == YES || [listUtil listCheckPresentVariable:passName inArray:bodyForce.valuesList] == YES) ? YES : NO;
+        activePartAll[bf_id] = [listUtilites listCheckPresentVariable:str1 inArray:bodyForce.valuesList];
+        activeCond[bf_id] = [listUtilites listCheckPresentVariable:condName inArray:bodyForce.valuesList];
+        activePart[bf_id] = [listUtilites listCheckPresentVariable:name inArray:bodyForce.valuesList ];
+        passive = (passive == YES || [listUtilites listCheckPresentVariable:passName inArray:bodyForce.valuesList] == YES) ? YES : NO;
         bf_id++;
     }
     
@@ -5328,21 +5285,17 @@ static dispatch_once_t onceToken;
             }
             bodyForceAtId = (model.bodyForces)[bf_id];
             
-            if ([listUtil listGetLogical:model inArray:bodyForceAtId.valuesList forVariable:passCondName info:&stat] == YES) {
+            if ([listUtilites listGetLogical:model inArray:bodyForceAtId.valuesList forVariable:passCondName info:&stat] == YES) {
                 if ([self FEMCore_checkPassiveElement:&elements[t] model:model solution:solution] == NO) continue;
                 for (j=0; j<n; j++) {
                     nodeIndexes[0] = indexes[j];
-                    if (passMerm[nodeIndexes[0]] == 0) [self FEMCore_setPointValues:model inSolution:solution numberofNodes:1 atIndexes:nodeIndexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                    if (passMerm[nodeIndexes[0]] == 0) [self FEMCore_setPointValues:model inSolution:solution numberofNodes:1 atIndexes:nodeIndexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal crsMatrix:crsMatrix bandMatrix:bandMatrix];
                 }
             } else {
-                [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                [self FEMCore_setElementValues:model inSolution:solution forElementNumber:t numberOfNodes:n atIndexes:indexes forValues:bodyForceAtId.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal crsMatrix:crsMatrix bandMatrix:bandMatrix];
             }
         }
     }
-    free(activePart);
-    free(activePartAll);
-    free(activeCond);
-    free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
     
     // Go through the pointwise Dirichlet BCs that are created on the fly.
     // Note that it is best that the coordinates are transformed to nodes using
@@ -5350,18 +5303,18 @@ static dispatch_once_t onceToken;
 
     for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
         
-        if ([listUtil listCheckPresentVariable:name inArray:boundaryCondition.valuesList] == NO) continue;
-        nodesFound = [listUtil listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
+        if ([listUtilites listCheckPresentVariable:name inArray:boundaryCondition.valuesList] == NO) continue;
+        nodesFound = [listUtilites listCheckPresentVariable:@"target nodes" inArray:boundaryCondition.valuesList];
         
         // The coodinates are only requested for a body that has no list of nodes.
         // At the first calling, the list of coordinates is transformed to a list of nodes
         if (nodesFound == NO) {
             
-            stat = [listUtil listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
+            stat = [listUtilites listGetConstRealArray:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates" buffer:&coordNodes];
             
             if (stat == YES) {
                 
-                eps = [listUtil listGetConstReal:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
+                eps = [listUtilites listGetConstReal:model inArray:boundaryCondition.valuesList forVariable:@"target coordinates eps" info:&stat minValue:NULL maxValue:NULL];
                 if (stat == NO) {
                     eps = HUGE_VAL;
                 } else {
@@ -5415,12 +5368,12 @@ static dispatch_once_t onceToken;
                     
                     // In the first time add the found nodes to the list
                     if (numberOfNodesFound > 0) {
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:numberOfNodesFound orUsingBlock:nil];
+                        [listUtilites addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:numberOfNodesFound orUsingBlock:nil];
                         nodesFound = YES;
                     } else {
                         // If no nodes found, add still an empty list and make sure the negative value is not
                         // treated later one. Otherwise this search would be retreated each time
-                        [listUtil addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:1 orUsingBlock:nil];
+                        [listUtilites addIntegerArrayInClassList:boundaryCondition theVariable:@"target nodes" withValues:indNodes size:1 orUsingBlock:nil];
                     }
                 }
             }
@@ -5433,14 +5386,14 @@ static dispatch_once_t onceToken;
         // If the target coordinates has already been assigned to an empty list,
         // cycle over it by testing the first node
         if (nodesFound == YES) {
-            [listUtil listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
+            [listUtilites listGetIntegerArray:model inArray:boundaryCondition.valuesList forVariable:@"target nodes" buffer:&nodeIndexes];
             if (nodeIndexes.ivector[0] == -1) nodesFound = NO;
         }
         
         if (nodesFound == YES) {
-            conditional = [listUtil listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
+            conditional = [listUtilites listCheckPresentVariable:condName inArray:boundaryCondition.valuesList];
             n = nodeIndexes.m;
-            [self FEMCore_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+            [self FEMCore_setPointValues:model inSolution:solution numberofNodes:n atIndexes:nodeIndexes.ivector forValues:boundaryCondition.valuesList variableName:name orderOfDofs:dof activeCondition:conditional conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal crsMatrix:crsMatrix bandMatrix:bandMatrix];
         }
         if (nodeIndexes.ivector != NULL) {
             free_ivector(nodeIndexes.ivector, 0, nodeIndexes.m-1);
@@ -5475,13 +5428,13 @@ static dispatch_once_t onceToken;
                 if (t>=model.numberOfBulkElements) {
                     for (FEMBoundaryCondition *boundaryCondition in model.boundaries) {
                         if (elements[t].BoundaryInfo->Constraint != boundaryCondition.tag) continue;
-                        [self FEMCore_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:boundaryCondition.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                        [self FEMCore_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:boundaryCondition.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal listUtilities:listUtilites crsMatrix:crsMatrix bandMatrix:bandMatrix];
                     }
                 } else {
                     if ((model.bodies)[elements[t].BodyID-1][@"body force"] == nil) continue;
                     bf_id = [(model.bodies)[elements[t].BodyID-1][@"body force"] intValue];
                     bodyForceAtId = (model.bodyForces)[bf_id];
-                    [self FEMCore_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:bodyForceAtId.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal];
+                    [self FEMCore_setLimiterValues:model inSolution:solution numberofNodes:n atIndexes:elements[t].NodeIndexes forValues:bodyForceAtId.valuesList orderOfDofs:dof limitActive:limitActive conditionName:condName permutationOffset:permOffset diaginalScaling:diagScaling offDiaginal:offDiaginal listUtilities:listUtilites crsMatrix:crsMatrix bandMatrix:bandMatrix];
                 }
             }
         }
@@ -7230,7 +7183,8 @@ static dispatch_once_t onceToken;
     faces = solution.mesh.getFaces;
     
     FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
-    FEMListUtilities *listUtil = [FEMListUtilities sharedListUtilities];
+    FEMMatrixBand *bandMatrix = [[FEMMatrixBand alloc] init];
+    FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMUtilities *utilities = [[FEMUtilities alloc] init];
     
     matContainers = solution.matrix.getContainers;
@@ -7297,7 +7251,7 @@ static dispatch_once_t onceToken;
     
     name = [NSMutableString stringWithString:[solution.variable canonicalizeName]];
     if (solution.variable.dofs > 1) {
-        [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-2 permutationOffset:NULL offDiaginalMatrix:NULL];
+        [self setDirichletBoundaries:model inSolution:solution variableName:name orderOfDofs:-2 permutationOffset:NULL offDiaginalMatrix:NULL listUtilites:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix];
     }
     
     constantValue = NO;
@@ -7325,7 +7279,7 @@ static dispatch_once_t onceToken;
             bc = [self getBoundaryCondition:model forElement:element];
             if (bc == nil) continue;
             
-            list = [listUtil listFindVariable:componentName inArray:bc];
+            list = [listUtilities listFindVariable:componentName inArray:bc];
             if (list == nil) continue;
             
             constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
@@ -7362,8 +7316,8 @@ static dispatch_once_t onceToken;
             componentName = [utilities appendNameFromString:solution.variable.name component:&component];
         } else componentName = solution.variable.name;
         
-        [self setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof];
-        [self setDirichletBoundaries:model inSolution:solution variableName:(NSMutableString *)componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix];
+        [self FEMCore_setNodalLoads:model inSolution:solution variableName:componentName orderOfDofs:dof listUtilities:listUtilities];
+        [self setDirichletBoundaries:model inSolution:solution variableName:(NSMutableString *)componentName orderOfDofs:dof permutationOffset:offset offDiaginalMatrix:offDiaginalMatrix listUtilites:listUtilities crsMatrix:crsMatrix bandMatrix:bandMatrix];
         
         // Dirichlet BCs for face and edge dofs
         for (i=0; i<solution.mesh.numberOfBoundaryElements; i++) {
@@ -7376,9 +7330,9 @@ static dispatch_once_t onceToken;
             
             NSString *str1 = [componentName stringByAppendingString:@" {e}"];
             NSString *str2 = [componentName stringByAppendingString:@" {f}"];
-            if ( [listUtil listCheckPresentVariable:componentName inArray:bc] == NO
-                && [listUtil listCheckPresentVariable:str1 inArray:bc] == NO
-                && [listUtil listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
+            if ( [listUtilities listCheckPresentVariable:componentName inArray:bc] == NO
+                && [listUtilities listCheckPresentVariable:str1 inArray:bc] == NO
+                && [listUtilities listCheckPresentVariable:str2 inArray:bc] == NO ) continue;
             
             // Get parent element
             parent = element->BoundaryInfo->Left;
@@ -7387,7 +7341,7 @@ static dispatch_once_t onceToken;
             }
             if (parent == NULL) continue;
             
-            if ([listUtil listCheckPresentVariable:str1 inArray:bc] == YES) {
+            if ([listUtilities listCheckPresentVariable:str1 inArray:bc] == YES) {
                 if (edges != NULL) {
                     switch ([self getElementFamily:element]) {
                         case 1:
@@ -7454,7 +7408,7 @@ static dispatch_once_t onceToken;
                             }
                     }
                 } // end associated edges
-            } else if ([listUtil listCheckPresentVariable:str2 inArray:bc] == YES) {
+            } else if ([listUtilities listCheckPresentVariable:str2 inArray:bc] == YES) {
                 n = element->Type.NumberOfNodes;
                 n = [self getElementDofsSolution:solution model:model forElement:element atIndexes:_g_Ind disableDiscontinuousGalerkin:NULL];
                 for (k=0; k<n; k++) {
@@ -7470,7 +7424,7 @@ static dispatch_once_t onceToken;
             
             if (parent->Pdefs == NULL) continue;
             
-            list = [listUtil listFindVariable:componentName inArray:bc];
+            list = [listUtilities listFindVariable:componentName inArray:bc];
             constantValue = ([list type] == LIST_TYPE_CONSTANT_SCALAR) ? YES : NO;
             if (constantValue == YES) continue;
             
