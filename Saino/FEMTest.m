@@ -758,11 +758,6 @@ static dispatch_once_t onceToken;
         }
     }
     mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];
-    
-    //FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
-    
-    //int ivalue = 2;
-    //[listUtilities addIntegerInClassList:mod.simulation theVariable:@"extruded mesh levels" withValue:&ivalue orUsingBlock:nil];
 }
 
 -(void)setUpISMIP_HOM_B010Test:(id __nonnull)model {
