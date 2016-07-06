@@ -757,7 +757,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
         }
     }
-    mod.meshName = [NSMutableString stringWithString:@"rectangle2-colored"];
+    mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];
     
     //FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
