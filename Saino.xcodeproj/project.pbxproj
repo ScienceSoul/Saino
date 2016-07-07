@@ -1159,7 +1159,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/MyDevLibs'\npath=$path1$path2$path3\necho $path\nif test -d $path ; then\n   rm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/SainoCore.framework /Users/${USER}/Documents/MyDevLibs";
+			shellScript = "path1='/Users/'\npath2=${USER}\npath3='/Documents/MyDevLibs'\npath=$path1$path2$path3\necho $path\nif [ \"$path2\" == \"_xcsbuildd\"]\nthen\n   echo \"No ops!\"\nelse\nif test -d $path ; then\n   rm -rf $path\nfi\nmkdir $path\ncp -r ${BUILT_PRODUCTS_DIR}/SainoCore.framework /Users/${USER}/Documents/MyDevLibs\nfi";
 		};
 /* End PBXShellScriptBuildPhase section */
 
