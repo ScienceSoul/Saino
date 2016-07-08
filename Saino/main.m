@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, "SAINO: JOB TOTAL TIME (CPU,REAL): %lf %lf.\n", cputime()-cp, realtime()-rt);
     
     NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
-    fprintf(stdout, "SAINO JOB FINISHED AT: %@.\n", dateString);
+    fprintf(stdout, "SAINO JOB FINISHED AT: %s.\n", [dateString UTF8String]);
     
     return 0;
     
