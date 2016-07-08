@@ -13,6 +13,9 @@ Tests/**/*.result
 Tests/**/*.colors
 Tests/**/*.colored*
 
+# Bundle executable
+PlugIns/FEMStructuredMeshMapper.bundle/Contents/MacOS/FEMStructuredMeshMapper
+
 # Extras
 Extras/
 docs/

@@ -14,6 +14,7 @@
 #import "FEMMatrixCRS.h"
 #import "FEMNumericIntegration.h"
 #import "Utils.h"
+#import "FEMSetUp.h"
 
 #ifdef TEST
     #import "FEMTest.h"
@@ -523,6 +524,9 @@
     } else if (test.do_ismip_hom_C010 == YES) {
         [test setUpISMIP_HOM_C010Test:self];
     }
+#else
+    FEMSetUp *setUP = [[FEMSetUp alloc] init];
+    [setUP setUpISMIP_HOM_A010_GPU:self];
 #endif
     
     [self FEMModel_initializeOutputLevel];
