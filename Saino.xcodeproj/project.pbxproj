@@ -194,13 +194,6 @@
 			remoteGlobalIDString = 738AB9E91BC7C9220038AAEF;
 			remoteInfo = SainoCore;
 		};
-		01803A001D2F566300DDDD64 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 736054341BCCEE3700832758;
-			remoteInfo = FEMStructuredMeshMapper;
-		};
 		730C42D21B2686E2009411B7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7315511413583FFD004CCD09 /* Project object */;
@@ -1013,7 +1006,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				01803A011D2F566300DDDD64 /* PBXTargetDependency */,
 				738AB9F01BC7C9220038AAEF /* PBXTargetDependency */,
 			);
 			name = Saino;
@@ -1304,11 +1296,6 @@
 			isa = PBXTargetDependency;
 			target = 738AB9E91BC7C9220038AAEF /* SainoCore */;
 			targetProxy = 013C0A7F1C47867B0067C98A /* PBXContainerItemProxy */;
-		};
-		01803A011D2F566300DDDD64 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 736054341BCCEE3700832758 /* FEMStructuredMeshMapper */;
-			targetProxy = 01803A001D2F566300DDDD64 /* PBXContainerItemProxy */;
 		};
 		730C42D31B2686E2009411B7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
