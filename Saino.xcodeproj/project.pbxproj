@@ -242,6 +242,7 @@
 		017309C21CE5E6F7000FA8C0 /* GPUUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUUtils.h; sourceTree = "<group>"; };
 		018039FC1D2F4F2400DDDD64 /* FEMSetUp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSetUp.m; sourceTree = "<group>"; };
 		018039FE1D2F4F3B00DDDD64 /* FEMSetUp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEMSetUp.h; sourceTree = "<group>"; };
+		01803A021D2FB5E900DDDD64 /* NavierStokesAssemblyKernel_opt.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = NavierStokesAssemblyKernel_opt.cl; sourceTree = "<group>"; };
 		01B39C6A1CC5E0B300E62601 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		7301FA201520120500451A49 /* sainoReport.pages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sainoReport.pages; path = docs/sainoReport.pages; sourceTree = SOURCE_ROOT; };
 		73051E2D17F2B582001861D8 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -507,6 +508,7 @@
 			children = (
 				73E6B576181A4E0900D3AB31 /* heatSolutiomAssemblyKernel.cl */,
 				014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */,
+				01803A021D2FB5E900DDDD64 /* NavierStokesAssemblyKernel_opt.cl */,
 				010ACFB21CCF686400CA1D9F /* GPUData.h */,
 				013558141CFFE10600311691 /* GPUData.c */,
 				017309C21CE5E6F7000FA8C0 /* GPUUtils.h */,
