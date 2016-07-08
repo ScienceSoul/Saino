@@ -526,7 +526,13 @@
     }
 #else
     FEMSetUp *setUP = [[FEMSetUp alloc] init];
-    [setUP setUpISMIP_HOM_A010_GPU:self];
+    if ([name isEqualToString:@"setUpISMIP_HOM_A010"]) {
+        [setUP setUpISMIP_HOM_A010:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU"]) {
+        [setUP setUpISMIP_HOM_A010_GPU:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_dense:self];
+    }
 #endif
     
     [self FEMModel_initializeOutputLevel];

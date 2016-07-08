@@ -1520,7 +1520,7 @@ jump:
     NSString *eq, *when;
     FEMMesh *extrudedMesh;
     listBuffer listBuffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
-    BOOL colorMesh=NO, execThis, found, parallelAssembly=NO;
+    BOOL colorMesh=NO, execThis, found, parallelAssembly=NO, noMDF=NO;
     
     FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     FEMPost *post = [[FEMPost alloc] init];
@@ -1529,10 +1529,18 @@ jump:
     
     NSArray *args = [[NSProcessInfo processInfo] arguments];
     if (_firstTime == YES) {
-        if ([args count]-3 > 0) {
+        if ([args count] > 1) {
             for (NSString *argument in args) {
                 _silent = (_silent == YES || ([argument isEqualToString:@"-s"] == YES || [argument isEqualToString:@"--silent"] == YES)) ? YES : NO;
                 _version = (_version == YES || ([argument isEqualToString:@"-v"] == YES || [argument isEqualToString:@"--version"] == YES)) ? YES : NO;
+            }
+        }
+        
+        // Check if we don't use a MDF
+        for (NSString *argument in args) {
+            if ([argument isEqualToString:@"--no_mdf"] == YES) {
+                noMDF = YES;
+                break;
             }
         }
         
@@ -1552,7 +1560,7 @@ jump:
         _firstTime = NO;
     }
    
-    if ([args count]-3 > 0) { // TODO: Add support for parallel run
+    if ([args count] > 1) { // TODO: Add support for parallel run
         self.modelName = [NSString stringWithString:args[1]];
         if ([self.modelName characterAtIndex:0] != '-') {
             _gotModelName = YES;
@@ -1586,10 +1594,12 @@ jump:
             }
             
             self.model = [[FEMModel alloc] init];
-            self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
-            if (self.model.mdf == nil) {
-                fprintf(stderr, "FEMJob:runWithInitialize: Unable to find model description file [' %s '].\n", [self.modelName UTF8String]);
-                fatal("FEMJob:runWithInitialize");
+            if (noMDF == NO) {
+                self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
+                if (self.model.mdf == nil) {
+                    fprintf(stderr, "FEMJob:runWithInitialize: Unable to find model description file [' %s '].\n", [self.modelName UTF8String]);
+                    fatal("FEMJob:runWithInitialize");
+                }
             }
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
@@ -1659,11 +1669,13 @@ jump:
             }
         } else {
             if (initialize == 3) {
-                if (self.model.mdf != nil) {
-                    [self.model.mdf closeHandle];
-                    self.model.mdf = nil;
+                if (noMDF == NO) {
+                    if (self.model.mdf != nil) {
+                        [self.model.mdf closeHandle];
+                        self.model.mdf = nil;
+                    }
+                    self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
                 }
-                self.model.mdf = [[FileReader alloc] initWithFilePath:self.modelName];
             }
             
             // TODO: Add support for reloading MDF if we really need that
