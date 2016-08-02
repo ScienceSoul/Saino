@@ -5,6 +5,10 @@
 #define TWO 2.0f
 #define FOUR 4.0f
 #define EIGHT 8.0f
+#define IP_U 0.57735027f
+#define IP_V 0.57735027f
+#define IP_W 0.57735027f
+#define IP_S 1.0f
 #define viscoExponent (1.0f/3.0f)
 #endif
 
@@ -15,6 +19,10 @@
 #define TWO 2.0
 #define FOUR 4.0
 #define EIGHT 8.0
+#define IP_U 0.5773502691896257
+#define IP_V 0.5773502691896257
+#define IP_W 0.5773502691896257
+#define IP_S 1.0
 #define viscoExponent (1.0/3.0)
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #endif
@@ -217,8 +225,6 @@ inline REAL dBasisdx3D(__global REAL *BasisFunctions,
 }
 
 __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
-                                  __global REAL *NodesUVW,
-                                  __global REAL *GaussPoints,
                                   __global REAL *values,
                                   __global REAL *rhs,
                                   __global int *diag,
@@ -267,11 +273,25 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     REAL forceVector[32];
     REAL jacM[32][32];
     REAL c2, c3, delta, detJ, mu, muder0, muder, rho, u, v, w, s, ss, sum, tau;
+    
+    // Definitions for 8 nodes octahedron
+    REAL NodeU[8] = {-ONE, ONE, ONE, -ONE, -ONE, ONE, ONE, -ONE};
+    REAL NodeV[8] = {-ONE, -ONE, ONE, ONE, -ONE, -ONE, ONE, ONE};
+    REAL NodeW[8] = {-ONE, -ONE, -ONE, -ONE, ONE, ONE, ONE, ONE};
+    
+    // Gauss points for 8 nodes octahedron
+    REAL ip_u[8] = {IP_U, -IP_U, IP_U, -IP_U, IP_U, -IP_U, IP_U, -IP_U};
+    REAL ip_v[8] = {IP_V, IP_V, -IP_V, -IP_V, IP_V, IP_V, -IP_V, -IP_V};
+    REAL ip_w[8] = {IP_W, IP_W, IP_W, IP_W, -IP_W, -IP_W, -IP_W, -IP_W};
+    REAL ip_s[8] = {IP_S, IP_S, IP_S, IP_S, IP_S, IP_S, IP_S, IP_S};
+    
     REAL criticalShearRate=1.0e-10;
     bool viscNewtonLin;
     
     int workItemID = get_global_id(0);
     int globalID = colorMapping[positionInColorMapping+workItemID];
+    
+    if (globalID < 0) return;
     
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
@@ -295,9 +315,9 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     
     // Always use stabilization, bubbles not supported
     for (int p=0; p<numberOfNodes; p++) {
-        u = NodesUVW[p];
-        v = NodesUVW[p+stride];
-        w = NodesUVW[p+(stride*2)];
+        u = NodeU[p];
+        v = NodeV[p];
+        w = NodeW[p];
         detJ = dBasisdx3D(BasisFunctions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                    u, v, w, numberOfNodes, numberElementDofs, globalID);
         for (int i=0; i<numberOfNodes; i++) {
@@ -310,14 +330,14 @@ __kernel void NavierStokesCompose(__global REAL *BasisFunctions,
     // Now we start integrating
     // Assume that number of Gauss points is equal to the number of nodes
     for (int t=0; t<numberOfNodes; t++) {
-        u = GaussPoints[t];
-        v = GaussPoints[t+stride];
-        w = GaussPoints[t+(stride*2)];
+        u = ip_u[t];
+        v = ip_v[t];
+        w = ip_w[t];
         
         basis3D(BasisFunctions, basis, u, v, w, numberOfNodes);
         detJ = dBasisdx3D(BasisFunctions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                    u, v, w, numberOfNodes, numberElementDofs, globalID);
-        s = detJ * GaussPoints[t+(stride*3)];
+        s = detJ * ip_s[t];
         
         rho = ZERO;
         for (int i=0; i<numberOfNodes; i++) {

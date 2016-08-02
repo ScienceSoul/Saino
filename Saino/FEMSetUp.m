@@ -25,7 +25,7 @@
     
     FEMListUtilities *listUtilities = [FEMListUtilities sharedListUtilities];
     
-    double L = 10.0e3;
+    double L = 80.0e3;
     double slope = 0.5 * M_PI / 180.0;
     
     double yearinsec = 365.25 * 24.0 * 60.0 * 60.0;
@@ -223,7 +223,7 @@
     mod.numberOfBoundaryConditions = 6;
     
     mod.meshDir = [NSMutableString stringWithString:self.path];
-    mod.meshName = [NSMutableString stringWithString:@"rectangle"];
+    mod.meshName = [NSMutableString stringWithString:@"rectangle_L80"];
 }
 
 -(void)setUpISMIP_HOM_A010_GPU:(id __nonnull)model {
@@ -238,11 +238,16 @@
     double n = 3.0;
     double eta = pow((2.0 * 100.0), (-1.0/n));
     
-    NSString *kernelPath = @"/Users/hakimeseddik/Documents/Saino/Saino/NavierStokesAssemblyKernel";
+    NSString *kernelPath = @"/Users/hakimeseddik/Documents/Saino/Saino/NavierStokesAssemblyKernel_opt";
     
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setValue:@100 forKey:@"nonlinear system newton after iterations"];
+            [solution.solutionInfo setValue:@1.0e-10 forKey:@"nonlinear system newton after tolerance"];
+            
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
@@ -250,15 +255,51 @@
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
             [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
+            [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
     }
-    mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];
+    mod.meshName = [NSMutableString stringWithString:@"rectangle_L80_colored"];
 }
 
--(void)setUpISMIP_HOM_A010_GPU_dense:(id __nonnull)model {
+-(void)setUpISMIP_HOM_A010_GPU_dense1:(id __nonnull)model {
     [self setUpISMIP_HOM_A010_GPU:model];
     FEMModel *mod = (FEMModel *)model;
-    mod.meshName = [NSMutableString stringWithString:@"rectangle2-colored"];
+    for (FEMSolution *solution in mod.solutions) {
+        if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            // If single precision and use of local memory:
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@64 forKey:@"parallel assembly work-group size"];
+            
+            [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
+        }
+    }
+    mod.meshName = [NSMutableString stringWithString:@"rectangle_L80_dense1_colored"];
+}
+
+-(void)setUpISMIP_HOM_A010_GPU_dense2:(id __nonnull)model {
+    [self setUpISMIP_HOM_A010_GPU:model];
+    FEMModel *mod = (FEMModel *)model;
+    for (FEMSolution *solution in mod.solutions) {
+        if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            
+            [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
+        }
+    }
+    mod.meshName = [NSMutableString stringWithString:@"rectangle_L80_dense2_colored"];
 }
 
 @end

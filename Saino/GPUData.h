@@ -10,8 +10,6 @@
 typedef struct {
     
     double * __nullable basisFunctions_dp;
-    double * __nullable nodesUVW_dp;
-    double * __nullable gaussPoints_dp;
     double * __nullable nodesX_dp;
     double * __nullable nodesY_dp;
     double * __nullable nodesZ_dp;
@@ -25,8 +23,6 @@ typedef struct {
     double mk_dp;
     
     float * __nullable basisFunctions_sp;
-    float * __nullable nodesUVW_sp;
-    float * __nullable gaussPoints_sp;
     float * __nullable nodesX_sp;
     float * __nullable nodesY_sp;
     float * __nullable nodesZ_sp;
@@ -42,8 +38,6 @@ typedef struct {
     // Memory locations to which the above variable
     // point according to the type used
     void * __nullable basisFunctions_v;
-    void * __nullable nodesUVW_v;
-    void * __nullable gaussPoints_v;
     void * __nullable nodesX_v;
     void * __nullable nodesY_v;
     void * __nullable nodesZ_v;
@@ -58,4 +52,82 @@ typedef struct {
     
 } ice_flow_gpu;
 
+typedef struct {
+    int p[8];
+    int q[8];
+    int r[8];
+    float coeff[8];
+} basis_functions_f;
+
+typedef struct {
+    int p[8];
+    int q[8];
+    int r[8];
+    double coeff[8];
+} basis_functions_d;
+
+typedef struct {
+    float nodes_x[8];
+    float nodes_y[8];
+    float nodes_z[8];
+    float vx[8];
+    float vy[8];
+    float vz[8];
+    float padding;
+} element_info_f;
+
+typedef struct {
+    float nodes_x[8];
+    float nodes_y[8];
+    float nodes_z[8];
+    float vx[8];
+    float vy[8];
+    float vz[8];
+    float dBasisdx[8][8][3];
+    float detJ[8];
+    float padding;
+} element_info_extended_f;
+
+typedef struct {
+    double nodes_x[8];
+    double nodes_y[8];
+    double nodes_z[8];
+    double vx[8];
+    double vy[8];
+    double vz[8];
+    double padding;
+} element_info_d;
+
+typedef struct {
+    double nodes_x[8];
+    double nodes_y[8];
+    double nodes_z[8];
+    double vx[8];
+    double vy[8];
+    double vz[8];
+    double dBasisdx[8][8][3];
+    double detJ[8];
+    double padding;
+} element_info_extended_d;
+
+typedef struct {
+    float basis[8][8];
+} element_basis_f;
+
+typedef struct {
+    double basis[8][8];
+} element_basis_d;
+
+typedef struct {
+    float dBasisdx[8][8][3];
+    float detJ[8];
+} element_dBasisdx_f;
+
+typedef struct {
+    double dBasisdx[8][8][3];
+    double detJ[8];
+} element_dBasisdx_d;
+
 void init_gpu_data(ice_flow_gpu * __nonnull data);
+void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
+void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);

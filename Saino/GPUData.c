@@ -14,8 +14,6 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
     
     *data = (ice_flow_gpu){
         .basisFunctions_dp=NULL,
-        .nodesUVW_dp=NULL,
-        .gaussPoints_dp=NULL,
         .nodesX_dp=NULL,
         .nodesY_dp=NULL,
         .nodesZ_dp=NULL,
@@ -24,8 +22,6 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .matRHS_dp=NULL,
         
         .basisFunctions_sp=NULL,
-        .nodesUVW_sp=NULL,
-        .gaussPoints_sp=NULL,
         .nodesX_sp=NULL,
         .nodesY_sp=NULL,
         .nodesZ_sp=NULL,
@@ -34,8 +30,6 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .matRHS_sp=NULL,
         
         .basisFunctions_v=NULL,
-        .nodesUVW_v=NULL,
-        .gaussPoints_v=NULL,
         .nodesX_v=NULL,
         .nodesY_v=NULL,
         .nodesZ_v=NULL,
@@ -61,4 +55,25 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .mk_sp=0.0f,
     };
 }
+
+void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data) {
+    
+    *data = (basis_functions_f) {
+        .p = {0, 0, 0, 0, 0, 0, 0, 0},
+        .q = {0, 0, 0, 0, 0, 0, 0, 0},
+        .r = {0, 0, 0, 0, 0, 0, 0, 0},
+        .coeff = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+    };
+}
+
+void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data) {
+    
+    *data = (basis_functions_d) {
+        .p = {0, 0, 0, 0, 0, 0, 0, 0},
+        .q = {0, 0, 0, 0, 0, 0, 0, 0},
+        .r = {0, 0, 0, 0, 0, 0, 0, 0},
+        .coeff = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+    };
+}
+
 

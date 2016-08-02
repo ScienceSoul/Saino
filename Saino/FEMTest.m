@@ -743,11 +743,13 @@ static dispatch_once_t onceToken;
     double n = 3.0;
     double eta = pow((2.0 * 100.0), (-1.0/n));
     
-    NSString *kernelPath = [self.path stringByReplacingOccurrencesOfString:@"Tests" withString:@"Saino/NavierStokesAssemblyKernel"];
+    NSString *kernelPath = [self.path stringByReplacingOccurrencesOfString:@"Tests" withString:@"Saino/NavierStokesAssemblyKernel_opt"];
     
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
@@ -755,6 +757,12 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
             [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
+            [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
     }
     mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];

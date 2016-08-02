@@ -39,3 +39,27 @@ double cpumemory () {
     getrusage( RUSAGE_SELF, &usage );
     return (double) 1.0 * usage.ru_maxrss;
 }
+
+double machcore(uint64_t endTime, uint64_t startTime){
+    
+    uint64_t difference = endTime - startTime;
+    static double conversion = 0.0;
+    double value = 0.0;
+    
+    if( 0.0 == conversion )
+    {
+        mach_timebase_info_data_t info;
+        kern_return_t err = mach_timebase_info( &info );
+        
+        if( 0 == err ){
+            /* seconds */
+            conversion = 1e-9 * (double) info.numer / (double) info.denom;
+            /* nanoseconds */
+            //conversion = (double) info.numer / (double) info.denom;
+        }
+    }
+    
+    value = conversion * (double) difference;
+    
+    return value;
+}

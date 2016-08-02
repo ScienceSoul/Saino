@@ -6964,6 +6964,7 @@ jump:
     Element_t *elements = NULL;
     if (readElementsFromFile == YES) {
         elements = (Element_t*) malloc( sizeof(Element_t) * mesh.numberOfBulkElements );
+        Element_t *meshElements = mesh.getElements;
         initElements(elements, mesh.numberOfBulkElements );
         
         NSString *elementsFile = [[dir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"mesh.colored_elements"];
@@ -6993,6 +6994,7 @@ jump:
             }
             elements[nb].ElementIndex = [filteredArray[0] intValue];
             elements[nb].color.colorIndex = [filteredArray[1] intValue];
+            meshElements[nb].color.colorIndex = [filteredArray[1] intValue];
             elements[nb].NDOFs = [filteredArray[2] intValue];
             elements[nb].NodeIndexes = (int *)malloc([filteredArray[2] intValue] * sizeof(int));
             j = 3;

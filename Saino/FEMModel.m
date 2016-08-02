@@ -530,8 +530,10 @@
         [setUP setUpISMIP_HOM_A010:self];
     } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU"]) {
         [setUP setUpISMIP_HOM_A010_GPU:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_dense:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense1"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_dense1:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense2"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_dense2:self];
     }
 #endif
     

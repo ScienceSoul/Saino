@@ -119,7 +119,7 @@ cl_device_id __nullable find_single_device(void) {
 
 int device_info(cl_device_id __nonnull device_id) {
     
-    cl_uint err;
+    cl_uint err, clock_frequency;
     
     cl_char vendor_name[1024] = {0};
     cl_char device_name[1025] = {0};
@@ -131,11 +131,13 @@ int device_info(cl_device_id __nonnull device_id) {
     
     err |= clGetDeviceInfo(device_id, CL_DRIVER_VERSION, sizeof(device_driver_version), device_driver_version, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_PROFILE, sizeof(device_profile), device_profile, NULL);
+    err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(clock_frequency), &clock_frequency, NULL);
     
-    printf("device_info: vendor: %s.\n", vendor_name);
-    printf("device_info: device name: %s.\n", device_name);
-    printf("device_info: OpenCL (driver) version: %s.\n", device_driver_version);
-    printf("device_info: supported profile: %s.\n", device_profile);
+    fprintf(stdout,"device_info: vendor: %s.\n", vendor_name);
+    fprintf(stdout,"device_info: device name: %s.\n", device_name);
+    fprintf(stdout,"device_info: OpenCL (driver) version: %s.\n", device_driver_version);
+    fprintf(stdout,"device_info: supported profile: %s.\n", device_profile);
+    fprintf(stdout,"device_info: clock frequency (MHz): %u.\n", clock_frequency);
     
     return CL_SUCCESS;
 }
@@ -171,25 +173,25 @@ int device_stats(cl_device_id __nonnull device_id) {
     err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(max_work_item_sizes), max_work_item_sizes, NULL);
     
-    printf("device_stats: supported OpenCL extensions: %s.\n",device_extensions);
-    printf("device_stats: address width: %u.\n",addr_size);
-    printf("device_stats: global memory size (MB): %llu.\n", global_mem_size/(1024*1024));
-    printf("device_stats: local memory size (KB): %llu.\n",local_mem_size/1024);
-    printf("device_stats: global memory cache line size (KB): %llu.\n", global_mem_cache_size/1024);
-    printf("device_stats: maximum memory allocation size (MB): %llu.\n", max_mem_alloc_size/(1024*1024));
-    printf("device_stats: maximum compute units: %u.\n", max_compute_units);
-    printf("device_stats: clock frequency (MHz): %u.\n", clock_frequency);
+    fprintf(stdout,"device_stats: supported OpenCL extensions: %s.\n",device_extensions);
+    fprintf(stdout,"device_stats: address width: %u.\n",addr_size);
+    fprintf(stdout,"device_stats: global memory size (MB): %llu.\n", global_mem_size/(1024*1024));
+    fprintf(stdout,"device_stats: local memory size (KB): %llu.\n",local_mem_size/1024);
+    fprintf(stdout,"device_stats: global memory cache line size (KB): %llu.\n", global_mem_cache_size/1024);
+    fprintf(stdout,"device_stats: maximum memory allocation size (MB): %llu.\n", max_mem_alloc_size/(1024*1024));
+    fprintf(stdout,"device_stats: maximum compute units: %u.\n", max_compute_units);
+    fprintf(stdout,"device_stats: clock frequency (MHz): %u.\n", clock_frequency);
     
-    printf("device_stats: maximum work group size: %zu.\n", max_work_group_size);
-    printf("device_stats: maximum work item size (each dimension): %zu %zu %zu.\n", max_work_item_sizes[0], max_work_item_sizes[1], max_work_item_sizes[2]);
+    fprintf(stdout,"device_stats: maximum work group size: %zu.\n", max_work_group_size);
+    fprintf(stdout,"device_stats: maximum work item size (each dimension): %zu %zu %zu.\n", max_work_item_sizes[0], max_work_item_sizes[1], max_work_item_sizes[2]);
 	
     for(int k=0;k<6;k++) {
         err |= clGetDeviceInfo(device_id, vector_width_types_native[k], sizeof(vector_width_native), &vector_width_native, NULL);
-        printf("device_stats: native vector type width for: %s = %u.\n", vector_type_names[k], vector_width_native);
+        fprintf(stdout,"device_stats: native vector type width for: %s = %u.\n", vector_type_names[k], vector_width_native);
     }
     for(int k=0;k<6;k++) {
         err |= clGetDeviceInfo(device_id, vector_width_types_prefered[k], sizeof(vector_width_prefered), &vector_width_prefered, NULL);
-        printf("device_stats: prefered vector type width for: %s = %u.\n", vector_type_names[k], vector_width_prefered);
+        fprintf(stdout,"device_stats: prefered vector type width for: %s = %u.\n", vector_type_names[k], vector_width_prefered);
     }
 	
 	return CL_SUCCESS;
