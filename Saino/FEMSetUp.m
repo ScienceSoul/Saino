@@ -302,4 +302,21 @@
     mod.meshName = [NSMutableString stringWithString:@"rectangle_L80_dense2_colored"];
 }
 
+-(void)setUpISMIP_HOM_A010_GPU_dense3:(id __nonnull)model {
+    [self setUpISMIP_HOM_A010_GPU:model];
+    FEMModel *mod = (FEMModel *)model;
+    for (FEMSolution *solution in mod.solutions) {
+        if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
+        }
+    }
+    mod.meshName = [NSMutableString stringWithString:@"rectangle_L80_dense3_colored"];
+}
+
 @end

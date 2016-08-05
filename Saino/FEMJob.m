@@ -1536,6 +1536,13 @@ jump:
             }
         }
         
+        // Increase the process stack size to the maximum limit
+        int result = increaseStackSize();
+        if (result != 0) {
+            fprintf(stderr, "setrlimit returned the error: %d\n", result);
+            fatal("FEMJob:runWithInitialize", "Problem when setting the maximum stack size.");
+        }
+        
         // Check if we don't use a MDF
         for (NSString *argument in args) {
             if ([argument isEqualToString:@"--no_mdf"] == YES) {
@@ -1604,7 +1611,6 @@ jump:
             [self.model loadModelName:self.modelName boundariesOnly:NO dummy:NULL dummy:NULL];
             
             // Check whether we need to color the mesh if parallel assembly is required
-            
             for (FEMSolution *solution in self.model.solutions) {
                 if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
                     parallelAssembly = YES;

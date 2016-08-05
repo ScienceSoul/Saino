@@ -506,8 +506,9 @@
     listUtils = [FEMListUtilities sharedListUtilities];
     
     // TODO: Here comes the Model Description File (MDF) parser
-    // For now we are just testing and we set manually a model
+    // For now we are just testing or we set manually a model
 #ifdef TEST
+    // Tests:
     FEMTest *test = [FEMTest sharedTest];
     if (test.do_heatq == YES) {
         [test setUpHeateqTest:self];
@@ -525,6 +526,13 @@
         [test setUpISMIP_HOM_C010Test:self];
     }
 #else
+    // Temporary command line interface
+    // Call with:
+    //      ./Saino setUpISMIP_HOM_A010 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_dense1 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_dense2 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_dense3 --no_mdf
     FEMSetUp *setUP = [[FEMSetUp alloc] init];
     if ([name isEqualToString:@"setUpISMIP_HOM_A010"]) {
         [setUP setUpISMIP_HOM_A010:self];
@@ -534,6 +542,8 @@
         [setUP setUpISMIP_HOM_A010_GPU_dense1:self];
     } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense2"]) {
         [setUP setUpISMIP_HOM_A010_GPU_dense2:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense3"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_dense3:self];
     }
 #endif
     

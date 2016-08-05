@@ -60,3 +60,5 @@ void __attribute((overloadable)) cshift(int * __nonnull arr, size_t narr, unsign
 char * __nullable dateAndTime(void);
 void startAdvanceOutput(char * __nonnull solverName, char * __nonnull outputType);
 void advanceOutput(int t, int n, double * __nullable dot_t, double * __nullable percent_t);
+
+int increaseStackSize(void);

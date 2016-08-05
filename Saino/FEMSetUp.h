@@ -16,5 +16,6 @@
 -(void)setUpISMIP_HOM_A010_GPU:(id __nonnull)model;
 -(void)setUpISMIP_HOM_A010_GPU_dense1:(id __nonnull)model;
 -(void)setUpISMIP_HOM_A010_GPU_dense2:(id __nonnull)model;
+-(void)setUpISMIP_HOM_A010_GPU_dense3:(id __nonnull)model;
 
 @end

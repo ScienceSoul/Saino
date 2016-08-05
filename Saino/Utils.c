@@ -6,6 +6,8 @@
 //  Copyright 2011 Institute of Low Temperature Science. All rights reserved.
 //
 
+#include <sys/resource.h>
+
 #include "Utils.h"
 #include "TimeProfile.h"
 
@@ -926,4 +928,21 @@ void advanceOutput(int t, int n, double * __nullable dot_t, double * __nullable 
         printf("\n");
         newLine = true;
     }
+}
+
+int increaseStackSize(void) {
+    
+    int result;
+    struct rlimit rl;
+    
+    result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0) {
+        if (rl.rlim_cur < rl.rlim_max) {
+            rl.rlim_cur = rl.rlim_max;
+            result = setrlimit(RLIMIT_STACK, &rl);
+        }
+    } else {
+        fatal("increaseStackSize", "Problem reading the stack size.");
+    }
+    return result;
 }
