@@ -7,6 +7,7 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 
 #include "GPUData.h"
 
@@ -74,6 +75,36 @@ void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __no
         .r = {0, 0, 0, 0, 0, 0, 0, 0},
         .coeff = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
     };
+}
+
+void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data, int size) {
+    
+    for (int i=0; i<size; i++) {
+        memset(data[i].nodes_x, 0.0f, sizeof(data[i].nodes_x) );
+        memset(data[i].nodes_y, 0.0f, sizeof(data[i].nodes_y) );
+        memset(data[i].nodes_z, 0.0f, sizeof(data[i].nodes_z) );
+        
+        memset(data[i].vx, 0.0f, sizeof(data[i].vx) );
+        memset(data[i].vy, 0.0f, sizeof(data[i].vy) );
+        memset(data[i].vz, 0.0f, sizeof(data[i].vz) );
+        
+        memset(data[i].perm, -1, sizeof(data[i].perm) );
+    }
+}
+
+void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size) {
+    
+    for (int i=0; i<size; i++) {
+        memset(data[i].nodes_x, 0.0, sizeof(data[i].nodes_x) );
+        memset(data[i].nodes_y, 0.0, sizeof(data[i].nodes_y) );
+        memset(data[i].nodes_z, 0.0, sizeof(data[i].nodes_z) );
+        
+        memset(data[i].vx, 0.0, sizeof(data[i].vx) );
+        memset(data[i].vy, 0.0, sizeof(data[i].vy) );
+        memset(data[i].vz, 0.0, sizeof(data[i].vz) );
+        
+        memset(data[i].perm, -1, sizeof(data[i].perm) );
+    }
 }
 
 

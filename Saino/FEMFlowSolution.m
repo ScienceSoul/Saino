@@ -92,9 +92,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 nsCondensateStiff:(void (* __nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
            defaultUpdateEquations:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP;
 -(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode;
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 @end
 
 @implementation FEMFlowSolution {
@@ -167,6 +168,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     char * __nullable _kernel_source;
     BOOL _initializeGPU;
     NSString * __nullable _precision;
+    cl_uint _positionInColorMapping;
     
     // Ice flow data on the GPU
     ice_flow_gpu *_gpuData;
@@ -179,6 +181,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     element_dBasisdx_f *_element_dBasisdx_f;
     element_dBasisdx_d *_element_dBasisdx_d;
+    
+    nodal_data_f *_nodal_data_f;
+    nodal_data_d *_nodal_data_d;
     
     // GPU buffers
     cl_mem _basis_functions;
@@ -197,10 +202,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_mem _gpuNewtonLinear;
     cl_mem _element_basis;
     cl_mem _element_dbasisdx;
+    cl_mem _nodal_data;
     void * __nullable _mapped_matValues;
     void * __nullable _mapped_matRHS;
     void * __nullable _mapped_varSolution;
     void * __nullable _mapped_gpuNewton;
+    void * __nullable _mapped_nodal_data;
 }
 
 -(void)FEMFlowSolution_nullify {
@@ -917,7 +924,6 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     Element_t *element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
     
-    int err;
     if ([precisionMode isEqualToString:@"single"] == YES) {
         
         _basis_functions_f = (basis_functions_f *)malloc(sizeof(basis_functions_f)*8);
@@ -944,9 +950,85 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             }
         }
     }
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_initElementBasisFunctions", "Error in setting gpu data.");
+}
+
+-(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+    
+    int err, n, nd;
+    Element_t *element = NULL;
+    const char *type= "double";
+    
+    int *indexes = intvec(0, solution.mesh.maxElementDofs-1);
+    
+    Nodes_t *nodes = (Nodes_t*)malloc(sizeof(Nodes_t));
+    nodes->x = doublevec(0, mesh.maxElementNodes-1);
+    nodes->y = doublevec(0, mesh.maxElementNodes-1);
+    nodes->z = doublevec(0, mesh.maxElementNodes-1);
+    nodes->numberOfNodes = mesh.maxElementNodes;
+    
+    if ([precisionMode isEqualToString:@"single"] == YES) {
+        _nodal_data_f = (nodal_data_f *)malloc(sizeof(nodal_data_f)*mesh.numberOfBulkElements);
+        init_nodal_data(_nodal_data_f, mesh.numberOfBulkElements);
+    } else if ([precisionMode isEqualToString:@"double"] == YES) {
+        _nodal_data_d = (nodal_data_d *)malloc(sizeof(nodal_data_d)*mesh.numberOfBulkElements);
+        init_nodal_data(_nodal_data_d, mesh.numberOfBulkElements);
     }
+
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        getNodesIMP(core, @selector(getNodes:model:inElement:resultNodes:numberOfNodes:mesh:), solution, model, element, nodes, NULL, nil);
+        n = element->Type.NumberOfNodes;
+        nd = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        if ([precisionMode isEqualToString:@"double"] == YES) {
+            err = init_data(precision(), type, 9, nodes->x, _nodal_data_d[t].nodes_x, (size_t)n, nodes->y, _nodal_data_d[t].nodes_y, (size_t)n,
+                            nodes->z, _nodal_data_d[t].nodes_z, (size_t)n);
+           switch (_nsdofs) {
+               case 3:
+                   for (int i=0; i<nd; i++) {
+                       _nodal_data_d[t].vx[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                       _nodal_data_d[t].vy[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                   }
+               case 4:
+                   for (int i=0; i<nd; i++) {
+                       _nodal_data_d[t].vx[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                       _nodal_data_d[t].vy[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                       _nodal_data_d[t].vz[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+2];
+                   }
+           }
+            for (int i=0; i<nd; i++) {
+                _nodal_data_d[t].perm[i] = _flowPerm[indexes[i]];
+            }
+            
+        } else if ([precisionMode isEqualToString:@"single"] == YES) {
+            err = init_data(precision(), type, 9, nodes->x, _nodal_data_f[t].nodes_x, (size_t)n, nodes->y, _nodal_data_f[t].nodes_y, (size_t)n,
+                            nodes->z, _nodal_data_f[t].nodes_z, (size_t)n);
+            switch (_nsdofs) {
+                case 3:
+                    for (int i=0; i<nd; i++) {
+                        _nodal_data_f[t].vx[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                        _nodal_data_f[t].vy[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                    }
+                case 4:
+                    for (int i=0; i<nd; i++) {
+                        _nodal_data_f[t].vx[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                        _nodal_data_f[t].vy[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                        _nodal_data_f[t].vz[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+2];
+                    }
+            }
+            for (int i=0; i<nd; i++) {
+                _nodal_data_f[t].perm[i] = _flowPerm[indexes[i]];
+            }
+        }
+     }
+    
+    
+    free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
+    
+    free_dvector(nodes->x, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
+    free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
+    free(nodes);
 }
 
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode {
@@ -1054,71 +1136,79 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _colorMapping.");
     }
     
-    _elementNodeIndexesStore = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), elementNodeIndexesStore, &err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _elementNodeIndexesStore.");
-    }
-    
-    _gpuData->nodesX_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
-    _gpuData->nodesY_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
-    _gpuData->nodesZ_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
-    _gpuData->varSol_v = alloc_mem(precision(), (size_t)flowContainers->sizeValues);
-    if ([precisionMode isEqualToString:@"single"] == YES) {
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        if ([precisionMode isEqualToString:@"single"] == YES) {
+            _nodal_data = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(nodal_data_f)*mesh.numberOfBulkElements, _nodal_data_f, &err);
+        } else if ([precisionMode isEqualToString:@"double"] == YES) {
+            _nodal_data = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(nodal_data_d)*mesh.numberOfBulkElements, _nodal_data_d, &err);
+        }
+    } else {
+        _elementNodeIndexesStore = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), elementNodeIndexesStore, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _elementNodeIndexesStore.");
+        }
         
-        _gpuData->nodesX_sp = _gpuData->nodesX_v;
-        _gpuData->nodesY_sp = _gpuData->nodesY_v;
-        _gpuData->nodesZ_sp = _gpuData->nodesZ_v;
-        _gpuData->varSol_sp = _gpuData->varSol_v;
+        _gpuData->nodesX_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
+        _gpuData->nodesY_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
+        _gpuData->nodesZ_v = alloc_mem(precision(), (size_t)mesh.numberOfNodes);
+        _gpuData->varSol_v = alloc_mem(precision(), (size_t)flowContainers->sizeValues);
+        if ([precisionMode isEqualToString:@"single"] == YES) {
+            
+            _gpuData->nodesX_sp = _gpuData->nodesX_v;
+            _gpuData->nodesY_sp = _gpuData->nodesY_v;
+            _gpuData->nodesZ_sp = _gpuData->nodesZ_v;
+            _gpuData->varSol_sp = _gpuData->varSol_v;
+            
+            size_t size = (size_t)mesh.numberOfNodes;
+            err = init_data(precision(), type, 9, meshNodes->x, _gpuData->nodesX_sp, size, meshNodes->y,  _gpuData->nodesY_sp, size,
+                            meshNodes->z, _gpuData->nodesZ_sp, size);
+            
+            size = (size_t)flowContainers->sizeValues;
+            err |= init_data(precision(), type, 3, _flowSolution, _gpuData->varSol_sp, size);
+            
+        } else if ([precisionMode isEqualToString:@"double"] == YES) {
+            
+            _gpuData->nodesX_dp = _gpuData->nodesX_v;
+            _gpuData->nodesY_dp = _gpuData->nodesY_v;
+            _gpuData->nodesZ_dp = _gpuData->nodesZ_v;
+            _gpuData->varSol_dp = _gpuData->varSol_v;
+            
+            size_t size = (size_t)mesh.numberOfNodes;
+            err = init_data(precision(), type, 9, meshNodes->x, _gpuData->nodesX_dp, size, meshNodes->y,  _gpuData->nodesY_dp, size,
+                            meshNodes->z, _gpuData->nodesZ_dp, size);
+            
+            size = (size_t)flowContainers->sizeValues;
+            err |= init_data(precision(), type, 3, _flowSolution, _gpuData->varSol_dp, size);
+            
+        }
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Error in setting data.");
+        }
         
-        size_t size = (size_t)mesh.numberOfNodes;
-        err = init_data(precision(), type, 9, meshNodes->x, _gpuData->nodesX_sp, size, meshNodes->y,  _gpuData->nodesY_sp, size,
-                        meshNodes->z, _gpuData->nodesZ_sp, size);
+        _nodesX = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesX_v, err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesX.");
+        }
         
-        size = (size_t)flowContainers->sizeValues;
-        err |= init_data(precision(), type, 3, _flowSolution, _gpuData->varSol_sp, size);
+        _nodesY = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesY_v, err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesY.");
+        }
         
-    } else if ([precisionMode isEqualToString:@"double"] == YES) {
+        _nodesZ = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesZ_v, err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesZ.");
+        }
         
-        _gpuData->nodesX_dp = _gpuData->nodesX_v;
-        _gpuData->nodesY_dp = _gpuData->nodesY_v;
-        _gpuData->nodesZ_dp = _gpuData->nodesZ_v;
-        _gpuData->varSol_dp = _gpuData->varSol_v;
+        _varSolution = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, flowContainers->sizeValues, _gpuData->varSol_v, err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varSolution.");
+        }
         
-        size_t size = (size_t)mesh.numberOfNodes;
-        err = init_data(precision(), type, 9, meshNodes->x, _gpuData->nodesX_dp, size, meshNodes->y,  _gpuData->nodesY_dp, size,
-                        meshNodes->z, _gpuData->nodesZ_dp, size);
-        
-        size = (size_t)flowContainers->sizeValues;
-        err |= init_data(precision(), type, 3, _flowSolution, _gpuData->varSol_dp, size);
-        
-    }
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Error in setting data.");
-    }
-    
-    _nodesX = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesX_v, err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesX.");
-    }
-    
-    _nodesY = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesY_v, err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesY.");
-    }
-    
-    _nodesZ = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, mesh.numberOfNodes, _gpuData->nodesZ_v, err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodesZ.");
-    }
-    
-    _varSolution = createDeviceBuffer(precision(), _context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, flowContainers->sizeValues, _gpuData->varSol_v, err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varSolution.");
-    }
-    
-    _varPermutation = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*flowContainers->sizePerm, _flowPerm, &err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varPermutation.");
+        _varPermutation = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*flowContainers->sizePerm, _flowPerm, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _varPermutation.");
+        }
     }
     
     _gpuNewtonLinear = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_char), &_newtonLinearization, &err);
@@ -1136,20 +1226,46 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     GlobalMemoryAllocationSize_t *globalAllocation = (GlobalMemoryAllocationSize_t *)malloc(sizeof(GlobalMemoryAllocationSize_t));
     initGlobalMemoryAllocation(globalAllocation);
     
-    int nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS + mesh.numberOfNodes
-    + mesh.numberOfNodes +  mesh.numberOfNodes + flowContainers->sizeValues;
+    int nbOfReals = 0;
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS;
+    } else {
+        nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS + mesh.numberOfNodes
+        + mesh.numberOfNodes +  mesh.numberOfNodes + flowContainers->sizeValues;
+    }
+    
     if (precision() == 1) {
        globalAllocation->nb_float = nbOfReals;
     } else {
         globalAllocation->nb_double = nbOfReals;
     }
     
-    globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements
-                               + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements;
+    } else {
+        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements
+        + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
+    }
     
     globalAllocation->nb_char = 1;
     
     size_t globalAllocationSize = computeGlobalMemoryAllocation(globalAllocation);
+    
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        if (precision() == 1) {
+            globalAllocationSize = globalAllocationSize + sizeof(nodal_data_f)*mesh.numberOfBulkElements;
+        } else {
+            globalAllocationSize = globalAllocationSize + sizeof(nodal_data_d)*mesh.numberOfBulkElements;
+        }
+    }
+    
+    if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
+        if (precision() == 1) {
+            globalAllocationSize = globalAllocationSize + sizeof(basis_functions_f)*8;
+        } else {
+            globalAllocationSize = globalAllocationSize + sizeof(basis_functions_d)*8;
+        }
+    }
     
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
         if (precision() == 1) {
@@ -1161,25 +1277,32 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: %lu MBytes allocated on the GPU global address space.\n",
             globalAllocationSize/(1024*1024));
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: global matrix number of rows: %d.\n", solution.matrix.numberOfRows);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: global matrix number of non-zeros: %d.\n", matContainers->sizeValues);
 }
 
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
     cl_int err;
+    cl_uint argIdx = 0;
     
-    err  = clSetKernelArg(_kernel_assembly, 0, sizeof(cl_mem), &_matValues);
-    err |= clSetKernelArg(_kernel_assembly, 1, sizeof(cl_mem), &_matRHS);
-    err |= clSetKernelArg(_kernel_assembly, 2, sizeof(cl_mem), &_matDiag);
-    err |= clSetKernelArg(_kernel_assembly, 3, sizeof(cl_mem), &_matRows);
-    err |= clSetKernelArg(_kernel_assembly, 4, sizeof(cl_mem), &_matCols);
-    err |= clSetKernelArg(_kernel_assembly, 5, sizeof(cl_mem), &_colorMapping);
-    err |= clSetKernelArg(_kernel_assembly, 6, sizeof(cl_mem), &_elementNodeIndexesStore);
-    err |= clSetKernelArg(_kernel_assembly, 7, sizeof(cl_mem), &_nodesX);
-    err |= clSetKernelArg(_kernel_assembly, 8, sizeof(cl_mem), &_nodesY);
-    err |= clSetKernelArg(_kernel_assembly, 9, sizeof(cl_mem), &_nodesZ);
-    err |= clSetKernelArg(_kernel_assembly, 10, sizeof(cl_mem), &_varSolution);
-    err |= clSetKernelArg(_kernel_assembly, 11, sizeof(cl_mem), &_varPermutation);
-    err |= clSetKernelArg(_kernel_assembly, 12, sizeof(cl_mem), &_gpuNewtonLinear);
+    err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_matValues);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRHS);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matDiag);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRows);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matCols);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_colorMapping);
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodal_data);
+    } else {
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_elementNodeIndexesStore);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesX);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesY);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesZ);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_varSolution);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_varPermutation);
+    }
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_gpuNewtonLinear);
     
     if (solution.solutionInfo[@"gpu ice density"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice density value for gpu execution.");
     if (solution.solutionInfo[@"gpu ice viscosity"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice viscosity value for gpu execution.");
@@ -1235,40 +1358,37 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
     }
     
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, 13, 1, *_gpuData->density_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, 14, 1, *_gpuData->viscosity_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, 15, 1, *_gpuData->gravity_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, 16, 1, *_gpuData->hk_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, 17, 1, *_gpuData->mk_v);
+    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->density_v);
+    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->viscosity_v);
+    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->gravity_v);
+    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->hk_v);
+    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->mk_v);
+    
+    _positionInColorMapping = ++argIdx;
     
     int n = element->Type.NumberOfNodes;
     int nBasis = element->Type.NumberOfNodes;
-    err |= clSetKernelArg(_kernel_assembly, 19, sizeof(cl_int), &n);
-    err |= clSetKernelArg(_kernel_assembly, 20, sizeof(cl_int), &n);
-    err |= clSetKernelArg(_kernel_assembly, 21, sizeof(cl_int), &nBasis);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &nBasis);
     
     int varDofs = solution.variable.dofs;
-    err |= clSetKernelArg(_kernel_assembly, 22, sizeof(cl_int), &varDofs);
+    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &varDofs);
     
-    int argIdx = 22;
     // If we use basis function from global memory instead of the definitions
     // inside the kernel
     if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
-        argIdx++;
-        err |= clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_basis_functions);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_basis_functions);
     }
     
     // If we compute the basis and basis derivatives in another kernel
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
-        argIdx++;
-        err |= clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_element_basis);
-        argIdx++;
-        err |= clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_element_dbasisdx);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_element_basis);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_element_dbasisdx);
     }
     
     // Allocate space for local memory if required
     if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
-        argIdx++;
         int wrk_groupSize = 0;
         if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
             wrk_groupSize  = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
@@ -1276,15 +1396,15 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
             if ([precisionMode isEqualToString:@"single"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
+                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
             } else if ([precisionMode isEqualToString:@"double"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
+                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
             }
         } else {
             if ([precisionMode isEqualToString:@"single"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, argIdx, wrk_groupSize*sizeof(element_info_f), NULL);
+                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_f), NULL);
             } else if ([precisionMode isEqualToString:@"double"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, argIdx, wrk_groupSize*sizeof(element_info_d), NULL);
+                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_d), NULL);
             }
         }
     }
@@ -1295,32 +1415,34 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
         int numberOfElements = model.numberOfBulkElements;
-        err  = clSetKernelArg(_kernel_basis_dbasisdx, 0, sizeof(cl_mem), &_element_basis);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 1, sizeof(cl_mem), &_element_dbasisdx);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 2, sizeof(cl_mem), &_nodesX);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 3, sizeof(cl_mem), &_nodesY);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 4, sizeof(cl_mem), &_nodesZ);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 5, sizeof(cl_mem), &_elementNodeIndexesStore);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 6, sizeof(cl_int), &n);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 7, sizeof(cl_int), &n);
-        err |= clSetKernelArg(_kernel_basis_dbasisdx, 8, sizeof(cl_int), &numberOfElements);
+        argIdx = 0;
+        err  = clSetKernelArg(_kernel_basis_dbasisdx, argIdx, sizeof(cl_mem), &_element_basis);
+        err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_element_dbasisdx);
+        if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_nodal_data);
+        } else {
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_nodesX);
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_nodesY);
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_nodesZ);
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_elementNodeIndexesStore);
+        }
+        err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_int), &n);
+        err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_int), &n);
+        err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_int), &numberOfElements);
         
-        argIdx=8;
         if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
-            argIdx++;
-            err |= clSetKernelArg(_kernel_basis_dbasisdx, argIdx, sizeof(cl_mem), &_basis_functions);
+            err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, sizeof(cl_mem), &_basis_functions);
         }
         
         if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
-            argIdx++;
             int wrk_groupSize = 0;
             if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
                 wrk_groupSize  = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
             }
             if ([precisionMode isEqualToString:@"single"] == YES) {
-                err |= clSetKernelArg(_kernel_basis_dbasisdx, argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
+                err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
             } else if ([precisionMode isEqualToString:@"double"] == YES) {
-                err |= clSetKernelArg(_kernel_basis_dbasisdx, argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
+                err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
             }
         }
         if (err < 0) {
@@ -1329,7 +1451,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     cl_int err;
     
@@ -1388,6 +1510,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
         [listOfOptions appendString:@" -DGLOBAL_BASIS_FUNCTIONS"];
     }
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+        [listOfOptions appendString:@" -DNODAL_DATA"];
+    }
     if ([precisionMode isEqualToString:@"single"] == YES) {
         [listOfOptions replaceOccurrencesOfString:@"-DKERNEL_FP_64" withString:@"-DKERNEL_FP_32" options:NSBackwardsSearch range:NSMakeRange(0, [listOfOptions length])];
     }
@@ -1397,6 +1522,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Do we use DEBUG mode in the kernel
     if ([solution.solutionInfo[@"enable GPU debug mode"] boolValue] == YES) {
         [listOfOptions appendString:@" -DDEBUG"];
+    }
+    
+    // Do we have a transient run
+    if (transient == YES) {
+        [listOfOptions appendString:@" -DTRANSIENT"];
+    }
+    
+    // Do we use the Newton Linearization
+    if ([solution.solutionInfo[@"enable newton linearization"] boolValue] == YES) {
+        [listOfOptions appendString:@" -DNEWTONLINEAR"];
     }
     
     // Do we have negative permutation indexes
@@ -1457,6 +1592,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     _gpuData = (ice_flow_gpu *)malloc(sizeof(ice_flow_gpu));
     init_gpu_data(_gpuData);
+    
     if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
         [self FEMFlowSolution_initElementBasisFunctions:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP];
     }
@@ -1470,6 +1606,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             _element_basis_d = (element_basis_d *)malloc(sizeof(element_basis_d));
             _element_dBasisdx_d = (element_dBasisdx_d *)malloc(sizeof(element_dBasisdx_d)*mesh.numberOfBulkElements);
         }
+    }
+    
+    if ([solution.solutionInfo[@"use element nodal data"] doubleValue] == YES) {
+        [self FEMFlowSolution_iniNodalData:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getNodes:getNodesIMP getElementDofsSolution:getElementDofsSolutionIMP];
     }
     
     // Allocate the GPU buffers and map the written buffers to the host
@@ -1515,6 +1655,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _element_dBasisdx_f = NULL;
         _element_dBasisdx_d = NULL;
         
+        _nodal_data_f = NULL;
+        _nodal_data_d = NULL;
+        
         _basis_functions = NULL;
         
         _matDiag = NULL;
@@ -1530,10 +1673,15 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _varSolution = NULL;
         _varPermutation = NULL;
         _gpuNewtonLinear = NULL;
+        _element_basis = NULL;
+        _element_dbasisdx = NULL;
+        _nodal_data = NULL;
+        
         _mapped_matValues = NULL;
         _mapped_matRHS = NULL;
         _mapped_varSolution = NULL;
         _mapped_gpuNewton = NULL;
+        _mapped_nodal_data = NULL;
 }
     
     return self;
@@ -1650,6 +1798,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             if(_element_dBasisdx_d != NULL) {
                 free(_element_dBasisdx_d);
             }
+            
+            if (_nodal_data_f != NULL) free(_nodal_data_f);
+            if (_nodal_data_d != NULL) free(_nodal_data_d);
             
             if (_kernel_source != NULL) free(_kernel_source);
         }
@@ -2168,7 +2319,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 fatal("FEMFlowSolution:solutionComputer", "Unknown GPU precision mode.");
             }
             
-            [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh precisionMode:_precision getActiveElement:getActiveElementIMP];
+            [self FEMFlowSolution_setGPUCore:core model:model solution:solution mesh:mesh precisionMode:_precision transientSimulation:transient getActiveElement:getActiveElementIMP getNodes:getNodesIMP getElementDofsSolution:getElementDofsSolutionIMP];
             _initializeGPU = YES;
         }
     }
@@ -2339,7 +2490,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 
                 size_t global_work_size = [color[0] intValue];
                 
-                err = clSetKernelArg(_kernel_assembly, 18, sizeof(cl_int), &position);
+                err = clSetKernelArg(_kernel_assembly, _positionInColorMapping, sizeof(cl_int), &position);
                 if (err < 0) {
                     fatal("FEMFlowSolution:solutionComputer", "Error in setting kernel arguments.");
                 }
@@ -2720,19 +2871,78 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
         if (parallelAssembly == YES) {
             cl_int err;
-            _mapped_varSolution = enqueueDeviceMapBuffer(precision(), _cmd_queue, _varSolution, CL_TRUE, CL_MAP_WRITE, 0, flowContainers->sizeValues, 0, NULL, NULL, err);
-            if (err < 0) {
-                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_matValues.");
-            }
-            if (precision() == 0) {
-                memcpy(_mapped_varSolution, _flowSolution, flowContainers->sizeValues*sizeof(cl_double));
-            } else {
-                float *buff = _mapped_varSolution;
-                for (i=0; i<flowContainers->sizeValues; i++) {
-                    buff[i] = (float)_flowSolution[i];
+            if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
+                
+                int nd;
+                Element_t *element;
+                int *indexes = intvec(0, solution.mesh.maxElementDofs-1);
+                
+                if (precision() == 0) {
+                    _mapped_nodal_data = clEnqueueMapBuffer(_cmd_queue, _nodal_data, CL_TRUE, CL_MAP_WRITE, 0, sizeof(nodal_data_d)*mesh.numberOfBulkElements, 0, NULL, NULL, &err);
+                    if (err < 0) {
+                        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_nodal_data.");
+                    }
+                    nodal_data_d *ref = _mapped_nodal_data;
+                    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+                        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+                        nd = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+                        switch (_nsdofs) {
+                            case 3:
+                                for (int i=0; i<nd; i++) {
+                                    ref[t].vx[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                                    ref[t].vy[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                                }
+                            case 4:
+                                for (int i=0; i<nd; i++) {
+                                    ref[t].vx[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                                    ref[t].vy[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                                    ref[t].vz[i] = _flowSolution[_nsdofs*_flowPerm[indexes[i]]+2];
+                                }
+                        }
+                    }
+                } else {
+                    _mapped_nodal_data = clEnqueueMapBuffer(_cmd_queue, _nodal_data, CL_TRUE, CL_MAP_WRITE, 0, sizeof(nodal_data_f)*mesh.numberOfBulkElements, 0, NULL, NULL, &err);
+                    if (err < 0) {
+                        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_nodal_data.");
+                    }
+                    nodal_data_f *ref = _mapped_nodal_data;
+                    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+                        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+                        nd = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+                        switch (_nsdofs) {
+                            case 3:
+                                for (int i=0; i<nd; i++) {
+                                    ref[t].vx[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                                    ref[t].vy[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                                }
+                            case 4:
+                                for (int i=0; i<nd; i++) {
+                                    ref[t].vx[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]];
+                                    ref[t].vy[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+1];
+                                    ref[t].vz[i] = (float)_flowSolution[_nsdofs*_flowPerm[indexes[i]]+2];
+                                }
+                        }
+                    }
                 }
+                
+                clEnqueueUnmapMemObject(_cmd_queue, _nodal_data, _mapped_nodal_data, 0, NULL, NULL);
+                free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
+                
+            } else {
+                _mapped_varSolution = enqueueDeviceMapBuffer(precision(), _cmd_queue, _varSolution, CL_TRUE, CL_MAP_WRITE, 0, flowContainers->sizeValues, 0, NULL, NULL, err);
+                if (err < 0) {
+                    fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't map _mapped_matValues.");
+                }
+                if (precision() == 0) {
+                    memcpy(_mapped_varSolution, _flowSolution, flowContainers->sizeValues*sizeof(cl_double));
+                } else {
+                    float *buff = _mapped_varSolution;
+                    for (i=0; i<flowContainers->sizeValues; i++) {
+                        buff[i] = (float)_flowSolution[i];
+                    }
+                }
+                clEnqueueUnmapMemObject(_cmd_queue, _varSolution, _mapped_varSolution, 0, NULL, NULL);
             }
-            clEnqueueUnmapMemObject(_cmd_queue, _varSolution, _mapped_varSolution, 0, NULL, NULL);
         }
         
         relativeChange = solution.variable.nonLinChange;

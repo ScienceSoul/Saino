@@ -294,7 +294,7 @@
     
     // We don't try to copy these objects from the original matrix.
     // Instead just assign them to nil since anyway they were only
-    // references in the original matrix.
+    // referenced in the original matrix.
     matrix.child = nil;
     matrix.parent = nil;
     matrix.constraint = nil;

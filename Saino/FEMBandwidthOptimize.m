@@ -95,7 +95,9 @@
 }
 
 /***********************************************************************************
+ 
     Method for computing the bandwidth of a sparse matrix
+ 
 ***********************************************************************************/
 -(int)computeBandWidthInListMatrix:(ListMatrix_t * __nonnull)list size:(int)n reorder:(int * __nullable)reorder invInitialReorder:(int * __nullable)invInitialReorder {
     
@@ -123,8 +125,10 @@
 }
 
 /***************************************************************************************************************************
+ 
     Method for reording variables for bandwidth and/or gaussian elimination filling optimization. Also computes node
     to element connections (which implies node to node connections and thus the global matrix structure).
+ 
 ****************************************************************************************************************************/
 -(int)optimizeBandwidthInListMatrix:(ListMatrix_t * __nonnull)listMatrix permutation:(int * __nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * __nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * __nonnull)equation {
     

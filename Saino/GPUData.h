@@ -128,6 +128,29 @@ typedef struct {
     double detJ[8];
 } element_dBasisdx_d;
 
+typedef struct {
+    float nodes_x[8];
+    float nodes_y[8];
+    float nodes_z[8];
+    float vx[8];
+    float vy[8];
+    float vz[8];
+    int perm[8];
+} nodal_data_f;
+
+typedef struct {
+    double nodes_x[8];
+    double nodes_y[8];
+    double nodes_z[8];
+    double vx[8];
+    double vy[8];
+    double vz[8];
+    int perm[8];
+} nodal_data_d;
+
 void init_gpu_data(ice_flow_gpu * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);
+
+void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data, int size);
+void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size);

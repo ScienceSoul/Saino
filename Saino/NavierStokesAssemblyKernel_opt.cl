@@ -101,6 +101,16 @@ typedef struct {
     REAL detJ[8];
 } _element_dBasisdx;
 
+typedef struct {
+    REAL nodes_x[8];
+    REAL nodes_y[8];
+    REAL nodes_z[8];
+    REAL vx[8];
+    REAL vy[8];
+    REAL vz[8];
+    int perm[8];
+} _nodal_data;
+
 #ifdef GLOBAL_BASIS_FUNCTIONS
     inline void basis3D(__global _basis_functions *basis_functions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes);
 #else
@@ -122,16 +132,30 @@ typedef struct {
 #endif
 #else
 #ifdef GLOBAL_BASIS_FUNCTIONS
-    inline REAL dBasisdx3D(__global _basis_functions *basis_functions,
-                           __global int *elementNodeIndexesStore,
-                           __global REAL *nodesX, __global REAL *nodesY, __global REAL *nodesZ,
+    inline REAL dBasisdx3D(__global _basis_functions *basis_functions
+#ifdef NODAL_DATA
+                           , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                           , __global int *elementNodeIndexesStore,
+                           __global REAL *nodesX,
+                           __global REAL *nodesY,
+                           __global REAL *nodesZ,
+#endif
                            REAL dBasisdx[][3],
                            REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID);
 #else
 inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
-                        int p[], int q[], int r[],
-                       __global int *elementNodeIndexesStore,
-                       __global REAL *nodesX, __global REAL *nodesY, __global REAL *nodesZ,
+                        int p[], int q[], int r[]
+#ifdef NODAL_DATA
+                       , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                       , __global int *elementNodeIndexesStore,
+                       __global REAL *nodesX,
+                       __global REAL *nodesY,
+                       __global REAL *nodesZ,
+#endif
                        REAL dBasisdx[][3],
                        REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID);
 #endif
@@ -177,16 +201,30 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
 #endif
 #else
 #ifdef GLOBAL_BASIS_FUNCTIONS
-        inline REAL dBasisdx3D(__global _basis_functions *basis_functions,
-                               __global int *elementNodeIndexesStore,
-                               __global REAL *nodesX, __global REAL *nodesY, __global REAL *nodesZ,
+        inline REAL dBasisdx3D(__global _basis_functions *basis_functions
+#ifdef NODAL_DATA
+                               , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                               , __global int *elementNodeIndexesStore,
+                               __global REAL *nodesX,
+                               __global REAL *nodesY,
+                               __global REAL *nodesZ,
+#endif
                                REAL dBasisdx[][3],
                                REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID) {
 #else
         inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
-                                int p[], int q[], int r[],
-                                __global int *elementNodeIndexesStore,
-                                __global REAL *nodesX, __global REAL *nodesY, __global REAL *nodesZ,
+                                int p[], int q[], int r[]
+#ifdef NODAL_DATA
+                               , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                                , __global int *elementNodeIndexesStore,
+                                __global REAL *nodesX,
+                               __global REAL *nodesY,
+                               __global REAL *nodesZ,
+#endif
                                 REAL dBasisdx[][3],
                                 REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID) {
 #endif
@@ -262,9 +300,15 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
             accum2 = accum2 + (element_info[localID].nodes_y[j] * dLBasisdx[3*j+i]);
             accum3 = accum3 + (element_info[localID].nodes_z[j] * dLBasisdx[3*j+i]);
 #else
+    #ifdef NODAL_DATA
+            accum1 = accum1 + (nodal_data[globalID].nodes_x[j] * dLBasisdx[3*j+i]);
+            accum2 = accum2 + (nodal_data[globalID].nodes_y[j] * dLBasisdx[3*j+i]);
+            accum3 = accum3 + (nodal_data[globalID].nodes_z[j] * dLBasisdx[3*j+i]);
+    #else
             accum1 = accum1 + (nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
             accum2 = accum2 + (nodesY[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
             accum3 = accum3 + (nodesZ[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
+    #endif
 #endif
         }
         dx[i]   = accum1;
@@ -351,9 +395,16 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
 #ifdef KERNEL_BASIS_DBASISDX
 
 __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
-                                   __global _element_dBasisdx *global_dBasisdx,
-                                   __global REAL *nodesX, __global REAL *nodesY, __global REAL *nodesZ,
+                                   __global _element_dBasisdx *global_dBasisdx
+#ifdef NODAL_DATA
+                                   , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                                   , __global REAL *nodesX,
+                                   __global REAL *nodesY,
+                                   __global REAL *nodesZ,
                                    __global int *elementNodeIndexesStore,
+#endif
                                    int numberOfNodes,
                                    int numberElementDofs,
                                    int numberOfElements
@@ -442,11 +493,19 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 #endif
  
 #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
+    for (int i=0; i<numberOfNodes; i++) {
+        element_info[local_id].nodes_x[i] = nodal_data[global_id].nodes_x[i];
+        element_info[local_id].nodes_y[i] = nodal_data[global_id].nodes_y[i];
+        element_info[local_id].nodes_z[i] = nodal_data[global_id].nodes_z[i];
+    }
+    #else
     for (int i=0; i<numberOfNodes; i++) {
         element_info[local_id].nodes_x[i] = nodesX[elementNodeIndexesStore[(global_id*numberElementDofs)+i]];
         element_info[local_id].nodes_y[i] = nodesY[elementNodeIndexesStore[(global_id*numberElementDofs)+i]];
         element_info[local_id].nodes_z[i] = nodesZ[elementNodeIndexesStore[(global_id*numberElementDofs)+i]];
     }
+    #endif
     
     barrier(CLK_LOCAL_MEM_FENCE);
 #endif
@@ -464,11 +523,21 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 #endif
 #else
 #ifdef GLOBAL_BASIS_FUNCTIONS
+    #ifdef NODAL_DATA
+        detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, global_id);
+    #else
         detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
+    #endif
 #else
+    #ifdef NODAL_DATA
+        detJ = dBasisdx3D(basis_functions, p, q, r, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, global_id);
+    #else
         detJ = dBasisdx3D(basis_functions, p, q, r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
+    #endif
 #endif
 #endif
 
@@ -527,14 +596,19 @@ __kernel void NavierStokesCompose(__global REAL *values,
                                   __global int *diag,
                                   __global int *rows,
                                   __global int *cols,
-                                  __global int *colorMapping,
-                                  __global int *elementNodeIndexesStore,
+                                  __global int *colorMapping
+#ifdef NODAL_DATA
+                                  , __global _nodal_data *nodal_data,
+#endif
+#ifndef NODAL_DATA
+                                  , __global int *elementNodeIndexesStore,
                                   __global REAL *nodesX,
                                   __global REAL *nodesY,
                                   __global REAL *nodesZ,
                                   __global REAL *varSolution,
                                   __global int *varPermutation,
-                                  __global char *newtonLinearization,      // Just a pointer to an integer value, // 1 for true, 0 for false
+#endif
+                                  __global char *newtonLinearization,      // Just a pointer to an integer value, 1 for true, 0 for false
                                   REAL density,
                                   REAL viscosity,
                                   REAL load,                               // load = Flow bodyforce 2 or 3
@@ -562,7 +636,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
     // Model dimension and mesh dimension are the same
     
     int k;
-    int col, row;
+    int col, row, start, end;
 #ifdef KERNEL_BASIS_DBASISDX
     REAL basis[8][8];
 #else
@@ -573,15 +647,21 @@ __kernel void NavierStokesCompose(__global REAL *values,
     REAL dmudx[3] = {};
     REAL force[4] = {};
     REAL grad[3][3] = {};
+#ifdef NEWTONLINEAR
     REAL gradT[3][3] = {};
     REAL strain[3][3] = {};
+#endif
     REAL su[8][4][4] = {};
     REAL sw[8][4][4] = {};
     REAL cc[4][4];
     REAL stiff[32][32];
+#ifdef TRANSIENT
     REAL mass[32][32];
+#endif
     REAL forceVector[32];
+#ifdef NEWTONLINEAR
     REAL jacM[32][32];
+#endif
     REAL c2, c3, delta, detJ, mu, muder0, muder, rho, u, v, w, s, ss, sum, tau;
     
     REAL criticalShearRate=1.0e-10;
@@ -670,6 +750,17 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #endif
     
 #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
+    for (int i=0; i<numberOfNodes; i++) {
+        element_info[local_id].nodes_x[i] = nodal_data[globalID].nodes_x[i];
+        element_info[local_id].nodes_y[i] = nodal_data[globalID].nodes_y[i];
+        element_info[local_id].nodes_z[i] = nodal_data[globalID].nodes_z[i];
+        
+        element_info[local_id].vx[i] = nodal_data[globalID].vx[i];
+        element_info[local_id].vy[i] = nodal_data[globalID].vy[i];
+        element_info[local_id].vz[i] = nodal_data[globalID].vz[i];
+    }
+    #else
     for (int i=0; i<numberOfNodes; i++) {
         element_info[local_id].nodes_x[i] = nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+i]];
         element_info[local_id].nodes_y[i] = nodesY[elementNodeIndexesStore[(globalID*numberElementDofs)+i]];
@@ -679,6 +770,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
         element_info[local_id].vy[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1];
         element_info[local_id].vz[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+2];
     }
+    #endif
     
 #ifdef KERNEL_BASIS_DBASISDX
     for(int i=0; i<numberOfNodes; i++) {
@@ -693,26 +785,29 @@ __kernel void NavierStokesCompose(__global REAL *values,
     
     barrier(CLK_LOCAL_MEM_FENCE);
 #endif
-    
+
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
             stiff[i][j] = ZERO;
         }
     }
+#ifdef TRANSIENT
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
             mass[i][j] = ZERO;
         }
     }
+#endif
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         forceVector[i] = ZERO;
     }
-    
+#ifdef NEWTONLINEAR
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
             jacM[i][j] = ZERO;
         }
     }
+#endif
     
     // Always use stabilization, bubbles not supported
     for (int p=0; p<numberOfNodes; p++) {
@@ -728,11 +823,21 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #endif
 #else
 #ifdef GLOBAL_BASIS_FUNCTIONS
+    #ifdef NODAL_DATA
+        detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #else
         detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #endif
 #else
+    #ifdef NODAL_DATA
+        detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #else
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #endif
 #endif
 #endif
         for (int i=0; i<numberOfNodes; i++) {
@@ -741,7 +846,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
             }
         }
     }
-    
+
     // Now we start integrating
     // Assume that number of Gauss points is equal to the number of nodes
     for (int t=0; t<numberOfNodes; t++) {
@@ -773,11 +878,21 @@ __kernel void NavierStokesCompose(__global REAL *values,
     #endif
     #else
     #ifdef GLOBAL_BASIS_FUNCTIONS
-        detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
+        #ifdef NODAL_DATA
+            detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #else
+            detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #endif
     #else
-        detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
+        #ifdef NODAL_DATA
+            detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #else
+            detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #endif
     #endif
     #endif
         s = detJ * ip_s[t];
@@ -803,9 +918,16 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * element_info[local_id].dBasisdx[t][j][i];
                 grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * element_info[local_id].dBasisdx[t][j][i];
     #else
+        #ifdef NODAL_DATA
+                grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+
+        #else
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+        #endif
     #endif
 #else
     #ifdef USE_GPU_LOCAL_MEM
@@ -813,9 +935,15 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * dBasisdx[j][i];
                 grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * dBasisdx[j][i];
     #else
+        #ifdef NODAL_DATA
+                grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * dBasisdx[j][i];
+                grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * dBasisdx[j][i];
+                grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * dBasisdx[j][i];
+        #else
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
                 grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
+        #endif
     #endif
 #endif
             }
@@ -880,7 +1008,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
         
         // The effective viscosity
         mu = mu * pow(ss, (c2-ONE)/TWO);
-        
+#ifdef NEWTONLINEAR
         viscNewtonLin = (*newtonLinearization && muder0 != ZERO) ? true : false;
         if (viscNewtonLin) {
             // Transpose
@@ -895,6 +1023,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 }
             }
         }
+#endif
         
         // Always do the stabilization
         // ---------------------------
@@ -1034,12 +1163,15 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 // Mass matrix
                 // Momentum equations
                 for (int i=0; i<MDIM; i++) {
+#ifdef TRANSIENT
 #ifdef KERNEL_BASIS_DBASISDX
                     mass[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = mass[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * rho * basis[t][q] * basis[t][p];
 #else
                     mass[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = mass[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * rho * basis[q] * basis[p];
 #endif
+#endif
                 }
+#ifdef NEWTONLINEAR
                 if (viscNewtonLin) {
                     for (int i=0; i<MDIM; i++) {
                         sum = 0.0;
@@ -1072,6 +1204,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
                         }
                     }
                 }
+#endif
                 
                 for (int i=0; i<MDIM; i++) {
                     for (int j=0; j<MDIM; j++) {
@@ -1115,10 +1248,12 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 // Add stabilization
                 for (int i=0; i<MDIM; i++) {
                     for (int j=0; j<MDIM+1; j++) {
+#ifdef TRANSIENT
 #ifdef KERNEL_BASIS_DBASISDX
                         mass[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = mass[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * tau * rho * basis[t][q] * sw[p][j][i];
 #else
                         mass[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = mass[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * tau * rho * basis[q] * sw[p][j][i];
+#endif
 #endif
                     }
                     for (int j=0; j<MDIM; j++) {
@@ -1167,7 +1302,8 @@ __kernel void NavierStokesCompose(__global REAL *values,
             }
         }
     }
-    
+
+#ifdef NEWTONLINEAR
     if (viscNewtonLin) {
         REAL sol[32];
         for(int i=0; i<varDofs*numberOfNodes; i++) {
@@ -1179,7 +1315,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #ifdef USE_GPU_LOCAL_MEM
             sol[i] = element_info[local_id].vx[kk];
 #else
+    #ifdef NODAL_DATA
+            sol[i] = nodal_data[globalID].vx[kk];
+    #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]];
+    #endif
 #endif
             kk++;
         }
@@ -1188,7 +1328,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #ifdef USE_GPU_LOCAL_MEM
             sol[i] = element_info[local_id].vy[kk];
 #else
+    #ifdef NODAL_DATA
+            sol[i] = nodal_data[globalID].vy[kk];
+    #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+1];
+    #endif
 #endif
             kk++;
         }
@@ -1197,7 +1341,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #ifdef USE_GPU_LOCAL_MEM
             sol[i] = element_info[local_id].vz[kk];
 #else
+    #ifdef NODAL_DATA
+            sol[i] = nodal_data[globalID].vz[kk];
+    #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
+    #endif
 #endif
             kk++;
         }
@@ -1223,34 +1371,46 @@ __kernel void NavierStokesCompose(__global REAL *values,
             forceVector[i] = forceVector[i] + yy[i];
         }
     }
+#endif
     
     // The contribution of the local matrix to the global matrix
     // Only for DOF > 1
     for (int i=0; i<numberElementDofs; i++) {
         for (k=1; k<=varDofs; k++) {
 #ifdef CHECK_NEG_PERM
+    #ifdef NODAL_DATA
+            if (nodal_data[globalID].perm[i] < 0) continue;
+    #else
             if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] < 0) continue;
+    #endif
 #endif
-            row = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]]+1) - k;
+
+#ifdef NODAL_DATA
+            row = varDofs * (nodal_data[globalID].perm[i] + 1) - k;
+#else
+            row = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + 1) - k;
+#endif
             for (int j=0; j<numberElementDofs; j++) {
                 for (int l=1; l<=varDofs; l++) {
 #ifdef CHECK_NEG_PERM
+    #ifdef NODAL_DATA
+                    if (nodal_data[globalID].perm[j] < 0) continue;
+    #else
                     if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+j] < 0) continue;
+    #endif
 #endif
-                    col = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1) - l;
-                    if (col >= row) {
-                        for (int c=diag[row]; c<=rows[row+1]-1; c++) {
-                            if (cols[c] == col) {
-                                values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
-                                break;
-                            }
-                        }
-                    } else {
-                        for (int c=rows[row]; c<=diag[row]-1; c++) {
-                            if (cols[c] == col) {
-                                values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
-                                break;
-                            }
+                    
+#ifdef NODAL_DATA
+                    col = varDofs * (nodal_data[globalID].perm[j] + 1) - l;
+#else
+                    col = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] + 1) - l;
+#endif
+                    start = (col >= row) ? diag[row] : rows[row];
+                    end = (col >= row) ? rows[row+1]-1 : diag[row]-1;
+                    for (int c=start; c<=end; c++) {
+                        if (cols[c] == col) {
+                            values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+                            break;
                         }
                     }
                 }
@@ -1260,11 +1420,23 @@ __kernel void NavierStokesCompose(__global REAL *values,
     
     // The right-hand side
     for (int i=0; i<numberElementDofs; i++) {
+#ifdef CHECK_NEG_PERM
+    #ifdef NODAL_DATA
+        if (nodal_data[globalID].perm[i] >= 0) {
+    #else
         if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+i] >= 0) {
+    #endif
+#endif
             for (int j=0; j<varDofs; j++) {
+#ifdef NODAL_DATA
+                k = varDofs * nodal_data[globalID].perm[i] + j;
+#else
                 k = varDofs * varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
+#endif
                 rhs[k] = rhs[k] + forceVector[varDofs*i+j];
             }
+#ifdef CHECK_NEG_PERM
         }
+#endif
     }
 }

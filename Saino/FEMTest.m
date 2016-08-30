@@ -747,6 +747,7 @@ static dispatch_once_t onceToken;
     
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
             [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
@@ -757,9 +758,12 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
             [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
+            [solution.solutionInfo setObject:@YES forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];

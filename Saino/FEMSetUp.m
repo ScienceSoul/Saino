@@ -245,6 +245,7 @@
             [solution.solutionInfo setValue:@100 forKey:@"nonlinear system newton after iterations"];
             [solution.solutionInfo setValue:@1.0e-10 forKey:@"nonlinear system newton after tolerance"];
             
+            [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
             [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
@@ -255,9 +256,12 @@
             [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
             [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
+            [solution.solutionInfo setObject:@NO forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -278,6 +282,7 @@
             [solution.solutionInfo setObject:@64 forKey:@"parallel assembly work-group size"];
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -295,6 +300,7 @@
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -311,7 +317,8 @@
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
             
-            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
