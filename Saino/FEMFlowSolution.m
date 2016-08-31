@@ -93,6 +93,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
            defaultUpdateEquations:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP;
 -(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 -(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_init_non_zeros:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode;
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 -(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
@@ -185,6 +186,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     nodal_data_f *_nodal_data_f;
     nodal_data_d *_nodal_data_d;
     
+    non_zero *_non_zeros;
+    
     // GPU buffers
     cl_mem _basis_functions;
     cl_mem _matDiag;
@@ -203,6 +206,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_mem _element_basis;
     cl_mem _element_dbasisdx;
     cl_mem _nodal_data;
+    cl_mem _matrix_non_zeros;
     void * __nullable _mapped_matValues;
     void * __nullable _mapped_matRHS;
     void * __nullable _mapped_varSolution;
@@ -1022,13 +1026,56 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
      }
     
-    
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
     
     free_dvector(nodes->x, 0, mesh.maxElementNodes-1);
     free_dvector(nodes->y, 0, mesh.maxElementNodes-1);
     free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
     free(nodes);
+}
+
+-(void)FEMFlowSolution_init_non_zeros:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+    
+    int n, col, end, indx, row, start;
+    Element_t *element = NULL;
+    
+    matrixArraysContainer *matContainers = solution.matrix.getContainers;
+    
+    int *indexes = intvec(0, solution.mesh.maxElementDofs-1);
+    
+    _non_zeros = (non_zero *)malloc(sizeof(non_zero)*mesh.numberOfBulkElements);
+    init_nz_indexes(_non_zeros, mesh.numberOfBulkElements);
+    
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        n = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        indx = 0;
+        for (int i=0; i<n; i++) {
+            for (int k=1; k<=_nsdofs; k++) {
+                if (_flowPerm[indexes[i]] < 0) continue;
+                row = _nsdofs * (_flowPerm[indexes[i]]+1) - k;
+                for (int j=0; j<n; j++) {
+                    for (int l=1; l<=_nsdofs; l++) {
+                        if (_flowPerm[indexes[j]] < 0) continue;
+                        col = _nsdofs * (_flowPerm[indexes[j]]+1) - l;
+                        
+                        start = (col >= row) ? matContainers->Diag[row] : matContainers->Rows[row];
+                        end = (col >= row) ? matContainers->Rows[row+1]-1 : matContainers->Diag[row]-1;
+                        for (int c=start; c<=end; c++) {
+                            if (matContainers->Cols[c] == col) {
+                                _non_zeros[t].indexes[indx] = c;
+                                indx++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
 }
 
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode {
@@ -1057,17 +1104,24 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
     }
     
-    _matDiag = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, &err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matDiag.");
-    }
-    _matRows = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, &err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRows.");
-    }
-    _matCols = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, &err);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matCols.");
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+        _matrix_non_zeros = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(non_zero)*mesh.numberOfBulkElements, _non_zeros, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matrix_non_zeros.");
+        }
+    } else {
+        _matDiag = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matDiag.");
+        }
+        _matRows = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRows.");
+        }
+        _matCols = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matCols.");
+        }
     }
     
     // Those buffers are initialized later inside the non-linearity loop
@@ -1141,6 +1195,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             _nodal_data = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(nodal_data_f)*mesh.numberOfBulkElements, _nodal_data_f, &err);
         } else if ([precisionMode isEqualToString:@"double"] == YES) {
             _nodal_data = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(nodal_data_d)*mesh.numberOfBulkElements, _nodal_data_d, &err);
+        }
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _nodal_data.");
         }
     } else {
         _elementNodeIndexesStore = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*(mesh.numberOfBulkElements*mesh.maxElementDofs), elementNodeIndexesStore, &err);
@@ -1240,16 +1297,23 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         globalAllocation->nb_double = nbOfReals;
     }
     
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == NO) {
+        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols;
+    }
+    
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
-        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements;
+        globalAllocation->nb_int = globalAllocation->nb_int + mesh.numberOfBulkElements;
     } else {
-        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols + mesh.numberOfBulkElements
-        + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
+        globalAllocation->nb_int = globalAllocation->nb_int + mesh.numberOfBulkElements + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
     }
     
     globalAllocation->nb_char = 1;
     
     size_t globalAllocationSize = computeGlobalMemoryAllocation(globalAllocation);
+    
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+        globalAllocationSize = globalAllocationSize + sizeof(non_zero)*mesh.numberOfBulkElements;
+    }
     
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
         if (precision() == 1) {
@@ -1288,9 +1352,13 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_matValues);
     err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRHS);
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matDiag);
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRows);
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matCols);
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matrix_non_zeros);
+    } else {
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matDiag);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRows);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matCols);
+    }
     err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_colorMapping);
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
         err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodal_data);
@@ -1513,6 +1581,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
         [listOfOptions appendString:@" -DNODAL_DATA"];
     }
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+        [listOfOptions appendString:@" -DPRECOMPUTE_NZ"];
+    }
     if ([precisionMode isEqualToString:@"single"] == YES) {
         [listOfOptions replaceOccurrencesOfString:@"-DKERNEL_FP_64" withString:@"-DKERNEL_FP_32" options:NSBackwardsSearch range:NSMakeRange(0, [listOfOptions length])];
     }
@@ -1612,6 +1683,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         [self FEMFlowSolution_iniNodalData:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getNodes:getNodesIMP getElementDofsSolution:getElementDofsSolutionIMP];
     }
     
+    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+        [self FEMFlowSolution_init_non_zeros:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getElementDofsSolution:getElementDofsSolutionIMP];
+    }
+    
     // Allocate the GPU buffers and map the written buffers to the host
     [self FEMFlowSolution_createMapGPUBuffersMesh:mesh solution:solution precisionMode:precisionMode];
     
@@ -1658,6 +1733,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _nodal_data_f = NULL;
         _nodal_data_d = NULL;
         
+        _non_zeros = NULL;
+        
         _basis_functions = NULL;
         
         _matDiag = NULL;
@@ -1676,6 +1753,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _element_basis = NULL;
         _element_dbasisdx = NULL;
         _nodal_data = NULL;
+        _matrix_non_zeros = NULL;
         
         _mapped_matValues = NULL;
         _mapped_matRHS = NULL;
@@ -1801,6 +1879,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             
             if (_nodal_data_f != NULL) free(_nodal_data_f);
             if (_nodal_data_d != NULL) free(_nodal_data_d);
+            
+            if (_non_zeros != NULL) free(_non_zeros);
             
             if (_kernel_source != NULL) free(_kernel_source);
         }

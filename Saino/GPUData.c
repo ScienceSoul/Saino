@@ -107,4 +107,11 @@ void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data
     }
 }
 
+void init_nz_indexes(non_zero * __nonnull data, int size) {
+    
+    for (int i=0; i<size; i++) {
+        memset(data[i].indexes, -1, sizeof(data[i].indexes) );
+    }
+}
+
 

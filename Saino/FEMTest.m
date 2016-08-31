@@ -764,6 +764,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
+            [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];

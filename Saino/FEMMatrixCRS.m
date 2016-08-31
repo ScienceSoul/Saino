@@ -622,12 +622,14 @@
                             for (c=matContainers->Diag[row]; c<=matContainers->Rows[row+1]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
                                     matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    break;
                                 }
                             }
                         } else {
                             for (c=matContainers->Rows[row]; c<=matContainers->Diag[row]-1; c++) {
                                 if (matContainers->Cols[c] == col) {
                                     matContainers->Values[c] = matContainers->Values[c] + localMatrix[dofs*(i+1)-k][dofs*(j+1)-l];
+                                    break;
                                 }
                             }
                         }

@@ -148,9 +148,15 @@ typedef struct {
     int perm[8];
 } nodal_data_d;
 
+typedef struct {
+    int indexes[1024];
+} non_zero;
+
 void init_gpu_data(ice_flow_gpu * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);
 
 void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data, int size);
 void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size);
+
+void init_nz_indexes(non_zero * __nonnull data, int size);

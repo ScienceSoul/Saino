@@ -111,6 +111,10 @@ typedef struct {
     int perm[8];
 } _nodal_data;
 
+typedef struct {
+    int indexes[1024];
+} _non_zero;
+
 #ifdef GLOBAL_BASIS_FUNCTIONS
     inline void basis3D(__global _basis_functions *basis_functions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes);
 #else
@@ -135,8 +139,7 @@ typedef struct {
     inline REAL dBasisdx3D(__global _basis_functions *basis_functions
 #ifdef NODAL_DATA
                            , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                            , __global int *elementNodeIndexesStore,
                            __global REAL *nodesX,
                            __global REAL *nodesY,
@@ -149,8 +152,7 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
                         int p[], int q[], int r[]
 #ifdef NODAL_DATA
                        , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                        , __global int *elementNodeIndexesStore,
                        __global REAL *nodesX,
                        __global REAL *nodesY,
@@ -204,8 +206,7 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
         inline REAL dBasisdx3D(__global _basis_functions *basis_functions
 #ifdef NODAL_DATA
                                , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                                , __global int *elementNodeIndexesStore,
                                __global REAL *nodesX,
                                __global REAL *nodesY,
@@ -218,8 +219,7 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
                                 int p[], int q[], int r[]
 #ifdef NODAL_DATA
                                , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                                 , __global int *elementNodeIndexesStore,
                                 __global REAL *nodesX,
                                __global REAL *nodesY,
@@ -398,8 +398,7 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
                                    __global _element_dBasisdx *global_dBasisdx
 #ifdef NODAL_DATA
                                    , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                                    , __global REAL *nodesX,
                                    __global REAL *nodesY,
                                    __global REAL *nodesZ,
@@ -592,15 +591,18 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 #endif
 
 __kernel void NavierStokesCompose(__global REAL *values,
-                                  __global REAL *rhs,
-                                  __global int *diag,
+                                  __global REAL *rhs
+#ifdef PRECOMPUTE_NZ
+                                  ,__global _non_zero *non_zeros,
+#else
+                                  ,__global int *diag,
                                   __global int *rows,
                                   __global int *cols,
+#endif
                                   __global int *colorMapping
 #ifdef NODAL_DATA
                                   , __global _nodal_data *nodal_data,
-#endif
-#ifndef NODAL_DATA
+#else
                                   , __global int *elementNodeIndexesStore,
                                   __global REAL *nodesX,
                                   __global REAL *nodesY,
@@ -1375,6 +1377,22 @@ __kernel void NavierStokesCompose(__global REAL *values,
     
     // The contribution of the local matrix to the global matrix
     // Only for DOF > 1
+#ifdef PRECOMPUTE_NZ
+    int c;
+    col = 0;
+    for (int i=0; i<numberElementDofs; i++) {
+        for (k=1; k<=varDofs; k++) {
+            for (int j=0; j<numberElementDofs; j++) {
+                for (int l=1; l<=varDofs; l++) {
+                    c = non_zeros[globalID].indexes[col];
+                    values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+                    col++;
+                }
+            }
+        }
+    }
+    
+#else
     for (int i=0; i<numberElementDofs; i++) {
         for (k=1; k<=varDofs; k++) {
 #ifdef CHECK_NEG_PERM
@@ -1417,6 +1435,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
             }
         }
     }
+#endif
     
     // The right-hand side
     for (int i=0; i<numberElementDofs; i++) {
