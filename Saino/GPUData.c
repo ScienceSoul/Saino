@@ -114,4 +114,17 @@ void init_nz_indexes(non_zero * __nonnull data, int size) {
     }
 }
 
+void __attribute__((overloadable)) init_stiff_force(stiff_force_f * __nonnull data, int size) {
+    for (int i=0; i<size; i++) {
+        memset(*(data[i].stiff), 0.0f, sizeof(float)*(32*32));
+        memset(data[i].force, 0.0f, sizeof(data[i].force));
+    }
+}
+
+void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull data, int size) {
+    for (int i=0; i<size; i++) {
+        memset(*(data[i].stiff), 0.0, sizeof(double)*(32*32));
+        memset(data[i].force, 0.0, sizeof(data[i].force));
+    }
+}
 

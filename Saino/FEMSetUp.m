@@ -247,8 +247,6 @@
             
             [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
-            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
-            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
@@ -259,10 +257,14 @@
             [solution.solutionInfo setObject:@NO forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
-            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
+            [solution.solutionInfo setObject:@YES forKey:@"use global stiff and force"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -278,13 +280,15 @@
             [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
             [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
-            // If single precision and use of local memory:
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly enable work-groups"];
+            // If single precision and use of local memory or if work-groups are enabled:
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
             [solution.solutionInfo setObject:@64 forKey:@"parallel assembly work-group size"];
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
+            [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -300,10 +304,15 @@
             [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
             [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly enable work-groups"];
+            // If single precision and use of local memory or if work-groups are enabled:
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@64 forKey:@"parallel assembly work-group size"];
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
+            [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }
@@ -317,12 +326,17 @@
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
-            [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly enable work-groups"];
+            // If single precision and use of local memory or if work-groups are enabled:
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@64 forKey:@"parallel assembly work-group size"];
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
+            [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
         }

@@ -115,6 +115,11 @@ typedef struct {
     int indexes[1024];
 } _non_zero;
 
+typedef struct {
+    REAL stiff[32][32];
+    REAL force[32];
+} _stiff_force;
+
 #ifdef GLOBAL_BASIS_FUNCTIONS
     inline void basis3D(__global _basis_functions *basis_functions, REAL basis[], REAL u, REAL v, REAL w, int numberOfNodes);
 #else
@@ -590,7 +595,11 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 
 #endif
 
-__kernel void NavierStokesCompose(__global REAL *values,
+__kernel void NavierStokesCompose(
+#ifdef GLOBAL_STIFF_FORCE
+                                  __global _stiff_force *stiff_force,
+#endif
+                                  __global REAL *values,
                                   __global REAL *rhs
 #ifdef PRECOMPUTE_NZ
                                   ,__global _non_zero *non_zeros,
@@ -656,11 +665,13 @@ __kernel void NavierStokesCompose(__global REAL *values,
     REAL su[8][4][4] = {};
     REAL sw[8][4][4] = {};
     REAL cc[4][4];
+#ifndef GLOBAL_STIFF_FORCE
     REAL stiff[32][32];
+    REAL forceVector[32];
+#endif
 #ifdef TRANSIENT
     REAL mass[32][32];
 #endif
-    REAL forceVector[32];
 #ifdef NEWTONLINEAR
     REAL jacM[32][32];
 #endif
@@ -739,7 +750,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
     //int local_size = get_local_size(0);
     int local_id = get_local_id(0);
     
-#ifdef USE_GPU_LOCAL_MEM
+#if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
     if (globalID < 0) return;
 #endif
     
@@ -790,9 +801,14 @@ __kernel void NavierStokesCompose(__global REAL *values,
 
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
+#ifdef GLOBAL_STIFF_FORCE
+            stiff_force[globalID].stiff[i][j] = ZERO;
+#else
             stiff[i][j] = ZERO;
+#endif
         }
     }
+    
 #ifdef TRANSIENT
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
@@ -800,9 +816,15 @@ __kernel void NavierStokesCompose(__global REAL *values,
         }
     }
 #endif
+    
     for(int i=0; i<varDofs*numberOfNodes; i++) {
+#ifdef GLOBAL_STIFF_FORCE
+        stiff_force[globalID].force[i] = ZERO;
+#else
         forceVector[i] = ZERO;
+#endif
     }
+    
 #ifdef NEWTONLINEAR
     for(int i=0; i<varDofs*numberOfNodes; i++) {
         for(int j=0; j<varDofs*numberOfNodes; j++) {
@@ -872,14 +894,14 @@ __kernel void NavierStokesCompose(__global REAL *values,
     #endif
 #else
     #ifdef USE_GPU_LOCAL_MEM
-    #ifdef GLOBAL_BASIS_FUNCTIONS
+      #ifdef GLOBAL_BASIS_FUNCTIONS
         detJ = dBasisdx3D(basis_functions, element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-    #else
+      #else
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r,
                           element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-    #endif
+      #endif
     #else
-    #ifdef GLOBAL_BASIS_FUNCTIONS
+      #ifdef GLOBAL_BASIS_FUNCTIONS
         #ifdef NODAL_DATA
             detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
@@ -887,7 +909,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
             detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
         #endif
-    #else
+      #else
         #ifdef NODAL_DATA
             detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
@@ -895,7 +917,7 @@ __kernel void NavierStokesCompose(__global REAL *values,
             detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
         #endif
-    #endif
+      #endif
     #endif
         s = detJ * ip_s[t];
 #endif
@@ -1213,37 +1235,76 @@ __kernel void NavierStokesCompose(__global REAL *values,
                         // Isotropic and no Laplace discretization
 #ifdef KERNEL_BASIS_DBASISDX
     #ifdef USE_GPU_LOCAL_MEM
+        #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * element_info[local_id].dBasisdx[t][q][j] * element_info[local_id].dBasisdx[t][p][j];
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
+        #else
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * element_info[local_id].dBasisdx[t][q][j] * element_info[local_id].dBasisdx[t][p][j];
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
+        #endif
     #else
+        #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * global_dBasisdx[globalID].dBasisdx[t][q][j] * global_dBasisdx[globalID].dBasisdx[t][p][j];
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * global_dBasisdx[globalID].dBasisdx[t][q][i] * global_dBasisdx[globalID].dBasisdx[t][p][j];
+        #else
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * global_dBasisdx[globalID].dBasisdx[t][q][j] * global_dBasisdx[globalID].dBasisdx[t][p][j];
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * global_dBasisdx[globalID].dBasisdx[t][q][i] * global_dBasisdx[globalID].dBasisdx[t][p][j];
+        #endif
     #endif
 #else
+    #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * dBasisdx[q][j] * dBasisdx[p][j];
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * dBasisdx[q][i] * dBasisdx[p][j];
+    #else
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * dBasisdx[q][j] * dBasisdx[p][j];
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * dBasisdx[q][i] * dBasisdx[p][j];
+    #endif
 #endif
                     }
                     // Pressure term
 #ifdef KERNEL_BASIS_DBASISDX
     #ifdef USE_GPU_LOCAL_MEM
+        #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[t][q] * element_info[local_id].dBasisdx[t][p][i];
+        #else
                     stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[t][q] * element_info[local_id].dBasisdx[t][p][i];
+        #endif
     #else
+        #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[t][q] * global_dBasisdx[globalID].dBasisdx[t][p][i];
+        #else
                     stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[t][q] * global_dBasisdx[globalID].dBasisdx[t][p][i];
+        #endif
     #endif
 #else
+    #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[q] * dBasisdx[p][i];
+    #else
                     stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[q] * dBasisdx[p][i];
+    #endif
 #endif
                     
                     // Continuity equation
 #ifdef KERNEL_BASIS_DBASISDX
     #ifdef USE_GPU_LOCAL_MEM
+        #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * element_info[local_id].dBasisdx[t][q][i] * basis[t][p];
+        #else
                     stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * element_info[local_id].dBasisdx[t][q][i] * basis[t][p];
+        #endif
     #else
+        #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * global_dBasisdx[globalID].dBasisdx[t][q][i] * basis[t][p];
+        #else
                     stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * global_dBasisdx[globalID].dBasisdx[t][q][i] * basis[t][p];
+        #endif
     #endif
 #else
+    #ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * dBasisdx[q][i] * basis[p];
+    #else
                     stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * dBasisdx[q][i] * basis[p];
+    #endif
 #endif
                 }
                 
@@ -1261,12 +1322,24 @@ __kernel void NavierStokesCompose(__global REAL *values,
                     for (int j=0; j<MDIM; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
     #ifdef USE_GPU_LOCAL_MEM
+        #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
+        #else
                         stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
+        #endif
     #else
+        #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * global_dBasisdx[globalID].dBasisdx[t][q][i] * global_dBasisdx[globalID].dBasisdx[t][p][j];
+        #else
                         stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * global_dBasisdx[globalID].dBasisdx[t][q][i] * global_dBasisdx[globalID].dBasisdx[t][p][j];
+        #endif
     #endif
 #else
+    #ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * dBasisdx[q][i] * dBasisdx[p][j];
+    #else
                         stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * dBasisdx[q][i] * dBasisdx[p][j];
+    #endif
 #endif
                     }
                 }
@@ -1281,7 +1354,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
                 }
                 for (int i=0; i<MDIM+1; i++) {
                     for (int j=0; j<MDIM+1; j++) {
+#ifdef GLOBAL_STIFF_FORCE
+                        stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * tau * cc[i][j];
+#else
                         stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * tau * cc[i][j];
+#endif
                     }
                 }
             }
@@ -1291,15 +1368,27 @@ __kernel void NavierStokesCompose(__global REAL *values,
         for (int p=0; p<nBasis; p++) {
             for (int i=0; i<MDIM+1; i++) {
 #ifdef KERNEL_BASIS_DBASISDX
+    #ifdef GLOBAL_STIFF_FORCE
+                stiff_force[globalID].force[((MDIM+1)*p)+i] = stiff_force[globalID].force[((MDIM+1)*p)+i] + s * rho * force[i] * basis[t][p];
+    #else
                 forceVector[((MDIM+1)*p)+i] = forceVector[((MDIM+1)*p)+i] + s * rho * force[i] * basis[t][p];
+    #endif
 #else
+    #ifdef GLOBAL_STIFF_FORCE
+                stiff_force[globalID].force[((MDIM+1)*p)+i] = stiff_force[globalID].force[((MDIM+1)*p)+i] + s * rho * force[i] * basis[p];
+    #else
                 forceVector[((MDIM+1)*p)+i] = forceVector[((MDIM+1)*p)+i] + s * rho * force[i] * basis[p];
+    #endif
 #endif
             }
             // Add stabilization
             for (int i=0; i<MDIM; i++) {
                 for (int j=0; j<MDIM+1; j++) {
+#ifdef GLOBAL_STIFF_FORCE
+                    stiff_force[globalID].force[((MDIM+1)*p)+j] = stiff_force[globalID].force[((MDIM+1)*p)+j] + s * tau * rho * force[i] * sw[p][j][i];
+#else
                     forceVector[((MDIM+1)*p)+j] = forceVector[((MDIM+1)*p)+j] + s * tau * rho * force[i] * sw[p][j][i];
+#endif
                 }
             }
         }
@@ -1355,7 +1444,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
         int p = (MDIM+1) * nBasis;
         for (int i=0; i<p; i++) {
             for (int j=0; j<p; j++) {
+#ifdef GLOBAL_STIFF_FORCE
+                stiff_force[globalID].stiff[i][j] = stiff_force[globalID].stiff[i][j] + jacM[i][j];
+#else
                 stiff[i][j] = stiff[i][j] + jacM[i][j];
+#endif
             }
         }
         REAL yy[32];
@@ -1370,7 +1463,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
             yy[i] = sum;
         }
         for (int i=0; i<p; i++) {
+#ifdef GLOBAL_STIFF_FORCE
+            stiff_force[globalID].force[i] = stiff_force[globalID].force[i] + yy[i];
+#else
             forceVector[i] = forceVector[i] + yy[i];
+#endif
         }
     }
 #endif
@@ -1385,7 +1482,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
             for (int j=0; j<numberElementDofs; j++) {
                 for (int l=1; l<=varDofs; l++) {
                     c = non_zeros[globalID].indexes[col];
+#ifdef GLOBAL_STIFF_FORCE
+                    values[c] = values[c] + stiff_force[globalID].stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+#else
                     values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+#endif
                     col++;
                 }
             }
@@ -1427,7 +1528,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
                     end = (col >= row) ? rows[row+1]-1 : diag[row]-1;
                     for (int c=start; c<=end; c++) {
                         if (cols[c] == col) {
+#ifdef GLOBAL_STIFF_FORCE
+                            values[c] = values[c] + stiff_force[globalID].stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+#else
                             values[c] = values[c] + stiff[varDofs*(i+1)-k][varDofs*(j+1)-l];
+#endif
                             break;
                         }
                     }
@@ -1452,7 +1557,11 @@ __kernel void NavierStokesCompose(__global REAL *values,
 #else
                 k = varDofs * varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
 #endif
+#ifdef GLOBAL_STIFF_FORCE
+                rhs[k] = rhs[k] + stiff_force[globalID].force[varDofs*i+j];
+#else
                 rhs[k] = rhs[k] + forceVector[varDofs*i+j];
+#endif
             }
 #ifdef CHECK_NEG_PERM
         }

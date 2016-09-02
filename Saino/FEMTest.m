@@ -749,8 +749,6 @@ static dispatch_once_t onceToken;
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
-            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
-            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
@@ -763,8 +761,12 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
+            
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
+            [solution.solutionInfo setObject:@YES forKey:@"use global stiff and force"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];

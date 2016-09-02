@@ -188,6 +188,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     non_zero *_non_zeros;
     
+    stiff_force_f *_global_stiff_force_f;
+    stiff_force_d *_global_stiff_force_d;
+    
     // GPU buffers
     cl_mem _basis_functions;
     cl_mem _matDiag;
@@ -207,6 +210,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_mem _element_dbasisdx;
     cl_mem _nodal_data;
     cl_mem _matrix_non_zeros;
+    cl_mem _global_stiff_force;
     void * __nullable _mapped_matValues;
     void * __nullable _mapped_matRHS;
     void * __nullable _mapped_varSolution;
@@ -1104,6 +1108,18 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
     }
     
+    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+        if ([precisionMode isEqualToString:@"single"] == YES) {
+            _global_stiff_force_f = (stiff_force_f *)malloc(sizeof(stiff_force_f)*mesh.numberOfBulkElements);
+            init_stiff_force(_global_stiff_force_f, mesh.numberOfBulkElements);
+            _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_f)*mesh.numberOfBulkElements, _global_stiff_force_f, &err);
+        } else if ([precisionMode isEqualToString:@"double"] == YES) {
+            _global_stiff_force_d = (stiff_force_d *)malloc(sizeof(stiff_force_d)*mesh.numberOfBulkElements);
+            init_stiff_force(_global_stiff_force_d, mesh.numberOfBulkElements);
+            _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_d)*mesh.numberOfBulkElements, _global_stiff_force_d, &err);
+        }
+    }
+    
     if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
         _matrix_non_zeros = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(non_zero)*mesh.numberOfBulkElements, _non_zeros, &err);
         if (err < 0) {
@@ -1138,10 +1154,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRHS.");
     }
     
-    // If we use the GPU local memory, we need to make sure that our work group size is a multiple
+    // If we use the GPU local memory or if we explicitly enable work-groups, we need to make sure that our work group size is a multiple
     // of the number of elemements in each color set. Adjust the number of elements in the color set
     // accordingly
-    if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
+    if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
         int adjust = 0;
         if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
             adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
@@ -1331,6 +1347,14 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
     }
     
+    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+        if (precision() == 1) {
+            globalAllocationSize = globalAllocationSize + sizeof(stiff_force_f)*mesh.numberOfBulkElements;
+        } else {
+            globalAllocationSize = globalAllocationSize + sizeof(stiff_force_d)*mesh.numberOfBulkElements;
+        }
+    }
+    
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
         if (precision() == 1) {
             globalAllocationSize = globalAllocationSize + sizeof(element_basis_f) + sizeof(element_dBasisdx_f)*mesh.numberOfBulkElements;
@@ -1350,7 +1374,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_int err;
     cl_uint argIdx = 0;
     
-    err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_matValues);
+    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+        err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_global_stiff_force);
+        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matValues);
+    } else {
+        err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_matValues);
+    }
     err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRHS);
     if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
         err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matrix_non_zeros);
@@ -1584,6 +1613,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
         [listOfOptions appendString:@" -DPRECOMPUTE_NZ"];
     }
+    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+        [listOfOptions appendString:@" -DGLOBAL_STIFF_FORCE"];
+    }
+    if ([solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
+        [listOfOptions appendString:@" -DENABLE_WORK_GROUPS"];
+    }
     if ([precisionMode isEqualToString:@"single"] == YES) {
         [listOfOptions replaceOccurrencesOfString:@"-DKERNEL_FP_64" withString:@"-DKERNEL_FP_32" options:NSBackwardsSearch range:NSMakeRange(0, [listOfOptions length])];
     }
@@ -1735,6 +1770,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         _non_zeros = NULL;
         
+        _global_stiff_force_f = NULL;
+        _global_stiff_force_d = NULL;
+        
         _basis_functions = NULL;
         
         _matDiag = NULL;
@@ -1754,6 +1792,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _element_dbasisdx = NULL;
         _nodal_data = NULL;
         _matrix_non_zeros = NULL;
+        _global_stiff_force = NULL;
         
         _mapped_matValues = NULL;
         _mapped_matRHS = NULL;
@@ -1842,6 +1881,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             if (_gpuNewtonLinear != NULL) clReleaseMemObject(_gpuNewtonLinear);
             if (_element_basis != NULL) clReleaseMemObject(_element_basis);
             if (_element_dbasisdx != NULL) clReleaseMemObject(_element_dbasisdx);
+            if (_nodal_data != NULL) clReleaseMemObject(_nodal_data);
+            if (_matrix_non_zeros != NULL) clReleaseMemObject(_matrix_non_zeros);
+            if (_global_stiff_force != NULL) clReleaseMemObject(_global_stiff_force);
             
             if (_gpuData != NULL) {
                 if (_gpuData->nodesX_v != NULL) free(_gpuData->nodesX_v);
@@ -1881,6 +1923,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             if (_nodal_data_d != NULL) free(_nodal_data_d);
             
             if (_non_zeros != NULL) free(_non_zeros);
+            
+            if (_global_stiff_force_f != NULL) free(_global_stiff_force_f);
+            if (_global_stiff_force_d != NULL) free(_global_stiff_force_d);
             
             if (_kernel_source != NULL) free(_kernel_source);
         }
@@ -2464,7 +2509,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         size_t global_work_size = mesh.numberOfBulkElements;
         
-        if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
+        if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
             if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
                 val = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
                 local_work_size = &val;
@@ -2549,7 +2594,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             double kernel_profile_fp;
             
             size_t *local_work_size = NULL, val;
-            if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
+            if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
                 if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
                     val = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
                     local_work_size = &val;

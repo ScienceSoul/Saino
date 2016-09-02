@@ -152,6 +152,16 @@ typedef struct {
     int indexes[1024];
 } non_zero;
 
+typedef struct {
+    float stiff[32][32];
+    float force[32];
+} stiff_force_f;
+
+typedef struct {
+    double stiff[32][32];
+    double force[32];
+} stiff_force_d;
+
 void init_gpu_data(ice_flow_gpu * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);
@@ -160,3 +170,7 @@ void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data
 void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size);
 
 void init_nz_indexes(non_zero * __nonnull data, int size);
+
+void __attribute__((overloadable)) init_stiff_force(stiff_force_f * __nonnull data, int size);
+void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull data, int size);
+
