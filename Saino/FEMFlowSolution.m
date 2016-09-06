@@ -2537,7 +2537,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         clGetEventProfilingInfo(basis_dBasis_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
         kernel_profile = (kernel_end - kernel_sart);
         kernel_profile_fp = (double)kernel_profile;
-        fprintf(stdout, "FEMFlowSolution:solutionComputer: total time for < basis and basis derivatives > kernel execution on GPU (s): %f\n", kernel_profile_fp*1.0e-9);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: execution time for < basis and basis derivatives > kernel on GPU: Real time (s): %f.\n", kernel_profile_fp*1.0e-9);
     }
 
     
@@ -2585,7 +2585,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         // Bulk elements
         if (parallelAssembly == YES) {
-            int position;
+            int positionsInColorMap[mesh.numberOfColors];
+            //size_t global_work_size;
             cl_int err;
             cl_event assembly_event;
             cl_ulong kernel_sart, kernel_end, kernel_profile;
@@ -2603,19 +2604,24 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 }
             }
             
+            // Figure out the starting index of the global work size
+            // in the color map table for each color set
+            memset(positionsInColorMap, 0, sizeof(positionsInColorMap));
+            positionsInColorMap[0] = 0;
+            for (i=1; i<mesh.numberOfColors; i++) {
+                NSMutableArray *cc = mesh.colors[i-1];
+                positionsInColorMap[i] = positionsInColorMap[i-1] + [cc[0] intValue];
+            }
+            
             kernel_profile = 0;
+            i = 0;
             cpu_assembly_loop_start = clock();
             real_assembly_loop_start = mach_absolute_time();
             for (NSMutableArray *color in mesh.colors) {
-                position = 0;
-                for (i=0; i<[color[1] intValue]; i++) {
-                    NSMutableArray *cc = mesh.colors[i];
-                    position = position + [cc[0] intValue];
-                }
                 
                 size_t global_work_size = [color[0] intValue];
                 
-                err = clSetKernelArg(_kernel_assembly, _positionInColorMapping, sizeof(cl_int), &position);
+                err = clSetKernelArg(_kernel_assembly, _positionInColorMapping, sizeof(cl_int), &positionsInColorMap[i]);
                 if (err < 0) {
                     fatal("FEMFlowSolution:solutionComputer", "Error in setting kernel arguments.");
                 }
@@ -2636,14 +2642,15 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                 clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
                 clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
                 kernel_profile += (kernel_end - kernel_sart);
+                i++;
             }
             cpu_assembly_loop_end = clock();
             real_assembly_loop_end = mach_absolute_time();
             kernel_profile_fp = (double)kernel_profile;
             
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: total time for < assembly > kernel execution on GPU (s): %f\n", kernel_profile_fp*1.0e-9);
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly execution on GPU: CPU time (s): %f\n", (cpu_assembly_loop_end-cpu_assembly_loop_start)/(double)CLOCKS_PER_SEC);
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly execution on GPU: Real time (s): %f\n", machcore(real_assembly_loop_end,real_assembly_loop_start));
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: execution time for < assembly > kernel on GPU: Real time (s): %f.\n", kernel_profile_fp*1.0e-9);
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly loop total time: CPU (s): %f.\n", (cpu_assembly_loop_end-cpu_assembly_loop_start)/(double)CLOCKS_PER_SEC);
+            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly loop total time: Real (s): %f.\n", machcore(real_assembly_loop_end,real_assembly_loop_start));
             
             // Read data from the device
             _mapped_matValues = enqueueDeviceMapBuffer(precision(), _cmd_queue, _matValues, CL_TRUE, CL_MAP_READ, 0, matContainers->sizeValues, 0, NULL, NULL, err);
