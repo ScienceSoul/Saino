@@ -160,11 +160,13 @@
 }
 
 /************************************************************************************************
+ 
     Sort columns to ascending order for rows of a CRS format matrix
  
     Arguments:
         FEMSolution *solution   ->  solution class containing the matrix
         BOOL *alsoValues        ->  whether values are sorted
+ 
 ************************************************************************************************/
 -(void)sortGlobal:(FEMSolution * __nonnull)solution alsoValues:(BOOL * __nullable)alsoValues {
     
@@ -206,12 +208,14 @@
 }
 
 /*********************************************************************************************************
+ 
     Set a given value to an element of a CRS format Matrix
  
     Arguments:
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
+ 
 *********************************************************************************************************/
 -(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
@@ -234,12 +238,14 @@
 }
 
 /************************************************************************************************************
+ 
     Add a given value to an element of a CRS format Matrix
  
     Arguments:
         FEMSolution *solution   ->  solution class containing the matrix
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be added
+ 
 ************************************************************************************************************/
 -(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
     
@@ -273,6 +279,7 @@
         int dofs               -> number of degrees of freemdom for one node
         int *indexes           -> Maps element node number to global (or partition) node number
                                   (to matrix rows and cols if dofs = 1)
+ 
 *******************************************************************************************************************************************/
 -(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inGlobal:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * __nonnull)indexes {
     
@@ -346,6 +353,7 @@
         FEMMatrix *matrix    -> solution class holding the global matrix
         int n                -> index of the dofs to be fixed
         double value         -> Dirichlet value to be set
+ 
 ************************************************************************************************************/
 -(void)setSymmetricDirichletInGlobal:(FEMSolution * __nonnull)solution atIndex:(int)n value:(double)value {
     
@@ -413,6 +421,7 @@
         FEMSolution *solution  -> Class holding input matrix.
         double *u              -> Vector to multiply
         double *v              -> Result vector
+ 
 *******************************************************************************************/
 -(void)matrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double * __nonnull)u result:(double * __nonnull)v {
     
@@ -445,6 +454,7 @@
         FEMSolution *solution  -> Class holding input matrix.
         double *u              -> Vector to multiply
         double *v              -> Result vector
+ 
 *******************************************************************************************/
 -(void)complexMatrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double complex * __nonnull)u result:(double complex * __nonnull)v {
     
@@ -468,6 +478,7 @@
 }
 
 /*********************************************************************************************
+ 
     Makes an algebraic lower order scheme assuming steady state advection-diffusion equation.
     This can be applied together with flux corrected transport (FCT) scheme.
  
@@ -476,6 +487,7 @@
  
     This method takes as argument a solution from which the matrix is used  
     or an individual matrix
+ 
 *********************************************************************************************/
 -(void)fctlLowOrderInSolution:(FEMSolution * __nullable)solution orMatrix:(FEMMatrix * __nullable)matrix {
     
@@ -577,6 +589,7 @@
         int dofs                -> number of degrees of freemdom for one node
         int *indexes            -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
+ 
 ************************************************************************************************************/
 -(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inMatrix:(FEMMatrix * __nonnull)matrix numberOfNodes:(int)numberOfNodes dofs:(int)dofs indexes:(int * __nonnull)indexes {
     
@@ -649,6 +662,7 @@
         FEMMatrix *a -> the matrix class
         int i        -> row number of the matrix element
         int j        -> column number of the matrix element
+ 
 *****************************************************************************************/
 -(void)makeMatrixIndex:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j {
     
@@ -704,11 +718,13 @@
 }
 
 /************************************************************************************************
+ 
     Sort columns to ascending order for rows of a CRS format matrix
  
     Arguments:
         Matrix_t *a             ->  the matrix class
         BOOL *alsoValues        ->  whether values are sorted
+ 
 ************************************************************************************************/
 -(void)sortMatrix:(FEMMatrix * __nonnull)matrix alsoValues:(BOOL * __nullable)alsoValues {
         
@@ -746,6 +762,7 @@
 }
 
 /************************************************************************************************
+ 
     Set a given value to an element of a CRS format Matrix
  
     Arguments:
