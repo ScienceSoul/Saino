@@ -492,7 +492,7 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
     basis_functions[7].coeff[6] =  COEFF; basis_functions[7].coeff[7] = -COEFF;
 #endif
     
-#ifdef USE_GPU_LOCAL_MEM
+#if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
     if (global_id >= numberOfElements) return;
 #endif
  
@@ -595,7 +595,9 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 
 #endif
 
-__kernel void NavierStokesCompose(
+__kernel void AssemblyByColoringStiffForceCompute(
+#ifdef COLORING_ASSEMBLY
+                                  
 #ifdef GLOBAL_STIFF_FORCE
                                   __global _stiff_force *stiff_force,
 #endif
@@ -609,6 +611,14 @@ __kernel void NavierStokesCompose(
                                   __global int *cols,
 #endif
                                   __global int *colorMapping
+                                  
+#endif
+                                  
+#ifdef NONZEROS_ASSEMBLY
+                               __global REAL *element_stiffs,
+                               __global REAL *element_forces
+#endif
+                                  
 #ifdef NODAL_DATA
                                   , __global _nodal_data *nodal_data,
 #else
@@ -625,7 +635,13 @@ __kernel void NavierStokesCompose(
                                   REAL load,                               // load = Flow bodyforce 2 or 3
                                   REAL hk,
                                   REAL mk,
+#ifdef COLORING_ASSEMBLY
                                   int positionInColorMapping,
+#endif
+                                                  
+#ifdef NONZEROS_ASSEMBLY
+                                  int numberOfElements,
+#endif
                                   int numberOfNodes,
                                   int numberElementDofs,
                                   int nBasis,
@@ -647,7 +663,11 @@ __kernel void NavierStokesCompose(
     // Model dimension and mesh dimension are the same
     
     int k;
+    
+#ifdef COLORING_ASSEMBLY
     int col, row, start, end;
+#endif
+    
 #ifdef KERNEL_BASIS_DBASISDX
     REAL basis[8][8];
 #else
@@ -744,14 +764,28 @@ __kernel void NavierStokesCompose(
     basis_functions[7].coeff[6] =  COEFF; basis_functions[7].coeff[7] = -COEFF;
 #endif
     
+#ifdef COLORING_ASSEMBLY
     int workItemID = get_global_id(0);
     int globalID = colorMapping[positionInColorMapping+workItemID];
+#endif
+
+#ifdef NONZEROS_ASSEMBLY
+    int globalID = get_global_id(0);
+#endif
     
     //int local_size = get_local_size(0);
     int local_id = get_local_id(0);
     
-#if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
-    if (globalID < 0) return;
+#ifdef COLORING_ASSEMBLY
+    #if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
+        if (globalID < 0) return;
+    #endif
+#endif
+    
+#ifdef NONZEROS_ASSEMBLY
+    #if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
+        if (globalID >= numberOfElements) return;
+    #endif
 #endif
     
 #ifdef KERNEL_BASIS_DBASISDX
@@ -1472,6 +1506,8 @@ __kernel void NavierStokesCompose(
     }
 #endif
     
+#ifdef COLORING_ASSEMBLY // The coloring method does the final global and vector contribution here
+    
     // The contribution of the local matrix to the global matrix
     // Only for DOF > 1
 #ifdef PRECOMPUTE_NZ
@@ -1566,5 +1602,80 @@ __kernel void NavierStokesCompose(
 #ifdef CHECK_NEG_PERM
         }
 #endif
+    }
+        
+#endif // End of the coloring method specific code
+        
+#ifdef NONZEROS_ASSEMBLY // If we do the assembly using the nonzeros method, we only need to store all computed local matrices and vectors
+    int indx = globalID * ( (numberElementDofs*varDofs)*(numberElementDofs*varDofs) );
+    for(int i=0; i<numberElementDofs*varDofs; i++) {
+        for(int j=0; j<numberElementDofs*varDofs; j++) {
+            element_stiffs[indx] = stiff[i][j];
+            indx++;
+        }
+    }
+    indx = globalID * (numberElementDofs*varDofs);
+    for(int i=0; i<numberElementDofs*varDofs; i++) {
+        element_forces[indx] = forceVector[i];
+        indx++;
+    }
+        
+#endif
+        
+}
+
+__kernel void AssemblyGlobalMatrixByNonZeros(__global REAL *element_stiffs, __global int *reduction, __global REAL *values, int blockSize, int nzPerThread) {
+    
+    int i;
+    
+    int groupID = get_group_id(0);
+    int localID = get_local_id(0);
+
+    if (localID >= blockSize) return;
+    
+    int endBlock = blockSize * (nzPerThread*9);
+    int id = (groupID * endBlock) + localID;
+    
+    REAL t = ZERO;
+    int count = 0;
+    while (count < endBlock) {
+        i = reduction[id];
+        
+        if (i > 0) {
+            t = t + element_stiffs[i-1];
+        } else if (i < 0) {
+            values[-i-1] = t;
+            t = ZERO;
+        }
+        id = id + blockSize;
+        count = count + blockSize;
+    }
+}
+
+__kernel void AssemblyGlobalVectorByNonZeros(__global REAL *element_forces, __global int *reduction, __global REAL *rhs, int blockSize, int nzPerThread) {
+    
+    int i;
+    
+    int groupID = get_group_id(0);
+    int localID = get_local_id(0);
+
+    if (localID >= blockSize) return;
+    
+    int endBlock = blockSize * (nzPerThread*9);
+    int id = (groupID * endBlock) + localID;
+    
+    REAL t = ZERO;
+    int count = 0;
+    while (count < endBlock) {
+        i = reduction[id];
+        
+        if (i > 0) {
+            t = t + element_forces[i-1];
+        } else if (i < 0) {
+            rhs[-i-1] = t;
+            t = ZERO;
+        }
+        id = id + blockSize;
+        count = count + blockSize;
     }
 }

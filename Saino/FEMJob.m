@@ -1517,7 +1517,7 @@ jump:
 -(void)runWithInitialize:(int)initialize {
     
     int i, j, k, extrudeLevels, interval, minVal, timeStep=0;
-    NSString *eq, *when;
+    NSString *eq, *methodGPU, *when;
     FEMMesh *extrudedMesh;
     listBuffer listBuffer = { NULL, NULL, NULL, NULL, 0, 0, 0};
     BOOL colorMesh=NO, execThis, found, parallelAssembly=NO, noMDF=NO;
@@ -1614,7 +1614,14 @@ jump:
             for (FEMSolution *solution in self.model.solutions) {
                 if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
                     parallelAssembly = YES;
-                    colorMesh = [solution.solutionInfo[@"color mesh"] boolValue];
+                    if (solution.solutionInfo[@"parallel assembly method"] != nil) {
+                        methodGPU = solution.solutionInfo[@"parallel assembly method"];
+                    } else {
+                        fatal("FEMJob:runWithInitialize", "Method for parallel assembly not given");
+                    }
+                    if ([methodGPU isEqualToString:@"element coloring"]) {
+                        colorMesh = [solution.solutionInfo[@"color mesh"] boolValue];
+                    }
                     break;
                 }
             }
@@ -1622,14 +1629,18 @@ jump:
             // Optionally perform simple extrusion to increase the dimension of the mesh
             extrudeLevels = [listUtilities listGetInteger:self.model inArray:self.model.simulation.valuesList forVariable:@"extruded mesh levels" info:&found minValue:NULL maxValue:NULL];
             if (extrudeLevels > 1) {
-                if (parallelAssembly == YES && colorMesh == NO) {
-                    fprintf(stderr, "FEMJob:runWithInitialize: if the < color mesh> option is set to < NO >, the extruded mesh won't be colored.\n");
-                    fprintf(stderr, "FEMJob:runWithInitialize: this means that the non-extruded mesh should already be colored which does not make sense.\n");
-                    fprintf(stderr, "FEMJob:runWithInitialize: if the mesh is extruded, it should not be colored before extrusion.\n");
-                    fatal("FEMJob:runWithInitialize");
+                if (parallelAssembly == YES && [methodGPU isEqualToString:@"element coloring"]) {
+                    if (colorMesh == NO) {
+                        fprintf(stderr, "FEMJob:runWithInitialize: error when using the parallel assembly with the coloring method.\n");
+                        fprintf(stderr, "FEMJob:runWithInitialize: if the < color mesh> option is set to < NO >, the extruded mesh won't be colored.\n");
+                        fprintf(stderr, "FEMJob:runWithInitialize: this means that the non-extruded mesh should already be colored which does not make sense.\n");
+                        fprintf(stderr, "FEMJob:runWithInitialize: if the mesh is extruded, it should not be colored before extrusion.\n");
+                        fatal("FEMJob:runWithInitialize");
+                    }
                 }
                 FEMMeshUtils *meshUtils = [[FEMMeshUtils alloc] init];
                 extrudedMesh = [meshUtils extrudeMesh:self.model.meshes[0] inLevels:extrudeLevels-2 model:self.model];
+                fprintf(stdout, "FEMJob:runWithInitialize: number of bulk elements after extrusion: %d\n", extrudedMesh.numberOfBulkElements);
                 for (FEMSolution *solution in self.model.solutions) {
                     if (solution.mesh == self.model.meshes[0]) {
                         solution.mesh = extrudedMesh;
@@ -1653,7 +1664,7 @@ jump:
             }
             // If parallel assembly and if required, color the mesh here
             // Store the result in the mesh directory so that we do the coloring only once
-            if (parallelAssembly == YES && colorMesh == YES) {
+            if (parallelAssembly == YES && [methodGPU isEqualToString:@"element coloring"] && colorMesh == YES) {
                 FEMMeshUtils *meshUtils = [[FEMMeshUtils alloc] init];
                 FEMMesh *mesh = self.model.meshes[0];
                 // Fist check whether we already have done the coloring before for this mesh
@@ -1910,8 +1921,10 @@ jump:
         test.ismip_hom_A010_allDone = YES;
     } else if (test.do_ismip_hom_B010 == YES) {
         test.ismip_hom_B010_allDone = YES;
-    } else if (test.do_ismip_hom_A010_gpu == YES) {
-        test.ismip_hom_A010_gpu_allDone = YES;
+    } else if (test.do_ismip_hom_A010_gpu_coloring == YES) {
+        test.ismip_hom_A010_gpu_color_allDone = YES;
+    } else if (test.do_ismip_hom_A010_gpu_nonzeros == YES) {
+        test.ismip_hom_A010_gpu_nonzeros_allDone = YES;
     } else if (test.do_ismip_hom_C010 == YES) {
         test.ismip_hom_C010_allDone = YES;
     }

@@ -94,9 +94,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 -(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 -(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 -(void)FEMFlowSolution_init_non_zeros:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_init_reduction_lists:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode;
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
 -(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize;
+-(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize;
 @end
 
 @implementation FEMFlowSolution {
@@ -163,13 +166,15 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_context _context;
     cl_command_queue _cmd_queue;
     cl_program _program;
-    cl_kernel _kernel_assembly;
+    cl_kernel _kernel_color_assembly_stiff_compute;
+    cl_kernel _kernel_nonzeros_assembly_global_matrix;
+    cl_kernel _kernel_nonzeros_assembly_global_vector;
     cl_kernel _kernel_basis_dbasisdx;
     size_t _src_len;
     char * __nullable _kernel_source;
     BOOL _initializeGPU;
     NSString * __nullable _precision;
-    cl_uint _positionInColorMapping;
+    cl_uint _kernelArgumemtPosition;
     
     // Ice flow data on the GPU
     ice_flow_gpu *_gpuData;
@@ -191,6 +196,11 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     stiff_force_f *_global_stiff_force_f;
     stiff_force_d *_global_stiff_force_d;
     
+    int * __nullable global_matrix_reduction;
+    int * __nullable global_vector_reduction;
+    int _global_non_zeros;
+    int _force_non_zeros;
+    
     // GPU buffers
     cl_mem _basis_functions;
     cl_mem _matDiag;
@@ -211,6 +221,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_mem _nodal_data;
     cl_mem _matrix_non_zeros;
     cl_mem _global_stiff_force;
+    cl_mem _global_matrix_reduction;
+    cl_mem _global_vector_reduction;
+    cl_mem _element_stiffs;
+    cl_mem _element_forces;
     void * __nullable _mapped_matValues;
     void * __nullable _mapped_matRHS;
     void * __nullable _mapped_varSolution;
@@ -1082,8 +1096,356 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
 }
 
+-(void)FEMFlowSolution_init_reduction_lists:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+    
+    int l, n, col, end, indx, row, start;
+    Element_t *element = NULL;
+
+    typedef struct {
+        short nbOfIndexes;
+        short cursor;
+        int sources[8];
+        int target;
+    } reduction_pass1;
+    reduction_pass1 *list_reduction_pass1;
+    
+    typedef struct {
+        int sources[8];
+        int target;
+    } reduction_pass2;
+    reduction_pass2 *list_reduction_pass2;
+    
+    typedef struct {
+        int matIdx[32][32];
+        int forceIdx[32];
+    } map;
+    map *linearization_map;
+    
+    matrixArraysContainer *matContainers = solution.matrix.getContainers;
+    int numberOfNonZeros = matContainers->sizeValues;
+    
+    int *indexes = intvec(0, solution.mesh.maxElementDofs-1);
+    
+    list_reduction_pass1 = (reduction_pass1 *)malloc(sizeof(reduction_pass1)*numberOfNonZeros);
+    for (int i=0; i<numberOfNonZeros; i++) {
+        list_reduction_pass1[i].nbOfIndexes = 0;
+        list_reduction_pass1[i].cursor = 0;
+        memset(list_reduction_pass1[i].sources, -1, sizeof(list_reduction_pass1[i].sources));
+        list_reduction_pass1[i].target = i;
+    }
+    
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        n = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        for (int i=0; i<n; i++) {
+            for (int k=1; k<=_nsdofs; k++) {
+                if (_flowPerm[indexes[i]] < 0) continue;
+                row = _nsdofs * (_flowPerm[indexes[i]]+1) - k;
+                for (int j=0; j<n; j++) {
+                    for (int l=1; l<=_nsdofs; l++) {
+                        if (_flowPerm[indexes[j]] < 0) continue;
+                        col = _nsdofs * (_flowPerm[indexes[j]]+1) - l;
+                        
+                        start = (col >= row) ? matContainers->Diag[row] : matContainers->Rows[row];
+                        end = (col >= row) ? matContainers->Rows[row+1]-1 : matContainers->Diag[row]-1;
+                        for (int c=start; c<=end; c++) {
+                            if (matContainers->Cols[c] == col) {
+                                list_reduction_pass1[c].nbOfIndexes++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Figure out the maximum number of source indices. Fatal if it somehow exeeds the buffer size used to store them
+    int max = -INT_MAX;
+    for (int i=0; i<numberOfNonZeros; i++) {
+        if (list_reduction_pass1[i].nbOfIndexes > max) {
+            max = list_reduction_pass1[i].nbOfIndexes;
+        }
+    }
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_init_reduction_lists: maximum number of source indices: %d\n", max);
+    if (max > 8) {
+        fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Number of source indices exeeds buffer size.");
+    }
+    
+    // Build the map from per-element 2D local matrix arrays to linearized global array
+    linearization_map = (map *)malloc(sizeof(map)*mesh.numberOfBulkElements);
+    indx = 0;
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        for (int i=0; i<32; i++) {
+            for (int j=0; j<32; j++) {
+                linearization_map[t].matIdx[i][j] = indx;
+                indx++;
+            }
+        }
+    }
+    
+    // Store the source indices. The source indices represent the position index in the global
+    // linearized array that stores the local matrices for all elements
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        n = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        for (int i=0; i<n; i++) {
+            for (int k=1; k<=_nsdofs; k++) {
+                if (_flowPerm[indexes[i]] < 0) continue;
+                row = _nsdofs * (_flowPerm[indexes[i]]+1) - k;
+                for (int j=0; j<n; j++) {
+                    for (int l=1; l<=_nsdofs; l++) {
+                        if (_flowPerm[indexes[j]] < 0) continue;
+                        col = _nsdofs * (_flowPerm[indexes[j]]+1) - l;
+                        
+                        start = (col >= row) ? matContainers->Diag[row] : matContainers->Rows[row];
+                        end = (col >= row) ? matContainers->Rows[row+1]-1 : matContainers->Diag[row]-1;
+                        for (int c=start; c<=end; c++) {
+                            if (matContainers->Cols[c] == col) {
+                                list_reduction_pass1[c].sources[list_reduction_pass1[c].cursor] = linearization_map[t].matIdx[_nsdofs*(i+1)-k][_nsdofs*(j+1)-l];
+                                list_reduction_pass1[c].cursor++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    free(linearization_map);
+    
+    // Filter the real nonzeros
+    int count = 0;
+    for (int i=0; i<numberOfNonZeros; i++) {
+        if (list_reduction_pass1[i].nbOfIndexes > 0) count++;
+    }
+    
+    // Adjust the number of nonzeros to be a multiple of the work group size
+    int adjust = 0;
+    if (solution.solutionInfo[@"nonzeros adjust global work size to be a multiple of"] != nil) {
+        adjust = [solution.solutionInfo[@"nonzeros adjust global work size to be a multiple of"] intValue];
+    } else {
+        fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", " Can't find adjustement parameter for nonzeros.");
+    }
+                              
+    numberOfNonZeros = count + (adjust - (count & (adjust-1)));
+    _global_non_zeros = numberOfNonZeros;
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_init_reduction_lists: final number of global nonzeros: %d\n", _global_non_zeros);
+    list_reduction_pass2 = (reduction_pass2 *)malloc(sizeof(reduction_pass2)*numberOfNonZeros);
+    for (int i=0; i<numberOfNonZeros; i++) {
+        memset(list_reduction_pass2[i].sources, 0, sizeof(list_reduction_pass2[i].sources));
+        list_reduction_pass2[i].target = 0;
+    }
+    
+    // Only store the real nonzeros and flag the indexes in order to distinguish between source and target indexes:
+    //  - negate the target indexes and substract 1 (i.e., inverting all bits in the integer under a two's complement system)
+    //  - add 1 to the source indexes
+    count = 0;
+    for (int i=0; i<matContainers->sizeValues; i++) {
+        if (list_reduction_pass1[i].nbOfIndexes > 0) {
+            for (int j=0; j<8; j++) {
+                list_reduction_pass2[count].sources[j] = list_reduction_pass1[i].sources[j]+1;
+            }
+            list_reduction_pass2[count].target = (-list_reduction_pass1[i].target)-1;
+            count++;
+        }
+    }
+    
+    free(list_reduction_pass1);
+    
+    // Create the reduction matrix that packs together all reduction lists. The matrix size is defined as follows:
+    // if we decide for example to compute 4 NZs per thread with a thred block size of 64 threads,
+    // we then need to define a work group size = (64*4)=256. So our packed matrix will be
+    // in this case of size:
+    //  number of rows = number of work groups  * 64 = (work space / 256) * 64
+    //  number of cols = number of NZs per thread * (max source indexes+number of target index) = 4 * (8+1)
+    int blockSize;
+    if (solution.solutionInfo[@"nonzeros assembly thread block size"] != nil) {
+        blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
+    } else fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Nonzeros assembly thread block size not found.");
+    
+    int nzPerThread;
+    if (solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] != nil) {
+        nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
+    } else fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Nonzeros assembly nonzeros per thread not found.");
+
+    int **packed = intmatrix(0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
+    memset(*packed, 0, ((numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9))*sizeof(int));
+    
+    count = 0;
+    n = 0;
+    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) { // Iterate over the number of blocks
+        for (int j=0; j<blockSize; j++) {
+            l = 0;
+            for (int k=0; k<nzPerThread; k++) {
+                for (int m=0; m<8; m++) {
+                    packed[n][l] = list_reduction_pass2[count].sources[m];
+                    l++;
+                }
+                packed[n][l] = list_reduction_pass2[count].target;
+                l++;
+                count++;
+            }
+            n++;
+        }
+    }
+    
+    free(list_reduction_pass2);
+    
+//    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread)*blockSize; i++) {
+//        for (int j=0; j<nzPerThread*9; j++) {
+//            printf("%d ", packed[i][j]);
+//        }
+//        printf("\n");
+//    }
+    
+    // Finally linearize the reduction matrix in column-major order. We linearise per sub-matrix
+    // i.e., per thread block
+    global_matrix_reduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
+    count = 0;
+    n = 0;
+    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) {
+        for (int j=0; j<nzPerThread*9; j++) {
+            l = n;
+            for (int k=0; k<blockSize; k++) {
+                global_matrix_reduction[count] = packed[l][j];
+                count++;
+                l++;
+            }
+        }
+        n = n + blockSize;
+    }
+    
+    free_imatrix(packed, 0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
+    
+    
+    // ====================================================
+    //
+    //  Do the same for the force vectors reduction matrix
+    //
+    // ====================================================
+    
+    numberOfNonZeros = matContainers->sizeRHS;
+    list_reduction_pass1 = (reduction_pass1 *)malloc(sizeof(reduction_pass1)*numberOfNonZeros);
+    for (int i=0; i<numberOfNonZeros; i++) {
+        list_reduction_pass1[i].nbOfIndexes = 0;
+        list_reduction_pass1[i].cursor = 0;
+        memset(list_reduction_pass1[i].sources, -1, sizeof(list_reduction_pass1[i].sources));
+        list_reduction_pass1[i].target = i;
+    }
+    
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        n = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        for (int i=0; i<n; i++) {
+            if (_flowPerm[indexes[i]] >= 0) {
+                for (int j=0; j<_nsdofs; j++) {
+                    l = _nsdofs * _flowPerm[indexes[i]] + j;
+                    list_reduction_pass1[l].nbOfIndexes++;
+                }
+            }
+        }
+    }
+    
+    // Build the map from per-element 2D local force arrays to linearized global array
+    linearization_map = (map *)malloc(sizeof(map)*mesh.numberOfBulkElements);
+    indx = 0;
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        for (int i=0; i<32; i++) {
+            linearization_map[t].forceIdx[i] = indx;
+            indx++;
+        }
+    }
+    
+    // Store the source indices. The source indices represent the position index in the global
+    // linearized array that stores the local force for all elements
+    for (int t=0; t<mesh.numberOfBulkElements; t++) {
+        element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), t, solution, model);
+        n = getElementDofsSolutionIMP(core, @selector(getElementDofsSolution:model:forElement:atIndexes:disableDiscontinuousGalerkin:), solution, model, element, indexes, NULL);
+        
+        for (int i=0; i<n; i++) {
+            if (_flowPerm[indexes[i]] >= 0) {
+                for (int j=0; j<_nsdofs; j++) {
+                    l = _nsdofs * _flowPerm[indexes[i]] + j;
+                    list_reduction_pass1[l].sources[list_reduction_pass1[l].cursor] = linearization_map[t].forceIdx[_nsdofs*i+j];
+                    list_reduction_pass1[l].cursor++;
+                }
+            }
+        }
+    }
+    
+    free(linearization_map);
+    
+    numberOfNonZeros = numberOfNonZeros + (adjust - (numberOfNonZeros & (adjust-1)));
+    _force_non_zeros = numberOfNonZeros;
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_init_reduction_lists: final number of force nonzeros: %d\n", _force_non_zeros);
+    list_reduction_pass2 = (reduction_pass2 *)malloc(sizeof(reduction_pass2)*numberOfNonZeros);
+    for (int i=0; i<numberOfNonZeros; i++) {
+        memset(list_reduction_pass2[i].sources, 0, sizeof(list_reduction_pass2[i].sources));
+        list_reduction_pass2[i].target = 0;
+    }
+
+    count = 0;
+    for (int i=0; i<matContainers->sizeRHS; i++) {
+        if (list_reduction_pass1[i].nbOfIndexes > 0) {
+            for (int j=0; j<8; j++) {
+                list_reduction_pass2[count].sources[j] = list_reduction_pass1[i].sources[j]+1;
+            }
+            list_reduction_pass2[count].target = (-list_reduction_pass1[i].target)-1;
+            count++;
+        }
+    }
+    
+    free(list_reduction_pass1);
+    
+    packed = intmatrix(0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
+    memset(*packed, 0, ((numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9))*sizeof(int));
+    
+    count = 0;
+    n = 0;
+    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) { // Iterate over the number of blocks
+        for (int j=0; j<blockSize; j++) {
+            l = 0;
+            for (int k=0; k<nzPerThread; k++) {
+                for (int m=0; m<8; m++) {
+                    packed[n][l] = list_reduction_pass2[count].sources[m];
+                    l++;
+                }
+                packed[n][l] = list_reduction_pass2[count].target;
+                l++;
+                count++;
+            }
+            n++;
+        }
+    }
+    
+    free(list_reduction_pass2);
+    
+    global_vector_reduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
+    count = 0;
+    n = 0;
+    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) {
+        for (int j=0; j<nzPerThread*9; j++) {
+            l = n;
+            for (int k=0; k<blockSize; k++) {
+                global_vector_reduction[count] = packed[l][j];
+                count++;
+                l++;
+            }
+        }
+        n = n + blockSize;
+    }
+    
+    free_imatrix(packed, 0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
+    free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
+}
+
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode {
     
+    int totElements = 0;
     int *colorMapping = NULL, *elementNodeIndexesStore = NULL;
     matrixArraysContainer *matContainers = NULL;
     variableArraysContainer *flowContainers = NULL;
@@ -1108,36 +1470,125 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
     }
     
-    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
-        if ([precisionMode isEqualToString:@"single"] == YES) {
-            _global_stiff_force_f = (stiff_force_f *)malloc(sizeof(stiff_force_f)*mesh.numberOfBulkElements);
-            init_stiff_force(_global_stiff_force_f, mesh.numberOfBulkElements);
-            _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_f)*mesh.numberOfBulkElements, _global_stiff_force_f, &err);
-        } else if ([precisionMode isEqualToString:@"double"] == YES) {
-            _global_stiff_force_d = (stiff_force_d *)malloc(sizeof(stiff_force_d)*mesh.numberOfBulkElements);
-            init_stiff_force(_global_stiff_force_d, mesh.numberOfBulkElements);
-            _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_d)*mesh.numberOfBulkElements, _global_stiff_force_d, &err);
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        
+        if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+            if ([precisionMode isEqualToString:@"single"] == YES) {
+                _global_stiff_force_f = (stiff_force_f *)malloc(sizeof(stiff_force_f)*mesh.numberOfBulkElements);
+                init_stiff_force(_global_stiff_force_f, mesh.numberOfBulkElements);
+                _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_f)*mesh.numberOfBulkElements, _global_stiff_force_f, &err);
+            } else if ([precisionMode isEqualToString:@"double"] == YES) {
+                _global_stiff_force_d = (stiff_force_d *)malloc(sizeof(stiff_force_d)*mesh.numberOfBulkElements);
+                init_stiff_force(_global_stiff_force_d, mesh.numberOfBulkElements);
+                _global_stiff_force = clCreateBuffer(_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(stiff_force_d)*mesh.numberOfBulkElements, _global_stiff_force_d, &err);
+            }
         }
-    }
-    
-    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
-        _matrix_non_zeros = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(non_zero)*mesh.numberOfBulkElements, _non_zeros, &err);
+        
+        if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+            _matrix_non_zeros = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(non_zero)*mesh.numberOfBulkElements, _non_zeros, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matrix_non_zeros.");
+            }
+        } else {
+            _matDiag = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matDiag.");
+            }
+            _matRows = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRows.");
+            }
+            _matCols = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matCols.");
+            }
+        }
+        
+        // If we use the GPU local memory or if we explicitly enable work-groups, we need to make sure that our work group size is a multiple
+        // of the number of elemements in each color set. Adjust the number of elements in the color set accordingly
+        if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
+            int adjust = 0;
+            if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
+                adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
+            } else {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Missing parameter to adjust color sets.");
+            }
+            
+            int nbElements;
+            totElements = 0;
+            for (NSMutableArray *color in mesh.colors) {
+                nbElements = [color[0] intValue];
+                nbElements = nbElements + (adjust - (nbElements & (adjust-1)));
+                totElements += nbElements;
+            }
+            Element_t *elements = mesh.getElements;
+            int *adjusted_colorMapping = calloc(totElements, sizeof(int));
+            int indx = 0, add;
+            for (NSMutableArray *color in mesh.colors) {
+                // First the real elements for a given color
+                for (int i=0; i<mesh.numberOfBulkElements; i++) {
+                    if (elements[i].color.colorIndex-1 == [color[1] intValue]) {
+                        adjusted_colorMapping[indx] = elements[i].ElementIndex-1;
+                        indx++;
+                    }
+                }
+                // Add the gost elements (element index=-1) for a given color
+                nbElements = [color[0] intValue];
+                add = (nbElements + (adjust - (nbElements & (adjust-1)))) - nbElements;
+                for (int i=0; i<add; i++) {
+                    adjusted_colorMapping[indx] = -1;
+                    indx++;
+                }
+                color[0] = @(nbElements + (adjust - (nbElements & (adjust-1))));
+            }
+            fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: number of elements after adjustement: \n");
+            for (NSMutableArray *color in mesh.colors) {
+                fprintf(stdout, "color index: %d: %d\n", [color[1] intValue], [color[0] intValue]);
+            }
+            _colorMapping = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*totElements, adjusted_colorMapping, &err);
+            free(adjusted_colorMapping);
+            
+        } else {
+            totElements = mesh.numberOfBulkElements;
+            _colorMapping = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*mesh.numberOfBulkElements, colorMapping, &err);
+        }
         if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matrix_non_zeros.");
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _colorMapping.");
         }
-    } else {
-        _matDiag = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeDiag, matContainers->Diag, &err);
+
+        
+    } else if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"]) {
+        
+        int blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
+        int nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
+        
+        int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+        _global_matrix_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, global_matrix_reduction, &err);
         if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matDiag.");
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _global_reduction.");
         }
-        _matRows = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeRows, matContainers->Rows, &err);
+        
+        size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+        _global_vector_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, global_vector_reduction, &err);
         if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRows.");
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _force_reduction.");
         }
-        _matCols = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*matContainers->sizeCols, matContainers->Cols, &err);
+        
+        void *element_stiffs = alloc_mem(precision(), (size_t)(mesh.numberOfBulkElements*((solution.mesh.maxElementDofs*_nsdofs)*(solution.mesh.maxElementDofs*_nsdofs))));
+        void *element_forces = alloc_mem(precision(), (size_t)(mesh.numberOfBulkElements*(solution.mesh.maxElementDofs*_nsdofs)));
+        
+        _element_stiffs = createDeviceBuffer(precision(), _context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, (mesh.numberOfBulkElements*((solution.mesh.maxElementDofs*_nsdofs)*(solution.mesh.maxElementDofs*_nsdofs))), element_stiffs, err);
         if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matCols.");
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _element_stiffs.");
         }
+
+        _element_forces = createDeviceBuffer(precision(), _context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, (mesh.numberOfBulkElements*(solution.mesh.maxElementDofs*_nsdofs)), element_forces, err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _element_forces.");
+        }
+        
+        free(element_stiffs);
+        free(element_forces);
     }
     
     // Those buffers are initialized later inside the non-linearity loop
@@ -1154,57 +1605,6 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _matRHS.");
     }
     
-    // If we use the GPU local memory or if we explicitly enable work-groups, we need to make sure that our work group size is a multiple
-    // of the number of elemements in each color set. Adjust the number of elements in the color set
-    // accordingly
-    if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
-        int adjust = 0;
-        if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
-            adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
-        } else {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Missing parameter to adjust color sets.");
-        }
-        
-        int nbElements, totElements;
-        totElements = 0;
-        for (NSMutableArray *color in mesh.colors) {
-            nbElements = [color[0] intValue];
-            nbElements = nbElements + (adjust - (nbElements & (adjust-1)));
-            totElements += nbElements;
-        }
-        Element_t *elements = mesh.getElements;
-        int *adjusted_colorMapping = calloc(totElements, sizeof(int));
-        int indx = 0, add;
-        for (NSMutableArray *color in mesh.colors) {
-            // First the real elements for a given color
-            for (int i=0; i<mesh.numberOfBulkElements; i++) {
-                if (elements[i].color.colorIndex-1 == [color[1] intValue]) {
-                    adjusted_colorMapping[indx] = elements[i].ElementIndex-1;
-                    indx++;
-                }
-            }
-            // Add the gost elements (element index=-1) for a given color
-            nbElements = [color[0] intValue];
-            add = (nbElements + (adjust - (nbElements & (adjust-1)))) - nbElements;
-            for (int i=0; i<add; i++) {
-                adjusted_colorMapping[indx] = -1;
-                indx++;
-            }
-            color[0] = @(nbElements + (adjust - (nbElements & (adjust-1))));
-        }
-        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: number of elements after adjustement: \n");
-        for (NSMutableArray *color in mesh.colors) {
-            fprintf(stdout, "color index: %d: %d\n", [color[1] intValue], [color[0] intValue]);
-        }
-        _colorMapping = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*totElements, adjusted_colorMapping, &err);
-        free(adjusted_colorMapping);
-        
-    } else {
-        _colorMapping = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*mesh.numberOfBulkElements, colorMapping, &err);
-    }
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _colorMapping.");
-    }
     
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
         if ([precisionMode isEqualToString:@"single"] == YES) {
@@ -1301,9 +1701,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     int nbOfReals = 0;
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
-        nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS;
+        nbOfReals = matContainers->sizeValues + matContainers->sizeRHS;
     } else {
-        nbOfReals = 256 + 24 + 32 + matContainers->sizeValues + matContainers->sizeRHS + mesh.numberOfNodes
+        nbOfReals = matContainers->sizeValues + matContainers->sizeRHS + mesh.numberOfNodes
         + mesh.numberOfNodes +  mesh.numberOfNodes + flowContainers->sizeValues;
     }
     
@@ -1313,22 +1713,46 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         globalAllocation->nb_double = nbOfReals;
     }
     
-    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == NO) {
-        globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols;
+    if([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == NO) {
+            globalAllocation->nb_int = matContainers->sizeDiag + matContainers->sizeRows + matContainers->sizeCols;
+        }
     }
     
-    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
-        globalAllocation->nb_int = globalAllocation->nb_int + mesh.numberOfBulkElements;
-    } else {
-        globalAllocation->nb_int = globalAllocation->nb_int + mesh.numberOfBulkElements + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
+    if([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        globalAllocation->nb_int = globalAllocation->nb_int + totElements;
+    }
+    if ([solution.solutionInfo[@"use element nodal data"] boolValue] == NO) {
+        globalAllocation->nb_int = globalAllocation->nb_int + (mesh.numberOfBulkElements*mesh.maxElementDofs) + flowContainers->sizePerm;
     }
     
     globalAllocation->nb_char = 1;
     
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"] == YES) {
+        int blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
+        int nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
+        
+        int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+        globalAllocation->nb_int = globalAllocation->nb_int + size;
+        
+        size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+        globalAllocation->nb_int = globalAllocation->nb_int + size;
+        
+        if (precision() == 1) {
+            globalAllocation->nb_float = globalAllocation->nb_float + (mesh.numberOfBulkElements*((solution.mesh.maxElementDofs*_nsdofs)*(solution.mesh.maxElementDofs*_nsdofs)));
+            globalAllocation->nb_float = globalAllocation->nb_float + (mesh.numberOfBulkElements*(solution.mesh.maxElementDofs*_nsdofs));
+        } else {
+            globalAllocation->nb_double = globalAllocation->nb_double + (mesh.numberOfBulkElements*((solution.mesh.maxElementDofs*_nsdofs)*(solution.mesh.maxElementDofs*_nsdofs)));
+            globalAllocation->nb_double = globalAllocation->nb_double + (mesh.numberOfBulkElements*(solution.mesh.maxElementDofs*_nsdofs));
+        }
+    }
+    
     size_t globalAllocationSize = computeGlobalMemoryAllocation(globalAllocation);
     
-    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
-        globalAllocationSize = globalAllocationSize + sizeof(non_zero)*mesh.numberOfBulkElements;
+    if([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+            globalAllocationSize = globalAllocationSize + sizeof(non_zero)*mesh.numberOfBulkElements;
+        }
     }
     
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
@@ -1347,11 +1771,13 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         }
     }
     
-    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
-        if (precision() == 1) {
-            globalAllocationSize = globalAllocationSize + sizeof(stiff_force_f)*mesh.numberOfBulkElements;
-        } else {
-            globalAllocationSize = globalAllocationSize + sizeof(stiff_force_d)*mesh.numberOfBulkElements;
+    if([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+            if (precision() == 1) {
+                globalAllocationSize = globalAllocationSize + sizeof(stiff_force_f)*mesh.numberOfBulkElements;
+            } else {
+                globalAllocationSize = globalAllocationSize + sizeof(stiff_force_d)*mesh.numberOfBulkElements;
+            }
         }
     }
     
@@ -1374,32 +1800,42 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_int err;
     cl_uint argIdx = 0;
     
-    if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
-        err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_global_stiff_force);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matValues);
-    } else {
-        err  = clSetKernelArg(_kernel_assembly, argIdx, sizeof(cl_mem), &_matValues);
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"use global stiff and force"] boolValue] == YES) {
+            err  = clSetKernelArg(_kernel_color_assembly_stiff_compute, argIdx, sizeof(cl_mem), &_global_stiff_force);
+            err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matValues);
+        } else {
+            err  = clSetKernelArg(_kernel_color_assembly_stiff_compute, argIdx, sizeof(cl_mem), &_matValues);
+        }
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matRHS);
+        
+    } else if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"] == YES) {
+        err  = clSetKernelArg(_kernel_color_assembly_stiff_compute, argIdx, sizeof(cl_mem), &_element_stiffs);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_element_forces);
     }
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRHS);
-    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matrix_non_zeros);
-    } else {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matDiag);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matRows);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_matCols);
+    
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+            err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matrix_non_zeros);
+        } else {
+            err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matDiag);
+            err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matRows);
+            err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_matCols);
+        }
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_colorMapping);
     }
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_colorMapping);
+
     if ([solution.solutionInfo[@"use element nodal data"] boolValue] == YES) {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodal_data);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_nodal_data);
     } else {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_elementNodeIndexesStore);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesX);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesY);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_nodesZ);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_varSolution);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_varPermutation);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_elementNodeIndexesStore);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_nodesX);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_nodesY);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_nodesZ);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_varSolution);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_varPermutation);
     }
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_gpuNewtonLinear);
+    err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_gpuNewtonLinear);
     
     if (solution.solutionInfo[@"gpu ice density"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice density value for gpu execution.");
     if (solution.solutionInfo[@"gpu ice viscosity"] == nil) fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Missing ice viscosity value for gpu execution.");
@@ -1455,53 +1891,55 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
     }
     
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->density_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->viscosity_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->gravity_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->hk_v);
-    err |= setDeviceKernelArg(precision(), _kernel_assembly, ++argIdx, 1, *_gpuData->mk_v);
+    err |= setDeviceKernelArg(precision(), _kernel_color_assembly_stiff_compute, ++argIdx, 1, *_gpuData->density_v);
+    err |= setDeviceKernelArg(precision(), _kernel_color_assembly_stiff_compute, ++argIdx, 1, *_gpuData->viscosity_v);
+    err |= setDeviceKernelArg(precision(), _kernel_color_assembly_stiff_compute, ++argIdx, 1, *_gpuData->gravity_v);
+    err |= setDeviceKernelArg(precision(), _kernel_color_assembly_stiff_compute, ++argIdx, 1, *_gpuData->hk_v);
+    err |= setDeviceKernelArg(precision(), _kernel_color_assembly_stiff_compute, ++argIdx, 1, *_gpuData->mk_v);
     
-    _positionInColorMapping = ++argIdx;
+    _kernelArgumemtPosition = ++argIdx;
     
     int n = element->Type.NumberOfNodes;
     int nBasis = element->Type.NumberOfNodes;
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &n);
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &n);
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &nBasis);
+    err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_int), &n);
+    err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_int), &nBasis);
     
     int varDofs = solution.variable.dofs;
-    err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_int), &varDofs);
+    err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_int), &varDofs);
     
     // If we use basis function from global memory instead of the definitions
     // inside the kernel
     if ([solution.solutionInfo[@"use global basis functions coefficients"] boolValue] == YES) {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_basis_functions);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_basis_functions);
     }
     
     // If we compute the basis and basis derivatives in another kernel
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_element_basis);
-        err |= clSetKernelArg(_kernel_assembly, ++argIdx, sizeof(cl_mem), &_element_dbasisdx);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_element_basis);
+        err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, sizeof(cl_mem), &_element_dbasisdx);
     }
     
     // Allocate space for local memory if required
     if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
         int wrk_groupSize = 0;
-        if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
-            wrk_groupSize  = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
+        if (solution.solutionInfo[@"coloring assembly/locals compute work-group size"] != nil) {
+            wrk_groupSize  = [solution.solutionInfo[@"coloring assembly/locals compute work-group size"] intValue];
+        } else {
+            fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Value for work-group size not found.");
         }
-        
+    
         if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
             if ([precisionMode isEqualToString:@"single"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
+                err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
             } else if ([precisionMode isEqualToString:@"double"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
+                err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, wrk_groupSize*sizeof(element_info_extended_d), NULL);
             }
         } else {
             if ([precisionMode isEqualToString:@"single"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_f), NULL);
+                err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, wrk_groupSize*sizeof(element_info_f), NULL);
             } else if ([precisionMode isEqualToString:@"double"] == YES) {
-                err |= clSetKernelArg(_kernel_assembly, ++argIdx, wrk_groupSize*sizeof(element_info_d), NULL);
+                err |= clSetKernelArg(_kernel_color_assembly_stiff_compute, ++argIdx, wrk_groupSize*sizeof(element_info_d), NULL);
             }
         }
     }
@@ -1533,8 +1971,8 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES) {
             int wrk_groupSize = 0;
-            if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
-                wrk_groupSize  = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
+            if (solution.solutionInfo[@"coloring assembly/locals compute work-group size"] != nil) {
+                wrk_groupSize  = [solution.solutionInfo[@"coloring assembly/locals compute work-group size"] intValue];
             }
             if ([precisionMode isEqualToString:@"single"] == YES) {
                 err |= clSetKernelArg(_kernel_basis_dbasisdx, ++argIdx, wrk_groupSize*sizeof(element_info_extended_f), NULL);
@@ -1546,6 +1984,26 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Error in setting < basis and basis derivatives >kernel arguments.");
         }
     }
+    
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"] == YES) {
+        
+        int blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
+        int nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
+
+        argIdx = 0;
+        err  = clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, argIdx, sizeof(cl_mem), &_element_stiffs);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_mem), &_global_matrix_reduction);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_mem), &_matValues);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_int), &blockSize);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_int), &nzPerThread);
+        
+        argIdx = 0;
+        err  = clSetKernelArg(_kernel_nonzeros_assembly_global_vector, argIdx, sizeof(cl_mem), &_element_forces);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_mem), &_global_vector_reduction);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_mem), &_matRHS);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_int), &blockSize);
+        err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_int), &nzPerThread);
+    }
 }
 
 -(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
@@ -1556,6 +2014,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     _device = find_single_device();
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: parrallel assembly computed on GPU info: \n");
     device_info(_device);
+    
+    if ([solution.solutionInfo[@"display all device stats"] boolValue] == YES) {
+        device_stats(_device);
+    }
     
     // Create the context of the command queue
     _context = clCreateContext(0, 1, &_device, NULL, NULL, &err);
@@ -1598,6 +2060,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // Options passed to the compilation of the kernel
     NSMutableString *listOfOptions;
     listOfOptions = [NSMutableString stringWithString:@"-DKERNEL_FP_64 -DMESH_DIMENSION_3 -DELEMENT_DIMENSION_3 -DMODEL_DIMENSION_3"];
+    
+    // The method we use to do the assembly on the GPU
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        [listOfOptions appendString:@" -DCOLORING_ASSEMBLY"];
+    } else if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"]) {
+        [listOfOptions appendString:@" -DNONZEROS_ASSEMBLY"];
+    } else {
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Assembly method not supported.");
+    }
+    
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
         [listOfOptions appendString:@" -DKERNEL_BASIS_DBASISDX"];
     }
@@ -1683,15 +2155,26 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_setGPUCore: done.\n");
     
     // Create the kernel(s)
-    _kernel_assembly = clCreateKernel(_program, "NavierStokesCompose", &err);
+    _kernel_color_assembly_stiff_compute = clCreateKernel(_program, "AssemblyByColoringStiffForceCompute", &err);
     if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error: ", err);
+        fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel < AssemblyByColoringStiffForceCompute >. Error: ", err);
     }
     if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
         _kernel_basis_dbasisdx = clCreateKernel(_program, "ComputeBasisDBasisdx", &err);
         if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel. Error: ", err);
+            fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel < ComputeBasisDBasisdx >. Error: ", err);
         }
+    }
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"] == YES) {
+        _kernel_nonzeros_assembly_global_matrix = clCreateKernel(_program, "AssemblyGlobalMatrixByNonZeros", &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel < AssemblyGlobalMatrixByNonZeros >. Error: ", err);
+        }
+        _kernel_nonzeros_assembly_global_vector = clCreateKernel(_program, "AssemblyGlobalVectorByNonZeros", &err);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_setGPUCore", "Can't create kernel < AssemblyGlobalVectorByNonZeros >. Error: ", err);
+        }
+
     }
     
     // Create data structures needed by the GPU
@@ -1718,8 +2201,14 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         [self FEMFlowSolution_iniNodalData:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getNodes:getNodesIMP getElementDofsSolution:getElementDofsSolutionIMP];
     }
     
-    if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
-        [self FEMFlowSolution_init_non_zeros:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getElementDofsSolution:getElementDofsSolutionIMP];
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"precompute nonzero indices"] boolValue] == YES) {
+            [self FEMFlowSolution_init_non_zeros:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getElementDofsSolution:getElementDofsSolutionIMP];
+        }
+    }
+    
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"nonzero entries"] == YES) {
+        [self FEMFlowSolution_init_reduction_lists:core solution:solution model:model mesh:mesh precisionMode:precisionMode getActiveElement:getActiveElementIMP getElementDofsSolution:getElementDofsSolutionIMP];
     }
     
     // Allocate the GPU buffers and map the written buffers to the host
@@ -1727,6 +2216,156 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     // Set kernel arguments
     [self FEMFlowSolution_setKernelArgumentsCore:core model:model solution:solution precisionMode:precisionMode getActiveElement:getActiveElementIMP];
+}
+
+-(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize {
+    
+    int i;
+    cl_int err;
+    cl_event assembly_event;
+    cl_ulong kernel_sart, kernel_end, kernel_profile;
+    clock_t cpu_assembly_loop_start, cpu_assembly_loop_end;
+    double real_assembly_loop_start, real_assembly_loop_end;
+
+    int positionsInColorMap[mesh.numberOfColors];
+    
+    // Figure out the starting index of the global work size
+    // in the color map table for each color set
+    memset(positionsInColorMap, 0, sizeof(positionsInColorMap));
+    positionsInColorMap[0] = 0;
+    for (i=1; i<mesh.numberOfColors; i++) {
+        NSMutableArray *cc = mesh.colors[i-1];
+        positionsInColorMap[i] = positionsInColorMap[i-1] + [cc[0] intValue];
+    }
+    
+    kernel_profile = 0;
+    i = 0;
+    cpu_assembly_loop_start = clock();
+    real_assembly_loop_start = mach_absolute_time();
+    for (NSMutableArray *color in mesh.colors) {
+        
+        size_t global_work_size = [color[0] intValue];
+        
+        err = clSetKernelArg(_kernel_color_assembly_stiff_compute, _kernelArgumemtPosition, sizeof(cl_int), &positionsInColorMap[i]);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Error in setting kernel arguments.");
+        }
+        
+        // Queue up the coloring assembly kernel
+        err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_color_assembly_stiff_compute, 1, NULL, &global_work_size, localWorkSize, 0, NULL, &assembly_event);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Can't enqueue kernel < _kernel_color_assembly_stiff_compute >. Error: ", err);
+        }
+        
+        // Finish the calculation
+        err = clFinish(_cmd_queue);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Can't finish kernel. Error: ", err);
+        }
+        
+        // Do some profiling
+        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+        kernel_profile += (kernel_end - kernel_sart);
+        i++;
+    }
+    cpu_assembly_loop_end = clock();
+    real_assembly_loop_end = mach_absolute_time();
+    
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_elementColoringAssemblyMesh: execution time for < coloring assembly > kernel on GPU: Real time (s): %f.\n", (double)kernel_profile*1.0e-9);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_elementColoringAssemblyMesh: coloring assembly loop total time: CPU (s): %f.\n", (cpu_assembly_loop_end-cpu_assembly_loop_start)/(double)CLOCKS_PER_SEC);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_elementColoringAssemblyMesh: coloring assembly loop total time: Real (s): %f.\n", machcore(real_assembly_loop_end,real_assembly_loop_start));
+}
+
+-(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize {
+
+    cl_int err;
+    cl_event stiff_force_compute_event;
+    cl_event nonzeros_global_assembly_event;
+    cl_event nonzeros_force_assembly_event;
+    cl_ulong compute_part, kernel_sart, kernel_end, kernel_profile, global_part, force_part;
+    
+    size_t global_work_size_local_compute = mesh.numberOfBulkElements;
+    
+    if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
+        
+        int adjust = 0;
+        if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
+            adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
+        }
+        
+        global_work_size_local_compute = global_work_size_local_compute + (adjust - (global_work_size_local_compute & (adjust-1)));
+    }
+    
+    int numberOfElements = mesh.numberOfBulkElements;
+    err = clSetKernelArg(_kernel_color_assembly_stiff_compute, _kernelArgumemtPosition, sizeof(cl_int), &numberOfElements);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Error in setting kernel arguments.");
+    }
+    
+    // Queue up the kernel that computes the local matrices and vectors
+    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_color_assembly_stiff_compute, 1, NULL, &global_work_size_local_compute, localWorkSize, 0, NULL, &stiff_force_compute_event);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_color_assembly_stiff_compute >. Error: ", err);
+    }
+    
+    // Finish the calculation
+    err = clFinish(_cmd_queue);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't finish kernel. Error: ", err);
+    }
+    
+    // Profile the local matrices and vectors calculation
+    kernel_profile = 0;
+    clGetEventProfilingInfo(stiff_force_compute_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+    clGetEventProfilingInfo(stiff_force_compute_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+    compute_part = (kernel_end - kernel_sart);
+    kernel_profile += (kernel_end - kernel_sart);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < locals compute > kernel on GPU: Real time (s): %f.\n", (double)compute_part*1.0e-9);
+    
+    size_t nonzeros_localWorkSize;
+    if (solution.solutionInfo[@"nonzeros assembly work-group size"] != nil) {
+        nonzeros_localWorkSize = [solution.solutionInfo[@"nonzeros assembly work-group size"] intValue];
+    } else {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Value for work-group size not found for the < nonzeros assembly > kernel");
+    }
+    
+    size_t global_work_size_nzs_global = _global_non_zeros;
+    size_t global_work_size_nzs_force = _force_non_zeros;
+    
+    // Queue up the nonzeros assembly kernel (global matrix part)
+    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_nonzeros_assembly_global_matrix, 1, NULL, &global_work_size_nzs_global, &nonzeros_localWorkSize, 0, NULL, &nonzeros_global_assembly_event);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_nonzeros_assembly_global_matrix >. Error: ", err);
+    }
+    
+    // Queue up the nonzeros assembly kernel (force matrix part)
+    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_nonzeros_assembly_global_vector, 1, NULL, &global_work_size_nzs_force, &nonzeros_localWorkSize, 0, NULL, &nonzeros_force_assembly_event);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_nonzeros_assembly_global_vector >. Error: ", err);
+    }
+    
+    // Finish the calculation
+    err = clFinish(_cmd_queue);
+    if (err < 0) {
+        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't finish kernel. Error: ", err);
+    }
+    
+    // Profile the nonzeros assembly of the global matrix
+    clGetEventProfilingInfo(nonzeros_global_assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+    clGetEventProfilingInfo(nonzeros_global_assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+    global_part = (kernel_end - kernel_sart);
+    kernel_profile += (kernel_end - kernel_sart);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros global part > kernel on GPU: Real time (s): %f.\n", (double)global_part*1.0e-9);
+    
+    // Profile the nonzeros assembly of the global vector
+    clGetEventProfilingInfo(nonzeros_force_assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+    clGetEventProfilingInfo(nonzeros_force_assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+    force_part = (kernel_end - kernel_sart);
+    kernel_profile += (kernel_end - kernel_sart);
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros force part > kernel on GPU: Real time (s): %f.\n", (double)force_part*1.0e-9);
+
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for nonzeros assembly kernel on GPU: Real time (s): %f.\n", (double)kernel_profile*1.0e-9);
 }
 
 - (id)init
@@ -1750,7 +2389,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _context = NULL;
         _cmd_queue = NULL;
         _program = NULL;
-        _kernel_assembly = NULL;
+        _kernel_color_assembly_stiff_compute = NULL;
         _kernel_basis_dbasisdx = NULL;
         _kernel_source = NULL;
         _initializeGPU = NO;
@@ -1773,8 +2412,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _global_stiff_force_f = NULL;
         _global_stiff_force_d = NULL;
         
-        _basis_functions = NULL;
+        global_matrix_reduction = NULL;
+        global_vector_reduction = NULL;
+        _global_non_zeros = 0;
+        _force_non_zeros = 0;
         
+        _basis_functions = NULL;
         _matDiag = NULL;
         _matRows = NULL;
         _matCols = NULL;
@@ -1793,6 +2436,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _nodal_data = NULL;
         _matrix_non_zeros = NULL;
         _global_stiff_force = NULL;
+        _global_matrix_reduction = NULL;
+        _global_vector_reduction = NULL;
+        _element_stiffs = NULL;
+        _element_forces = NULL;
         
         _mapped_matValues = NULL;
         _mapped_matRHS = NULL;
@@ -1859,7 +2506,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (solution.solutionInfo[@"parallel assembly"] != nil) {
         if ([solution.solutionInfo[@"parallel assembly"] boolValue] == YES) {
                 
-            if (_kernel_assembly != NULL) clReleaseKernel(_kernel_assembly);
+            if (_kernel_color_assembly_stiff_compute != NULL) clReleaseKernel(_kernel_color_assembly_stiff_compute);
+            if (_kernel_nonzeros_assembly_global_matrix != NULL) clReleaseKernel(_kernel_nonzeros_assembly_global_matrix);
+            if (_kernel_nonzeros_assembly_global_vector != NULL) clReleaseKernel(_kernel_nonzeros_assembly_global_vector);
             if (_kernel_basis_dbasisdx != NULL) clReleaseKernel(_kernel_basis_dbasisdx);
             if (_context != NULL) clReleaseContext(_context);
             if (_cmd_queue != NULL) clReleaseCommandQueue(_cmd_queue);
@@ -2463,22 +3112,22 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         cl_int err;
         size_t wg_size, wg_multiple;
         cl_ulong private_usage, local_usage;
-        err = clGetKernelWorkGroupInfo(_kernel_assembly, _device, CL_KERNEL_WORK_GROUP_SIZE,
+        err = clGetKernelWorkGroupInfo(_kernel_color_assembly_stiff_compute, _device, CL_KERNEL_WORK_GROUP_SIZE,
                                        sizeof(wg_size), &wg_size, NULL);
-        err |= clGetKernelWorkGroupInfo(_kernel_assembly, _device,
+        err |= clGetKernelWorkGroupInfo(_kernel_color_assembly_stiff_compute, _device,
                                         CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
                                         sizeof(wg_multiple), &wg_multiple, NULL);
-        err |= clGetKernelWorkGroupInfo(_kernel_assembly, _device, CL_KERNEL_LOCAL_MEM_SIZE,
+        err |= clGetKernelWorkGroupInfo(_kernel_color_assembly_stiff_compute, _device, CL_KERNEL_LOCAL_MEM_SIZE,
                                         sizeof(local_usage), &local_usage, NULL);
-        err |= clGetKernelWorkGroupInfo(_kernel_assembly, _device, CL_KERNEL_PRIVATE_MEM_SIZE,
+        err |= clGetKernelWorkGroupInfo(_kernel_color_assembly_stiff_compute, _device, CL_KERNEL_PRIVATE_MEM_SIZE,
                                         sizeof(private_usage), &private_usage, NULL);
         if(err < 0) {
             fatal("FEMFlowSolution:solutionComputer", "Error in getting kernel work-group size information.");
         };
-        fprintf(stdout, "FEMFlowSolution:solutionComputer: < assembly > kernel maximum work group size: %zu\n", wg_size);
-        fprintf(stdout, "FEMFlowSolution:solutionComputer: < assembly > kernel work group size best multiple: %zu\n", wg_multiple);
-        fprintf(stdout, "FEMFlowSolution:solutionComputer: local memory used by the < assembly > kernel (KB): %llu\n", local_usage/1024);
-        fprintf(stdout, "FEMFlowSolution:solutionComputer: private memory used by the < assembly > kernel (KB): %llu\n", private_usage/1024);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: < coloring assembly/locals compute > kernel maximum work group size: %zu\n", wg_size);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: < coloring assembly/locals compute > kernel work group size best multiple: %zu\n", wg_multiple);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: local memory used by the < coloring assembly/locals compute > kernel (KB): %llu\n", local_usage/1024);
+        fprintf(stdout, "FEMFlowSolution:solutionComputer: private memory used by the < coloring assembly/locals compute > kernel (KB): %llu\n", private_usage/1024);
         
         if ([solution.solutionInfo[@"compute basis and basis derivatives in separate kernel"] boolValue] == YES) {
             err = clGetKernelWorkGroupInfo(_kernel_basis_dbasisdx, _device, CL_KERNEL_WORK_GROUP_SIZE,
@@ -2510,11 +3159,11 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         size_t global_work_size = mesh.numberOfBulkElements;
         
         if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
-            if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
-                val = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
+            if (solution.solutionInfo[@"coloring assembly/locals compute work-group size"] != nil) {
+                val = [solution.solutionInfo[@"coloring assembly/locals compute work-group size"] intValue];
                 local_work_size = &val;
             } else {
-                fatal("FEMFlowSolution:solutionComputer", "Missing work-group size for the < basis and basis derivatives > kernel.");
+                fatal("FEMFlowSolution:solutionComputer", "Value for work-group size not found for the < basis and basis derivatives > kernel.");
             }
             
             int adjust = 0;
@@ -2528,9 +3177,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         // Queue up the basis and basis derivatives kernel
         err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_basis_dbasisdx, 1, NULL, &global_work_size, local_work_size, 0, NULL, &basis_dBasis_event);
         if (err < 0) {
-            fatal("FEMFlowSolution:solutionComputer", "Can't enqueue kernel. Error: ", err);
+            fatal("FEMFlowSolution:solutionComputer", "Can't enqueue kernel < _kernel_basis_dbasisdx >. Error: ", err);
         }
-        clFinish(_cmd_queue);
+        err = clFinish(_cmd_queue);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblyMesh", "Can't finish kernel. Error: ", err);
+        }
         
         // Do some profiling
         clGetEventProfilingInfo(basis_dBasis_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
@@ -2585,72 +3237,24 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         
         // Bulk elements
         if (parallelAssembly == YES) {
-            int positionsInColorMap[mesh.numberOfColors];
-            //size_t global_work_size;
             cl_int err;
-            cl_event assembly_event;
-            cl_ulong kernel_sart, kernel_end, kernel_profile;
-            clock_t cpu_assembly_loop_start, cpu_assembly_loop_end;
-            double real_assembly_loop_start, real_assembly_loop_end;
-            double kernel_profile_fp;
             
             size_t *local_work_size = NULL, val;
             if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
-                if (solution.solutionInfo[@"parallel assembly work-group size"] != nil) {
-                    val = [solution.solutionInfo[@"parallel assembly work-group size"] intValue];
+                if (solution.solutionInfo[@"coloring assembly/locals compute work-group size"] != nil) {
+                    val = [solution.solutionInfo[@"coloring assembly/locals compute work-group size"] intValue];
                     local_work_size = &val;
                 } else {
-                    fatal("FEMFlowSolution:solutionComputer", "Missing work-group size for the < assembly > kernel.");
+                    fatal("FEMFlowSolution:solutionComputer", "Value for work-group size not found for the < coloring assembly/locals compute > kernel.");
                 }
             }
             
-            // Figure out the starting index of the global work size
-            // in the color map table for each color set
-            memset(positionsInColorMap, 0, sizeof(positionsInColorMap));
-            positionsInColorMap[0] = 0;
-            for (i=1; i<mesh.numberOfColors; i++) {
-                NSMutableArray *cc = mesh.colors[i-1];
-                positionsInColorMap[i] = positionsInColorMap[i-1] + [cc[0] intValue];
+            NSString *assemblyMethod = assemblyMethod = solution.solutionInfo[@"parallel assembly method"];
+            if ([assemblyMethod isEqualToString:@"element coloring"]) {
+                [self FEMFlowSolution_elementColoringAssemblySolution:solution mesh:mesh localWorkSize:local_work_size];
+            } else if ([assemblyMethod isEqualToString:@"nonzero entries"]) {
+                [self FEMFlowSolution_nonzeroAssemblySolution:solution mesh:mesh localWorkSize:local_work_size];
             }
-            
-            kernel_profile = 0;
-            i = 0;
-            cpu_assembly_loop_start = clock();
-            real_assembly_loop_start = mach_absolute_time();
-            for (NSMutableArray *color in mesh.colors) {
-                
-                size_t global_work_size = [color[0] intValue];
-                
-                err = clSetKernelArg(_kernel_assembly, _positionInColorMapping, sizeof(cl_int), &positionsInColorMap[i]);
-                if (err < 0) {
-                    fatal("FEMFlowSolution:solutionComputer", "Error in setting kernel arguments.");
-                }
-                
-                // Queue up the assembly kernel
-                err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_assembly, 1, NULL, &global_work_size, local_work_size, 0, NULL, &assembly_event);
-                if (err < 0) {
-                    fatal("FEMFlowSolution:solutionComputer", "Can't enqueue kernel. Error: ", err);
-                }
-                
-                // Finish the calculation
-                clFinish(_cmd_queue);
-                if (err < 0) {
-                    fatal("FEMFlowSolution:solutionComputer", "Can't finish kernel. Error: ", err);
-                }
-                
-                // Do some profiling
-                clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
-                clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
-                kernel_profile += (kernel_end - kernel_sart);
-                i++;
-            }
-            cpu_assembly_loop_end = clock();
-            real_assembly_loop_end = mach_absolute_time();
-            kernel_profile_fp = (double)kernel_profile;
-            
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: execution time for < assembly > kernel on GPU: Real time (s): %f.\n", kernel_profile_fp*1.0e-9);
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly loop total time: CPU (s): %f.\n", (cpu_assembly_loop_end-cpu_assembly_loop_start)/(double)CLOCKS_PER_SEC);
-            fprintf(stdout, "FEMFlowSolution:solutionComputer: assembly loop total time: Real (s): %f.\n", machcore(real_assembly_loop_end,real_assembly_loop_start));
             
             // Read data from the device
             _mapped_matValues = enqueueDeviceMapBuffer(precision(), _cmd_queue, _matValues, CL_TRUE, CL_MAP_READ, 0, matContainers->sizeValues, 0, NULL, NULL, err);
@@ -2664,6 +3268,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             if (precision() == 0) {
                 memcpy(matContainers->Values, _mapped_matValues, matContainers->sizeValues*sizeof(cl_double));
                 memcpy(matContainers->RHS, _mapped_matRHS, matContainers->sizeRHS*sizeof(cl_double));
+//                for (int i=0; i<matContainers->sizeValues; i++) {
+//                    printf("%f\n", matContainers->Values[i]);
+//                }
             } else {
                 float *buff1 = _mapped_matValues;
                 float *buff2 = _mapped_matRHS;

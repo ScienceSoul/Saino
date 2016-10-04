@@ -16,14 +16,16 @@
 @property(nonatomic, assign) BOOL do_natural_convection;
 @property(nonatomic, assign) BOOL do_ismip_hom_A010;
 @property(nonatomic, assign) BOOL do_ismip_hom_B010;
-@property(nonatomic, assign) BOOL do_ismip_hom_A010_gpu;
+@property(nonatomic, assign) BOOL do_ismip_hom_A010_gpu_coloring;
+@property(nonatomic, assign) BOOL do_ismip_hom_A010_gpu_nonzeros;
 @property(nonatomic, assign) BOOL do_ismip_hom_C010;
 @property(nonatomic, assign) BOOL heatq_allDone;
 @property(nonatomic, assign) BOOL step_stokes_allDone;
 @property(nonatomic, assign) BOOL natural_convection_allDone;
 @property(nonatomic, assign) BOOL ismip_hom_A010_allDone;
 @property(nonatomic, assign) BOOL ismip_hom_B010_allDone;
-@property(nonatomic, assign) BOOL ismip_hom_A010_gpu_allDone;
+@property(nonatomic, assign) BOOL ismip_hom_A010_gpu_color_allDone;
+@property(nonatomic, assign) BOOL ismip_hom_A010_gpu_nonzeros_allDone;
 @property(nonatomic, assign) BOOL ismip_hom_C010_allDone;
 @property(nonatomic, assign) double norm;
 
@@ -37,7 +39,8 @@
 -(void)setUpNaturalConvectionTest:(id __nonnull)model;
 -(void)setUpISMIP_HOM_A010Test:(id __nonnull)model;
 -(void)setUpISMIP_HOM_B010Test:(id __nonnull)model;
--(void)setUpISMIP_HOM_A010Test_GPU:(id __nonnull)model;
+-(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id __nonnull)model;
+-(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id __nonnull)model;
 -(void)setUpISMIP_HOM_C010Test:(id __nonnull)model;
 
 @end

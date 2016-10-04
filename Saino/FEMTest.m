@@ -21,14 +21,15 @@
 @synthesize do_natural_convection = _do_natural_convection;
 @synthesize do_ismip_hom_A010 = _do_ismip_hom_A010;
 @synthesize do_ismip_hom_B010 = _do_ismip_hom_B010;
-@synthesize do_ismip_hom_A010_gpu = _do_ismip_hom_A010_gpu;
+@synthesize do_ismip_hom_A010_gpu_coloring = _do_ismip_hom_A010_gpu_coloring;
 @synthesize do_ismip_hom_C010 = _do_ismip_hom_C010;
 @synthesize heatq_allDone = _heatq_allDone;
 @synthesize step_stokes_allDone = _step_stokes_allDone;
 @synthesize natural_convection_allDone = _natural_convection_allDone;
 @synthesize ismip_hom_A010_allDone = _ismip_hom_A010_allDone;
 @synthesize ismip_hom_B010_allDone = _ismip_hom_B010_allDone;
-@synthesize ismip_hom_A010_gpu_allDone = _ismip_hom_A010_gpu_allDone;
+@synthesize ismip_hom_A010_gpu_color_allDone = _ismip_hom_A010_gpu_color_allDone;
+@synthesize ismip_hom_A010_gpu_nonzeros_allDone = _ismip_hom_A010_gpu_nonzeros_allDone;
 @synthesize ismip_hom_C010_allDone = _ismip_hom_C010_allDone;
 @synthesize norm = _norm;
 
@@ -64,14 +65,16 @@ static dispatch_once_t onceToken;
     _do_natural_convection = NO;
     _do_ismip_hom_A010 = NO;
     _do_ismip_hom_B010 = NO;
-    _do_ismip_hom_A010_gpu = NO;
+    _do_ismip_hom_A010_gpu_coloring = NO;
+    _do_ismip_hom_A010_gpu_nonzeros = NO;
     _do_ismip_hom_C010 = NO;
     _heatq_allDone = NO;
     _step_stokes_allDone = NO;
     _natural_convection_allDone = NO;
     _ismip_hom_A010_allDone = NO;
     _ismip_hom_B010_allDone = NO;
-    _ismip_hom_A010_gpu_allDone = NO;
+    _ismip_hom_A010_gpu_color_allDone = NO;
+    _ismip_hom_A010_gpu_nonzeros_allDone = NO;
     _ismip_hom_C010_allDone = NO;
     _norm = 0.0;
 }
@@ -731,7 +734,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"rectangle"];
 }
 
--(void)setUpISMIP_HOM_A010Test_GPU:(id __nonnull)model {
+-(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id __nonnull)model {
     
     [self setUpISMIP_HOM_A010Test:model];
     
@@ -749,6 +752,7 @@ static dispatch_once_t onceToken;
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
             [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@"element coloring" forKey:@"parallel assembly method"];
             [solution.solutionInfo setObject:@YES forKey:@"color mesh"];
             [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
             [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
@@ -762,7 +766,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
-            [solution.solutionInfo setObject:@16 forKey:@"parallel assembly work-group size"];
+            [solution.solutionInfo setObject:@16 forKey:@"coloring assembly/locals compute work-group size"];
             
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
@@ -773,6 +777,54 @@ static dispatch_once_t onceToken;
         }
     }
     mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];
+}
+
+-(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id __nonnull)model {
+    
+    [self setUpISMIP_HOM_A010Test:model];
+    
+    FEMModel *mod = (FEMModel *)model;
+    
+    double yearinsec = 365.25 * 24.0 * 60.0 * 60.0;
+    double rhoi = 900.0 / (1.0e6 * pow(yearinsec, 2.0));
+    double gravity = -9.81 * pow(yearinsec, 2.0);
+    double n = 3.0;
+    double eta = pow((2.0 * 100.0), (-1.0/n));
+    
+    NSString *kernelPath = [self.path stringByReplacingOccurrencesOfString:@"Tests" withString:@"Saino/NavierStokesAssemblyKernel_opt"];
+    
+    for (FEMSolution *solution in mod.solutions) {
+        if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
+            [solution.solutionInfo setObject:@NO forKey:@"optimize bandwidth"];
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly"];
+            [solution.solutionInfo setObject:@"nonzero entries" forKey:@"parallel assembly method"];
+            [solution.solutionInfo setObject:kernelPath forKey:@"gpu kernel source file"];
+            [solution.solutionInfo setObject:@"ice flow" forKey:@"gpu flow type"];
+            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@(rhoi) forKey:@"gpu ice density"];
+            [solution.solutionInfo setObject:@(eta) forKey:@"gpu ice viscosity"];
+            [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
+            [solution.solutionInfo setObject:@YES forKeyedSubscript:@"enable newton linearization"];
+            [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
+            [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
+            
+            [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@16 forKey:@"coloring assembly/locals compute work-group size"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
+            
+            [solution.solutionInfo setObject:@256 forKey:@"nonzeros adjust global work size to be a multiple of"];
+            [solution.solutionInfo setObject:@256 forKey:@"nonzeros assembly work-group size"];
+            [solution.solutionInfo setObject:@64 forKey:@"nonzeros assembly thread block size"];
+            [solution.solutionInfo setObject:@4 forKey:@"nonzeros assembly nonzeros per thread"];
+            
+            [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
+            [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
+            [solution.solutionInfo setObject:@YES forKey:@"display all device stats"];
+        }
+    }
+    mod.meshName = [NSMutableString stringWithString:@"rectangle-nzs"];
 }
 
 -(void)setUpISMIP_HOM_B010Test:(id __nonnull)model {

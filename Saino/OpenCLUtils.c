@@ -119,7 +119,7 @@ cl_device_id __nullable find_single_device(void) {
 
 int device_info(cl_device_id __nonnull device_id) {
     
-    cl_uint err, clock_frequency;
+    cl_uint err, clock_frequency, address_bits;
     
     cl_char vendor_name[1024] = {0};
     cl_char device_name[1025] = {0};
@@ -132,12 +132,14 @@ int device_info(cl_device_id __nonnull device_id) {
     err |= clGetDeviceInfo(device_id, CL_DRIVER_VERSION, sizeof(device_driver_version), device_driver_version, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_PROFILE, sizeof(device_profile), device_profile, NULL);
     err |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(clock_frequency), &clock_frequency, NULL);
+    err |= clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS, sizeof(address_bits), &address_bits, NULL);
     
     fprintf(stdout,"device_info: vendor: %s.\n", vendor_name);
     fprintf(stdout,"device_info: device name: %s.\n", device_name);
     fprintf(stdout,"device_info: OpenCL (driver) version: %s.\n", device_driver_version);
     fprintf(stdout,"device_info: supported profile: %s.\n", device_profile);
     fprintf(stdout,"device_info: clock frequency (MHz): %u.\n", clock_frequency);
+    fprintf(stdout,"device_info: address space size (bits): %u.\n", address_bits);
     
     return CL_SUCCESS;
 }

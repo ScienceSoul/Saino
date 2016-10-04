@@ -41,8 +41,10 @@
             test.do_ismip_hom_A010 = YES;
         } else if ([[sender title] isEqualToString:@"ISMIP-B010"]) {
             test.do_ismip_hom_B010 = YES;
-        } else if ([[sender title] isEqualToString:@"ISMIP-A010 GPU"]) {
-            test.do_ismip_hom_A010_gpu = YES;
+        } else if ([[sender title] isEqualToString:@"ISMIP-A010 GPU Color"]) {
+            test.do_ismip_hom_A010_gpu_coloring = YES;
+        } else if ([[sender title] isEqualToString:@"ISMIP-A010 GPU NZs"]) {
+            test.do_ismip_hom_A010_gpu_nonzeros = YES;
         } else if ([[sender title] isEqualToString:@"ISMIP-C010"]) {
             test.do_ismip_hom_C010 = YES;
         }

@@ -520,8 +520,10 @@
         [test setUpISMIP_HOM_A010Test:self];
     } else if (test.do_ismip_hom_B010 == YES) {
         [test setUpISMIP_HOM_B010Test:self];
-    } else if (test.do_ismip_hom_A010_gpu == YES) {
-        [test setUpISMIP_HOM_A010Test_GPU:self];
+    } else if (test.do_ismip_hom_A010_gpu_coloring == YES) {
+        [test setUpISMIP_HOM_A010Test_GPU_coloring:self];
+    } else if (test.do_ismip_hom_A010_gpu_nonzeros == YES) {
+        [test setUpISMIP_HOM_A010Test_GPU_nonzeros:self];
     } else if (test.do_ismip_hom_C010 == YES) {
         [test setUpISMIP_HOM_C010Test:self];
     }
@@ -529,22 +531,36 @@
     // Temporary command line interface
     // Call with:
     //      ./Saino setUpISMIP_HOM_A010 --no_mdf
-    //      ./Saino setUpISMIP_HOM_A010_GPU --no_mdf
-    //      ./Saino setUpISMIP_HOM_A010_GPU_dense1 --no_mdf
-    //      ./Saino setUpISMIP_HOM_A010_GPU_dense2 --no_mdf
-    //      ./Saino setUpISMIP_HOM_A010_GPU_dense3 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_Coloring --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_Coloring_GPU_dense1 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_Coloring_GPU_dense2 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_Coloring_GPU_dense3 --no_mdf
+    //
+    //      ./Saino setUpISMIP_HOM_A010_GPU_NonZeros --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_NonZeros_dense1 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_NonZeros_dense2 --no_mdf
+    //      ./Saino setUpISMIP_HOM_A010_GPU_NonZeros_dense3 --no_mdf
     FEMSetUp *setUP = [[FEMSetUp alloc] init];
     if ([name isEqualToString:@"setUpISMIP_HOM_A010"]) {
         [setUP setUpISMIP_HOM_A010:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU"]) {
-        [setUP setUpISMIP_HOM_A010_GPU:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense1"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_dense1:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense2"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_dense2:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_dense3"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_dense3:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense1"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense1:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense2"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense2:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense3"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense3:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense1"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense1:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense2"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense2:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense3"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense3:self];
     }
+
 #endif
     
     [self FEMModel_initializeOutputLevel];

@@ -235,13 +235,13 @@
     }
 }
 
--(void)testISMIP_HOM_A010_GPU {
+-(void)testISMIP_HOM_A010_GPU_Color {
     int success;
     double targetNorm = 9.8237320560;
     
-    [_saino_view_controller press:[_saino_view viewWithTag: 7]]; // ISMIP-HOM A010 GPU
+    [_saino_view_controller press:[_saino_view viewWithTag: 7]]; // ISMIP-HOM A010 GPU Color
     
-    if (self.testApp.ismip_hom_A010_gpu_allDone == YES) {
+    if (self.testApp.ismip_hom_A010_gpu_color_allDone == YES) {
         if (self.testApp.norm != -1.0) {
             if (_targetEps < 0.0) {
                 if (targetNorm < self.testApp.norm) {
@@ -256,11 +256,40 @@
         if (success != 0) {
             fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
         } else {
-            fprintf(stdout, "ISMIP-HOM A010 GPU:   [Passed].\n");
+            fprintf(stdout, "ISMIP-HOM A010 GPU Color:   [Passed].\n");
         }
-        XCTAssertTrue(success == 0, @"ISMIP-HOM A010 GPU:   [FAILED].\n");
+        XCTAssertTrue(success == 0, @"ISMIP-HOM A010 GPU Color:   [FAILED].\n");
     } else {
-        XCTAssertTrue(self.testApp.ismip_hom_A010_gpu_allDone == YES, @"ISMIP-HOM A010 GPU: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+        XCTAssertTrue(self.testApp.ismip_hom_A010_gpu_color_allDone == YES, @"ISMIP-HOM A010 GPU Color: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
+    }
+}
+
+-(void)testISMIP_HOM_A010_GPU_Nonzeros {
+    int success;
+    double targetNorm = 9.8237320560;
+    
+    [_saino_view_controller press:[_saino_view viewWithTag: 8]]; // ISMIP-HOM A010 GPU Nonzeros
+    
+    if (self.testApp.ismip_hom_A010_gpu_nonzeros_allDone == YES) {
+        if (self.testApp.norm != -1.0) {
+            if (_targetEps < 0.0) {
+                if (targetNorm < self.testApp.norm) {
+                    success = 0;
+                } else
+                    success = -1;
+            } else if (2.0 * fabs(self.testApp.norm - targetNorm) / (self.testApp.norm + targetNorm) < _targetEps) success = 0;
+            else success = -1;
+        } else {
+            success = 0;
+        }
+        if (success != 0) {
+            fprintf(stdout, "Computed norm: %e.\n", self.testApp.norm);
+        } else {
+            fprintf(stdout, "ISMIP-HOM A010 GPU Nonzeros:   [Passed].\n");
+        }
+        XCTAssertTrue(success == 0, @"ISMIP-HOM A010 GPU Nonzeros:   [FAILED].\n");
+    } else {
+        XCTAssertTrue(self.testApp.ismip_hom_A010_gpu_nonzeros_allDone == YES, @"ISMIP-HOM A010 GPU Nonzeros: not reaching end of simulation:    [LOOK AT ERROR LOGS].\n");
     }
 }
 
