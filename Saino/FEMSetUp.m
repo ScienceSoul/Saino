@@ -384,6 +384,7 @@
             [solution.solutionInfo setObject:@256 forKey:@"nonzeros assembly work-group size"];
             [solution.solutionInfo setObject:@64 forKey:@"nonzeros assembly thread block size"];
             [solution.solutionInfo setObject:@4 forKey:@"nonzeros assembly nonzeros per thread"];
+            [solution.solutionInfo setObject:@1024 forKey:@"maximum allowed allocation size for reduction matrix buffer (MB)"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
@@ -453,7 +454,7 @@
     FEMModel *mod = (FEMModel *)model;
     for (FEMSolution *solution in mod.solutions) {
         if ([solution.solutionInfo[@"equation"] isEqualToString:@"navier-stokes"] == YES) {
-            [solution.solutionInfo setObject:@"double" forKey:@"gpu floating-point precision"];
+            [solution.solutionInfo setObject:@"single" forKey:@"gpu floating-point precision"];
             [solution.solutionInfo setObject:@NO forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
             [solution.solutionInfo setObject:@YES forKey:@"parallel assembly enable work-groups"];

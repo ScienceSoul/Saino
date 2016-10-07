@@ -23,6 +23,106 @@
 #import "GPUData.h"
 #import "GPUUtils.h"
 
+cl_ulong enqueue_finish_kernel(cl_command_queue queue, cl_kernel kernel, size_t globalWorkSize, size_t localWorkSize, char *kernelName) {
+    
+    cl_int err;
+    cl_ulong kernel_sart, kernel_end, timing;
+    cl_event assembly_event;
+    
+    // Queue up the kernels
+    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, &assembly_event);
+    if (err < 0) {
+        fprintf(stderr, "enqueue_kernel_finish: can't enqueue kernel %s. Error: %d", kernelName, err);
+        fatal("enqueue_kernel_finish");
+    }
+    
+    // Finish the calculation
+    err = clFinish(queue);
+    if (err < 0) {
+        fatal("enqueue_kernel_finish", "Can't finish kernel. Error: ", err);
+    }
+
+    // Profiling
+    clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+    clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+    timing = (kernel_end - kernel_sart);
+    
+    return timing;
+}
+
+int find_passes(int mem, int mem_max, int *partitions, int nbNonZeros, int blockSize, int nzPerThread) {
+    
+    int reductionFactor = 1;
+    int memorySize = mem;
+    
+    while (memorySize > mem_max) {
+        reductionFactor = reductionFactor * 2;
+        int nbGroups = (nbNonZeros / (blockSize*nzPerThread)) / reductionFactor;
+        int size = (nbGroups * (blockSize*(nzPerThread*9)));
+        memorySize = (size * 4) / (1024*1024);
+    }
+    int nbGroups1 = (nbNonZeros / (blockSize*nzPerThread)) / reductionFactor;
+    int nbGroups2 = nbNonZeros / (blockSize*nzPerThread);
+    for (int i=0; i<reductionFactor-1; i++) {
+        nbGroups2 = nbGroups2 - nbGroups1;
+    }
+    for (int i=0; i<reductionFactor-1; i++) {
+        partitions[i] = nbGroups1;
+    }
+    partitions[reductionFactor-1] = nbGroups2;
+    
+    return reductionFactor;
+}
+
+cl_ulong loop_over_passes(cl_command_queue queue, cl_kernel kernel, cl_mem buffer, int *reduction, int *passes, short numberOfPasses, int blockSize, int nzPerThread, size_t localWorkSize, char *taskName) {
+    
+    cl_int err;
+    cl_ulong kernel_sart, kernel_end, timing;
+    cl_event assembly_event;
+    void * mapped_reduction;
+    
+    fprintf(stdout, "loop_over_passes: %d passes will be used for the %s.\n", numberOfPasses, taskName);
+    
+    int size = max_array(passes, numberOfPasses);
+    size = size * (blockSize*(nzPerThread*9));
+    
+    // Loop over all passes
+    int cursor = 0;
+    int l;
+    timing = 0;
+    size_t global_work_size_nzs_global;
+    for (int i=0; i<numberOfPasses; i++) {
+        mapped_reduction = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_WRITE, 0, sizeof(cl_int)*size, 0, NULL, NULL, &err);
+        if (err < 0) {
+            fatal("loop_over_passes", "Couldn't map mapped_reduction.");
+        }
+        int *buff = mapped_reduction;
+        int start = cursor;
+        l = 0;
+        for (int j=start; j<start+passes[i]*(blockSize*(nzPerThread*9)); j++) {
+            buff[l] = reduction[j];
+            cursor++;
+            l++;
+        }
+        clEnqueueUnmapMemObject(queue, buffer, mapped_reduction, 0, NULL, NULL);
+        
+        global_work_size_nzs_global = passes[i] * (blockSize*nzPerThread);
+        err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_work_size_nzs_global, &localWorkSize, 0, NULL, &assembly_event);
+        if (err < 0) {
+            fatal("loop_over_passes", "Can't enqueue kernel. Error: ", err);
+        }
+        err = clFinish(queue);
+        if (err < 0) {
+            fatal("loop_over_passes", "Can't finish kernel. Error: ", err);
+        }
+        // Profiling
+        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
+        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
+        timing += (kernel_end - kernel_sart);
+    }
+    return timing;
+}
+
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
 -(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * __nonnull)model;
@@ -196,10 +296,14 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     stiff_force_f *_global_stiff_force_f;
     stiff_force_d *_global_stiff_force_d;
     
-    int * __nullable global_matrix_reduction;
-    int * __nullable global_vector_reduction;
+    int * __nullable _globalMatrixReduction;
+    int * __nullable _globalVectorReduction;
+    int * __nullable _passes_global;
+    int * __nullable _passes_force;
     int _global_non_zeros;
     int _force_non_zeros;
+    short _numberOfPassesGlobal;
+    short _numberOfPassesForce;
     
     // GPU buffers
     cl_mem _basis_functions;
@@ -1229,7 +1333,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     } else {
         fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", " Can't find adjustement parameter for nonzeros.");
     }
-                              
+    
     numberOfNonZeros = count + (adjust - (count & (adjust-1)));
     _global_non_zeros = numberOfNonZeros;
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_init_reduction_lists: final number of global nonzeros: %d\n", _global_non_zeros);
@@ -1270,7 +1374,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] != nil) {
         nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
     } else fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Nonzeros assembly nonzeros per thread not found.");
-
+    
     int **packed = intmatrix(0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
     memset(*packed, 0, ((numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9))*sizeof(int));
     
@@ -1294,23 +1398,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     free(list_reduction_pass2);
     
-//    for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread)*blockSize; i++) {
-//        for (int j=0; j<nzPerThread*9; j++) {
-//            printf("%d ", packed[i][j]);
-//        }
-//        printf("\n");
-//    }
-    
     // Finally linearize the reduction matrix in column-major order. We linearise per sub-matrix
     // i.e., per thread block
-    global_matrix_reduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
+    _globalMatrixReduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
     count = 0;
     n = 0;
     for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) {
         for (int j=0; j<nzPerThread*9; j++) {
             l = n;
             for (int k=0; k<blockSize; k++) {
-                global_matrix_reduction[count] = packed[l][j];
+                _globalMatrixReduction[count] = packed[l][j];
                 count++;
                 l++;
             }
@@ -1387,7 +1484,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         memset(list_reduction_pass2[i].sources, 0, sizeof(list_reduction_pass2[i].sources));
         list_reduction_pass2[i].target = 0;
     }
-
+    
     count = 0;
     for (int i=0; i<matContainers->sizeRHS; i++) {
         if (list_reduction_pass1[i].nbOfIndexes > 0) {
@@ -1424,14 +1521,14 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     free(list_reduction_pass2);
     
-    global_vector_reduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
+    _globalVectorReduction = (int *)malloc(sizeof(int)*(numberOfNonZeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9));
     count = 0;
     n = 0;
     for (int i=0; i<numberOfNonZeros/(blockSize*nzPerThread); i++) {
         for (int j=0; j<nzPerThread*9; j++) {
             l = n;
             for (int k=0; k<blockSize; k++) {
-                global_vector_reduction[count] = packed[l][j];
+                _globalVectorReduction[count] = packed[l][j];
                 count++;
                 l++;
             }
@@ -1441,7 +1538,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     free_imatrix(packed, 0, (numberOfNonZeros/(blockSize*nzPerThread)*blockSize)-1, 0, (nzPerThread*9)-1);
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
-}
+   }
 
 -(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode {
     
@@ -1562,16 +1659,68 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         int blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
         int nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
         
-        int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
-        _global_matrix_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, global_matrix_reduction, &err);
-        if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _global_reduction.");
+        // Figure out whether the buffers used to store the reduction matrices are <= CL_DEVICE_MAX_MEM_ALLOC_SIZE
+        // If not, we need to enqueue the kernels in seveval passes with a smaller buffer
+        //TODO: Make it work for very large simulations.
+        int memorySize = ((_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9)) * 4;
+        memorySize = memorySize / (1024*1024);
+        
+        int max_mem_alloc_size = 0;
+        if (solution.solutionInfo[@"maximum allowed allocation size for reduction matrix buffer (MB)"] != nil) {
+            max_mem_alloc_size = [solution.solutionInfo[@"maximum allowed allocation size for reduction matrix buffer (MB)"] intValue];
+        } else fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Missing value for the maximum allowed allocation size for reduction matrix buffer");
+
+        _numberOfPassesGlobal = 1;
+        if (memorySize > max_mem_alloc_size) {
+            _passes_global = malloc(sizeof(int)*16);
+            memset(_passes_global, 0, sizeof(int)*16);
+            _numberOfPassesGlobal = find_passes(memorySize, max_mem_alloc_size, _passes_global, _global_non_zeros, blockSize, nzPerThread);
         }
         
-        size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
-        _global_vector_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, global_vector_reduction, &err);
-        if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _force_reduction.");
+        memorySize = ((_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9)) * 4;
+        memorySize = memorySize / (1024*1024);
+        
+        _numberOfPassesForce = 1;
+        if (memorySize > max_mem_alloc_size) {
+            _passes_force = malloc(sizeof(int)*16);
+            memset(_passes_force, 0, sizeof(int)*16);
+            _numberOfPassesForce = find_passes(memorySize, max_mem_alloc_size, _passes_force, _force_non_zeros, blockSize, nzPerThread);
+        }
+
+        if (_numberOfPassesGlobal == 1) {
+            int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+            _global_matrix_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, _globalMatrixReduction, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Couldn't create the buffer object _global_matrix_reduction.");
+            }
+        } else {
+            int size = max_array(_passes_global, _numberOfPassesGlobal);
+            size = size * (blockSize*(nzPerThread*9));
+            int *reductionPartition = (int *)malloc(sizeof(int)*size);
+            memset(reductionPartition, 0, sizeof(int)*size);
+            _global_matrix_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, reductionPartition, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Couldn't create the buffer object _global_matrix_reduction.");
+            }
+            free(reductionPartition);
+        }
+        
+        if (_numberOfPassesForce == 1) {
+            int size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+            _global_vector_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, _globalVectorReduction, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _force_reduction.");
+            }
+        } else {
+            int size = max_array(_passes_force, _numberOfPassesForce);
+            size = size * (blockSize*(nzPerThread*9));
+            int *reductionPartition = (int *)malloc(sizeof(int)*size);
+            memset(reductionPartition, 0, sizeof(int)*size);
+            _global_vector_reduction = clCreateBuffer(_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_int)*size, reductionPartition, &err);
+            if (err < 0) {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Couldn't create the buffer object _force_reduction.");
+            }
+            free(reductionPartition);
         }
         
         void *element_stiffs = alloc_mem(precision(), (size_t)(mesh.numberOfBulkElements*((solution.mesh.maxElementDofs*_nsdofs)*(solution.mesh.maxElementDofs*_nsdofs))));
@@ -1732,10 +1881,16 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         int blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
         int nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
         
-        int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
-        globalAllocation->nb_int = globalAllocation->nb_int + size;
+        if (_numberOfPassesGlobal == 1) {
+            int size = (_global_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+            globalAllocation->nb_int = globalAllocation->nb_int + size;
+        } else {
+            int size = max_array(_passes_global, _numberOfPassesGlobal);
+            size = size * (blockSize*(nzPerThread*9));
+            globalAllocation->nb_int = globalAllocation->nb_int + size;
+        }
         
-        size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
+        int size = (_force_non_zeros/(blockSize*nzPerThread)*blockSize)*(nzPerThread*9);
         globalAllocation->nb_int = globalAllocation->nb_int + size;
         
         if (precision() == 1) {
@@ -1996,13 +2151,19 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_mem), &_matValues);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_int), &blockSize);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_matrix, ++argIdx, sizeof(cl_int), &nzPerThread);
-        
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Error in setting < _kernel_nonzeros_assembly_global_matrix > kernel arguments.");
+        }
+
         argIdx = 0;
         err  = clSetKernelArg(_kernel_nonzeros_assembly_global_vector, argIdx, sizeof(cl_mem), &_element_forces);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_mem), &_global_vector_reduction);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_mem), &_matRHS);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_int), &blockSize);
         err |= clSetKernelArg(_kernel_nonzeros_assembly_global_vector, ++argIdx, sizeof(cl_int), &nzPerThread);
+        if (err < 0) {
+            fatal("FEMFlowSolution:FEMFlowSolution_setKernelArgumentsCore", "Error in setting < _kernel_nonzeros_assembly_global_vector > kernel arguments.");
+        }
     }
 }
 
@@ -2222,8 +2383,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     
     int i;
     cl_int err;
-    cl_event assembly_event;
-    cl_ulong kernel_sart, kernel_end, kernel_profile;
+    cl_ulong kernel_profile;
     clock_t cpu_assembly_loop_start, cpu_assembly_loop_end;
     double real_assembly_loop_start, real_assembly_loop_end;
 
@@ -2251,22 +2411,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Error in setting kernel arguments.");
         }
         
-        // Queue up the coloring assembly kernel
-        err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_color_assembly_stiff_compute, 1, NULL, &global_work_size, localWorkSize, 0, NULL, &assembly_event);
-        if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Can't enqueue kernel < _kernel_color_assembly_stiff_compute >. Error: ", err);
-        }
-        
-        // Finish the calculation
-        err = clFinish(_cmd_queue);
-        if (err < 0) {
-            fatal("FEMFlowSolution:FEMFlowSolution_elementColoringAssemblySolution", "Can't finish kernel. Error: ", err);
-        }
-        
-        // Do some profiling
-        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
-        clGetEventProfilingInfo(assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
-        kernel_profile += (kernel_end - kernel_sart);
+        kernel_profile += enqueue_finish_kernel(_cmd_queue, _kernel_color_assembly_stiff_compute, global_work_size, *localWorkSize, "< _kernel_color_assembly_stiff_compute >");
         i++;
     }
     cpu_assembly_loop_end = clock();
@@ -2280,10 +2425,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 -(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize {
 
     cl_int err;
-    cl_event stiff_force_compute_event;
-    cl_event nonzeros_global_assembly_event;
-    cl_event nonzeros_force_assembly_event;
-    cl_ulong compute_part, kernel_sart, kernel_end, kernel_profile, global_part, force_part;
+    cl_ulong kernel_profile, global_part, force_part;
     
     size_t global_work_size_local_compute = mesh.numberOfBulkElements;
     
@@ -2303,67 +2445,47 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Error in setting kernel arguments.");
     }
     
-    // Queue up the kernel that computes the local matrices and vectors
-    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_color_assembly_stiff_compute, 1, NULL, &global_work_size_local_compute, localWorkSize, 0, NULL, &stiff_force_compute_event);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_color_assembly_stiff_compute >. Error: ", err);
-    }
+    kernel_profile = enqueue_finish_kernel(_cmd_queue, _kernel_color_assembly_stiff_compute, global_work_size_local_compute, *localWorkSize, "< _kernel_color_assembly_stiff_compute >");
+    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < locals compute > kernel on GPU: Real time (s): %f.\n", (double)kernel_profile*1.0e-9);
     
-    // Finish the calculation
-    err = clFinish(_cmd_queue);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't finish kernel. Error: ", err);
-    }
-    
-    // Profile the local matrices and vectors calculation
-    kernel_profile = 0;
-    clGetEventProfilingInfo(stiff_force_compute_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
-    clGetEventProfilingInfo(stiff_force_compute_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
-    compute_part = (kernel_end - kernel_sart);
-    kernel_profile += (kernel_end - kernel_sart);
-    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < locals compute > kernel on GPU: Real time (s): %f.\n", (double)compute_part*1.0e-9);
-    
-    size_t nonzeros_localWorkSize;
+    size_t nonzeros_localWorkSize = 0;
     if (solution.solutionInfo[@"nonzeros assembly work-group size"] != nil) {
         nonzeros_localWorkSize = [solution.solutionInfo[@"nonzeros assembly work-group size"] intValue];
     } else {
         fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Value for work-group size not found for the < nonzeros assembly > kernel");
     }
     
-    size_t global_work_size_nzs_global = _global_non_zeros;
-    size_t global_work_size_nzs_force = _force_non_zeros;
-    
-    // Queue up the nonzeros assembly kernel (global matrix part)
-    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_nonzeros_assembly_global_matrix, 1, NULL, &global_work_size_nzs_global, &nonzeros_localWorkSize, 0, NULL, &nonzeros_global_assembly_event);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_nonzeros_assembly_global_matrix >. Error: ", err);
+    int blockSize = 0;
+    int nzPerThread = 0;
+    if (_numberOfPassesGlobal > 1 || _numberOfPassesForce > 1) {
+        blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
+        nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
     }
     
-    // Queue up the nonzeros assembly kernel (force matrix part)
-    err = clEnqueueNDRangeKernel(_cmd_queue, _kernel_nonzeros_assembly_global_vector, 1, NULL, &global_work_size_nzs_force, &nonzeros_localWorkSize, 0, NULL, &nonzeros_force_assembly_event);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't enqueue kernel < _kernel_nonzeros_assembly_global_vector >. Error: ", err);
+    // Global matrix part
+    if (_numberOfPassesGlobal == 1) {
+        size_t global_work_size_nzs_global = _global_non_zeros;
+        global_part = enqueue_finish_kernel(_cmd_queue, _kernel_nonzeros_assembly_global_matrix, global_work_size_nzs_global, nonzeros_localWorkSize, "< _kernel_nonzeros_assembly_global_matrix >");
+        kernel_profile += global_part;
+        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros global part > kernel on GPU: Real time (s): %f.\n", (double)global_part*1.0e-9);
+    } else {
+        global_part = loop_over_passes(_cmd_queue, _kernel_nonzeros_assembly_global_matrix, _global_matrix_reduction, _globalMatrixReduction, _passes_global, _numberOfPassesGlobal, blockSize, nzPerThread, nonzeros_localWorkSize, "global matrix assembly");
+        kernel_profile += global_part;
+        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros global part > kernel on GPU: Real time (s): %f.\n", (double)global_part*1.0e-9);
     }
     
-    // Finish the calculation
-    err = clFinish(_cmd_queue);
-    if (err < 0) {
-        fatal("FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution", "Can't finish kernel. Error: ", err);
+    // Global vector part
+    if (_numberOfPassesForce == 1) {
+         size_t global_work_size_nzs_force = _force_non_zeros;
+        
+        force_part = enqueue_finish_kernel(_cmd_queue, _kernel_nonzeros_assembly_global_vector, global_work_size_nzs_force, nonzeros_localWorkSize, "< _kernel_nonzeros_assembly_global_vector >");
+        kernel_profile += force_part;
+        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros force part > kernel on GPU: Real time (s): %f.\n", (double)force_part*1.0e-9);
+    } else {
+        force_part = loop_over_passes(_cmd_queue, _kernel_nonzeros_assembly_global_vector, _global_vector_reduction, _globalVectorReduction, _passes_force, _numberOfPassesForce, blockSize, nzPerThread, nonzeros_localWorkSize, "global vector assembly");
+        kernel_profile += force_part;
+        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros force part > kernel on GPU: Real time (s): %f.\n", (double)force_part*1.0e-9);
     }
-    
-    // Profile the nonzeros assembly of the global matrix
-    clGetEventProfilingInfo(nonzeros_global_assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
-    clGetEventProfilingInfo(nonzeros_global_assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
-    global_part = (kernel_end - kernel_sart);
-    kernel_profile += (kernel_end - kernel_sart);
-    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros global part > kernel on GPU: Real time (s): %f.\n", (double)global_part*1.0e-9);
-    
-    // Profile the nonzeros assembly of the global vector
-    clGetEventProfilingInfo(nonzeros_force_assembly_event, CL_PROFILING_COMMAND_START, sizeof(kernel_sart), &kernel_sart, NULL);
-    clGetEventProfilingInfo(nonzeros_force_assembly_event, CL_PROFILING_COMMAND_END, sizeof(kernel_end), &kernel_end, NULL);
-    force_part = (kernel_end - kernel_sart);
-    kernel_profile += (kernel_end - kernel_sart);
-    fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for < nonzeros force part > kernel on GPU: Real time (s): %f.\n", (double)force_part*1.0e-9);
 
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_nonzeroAssemblySolution: execution time for nonzeros assembly kernel on GPU: Real time (s): %f.\n", (double)kernel_profile*1.0e-9);
 }
@@ -2412,10 +2534,14 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
         _global_stiff_force_f = NULL;
         _global_stiff_force_d = NULL;
         
-        global_matrix_reduction = NULL;
-        global_vector_reduction = NULL;
+        _globalMatrixReduction = NULL;
+        _globalVectorReduction = NULL;
+        _passes_global = NULL;
+        _passes_force  = NULL;
         _global_non_zeros = 0;
         _force_non_zeros = 0;
+        _numberOfPassesGlobal = 0;
+        _numberOfPassesForce = 0;
         
         _basis_functions = NULL;
         _matDiag = NULL;

@@ -818,6 +818,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@256 forKey:@"nonzeros assembly work-group size"];
             [solution.solutionInfo setObject:@64 forKey:@"nonzeros assembly thread block size"];
             [solution.solutionInfo setObject:@4 forKey:@"nonzeros assembly nonzeros per thread"];
+            [solution.solutionInfo setObject:@1024 forKey:@"maximum allowed allocation size for reduction matrix buffer (MB)"];
             
             [solution.solutionInfo setObject:@YES forKey:@"enable GPU debug mode"];
             [solution.solutionInfo setObject:@YES forKey:@"enable gpu multiply-and-add operations"];
