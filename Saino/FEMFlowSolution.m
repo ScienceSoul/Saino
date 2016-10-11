@@ -2659,6 +2659,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             if (_nodal_data != NULL) clReleaseMemObject(_nodal_data);
             if (_matrix_non_zeros != NULL) clReleaseMemObject(_matrix_non_zeros);
             if (_global_stiff_force != NULL) clReleaseMemObject(_global_stiff_force);
+            if (_global_matrix_reduction != NULL) clReleaseMemObject(_global_matrix_reduction);
+            if (_global_vector_reduction != NULL) clReleaseMemObject(_global_vector_reduction);
+            if(_element_stiffs != NULL) clReleaseMemObject(_element_stiffs);
+            if(_element_forces != NULL) clReleaseMemObject(_element_forces);
             
             if (_gpuData != NULL) {
                 if (_gpuData->nodesX_v != NULL) free(_gpuData->nodesX_v);
@@ -2701,6 +2705,11 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
             
             if (_global_stiff_force_f != NULL) free(_global_stiff_force_f);
             if (_global_stiff_force_d != NULL) free(_global_stiff_force_d);
+            
+            if(_globalMatrixReduction != NULL) free(_globalMatrixReduction);
+            if (_globalVectorReduction != NULL) free(_globalVectorReduction);
+            if (_passes_global != NULL) free(_passes_global);
+            if (_passes_force != NULL) free(_passes_force);
             
             if (_kernel_source != NULL) free(_kernel_source);
         }
