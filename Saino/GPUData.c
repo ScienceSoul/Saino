@@ -18,6 +18,9 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .nodesX_dp=NULL,
         .nodesY_dp=NULL,
         .nodesZ_dp=NULL,
+        .nodesvx_dp=NULL,
+        .nodesvy_dp=NULL,
+        .nodesvz_dp=NULL,
         .varSol_dp=NULL,
         .matValues_dp=NULL,
         .matRHS_dp=NULL,
@@ -26,6 +29,9 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .nodesX_sp=NULL,
         .nodesY_sp=NULL,
         .nodesZ_sp=NULL,
+        .nodesvx_sp=NULL,
+        .nodesvy_sp=NULL,
+        .nodesvz_sp=NULL,
         .varSol_sp=NULL,
         .matValues_sp=NULL,
         .matRHS_sp=NULL,
@@ -34,6 +40,9 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .nodesX_v=NULL,
         .nodesY_v=NULL,
         .nodesZ_v=NULL,
+        .nodesvx_v=NULL,
+        .nodesvy_v=NULL,
+        .nodesvz_v=NULL,
         .varSol_v=NULL,
         .matValues_v=NULL,
         .matRHS_v=NULL,
@@ -42,6 +51,8 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
         .gravity_v=NULL,
         .hk_v=NULL,
         .mk_v=NULL,
+        
+        .perm=NULL,
         
         .density_dp = 0.0,
         .viscosity_dp=0.0,
@@ -125,6 +136,23 @@ void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull da
     for (int i=0; i<size; i++) {
         memset(*(data[i].stiff), 0.0, sizeof(double)*(32*32));
         memset(data[i].force, 0.0, sizeof(data[i].force));
+    }
+}
+
+void init_color_data(colors_data * __nonnull data, int size) {
+    for (int i=0; i<size; i++) {
+        data[i].buckets = NULL;
+        data[i].numberOfBuckets = 0;
+        data[i].data = NULL;
+        data[i].perm = NULL;
+        
+        data[i]._nodal_nodes_x = NULL;
+        data[i]._nodal_nodes_y = NULL;
+        data[i]._nodal_nodes_z = NULL;
+        data[i]._nodal_vx = NULL;
+        data[i]._nodal_vy = NULL;
+        data[i]._nodal_vz = NULL;
+        data[i]._nodal_perm = NULL;
     }
 }
 

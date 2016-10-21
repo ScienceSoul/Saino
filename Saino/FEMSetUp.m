@@ -288,6 +288,7 @@
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
+
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
             [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
@@ -312,6 +313,7 @@
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
+            
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
             [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
@@ -336,6 +338,7 @@
             
             [solution.solutionInfo setObject:@NO forKey:@"use global basis functions coefficients"];
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
+            
             [solution.solutionInfo setObject:@YES forKey:@"precompute nonzero indices"];
             [solution.solutionInfo setObject:@NO forKey:@"use global stiff and force"];
             
@@ -372,7 +375,7 @@
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
             [solution.solutionInfo setObject:@NO forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
-            [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];

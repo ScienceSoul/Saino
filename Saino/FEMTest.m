@@ -763,6 +763,7 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@YES forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
             [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@NO forKey:@"parallel assembly enable work-groups"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
@@ -806,11 +807,12 @@ static dispatch_once_t onceToken;
             [solution.solutionInfo setObject:@(gravity) forKey:@"gpu ice gravity"];
             [solution.solutionInfo setObject:@YES forKeyedSubscript:@"enable newton linearization"];
             [solution.solutionInfo setObject:@YES forKey:@"compute basis and basis derivatives in separate kernel"];
-            [solution.solutionInfo setObject:@YES forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@NO forKey:@"use gpu local memory"];
+            [solution.solutionInfo setObject:@YES forKey:@"parallel assembly enable work-groups"];
             [solution.solutionInfo setObject:@YES forKey:@"use global basis functions coefficients"];
             
             [solution.solutionInfo setObject:@64 forKey:@"adjust global work size to be a multiple of"];
-            [solution.solutionInfo setObject:@16 forKey:@"coloring assembly/locals compute work-group size"];
+            [solution.solutionInfo setObject:@64 forKey:@"coloring assembly/locals compute work-group size"];
             
             [solution.solutionInfo setObject:@YES forKey:@"use element nodal data"];
             

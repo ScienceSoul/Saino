@@ -53,12 +53,6 @@
 #define MDIM 3
 #endif
 
-#ifdef UNIT_OFFSET
-#define OFFSET 1
-#else
-#define OFFSET 0
-#endif
-
 #ifdef LOOP_UNROLL_1
 #define UNROLL_DEPTH 3
 #endif
@@ -127,45 +121,76 @@ typedef struct {
 #endif
 
 #ifdef USE_GPU_LOCAL_MEM
-#ifdef GLOBAL_BASIS_FUNCTIONS
-    inline REAL dBasisdx3D(__global _basis_functions *basis_functions,
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
+             REAL dBasisdx3D(__global _basis_functions *basis_functions,
                        __local _element_info *element_info,
                        REAL dBasisdx[][3],
                        REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID);
-#else
-    inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
+        #endif
+        #ifdef NODAL_DATA_2
+             REAL dBasisdx3D(__global _basis_functions *basis_functions,
+                       __local REAL *local_nodes_x, __local REAL *local_nodes_y, __local REAL *local_nodes_z, int local_size, int endblock,
+                       REAL dBasisdx[][3],
+                       REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID);
+        #endif
+    #else
+        #ifdef NODAL_DATA
+             REAL dBasisdx3D(_private_basis_functions *basis_functions,
                        int p[], int q[], int r[],
                        __local _element_info *element_info,
                        REAL dBasisdx[][3],
                        REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID);
-#endif
+        #endif
+        #ifdef NODAL_DATA_2
+             REAL dBasisdx3D(_private_basis_functions *basis_functions,
+                       int p[], int q[], int r[],
+                       __local REAL *local_nodes_x, __local REAL *local_nodes_y, __local REAL *local_nodes_z, int local_size, int endblock,
+                       REAL dBasisdx[][3],
+                       REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID);
+        #endif
+    #endif
 #else
-#ifdef GLOBAL_BASIS_FUNCTIONS
-    inline REAL dBasisdx3D(__global _basis_functions *basis_functions
-#ifdef NODAL_DATA
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+     REAL dBasisdx3D(__global _basis_functions *basis_functions
+        #ifdef NODAL_DATA
                            , __global _nodal_data *nodal_data,
-#else
+        #elif NODAL_DATA_2
+                           , __global REAL *nodal_nodes_x
+                           , __global REAL *nodal_nodes_y
+                           , __global REAL *nodal_nodes_z
+                           , int local_size
+                           , int id
+                           , int endblock,
+        #else
                            , __global int *elementNodeIndexesStore,
                            __global REAL *nodesX,
                            __global REAL *nodesY,
                            __global REAL *nodesZ,
-#endif
+        #endif
                            REAL dBasisdx[][3],
                            REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID);
-#else
-inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
+    #else
+     REAL dBasisdx3D(_private_basis_functions *basis_functions,
                         int p[], int q[], int r[]
-#ifdef NODAL_DATA
+        #ifdef NODAL_DATA
                        , __global _nodal_data *nodal_data,
-#else
+        #elif NODAL_DATA_2
+                           , __global REAL *nodal_nodes_x
+                           , __global REAL *nodal_nodes_y
+                           , __global REAL *nodal_nodes_z
+                           , int local_size
+                           , int id
+                           , int endblock,
+        #else
                        , __global int *elementNodeIndexesStore,
                        __global REAL *nodesX,
                        __global REAL *nodesY,
                        __global REAL *nodesZ,
-#endif
+        #endif
                        REAL dBasisdx[][3],
                        REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID);
-#endif
+    #endif
 #endif
 
 
@@ -194,45 +219,76 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
 }
 
 #ifdef USE_GPU_LOCAL_MEM
-#ifdef GLOBAL_BASIS_FUNCTIONS
-        inline REAL dBasisdx3D(__global _basis_functions *basis_functions,
-                               __local _element_info *element_info,
-                               REAL dBasisdx[][3],
-                               REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID) {
-#else
-        inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
+             REAL dBasisdx3D(__global _basis_functions *basis_functions,
+                                   __local _element_info *element_info,
+                                   REAL dBasisdx[][3],
+                                   REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID) {
+        #endif
+        #ifdef NODAL_DATA_2
+             REAL dBasisdx3D(__global _basis_functions *basis_functions,
+                                    __local REAL *local_nodes_x, __local REAL *local_nodes_y, __local REAL *local_nodes_z, int local_size, int endblock,
+                                    REAL dBasisdx[][3],
+                                    REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID) {
+        #endif
+    #else
+        #ifdef NODAL_DATA
+                 REAL dBasisdx3D(_private_basis_functions *basis_functions,
                                int p[], int q[], int r[],
                                __local _element_info *element_info,
                                REAL dBasisdx[][3],
                                REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID) {
-#endif
+        #endif
+        #ifdef NODAL_DATA_2
+                 REAL dBasisdx3D(_private_basis_functions *basis_functions,
+                                int p[], int q[], int r[],
+                                __local REAL *local_nodes_x, __local REAL *local_nodes_y, __local REAL *local_nodes_z, int local_size, int endblock,
+                                REAL dBasisdx[][3],
+                                       REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int localID) {
+        #endif
+    #endif
 #else
-#ifdef GLOBAL_BASIS_FUNCTIONS
-        inline REAL dBasisdx3D(__global _basis_functions *basis_functions
-#ifdef NODAL_DATA
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+         REAL dBasisdx3D(__global _basis_functions *basis_functions
+        #ifdef NODAL_DATA
                                , __global _nodal_data *nodal_data,
-#else
+        #elif NODAL_DATA_2
+                               , __global REAL *nodal_nodes_x
+                               , __global REAL *nodal_nodes_y
+                               , __global REAL *nodal_nodes_z
+                               , int local_size
+                               , int id
+                               , int endblock,
+        #else
                                , __global int *elementNodeIndexesStore,
                                __global REAL *nodesX,
                                __global REAL *nodesY,
                                __global REAL *nodesZ,
-#endif
+        #endif
                                REAL dBasisdx[][3],
                                REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID) {
-#else
-        inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
+    #else
+         REAL dBasisdx3D(_private_basis_functions *basis_functions,
                                 int p[], int q[], int r[]
-#ifdef NODAL_DATA
+        #ifdef NODAL_DATA
                                , __global _nodal_data *nodal_data,
-#else
+        #elif NODAL_DATA_2
+                               , __global REAL *nodal_nodes_x
+                               , __global REAL *nodal_nodes_y
+                               , __global REAL *nodal_nodes_z
+                               , int local_size
+                               , int id
+                               , int endblock,
+        #else
                                 , __global int *elementNodeIndexesStore,
                                 __global REAL *nodesX,
                                __global REAL *nodesY,
                                __global REAL *nodesZ,
-#endif
+        #endif
                                 REAL dBasisdx[][3],
                                 REAL u, REAL v, REAL w, int numberOfNodes, int numberElementDofs, int globalID) {
-#endif
+    #endif
 #endif
 
 
@@ -299,23 +355,84 @@ inline REAL dBasisdx3D(_private_basis_functions *basis_functions,
         accum1 = ZERO;
         accum2 = ZERO;
         accum3 = ZERO;
+        
+#ifdef NODAL_DATA
         for (int j=0; j<numberOfNodes; j++) {
-#ifdef USE_GPU_LOCAL_MEM
+            #ifdef USE_GPU_LOCAL_MEM
             accum1 = accum1 + (element_info[localID].nodes_x[j] * dLBasisdx[3*j+i]);
             accum2 = accum2 + (element_info[localID].nodes_y[j] * dLBasisdx[3*j+i]);
             accum3 = accum3 + (element_info[localID].nodes_z[j] * dLBasisdx[3*j+i]);
-#else
-    #ifdef NODAL_DATA
+            #else
             accum1 = accum1 + (nodal_data[globalID].nodes_x[j] * dLBasisdx[3*j+i]);
             accum2 = accum2 + (nodal_data[globalID].nodes_y[j] * dLBasisdx[3*j+i]);
             accum3 = accum3 + (nodal_data[globalID].nodes_z[j] * dLBasisdx[3*j+i]);
-    #else
+            #endif
+        }
+#elif NODAL_DATA_2
+            #ifdef USE_GPU_LOCAL_MEM
+            int idd_local = localID;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                accum1 = accum1 + (local_nodes_x[idd_local] * dLBasisdx[3*j+i]);
+                accum2 = accum2 + (local_nodes_y[idd_local] * dLBasisdx[3*j+i]);
+                accum3 = accum3 + (local_nodes_z[idd_local] * dLBasisdx[3*j+i]);
+                
+                idd_local = idd_local + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #else
+            int idd = id;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                accum1 = accum1 + (nodal_nodes_x[idd] * dLBasisdx[3*j+i]);
+                accum2 = accum2 + (nodal_nodes_y[idd] * dLBasisdx[3*j+i]);
+                accum3 = accum3 + (nodal_nodes_z[idd] * dLBasisdx[3*j+i]);
+                
+                idd = idd + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #endif
+#else
+        for (int j=0; j<numberOfNodes; j++) {
             accum1 = accum1 + (nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
             accum2 = accum2 + (nodesY[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
             accum3 = accum3 + (nodesZ[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
-    #endif
-#endif
         }
+#endif
+        
+        
+//        for (int j=0; j<numberOfNodes; j++) {
+//#ifdef USE_GPU_LOCAL_MEM
+//    #ifdef NODAL_DATA
+//            accum1 = accum1 + (element_info[localID].nodes_x[j] * dLBasisdx[3*j+i]);
+//            accum2 = accum2 + (element_info[localID].nodes_y[j] * dLBasisdx[3*j+i]);
+//            accum3 = accum3 + (element_info[localID].nodes_z[j] * dLBasisdx[3*j+i]);
+//    #endif
+//    #ifdef NODAL_DATA_2
+//            accum1 = accum1 + (local_nodes_x[(j*local_size)+localID] * dLBasisdx[3*j+i]);
+//            accum2 = accum2 + (local_nodes_y[(j*local_size)+localID] * dLBasisdx[3*j+i]);
+//            accum3 = accum3 + (local_nodes_z[(j*local_size)+localID] * dLBasisdx[3*j+i]);
+//    #endif
+//#else
+//    #ifdef NODAL_DATA
+//            accum1 = accum1 + (nodal_data[globalID].nodes_x[j] * dLBasisdx[3*j+i]);
+//            accum2 = accum2 + (nodal_data[globalID].nodes_y[j] * dLBasisdx[3*j+i]);
+//            accum3 = accum3 + (nodal_data[globalID].nodes_z[j] * dLBasisdx[3*j+i]);
+//    #elif NODAL_DATA_2
+//            accum1 = accum1 + (nodal_nodes_x[id+(j*local_size)] * dLBasisdx[3*j+i]);
+//            accum2 = accum2 + (nodal_nodes_y[id+(j*local_size)] * dLBasisdx[3*j+i]);
+//            accum3 = accum3 + (nodal_nodes_z[id+(j*local_size)] * dLBasisdx[3*j+i]);
+//    #else
+//            accum1 = accum1 + (nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
+//            accum2 = accum2 + (nodesY[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
+//            accum3 = accum3 + (nodesZ[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] * dLBasisdx[3*j+i]);
+//    #endif
+//#endif
+//        }
         dx[i]   = accum1;
         dx[3+i] = accum2;
         dx[6+i] = accum3;
@@ -403,6 +520,10 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
                                    __global _element_dBasisdx *global_dBasisdx
 #ifdef NODAL_DATA
                                    , __global _nodal_data *nodal_data,
+#elif NODAL_DATA_2
+                                   , __global REAL *nodal_nodes_x
+                                   , __global REAL *nodal_nodes_y
+                                   , __global REAL *nodal_nodes_z,
 #else
                                    , __global REAL *nodesX,
                                    __global REAL *nodesY,
@@ -416,7 +537,14 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
                                    , __global _basis_functions *basis_functions
 #endif
 #ifdef USE_GPU_LOCAL_MEM
+        #ifdef NODAL_DATA
                                    , __local _element_info *element_info
+        #endif
+        #ifdef NODAL_DATA_2
+                                   , __local REAL *local_nodes_x
+                                   , __local REAL *local_nodes_y
+                                   , __local REAL *local_nodes_z
+        #endif
 #endif
                                    ) {
     
@@ -438,6 +566,13 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
     
     int global_id = get_global_id(0);
     int local_id = get_local_id(0);
+
+#ifdef NODAL_DATA_2
+    int local_size = get_local_size(0);
+    int goupd_id = get_group_id(0);
+    int endblock = local_size * numberOfNodes;
+    int id = (goupd_id * endblock) + local_id;
+#endif
     
 #ifndef GLOBAL_BASIS_FUNCTIONS
     int p[8], q[8], r[8];
@@ -503,6 +638,24 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
         element_info[local_id].nodes_y[i] = nodal_data[global_id].nodes_y[i];
         element_info[local_id].nodes_z[i] = nodal_data[global_id].nodes_z[i];
     }
+    #elif NODAL_DATA_2
+    int idd = id;
+    int idd_local = local_id;
+    int count = 0;
+    while (count < endblock) {
+        local_nodes_x[idd_local] = nodal_nodes_x[idd];
+        local_nodes_y[idd_local] = nodal_nodes_y[idd];
+        local_nodes_z[idd_local] = nodal_nodes_z[idd];
+        
+        idd = idd + local_size;
+        idd_local = idd_local + local_size;
+        count = count + local_size;
+    }
+//    for (int i=0; i<numberOfNodes; i++) {
+//        local_nodes_x[(i*local_size)+local_id] = nodal_nodes_x[id+(i*local_size)];
+//        local_nodes_y[(i*local_size)+local_id] = nodal_nodes_y[id+(i*local_size)];
+//        local_nodes_z[(i*local_size)+local_id] = nodal_nodes_z[id+(i*local_size)];
+//    }
     #else
     for (int i=0; i<numberOfNodes; i++) {
         element_info[local_id].nodes_x[i] = nodesX[elementNodeIndexesStore[(global_id*numberElementDofs)+i]];
@@ -519,33 +672,50 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
         v = ip_v[t];
         w = ip_w[t];
 #ifdef USE_GPU_LOCAL_MEM
-#ifdef GLOBAL_BASIS_FUNCTIONS
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-#else
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+    #else
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, p, q, r,
                           element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-#endif
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, p, q, r,
+                          local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+    #endif
 #else
-#ifdef GLOBAL_BASIS_FUNCTIONS
-    #ifdef NODAL_DATA
+    #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
-    #else
+        #elif NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, global_id);
+        #else
         detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
-    #endif
-#else
-    #ifdef NODAL_DATA
+        #endif
+    #else
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, p, q, r, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
-    #else
+        #elif NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, p, q, r, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, global_id);
+        #else
         detJ = dBasisdx3D(basis_functions, p, q, r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, global_id);
+        #endif
     #endif
 #endif
-#endif
 
-#ifdef USE_GPU_LOCAL_MEM
+#if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
         for (int i=0; i<numberOfNodes; i++) {
             for (int j=0; j<3; j++) {
                 element_info[local_id].dBasisdx[t][i][j] = dBasisdx[i][j];
@@ -563,7 +733,7 @@ __kernel void ComputeBasisDBasisdx(__global _element_basis *global_basis,
 #endif
     }
     
-#ifdef USE_GPU_LOCAL_MEM
+#if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
     barrier(CLK_LOCAL_MEM_FENCE);
     
     for (int t=0; t<numberOfNodes; t++) {
@@ -621,6 +791,18 @@ __kernel void AssemblyByColoringStiffForceCompute(
                                   
 #ifdef NODAL_DATA
                                   , __global _nodal_data *nodal_data,
+#elif NODAL_DATA_2
+                                  , __global REAL *nodal_nodes_x
+                                  , __global REAL *nodal_nodes_y
+                                  , __global REAL *nodal_nodes_z
+                                  , __global REAL *nodal_vx
+                                  , __global REAL *nodal_vy,
+    #ifdef MODEL_DIMENSION_3
+                                   __global REAL *nodal_vz,
+    #endif
+    #ifdef COLORING_ASSEMBLY
+                                   __global int *nodal_perm,
+    #endif
 #else
                                   , __global int *elementNodeIndexesStore,
                                   __global REAL *nodesX,
@@ -654,7 +836,22 @@ __kernel void AssemblyByColoringStiffForceCompute(
                                   __global _element_dBasisdx *global_dBasisdx
 #endif
 #ifdef USE_GPU_LOCAL_MEM
-                                  , __local _element_info *element_info
+    #ifdef NODAL_DATA
+                           , __local _element_info *element_info
+    #endif
+    #ifdef NODAL_DATA_2
+                           , __local REAL *local_nodes_x
+                           , __local REAL *local_nodes_y
+                           , __local REAL *local_nodes_z
+                           , __local REAL *local_vx
+                           , __local REAL *local_vy
+        #ifdef MODEL_DIMENSION_3
+                            ,__local REAL *local_vz
+        #endif
+        #ifdef COLORING_ASSEMBLY
+                           , __local int *local_perm
+        #endif
+    #endif
 #endif
                                   ) {
     
@@ -773,8 +970,14 @@ __kernel void AssemblyByColoringStiffForceCompute(
     int globalID = get_global_id(0);
 #endif
     
-    //int local_size = get_local_size(0);
     int local_id = get_local_id(0);
+    
+#ifdef NODAL_DATA_2
+    int local_size = get_local_size(0);
+    int goupd_id = get_group_id(0);
+    int endblock = local_size * numberOfNodes;
+    int id = (goupd_id * endblock) + local_id;
+#endif
     
 #ifdef COLORING_ASSEMBLY
     #if defined (USE_GPU_LOCAL_MEM) || defined (ENABLE_WORK_GROUPS)
@@ -807,6 +1010,38 @@ __kernel void AssemblyByColoringStiffForceCompute(
         element_info[local_id].vy[i] = nodal_data[globalID].vy[i];
         element_info[local_id].vz[i] = nodal_data[globalID].vz[i];
     }
+    #elif NODAL_DATA_2
+    int idd = id;
+    int idd_local = local_id;
+    int count = 0;
+    while (count < endblock) {
+        local_nodes_x[idd_local] = nodal_nodes_x[idd];
+        local_nodes_y[idd_local] = nodal_nodes_y[idd];
+        local_nodes_z[idd_local] = nodal_nodes_z[idd];
+        
+        local_vx[idd_local] = nodal_vx[idd];
+        local_vy[idd_local] = nodal_vy[idd];
+        local_vz[idd_local] = nodal_vz[idd];
+        #ifdef COLORING_ASSEMBLY
+            local_perm[idd_local] = nodal_perm[idd];
+        #endif
+
+        idd = idd + local_size;
+        idd_local = idd_local + local_size;
+        count = count + local_size;
+    }
+//    for (int i=0; i<numberOfNodes; i++) {
+//        local_nodes_x[(i*local_size)+local_id] = nodal_nodes_x[id+(i*local_size)];
+//        local_nodes_y[(i*local_size)+local_id] = nodal_nodes_y[id+(i*local_size)];
+//        local_nodes_z[(i*local_size)+local_id] = nodal_nodes_z[id+(i*local_size)];
+//        
+//        local_vx[(i*local_size)+local_id] = nodal_vx[id+(i*local_size)];
+//        local_vy[(i*local_size)+local_id] = nodal_vy[id+(i*local_size)];
+//        local_vz[(i*local_size)+local_id] = nodal_vz[id+(i*local_size)];
+//        #ifdef COLORING_ASSEMBLY
+//            local_perm[(i*local_size)+local_id] = nodal_perm[id+(i*local_size)];
+//        #endif
+//    }
     #else
     for (int i=0; i<numberOfNodes; i++) {
         element_info[local_id].nodes_x[i] = nodesX[elementNodeIndexesStore[(globalID*numberElementDofs)+i]];
@@ -819,7 +1054,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
     }
     #endif
     
-#ifdef KERNEL_BASIS_DBASISDX
+#if defined (KERNEL_BASIS_DBASISDX) && defined (NODAL_DATA)
     for(int i=0; i<numberOfNodes; i++) {
         for(int j=0; j<numberOfNodes; j++) {
             for(k=0; k<3; k++) {
@@ -873,30 +1108,46 @@ __kernel void AssemblyByColoringStiffForceCompute(
         v = NodeV[p];
         w = NodeW[p];
 #ifdef USE_GPU_LOCAL_MEM
-#ifdef GLOBAL_BASIS_FUNCTIONS
+ #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-#else
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+ #else
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r,
                           element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
-#endif
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r,
+                          local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+ #endif
 #else
-#ifdef GLOBAL_BASIS_FUNCTIONS
+ #ifdef GLOBAL_BASIS_FUNCTIONS
     #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #elif NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
     #else
         detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
     #endif
-#else
+ #else
     #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+    #elif NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, globalID);
     #else
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
     #endif
-#endif
+ #endif
 #endif
         for (int i=0; i<numberOfNodes; i++) {
             for (int j=0; j<3; j++) {
@@ -921,7 +1172,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #endif
 
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
         s = element_info[local_id].detJ[t] * ip_s[t];
     #else
         s = global_dBasisdx[globalID].detJ[t] * ip_s[t];
@@ -929,15 +1180,29 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #else
     #ifdef USE_GPU_LOCAL_MEM
       #ifdef GLOBAL_BASIS_FUNCTIONS
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
       #else
+        #ifdef NODAL_DATA
         detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r,
                           element_info, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
+        #ifdef NODAL_DATA_2
+        detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r,
+                          local_nodes_x, local_nodes_y, local_nodes_z, local_size, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, local_id);
+        #endif
       #endif
     #else
       #ifdef GLOBAL_BASIS_FUNCTIONS
         #ifdef NODAL_DATA
             detJ = dBasisdx3D(basis_functions, nodal_data, dBasisdx,
+                          u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #elif NODAL_DATA_2
+            detJ = dBasisdx3D(basis_functions, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
         #else
             detJ = dBasisdx3D(basis_functions, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
@@ -947,6 +1212,8 @@ __kernel void AssemblyByColoringStiffForceCompute(
         #ifdef NODAL_DATA
             detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_data, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
+        #elif NODAL_DATA_2
+            detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, nodal_nodes_x, nodal_nodes_y, nodal_nodes_z, local_size, id, endblock, dBasisdx, u, v, w, numberOfNodes, numberElementDofs, globalID);
         #else
             detJ = dBasisdx3D(basis_functions, basis_p, basis_q, basis_r, elementNodeIndexesStore, nodesX, nodesY, nodesZ, dBasisdx,
                           u, v, w, numberOfNodes, numberElementDofs, globalID);
@@ -969,42 +1236,158 @@ __kernel void AssemblyByColoringStiffForceCompute(
             grad[0][i] = ZERO;
             grad[1][i] = ZERO;
             grad[2][i] = ZERO;
-            for (int j=0; j<numberOfNodes; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
+            for (int j=0; j<numberOfNodes; j++) {
+            #ifdef USE_GPU_LOCAL_MEM
                 grad[0][i] = grad[0][i] + element_info[local_id].vx[j] * element_info[local_id].dBasisdx[t][j][i];
                 grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * element_info[local_id].dBasisdx[t][j][i];
                 grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * element_info[local_id].dBasisdx[t][j][i];
-    #else
-        #ifdef NODAL_DATA
+            #else
                 grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
-
-        #else
+            #endif
+            }
+    #elif NODAL_DATA_2
+            #ifdef USE_GPU_LOCAL_MEM
+            int idd_local = local_id;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                grad[0][i] = grad[0][i] + local_vx[idd_local] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[1][i] = grad[1][i] + local_vy[idd_local] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[2][i] = grad[2][i] + local_vz[idd_local] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                idd_local = idd_local + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #else
+            int idd = id;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                grad[0][i] = grad[0][i] + nodal_vx[idd] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[1][i] = grad[1][i] + nodal_vy[idd] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                grad[2][i] = grad[2][i] + nodal_vz[idd] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+                idd = idd + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #endif
+    #else
+            for (int j=0; j<numberOfNodes; j++) {
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * global_dBasisdx[globalID].dBasisdx[t][j][i];
                 grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * global_dBasisdx[globalID].dBasisdx[t][j][i];
-        #endif
+            }
     #endif
 #else
-    #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
+            for (int j=0; j<numberOfNodes; j++) {
+            #ifdef USE_GPU_LOCAL_MEM
                 grad[0][i] = grad[0][i] + element_info[local_id].vx[j] * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * dBasisdx[j][i];
                 grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * dBasisdx[j][i];
-    #else
-        #ifdef NODAL_DATA
+            #else
                 grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * dBasisdx[j][i];
                 grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * dBasisdx[j][i];
-        #else
+            }
+            #endif
+    #elif NODAL_DATA_2
+            #ifdef USE_GPU_LOCAL_MEM
+            int idd_local = local_id;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                grad[0][i] = grad[0][i] + local_vx[idd_local] * dBasisdx[j][i];
+                grad[1][i] = grad[1][i] + local_vy[idd_local] * dBasisdx[j][i];
+                grad[2][i] = grad[2][i] + local_vz[idd_local] * dBasisdx[j][i];
+                idd_local = idd_local + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #else
+            int idd = id;
+            int count = 0;
+            int j = 0;
+            while (count < endblock) {
+                grad[0][i] = grad[0][i] + nodal_vx[idd] * dBasisdx[j][i];
+                grad[1][i] = grad[1][i] + nodal_vy[idd] * dBasisdx[j][i];
+                grad[2][i] = grad[2][i] + nodal_vz[idd] * dBasisdx[j][i];
+                idd = idd + local_size;
+                count = count + local_size;
+                j++;
+            }
+            #endif
+            
+    #else
+            for (int j=0; j<numberOfNodes; j++) {
                 grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * dBasisdx[j][i];
                 grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
                 grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
-        #endif
+            }
     #endif
 #endif
-            }
+            
+//            for (int j=0; j<numberOfNodes; j++) {
+//#ifdef KERNEL_BASIS_DBASISDX
+//    #ifdef USE_GPU_LOCAL_MEM
+//        #ifdef NODAL_DATA
+//                grad[0][i] = grad[0][i] + element_info[local_id].vx[j] * element_info[local_id].dBasisdx[t][j][i];
+//                grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * element_info[local_id].dBasisdx[t][j][i];
+//                grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * element_info[local_id].dBasisdx[t][j][i];
+//        #endif
+//        #ifdef NODAL_DATA_2
+//                grad[0][i] = grad[0][i] + local_vx[(j*local_size)+local_id] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[1][i] = grad[1][i] + local_vy[(j*local_size)+local_id] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[2][i] = grad[2][i] + local_vz[(j*local_size)+local_id] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//        #endif
+//    #else
+//        #ifdef NODAL_DATA
+//                grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//        #elif NODAL_DATA_2
+//                grad[0][i] = grad[0][i] + nodal_vx[id+(j*local_size)] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[1][i] = grad[1][i] + nodal_vy[id+(j*local_size)] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[2][i] = grad[2][i] + nodal_vz[id+(j*local_size)] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//        #else
+//                grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//                grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * global_dBasisdx[globalID].dBasisdx[t][j][i];
+//        #endif
+//    #endif
+//#else
+//    #ifdef USE_GPU_LOCAL_MEM
+//        #ifdef NODAL_DATA
+//                grad[0][i] = grad[0][i] + element_info[local_id].vx[j] * dBasisdx[j][i];
+//                grad[1][i] = grad[1][i] + element_info[local_id].vy[j] * dBasisdx[j][i];
+//                grad[2][i] = grad[2][i] + element_info[local_id].vz[j] * dBasisdx[j][i];
+//        #endif
+//        #ifdef NODAL_DATA_2
+//                grad[0][i] = grad[0][i] + local_vx[(j*local_size)+local_id] * dBasisdx[j][i];
+//                grad[1][i] = grad[1][i] + local_vy[(j*local_size)+local_id] * dBasisdx[j][i];
+//                grad[2][i] = grad[2][i] + local_vz[(j*local_size)+local_id] * dBasisdx[j][i];
+//        #endif
+//    #else
+//        #ifdef NODAL_DATA
+//                grad[0][i] = grad[0][i] + nodal_data[globalID].vx[j] * dBasisdx[j][i];
+//                grad[1][i] = grad[1][i] + nodal_data[globalID].vy[j] * dBasisdx[j][i];
+//                grad[2][i] = grad[2][i] + nodal_data[globalID].vz[j] * dBasisdx[j][i];
+//        #elif NODAL_DATA_2
+//                grad[0][i] = grad[0][i] + nodal_vx[id+(j*local_size)] * dBasisdx[j][i];
+//                grad[1][i] = grad[1][i] + nodal_vy[id+(j*local_size)] * dBasisdx[j][i];
+//                grad[2][i] = grad[2][i] + nodal_vz[id+(j*local_size)] * dBasisdx[j][i];
+//        #else
+//                grad[0][i] = grad[0][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]]   * dBasisdx[j][i];
+//                grad[1][i] = grad[1][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+1] * dBasisdx[j][i];
+//                grad[2][i] = grad[2][i] + varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]]+2] * dBasisdx[j][i];
+//        #endif
+//    #endif
+//#endif
+//            }
         }
         
         // Force at integration point
@@ -1090,7 +1473,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
             dmudx[i] = ZERO;
             for (int j=0; j<numberOfNodes; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                 dmudx[i] = dmudx[i] + viscosity * element_info[local_id].dBasisdx[t][j][i];
     #else
                 dmudx[i] = dmudx[i] + viscosity * global_dBasisdx[globalID].dBasisdx[t][j][i];
@@ -1115,7 +1498,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
         for (int p=0; p<numberOfNodes; p++) {
             for (int i=0; i<MDIM; i++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined(NODAL_DATA)
                 su[p][i][MDIM] = su[p][i][MDIM] + element_info[local_id].dBasisdx[t][p][i];
     #else
                 su[p][i][MDIM] = su[p][i][MDIM] + global_dBasisdx[globalID].dBasisdx[t][p][i];
@@ -1125,7 +1508,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #endif
                 for (int j=0; j<MDIM; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                     su[p][i][i] = su[p][i][i] - dmudx[j] * element_info[local_id].dBasisdx[t][p][j];
                     su[p][i][j] = su[p][i][j] - dmudx[j] * element_info[local_id].dBasisdx[t][p][i];
     #else
@@ -1139,7 +1522,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     sum = ZERO;
                     for (k=0; k<numberOfNodes; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                         sum = sum + dNodalBasisdx[p][k][j] * element_info[local_id].dBasisdx[t][k][j];
     #else
                         sum = sum + dNodalBasisdx[p][k][j] * global_dBasisdx[globalID].dBasisdx[t][k][j];
@@ -1152,7 +1535,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     sum = ZERO;
                     for (k=0; k<numberOfNodes; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                         sum = sum + dNodalBasisdx[p][k][i] * element_info[local_id].dBasisdx[t][k][j];
     #else
                         sum = sum + dNodalBasisdx[p][k][i] * global_dBasisdx[globalID].dBasisdx[t][k][j];
@@ -1164,7 +1547,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     su[p][i][j] = su[p][i][j] - mu * sum;
                 }
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                 sw[p][MDIM][i] = sw[p][MDIM][i] + element_info[local_id].dBasisdx[t][p][i];
     #else
                 sw[p][MDIM][i] = sw[p][MDIM][i] + global_dBasisdx[globalID].dBasisdx[t][p][i];
@@ -1174,7 +1557,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #endif
                 for (int j=0; j<MDIM; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                     sw[p][i][i] = sw[p][i][i] - dmudx[j] * element_info[local_id].dBasisdx[t][p][j];
                     sw[p][j][i] = sw[p][j][i] - dmudx[j] * element_info[local_id].dBasisdx[t][p][i];
     #else
@@ -1188,7 +1571,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     sum = ZERO;
                     for (k=0; k<numberOfNodes; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                         sum = sum + dNodalBasisdx[p][k][j] * element_info[local_id].dBasisdx[t][k][j];
     #else
                         sum = sum + dNodalBasisdx[p][k][j] * global_dBasisdx[globalID].dBasisdx[t][k][j];
@@ -1201,7 +1584,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     sum = ZERO;
                     for (k=0; k<numberOfNodes; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                         sum = sum + dNodalBasisdx[p][k][i] * element_info[local_id].dBasisdx[t][k][j];
     #else
                         sum = sum + dNodalBasisdx[p][k][i] * global_dBasisdx[globalID].dBasisdx[t][k][j];
@@ -1235,7 +1618,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                         sum = 0.0;
                         for (k=0; k<3; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                             sum = sum + strain[i][k] * element_info[local_id].dBasisdx[t][q][k];
     #else
                             sum = sum + strain[i][k] * global_dBasisdx[globalID].dBasisdx[t][q][k];
@@ -1249,7 +1632,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                             sum = 0.0;
                             for (k=0; k<3; k++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
                                 sum = sum + strain[j][k] * element_info[local_id].dBasisdx[t][p][k];
     #else
                                 sum = sum + strain[j][k] * global_dBasisdx[globalID].dBasisdx[t][p][k];
@@ -1268,7 +1651,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     for (int j=0; j<MDIM; j++) {
                         // Isotropic and no Laplace discretization
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
         #ifdef GLOBAL_STIFF_FORCE
                         stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+i] + s * mu * element_info[local_id].dBasisdx[t][q][j] * element_info[local_id].dBasisdx[t][p][j];
                         stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+j] + s * mu * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
@@ -1297,7 +1680,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     }
                     // Pressure term
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
         #ifdef GLOBAL_STIFF_FORCE
                     stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] = stiff_force[globalID].stiff[((MDIM+1)*p)+i][((MDIM+1)*q)+MDIM] - s * basis[t][q] * element_info[local_id].dBasisdx[t][p][i];
         #else
@@ -1320,7 +1703,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     
                     // Continuity equation
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && (NODAL_DATA)
         #ifdef GLOBAL_STIFF_FORCE
                     stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+MDIM][((MDIM+1)*q)+i] + s * element_info[local_id].dBasisdx[t][q][i] * basis[t][p];
         #else
@@ -1355,7 +1738,7 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     }
                     for (int j=0; j<MDIM; j++) {
 #ifdef KERNEL_BASIS_DBASISDX
-    #ifdef USE_GPU_LOCAL_MEM
+    #if defined (USE_GPU_LOCAL_MEM) && defined (NODAL_DATA)
         #ifdef GLOBAL_STIFF_FORCE
                         stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] = stiff_force[globalID].stiff[((MDIM+1)*p)+j][((MDIM+1)*q)+i] + s * delta * element_info[local_id].dBasisdx[t][q][i] * element_info[local_id].dBasisdx[t][p][j];
         #else
@@ -1438,10 +1821,17 @@ __kernel void AssemblyByColoringStiffForceCompute(
         int kk = 0;
         for (int i=0; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
 #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
             sol[i] = element_info[local_id].vx[kk];
+    #endif
+    #ifdef NODAL_DATA_2
+            sol[i] = local_vx[(kk*local_size)+local_id];
+    #endif
 #else
     #ifdef NODAL_DATA
             sol[i] = nodal_data[globalID].vx[kk];
+    #elif NODAL_DATA_2
+            sol[i] = nodal_vx[id+(kk*local_size)];
     #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]];
     #endif
@@ -1451,10 +1841,17 @@ __kernel void AssemblyByColoringStiffForceCompute(
         kk = 0;
         for (int i=1; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
 #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
             sol[i] = element_info[local_id].vy[kk];
+    #endif
+    #ifdef NODAL_DATA_2
+            sol[i] = local_vy[(kk*local_size)+local_id];
+    #endif
 #else
     #ifdef NODAL_DATA
             sol[i] = nodal_data[globalID].vy[kk];
+    #elif NODAL_DATA_2
+            sol[i] = nodal_vy[id+(kk*local_size)];
     #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+1];
     #endif
@@ -1464,10 +1861,17 @@ __kernel void AssemblyByColoringStiffForceCompute(
         kk = 0;
         for (int i=2; i<(MDIM+1)*numberOfNodes; i+=(MDIM+1)) {
 #ifdef USE_GPU_LOCAL_MEM
+    #ifdef NODAL_DATA
             sol[i] = element_info[local_id].vz[kk];
+    #endif
+    #ifdef NODAL_DATA_2
+            sol[i] = local_vz[(kk*local_size)+local_id];
+    #endif
 #else
     #ifdef NODAL_DATA
             sol[i] = nodal_data[globalID].vz[kk];
+    #elif NODAL_DATA_2
+            sol[i] = nodal_vz[id+(kk*local_size)];
     #else
             sol[i] = varSolution[varDofs*varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+kk]]+2];
     #endif
@@ -1535,6 +1939,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #ifdef CHECK_NEG_PERM
     #ifdef NODAL_DATA
             if (nodal_data[globalID].perm[i] < 0) continue;
+    #elif NODAL_DATA_2
+        #ifdef USE_GPU_LOCAL_MEM
+            if (local_perm[(i*local_size)+local_id] < 0) continue;
+        #else
+            if (nodal_perm[id+(i*local_size)] < 0) continue;
+        #endif
     #else
             if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] < 0) continue;
     #endif
@@ -1542,6 +1952,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
 
 #ifdef NODAL_DATA
             row = varDofs * (nodal_data[globalID].perm[i] + 1) - k;
+#elif NODAL_DATA_2
+    #ifdef USE_GPU_LOCAL_MEM
+            row = varDofs * (local_perm[(i*local_size)+local_id] + 1) - k;
+    #else
+            row = varDofs * (nodal_perm[id+(i*local_size)] + 1) - k;
+    #endif
 #else
             row = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + 1) - k;
 #endif
@@ -1550,6 +1966,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #ifdef CHECK_NEG_PERM
     #ifdef NODAL_DATA
                     if (nodal_data[globalID].perm[j] < 0) continue;
+    #elif NODAL_DATA_2
+        #ifdef USE_GPU_LOCAL_MEM
+                    if (local_perm[(j*local_size)+local_id] < 0) continue;
+        #else
+                    if (nodal_perm[id+(j*local_size)] < 0) continue;
+        #endif
     #else
                     if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+j] < 0) continue;
     #endif
@@ -1557,6 +1979,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
                     
 #ifdef NODAL_DATA
                     col = varDofs * (nodal_data[globalID].perm[j] + 1) - l;
+#elif NODAL_DATA_2
+    #ifdef USE_GPU_LOCAL_MEM
+                    col = varDofs * (local_perm[(j*local_size)+local_id] + 1) - l;
+    #else
+                    col = varDofs * (nodal_perm[id+(j*local_size)] + 1) - l;
+    #endif
 #else
                     col = varDofs * (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+j]] + 1) - l;
 #endif
@@ -1583,6 +2011,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
 #ifdef CHECK_NEG_PERM
     #ifdef NODAL_DATA
         if (nodal_data[globalID].perm[i] >= 0) {
+    #elif NODAL_DATA_2
+        #ifdef USE_GPU_LOCAL_MEM
+            if (local_perm[(i*local_size)+local_id] >= 0) {
+        #else
+            if (nodal_perm[id+(i*local_size)] >= 0) {
+        #endif
     #else
         if (varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)]+i] >= 0) {
     #endif
@@ -1590,6 +2024,12 @@ __kernel void AssemblyByColoringStiffForceCompute(
             for (int j=0; j<varDofs; j++) {
 #ifdef NODAL_DATA
                 k = varDofs * nodal_data[globalID].perm[i] + j;
+#elif NODAL_DATA_2
+    #ifdef USE_GPU_LOCAL_MEM
+                k = varDofs * local_perm[(i*local_size)+local_id] + j;
+    #else
+                k = varDofs * nodal_perm[id+(i*local_size)] + j;
+    #endif
 #else
                 k = varDofs * varPermutation[elementNodeIndexesStore[(globalID*numberElementDofs)+i]] + j;
 #endif

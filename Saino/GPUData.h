@@ -5,7 +5,9 @@
 //  Created by Hakime Seddik on 26/04/2016.
 //  Copyright © 2016 Institute of Low Temperature Science. All rights reserved.
 //
-    
+
+#include <OpenCL/OpenCL.h>
+
 // GPU data structure for ice flow simulations
 typedef struct {
     
@@ -13,6 +15,9 @@ typedef struct {
     double * __nullable nodesX_dp;
     double * __nullable nodesY_dp;
     double * __nullable nodesZ_dp;
+    double * __nullable nodesvx_dp;
+    double * __nullable nodesvy_dp;
+    double * __nullable nodesvz_dp;
     double * __nullable varSol_dp;
     double * __nullable matValues_dp;
     double * __nullable matRHS_dp;
@@ -26,6 +31,9 @@ typedef struct {
     float * __nullable nodesX_sp;
     float * __nullable nodesY_sp;
     float * __nullable nodesZ_sp;
+    float * __nullable nodesvx_sp;
+    float * __nullable nodesvy_sp;
+    float * __nullable nodesvz_sp;
     float * __nullable varSol_sp;
     float * __nullable matValues_sp;
     float * __nullable matRHS_sp;
@@ -35,12 +43,15 @@ typedef struct {
     float hk_sp;
     float mk_sp;
     
-    // Memory locations to which the above variable
-    // point according to the type used
+    // Memory locations to which the real variables
+    // point according to the precision used
     void * __nullable basisFunctions_v;
     void * __nullable nodesX_v;
     void * __nullable nodesY_v;
     void * __nullable nodesZ_v;
+    void * __nullable nodesvx_v;
+    void * __nullable nodesvy_v;
+    void * __nullable nodesvz_v;
     void * __nullable varSol_v;
     void * __nullable matValues_v;
     void * __nullable matRHS_v;
@@ -49,6 +60,8 @@ typedef struct {
     void * __nullable gravity_v;
     void * __nullable hk_v;
     void * __nullable mk_v;
+    
+    int * __nullable perm;
     
 } ice_flow_gpu;
 
@@ -162,6 +175,32 @@ typedef struct {
     double force[32];
 } stiff_force_d;
 
+typedef struct {
+    double * __nullable nodesX;
+    double * __nullable nodesY;
+    double * __nullable nodesZ;
+    double * __nullable nodesvx;
+    double * __nullable nodesvy;
+    double * __nullable nodesvz;
+    int * __nullable perm;
+} bucket;
+
+typedef struct {
+    bucket * __nullable buckets;
+    int numberOfBuckets;
+    
+    ice_flow_gpu * __nullable data;
+    int * __nullable perm;
+    
+    cl_mem __nullable _nodal_nodes_x;
+    cl_mem __nullable _nodal_nodes_y;
+    cl_mem __nullable _nodal_nodes_z;
+    cl_mem __nullable _nodal_vx;
+    cl_mem __nullable _nodal_vy;
+    cl_mem __nullable _nodal_vz;
+    cl_mem __nullable _nodal_perm;
+} colors_data;
+
 void init_gpu_data(ice_flow_gpu * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
 void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);
@@ -173,4 +212,6 @@ void init_nz_indexes(non_zero * __nonnull data, int size);
 
 void __attribute__((overloadable)) init_stiff_force(stiff_force_f * __nonnull data, int size);
 void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull data, int size);
+
+void init_color_data(colors_data * __nonnull data, int size);
 
