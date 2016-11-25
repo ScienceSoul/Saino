@@ -2905,44 +2905,46 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // of the number of elements in each color set. Adjust the number of elements in the color set accordingly
     int totElements = 0;
     int *adjusted_colorMapping = NULL;
-    if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
-        int adjust = 0;
-        if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
-            adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
-        } else {
-            fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Missing parameter to adjust color sets.");
-        }
-        
-        int nbElements;
-        totElements = 0;
-        for (NSMutableArray *color in mesh.colors) {
-            nbElements = [color[0] intValue];
-            nbElements = nbElements + (adjust - (nbElements & (adjust-1)));
-            totElements += nbElements;
-        }
-        Element_t *elements = mesh.getElements;
-        adjusted_colorMapping = calloc(totElements, sizeof(int));
-        int indx = 0, add;
-        for (NSMutableArray *color in mesh.colors) {
-            // First the real elements for a given color
-            for (int i=0; i<mesh.numberOfBulkElements; i++) {
-                if (elements[i].color.colorIndex-1 == [color[1] intValue]) {
-                    adjusted_colorMapping[indx] = elements[i].ElementIndex-1;
+    if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
+        if ([solution.solutionInfo[@"use gpu local memory"] boolValue] == YES || [solution.solutionInfo[@"parallel assembly enable work-groups"] boolValue] == YES) {
+            int adjust = 0;
+            if (solution.solutionInfo[@"adjust global work size to be a multiple of"] != nil) {
+                adjust = [solution.solutionInfo[@"adjust global work size to be a multiple of"] intValue];
+            } else {
+                fatal("FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh", "Missing parameter to adjust color sets.");
+            }
+            
+            int nbElements;
+            totElements = 0;
+            for (NSMutableArray *color in mesh.colors) {
+                nbElements = [color[0] intValue];
+                nbElements = nbElements + (adjust - (nbElements & (adjust-1)));
+                totElements += nbElements;
+            }
+            Element_t *elements = mesh.getElements;
+            adjusted_colorMapping = calloc(totElements, sizeof(int));
+            int indx = 0, add;
+            for (NSMutableArray *color in mesh.colors) {
+                // First the real elements for a given color
+                for (int i=0; i<mesh.numberOfBulkElements; i++) {
+                    if (elements[i].color.colorIndex-1 == [color[1] intValue]) {
+                        adjusted_colorMapping[indx] = elements[i].ElementIndex-1;
+                        indx++;
+                    }
+                }
+                // Add the gost elements (element index=-1) for a given color
+                nbElements = [color[0] intValue];
+                add = (nbElements + (adjust - (nbElements & (adjust-1)))) - nbElements;
+                for (int i=0; i<add; i++) {
+                    adjusted_colorMapping[indx] = -1;
                     indx++;
                 }
+                color[0] = @(nbElements + (adjust - (nbElements & (adjust-1))));
             }
-            // Add the gost elements (element index=-1) for a given color
-            nbElements = [color[0] intValue];
-            add = (nbElements + (adjust - (nbElements & (adjust-1)))) - nbElements;
-            for (int i=0; i<add; i++) {
-                adjusted_colorMapping[indx] = -1;
-                indx++;
+            fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: number of elements after adjustement: \n");
+            for (NSMutableArray *color in mesh.colors) {
+                fprintf(stdout, "color index: %d: %d\n", [color[1] intValue], [color[0] intValue]);
             }
-            color[0] = @(nbElements + (adjust - (nbElements & (adjust-1))));
-        }
-        fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: number of elements after adjustement: \n");
-        for (NSMutableArray *color in mesh.colors) {
-            fprintf(stdout, "color index: %d: %d\n", [color[1] intValue], [color[0] intValue]);
         }
     }
     

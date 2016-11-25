@@ -543,22 +543,38 @@
     FEMSetUp *setUP = [[FEMSetUp alloc] init];
     if ([name isEqualToString:@"setUpISMIP_HOM_A010"]) {
         [setUP setUpISMIP_HOM_A010:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_Coloring:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense1"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense1:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense2"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense2:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_dense3"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_Coloring_dense3:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_NonZeros:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense1"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense1:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense2"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense2:self];
-    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_dense3"]) {
-        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_dense3:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_20x20"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_20x20:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_40x40"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_40x40:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_70x70"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_70x70:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_100x100"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_100x100:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_120x120"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_120x120:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_150x150"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_150x150:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_Coloring_170x170"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_Coloring_170x170:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_20x20"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_20x20:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_40x40"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_40x40:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_70x70"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_70x70:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_100x100"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_100x100:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_120x120"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_120x120:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_150x150"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_150x150:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_A010_GPU_NonZeros_170x170"]) {
+        [setUP setUpISMIP_HOM_A010_GPU_NonZeros_170x170:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_B010"]) {
+        [setUP setUpISMIP_HOM_B010:self];
+    } else if ([name isEqualToString:@"setUpISMIP_HOM_C010"]) {
+        [setUP setUpISMIP_HOM_C010:self];
     }
 
 #endif

@@ -1210,8 +1210,6 @@ static dispatch_once_t onceToken;
     
     mod.meshDir = [NSMutableString stringWithString:[self.path stringByAppendingPathComponent:@"ISMIP-HOM-C010"]];
     mod.meshName = [NSMutableString stringWithString:@"rectangle"];
-
-    
 }
 
 @end

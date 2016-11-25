@@ -46,8 +46,13 @@
         if (varContainers->sizeValues == variable.dofs) continue;
         if (variable.isSecondary == YES) continue;
         
-        NSString *string = [variable.name substringToIndex:10];
-        if (variable.dofs == 1 && [string isEqualToString:@"coordinate"] == NO) {
+        NSString *string;
+        if (variable.name.length < 10) { // 10 is the size of the string "coordinate"
+            string = @"xxxxxxxxxxxx";
+        } else {
+            string = variable.name;
+        }
+        if (variable.dofs == 1 && [[string substringToIndex:10] isEqualToString:@"coordinate"] == NO) {
             only = YES;
             oldSol = [utilities getVariableFrom:oldMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
             newSol = [utilities getVariableFrom:newMesh.variables model:model name:variable.name onlySearch:&only maskName:NULL info:&stat];
@@ -389,8 +394,13 @@
             
             newSol = nil;
             oldSol = nil;
-            NSString *string = [variable.name substringToIndex:10];
-            if (variable.dofs == 1 && [string isEqualToString:@"coordinate"] == NO) {
+            NSString *string;
+            if (variable.name.length < 10) { // 10 is the size of the string "coordinate"
+                string = @"xxxxxxxxxxxx";
+            } else {
+                string = variable.name;
+            }
+            if (variable.dofs == 1 && [[string substringToIndex:10] isEqualToString:@"coordinate"] == NO) {
                 
                 // Interpolate variable at point in element
                 newSol = [utilities getVariableFrom:newMesh.variables model:model name:variable.name onlySearch:&searchOnly maskName:NULL info:&found];

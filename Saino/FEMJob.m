@@ -1126,13 +1126,20 @@ jump:
 }
 
 /***********************************************************************************
+ 
     Save fields in a file that may be used for restarting a simulation.
-    The data is saved in ascii format (no binary format support yet).
+    The data is saved in ascii format.
+ 
+    TODO: binary format not supported yet
+ 
+     Method corresponds mostly to Elmer from git on October 27 2015
+ 
 ***********************************************************************************/
 -(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface post:(FEMPost * __nonnull)post {
     
-    int i, k, dofs, n, saveCount;
-    BOOL found, freeSurfaceFlag, moveBoundary, sameAsPrev, all;
+    int i, k, k2, dofs, n, permSize, saveCount;
+    BOOL all, found, moveBoundary, outputVariableList, sameAsPrev, saveCoordinates, saveGlobal, saveThis;
+    NSString *eqName;
     NSMutableString *fName;
     FEMListUtilities *listUtilities;
     FEMUtilities *utilities;
@@ -1151,21 +1158,32 @@ jump:
             [fName appendString:fileName];
         }
     }
+    if (mesh.savesDone == 0) {
+        fprintf(stdout, "-----------------------------------------------------\n");
+        fprintf(stdout, "FEMJob_saveResult: saving results to file: %s.\n", [fName UTF8String]);
+    }
+    
+    saveGlobal = [listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"outut global variables" info:&found];
+    outputVariableList = [listUtilities listCheckPresentVariable:@"output variable 1" inArray:model.simulation.valuesList];
     
     if (freeSurface != NULL) {
-        freeSurfaceFlag = *freeSurface;
+        saveCoordinates = *freeSurface;
     } else {
-        freeSurfaceFlag = NO;
+        saveCoordinates = NO;
         moveBoundary = NO;
         for (FEMBoundaryCondition *boundaryCondition in model.boundaryConditions) {
-            freeSurfaceFlag = (freeSurfaceFlag == YES || [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"free surface" info:&found] == YES) ? YES : NO;
-            if (freeSurfaceFlag == YES) {
+            saveCoordinates = [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"free surface" info:&found];
+            if (saveCoordinates == YES) {
                 moveBoundary = [listUtilities listGetLogical:model inArray:boundaryCondition.valuesList forVariable:@"internal move boundary" info:&found];
-                if (found == NO) moveBoundary = YES;
-                freeSurfaceFlag = (freeSurfaceFlag == YES && moveBoundary == YES) ? YES : NO;
+                if (found == YES) saveCoordinates = moveBoundary;
             }
-            if (freeSurfaceFlag == YES) break;
+            if (saveCoordinates == YES) break;
         }
+    }
+    if ([listUtilities listGetLogical:model inArray:model.simulation.valuesList forVariable:@"output coordinates" info:&found] == YES)
+        saveCoordinates = YES;
+    if (saveCoordinates == YES) {
+        if (mesh.savesDone == 0) fprintf(stdout, "FEMJob_saveResult: saving also coordinates.\n");
     }
     
     fileManager = [NSFileManager defaultManager];
@@ -1191,54 +1209,113 @@ jump:
             }
         }
         // The first time, we start by writing the header
-        [post writeString:@"ACSII 1" toFileHandle:outputFileHandle]; [outputFileHandle writeData:newLineBuff];
+        fprintf(stdout, "FEMJob_saveResult: writing the header part.\n");
+        [post writeString:@" ASCII 3" toFileHandle:outputFileHandle]; [outputFileHandle writeData:newLineBuff];
         [post writeString:@"!File started at: " toFileHandle:outputFileHandle];
         NSString *dateString = [NSString stringWithCString:dateAndTime() encoding:NSASCIIStringEncoding];
         [post writeString:dateString toFileHandle:outputFileHandle];
         [outputFileHandle writeData:newLineBuff];
         
-        [post writeString:@"Degrees of freedom:" toFileHandle:outputFileHandle];
-        [outputFileHandle writeData:newLineBuff];
         dofs = 0;
-        for (FEMVariable *variable in mesh.variables) {
-            if (variable.output == YES) {
+        [post writeString:@" Degrees of freedom:" toFileHandle:outputFileHandle];
+        [outputFileHandle writeData:newLineBuff];
+        NSSet *set = [NSSet setWithObjects:@" ", @"0", @"1", @"2", @"3", @"4", @"5", @"6",
+                      @"7", @"8", @"9", nil];
+        for (int isVector=1; isVector>=0; isVector--) {
+            for (FEMVariable *variable in mesh.variables) {
                 varContainers = variable.getContainers;
-                if (variable.dofs > 1 && varContainers->sizeValues > 1) {
-                    if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
+                if (variable.output == YES) {
+                    saveThis = NO;
+                    if (varContainers->sizeValues == variable.dofs) {
+                        saveThis = saveGlobal;
+                    } else {
+                        NSString *string;
+                        if (variable.name.length < 10) { // 10 is the size of the string "coordinate"
+                            string = @"xxxxxxxxxxxx";
+                        } else {
+                            string = variable.name;
+                        }
+                        if ([[string substringToIndex:10] isEqualToString:@"coordinate"] == NO || saveCoordinates == YES) {
+                            saveThis = YES;
+                        }
+                    }
+                    
+                    if (isVector == 1 && variable.dofs == 1) saveThis = NO;
+                    if (isVector == 0 && variable.dofs > 1) saveThis = NO;
+                    
+                    k = (int)variable.name.length;
+                    if (outputVariableList == YES && saveThis == YES) {
+                        saveThis = NO;
+                        for (int j=1; j<=1000; j++) {
+                            NSString *varName = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:[@"output variable " stringByAppendingString:[NSString stringWithFormat:@"%d",j]] info:&found];
+                            if (found == NO) break;
+                            k2 = (int)varName.length;
+                            if ([[varName substringToIndex:k2] isEqualToString:[variable.name substringToIndex:k]] == YES) {
+                                saveThis = YES;
+                                // This makes it possible to request saving of vectors
+                                // so that also all the corresponding scalar components (1, 2, 3, ...) are saved
+                                if (k > k2) {
+                                    saveThis = ([set containsObject:[[variable.name substringFromIndex:k2+1] substringToIndex:k]] == YES) ? YES : NO ;
+                                    if (saveThis == YES) break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (saveThis == YES) {
+                        FEMSolution *solution = (FEMSolution *)variable.solution;
+                        if (solution != nil) {
+                            if (solution.solutionInfo[@"equation"] != nil) {
+                                eqName = solution.solutionInfo[@"equation"];
+                            } else {
+                                eqName = @"no equation";
+                            }
+                        }
+                        
+                        if (varContainers->Perm != NULL) {
+                            permSize = varContainers->sizePerm;
+                        }
+                        else {
+                            permSize = 0;
+                        }
+                        
                         [post writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [post writeString:@":" toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        if (variable.isComponentVariable == YES) {
+                            [post writeInteger:varContainers->sizeComponentValues toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        } else {
+                            [post writeInteger:varContainers->sizeValues toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        }
+                        [post writeInteger:permSize toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
                         [post writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
-                        [post writeString:@" :fs" toFileHandle:outputFileHandle];
+                        [post writeString:@":" toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [post writeString:eqName toFileHandle:outputFileHandle];
                         [outputFileHandle writeData:newLineBuff];
+                        
+                        if (isVector == 0) {
+                            dofs++;
+                            if (binary) {
+                                // TODO:....
+                            }
+                        }
                     }
                 }
             }
         }
         
-        for (FEMVariable *variable in mesh.variables) {
-            if (variable.output == YES) {
-                varContainers = variable.getContainers;
-                if (variable.dofs == 1 && varContainers->sizeValues > 1) {
-                    if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
-                        [post writeString:variable.name toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
-                        [post writeInteger:variable.dofs toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
-                        [post writeString:@" :fs" toFileHandle:outputFileHandle];
-                        if (variable.dofs == 1) dofs++;
-                        [outputFileHandle writeData:newLineBuff];
-                    }
-                }
-            }
-        }
-        [post writeString:@"Total Dofs: " toFileHandle:outputFileHandle];
+        [post writeString:@" Total Dofs: " toFileHandle:outputFileHandle];
         [post writeInteger:dofs toFileHandle:outputFileHandle];
         [outputFileHandle writeData:newLineBuff];
-        [post writeString:@"Number of Nodes: " toFileHandle:outputFileHandle];
+        [post writeString:@" Number of Nodes: " toFileHandle:outputFileHandle];
         [post writeInteger:mesh.numberOfNodes toFileHandle:outputFileHandle];
         [outputFileHandle writeData:newLineBuff];
+        
     } else {
         outputFileHandle = [NSFileHandle fileHandleForWritingAtPath:fName];
         [outputFileHandle seekToEndOfFile];
     }
     
+    if (mesh.savesDone == 0) fprintf(stdout, "FEMJob_saveResult: writing data for the current time step.\n");
     [post writeString:@"Time: " toFileHandle:outputFileHandle];
     [post writeInteger:mesh.savesDone+1 toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
     [post writeInteger:time toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
@@ -1249,76 +1326,121 @@ jump:
     prev = allocateVariableContainer();
     for (FEMVariable *variable in mesh.variables) {
         varContainers = variable.getContainers;
-        if (variable.output == YES && variable.dofs == 1 && varContainers->sizeValues > 1) {
-            if ([variable.name length] < 10 || [[variable.name substringToIndex:10] isEqualToString:@"coordinate"] == NO || freeSurfaceFlag == YES) {
-                if (saveAll == YES || variable.valuesChanged == YES) {
-                    [post writeString:variable.name toFileHandle:outputFileHandle];
+        saveThis = NO;
+        
+        if (variable.output == YES && variable.dofs == 1) {
+            if (variable.dofs == varContainers->sizeValues) {
+                saveThis = saveGlobal;
+            } else {
+                NSString *string;
+                if (variable.name.length < 10) {
+                    string = @"xxxxxxxxxxxx";
+                } else {
+                    string = variable.name;
+                }
+                if ([[string substringToIndex:10] isEqualToString:@"coordinate"] == NO || saveCoordinates == YES) {
+                    saveThis = YES;
+                }
+            }
+        }
+        
+        if (outputVariableList == YES && saveThis == YES) {
+            saveThis = NO;
+            for (int j=1; j<=1000; j++) {
+                NSString *varName = [listUtilities listGetString:model inArray:model.simulation.valuesList forVariable:[@"output variable " stringByAppendingString:[NSString stringWithFormat:@"%d",j]] info:&found];
+                if (found == NO) break;
+                if ([varName isEqualToString:variable.name] == YES) {
+                    saveThis = YES;
+                    break;
+                }
+            }
+        }
+        
+        if (saveThis == YES) {
+            if (saveAll == YES || variable.valuesChanged == YES) {
+                [post writeString:variable.name toFileHandle:outputFileHandle];
+                [outputFileHandle writeData:newLineBuff];
+                // Permutations...
+                if (varContainers->Perm == NULL) {
+                    [post writeString:@"Perm: NULL" toFileHandle:outputFileHandle];
                     [outputFileHandle writeData:newLineBuff];
-                    // Permutations...
-                    if (varContainers->Perm == NULL) {
-                        [post writeString:@"Perm: NULL" toFileHandle:outputFileHandle];
+                } else {
+                    sameAsPrev = NO;
+                    if (varContainers->Perm == prev->Perm) {
+                        sameAsPrev = YES;
+                    } else if (prev->Perm != NULL) {
+                        if (varContainers->sizePerm == prev->sizePerm) {
+                            all = YES;
+                            for (i=0; i<varContainers->sizePerm; i++) {
+                                if (varContainers->Perm[i] != prev->Perm[i]) {
+                                    all = NO;
+                                    break;
+                                }
+                            }
+                            if (all == YES) sameAsPrev = YES;
+                        }
+                    }
+                    if (sameAsPrev == YES) {
+                        [post writeString:@"Perm: use previous" toFileHandle:outputFileHandle];
                         [outputFileHandle writeData:newLineBuff];
                     } else {
-                        sameAsPrev = NO;
-                        if (varContainers->Perm == prev->Perm) {
-                            sameAsPrev = YES;
-                        } else if (prev->Perm != NULL) {
-                            if (varContainers->sizePerm == prev->sizePerm) {
-                                all = YES;
-                                for (i=0; i<varContainers->sizePerm; i++) {
-                                    if (varContainers->Perm[i] != prev->Perm[i]) {
-                                        all = NO;
-                                        break;
-                                    }
-                                }
-                                if (all == YES) sameAsPrev = YES;
-                            }
+                        prev->Perm = varContainers->Perm;
+                        n = 0;
+                        for (i=0; i<varContainers->sizePerm; i++) {
+                            if (varContainers->Perm[i] >= 0) n++;
                         }
-                        if (sameAsPrev == YES) {
-                            [post writeString:@"Perm: use previous" toFileHandle:outputFileHandle];
-                            [outputFileHandle writeData:newLineBuff];
-                        } else {
-                            prev->Perm = varContainers->Perm;
-                            n = 0;
-                            for (i=0; i<varContainers->sizePerm; i++) {
-                                if (varContainers->Perm[i] >= 0) n++;
-                            }
-                            [post writeString:@"Perm: " toFileHandle:outputFileHandle];
-                            [post writeInteger:varContainers->sizePerm toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
-                            [post writeInteger:n toFileHandle:outputFileHandle];
-                            [outputFileHandle writeData:newLineBuff];
-                            for (i=0; i<varContainers->sizePerm; i++) {
-                                if (varContainers->Perm[i] >= 0) {
-                                    [post writeInteger:i+1 toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
-                                    [post writeInteger:varContainers->Perm[i]+1 toFileHandle:outputFileHandle];
-                                    [outputFileHandle writeData:newLineBuff];
-                                }
+                        [post writeString:@"Perm: " toFileHandle:outputFileHandle];
+                        [post writeInteger:varContainers->sizePerm toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                        [post writeInteger:n toFileHandle:outputFileHandle];
+                        [outputFileHandle writeData:newLineBuff];
+                        for (i=0; i<varContainers->sizePerm; i++) {
+                            if (varContainers->Perm[i] >= 0) {
+                                [post writeInteger:i+1 toFileHandle:outputFileHandle]; [outputFileHandle writeData:spaceBuff];
+                                [post writeInteger:varContainers->Perm[i]+1 toFileHandle:outputFileHandle];
+                                [outputFileHandle writeData:newLineBuff];
                             }
                         }
                     }
-                    
-                    if (varContainers->Perm != NULL) {
-                        n = varContainers->sizePerm;
-                    } else {
-                        n = mesh.numberOfNodes;
-                    }
-                    
-                    // and the values...
-                    for (i=0; i<n; i++) {
-                        k = 0;
-                        if (varContainers->Perm != NULL) k = varContainers->Perm[i];
-                        if (k >= 0) {
-                            [post writeDouble:varContainers->Values[k] toFileHandle:outputFileHandle];
-                            [outputFileHandle writeData:newLineBuff];
-                        }
-                    }
-                    variable.valuesChanged = NO;
                 }
+                
+                if (varContainers->Perm != NULL) {
+                    n = varContainers->sizePerm;
+                } else {
+                    if (variable.isComponentVariable == YES) {
+                        n = varContainers->sizeComponentValues;
+                    } else {
+                        n = varContainers->sizeValues;
+                    }
+                }
+                
+                // and the values...
+                for (i=0; i<n; i++) {
+                    k = i;
+                    if (varContainers->Perm != NULL) k = varContainers->Perm[i];
+                    if (k >= 0) {
+                        if (variable.isComponentVariable == YES) {
+                            [post writeDouble:*(varContainers->ComponentValues[k]) toFileHandle:outputFileHandle];
+                        } else {
+                            [post writeDouble:varContainers->Values[k] toFileHandle:outputFileHandle];
+                        }
+                        [outputFileHandle writeData:newLineBuff];
+                    }
+                }
+                variable.valuesChanged = NO;
+            }
+        } else {
+            if (binary == YES) {
+                // TODO:...
             }
         }
     }
     
     [outputFileHandle closeFile];
+    if (mesh.savesDone == 0) {
+        fprintf(stdout, "FEMJob_saveResult: done writing results file.\n");
+        fprintf(stdout, "-----------------------------------------------------\n");
+    }
+    
     mesh.savesDone++;
     saveCount = mesh.savesDone;
     free(prev);
@@ -1640,7 +1762,7 @@ jump:
                 }
                 FEMMeshUtils *meshUtils = [[FEMMeshUtils alloc] init];
                 extrudedMesh = [meshUtils extrudeMesh:self.model.meshes[0] inLevels:extrudeLevels-2 model:self.model];
-                fprintf(stdout, "FEMJob:runWithInitialize: number of bulk elements after extrusion: %d\n", extrudedMesh.numberOfBulkElements);
+                fprintf(stdout, "FEMJob:runWithInitialize: number of mesh elements after extrusion: %d\n", extrudedMesh.numberOfBulkElements+extrudedMesh.numberOfBoundaryElements);
                 for (FEMSolution *solution in self.model.solutions) {
                     if (solution.mesh == self.model.meshes[0]) {
                         solution.mesh = extrudedMesh;
