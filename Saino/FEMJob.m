@@ -163,7 +163,9 @@
 }
 
 /*******************************************************************
+ 
     Add coordinate and time variables to the meshe(s) in the model
+ 
 *******************************************************************/
 -(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * __nonnull)model {
     
@@ -360,7 +362,9 @@
 }
 
 /*************************************************************
+ 
     Check if we are restarting, and if yes read field values
+ 
 *************************************************************/
 -(void)FEMJob_restartModel:(FEMModel * __nonnull)model {
     
@@ -410,9 +414,11 @@
     }
 }
 
-/******************************************
+/***********************************************
+ 
     Set initial conditions for the fields
-******************************************/
+ 
+***********************************************/
 -(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model {
     
     int j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
@@ -972,7 +978,9 @@ jump:
 }
 
 /***********************************************************************************
+ 
     Saves results file to post proecessing file of ElmerPost format if requested
+ 
 ***********************************************************************************/
 -(void)FEMJob_saveToPostModel:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post {
     
@@ -1132,7 +1140,7 @@ jump:
  
     TODO: binary format not supported yet
  
-     Method corresponds mostly to Elmer from git on October 27 2015
+    Method corresponds mostly to Elmer from git on October 27 2015
  
 ***********************************************************************************/
 -(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface post:(FEMPost * __nonnull)post {
@@ -1450,7 +1458,9 @@ jump:
 
 
 /***********************************************************************************
+ 
     Saves current time step to external files
+ 
 ***********************************************************************************/
 -(void)FEMJob_saveCurrent:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post {
     
