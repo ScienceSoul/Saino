@@ -3,7 +3,7 @@
 //  SainoCore
 //
 //  Created by Seddik hakime on 09/10/2015.
-//  Copyright © 2015 Institute of Low Temperature Science. All rights reserved.
+//  Copyright © 2015 ScienceSoul. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
