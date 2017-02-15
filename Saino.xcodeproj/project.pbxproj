@@ -238,6 +238,7 @@
 		010ACFB21CCF686400CA1D9F /* GPUData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUData.h; sourceTree = "<group>"; };
 		013558141CFFE10600311691 /* GPUData.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GPUData.c; sourceTree = "<group>"; };
 		014AAB0B1CA11B360036F6CF /* NavierStokesAssemblyKernel.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; lineEnding = 0; path = NavierStokesAssemblyKernel.cl; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
+		0161B27E1E543B2C00DDB54E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		017309C11CE5E6F7000FA8C0 /* GPUUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GPUUtils.c; sourceTree = "<group>"; };
 		017309C21CE5E6F7000FA8C0 /* GPUUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUUtils.h; sourceTree = "<group>"; };
 		018039FC1D2F4F2400DDDD64 /* FEMSetUp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FEMSetUp.m; sourceTree = "<group>"; };
@@ -538,6 +539,7 @@
 		7315511213583FFD004CCD09 = {
 			isa = PBXGroup;
 			children = (
+				0161B27E1E543B2C00DDB54E /* README.md */,
 				738AB9E31BC7C51C0038AAEF /* SainoCore */,
 				7315512713583FFD004CCD09 /* Saino */,
 				730C42CD1B2686E2009411B7 /* Saino App Tests */,
