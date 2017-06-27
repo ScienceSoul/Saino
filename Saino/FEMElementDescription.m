@@ -2488,7 +2488,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
 
 ************************************************************/
--(void)invertMatrix3x3:(double[][3])G inverted:(double[][3])GI detG:(double)detG {
+-(void)invertMatrix3x3:(double[_Nonnull][3])G inverted:(double[_Nonnull][3])GI detG:(double)detG {
     
     double s = 1.0 / detG;
     

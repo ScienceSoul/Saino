@@ -38,8 +38,8 @@
 -(void)addVectorTo:(NSMutableArray * __nonnull)anArray mesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution name:(NSString * __nonnull)name dofs:(int * __nullable)dofs container:(variableArraysContainer * __nonnull)aContainer ifOutput:(BOOL * __nullable)output ifSecondary:(BOOL * __nullable)secondary global:(BOOL * __nullable)global initValue:(double * __nullable)initValue;
 -(double)interpolateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff;
 -(double)derivateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff;
--(void)solveLinearSystem2x2:(double[][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
--(void)solveLinearSystem3x3:(double[][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
+-(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
+-(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
 -(FEMMatrix * __nonnull)meshProjectorMesh1:(FEMMesh * __nonnull)mesh1 mesh2:(FEMMesh * __nonnull)mesh2 model:(FEMModel * __nonnull)model useQuadrantTree:(BOOL * __nullable)quadrantTree transpose:(BOOL * __nullable)transs;
 -(double)cublicSplineX:(double * __nonnull)x Y:(double * __nonnull)y R:(double * __nonnull)r T:(double)t;
 

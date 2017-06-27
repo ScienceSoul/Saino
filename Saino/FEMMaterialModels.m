@@ -45,7 +45,7 @@
     Note: Actually square of the second invariant of the velocity is returned
  
 ******************************************************************************/
--(double)secondInvariantVelo:(double[3])velo dVelodx:(double[][3])dVelodx crtMatrix:(double[][3])crtMatrix symbols:(double[][3][3])symbols model:(FEMModel* __nonnull)model {
+-(double)secondInvariantVelo:(double[_Nonnull 3])velo dVelodx:(double[_Nonnull][3])dVelodx crtMatrix:(double[_Nullable][3])crtMatrix symbols:(double[_Nullable][3][3])symbols model:(FEMModel* __nonnull)model {
     
     int i, j, k, l;
     double s, t;

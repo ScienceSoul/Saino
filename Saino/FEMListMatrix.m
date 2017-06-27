@@ -147,7 +147,7 @@
 -(void)addToMatrixElement:(ListMatrix_t * __nonnull)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL * __nullable)setValue {
     
     ListMatrixEntry_t *entry = NULL;
-    BOOL set;
+    BOOL set=NO;
     
     if (setValue != NULL) set = *setValue;
     

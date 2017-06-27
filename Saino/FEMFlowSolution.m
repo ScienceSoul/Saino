@@ -1799,12 +1799,12 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     // in this case of size:
     //  number of rows = number of work groups  * 64 = (work space / 256) * 64
     //  number of cols = number of NZs per thread * (max source indexes+number of target index) = 4 * (8+1)
-    int blockSize;
+    int blockSize = 0;
     if (solution.solutionInfo[@"nonzeros assembly thread block size"] != nil) {
         blockSize = [solution.solutionInfo[@"nonzeros assembly thread block size"] intValue];
     } else fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Nonzeros assembly thread block size not found.");
     
-    int nzPerThread;
+    int nzPerThread = 0;
     if (solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] != nil) {
         nzPerThread = [solution.solutionInfo[@"nonzeros assembly nonzeros per thread"] intValue];
     } else fatal("FEMFlowSolution:FEMFlowSolution_init_reduction_lists", "Nonzeros assembly nonzeros per thread not found.");
@@ -2462,7 +2462,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 
 -(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
-    cl_int err;
+    cl_int err=0;
     cl_uint argIdx = 0;
     
     if ([solution.solutionInfo[@"parallel assembly method"] isEqualToString:@"element coloring"] == YES) {
@@ -3417,7 +3417,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
 
 -(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
-    int i, j, k, n, t, bf_id, body_id, eq_id, mat_id, compressibilityModel=-1, dim, freeSIter, iter, modelCoords=0, modelDim=0, newtonIter, nonLinearIter;
+    int i, j, k, n, t, bf_id, body_id, eq_id=0, mat_id=0, compressibilityModel=-1, dim, freeSIter, iter, modelCoords=0, modelDim=0, newtonIter, nonLinearIter;
     static int dt, saveTimeStep=-1;
     int *tempPerm = NULL, *meshVeloPerm = NULL;
     double *temperature = NULL, *tempPrev = NULL, *meshVelocity = NULL;

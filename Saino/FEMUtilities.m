@@ -986,7 +986,7 @@
     return f;
 }
 
--(void)solveLinearSystem2x2:(double[][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
     
     double detA;
     
@@ -1002,7 +1002,7 @@
     x[1] = detA * ( a[0][0] * b[1] - a[1][0] * b[0] );
 }
 
--(void)solveLinearSystem3x3:(double[][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
     
     double c[2][2], y[2], g[2], s, t, q;
     
@@ -1888,11 +1888,11 @@
 ********************************************************************************************************/
 -(void)addEquationToSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model transient:(BOOL)transient {
     
-    int i, j, k, l, dofs, nrows, n, mgLevels;
+    int i, j, k, l, dofs, nrows, n, mgLevels=0;
     double *sol;
     NSString *tmpName, *methodName;
     NSMutableString *varName, *str;
-    BOOL found, onlySearch, secondary, variableOutput, harmonicAnal, eigenAnal, complexFlag, multigridActive, mgAlgebraic;
+    BOOL found, onlySearch, secondary, variableOutput, harmonicAnal, eigenAnal, complexFlag, multigridActive, mgAlgebraic=NO;
     FEMCore *core;
     FEMVariable *var;
     FEMMesh *newMesh, *oldMesh;

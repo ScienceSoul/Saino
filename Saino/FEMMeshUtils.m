@@ -543,7 +543,7 @@
     Element_t *elements = mesh.getElements, *left = NULL, *newFace = NULL, *oldFace = NULL, *swap = NULL, *right = NULL;
     if (doEdges == YES) {
         edgeDone = boolvec(0, mesh.numberOfEdges-1);
-        memset(edgeDone, 0, n*sizeof(bool));
+        memset(edgeDone, 0, mesh.numberOfEdges*sizeof(bool));
         indp = indpoffset;
         
         for (int t=0; t<mesh.numberOfBoundaryElements; t++) {
@@ -6163,7 +6163,7 @@ jump:
 *********************************************************************************************************************************/
 -(FEMVariable * __nullable)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * __nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * __nullable)midNodePointer midLayerExists:(BOOL * __nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * __nullable)nodeLayer {
     
-    int activeDirection, dim, ii, jj;
+    int activeDirection=0, dim, ii, jj;
     double at0, at1, dotProduct, elemVector[3], eps, length, unitVector[3], *values = NULL, vector[3], vector2[3];
     NSString *coordTransform;
     FEMVariable *variable;

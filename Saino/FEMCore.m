@@ -3536,7 +3536,7 @@ static dispatch_once_t onceToken;
 **************************************************************************************/
 -(void)getNodes:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model inElement:(Element_t * __nonnull)element resultNodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int * __nullable)nd mesh:(FEMMesh * __nullable)mesh {
     
-    int i, n, nb, sz, sz1;
+    int i, n, nb, sz=0, sz1=0;
     FEMMesh *msh;
     
     if (solution != nil) msh = solution.mesh;

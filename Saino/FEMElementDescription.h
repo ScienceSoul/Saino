@@ -47,7 +47,7 @@
 -(void)globalToLocalFromElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes localU:(double * __nonnull)u localV:(double * __nonnull)v localW:(double * __nonnull)w x:(double)x y:(double)y z:(double)z model:(FEMModel * __nonnull)model;
 -(double)interpolate2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v;
 -(double)interpolate3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w;
--(void)invertMatrix3x3:(double[][3])G inverted:(double[][3])GI detG:(double)detG;
+-(void)invertMatrix3x3:(double[_Nonnull][3])G inverted:(double[_Nonnull][3])GI detG:(double)detG;
 -(void)getEdgeBasisElement:(Element_t * __nonnull)element wBasis:(double * __nonnull * __nonnull)wBasis rotWBasis:(double * __nonnull * __nonnull)rotWBasis basis:(double * __nonnull)basis dBasisdx:(double * __nonnull * __nonnull)dBasisdx;
 
 -(void)deallocation;

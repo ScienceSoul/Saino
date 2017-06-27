@@ -25,13 +25,13 @@
 #include <stdbool.h>
 #include "Constructors.h"
 
-void __attribute__((overloadable)) fatal(char head[]);
-void __attribute__((overloadable)) fatal(char head[], char message[]);
-void __attribute__((overloadable)) fatal(char head[], char message[], int n);
-void __attribute__((overloadable)) fatal(char head[], char message[], double n);
-void __attribute__((overloadable)) warning(char head[], char message[]);
-void __attribute__((overloadable)) warning(char head[], char message[], int n);
-void __attribute__((overloadable)) warning(char head[], char message[], double n);
+void __attribute__((overloadable)) fatal(char head[_Nonnull]);
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull]);
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull], int n);
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull], double n);
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull]);
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull], int n);
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull], double n);
 bool * __nonnull boolvec(long nl, long nh);
 int * __nonnull intvec(long nl, long nh);
 unsigned long * __nonnull ulongvec(long nl, long nh);

@@ -35,8 +35,7 @@ bool * __nonnull boolvec(long nl, long nh) {
 	return v-nl+FI_END;
 }
 
-int * __nonnull intvec(long nl, long nh)
-{
+int * __nonnull intvec(long nl, long nh) {
 	int *v;
 	
 	v = (int *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(int)));
@@ -44,8 +43,7 @@ int * __nonnull intvec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-unsigned long * __nonnull ulongvec(long nl, long nh)
-{
+unsigned long * __nonnull ulongvec(long nl, long nh) {
     unsigned long *v;
 	
 	v = (unsigned long *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(unsigned long)));
@@ -53,8 +51,7 @@ unsigned long * __nonnull ulongvec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-double * __nonnull doublevec(long nl, long nh)
-{
+double * __nonnull doublevec(long nl, long nh) {
 	
 	double *v;
 	
@@ -63,8 +60,7 @@ double * __nonnull doublevec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-float * __nonnull floatvec(long nl, long nh)
-{
+float * __nonnull floatvec(long nl, long nh) {
 	float *v;
 	
 	v = (float *)malloc((size_t) ((nh-nl+1+FI_END)*sizeof(float)));
@@ -72,8 +68,7 @@ float * __nonnull floatvec(long nl, long nh)
 	return v-nl+FI_END;
 }
 
-double complex * __nonnull cdoublevec(long nl, long nh)
-{
+double complex * __nonnull cdoublevec(long nl, long nh) {
 	
 	double complex *v;
 	
@@ -102,8 +97,7 @@ bool * __nonnull * __nonnull boolmatrix(long nrl, long nrh, long ncl, long nch) 
 	return m;
 }
 
-int * __nonnull * __nonnull intmatrix(long nrl, long nrh, long ncl, long nch)
-{
+int * __nonnull * __nonnull intmatrix(long nrl, long nrh, long ncl, long nch) {
 	
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	int **m;
@@ -123,8 +117,7 @@ int * __nonnull * __nonnull intmatrix(long nrl, long nrh, long ncl, long nch)
 	return m;
 }
 
-double * __nonnull * __nonnull doublematrix(long nrl, long nrh, long ncl, long nch)
-{
+double * __nonnull * __nonnull doublematrix(long nrl, long nrh, long ncl, long nch) {
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	double **m;
 	
@@ -143,8 +136,7 @@ double * __nonnull * __nonnull doublematrix(long nrl, long nrh, long ncl, long n
 	return m;
 }
 
-float * __nonnull * __nonnull floatmatrix(long nrl, long nrh, long ncl, long nch)
-{
+float * __nonnull * __nonnull floatmatrix(long nrl, long nrh, long ncl, long nch) {
 	long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
 	float **m;
 	
@@ -183,8 +175,7 @@ double complex * __nonnull * __nonnull cdoublematrix(long nrl, long nrh, long nc
 	return m;
 }
 
-double * __nonnull * __nonnull * __nonnull d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
-{
+double * __nonnull * __nonnull * __nonnull d3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh) {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	double ***t;
 	
@@ -217,8 +208,7 @@ double * __nonnull * __nonnull * __nonnull d3tensor(long nrl, long nrh, long ncl
 	return t;	    
 }
 
-float * __nonnull * __nonnull * __nonnull f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
-{
+float * __nonnull * __nonnull * __nonnull f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh) {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	float ***t;
 	
@@ -251,8 +241,7 @@ float * __nonnull * __nonnull * __nonnull f3tensor(long nrl, long nrh, long ncl,
 	return t;	    
 }
 
-int * __nonnull * __nonnull * __nonnull i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh)
-{
+int * __nonnull * __nonnull * __nonnull i3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ngh) {
 	long i, j, nrow=nrh-nrl+1, ncol=nch-ncl+1, ndep=ngh-ndl+1;
 	int ***t;
 	
@@ -285,33 +274,28 @@ int * __nonnull * __nonnull * __nonnull i3tensor(long nrl, long nrh, long ncl, l
 	return t;	    
 }
 
-void free_bvector(bool * __nonnull v, long nl, long nh){
+void free_bvector(bool * __nonnull v, long nl, long nh) {
     
     free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_dvector(double * __nonnull v, long nl, long nh)
-{
+void free_dvector(double * __nonnull v, long nl, long nh) {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_fvector(float * __nonnull v, long nl, long nh)
-{
+void free_fvector(float * __nonnull v, long nl, long nh) {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_ivector(int * __nonnull v, long nl, long nh)
-{
+void free_ivector(int * __nonnull v, long nl, long nh) {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_cdvector(double complex * __nonnull v, long nl, long nh)
-{
+void free_cdvector(double complex * __nonnull v, long nl, long nh) {
 	free((FREE_ARG) (v+nl-FI_END));
 }
 
-void free_ulvector(unsigned long * __nonnull v, long nl, long nh)
-{    
+void free_ulvector(unsigned long * __nonnull v, long nl, long nh) {
     free((FREE_ARG) (v+nl-FI_END));
 }
 
@@ -321,20 +305,17 @@ void free_bmatrix(bool * __nonnull * __nonnull m, long nrl, long nrh, long ncl, 
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_dmatrix(double * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
-{ 
+void free_dmatrix(double * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch) {
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_fmatrix(float * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
-{
+void free_fmatrix(float * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch) {
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_imatrix(int * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch)
-{
+void free_imatrix(int * __nonnull * __nonnull m, long nrl, long nrh, long ncl, long nch) {
 	free((FREE_ARG) (m[nrl]+ncl-FI_END));
 	free((FREE_ARG) (m+nrl-FI_END));
 }
@@ -345,66 +326,60 @@ void free_cdmatrix(double complex * __nonnull * __nonnull m, long nrl, long nrh,
 	free((FREE_ARG) (m+nrl-FI_END));
 }
 
-void free_d3tensor(double * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
-{
+void free_d3tensor(double * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh) {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));
 	free((FREE_ARG) (t[nrl]+ncl-FI_END));
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void free_f3tensor(float * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
-{
+void free_f3tensor(float * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh) {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));
 	free((FREE_ARG) (t[nrl]+ncl-FI_END));
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void free_i3tensor(int * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh)
-{
+void free_i3tensor(int * __nonnull * __nonnull * __nonnull t, long nrl, long nrh, long ncl, long nch, long ndl, long ndh) {
 	/*Free a double d3tensor allocated by d3tensor*/
 	free((FREE_ARG) (t[nrl][ncl]+ndl-FI_END));
 	free((FREE_ARG) (t[nrl]+ncl-FI_END));
 	free((FREE_ARG) (t+nrl-FI_END));
 }
 
-void __attribute__((overloadable)) fatal(char head[]) {
+void __attribute__((overloadable)) fatal(char head[_Nonnull]) {
     
     formatType = 1;
     format(head, NULL, NULL, NULL);
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[]) {
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull]) {
     
     formatType = 2;
     format(head, message, NULL, NULL);
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[], int n) {
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull], int n) {
     
     formatType = 3;
     format(head, message, &n, NULL);
 }
 
-void __attribute__((overloadable)) fatal(char head[], char message[], double n) {
+void __attribute__((overloadable)) fatal(char head[_Nonnull], char message[_Nonnull], double n) {
     
     formatType = 4;
     format(head, message, NULL, &n);
 }
 
-void __attribute__((overloadable)) warning(char head[], char message[])
-{
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull]) {
     fprintf(stdout, "%s: %s\n", head, message);
 }
 
-void __attribute__((overloadable)) warning(char head[], char message[], int n)
-{
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull], int n) {
     fprintf(stdout, "%s: %s %d\n", head, message, n);
 }
 
-void __attribute__((overloadable)) warning(char head[], char message[], double n)
-{
+void __attribute__((overloadable)) warning(char head[_Nonnull], char message[_Nonnull], double n) {
     fprintf(stdout, "%s: %s %f\n", head, message, n);
 }
 
