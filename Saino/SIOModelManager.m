@@ -23,9 +23,9 @@
 
 @interface SIOModelManager ()
 
--(int)SIOModelManager_mkdir:(NSString * __nonnull)dir;
--(int)SIOModelManager_chdir:(NSString * __nonnull)dir;
--(int)SIOModelManager_checkModel:(NSString * __nonnull)model;
+-(int)SIOModelManager_mkdir:(NSString * _Nonnull)dir;
+-(int)SIOModelManager_chdir:(NSString * _Nonnull)dir;
+-(int)SIOModelManager_checkModel:(NSString * _Nonnull)model;
 
 @end
 
@@ -37,7 +37,7 @@
 
 #pragma Private metods
 
--(int)SIOModelManager_mkdir:(NSString * __nonnull)dir {
+-(int)SIOModelManager_mkdir:(NSString * _Nonnull)dir {
     
     int rc;
     
@@ -59,7 +59,7 @@
 }
 
 
--(int)SIOModelManager_chdir:(NSString * __nonnull)dir {
+-(int)SIOModelManager_chdir:(NSString * _Nonnull)dir {
     
     int rc;
     
@@ -90,7 +90,7 @@
 }
 
 
--(int)SIOModelManager_checkModel:(NSString * __nonnull)model {
+-(int)SIOModelManager_checkModel:(NSString * _Nonnull)model {
     
     int rc, rc_access;
     struct stat buf;
@@ -167,7 +167,7 @@
     
 }
 
--(int)createModel:(NSString * __nonnull)dir {
+-(int)createModel:(NSString * _Nonnull)dir {
     
     self.modeldir = [NSString stringWithString:dir]; 
     
@@ -184,7 +184,7 @@
     return 0;
 }
 
--(int)openModel:(NSString * __nonnull)dir {
+-(int)openModel:(NSString * _Nonnull)dir {
     
     self.modeldir = [NSString stringWithString:dir];
     
@@ -206,7 +206,7 @@
     return 0;
 }
 
--(int)openStream:(NSFileHandle * __nullable)fstr name:(NSString * __nonnull)name mode:(NSString * __nonnull)mode {
+-(int)openStream:(NSFileHandle * _Nullable)fstr name:(NSString * _Nonnull)name mode:(NSString * _Nonnull)mode {
     
     if ([mode isEqualToString:@"read"]) {
         fstr = [NSFileHandle fileHandleForReadingAtPath:name];
@@ -225,13 +225,13 @@
     return 0;
 }
 
--(int)closeStrem:(NSFileHandle * __nonnull)fstr {
+-(int)closeStrem:(NSFileHandle * _Nonnull)fstr {
     
     [fstr closeFile];
     return 0;
 }
 
--(int)makeDirectory:(NSString * __nonnull)dir {
+-(int)makeDirectory:(NSString * _Nonnull)dir {
     
     return [self SIOModelManager_mkdir:dir];
 }

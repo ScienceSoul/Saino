@@ -66,99 +66,99 @@ static const int PRECOND_VANKA     =  560;
 @interface FEMCore ()
 
 // Solving linear systems and compute norms
--(void)FEMCore_iterCallType:(int)iterType solution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double *)dpar work:(double * __nonnull * __nonnull)work pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod;
--(void)FEMCore_rotateNTSystem:(double * __nonnull)vec nodeNumber:(int)nodeNumber model:(FEMModel * __nonnull)model;
--(void)FEMCore_backRotateNTSystem:(double * __nonnull)solution permutation:(int * __nonnull)perm ndofs:(int)ndofs model:(FEMModel * __nonnull)model;
--(double)FEMCore_computeNormInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model size:(int)n values:(double * __nullable)values;
--(void)FEMCore_solveLinearSystemMatrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nonnull)b result:(double * __nonnull)x norm:(double * __nonnull)norm dofs:(int)dofs solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model bulkMatrix:(FEMMatrix * __nullable)bulkMatrix;
+-(void)FEMCore_iterCallType:(int)iterType solution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double *)dpar work:(double * _Nonnull * _Nonnull)work pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod;
+-(void)FEMCore_rotateNTSystem:(double * _Nonnull)vec nodeNumber:(int)nodeNumber model:(FEMModel * _Nonnull)model;
+-(void)FEMCore_backRotateNTSystem:(double * _Nonnull)solution permutation:(int * _Nonnull)perm ndofs:(int)ndofs model:(FEMModel * _Nonnull)model;
+-(double)FEMCore_computeNormInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model size:(int)n values:(double * _Nullable)values;
+-(void)FEMCore_solveLinearSystemMatrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nonnull)b result:(double * _Nonnull)x norm:(double * _Nonnull)norm dofs:(int)dofs solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model bulkMatrix:(FEMMatrix * _Nullable)bulkMatrix;
 
 // Check passive element
--(BOOL)FEMCore_checkPassiveElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution;
+-(BOOL)FEMCore_checkPassiveElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution;
 
 // Check normal / tangential vector boundary conditions
--(void)FEMCore_checkNormalTangentialBoundaryModel:(FEMModel * __nonnull)model variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
+-(void)FEMCore_checkNormalTangentialBoundaryModel:(FEMModel * _Nonnull)model variableName:(NSString * _Nonnull)variableName dimension:(int)dimension;
 
 // Average boundary normals
--(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)variableName dimension:(int)dimension;
+-(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution variableName:(NSString * _Nonnull)variableName dimension:(int)dimension;
 
 // Rotate matrix
--(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix vector:(double * __nonnull)vector rows:(int * __nonnull)rows cols:(int * __nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes;
+-(void)FEMCore_rotateMatrix:(double * _Nonnull * _Nonnull)matrix vector:(double * _Nonnull)vector rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes;
 
 // Update global force
--(void)FEMCore_updateGlobalForceModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element forceVector:(double * __nonnull * __nonnull)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double * __nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rotateNT:(BOOL * __nullable)rotateNT;
+-(void)FEMCore_updateGlobalForceModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element forceVector:(double * _Nonnull * _Nonnull)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double * _Nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rotateNT:(BOOL * _Nullable)rotateNT;
 
 // Update force vector
--(void)FEMCore_finishAssemblyModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution forceVector:(double * __nonnull)forceVector sizeForceVector:(int)n;
+-(void)FEMCore_finishAssemblyModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution forceVector:(double * _Nonnull)forceVector sizeForceVector:(int)n;
 
 // Loads
--(void)FEMCore_setNodalLoads:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMCore_setElementLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes doneLoad:(BOOL * __nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling;
--(void)FEMCore_setPointLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling;
+-(void)FEMCore_setNodalLoads:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution variableName:(NSString * _Nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMCore_setElementLoadsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element values:(NSArray * _Nonnull)values name:(NSString * _Nonnull)name indexes:(int * _Nonnull)indexes doneLoad:(BOOL * _Nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * _Nonnull)diagScaling;
+-(void)FEMCore_setPointLoadsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element values:(NSArray * _Nonnull)values name:(NSString * _Nonnull)name indexes:(int * _Nonnull)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * _Nonnull)diagScaling;
 
 // Element and point values
--(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
--(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
+-(void)FEMCore_setElementValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
+-(void)FEMCore_setPointValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
 
 // Periodic
--(void)FEMCore_setPeriodicBoundariesPass1Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling;
--(void)FEMCore_setPeriodicBoundariesPass2Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling;
+-(void)FEMCore_setPeriodicBoundariesPass1Model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution name:(NSMutableString * _Nonnull)name dof:(int)dof this:(int)this done:(BOOL * _Nonnull)done diaginalScaling:(double * _Nonnull)diagScaling;
+-(void)FEMCore_setPeriodicBoundariesPass2Model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution name:(NSMutableString * _Nonnull)name dof:(int)dof this:(int)this done:(BOOL * _Nonnull)done diaginalScaling:(double * _Nonnull)diagScaling;
 
 // Limiter
--(void)FEMCore_determineSoftLimiterInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * __nonnull)listUtilities crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
+-(void)FEMCore_determineSoftLimiterInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)FEMCore_setLimiterValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values  orderOfDofs:(int)dof limitActive:(bool * _Nonnull)limitActive conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * _Nonnull)listUtilities crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
 
 // Rows equilibration
--(void)FEMCore_rowEquilibrationMatrix:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)f parallel:(BOOL)parallel;
--(void)FEMCore_reverseRowEquilibrationMatrix:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)f;
+-(void)FEMCore_rowEquilibrationMatrix:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)f parallel:(BOOL)parallel;
+-(void)FEMCore_reverseRowEquilibrationMatrix:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)f;
 
 // Method for coupled solution used by solveEquationsModel:timeStep:transientSimulation:coupledMinIteration:coupleMaxIteration:steadyStateReached:realTimeStep:
--(void)FEMCore_solveCoupledModel:(FEMModel * __nonnull)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL * __nonnull)doneThis afterConverged:(BOOL * __nonnull)afterConverged steadyIt:(double * __nonnull)steadyIt;
+-(void)FEMCore_solveCoupledModel:(FEMModel * _Nonnull)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL * _Nonnull)doneThis afterConverged:(BOOL * _Nonnull)afterConverged steadyIt:(double * _Nonnull)steadyIt;
 
 // Single solution
--(void)FEMCore_singleSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient;
+-(void)FEMCore_singleSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient;
 
 //
--(void)FEMCore_updateExportedVariablesSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
+-(void)FEMCore_updateExportedVariablesSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
 
 @end
 
 @implementation FEMCore {
     
-    double * __nullable * __nullable _kernStiff;
-    double * __nullable _kernWork;                         // kernStiff(maxElementDofs)(maxElementDofs), kernWork(maxElementDofs)
-    int * __nullable _g_Ind;
-    int * __nullable _l_Ind;                               // g_Ind(maxElementDofs), l_Ind(maxElementDofs)
+    double * _Nullable * _Nullable _kernStiff;
+    double * _Nullable _kernWork;                         // kernStiff(maxElementDofs)(maxElementDofs), kernWork(maxElementDofs)
+    int * _Nullable _g_Ind;
+    int * _Nullable _l_Ind;                               // g_Ind(maxElementDofs), l_Ind(maxElementDofs)
     int _size1kernStiff;
     int _size2kernStiff;
     int _sizekernWork;
     int _size_g_Ind;
     int _size_l_Ind;
     
-    int * __nonnull * __nonnull _lineEM;
-    int * __nonnull * __nonnull _triangleEM;
-    int * __nonnull * __nonnull _quadEM;
-    int * __nonnull * __nonnull _tetraEM;
-    int * __nonnull * __nonnull _prismEM;
-    int * __nonnull * __nonnull _wedgeEM;
-    int * __nonnull * __nonnull _brickEM;
+    int * _Nonnull * _Nonnull _lineEM;
+    int * _Nonnull * _Nonnull _triangleEM;
+    int * _Nonnull * _Nonnull _quadEM;
+    int * _Nonnull * _Nonnull _tetraEM;
+    int * _Nonnull * _Nonnull _prismEM;
+    int * _Nonnull * _Nonnull _wedgeEM;
+    int * _Nonnull * _Nonnull _brickEM;
     
     BOOL _initialized[8];
     
     int _k1, _n1;
-    double * __nullable _saveValues;
-    double * __nullable * __nullable _damp;
-    double * __nullable * __nullable _stiff;
-    double * __nullable * __nullable _mass;
-    double * __nullable * __nullable _x;
+    double * _Nullable _saveValues;
+    double * _Nullable * _Nullable _damp;
+    double * _Nullable * _Nullable _stiff;
+    double * _Nullable * _Nullable _mass;
+    double * _Nullable * _Nullable _x;
 
-    id <SainoSolutionsComputer> __nullable _instance;
+    id <SainoSolutionsComputer> _Nullable _instance;
 }
 
 #pragma mark Private methods...
 
 #pragma mark Solve linear systems and norms
 
--(void)FEMCore_iterCallType:(int)iterType solution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double *)dpar work:(double * __nonnull * __nonnull)work pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)FEMCore_iterCallType:(int)iterType solution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double *)dpar work:(double * _Nonnull * _Nonnull)work pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
 
     if (pcondrMethod == 0) {
         pcondrMethod = @selector(CRSPCondDummyMatrix:afterPrecondition:rightHandSide:info:);
@@ -231,7 +231,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_rotateNTSystem:(double * __nonnull)vec nodeNumber:(int)nodeNumber model:(FEMModel * __nonnull)model {
+-(void)FEMCore_rotateNTSystem:(double * _Nonnull)vec nodeNumber:(int)nodeNumber model:(FEMModel * _Nonnull)model {
     
     int i, k, dim;
     double bu, bv, bw, rm[3][3];
@@ -265,7 +265,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_backRotateNTSystem:(double * __nonnull)solution permutation:(int * __nonnull)perm ndofs:(int)ndofs model:(FEMModel * __nonnull)model {
+-(void)FEMCore_backRotateNTSystem:(double * _Nonnull)solution permutation:(int * _Nonnull)perm ndofs:(int)ndofs model:(FEMModel * _Nonnull)model {
     
     int i, j, k, l, dim;
     double bu, bv, bw, rm[3][3];
@@ -309,7 +309,7 @@ static const int PRECOND_VANKA     =  560;
     Computes the norm related to a solution vector.
  
 *******************************************************/
--(double)FEMCore_computeNormInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model size:(int)n values:(double * __nullable)values {
+-(double)FEMCore_computeNormInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model size:(int)n values:(double * _Nullable)values {
     
     int normDim, normDofs, dofs, i, j, k, l, nn, permStart, totn;
     int *iPerm;
@@ -471,7 +471,7 @@ static const int PRECOND_VANKA     =  560;
     Solves a linear system and also calls the necessary preconditioning methods
  
 *********************************************************************************/
--(void)FEMCore_solveLinearSystemMatrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nonnull)b result:(double * __nonnull)x norm:(double * __nonnull)norm dofs:(int)dofs solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model bulkMatrix:(FEMMatrix * __nullable)bulkMatrix {
+-(void)FEMCore_solveLinearSystemMatrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nonnull)b result:(double * _Nonnull)x norm:(double * _Nonnull)norm dofs:(int)dofs solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model bulkMatrix:(FEMMatrix * _Nullable)bulkMatrix {
     
     int i, j, k, l, ii, m, n, dof;
     double bnorm, sum, energy, *tempVector, *saveValues;
@@ -766,7 +766,7 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Element info
 
--(BOOL)FEMCore_checkPassiveElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution {
+-(BOOL)FEMCore_checkPassiveElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution {
     
     int body_id, bf_id, nbNodes;
     listBuffer passive = { NULL, NULL, NULL, NULL, 0, 0, 0};
@@ -819,7 +819,7 @@ static const int PRECOND_VANKA     =  560;
     space normals and if in 3D two tangent direction vectors.
  
 *************************************************************************************/
--(void)FEMCore_checkNormalTangentialBoundaryModel:(FEMModel * __nonnull)model variableName:(NSString * __nonnull)variableName dimension:(int)dimension {
+-(void)FEMCore_checkNormalTangentialBoundaryModel:(FEMModel * _Nonnull)model variableName:(NSString * _Nonnull)variableName dimension:(int)dimension {
     
     int j, k, n, t;
     BOOL conditional, found, gotIt;
@@ -934,7 +934,7 @@ static const int PRECOND_VANKA     =  560;
     Method corresponds partially to Elmer from git on October 27 2015
  
 **************************************************************************************/
--(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)variableName dimension:(int)dimension {
+-(void)FEMCore_averageBoundaryNormalsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution variableName:(NSString * _Nonnull)variableName dimension:(int)dimension {
     
     int i, j, k, l, m, n, t, tt;
     double bu, bv, detJ, *lrnm, *nrm, s, sum;
@@ -1333,7 +1333,7 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Manipulate matrix
 
--(void)FEMCore_rotateMatrix:(double * __nonnull * __nonnull)matrix vector:(double * __nonnull)vector rows:(int * __nonnull)rows cols:(int * __nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes {
+-(void)FEMCore_rotateMatrix:(double * _Nonnull * _Nonnull)matrix vector:(double * _Nonnull)vector rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols numberOfNodes:(int)n dimension:(int)dim dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes {
     
     int i, j;
     double n1[3], r[n*dofs][n*dofs], q[n*dofs][n*dofs], t1[3], t2[3], vect[n*dofs];
@@ -1395,7 +1395,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_updateGlobalForceModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element forceVector:(double * __nonnull * __nonnull)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double * __nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rotateNT:(BOOL * __nullable)rotateNT {
+-(void)FEMCore_updateGlobalForceModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element forceVector:(double * _Nonnull * _Nonnull)forceVector forceVectorUpdateAtIndex:(int)index localForce:(double * _Nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rotateNT:(BOOL * _Nullable)rotateNT {
     
     int i, j, k, dim, indexes[n];
     BOOL rotate;
@@ -1438,7 +1438,7 @@ static const int PRECOND_VANKA     =  560;
     Required only for time dependent simulations.
  
 ***********************************************************************************************/
--(void)FEMCore_finishAssemblyModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution forceVector:(double * __nonnull)forceVector sizeForceVector:(int)n {
+-(void)FEMCore_finishAssemblyModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution forceVector:(double * _Nonnull)forceVector sizeForceVector:(int)n {
     
     int i, order;
     NSString *method, *simulation;
@@ -1491,7 +1491,7 @@ static const int PRECOND_VANKA     =  560;
  beginning of the simulation by the bandwidth optimization
  
  *****************************************************************************************************************/
--(void)FEMCore_setNodalLoads:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSString * __nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMCore_setNodalLoads:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution variableName:(NSString * _Nonnull)name orderOfDofs:(int)dof listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int i, j, n, bc, t, bf_id, noNodes=0, noDims=0;
     int indexes[solution.mesh.maxElementDofs];
@@ -1682,7 +1682,7 @@ static const int PRECOND_VANKA     =  560;
     if (diagScaling != matContainers->DiagScaling) free_dvector(diagScaling, 0, solution.matrix.numberOfRows-1);
 }
 
--(void)FEMCore_setElementLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes doneLoad:(BOOL * __nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling {
+-(void)FEMCore_setElementLoadsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element values:(NSArray * _Nonnull)values name:(NSString * _Nonnull)name indexes:(int * _Nonnull)indexes doneLoad:(BOOL * _Nonnull)doneLoad size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * _Nonnull)diagScaling {
     
     int j, k, l, k1;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
@@ -1739,7 +1739,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_setPointLoadsModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element values:(NSArray * __nonnull)values name:(NSString * __nonnull)name indexes:(int * __nonnull)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * __nonnull)diagScaling {
+-(void)FEMCore_setPointLoadsModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element values:(NSArray * _Nonnull)values name:(NSString * _Nonnull)name indexes:(int * _Nonnull)indexes size:(int)n dof:(int)dof ndofs:(int)ndofs diagonalScaling:(double * _Nonnull)diagScaling {
     
     int j, k, l, k1;
     listBuffer work = { NULL, NULL, NULL, NULL, 0, 0, 0 };
@@ -1799,7 +1799,7 @@ static const int PRECOND_VANKA     =  560;
     Method corresponds mostly to Elmer from git on October 27 2015
  
 ****************************************************************************/
--(void)FEMCore_setElementValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)FEMCore_setElementValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElementNumber:(int)elno numberOfNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int i, j, k, l, m, dim, k1, kmax, lmax;
     BOOL checkNT, stat, all;
@@ -1940,7 +1940,7 @@ static const int PRECOND_VANKA     =  560;
     free_dvector(rotvec, 0, 2);
 }
 
--(void)FEMCore_setPointValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)FEMCore_setPointValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int j, k, l, k1;
     BOOL stat;
@@ -2041,7 +2041,7 @@ static const int PRECOND_VANKA     =  560;
     beginning of the simulation by the bandwidth optimization
  
 *****************************************************************************************************************/
--(void)FEMCore_setPeriodicBoundariesPass1Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling {
+-(void)FEMCore_setPeriodicBoundariesPass1Model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution name:(NSMutableString * _Nonnull)name dof:(int)dof this:(int)this done:(BOOL * _Nonnull)done diaginalScaling:(double * _Nonnull)diagScaling {
     
     int i, j, k, l, m, n, ii, p, q, nn;
     double scale;
@@ -2233,7 +2233,7 @@ static const int PRECOND_VANKA     =  560;
     Method corresponds to Elmer from git on October 27 2015 (but not entirely completed yet)
  
 *****************************************************************************************************************/
--(void)FEMCore_setPeriodicBoundariesPass2Model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution name:(NSMutableString * __nonnull)name dof:(int)dof this:(int)this done:(BOOL * __nonnull)done diaginalScaling:(double * __nonnull)diagScaling {
+-(void)FEMCore_setPeriodicBoundariesPass2Model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution name:(NSMutableString * _Nonnull)name dof:(int)dof this:(int)this done:(BOOL * _Nonnull)done diaginalScaling:(double * _Nonnull)diagScaling {
     
     int i, k, l, m, ii;
     double scale, val=0.0, valueOffset;
@@ -2320,7 +2320,7 @@ static const int PRECOND_VANKA     =  560;
     only on the second non-linear iteation round.
  
 ************************************************************************************************/
--(void)FEMCore_determineSoftLimiterInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)FEMCore_determineSoftLimiterInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, n, t, ind, dofs, dof, bf, upper, removed, added, elemFirst, elemLast, totSize, count, comp;
     double limitSign, eps;
@@ -2542,7 +2542,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_setLimiterValues:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution numberofNodes:(int)n atIndexes:(int * __nonnull)indexes forValues:(NSArray * __nonnull)values  orderOfDofs:(int)dof limitActive:(bool * __nonnull)limitActive conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * __nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * __nonnull)listUtilities crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)FEMCore_setLimiterValues:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes forValues:(NSArray * _Nonnull)values  orderOfDofs:(int)dof limitActive:(bool * _Nonnull)limitActive conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset diaginalScaling:(double * _Nonnull)diagScaling offDiaginal:(BOOL)offDiaginal  listUtilities:(FEMListUtilities * _Nonnull)listUtilities crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int j, k;
     BOOL stat;
@@ -2591,7 +2591,7 @@ static const int PRECOND_VANKA     =  560;
     number. The associated rhs vector is also scaled
  
 ****************************************************************************************/
--(void)FEMCore_rowEquilibrationMatrix:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)f parallel:(BOOL)parallel {
+-(void)FEMCore_rowEquilibrationMatrix:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)f parallel:(BOOL)parallel {
     
     int i, j, n;
     double norm, tmp;
@@ -2687,7 +2687,7 @@ static const int PRECOND_VANKA     =  560;
     done by row equilibration.
  
 *****************************************************************************************/
--(void)FEMCore_reverseRowEquilibrationMatrix:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)f {
+-(void)FEMCore_reverseRowEquilibrationMatrix:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)f {
     
     int i, j, n;
     matrixArraysContainer *matContainers = NULL;
@@ -2716,7 +2716,7 @@ static const int PRECOND_VANKA     =  560;
     matContainers->DiagScaling = NULL;
 }
 
--(void)FEMCore_solveCoupledModel:(FEMModel * __nonnull)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL * __nonnull)doneThis afterConverged:(BOOL * __nonnull)afterConverged steadyIt:(double * __nonnull)steadyIt {
+-(void)FEMCore_solveCoupledModel:(FEMModel * _Nonnull)model timeStep:(double)dt coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter transientSimulation:(BOOL)transient scanning:(BOOL)scanning doneThis:(BOOL * _Nonnull)doneThis afterConverged:(BOOL * _Nonnull)afterConverged steadyIt:(double * _Nonnull)steadyIt {
     
     int  i, j, k, n;
     double relaxation;
@@ -2926,7 +2926,7 @@ static const int PRECOND_VANKA     =  560;
     nonlinear system.
  
 **************************************************************************************************************************/
--(void)FEMCore_singleSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient {
+-(void)FEMCore_singleSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient {
     
     int i, maxDim;
     BOOL meActive;
@@ -3022,7 +3022,7 @@ static const int PRECOND_VANKA     =  560;
     }
 }
 
--(void)FEMCore_updateExportedVariablesSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)FEMCore_updateExportedVariablesSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, l, m, dofs;
     double *localSol, *localCond;
@@ -3138,10 +3138,10 @@ static const int PRECOND_VANKA     =  560;
 
 #pragma mark Singleton method
 
-static FEMCore * __nullable sharedCore = nil;
+static FEMCore * _Nullable sharedCore = nil;
 static dispatch_once_t onceToken;
 
-+(id __nonnull)sharedCore {
++(id _Nonnull)sharedCore {
     
     dispatch_once(&onceToken, ^{
         sharedCore = [[self alloc] init];
@@ -3268,7 +3268,7 @@ static dispatch_once_t onceToken;
 
 
 // Initialize solution of next time step
--(void)initializeTimeStepInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)initializeTimeStepInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, order;
     BOOL found;
@@ -3399,7 +3399,7 @@ static dispatch_once_t onceToken;
      Method corresponds to Elmer from git on October 27 2015 (but not completed yet)
  
 ***********************************************************************************************/
--(void)initializeToZeroMatrix:(FEMMatrix * __nonnull)matrix forceVector:(double * __nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution {
+-(void)initializeToZeroMatrix:(FEMMatrix * _Nonnull)matrix forceVector:(double * _Nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution {
     
     int i, dim;
     matrixArraysContainer *matContainers = NULL;
@@ -3482,7 +3482,7 @@ static dispatch_once_t onceToken;
     Performs initialization for matrix equation related to the active solution
  
 *******************************************************************************/
--(void)defaultInitializeSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)defaultInitializeSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -3497,7 +3497,7 @@ static dispatch_once_t onceToken;
     active element
  
 *****************************************************************************/
--(BOOL)getReal:(FEMModel * __nonnull)model forElement:(Element_t * __nullable)element inArray:(NSArray * __nonnull)array variableName:(NSString * __nonnull)name buffer:(listBuffer * __nonnull)result listUtilities:(FEMListUtilities * __nonnull)listUtil {
+-(BOOL)getReal:(FEMModel * _Nonnull)model forElement:(Element_t * _Nullable)element inArray:(NSArray * _Nonnull)array variableName:(NSString * _Nonnull)name buffer:(listBuffer * _Nonnull)result listUtilities:(FEMListUtilities * _Nonnull)listUtil {
     
     int n;
     int dNodes[1];
@@ -3518,7 +3518,7 @@ static dispatch_once_t onceToken;
     return found;
 }
 
--(int)isPElement:(Element_t * __nonnull)element {
+-(int)isPElement:(Element_t * _Nonnull)element {
     
     if (element->Pdefs != NULL) {
         return 1;
@@ -3534,7 +3534,7 @@ static dispatch_once_t onceToken;
     Method corresponds partially to Elmer from git on October 27 2015
  
 **************************************************************************************/
--(void)getNodes:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model inElement:(Element_t * __nonnull)element resultNodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int * __nullable)nd mesh:(FEMMesh * __nullable)mesh {
+-(void)getNodes:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model inElement:(Element_t * _Nonnull)element resultNodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int * _Nullable)nd mesh:(FEMMesh * _Nullable)mesh {
     
     int i, n, nb, sz=0, sz1=0;
     FEMMesh *msh;
@@ -3609,7 +3609,7 @@ static dispatch_once_t onceToken;
     Needed to skip nodal elements in 2D and 3D boundary condition setting.
  
 *****************************************************************************/
--(BOOL)isFluxElement:(Element_t * __nonnull)element mesh:(FEMMesh * __nonnull)mesh {
+-(BOOL)isFluxElement:(Element_t * _Nonnull)element mesh:(FEMMesh * _Nonnull)mesh {
     
     int family, meshDim;
     
@@ -3623,7 +3623,7 @@ static dispatch_once_t onceToken;
     return (meshDim <= family) ? YES : NO;
 }
 
--(int)getElementFamily:(Element_t * __nonnull)element {
+-(int)getElementFamily:(Element_t * _Nonnull)element {
     
     return element->Type.ElementCode / 100;
 }
@@ -3635,7 +3635,7 @@ static dispatch_once_t onceToken;
     Method corresponds partially to Elmer from git on October 27 2015
  
 ***********************************************************************/
--(int)getElementDofsSolution:(FEMSolution * __nullable)uSolution model:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element atIndexes:(int * __nonnull)indexes disableDiscontinuousGalerkin:(BOOL * __nullable)disableDiscontinuousGalerkin {
+-(int)getElementDofsSolution:(FEMSolution * _Nullable)uSolution model:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element atIndexes:(int * _Nonnull)indexes disableDiscontinuousGalerkin:(BOOL * _Nullable)disableDiscontinuousGalerkin {
     
     int nb, i, j, k, bid, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs, ind;
     BOOL gb;
@@ -3816,7 +3816,7 @@ static dispatch_once_t onceToken;
     return nb;
 }
 
--(int)sgetElementDofsSolution:(FEMSolution * __nullable)uSolution model:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element atIndexes:(int * __nonnull)indexes {
+-(int)sgetElementDofsSolution:(FEMSolution * _Nullable)uSolution model:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element atIndexes:(int * _Nonnull)indexes {
     
     int nb, i, j, edofs, fdofs, faceDofs, edgeDofs, bubbleDofs;
     BOOL gb;
@@ -3934,7 +3934,7 @@ static dispatch_once_t onceToken;
 }
 
 // Return the number of bubble degree of freedom in the active element
--(int)getNumberOfBubbleDofsElement:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution {
+-(int)getNumberOfBubbleDofsElement:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution {
     
     int n=0;
     BOOL gb;
@@ -3952,7 +3952,7 @@ static dispatch_once_t onceToken;
     return n;
 }
 
--(Element_t * __nonnull)getActiveElement:(int)t solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(Element_t * _Nonnull)getActiveElement:(int)t solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     Element_t *element = NULL, *elements = NULL, *currentElement = NULL;
     solutionArraysContainer *solutionContainers = NULL;
@@ -3970,12 +3970,12 @@ static dispatch_once_t onceToken;
     return element;
 }
 
--(int)getNumberOfNodesForElement:(Element_t * __nonnull)element {
+-(int)getNumberOfNodesForElement:(Element_t * _Nonnull)element {
     
     return element->Type.NumberOfNodes;
 }
 
--(int)getBoundaryConditionID:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element {
+-(int)getBoundaryConditionID:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element {
     
     int bc_id = 0;
     
@@ -3989,7 +3989,7 @@ static dispatch_once_t onceToken;
     return bc_id;
 }
 
--(NSArray * __nullable)getBoundaryCondition:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element {
+-(NSArray * _Nullable)getBoundaryCondition:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element {
     
     int bc_id;
     
@@ -4006,7 +4006,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(Element_t * __nonnull)getBoundaryElement:(FEMSolution * __nonnull)solution atIndex:(int)index {
+-(Element_t * _Nonnull)getBoundaryElement:(FEMSolution * _Nonnull)solution atIndex:(int)index {
     
     Element_t *elements;
     
@@ -4019,7 +4019,7 @@ static dispatch_once_t onceToken;
     return &elements[solution.mesh.numberOfBulkElements+index];
 }
 
--(void)getScalarLocalField:(double * __nonnull)field sizeField:(int)sizeField name:(NSString * __nullable)name element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int * __nullable)tStep {
+-(void)getScalarLocalField:(double * _Nonnull)field sizeField:(int)sizeField name:(NSString * _Nullable)name element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int * _Nullable)tStep {
     
     int i, j, n;
     double *values = NULL;
@@ -4078,7 +4078,7 @@ static dispatch_once_t onceToken;
     if (needsDeallocation == YES) free_dvector(values, 0, varContainers->size1PrevValues-1);
 }
 
--(void)getVectorLocalField:(double * __nonnull * __nonnull)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString * __nullable)name element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int * __nullable)tStep {
+-(void)getVectorLocalField:(double * _Nonnull * _Nonnull)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString * _Nullable)name element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int * _Nullable)tStep {
     
     int i, j, k, n;
     double *values = NULL;
@@ -4147,7 +4147,7 @@ static dispatch_once_t onceToken;
     Return the EdgeMap and its size (number of rows)
  
 ****************************************************/
--(int * __nonnull * __nonnull)getEdgeMap:(int)elementFamily mapSize:(int * __nullable)mapSize {
+-(int * _Nonnull * _Nonnull)getEdgeMap:(int)elementFamily mapSize:(int * _Nullable)mapSize {
     
     int **edgeMap = NULL;
     
@@ -4359,7 +4359,7 @@ static dispatch_once_t onceToken;
         int resultSize     -> Size of created index vector, i.e., how many indexes were created
  
 ************************************************************************************************/
--(void)getBoundaryIndexes:(FEMMesh * __nonnull)mesh forBoundaryElement:(Element_t * __nonnull)element withParentElement:(Element_t * __nonnull)parent resultVector:(int * __nonnull)indexes sizeVector:(int)size indexSize:(int * __nonnull)indexSize {
+-(void)getBoundaryIndexes:(FEMMesh * _Nonnull)mesh forBoundaryElement:(Element_t * _Nonnull)element withParentElement:(Element_t * _Nonnull)parent resultVector:(int * _Nonnull)indexes sizeVector:(int)size indexSize:(int * _Nonnull)indexSize {
     
     int i, j, n;
     Element_t *edges = NULL, *faces = NULL;
@@ -4430,7 +4430,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(int)getBodyForceIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model {
+-(int)getBodyForceIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model {
     
     int body_id, bf_id;
 
@@ -4444,7 +4444,7 @@ static dispatch_once_t onceToken;
     return bf_id;
 }
 
--(int)getMaterialIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model {
+-(int)getMaterialIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model {
     
     int body_id, mat_id;
     
@@ -4458,7 +4458,7 @@ static dispatch_once_t onceToken;
     return mat_id;
 }
 
--(int)getEquationIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model {
+-(int)getEquationIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model {
     
     int body_id, eq_id;
     
@@ -4477,7 +4477,7 @@ static dispatch_once_t onceToken;
     Returns a material property from either of the parents of the current boundary element
  
 *******************************************************************************************/
--(BOOL)getParentMaterialProperty:(NSString * __nonnull)name forElement:(Element_t * __nonnull)element parentElement:(Element_t * __nullable)parentElement model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities buffer:(listBuffer * __nonnull)result {
+-(BOOL)getParentMaterialProperty:(NSString * _Nonnull)name forElement:(Element_t * _Nonnull)element parentElement:(Element_t * _Nullable)parentElement model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities buffer:(listBuffer * _Nonnull)result {
     
     int leftright, mat_id, n;
     BOOL gotIt, found;
@@ -4511,7 +4511,7 @@ static dispatch_once_t onceToken;
     return gotIt;
 }
 
--(BOOL)isActiveBoundaryElement:(Element_t * __nonnull)element inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(BOOL)isActiveBoundaryElement:(Element_t * _Nonnull)element inSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     BOOL active;
     int i, n;
@@ -4539,7 +4539,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 ********************************************************************************************************************/
--(void)checkNormalTangential:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int * __nonnull)indexes atBoundary:(int)bc variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset {
+-(void)checkNormalTangential:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes atBoundary:(int)bc variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset {
     
     int i, j, k, m, dim, kmax;
     listBuffer condition = { NULL, NULL, NULL, NULL, 0, 0, 0 };
@@ -4606,7 +4606,7 @@ static dispatch_once_t onceToken;
     free_dvector(rotvec, 0, 2);
 }
 
--(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution * __nonnull)solution {
+-(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution * _Nonnull)solution {
         
     if (solution.matrix.format == MATRIX_CRS) {
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
@@ -4622,7 +4622,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)setMatrixElementForSolution:(FEMSolution * __nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+-(void)setMatrixElementForSolution:(FEMSolution * _Nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value {
         
     if (solution.matrix.format == MATRIX_CRS) {
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
@@ -4637,7 +4637,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)addToMatrixElementForSolution:(FEMSolution * __nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value {
+-(void)addToMatrixElementForSolution:(FEMSolution * _Nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value {
         
     if (solution.matrix.format == MATRIX_CRS) {
         FEMMatrixCRS *crsMatrix = [[FEMMatrixCRS alloc] init];
@@ -4665,7 +4665,7 @@ static dispatch_once_t onceToken;
         double *integral      ->   integral of the given function
         
 ***************************************************************************************************************/
--(void)localBoundaryIntegral:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution atBoundary:(NSArray * __nonnull)bc forElement:(Element_t * __nonnull)element withNumberOfNodes:(int)nd andParent:(Element_t * __nonnull)parent withNumberOfNodes:(int)np boundaryName:(NSString * __nonnull)name functionIntegral:(double * __nonnull)integral {
+-(void)localBoundaryIntegral:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution atBoundary:(NSArray * _Nonnull)bc forElement:(Element_t * _Nonnull)element withNumberOfNodes:(int)nd andParent:(Element_t * _Nonnull)parent withNumberOfNodes:(int)np boundaryName:(NSString * _Nonnull)name functionIntegral:(double * _Nonnull)integral {
     
     int i, n, jj=-1, kk=-1, t, size;
     int **edgeMap = NULL;
@@ -4823,7 +4823,7 @@ static dispatch_once_t onceToken;
         double **stiff, double *force   ->  Output: boundary problem stiffness matrix and force vector
  
 *************************************************************************************************************************************/
--(void)localBoundaryBDOFs:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution atBoundary:(NSArray * __nonnull)bc forElement:(Element_t * __nonnull)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString * __nonnull)name resultMatrix:(double * __nonnull * __nonnull)stiff resultVector:(double * __nonnull)force {
+-(void)localBoundaryBDOFs:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution atBoundary:(NSArray * _Nonnull)bc forElement:(Element_t * _Nonnull)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString * _Nonnull)name resultMatrix:(double * _Nonnull * _Nonnull)stiff resultVector:(double * _Nonnull)force {
     
     int i, n, p, q, t;
     double xip, yip, zip, s, load;
@@ -4903,7 +4903,7 @@ static dispatch_once_t onceToken;
     [numericIntegration deallocation:solution.mesh];
 }
 
--(void)solveWithLapackMatrix:(double * __nonnull)a andVector:(double * __nonnull)x size:(int)n leadingDimension:(int)lda {
+-(void)solveWithLapackMatrix:(double * _Nonnull)a andVector:(double * _Nonnull)x size:(int)n leadingDimension:(int)lda {
     
     int nhrs, info;
     int *ipiv;
@@ -4929,7 +4929,7 @@ static dispatch_once_t onceToken;
     free_ivector(ipiv, 0, n-1);
 }
 
--(void)solveLinearSystemWithMatrix:(double * __nonnull * __nonnull)a andVector:(double * __nonnull)x size:(int)n leadingDimension:(int)lda {
+-(void)solveLinearSystemWithMatrix:(double * _Nonnull * _Nonnull)a andVector:(double * _Nonnull)x size:(int)n leadingDimension:(int)lda {
     
     int i, j;
     double aa[2][2], aaa[3][3], *at, b[n];
@@ -4991,7 +4991,7 @@ static dispatch_once_t onceToken;
     beginning of the simulation by the bandwidth optimization
  
 *****************************************************************************************************************/
--(void)setDirichletBoundaries:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof permutationOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix listUtilites:(FEMListUtilities * __nonnull)listUtilites crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)setDirichletBoundaries:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof permutationOffset:(int * _Nullable)offset offDiaginalMatrix:(BOOL * _Nullable)offDiaginalMatrix listUtilites:(FEMListUtilities * _Nonnull)listUtilites crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int i, j, k, n, bc, t, bf_id, bndry_start, bndry_end, noNodes, noDims, permOffset, numberOfNodesFound;
     int indexes[solution.mesh.maxElementDofs];
@@ -5471,7 +5471,7 @@ static dispatch_once_t onceToken;
     (DAD) = Db, where D = 1/sqrt(Diag(A)) and y = D^-1 x
  
 *****************************************************************************************************************/
--(void)scaleLinearSystem:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nullable)b result:(double * __nullable)x diagScaling:(double * __nullable)diagScaling applyScaling:(BOOL * __nullable)applyScaling rhsScaling:(BOOL * __nullable)rhsScaling {
+-(void)scaleLinearSystem:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nullable)b result:(double * _Nullable)x diagScaling:(double * _Nullable)diagScaling applyScaling:(BOOL * _Nullable)applyScaling rhsScaling:(BOOL * _Nullable)rhsScaling {
     
     int i, j, n;
     double *diag, bnorm, sum;
@@ -5596,7 +5596,7 @@ static dispatch_once_t onceToken;
     be given.
  
 ************************************************************************************/
--(void)backScaleLinearSystem:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nullable)b result:(double * __nullable)x diagScaling:(double * __nullable)diagScaling sizeOFDiagScaling:(int * __nullable)sizeOfDiagScaling {
+-(void)backScaleLinearSystem:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nullable)b result:(double * _Nullable)x diagScaling:(double * _Nullable)diagScaling sizeOFDiagScaling:(int * _Nullable)sizeOfDiagScaling {
     
     int i, j, k, n;
     double *diag, bnorm;
@@ -5693,7 +5693,7 @@ static dispatch_once_t onceToken;
     Operates ditectly on the solution matrix.
  
 ****************************************************************************/
--(void)matrixVectorMultplyInSolution:(FEMSolution * __nonnull)solution multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v {
+-(void)matrixVectorMultplyInSolution:(FEMSolution * _Nonnull)solution multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
@@ -5721,7 +5721,7 @@ static dispatch_once_t onceToken;
     Matrix vector multiplication of sparse matrices.
  
 ****************************************************************************/
--(void)matrixVectorMultplyInMatrix:(FEMMatrix * __nonnull)matrix multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v {
+-(void)matrixVectorMultplyInMatrix:(FEMMatrix * _Nonnull)matrix multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
@@ -5744,7 +5744,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)invalidateVariableInTopMesh:(NSArray * __nonnull)topMesh primaryMesh:(FEMMesh * __nonnull)primaryMesh name:(NSString * __nonnull)name model:(FEMModel * __nonnull)model {
+-(void)invalidateVariableInTopMesh:(NSArray * _Nonnull)topMesh primaryMesh:(FEMMesh * _Nonnull)primaryMesh name:(NSString * _Nonnull)name model:(FEMModel * _Nonnull)model {
     
     int i;
     BOOL onlySearch, found;
@@ -5833,7 +5833,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution {
+-(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution {
     
     int i, n=0, cnt, ind, sz;
     int *arr;
@@ -5910,7 +5910,7 @@ static dispatch_once_t onceToken;
     free_ivector(arr, 0, n-1);
 }
 
--(void)computeNodalWeightsInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model weightBoundary:(BOOL)weightBoundary perm:(int * __nullable)perm sizePerm:(int * __nullable)sizePerm variableName:(NSString * __nullable)variableName {
+-(void)computeNodalWeightsInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model weightBoundary:(BOOL)weightBoundary perm:(int * _Nullable)perm sizePerm:(int * _Nullable)sizePerm variableName:(NSString * _Nullable)variableName {
     
     int i, e, m, n, t, elemStart, elemEnd, sizeIntPerm;
     int *intPerm = NULL, *localIndexes;
@@ -6039,7 +6039,7 @@ static dispatch_once_t onceToken;
 }
 
 // Eliminates bubble degrees of freedom from a local linear system
--(void)nsCondensateStiff:(double * __nonnull * __nonnull)stiff force:(double * __nonnull)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double * __nonnull)force1 {
+-(void)nsCondensateStiff:(double * _Nonnull * _Nonnull)stiff force:(double * _Nonnull)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double * _Nonnull)force1 {
     
     int i, j, m, p, cdofs[(dim+1)*n], bdofs[dim*nb];
     double fb[nb*dim], **kbb, kbl[nb*dim][n*(dim+1)], klb[n*(dim+1)][nb*dim], x[(dim+1)*n], y[(dim+1)*n];
@@ -6115,7 +6115,7 @@ static dispatch_once_t onceToken;
     free_dmatrix(kbb, 0, (nb*dim)-1, 0, (nb*dim)-1);
 }
 
--(void)condensateStiff:(double * __nonnull * __nonnull)stiff force:(double * __nonnull)force numberOfNodes:(int)n force1:(double * __nullable)force1 {
+-(void)condensateStiff:(double * _Nonnull * _Nonnull)stiff force:(double * _Nonnull)force numberOfNodes:(int)n force1:(double * _Nullable)force1 {
     
     int i, j, ldofs[n], bdofs[n];
     double fb[n], b[n][n], c[n][n], **kbb, kbl[n][n], klb[n][n], x[n], y[n];
@@ -6176,7 +6176,7 @@ static dispatch_once_t onceToken;
     For time dependent simulations add the time derivative coefficient terms to the matrix containing other coefficients.
  
 *************************************************************************************************************************/
--(void)addFirstOrderTimeModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element massMatrix:(double * __nonnull * __nonnull)massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)addFirstOrderTimeModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element massMatrix:(double * _Nonnull * _Nonnull)massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, k, l, m, order;
     double s, t;
@@ -6274,7 +6274,7 @@ static dispatch_once_t onceToken;
     For time dependent simulations add the time derivative coefficient terms to the matrix containing other coefficients.
  
 *************************************************************************************************************************/
--(void)addSecondOrderTimeModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element massMatrix:(double * __nonnull * __nonnull)massMatrix dampMatrix:(double * __nonnull * __nonnull)dampMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration {
+-(void)addSecondOrderTimeModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element massMatrix:(double * _Nonnull * _Nonnull)massMatrix dampMatrix:(double * _Nonnull * _Nonnull)dampMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration {
     
     int i, j, k, l;
     double s, t;
@@ -6359,7 +6359,7 @@ static dispatch_once_t onceToken;
     int *nodeIndexes            -> Element node to global node numbering mapping
  
 ********************************************************************************************************************/
--(void)updateMassMatrixModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution localMassMatrix:(double * __nonnull * __nonnull)localMassMatrix element:(Element_t * __nonnull)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes {
+-(void)updateMassMatrixModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution localMassMatrix:(double * _Nonnull * _Nonnull)localMassMatrix element:(Element_t * _Nonnull)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes {
     
     int i, j;
     double s, t, *saveValues;
@@ -6412,7 +6412,7 @@ static dispatch_once_t onceToken;
     matContainers->Values = saveValues;
 }
 
--(void)defaultUpdateMass:(double * __nonnull * __nonnull)mass element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)defaultUpdateMass:(double * _Nonnull * _Nonnull)mass element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, n;
     matrixArraysContainer *matContainers = NULL;
@@ -6439,7 +6439,7 @@ static dispatch_once_t onceToken;
     [self updateMassMatrixModel:model inSolution:solution localMassMatrix:mass element:element numberOfNodes:n dofs:solution.variable.dofs nodeIndexes:indexes];
 }
 
--(void)defaultUpdateComplexMass:(double complex * __nonnull * __nonnull)cmass element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)defaultUpdateComplexMass:(double complex * _Nonnull * _Nonnull)cmass element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, dofs, n;
     double **mass;
@@ -6479,7 +6479,7 @@ static dispatch_once_t onceToken;
     free_dmatrix(mass, 0, (dofs*n)-1, 0, (dofs*n)-1);
 }
 
--(void)defaultUpdateDamp:(double * __nonnull * __nonnull)damp element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)defaultUpdateDamp:(double * _Nonnull * _Nonnull)damp element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, n;
     double *saveValues;
@@ -6510,7 +6510,7 @@ static dispatch_once_t onceToken;
     matContainers->MassValues = saveValues;
 }
 
--(void)defaultUpdateComplexDamp:(double complex * __nonnull * __nonnull)cdamp element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)defaultUpdateComplexDamp:(double complex * _Nonnull * _Nonnull)cdamp element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, dofs, n;
     double **damp, *saveValues;
@@ -6553,7 +6553,7 @@ static dispatch_once_t onceToken;
     free_dmatrix(damp, 0, (dofs*n)-1, 0, (dofs*n)-1);
 }
 
--(void)defaultFirstOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realMass:(double * __nonnull * __nonnull)mass realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities { // rows and cols for stiff and mass matrix
+-(void)defaultFirstOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realMass:(double * _Nonnull * _Nonnull)mass realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities { // rows and cols for stiff and mass matrix
     
     int i, n;
     double dt;
@@ -6577,7 +6577,7 @@ static dispatch_once_t onceToken;
     [self addFirstOrderTimeModel:model solution:solution element:element massMatrix:mass stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration utilities:utilities];
 }
 
--(void)defaultFirstOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexMass:(double complex * __nonnull * __nonnull)cmass complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull)cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)defaultFirstOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexMass:(double complex * _Nonnull * _Nonnull)cmass complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull)cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, n, dofs;
     double dt;
@@ -6634,7 +6634,7 @@ static dispatch_once_t onceToken;
     free_dvector(force, 0, (n*dofs)-1);
 }
 
--(void)defaultSecondOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realMass:(double * __nonnull * __nonnull)mass realDamp:(double * __nonnull * __nonnull)damp realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration {
+-(void)defaultSecondOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realMass:(double * _Nonnull * _Nonnull)mass realDamp:(double * _Nonnull * _Nonnull)damp realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration {
     
     int i, n;
     double dt;
@@ -6659,7 +6659,7 @@ static dispatch_once_t onceToken;
     [self addSecondOrderTimeModel:model solution:solution element:element massMatrix:mass dampMatrix:damp stiffMatrix:stiff force:force dt:dt size:n dofs:solution.variable.dofs nodeIndexes:perm rows:rows cols:cols timeIntegration:timeIntegration];
 }
 
--(void)defaultSecondOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexMass:(double complex * __nonnull * __nonnull)cmass complexDamp:(double complex * __nonnull * __nonnull)cdamp complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull)cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration {
+-(void)defaultSecondOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexMass:(double complex * _Nonnull * _Nonnull)cmass complexDamp:(double complex * _Nonnull * _Nonnull)cdamp complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull)cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration {
     
     int i, j, n, dofs;
     double dt;
@@ -6724,7 +6724,7 @@ static dispatch_once_t onceToken;
     free_dvector(force, 0, (n*dofs)-1);
 }
 
--(void)defaultFirstOrderTimeGlobalModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)defaultFirstOrderTimeGlobalModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, k, n, order;
     double force[1], dts[16];
@@ -6818,7 +6818,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)defaultSecondOrderTimeGlobalModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration {
+-(void)defaultSecondOrderTimeGlobalModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration {
     
     int i, j, k, n;
     double force[1];
@@ -6907,7 +6907,7 @@ static dispatch_once_t onceToken;
         int *nodeIndexes            -> Element node to global node numbering mapping
  
 ********************************************************************************************************************/
--(void)updateGlobalEquationsModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element localStiffMatrix:(double * __nonnull * __nonnull)localStiffMatrix forceVector:(double * __nonnull)forceVector localForce:(double * __nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols rotateNT:(BOOL * __nullable)rotateNT crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)updateGlobalEquationsModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element localStiffMatrix:(double * _Nonnull * _Nonnull)localStiffMatrix forceVector:(double * _Nonnull)forceVector localForce:(double * _Nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols rotateNT:(BOOL * _Nullable)rotateNT crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int i, j, k, dim;
     int indexes[n];
@@ -6979,7 +6979,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)defaultUpdateEquations:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)defaultUpdateEquations:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int i, n;
     matrixArraysContainer *matContainers = NULL;
@@ -7018,7 +7018,7 @@ static dispatch_once_t onceToken;
                             model, solution, element, stiff, matContainers->RHS, force, n, solution.variable.dofs, perm, rows, cols, NULL, crsMatrix, bandMatrix);
 }
 
--(void)defaultUpdateEquations:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull )cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix {
+-(void)defaultUpdateEquations:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull )cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix {
     
     int i, j, n, dofs;
     int *perm;
@@ -7067,7 +7067,7 @@ static dispatch_once_t onceToken;
     matrix for later use.
  
 *******************************************************************************/
--(void)defaultFinishBulkAssemblySolution:(FEMSolution * __nonnull)solution bulkUpdate:(BOOL * __nullable)bulkUpdate {
+-(void)defaultFinishBulkAssemblySolution:(FEMSolution * _Nonnull)solution bulkUpdate:(BOOL * _Nullable)bulkUpdate {
     
     int n;
     BOOL bUpd = NO;
@@ -7123,7 +7123,7 @@ static dispatch_once_t onceToken;
     // Also present in defaultFinishAssemblySolution
 }
 
--(void)defaultFinishAssemblySolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)defaultFinishAssemblySolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int order;
     NSString *string;
@@ -7155,7 +7155,7 @@ static dispatch_once_t onceToken;
 
 #pragma mark Boundary conditions
 //TODO: Update this method so that it's similar to the version in Elmer 5908
--(void)dirichletBoundaryConditions:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution usingOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix {
+-(void)dirichletBoundaryConditions:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution usingOffset:(int * _Nullable)offset offDiaginalMatrix:(BOOL * _Nullable)offDiaginalMatrix {
     
     int i, j, k, kk, l, n, nb, mb, dof, numEdgeDofs, n_start, u_offset;
     double *diagScaling;
@@ -7553,7 +7553,7 @@ static dispatch_once_t onceToken;
     may be used. Also performs relaxation if a non-unity relaxation factor is given.
  
 *****************************************************************************************************/
--(void)computeChange:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)aModel isSteadyState:(BOOL)steadyState nsize:(int * __nullable)nsize values:(double * __nullable)values values0:(double * __nullable)values0 sizeValues0:(int * __nullable)sizeValues0 {
+-(void)computeChange:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)aModel isSteadyState:(BOOL)steadyState nsize:(int * _Nullable)nsize values:(double * _Nullable)values values0:(double * _Nullable)values0 sizeValues0:(int * _Nullable)sizeValues0 {
     
     NSString *convergenceType, *solverName;
     int i, n, n0, relaxAfter, iterNo;
@@ -7964,7 +7964,7 @@ static dispatch_once_t onceToken;
     2) The FEMIterativeMethods class that includes some classic iterative methods and also some more recent Krylov methods.
  
 ******************************************************************************************************************************/
--(void)iterativeSolveMatrix:(FEMMatrix * __nonnull)matrix result:(double * __nonnull)x rhs:(double * __nonnull)b dimensions:(int * __nullable)ndim solution:(FEMSolution * __nonnull)solution {
+-(void)iterativeSolveMatrix:(FEMMatrix * _Nonnull)matrix result:(double * _Nonnull)x rhs:(double * _Nonnull)b dimensions:(int * _Nullable)ndim solution:(FEMSolution * _Nonnull)solution {
     
     NSString *str;
     int i, n, iterType, pCondType=0, *ipar, wsize, ilun=0;
@@ -8375,7 +8375,7 @@ static dispatch_once_t onceToken;
         TODO: Add support for parallel run
  
 *****************************************************************************************************/
--(void)solveSystemMatrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nonnull)b result:(double * __nonnull)x norm:(double * __nonnull)norm dofs:(int)dofs solution:(FEMSolution * __nonnull)solution  model:(FEMModel * __nonnull)model {
+-(void)solveSystemMatrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nonnull)b result:(double * _Nonnull)x norm:(double * _Nonnull)norm dofs:(int)dofs solution:(FEMSolution * _Nonnull)solution  model:(FEMModel * _Nonnull)model {
     
     int n, i;
     double relaxation, beta, gamma;
@@ -8479,7 +8479,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(double)findSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model backRorateNT:(BOOL * __nullable)backRorateNT {
+-(double)findSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model backRorateNT:(BOOL * _Nullable)backRorateNT {
     
     double norm;
     BOOL backBot=NO;
@@ -8521,7 +8521,7 @@ static dispatch_once_t onceToken;
     as stoping criterion
  
 *********************************************************************************/
--(double)stopc:(FEMMatrix * __nonnull)matrix multiplyVector:(double * __nonnull)x righHandSide:(double * __nonnull)b ipar:(int * __nonnull)ipar {
+-(double)stopc:(FEMMatrix * _Nonnull)matrix multiplyVector:(double * _Nonnull)x righHandSide:(double * _Nonnull)b ipar:(int * _Nonnull)ipar {
 
     int n;
     double err, *res;
@@ -8557,7 +8557,7 @@ static dispatch_once_t onceToken;
     coupled amd block.
  
 *********************************************************************************************************/
--(void)activateSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient {
+-(void)activateSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient {
     
     int j, timei, timestep, passiveBCId;
     double st, dtScale = 1.0;
@@ -8707,7 +8707,7 @@ static dispatch_once_t onceToken;
 }
 
 // Solve the equations one-by-one
--(void)solveEquationsModel:(FEMModel * __nonnull)model timeStep:(double * __nonnull)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL * __nonnull)steadyStateReached realTimeStep:(int * __nonnull)realTimeStep {
+-(void)solveEquationsModel:(FEMModel * _Nonnull)model timeStep:(double * _Nonnull)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL * _Nonnull)steadyStateReached realTimeStep:(int * _Nonnull)realTimeStep {
     
     int i, j, n=0, rgOrder=0;
     double *steadyIt = NULL, prevDt=0.0;
@@ -8918,7 +8918,7 @@ static dispatch_once_t onceToken;
     free(afterConverged);
 }
 
--(dispatch_queue_t __nonnull)getDispatchQueueAndInfoForDeviceType:(NSString * __nonnull)deviceType {
+-(dispatch_queue_t _Nonnull)getDispatchQueueAndInfoForDeviceType:(NSString * _Nonnull)deviceType {
     
     dispatch_queue_t queue = NULL;
     cl_int error;

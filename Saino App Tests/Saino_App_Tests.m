@@ -25,8 +25,8 @@
 #import "SainoViewControler.h"
 
 @interface Saino_App_Tests : XCTestCase {
-    SainoViewControler  * __nonnull _saino_view_controller;
-    NSView              * __nonnull _saino_view;
+    SainoViewControler  * _Nonnull _saino_view_controller;
+    NSView              * _Nonnull _saino_view;
     
     double _targetEps;
 }

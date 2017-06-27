@@ -24,20 +24,20 @@
 @implementation FEMStructuredMeshMapper {
     
     int _nsize;
-    int * __nullable _bottomPerm;
-    int * __nullable _bottomPointer;
-    int * __nullable _downPointer;
-    int * __nullable _maskPerm;
-    int * __nullable _topPerm;
-    int * __nullable _topPointer;
-    int * __nullable _midPointer;
-    int * __nullable _nodeLayer;
-    int * __nullable _upPointer;
-    double * __nullable _bottomField;
-    double * __nullable _coord;
-    double * __nullable _field;
-    double * __nullable _origCoord;
-    double * __nullable _topField;
+    int * _Nullable _bottomPerm;
+    int * _Nullable _bottomPointer;
+    int * _Nullable _downPointer;
+    int * _Nullable _maskPerm;
+    int * _Nullable _topPerm;
+    int * _Nullable _topPointer;
+    int * _Nullable _midPointer;
+    int * _Nullable _nodeLayer;
+    int * _Nullable _upPointer;
+    double * _Nullable _bottomField;
+    double * _Nullable _coord;
+    double * _Nullable _field;
+    double * _Nullable _origCoord;
+    double * _Nullable _topField;
     BOOL _initialized;
     BOOL _maskExists;
     BOOL _visited;
@@ -76,7 +76,7 @@
 
 **************************************************************************/
 
--(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int j, n, ibot, imid, itop, bottomNode, topNode;
     int *tangleMaskPerm = NULL;
@@ -500,7 +500,7 @@
     }
 }
 
--(void)deallocation:(FEMSolution * __nonnull)solution {
+-(void)deallocation:(FEMSolution * _Nonnull)solution {
     if (_topPointer != NULL) {
         free_ivector(_topPointer, 0, _nsize-1);
     }

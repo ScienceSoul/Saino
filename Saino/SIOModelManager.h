@@ -32,14 +32,14 @@
 @property (nonatomic, strong, nullable) NSString *modeldir;
 @property (nonatomic, strong, nullable) NSString *modelname;
 
--(int)createModel:(NSString * __nonnull)dir;
--(int)openModel:(NSString * __nonnull)dir;
+-(int)createModel:(NSString * _Nonnull)dir;
+-(int)openModel:(NSString * _Nonnull)dir;
 -(int)closeModel;
 
--(int)openStream:(NSFileHandle * __nullable)fstr name:(NSString * __nonnull)name mode:(NSString * __nonnull)mode;
--(int)closeStrem:(NSFileHandle * __nonnull)fstr;
+-(int)openStream:(NSFileHandle * _Nullable)fstr name:(NSString * _Nonnull)name mode:(NSString * _Nonnull)mode;
+-(int)closeStrem:(NSFileHandle * _Nonnull)fstr;
 
--(int)makeDirectory:(NSString * __nonnull)dir;
+-(int)makeDirectory:(NSString * _Nonnull)dir;
 
 -(void)deallocation;
 

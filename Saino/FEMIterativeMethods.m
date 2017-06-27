@@ -25,19 +25,19 @@
 #import "Utils.h"
 
 @interface FEMIterativeMethods ()
--(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL __nonnull)matvecMethod;
--(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval matvecMethod:(SEL __nonnull)matvecMethod;
--(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod;
--(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod;
--(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod;
--(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix * __nonnull)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v;
+-(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL _Nonnull)matvecMethod;
+-(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval matvecMethod:(SEL _Nonnull)matvecMethod;
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod;
+-(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod;
+-(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod;
+-(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix * _Nonnull)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v;
 @end
 
 @implementation FEMIterativeMethods
 
 #pragma mark Private methods
 
--(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL __nonnull)matvecMethod {
+-(void)FEMIterativeMethods_sgsNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval omega:(double)omega matvecMethod:(SEL _Nonnull)matvecMethod {
     
     int i, j, k;
     double *r;
@@ -126,7 +126,7 @@
     free_dvector(r, 0, n-1);
 }
 
--(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval matvecMethod:(SEL __nonnull)matvecMethod {
+-(void)FEMIterativeMethods_jacobiNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval matvecMethod:(SEL _Nonnull)matvecMethod {
     
     int i, k;
     double *r;
@@ -204,7 +204,7 @@
     free_dvector(r, 0, n-1);
 }
 
--(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix * __nonnull)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v {
+-(void)FEMIterativeMethods_ConstraintVectorMultiplyInMatrix:(FEMMatrix * _Nonnull)constraintMatrix constrained:(BOOL)constrained numberOfDimensions:(int)n multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v {
     
     int nc;
     double s;
@@ -233,7 +233,7 @@
  
     Double precision version.
 ***********************************************************************************************************************/
--(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod {
+-(void)FEMIterativeMethods_BICGStabLNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval polynomialDegree:(int)polyDegree constrained:(BOOL)constrained numberOfConstrains:(int)nc pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod {
     
     double zero, one, *t, kappa0, kappal;
     double rnrm0, rnrm, mxnrmx, mxnrmr, errorind, delta = 1.0e-2, bnrm;
@@ -688,7 +688,7 @@
     free_ivector(iwork, 0, (polyDegree-1)-1);
 }
 
--(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod {
+-(void)FEMIterativeMethods_gcrNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval restart:(int)m pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod {
     
     int i, j, k, l;
     double bnorm, rnorm;
@@ -840,7 +840,7 @@
     }
 }
 
--(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix * __nonnull)matrix afterSolve:(double * __nonnull)xvec rightHandSide:(double * __nonnull)rhsvec ipar:(int * __nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * __nonnull)residual converged:(BOOL * __nonnull)converged diverged:(BOOL * __nonnull)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL __nonnull)pcondlMethod matvecMethod:(SEL __nonnull)matvecMethod {
+-(void)FEMIterativeMethods_richardsonNumberOfDimensions:(int)n matrix:(FEMMatrix * _Nonnull)matrix afterSolve:(double * _Nonnull)xvec rightHandSide:(double * _Nonnull)rhsvec ipar:(int * _Nonnull)ipar rounds:(double)rounds minTolerance:(double)minTolerance maxTolerance:(double)maxTolerance residual:(double * _Nonnull)residual converged:(BOOL * _Nonnull)converged diverged:(BOOL * _Nonnull)diverged outputInterval:(int)outputInterval pcondlMethod:(SEL _Nonnull)pcondlMethod matvecMethod:(SEL _Nonnull)matvecMethod {
     
     int i, j, k;
     double bnorm, rnorm, s;
@@ -957,7 +957,7 @@
     Symmetric Gauss-Seidel iterative method for linear systems. This is not really
     of practical use but may be used for testing, for example.
 ***********************************************************************************/
--(void)dsgsSolveMatrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dsgsSolveMatrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual, omega;
@@ -984,7 +984,7 @@
     the division by it is unnecessary. Hence for this method scaling is not
     needed.
 *******************************************************************************/
--(void)djacobiSolveMatrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)djacobiSolveMatrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;
@@ -1007,7 +1007,7 @@
     This routine solves real linear systems Ax = b by using the BiCGStab(l) algorithm
     with l >= 2 and the right-oriented ILU(n) preconditioning.
 ***************************************************************************************/
--(void)dbicgstablSolveMatrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dbicgstablSolveMatrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int nc = 0, rounds, outputInterval, polynomialDegree;
     double minTol, maxTol;
@@ -1060,7 +1060,7 @@
     This routine solves real linear systems Ax = b by using the GCR algorithm
     (Generalized Conjugate Residual).
 ********************************************************************************/
--(void)dgcrSolveMatrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dgcrSolveMatrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int rounds, outputInterval, restartN;
     double minTol, maxTol, residual;
@@ -1087,7 +1087,7 @@
     lumped mass is by construction unity (assuming all-positive entries). 
     So for this method scaling is not needed.
 ****************************************************************************************************/
--(void)drichardsonSolveMatrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)drichardsonSolveMatrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int rounds, outputInterval;
     double minTol, maxTol, residual;

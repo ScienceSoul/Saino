@@ -22,7 +22,7 @@
 #include <string.h>
 #include "GPUData.h"
 
-void init_gpu_data(ice_flow_gpu * __nonnull data) {
+void init_gpu_data(ice_flow_gpu * _Nonnull data) {
     
     *data = (ice_flow_gpu){
         .basisFunctions_dp=NULL,
@@ -79,7 +79,7 @@ void init_gpu_data(ice_flow_gpu * __nonnull data) {
     };
 }
 
-void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data) {
+void __attribute__((overloadable)) init_basis_functions(basis_functions_f * _Nonnull data) {
     
     *data = (basis_functions_f) {
         .p = {0, 0, 0, 0, 0, 0, 0, 0},
@@ -89,7 +89,7 @@ void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __no
     };
 }
 
-void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data) {
+void __attribute__((overloadable)) init_basis_functions(basis_functions_d * _Nonnull data) {
     
     *data = (basis_functions_d) {
         .p = {0, 0, 0, 0, 0, 0, 0, 0},
@@ -99,7 +99,7 @@ void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __no
     };
 }
 
-void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data, int size) {
+void __attribute__((overloadable)) init_nodal_data(nodal_data_f * _Nonnull data, int size) {
     
     for (int i=0; i<size; i++) {
         memset(data[i].nodes_x, 0.0f, sizeof(data[i].nodes_x) );
@@ -114,7 +114,7 @@ void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data
     }
 }
 
-void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size) {
+void __attribute__((overloadable)) init_nodal_data(nodal_data_d * _Nonnull data, int size) {
     
     for (int i=0; i<size; i++) {
         memset(data[i].nodes_x, 0.0, sizeof(data[i].nodes_x) );
@@ -129,28 +129,28 @@ void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data
     }
 }
 
-void init_nz_indexes(non_zero * __nonnull data, int size) {
+void init_nz_indexes(non_zero * _Nonnull data, int size) {
     
     for (int i=0; i<size; i++) {
         memset(data[i].indexes, -1, sizeof(data[i].indexes) );
     }
 }
 
-void __attribute__((overloadable)) init_stiff_force(stiff_force_f * __nonnull data, int size) {
+void __attribute__((overloadable)) init_stiff_force(stiff_force_f * _Nonnull data, int size) {
     for (int i=0; i<size; i++) {
         memset(*(data[i].stiff), 0.0f, sizeof(float)*(32*32));
         memset(data[i].force, 0.0f, sizeof(data[i].force));
     }
 }
 
-void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull data, int size) {
+void __attribute__((overloadable)) init_stiff_force(stiff_force_d * _Nonnull data, int size) {
     for (int i=0; i<size; i++) {
         memset(*(data[i].stiff), 0.0, sizeof(double)*(32*32));
         memset(data[i].force, 0.0, sizeof(data[i].force));
     }
 }
 
-void init_color_data(colors_data * __nonnull data, int size) {
+void init_color_data(colors_data * _Nonnull data, int size) {
     for (int i=0; i<size; i++) {
         data[i].buckets = NULL;
         data[i].numberOfBuckets = 0;

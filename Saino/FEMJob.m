@@ -34,15 +34,15 @@
 #endif
 
 @interface FEMJob ()
--(void)FEMJob_addSolutionsModel:(FEMModel * __nonnull)model;
--(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * __nonnull)model;
--(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model;
--(void)FEMJob_initCondModel:(FEMModel * __nonnull)model;
--(void)FEMJob_restartModel:(FEMModel * __nonnull)model;
--(void)FEMJob_runSimulation:(FEMModel * __nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * __nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning post:(FEMPost * __nonnull)post;
--(void)FEMJob_saveToPostModel:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post;
--(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface post:(FEMPost * __nonnull)post;
--(void)FEMJob_saveCurrent:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post;
+-(void)FEMJob_addSolutionsModel:(FEMModel * _Nonnull)model;
+-(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * _Nonnull)model;
+-(void)FEMJob_setInitialConditionsModel:(FEMModel * _Nonnull)model;
+-(void)FEMJob_initCondModel:(FEMModel * _Nonnull)model;
+-(void)FEMJob_restartModel:(FEMModel * _Nonnull)model;
+-(void)FEMJob_runSimulation:(FEMModel * _Nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * _Nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning post:(FEMPost * _Nonnull)post;
+-(void)FEMJob_saveToPostModel:(FEMModel * _Nonnull)model currentStep:(int)currentStep post:(FEMPost * _Nonnull)post;
+-(int)FEMJob_saveResult:(NSString * _Nonnull)fileName model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * _Nullable)freeSurface post:(FEMPost * _Nonnull)post;
+-(void)FEMJob_saveCurrent:(FEMModel * _Nonnull)model currentStep:(int)currentStep post:(FEMPost * _Nonnull)post;
 @end
 
 @implementation FEMJob {
@@ -61,18 +61,18 @@
     int _savedSteps;
     int _coupledMaxIter;
     int _coupledMinIter;
-    int * __nullable _timeSteps;
-    int * __nullable _outputIntervals;
+    int * _Nullable _timeSteps;
+    int * _Nullable _outputIntervals;
     double _s;
     double _dt;
-    double * __nullable _sTime;
-    double * __nullable _sStep;
-    double * __nullable _sInterval;
-    double * __nullable _sSize;
-    double * __nullable * __nullable _sPrevSizes;
-    double * __nullable _steadyIt;
-    double * __nullable _nonLinIt;
-    double * __nullable * __nullable _timeStepSizes;
+    double * _Nullable _sTime;
+    double * _Nullable _sStep;
+    double * _Nullable _sInterval;
+    double * _Nullable _sSize;
+    double * _Nullable * _Nullable _sPrevSizes;
+    double * _Nullable _steadyIt;
+    double * _Nullable _nonLinIt;
+    double * _Nullable * _Nullable _timeStepSizes;
     int _sizeTimeSteps;
     int _sizeOutputIntervals;
     int _sizeSTime;
@@ -86,9 +86,9 @@
     int _size1TimeStepSizes;
     int _size2TimeStepSizes;
     
-    NSMutableString * __nonnull _outputName;
-    NSMutableString * __nonnull _postName;
-    NSString * __nullable _when;
+    NSMutableString * _Nonnull _outputName;
+    NSMutableString * _Nonnull _postName;
+    NSString * _Nullable _when;
 }
 
 @synthesize core = _core;
@@ -106,7 +106,7 @@
     Method corresponds partially to Elmer from git on October 27 2015
 
 **********************************************************************/
--(void)FEMJob_addSolutionsModel:(FEMModel * __nonnull)model {
+-(void)FEMJob_addSolutionsModel:(FEMModel * _Nonnull)model {
     
     int i, j;
     BOOL initSolution, found;
@@ -179,7 +179,7 @@
     Add coordinate and time variables to the meshe(s) in the model
  
 *******************************************************************/
--(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * __nonnull)model {
+-(void)FEMJob_addMeshCoordinatesAndTimeModel:(FEMModel * _Nonnull)model {
     
     FEMVariable *dtVar = nil;
     FEMSolution *solution = nil;
@@ -238,7 +238,7 @@
     free(varContainers);
 }
 
--(void)FEMJob_initCondModel:(FEMModel * __nonnull)model {
+-(void)FEMJob_initCondModel:(FEMModel * _Nonnull)model {
     
     int i, j, k, k1, l, n, t, dofs;
     int *indexes;
@@ -378,7 +378,7 @@
     Check if we are restarting, and if yes read field values
  
 *************************************************************/
--(void)FEMJob_restartModel:(FEMModel * __nonnull)model {
+-(void)FEMJob_restartModel:(FEMModel * _Nonnull)model {
     
     int k, minVal;
     double startTime;
@@ -431,7 +431,7 @@
     Set initial conditions for the fields
  
 ***********************************************/
--(void)FEMJob_setInitialConditionsModel:(FEMModel * __nonnull)model {
+-(void)FEMJob_setInitialConditionsModel:(FEMModel * _Nonnull)model {
     
     int j, k, l, m, n, t, dim, vectDof=0, realDof=-1;
     double udot, parU, parV, *nrm, *t1, *t2, *vec, *tmp;
@@ -653,7 +653,7 @@
     if (tensor.tensor != NULL) free_d3tensor(tensor.tensor, 0, tensor.m-1, 0, tensor.n-1, 0, tensor.p-1);
 }
 
--(void)FEMJob_runSimulation:(FEMModel * __nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * __nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning post:(FEMPost * __nonnull)post {
+-(void)FEMJob_runSimulation:(FEMModel * _Nonnull)model timeIntervals:(int)timeIntervals coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter outputIntervals:(int * _Nonnull)outputIntervals transient:(BOOL)transient scanning:(BOOL)scanning post:(FEMPost * _Nonnull)post {
     
     int i, j, k, jj, kk, n, interval, timeStep, stepCount = 0, cumTimeStep, realTimeStep, timeLeft, adaptiveKeepSmallest, minVal, smallestCount,
         stepControl=-1;
@@ -994,7 +994,7 @@ jump:
     Saves results file to post proecessing file of ElmerPost format if requested
  
 ***********************************************************************************/
--(void)FEMJob_saveToPostModel:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post {
+-(void)FEMJob_saveToPostModel:(FEMModel * _Nonnull)model currentStep:(int)currentStep post:(FEMPost * _Nonnull)post {
     
     int j, k, timeSteps, savedEigenValues;
     BOOL found, lastExisting, eigenAnal=NO, append;
@@ -1155,7 +1155,7 @@ jump:
     Method corresponds mostly to Elmer from git on October 27 2015
  
 ***********************************************************************************/
--(int)FEMJob_saveResult:(NSString * __nonnull)fileName model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * __nullable)freeSurface post:(FEMPost * __nonnull)post {
+-(int)FEMJob_saveResult:(NSString * _Nonnull)fileName model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh time:(int)time simulationTime:(double)simulationTime binary:(BOOL)binary saveAll:(BOOL)saveAll freeSurface:(BOOL * _Nullable)freeSurface post:(FEMPost * _Nonnull)post {
     
     int i, k, k2, dofs, n, permSize, saveCount;
     BOOL all, found, moveBoundary, outputVariableList, sameAsPrev, saveCoordinates, saveGlobal, saveThis;
@@ -1474,7 +1474,7 @@ jump:
     Saves current time step to external files
  
 ***********************************************************************************/
--(void)FEMJob_saveCurrent:(FEMModel * __nonnull)model currentStep:(int)currentStep post:(FEMPost * __nonnull)post {
+-(void)FEMJob_saveCurrent:(FEMModel * _Nonnull)model currentStep:(int)currentStep post:(FEMPost * _Nonnull)post {
     
     int j, k;
     BOOL found, binaryOutput, saveAll, eigenAnal=NO;

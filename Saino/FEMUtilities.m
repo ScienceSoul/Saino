@@ -55,7 +55,7 @@
     return self;
 }
 
--(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix * __nonnull)a {
+-(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix * _Nonnull)a {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
@@ -74,7 +74,7 @@
     }
 }
 
--(void)setMatrixElement:(FEMMatrix * __nonnull)a atIndex:(int)i andIndex:(int)j value:(double)value {
+-(void)setMatrixElement:(FEMMatrix * _Nonnull)a atIndex:(int)i andIndex:(int)j value:(double)value {
     
     FEMMatrixCRS *crsMatrix;
     FEMMatrixBand *bandMatrix;
@@ -92,7 +92,7 @@
     }
 }
 
--(int)initialPermutationInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model solution:(FEMSolution *__nonnull)solution equation:(NSString * __nonnull)str permutation:(int * __nonnull)perm DGSolution:(BOOL * __nullable)dg globalBubbles:(BOOL * __nullable)gb {
+-(int)initialPermutationInMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model solution:(FEMSolution *_Nonnull)solution equation:(NSString * _Nonnull)str permutation:(int * _Nonnull)perm DGSolution:(BOOL * _Nullable)dg globalBubbles:(BOOL * _Nullable)gb {
     
     int i, j, t, n, e, edofs, fdofs, bdofs, ndofs;
     int indexes[128];
@@ -375,7 +375,7 @@
     Adds a new variable to the list of variables
 
 *********************************************************************************************/
--(void)addVariableTo:(NSMutableArray * __nonnull)anArray mesh:(FEMMesh * __nullable)mesh solution:(FEMSolution * __nullable)solution name:(NSString * __nonnull)name dofs:(int )dofs container:(variableArraysContainer * __nonnull)aContainer component:(BOOL)component ifOutput:(BOOL * __nullable)output ifSecondary:(BOOL * __nullable)secondary type:(int * __nullable)aType {
+-(void)addVariableTo:(NSMutableArray * _Nonnull)anArray mesh:(FEMMesh * _Nullable)mesh solution:(FEMSolution * _Nullable)solution name:(NSString * _Nonnull)name dofs:(int )dofs container:(variableArraysContainer * _Nonnull)aContainer component:(BOOL)component ifOutput:(BOOL * _Nullable)output ifSecondary:(BOOL * _Nullable)secondary type:(int * _Nullable)aType {
     
     FEMVariable *newVariable;
     variableArraysContainer *varContainers = NULL;
@@ -467,7 +467,7 @@
     [anArray addObject:newVariable];
 }
 
--(void)addVectorTo:(NSMutableArray * __nonnull)anArray mesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution name:(NSString * __nonnull)name dofs:(int * __nullable)dofs container:(variableArraysContainer * __nonnull)aContainer ifOutput:(BOOL * __nullable)output ifSecondary:(BOOL * __nullable)secondary global:(BOOL * __nullable)global initValue:(double * __nullable)initValue {
+-(void)addVectorTo:(NSMutableArray * _Nonnull)anArray mesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution name:(NSString * _Nonnull)name dofs:(int * _Nullable)dofs container:(variableArraysContainer * _Nonnull)aContainer ifOutput:(BOOL * _Nullable)output ifSecondary:(BOOL * _Nullable)secondary global:(BOOL * _Nullable)global initValue:(double * _Nullable)initValue {
     
     int i, j, k, ndofs, nsize;
     NSString *tmpName;
@@ -551,7 +551,7 @@
     free(varContainers);
 }
 
--(FEMVariable * __nullable)getVariableFrom:(NSMutableArray * __nonnull)anArray model:(FEMModel * __nonnull)model name:(NSString * __nonnull)name onlySearch:(BOOL * __nullable)only maskName:(NSString * __nullable)maskName info:(BOOL * __nonnull)found {
+-(FEMVariable * _Nullable)getVariableFrom:(NSMutableArray * _Nonnull)anArray model:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name onlySearch:(BOOL * _Nullable)only maskName:(NSString * _Nullable)maskName info:(BOOL * _Nonnull)found {
     
     int i, j, k, l, n, dofs, aNumber;
     FEMVariable *var = nil, *pVar = nil, *tmp = nil;
@@ -915,7 +915,7 @@
 /*********************************************************************************************************
  Interpolate values in a curve given by linear table or splines.
 *********************************************************************************************************/
--(double)interpolateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff {
+-(double)interpolateCurveTvalues:(double * _Nonnull)tValues fValues:(double * _Nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * _Nullable)cubicCoeff {
     
     int i;
     double f;
@@ -955,7 +955,7 @@
 /*********************************************************************************************************
     Derivative a curve given by linear table or splines.
 *********************************************************************************************************/
--(double)derivateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff {
+-(double)derivateCurveTvalues:(double * _Nonnull)tValues fValues:(double * _Nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * _Nullable)cubicCoeff {
     
     int i;
     double f;
@@ -986,7 +986,7 @@
     return f;
 }
 
--(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * _Nonnull)x rightHandSide:(double * _Nonnull)b {
     
     double detA;
     
@@ -1002,7 +1002,7 @@
     x[1] = detA * ( a[0][0] * b[1] - a[1][0] * b[0] );
 }
 
--(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b {
+-(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * _Nonnull)x rightHandSide:(double * _Nonnull)b {
     
     double c[2][2], y[2], g[2], s, t, q;
     
@@ -1057,7 +1057,7 @@
     }
 }
 
--(FEMMatrix * __nonnull)meshProjectorMesh1:(FEMMesh * __nonnull)mesh1 mesh2:(FEMMesh * __nonnull)mesh2 model:(FEMModel * __nonnull)model useQuadrantTree:(BOOL * __nullable)quadrantTree transpose:(BOOL * __nullable)trans {
+-(FEMMatrix * _Nonnull)meshProjectorMesh1:(FEMMesh * _Nonnull)mesh1 mesh2:(FEMMesh * _Nonnull)mesh2 model:(FEMModel * _Nonnull)model useQuadrantTree:(BOOL * _Nullable)quadrantTree transpose:(BOOL * _Nullable)trans {
     
     FEMProjector *projector;
     FEMMatrix *projectorMatrix;
@@ -1081,7 +1081,7 @@
     return projectorMatrix;
 }
 
--(double)cublicSplineX:(double * __nonnull)x Y:(double * __nonnull)y R:(double * __nonnull)r T:(double)t {
+-(double)cublicSplineX:(double * _Nonnull)x Y:(double * _Nonnull)y R:(double * _Nonnull)r T:(double)t {
     
     double s, a, b, c, h, lt;
     
@@ -1096,7 +1096,7 @@
     return s;
 }
 
--(NSString * __nullable)appendNameFromString:(NSString * __nonnull)string component:(int * __nullable)component {
+-(NSString * _Nullable)appendNameFromString:(NSString * _Nonnull)string component:(int * _Nullable)component {
     
     int i, j, dofs, comp, dofsTot;
     NSString *str;
@@ -1162,7 +1162,7 @@
     return str;
 }
 
--(NSString * __nonnull)appendNameFromVariable:(FEMVariable * __nonnull)variable component:(int * __nullable)component {
+-(NSString * _Nonnull)appendNameFromVariable:(FEMVariable * _Nonnull)variable component:(int * _Nullable)component {
     
     NSString *str;
     NSMutableString *str1;
@@ -1191,7 +1191,7 @@
     This is intended use of this is in the solution construction to declare exported 
     variables without the risk of running over some existing ones.
 ******************************************************************************************/
--(NSString * __nonnull)nextFreeKeyword:(NSString * __nonnull)keyword0 dictionary:(NSMutableDictionary * __nonnull)dictionary {
+-(NSString * _Nonnull)nextFreeKeyword:(NSString * _Nonnull)keyword0 dictionary:(NSMutableDictionary * _Nonnull)dictionary {
     
     int i;
     NSMutableString *str;
@@ -1211,7 +1211,7 @@
 /******************************************************
     Check the feasibility of solution options
 ******************************************************/
--(void)checkOptionsInSolution:(FEMSolution * __nonnull)solution {
+-(void)checkOptionsInSolution:(FEMSolution * _Nonnull)solution {
     
     NSString *str;
     
@@ -1255,7 +1255,7 @@
     Add the generic components to each solution
     A few solutions are for historical reasons given a special treatment
 ********************************************************************************************************/
--(void)addEquationBasicsToSolution:(FEMSolution * __nonnull)solution name:(NSString * __nonnull)name model:(FEMModel * __nonnull)model transient:(BOOL)transient {
+-(void)addEquationBasicsToSolution:(FEMSolution * _Nonnull)solution name:(NSString * _Nonnull)name model:(FEMModel * _Nonnull)model transient:(BOOL)transient {
     
     int i, j, k, l, maxDim, minVal, maxVal, dofs, ndeg, maxNDOFs, maxDGDOFs, maxEDOFs, maxFDOFs, maxBDOFs,
         matrixFormat, nrows, nsize, type;
@@ -1886,7 +1886,7 @@
     Add information that is typically only needed if there's a matrix equation to work with.
     This should be called only after both the solution vector and matrix have been created.
 ********************************************************************************************************/
--(void)addEquationToSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model transient:(BOOL)transient {
+-(void)addEquationToSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model transient:(BOOL)transient {
     
     int i, j, k, l, dofs, nrows, n, mgLevels=0;
     double *sol;
@@ -2387,7 +2387,7 @@
     }
 }
 
--(BOOL)isFileNameQualified:(NSString * __nonnull)file {
+-(BOOL)isFileNameQualified:(NSString * _Nonnull)file {
     
     NSRange range;
     
@@ -2401,7 +2401,7 @@
     Given the filename0 (and suffix0) find the 1st free filename
     that does not exist in the current working directory
 ****************************************************************/
--(NSMutableString * __nullable)nextFreeFileName:(NSString * __nonnull)fileName0 suffix:(NSString * __nullable)suffix0 lastExisting:(BOOL * __nullable)lastExisting {
+-(NSMutableString * _Nullable)nextFreeFileName:(NSString * _Nonnull)fileName0 suffix:(NSString * _Nullable)suffix0 lastExisting:(BOOL * _Nullable)lastExisting {
     
     int no;
     NSRange range;
@@ -2445,7 +2445,7 @@
     return fileName;
 }
 
--(NSBundle * __nullable)loadBundle:(NSString * __nonnull)bundleName useApplicationSupportPath:(BOOL * __nullable)useApplicationSupportPath {
+-(NSBundle * _Nullable)loadBundle:(NSString * _Nonnull)bundleName useApplicationSupportPath:(BOOL * _Nullable)useApplicationSupportPath {
     
     NSBundle *currentBundle;
     NSArray *librarySearchPaths;
@@ -2492,7 +2492,7 @@
     return currentBundle;
 }
 
--(BOOL)plugInClassIsValid:(Class __nonnull)plugInClass {
+-(BOOL)plugInClassIsValid:(Class _Nonnull)plugInClass {
     
     if ([plugInClass conformsToProtocol:@protocol(SainoSolutionsComputer)] == YES) {
         if ([plugInClass instancesRespondToSelector:@selector(solutionComputer:model:timeStep:transientSimulation:)] == YES &&
@@ -2503,7 +2503,7 @@
     return NO;
 }
 
--(void)generateColor:(RGBColors * __nonnull)color {
+-(void)generateColor:(RGBColors * _Nonnull)color {
     
     int red = arc4random() % 256;
     int green = arc4random() % 256;

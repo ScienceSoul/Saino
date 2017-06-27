@@ -35,7 +35,7 @@
 #import "OpenCLUtils.h"
 
 static int k1 = 0, n1 = 0;
-static double * __nullable * __nullable stiff = NULL, * __nullable * __nullable mass = NULL, * __nullable * __nullable x = NULL;
+static double * _Nullable * _Nullable stiff = NULL, * _Nullable * _Nullable mass = NULL, * _Nullable * _Nullable x = NULL;
 
 enum {
     PHASE_SPATIAL_1 = 1,
@@ -58,9 +58,9 @@ enum {
     int _doneTime;
     int _phaseChangeModel;
     int _localNodes;
-    int * __nullable _indexes;
-    int * __nullable _saveIndexes;
-    int * __nullable _tempPerm;
+    int * _Nullable _indexes;
+    int * _Nullable _saveIndexes;
+    int * _Nullable _tempPerm;
     double _dt;
     double _emissivity;
     double _powerScaling;
@@ -69,56 +69,56 @@ enum {
     double _stefanBoltzmann;
     double _text;
     double _visibleFraction;
-    double * __nullable _u, * __nullable _v, * __nullable _w;
-    double * __nullable * __nullable _mu;
-    double * __nullable _pressure;
-    double * __nullable _dPressureDt;
-    double * __nullable _pressureCoeff;
-    double * __nullable _density;
-    double * __nullable _work;
-    double * __nullable _latentHeat;
-    double * __nullable * __nullable _phaseVelocity;
-    double * __nullable _electricConductivity;
+    double * _Nullable _u, * _Nullable _v, * _Nullable _w;
+    double * _Nullable * _Nullable _mu;
+    double * _Nullable _pressure;
+    double * _Nullable _dPressureDt;
+    double * _Nullable _pressureCoeff;
+    double * _Nullable _density;
+    double * _Nullable _work;
+    double * _Nullable _latentHeat;
+    double * _Nullable * _Nullable _phaseVelocity;
+    double * _Nullable _electricConductivity;
     double _normal[3];
-    double * __nullable _permeability;
-    double * __nullable _viscosity;
-    double * __nullable _c0;
-    double * __nullable _heatTransferCoeff;
-    double * __nullable _heatExpansionCoeff;
-    double * __nullable _referenceTemperature;
-    double * __nullable * __nullable _mass;
-    double * __nullable _localTemperature;
-    double * __nullable _heatCapacity;
-    double * __nullable _enthalpy;
-    double * __nullable _nodalEmissivity;
-    double * __nullable _gasConstant;
-    double * __nullable _aText;
-    double * __nullable * __nullable * __nullable _heatConductivity;
-    double * __nullable * __nullable _stiff;
-    double * __nullable _load;
-    double * __nullable _force;
-    double * __nullable _timeForce;
-    double * __nullable _perfusionRate;
-    double * __nullable _perfusionDensity;
-    double * __nullable _perfusionHeatCapacity;
-    double * __nullable _perfusionRefTemperature;
-    double * __nullable _heaterArea;
-    double * __nullable _heaterDensity;
-    double * __nullable _heaterSource;
-    double * __nullable _heaterScaling;
-    double * __nullable _heaterTarget;
-    double * __nullable _xx;
-    double * __nullable _yy;
-    double * __nullable _forceHeater;
-    double * __nullable _prevSolution;
-    double * __nullable _temperature;
-    double * __nullable _tSolution;
-    double * __nullable _tSolution1;
-    bool * __nullable _smarterHeaters;
-    bool * __nullable _integralHeaters;
-    Nodes_t * __nullable _elementNodes;
-    NSString * __nullable _phaseModel;
-    NSString * __nullable _radiationFlag;
+    double * _Nullable _permeability;
+    double * _Nullable _viscosity;
+    double * _Nullable _c0;
+    double * _Nullable _heatTransferCoeff;
+    double * _Nullable _heatExpansionCoeff;
+    double * _Nullable _referenceTemperature;
+    double * _Nullable * _Nullable _mass;
+    double * _Nullable _localTemperature;
+    double * _Nullable _heatCapacity;
+    double * _Nullable _enthalpy;
+    double * _Nullable _nodalEmissivity;
+    double * _Nullable _gasConstant;
+    double * _Nullable _aText;
+    double * _Nullable * _Nullable * _Nullable _heatConductivity;
+    double * _Nullable * _Nullable _stiff;
+    double * _Nullable _load;
+    double * _Nullable _force;
+    double * _Nullable _timeForce;
+    double * _Nullable _perfusionRate;
+    double * _Nullable _perfusionDensity;
+    double * _Nullable _perfusionHeatCapacity;
+    double * _Nullable _perfusionRefTemperature;
+    double * _Nullable _heaterArea;
+    double * _Nullable _heaterDensity;
+    double * _Nullable _heaterSource;
+    double * _Nullable _heaterScaling;
+    double * _Nullable _heaterTarget;
+    double * _Nullable _xx;
+    double * _Nullable _yy;
+    double * _Nullable _forceHeater;
+    double * _Nullable _prevSolution;
+    double * _Nullable _temperature;
+    double * _Nullable _tSolution;
+    double * _Nullable _tSolution1;
+    bool * _Nullable _smarterHeaters;
+    bool * _Nullable _integralHeaters;
+    Nodes_t * _Nullable _elementNodes;
+    NSString * _Nullable _phaseModel;
+    NSString * _Nullable _radiationFlag;
 }
 
 -(void)FEMHeatSolution_nullify {
@@ -204,7 +204,7 @@ enum {
     return self;
 }
 
--(void)deallocation:(FEMSolution * __nonnull)solution {
+-(void)deallocation:(FEMSolution * _Nonnull)solution {
     
     int n = solution.mesh.maxElementDofs;
     variableArraysContainer *tempContainers = solution.variable.getContainers;
@@ -276,7 +276,7 @@ enum {
     if (_tSolution1 != NULL) free_dvector(_tSolution1, 0, _localNodes-1);
 }
 
--(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, n, nb, t, body_id, cols, iter, nBasis, nonLinearIter, newtonIter, position, returnValue, rows;
     static int firstTimeCL = 0;

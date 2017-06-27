@@ -163,20 +163,20 @@ int getNumberOfElementsFromMethod(FEMSolution *solution, FEMMesh *mesh, BOOL *al
 
 @interface FEMFlowSolution ()
 -(void)FEMFlowSolution_nullify;
--(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * __nonnull)model;
--(void)FEMFlowSolution_doAssembly:(FEMSolution * __nonnull)solution
-                             core:(FEMCore * __nonnull)core
-                            model:(FEMModel * __nonnull)model
-                    listUtilities:(FEMListUtilities * __nonnull)listUtilities
-               coordinatesSystems:(FEMCoordinateSystems * __nonnull)coordinatesSystems
-                     navierStokes:(FEMNavierStokes * __nonnull)navierStokes
-          navierStokesCylindrical:(FEMNavierStokesCylindrical * __nonnull)navierStokesCylindrical
+-(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * _Nonnull)model;
+-(void)FEMFlowSolution_doAssembly:(FEMSolution * _Nonnull)solution
+                             core:(FEMCore * _Nonnull)core
+                            model:(FEMModel * _Nonnull)model
+                    listUtilities:(FEMListUtilities * _Nonnull)listUtilities
+               coordinatesSystems:(FEMCoordinateSystems * _Nonnull)coordinatesSystems
+                     navierStokes:(FEMNavierStokes * _Nonnull)navierStokes
+          navierStokesCylindrical:(FEMNavierStokesCylindrical * _Nonnull)navierStokesCylindrical
               navierStokesGeneral:(FEMNavierStokesGeneral *)navierStokesGeneral
-                      integration:(FEMNumericIntegration * __nonnull)integration
-                    differentials:(FEMDifferentials * __nonnull)differentials
-                   materialModels:(FEMMaterialModels * __nonnull)materialModels
-                        utilities:(FEMUtilities * __nonnull)utilities
-               elementDescription:(FEMElementDescription * __nonnull)elementDescription
+                      integration:(FEMNumericIntegration * _Nonnull)integration
+                    differentials:(FEMDifferentials * _Nonnull)differentials
+                   materialModels:(FEMMaterialModels * _Nonnull)materialModels
+                        utilities:(FEMUtilities * _Nonnull)utilities
+               elementDescription:(FEMElementDescription * _Nonnull)elementDescription
                   timeIntegration:(FEMTimeIntegration *)timeIntegration
                         crsMatrix:(FEMMatrixCRS *)crsMatrix
                        bandMatrix:(FEMMatrixBand *)bandMatrix
@@ -184,63 +184,63 @@ int getNumberOfElementsFromMethod(FEMSolution *solution, FEMMesh *mesh, BOOL *al
                            bodyID:(int)body_id
                              eqID:(int)eq_id
                             matID:(int)mat_id
-                           vector:(listBuffer * __nonnull)vector
-                           matrix:(listBuffer * __nonnull)matrix
-                             pwrk:(listBuffer * __nonnull)pwrk
-                      meshVeloSol:(FEMVariable * __nonnull)meshVeloSol
-                     meshVeloPerm:(int * __nullable)meshVeloPerm
-                     meshVelocity:(double * __nullable)meshVelocity
-                          tempSol:(FEMVariable * __nullable)tempSol
-                         tempPerm:(int * __nullable)tempPerm
-                      temperature:(double * __nullable)temperature
-                         tempPrev:(double * __nullable)tempPrev
+                           vector:(listBuffer * _Nonnull)vector
+                           matrix:(listBuffer * _Nonnull)matrix
+                             pwrk:(listBuffer * _Nonnull)pwrk
+                      meshVeloSol:(FEMVariable * _Nonnull)meshVeloSol
+                     meshVeloPerm:(int * _Nullable)meshVeloPerm
+                     meshVelocity:(double * _Nullable)meshVelocity
+                          tempSol:(FEMVariable * _Nullable)tempSol
+                         tempPerm:(int * _Nullable)tempPerm
+                      temperature:(double * _Nullable)temperature
+                         tempPrev:(double * _Nullable)tempPrev
                       ifTransient:(BOOL)ifTransient
                        convection:(BOOL)convection
-                   flowContainers:(variableArraysContainer * __nonnull)flowContainers
-                       densitySol:(FEMVariable * __nullable)densitySol
-                densityContainers:(variableArraysContainer * __nullable)densityContainers
+                   flowContainers:(variableArraysContainer * _Nonnull)flowContainers
+                       densitySol:(FEMVariable * _Nullable)densitySol
+                densityContainers:(variableArraysContainer * _Nullable)densityContainers
                                dt:(int)dt
                           gravity:(double *)gravity
                          timeStep:(int)timeStep
               newtonLinearization:(BOOL)newtonLinearization
                         transient:(BOOL)transient
-                    stabilizeFlag:(NSString * __nonnull)stabilizeFlag
+                    stabilizeFlag:(NSString * _Nonnull)stabilizeFlag
                 divDiscretization:(BOOL)divDiscretization
               gradPDiscretization:(BOOL)gradPDiscretization
                         stabilize:(BOOL)stabilize
                           bubbles:(BOOL)bubbles
-                        flowModel:(NSString * __nonnull)flowModel
-                 getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP
-          getEquationIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getEquationIDForElementIMP
-         getBodyForceIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getBodyForceIDForElementIMP
-          getMaterialIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getMaterialIDForElementIMP
-                    listGetString:(NSString* (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetStringIMP
-                   listGetLogical:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetLogicalIMP
-            listGetConstRealArray:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, listBuffer*))listGetConstRealArrayIMP
-     getNumberOfBubbleDofsElement:(int (* __nonnull)(id, SEL, Element_t*, FEMSolution*))getNumberOfBubbleDofsElementIMP
-           getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP
-                         getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP
-                          getReal:(BOOL (* __nonnull)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))getRealIMP
-                 listGetConstReal:(double (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))listGetConstRealIMP
-                 listGetRealArray:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))listGetRealArrayIMP
-    navierStokesComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, int, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterial*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesComposeMassMatrixIMP
-navierStokesCylindricalComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, BOOL, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesCylindricalComposeMassMatrixIMP
-navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesGeneralComposeMassMatrixIMP
-            defaultFirstOrderTime:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))defaultFirstOrderTimeIMP
-                nsCondensateStiff:(void (* __nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
-           defaultUpdateEquations:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP;
--(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
--(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
--(void)FEMFlowSolution_iniNodalData2Coloring:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+                        flowModel:(NSString * _Nonnull)flowModel
+                 getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP
+          getEquationIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getEquationIDForElementIMP
+         getBodyForceIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getBodyForceIDForElementIMP
+          getMaterialIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getMaterialIDForElementIMP
+                    listGetString:(NSString* (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetStringIMP
+                   listGetLogical:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetLogicalIMP
+            listGetConstRealArray:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, listBuffer*))listGetConstRealArrayIMP
+     getNumberOfBubbleDofsElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMSolution*))getNumberOfBubbleDofsElementIMP
+           getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP
+                         getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP
+                          getReal:(BOOL (* _Nonnull)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))getRealIMP
+                 listGetConstReal:(double (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))listGetConstRealIMP
+                 listGetRealArray:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))listGetRealArrayIMP
+    navierStokesComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, int, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterial*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesComposeMassMatrixIMP
+navierStokesCylindricalComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, BOOL, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesCylindricalComposeMassMatrixIMP
+navierStokesGeneralComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesGeneralComposeMassMatrixIMP
+            defaultFirstOrderTime:(void (* _Nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))defaultFirstOrderTimeIMP
+                nsCondensateStiff:(void (* _Nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
+           defaultUpdateEquations:(void (* _Nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP;
+-(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_iniNodalData:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_iniNodalData2Coloring:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
 
--(void)FEMFlowSolution_iniNodalData2NZs:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh numberOfElements:(int)numberOfElements basisKernel:(BOOL)basisKernel getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
--(void)FEMFlowSolution_init_non_zeros:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
--(void)FEMFlowSolution_init_reduction_lists:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
--(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode adjusted_colorMapping:(int * __nullable)adjusted_colorMapping;
--(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
--(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize;
--(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize;
+-(void)FEMFlowSolution_iniNodalData2NZs:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh numberOfElements:(int)numberOfElements basisKernel:(BOOL)basisKernel getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_init_non_zeros:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_init_reduction_lists:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution precisionMode:(NSString * _Nonnull)precisionMode adjusted_colorMapping:(int * _Nullable)adjusted_colorMapping;
+-(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * _Nonnull)core  model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP;
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * _Nonnull)core model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP;
+-(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh localWorkSize:(size_t *)localWorkSize;
+-(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh localWorkSize:(size_t *)localWorkSize;
 @end
 
 @implementation FEMFlowSolution {
@@ -254,50 +254,50 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     int _sizePDensity0;
     int _sizePDensity1;
     int _sizePseudoPressure;
-    int * __nullable _flowPerm;
-    int * __nullable _indexes;
-    double * __nullable _alpha;
-    double * __nullable _beta;
-    double * __nullable _density;
-    double * __nullable * __nullable _drag;
-    double * __nullable _extPressure;
-    double * __nullable _flowSolution;
-    double * __nullable _force;
-    double * __nullable _gasConstant;
-    double * __nullable _heatExpansionCoeff;
-    double * __nullable _heatCapacity;
-    double * __nullable _layerThickness;
-    double * __nullable _localTempPrev;
-    double * __nullable _localTemperature;
-    double * __nullable * __nullable _loadVector;
-    double * __nullable * __nullable _mass;
-    double * __nullable _mu;
-    double * __nullable _mv;
-    double * __nullable _mw;
-    double * __nullable _mx;
-    double * __nullable _my;
-    double * __nullable _mz;
-    double * __nullable _pDensity0;
-    double * __nullable _pDensity1;
-    double * __nullable _permeability;
-    double * __nullable _potentialCoefficient;
-    double *__nullable _potentialField;
-    double *__nullable _pressure;
-    double * __nullable _prevDensity;
-    double * __nullable _prevPressure;
-    double * __nullable _pseudoCompressibility;
-    double * __nullable _pseudoPressure;
-    double * __nullable _pSolution;
-    double * __nullable _referenceTemperature;
-    double * __nullable * __nullable _slipCoeff;
-    double * __nullable * __nullable _stiff;
-    double * __nullable _timeForce;
-    double * __nullable _surfaceRoughness;
-    double * __nullable _u;
-    double * __nullable _v;
-    double * __nullable _viscosity;
-    double * __nullable _w;
-    Nodes_t * __nullable _elementNodes;
+    int * _Nullable _flowPerm;
+    int * _Nullable _indexes;
+    double * _Nullable _alpha;
+    double * _Nullable _beta;
+    double * _Nullable _density;
+    double * _Nullable * _Nullable _drag;
+    double * _Nullable _extPressure;
+    double * _Nullable _flowSolution;
+    double * _Nullable _force;
+    double * _Nullable _gasConstant;
+    double * _Nullable _heatExpansionCoeff;
+    double * _Nullable _heatCapacity;
+    double * _Nullable _layerThickness;
+    double * _Nullable _localTempPrev;
+    double * _Nullable _localTemperature;
+    double * _Nullable * _Nullable _loadVector;
+    double * _Nullable * _Nullable _mass;
+    double * _Nullable _mu;
+    double * _Nullable _mv;
+    double * _Nullable _mw;
+    double * _Nullable _mx;
+    double * _Nullable _my;
+    double * _Nullable _mz;
+    double * _Nullable _pDensity0;
+    double * _Nullable _pDensity1;
+    double * _Nullable _permeability;
+    double * _Nullable _potentialCoefficient;
+    double *_Nullable _potentialField;
+    double *_Nullable _pressure;
+    double * _Nullable _prevDensity;
+    double * _Nullable _prevPressure;
+    double * _Nullable _pseudoCompressibility;
+    double * _Nullable _pseudoPressure;
+    double * _Nullable _pSolution;
+    double * _Nullable _referenceTemperature;
+    double * _Nullable * _Nullable _slipCoeff;
+    double * _Nullable * _Nullable _stiff;
+    double * _Nullable _timeForce;
+    double * _Nullable _surfaceRoughness;
+    double * _Nullable _u;
+    double * _Nullable _v;
+    double * _Nullable _viscosity;
+    double * _Nullable _w;
+    Nodes_t * _Nullable _elementNodes;
     
     // --------------------------------------------------
     // The following definitions are used for
@@ -312,9 +312,9 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     cl_kernel _kernel_nonzeros_assembly_global_vector;
     cl_kernel _kernel_basis_dbasisdx;
     size_t _src_len;
-    char * __nullable _kernel_source;
+    char * _Nullable _kernel_source;
     BOOL _initializeGPU;
-    NSString * __nullable _precision;
+    NSString * _Nullable _precision;
     cl_uint _kernelArgumemtPosition1;
     cl_uint _kernelArgumemtPosition2;
     
@@ -339,10 +339,10 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     stiff_force_f *_global_stiff_force_f;
     stiff_force_d *_global_stiff_force_d;
     
-    int * __nullable _globalMatrixReduction;
-    int * __nullable _globalVectorReduction;
-    int * __nullable _passes_global;
-    int * __nullable _passes_force;
+    int * _Nullable _globalMatrixReduction;
+    int * _Nullable _globalVectorReduction;
+    int * _Nullable _passes_global;
+    int * _Nullable _passes_force;
     int _global_non_zeros;
     int _force_non_zeros;
     short _numberOfPassesGlobal;
@@ -431,7 +431,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     _elementNodes = NULL;
 }
 
--(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * __nonnull)model {
+-(void)FEMFlowSolution_checkCircleBoundaryModel:(FEMModel * _Nonnull)model {
     
     int l=0;
     double phi, r, x, y, x0, y0;
@@ -479,19 +479,19 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)FEMFlowSolution_doAssembly:(FEMSolution * __nonnull)solution
-                             core:(FEMCore * __nonnull)core
-                            model:(FEMModel * __nonnull)model
-                    listUtilities:(FEMListUtilities * __nonnull)listUtilities
-               coordinatesSystems:(FEMCoordinateSystems * __nonnull)coordinatesSystems
-                     navierStokes:(FEMNavierStokes * __nonnull)navierStokes
-          navierStokesCylindrical:(FEMNavierStokesCylindrical * __nonnull)navierStokesCylindrical
+-(void)FEMFlowSolution_doAssembly:(FEMSolution * _Nonnull)solution
+                             core:(FEMCore * _Nonnull)core
+                            model:(FEMModel * _Nonnull)model
+                    listUtilities:(FEMListUtilities * _Nonnull)listUtilities
+               coordinatesSystems:(FEMCoordinateSystems * _Nonnull)coordinatesSystems
+                     navierStokes:(FEMNavierStokes * _Nonnull)navierStokes
+          navierStokesCylindrical:(FEMNavierStokesCylindrical * _Nonnull)navierStokesCylindrical
               navierStokesGeneral:(FEMNavierStokesGeneral *)navierStokesGeneral
-                      integration:(FEMNumericIntegration * __nonnull)integration
-                    differentials:(FEMDifferentials * __nonnull)differentials
-                   materialModels:(FEMMaterialModels * __nonnull)materialModels
-                        utilities:(FEMUtilities * __nonnull)utilities
-               elementDescription:(FEMElementDescription * __nonnull)elementDescription
+                      integration:(FEMNumericIntegration * _Nonnull)integration
+                    differentials:(FEMDifferentials * _Nonnull)differentials
+                   materialModels:(FEMMaterialModels * _Nonnull)materialModels
+                        utilities:(FEMUtilities * _Nonnull)utilities
+               elementDescription:(FEMElementDescription * _Nonnull)elementDescription
                   timeIntegration:(FEMTimeIntegration *)timeIntegration
                         crsMatrix:(FEMMatrixCRS *)crsMatrix
                        bandMatrix:(FEMMatrixBand *)bandMatrix
@@ -499,51 +499,51 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
                            bodyID:(int)body_id
                              eqID:(int)eq_id
                             matID:(int)mat_id
-                           vector:(listBuffer * __nonnull)vector
-                           matrix:(listBuffer * __nonnull)matrix
-                             pwrk:(listBuffer * __nonnull)pwrk
-                      meshVeloSol:(FEMVariable * __nonnull)meshVeloSol
-                     meshVeloPerm:(int * __nullable)meshVeloPerm
-                     meshVelocity:(double * __nullable)meshVelocity
-                          tempSol:(FEMVariable * __nullable)tempSol
-                         tempPerm:(int * __nullable)tempPerm
-                      temperature:(double * __nullable)temperature
-                         tempPrev:(double * __nullable)tempPrev
+                           vector:(listBuffer * _Nonnull)vector
+                           matrix:(listBuffer * _Nonnull)matrix
+                             pwrk:(listBuffer * _Nonnull)pwrk
+                      meshVeloSol:(FEMVariable * _Nonnull)meshVeloSol
+                     meshVeloPerm:(int * _Nullable)meshVeloPerm
+                     meshVelocity:(double * _Nullable)meshVelocity
+                          tempSol:(FEMVariable * _Nullable)tempSol
+                         tempPerm:(int * _Nullable)tempPerm
+                      temperature:(double * _Nullable)temperature
+                         tempPrev:(double * _Nullable)tempPrev
                       ifTransient:(BOOL)ifTransient
                        convection:(BOOL)convection
-                   flowContainers:(variableArraysContainer * __nonnull)flowContainers
-                       densitySol:(FEMVariable * __nullable)densitySol
-                densityContainers:(variableArraysContainer * __nullable)densityContainers
+                   flowContainers:(variableArraysContainer * _Nonnull)flowContainers
+                       densitySol:(FEMVariable * _Nullable)densitySol
+                densityContainers:(variableArraysContainer * _Nullable)densityContainers
                                dt:(int)dt
                           gravity:(double *)gravity
                          timeStep:(int)timeStep
               newtonLinearization:(BOOL)newtonLinearization
                         transient:(BOOL)transient
-                    stabilizeFlag:(NSString * __nonnull)stabilizeFlag
+                    stabilizeFlag:(NSString * _Nonnull)stabilizeFlag
                 divDiscretization:(BOOL)divDiscretization
               gradPDiscretization:(BOOL)gradPDiscretization
                         stabilize:(BOOL)stabilize
                           bubbles:(BOOL)bubbles
-                        flowModel:(NSString * __nonnull)flowModel
-                 getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP
-          getEquationIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getEquationIDForElementIMP
-         getBodyForceIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getBodyForceIDForElementIMP
-          getMaterialIDForElement:(int (* __nonnull)(id, SEL, Element_t*, FEMModel*))getMaterialIDForElementIMP
-                    listGetString:(NSString* (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetStringIMP
-                   listGetLogical:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetLogicalIMP
-            listGetConstRealArray:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, listBuffer*))listGetConstRealArrayIMP
-     getNumberOfBubbleDofsElement:(int (* __nonnull)(id, SEL, Element_t*, FEMSolution*))getNumberOfBubbleDofsElementIMP
-           getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP
-                         getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP
-                          getReal:(BOOL (* __nonnull)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))getRealIMP
-                 listGetConstReal:(double (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))listGetConstRealIMP
-                 listGetRealArray:(BOOL (* __nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))listGetRealArrayIMP
-    navierStokesComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, int, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterial*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesComposeMassMatrixIMP
-navierStokesCylindricalComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, BOOL, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesCylindricalComposeMassMatrixIMP
-navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesGeneralComposeMassMatrixIMP
-            defaultFirstOrderTime:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))defaultFirstOrderTimeIMP
-                nsCondensateStiff:(void (* __nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
-           defaultUpdateEquations:(void (* __nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP {
+                        flowModel:(NSString * _Nonnull)flowModel
+                 getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP
+          getEquationIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getEquationIDForElementIMP
+         getBodyForceIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getBodyForceIDForElementIMP
+          getMaterialIDForElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMModel*))getMaterialIDForElementIMP
+                    listGetString:(NSString* (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetStringIMP
+                   listGetLogical:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*))listGetLogicalIMP
+            listGetConstRealArray:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, listBuffer*))listGetConstRealArrayIMP
+     getNumberOfBubbleDofsElement:(int (* _Nonnull)(id, SEL, Element_t*, FEMSolution*))getNumberOfBubbleDofsElementIMP
+           getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP
+                         getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP
+                          getReal:(BOOL (* _Nonnull)(id, SEL, FEMModel*, Element_t*, NSArray*, NSString*, listBuffer*, FEMListUtilities*))getRealIMP
+                 listGetConstReal:(double (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, BOOL*, double*, double*))listGetConstRealIMP
+                 listGetRealArray:(BOOL (* _Nonnull)(id, SEL, FEMModel*, NSArray*, NSString*, int, int*, listBuffer*))listGetRealArrayIMP
+    navierStokesComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, int, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMSolution*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMMaterial*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesComposeMassMatrixIMP
+navierStokesCylindricalComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, NSString*, BOOL, BOOL, double*, double*, BOOL, double**, BOOL, double*, double*, BOOL, BOOL, BOOL, BOOL, Element_t*, int, int, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesCylindricalComposeMassMatrixIMP
+navierStokesGeneralComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, double**, double*, double**, double*, double*, double*, double*, double*, double*, double*, double*, BOOL, BOOL, Element_t*, int, Nodes_t*, FEMCore*, FEMMesh*, FEMModel*, FEMNumericIntegration*, FEMElementDescription*, FEMCoordinateSystems*, FEMMaterialModels*, FEMDifferentials*, FEMListUtilities*, FEMUtilities*))navierStokesGeneralComposeMassMatrixIMP
+            defaultFirstOrderTime:(void (* _Nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double**, double*, int*, int*, FEMTimeIntegration*, FEMUtilities*))defaultFirstOrderTimeIMP
+                nsCondensateStiff:(void (* _Nonnull)(id, SEL, double**, double*, int, int, int, double*))nsCondensateStiffIMP
+           defaultUpdateEquations:(void (* _Nonnull)(id, SEL, FEMModel*, FEMSolution*, Element_t *, double**, double*, int*, int*, FEMMatrixCRS*, FEMMatrixBand*))defaultUpdateEquationsIMP {
     
     int i, j, k, compressibilityModel=-1, n, nb, nd;
     double angularVelocity[3], referencePressure, specificHeatRatio, tDiff;
@@ -1093,7 +1093,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+-(void)FEMFlowSolution_initElementBasisFunctions:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
     Element_t *element = getActiveElementIMP(core, @selector(getActiveElement:solution:model:), 0, solution, model);
     
@@ -1130,7 +1130,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     Organize element data for saving memory space but not for coalesced memory access
  
 **************************************************************************************/
--(void)FEMFlowSolution_iniNodalData:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_iniNodalData:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     int err, n, nd;
     Element_t *element = NULL;
@@ -1213,7 +1213,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     Organize element data for coalesced memory access (tentative)
  
 **************************************************************************************/
--(void)FEMFlowSolution_iniNodalData2Coloring:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_iniNodalData2Coloring:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     int n, nd;
     Element_t *element = NULL;
@@ -1412,7 +1412,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     free(nodes);
 }
 
--(void)FEMFlowSolution_iniNodalData2NZs:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh numberOfElements:(int)numberOfElements basisKernel:(BOOL)basisKernel getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_iniNodalData2NZs:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh numberOfElements:(int)numberOfElements basisKernel:(BOOL)basisKernel getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     int n, nd;
     Element_t *element = NULL;
@@ -1590,7 +1590,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     free(nodes);
 
 }
--(void)FEMFlowSolution_init_non_zeros:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_init_non_zeros:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     int n, col, end, indx, row, start;
     Element_t *element = NULL;
@@ -1634,7 +1634,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
 }
 
--(void)FEMFlowSolution_init_reduction_lists:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_init_reduction_lists:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     int l, n, col, end, indx, row, start;
     Element_t *element = NULL;
@@ -1974,7 +1974,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     free_ivector(indexes, 0, solution.mesh.maxElementDofs-1);
    }
 
--(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution precisionMode:(NSString * __nonnull)precisionMode adjusted_colorMapping:(int * __nullable)adjusted_colorMapping {
+-(void)FEMFlowSolution_createMapGPUBuffersMesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution precisionMode:(NSString * _Nonnull)precisionMode adjusted_colorMapping:(int * _Nullable)adjusted_colorMapping {
     
     int totElements = 0;
     int *colorMapping = NULL, *elementNodeIndexesStore = NULL;
@@ -2460,7 +2460,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_createMapGPUBuffersMesh: global matrix number of non-zeros: %d.\n", matContainers->sizeValues);
 }
 
--(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * __nonnull)core  model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
+-(void)FEMFlowSolution_setKernelArgumentsCore:(FEMCore * _Nonnull)core  model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP {
     
     cl_int err=0;
     cl_uint argIdx = 0;
@@ -2737,7 +2737,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)FEMFlowSolution_setGPUCore:(FEMCore * __nonnull)core model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh precisionMode:(NSString * __nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* __nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* __nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
+-(void)FEMFlowSolution_setGPUCore:(FEMCore * _Nonnull)core model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh precisionMode:(NSString * _Nonnull)precisionMode transientSimulation:(BOOL)transient getActiveElement:(Element_t* (* _Nonnull)(id, SEL, int, FEMSolution*, FEMModel*))getActiveElementIMP getNodes:(void (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, Nodes_t*, int*, FEMMesh*))getNodesIMP getElementDofsSolution:(int (* _Nonnull)(id, SEL, FEMSolution*, FEMModel*, Element_t*, int*, BOOL*))getElementDofsSolutionIMP {
     
     cl_int err;
     
@@ -3019,7 +3019,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     if (adjusted_colorMapping != NULL) free(adjusted_colorMapping);
 }
 
--(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize {
+-(void)FEMFlowSolution_elementColoringAssemblySolution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh localWorkSize:(size_t *)localWorkSize {
     
     int i;
     cl_int err;
@@ -3077,7 +3077,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     fprintf(stdout, "FEMFlowSolution:FEMFlowSolution_elementColoringAssemblyMesh: coloring assembly loop total time: Real (s): %f.\n", machcore(real_assembly_loop_end,real_assembly_loop_start));
 }
 
--(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh localWorkSize:(size_t *)localWorkSize {
+-(void)FEMFlowSolution_nonzeroAssemblySolution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh localWorkSize:(size_t *)localWorkSize {
 
     cl_int err;
     cl_ulong kernel_profile, global_part, force_part;
@@ -3233,7 +3233,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     return self;
 }
 
--(void)deallocation:(FEMSolution * __nonnull)solution {
+-(void)deallocation:(FEMSolution * _Nonnull)solution {
     
     int n = solution.mesh.maxElementDofs;
     variableArraysContainer *flowContainers = solution.variable.getContainers;
@@ -3415,7 +3415,7 @@ navierStokesGeneralComposeMassMatrix:(void (* __nonnull)(id, SEL, double**, doub
     }
 }
 
--(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, j, k, n, t, bf_id, body_id, eq_id=0, mat_id=0, compressibilityModel=-1, dim, freeSIter, iter, modelCoords=0, modelDim=0, newtonIter, nonLinearIter;
     static int dt, saveTimeStep=-1;

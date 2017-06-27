@@ -25,12 +25,12 @@
 #include <stdbool.h>
 #include "Constructors.h"
 
-void initNodes(Nodes_t * __nonnull nodes) {
+void initNodes(Nodes_t * _Nonnull nodes) {
     
     *nodes = (Nodes_t){.numberOfNodes=0, .x=NULL, .y=NULL, .z=NULL};
 }
 
-void initElements(Element_t * __nonnull elements, int n) {
+void initElements(Element_t * _Nonnull elements, int n) {
     
     int i;
     
@@ -41,12 +41,12 @@ void initElements(Element_t * __nonnull elements, int n) {
     }
 }
 
-void initBoundaryInfo(BoundaryInfo_t * __nonnull boundaryInfo) {
+void initBoundaryInfo(BoundaryInfo_t * _Nonnull boundaryInfo) {
     
     *boundaryInfo = (BoundaryInfo_t){.Constraint=0, .Outbody=-1, .GebhardtFactors=NULL, .Left=NULL, .Right=NULL};
 }
 
-variableArraysContainer * __nonnull allocateVariableContainer(void) {
+variableArraysContainer * _Nonnull allocateVariableContainer(void) {
     
     variableArraysContainer *varContainers = NULL;
     varContainers = (variableArraysContainer*)malloc(sizeof(variableArraysContainer));
@@ -56,7 +56,7 @@ variableArraysContainer * __nonnull allocateVariableContainer(void) {
     return varContainers;
 }
 
-RungeKutta_t * __nonnull allocateRungeKutta(int n) {
+RungeKutta_t * _Nonnull allocateRungeKutta(int n) {
     
     RungeKutta_t *rungeKutta = NULL;
     

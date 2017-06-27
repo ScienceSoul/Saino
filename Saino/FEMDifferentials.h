@@ -35,7 +35,7 @@
 *******************************************************************************/
 @interface FEMDifferentials : NSObject
 
--(void)lorentzForceElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double * __nonnull)lorentzForce mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration coordinateSystems:(FEMCoordinateSystems * __nonnull)coordinateSystems listUtilities:(FEMListUtilities * __nonnull)listUtilities utilities:(FEMUtilities * __nonnull)utilities;
--(double)jouleHeatElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration listUtilities:(FEMListUtilities * __nonnull)listUtilities;
+-(void)lorentzForceElement:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double * _Nonnull)lorentzForce mesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration coordinateSystems:(FEMCoordinateSystems * _Nonnull)coordinateSystems listUtilities:(FEMListUtilities * _Nonnull)listUtilities utilities:(FEMUtilities * _Nonnull)utilities;
+-(double)jouleHeatElement:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
 
 @end

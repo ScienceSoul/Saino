@@ -29,8 +29,8 @@ static double UPPERB_TOL_RATIO  =  10.0;
 
 @interface FEMHUTIter ()
 
--(void)HUTI_dRandVector:(double * __nonnull)u ipar:(int * __nonnull)ipar;
--(void)HUTI_dLuSolveAt:(int)n luMatrix:(double * __nonnull * __nonnull)lumat afterSolve:(double * __nonnull)u rightHandSide:(double * __nonnull)v;
+-(void)HUTI_dRandVector:(double * _Nonnull)u ipar:(int * _Nonnull)ipar;
+-(void)HUTI_dLuSolveAt:(int)n luMatrix:(double * _Nonnull * _Nonnull)lumat afterSolve:(double * _Nonnull)u rightHandSide:(double * _Nonnull)v;
 
 @end
 
@@ -41,7 +41,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
 /**********************************************************
     This method fills a vector with pseudo random numbers
 **********************************************************/
--(void)HUTI_dRandVector:(double * __nonnull)u ipar:(int * __nonnull)ipar {
+-(void)HUTI_dRandVector:(double * _Nonnull)u ipar:(int * _Nonnull)ipar {
     
     for (int i=0; i<HUTI_NDIM; i++) {
         u[i] = rand() % 100;
@@ -52,7 +52,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     This method constructs LU decomposition of the given matrix
     and solve LUu = v
 ******************************************************************/
--(void)HUTI_dLuSolveAt:(int)n luMatrix:(double * __nonnull * __nonnull)lumat afterSolve:(double * __nonnull)u rightHandSide:(double * __nonnull)v {
+-(void)HUTI_dLuSolveAt:(int)n luMatrix:(double * _Nonnull * _Nonnull)lumat afterSolve:(double * _Nonnull)u rightHandSide:(double * _Nonnull)v {
     
     int i, j, k;
     
@@ -155,7 +155,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Double precision version.
  
  **********************************************************************************************************************************/
--(void)dbicgstabSolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double *__nonnull)b ipar:(int * __nonnull)ipar dpar:(double *__nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dbicgstabSolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double *_Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double *_Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega;
@@ -446,7 +446,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dbicgstab2SolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dbicgstab2SolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho, alpha, beta, omega1, omega2;
@@ -845,7 +845,7 @@ static double UPPERB_TOL_RATIO  =  10.0;
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dtfqmrSolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dtfqmrSolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho=0, alpha, beta, gamma, oldgamma, eta, tau, c;
@@ -1482,7 +1482,7 @@ jump:
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dcgSolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dcgSolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho=0.0, alpha, beta;
@@ -1723,7 +1723,7 @@ jump:
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dcgsSolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double * __nonnull)dpar pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dcgsSolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double * _Nonnull)dpar pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, iter_count;
     double rho, oldrho=0.0, alpha, beta;
@@ -1997,7 +1997,7 @@ jump:
     Double precision version.
  
 **********************************************************************************************************************************/
--(void)dgmresSolveInSolution:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double * __nonnull)x rhs:(double * __nonnull)b ipar:(int * __nonnull)ipar dpar:(double *__nonnull)dpar work:(double * __nonnull * __nonnull)work pcondlMethod:(SEL __nonnull)pcondlMethod pcondrMethod:(SEL __nonnull)pcondrMethod matvecMethod:(SEL __nonnull)matvecMethod mstopMethod:(SEL __nonnull)mstopMethod {
+-(void)dgmresSolveInSolution:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix ndim:(int)ndim wrkdim:(int)wrkdim result:(double * _Nonnull)x rhs:(double * _Nonnull)b ipar:(int * _Nonnull)ipar dpar:(double *_Nonnull)dpar work:(double * _Nonnull * _Nonnull)work pcondlMethod:(SEL _Nonnull)pcondlMethod pcondrMethod:(SEL _Nonnull)pcondrMethod matvecMethod:(SEL _Nonnull)matvecMethod mstopMethod:(SEL _Nonnull)mstopMethod {
     
     int i, j, k, iter_count, m;
     int s_ind, vtmp_ind, v_ind;

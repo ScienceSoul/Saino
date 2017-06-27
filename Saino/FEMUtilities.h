@@ -30,39 +30,39 @@
 @property(nonatomic, strong, nonnull) NSString *ext;
 @property(nonatomic, strong, nonnull) NSString *appSupportSubpath;
 
--(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix * __nonnull)a;
--(void)setMatrixElement:(FEMMatrix * __nonnull)a atIndex:(int)i andIndex:(int)j value:(double)value;
--(int)initialPermutationInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model solution:(FEMSolution *__nonnull)solution equation:(NSString * __nonnull)str permutation:(int * __nonnull)perm DGSolution:(BOOL * __nullable)dg globalBubbles:(BOOL * __nullable)gb;
--(FEMVariable * __nullable)getVariableFrom:(NSMutableArray * __nonnull)anArray model:(FEMModel * __nonnull)model name:(NSString * __nonnull)name onlySearch:(BOOL * __nullable)only maskName:(NSString * __nullable)maskName info:(BOOL * __nonnull)found;
--(void)addVariableTo:(NSMutableArray * __nonnull)anArray mesh:(FEMMesh * __nullable)mesh solution:(FEMSolution * __nullable)solution name:(NSString * __nonnull)name dofs:(int )dofs container:(variableArraysContainer * __nonnull)aContainer component:(BOOL)component ifOutput:(BOOL * __nullable)output ifSecondary:(BOOL * __nullable)secondary type:(int * __nullable)aType;
--(void)addVectorTo:(NSMutableArray * __nonnull)anArray mesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution name:(NSString * __nonnull)name dofs:(int * __nullable)dofs container:(variableArraysContainer * __nonnull)aContainer ifOutput:(BOOL * __nullable)output ifSecondary:(BOOL * __nullable)secondary global:(BOOL * __nullable)global initValue:(double * __nullable)initValue;
--(double)interpolateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff;
--(double)derivateCurveTvalues:(double * __nonnull)tValues fValues:(double * __nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * __nullable)cubicCoeff;
--(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
--(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * __nonnull)x rightHandSide:(double * __nonnull)b;
--(FEMMatrix * __nonnull)meshProjectorMesh1:(FEMMesh * __nonnull)mesh1 mesh2:(FEMMesh * __nonnull)mesh2 model:(FEMModel * __nonnull)model useQuadrantTree:(BOOL * __nullable)quadrantTree transpose:(BOOL * __nullable)transs;
--(double)cublicSplineX:(double * __nonnull)x Y:(double * __nonnull)y R:(double * __nonnull)r T:(double)t;
+-(void)zeroTheNumberOfRows:(int)n inMatrix:(FEMMatrix * _Nonnull)a;
+-(void)setMatrixElement:(FEMMatrix * _Nonnull)a atIndex:(int)i andIndex:(int)j value:(double)value;
+-(int)initialPermutationInMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model solution:(FEMSolution *_Nonnull)solution equation:(NSString * _Nonnull)str permutation:(int * _Nonnull)perm DGSolution:(BOOL * _Nullable)dg globalBubbles:(BOOL * _Nullable)gb;
+-(FEMVariable * _Nullable)getVariableFrom:(NSMutableArray * _Nonnull)anArray model:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name onlySearch:(BOOL * _Nullable)only maskName:(NSString * _Nullable)maskName info:(BOOL * _Nonnull)found;
+-(void)addVariableTo:(NSMutableArray * _Nonnull)anArray mesh:(FEMMesh * _Nullable)mesh solution:(FEMSolution * _Nullable)solution name:(NSString * _Nonnull)name dofs:(int )dofs container:(variableArraysContainer * _Nonnull)aContainer component:(BOOL)component ifOutput:(BOOL * _Nullable)output ifSecondary:(BOOL * _Nullable)secondary type:(int * _Nullable)aType;
+-(void)addVectorTo:(NSMutableArray * _Nonnull)anArray mesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution name:(NSString * _Nonnull)name dofs:(int * _Nullable)dofs container:(variableArraysContainer * _Nonnull)aContainer ifOutput:(BOOL * _Nullable)output ifSecondary:(BOOL * _Nullable)secondary global:(BOOL * _Nullable)global initValue:(double * _Nullable)initValue;
+-(double)interpolateCurveTvalues:(double * _Nonnull)tValues fValues:(double * _Nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * _Nullable)cubicCoeff;
+-(double)derivateCurveTvalues:(double * _Nonnull)tValues fValues:(double * _Nonnull)fValues value:(double)t sizeOfTValues:(int)n cubicCoefficient:(double * _Nullable)cubicCoeff;
+-(void)solveLinearSystem2x2:(double[_Nonnull][2])a afterSolve:(double * _Nonnull)x rightHandSide:(double * _Nonnull)b;
+-(void)solveLinearSystem3x3:(double[_Nonnull][3])a afterSolve:(double * _Nonnull)x rightHandSide:(double * _Nonnull)b;
+-(FEMMatrix * _Nonnull)meshProjectorMesh1:(FEMMesh * _Nonnull)mesh1 mesh2:(FEMMesh * _Nonnull)mesh2 model:(FEMModel * _Nonnull)model useQuadrantTree:(BOOL * _Nullable)quadrantTree transpose:(BOOL * _Nullable)transs;
+-(double)cublicSplineX:(double * _Nonnull)x Y:(double * _Nonnull)y R:(double * _Nonnull)r T:(double)t;
 
 // Following two methods correspond to ComponentName routines in Elmer
--(NSString * __nullable)appendNameFromString:(NSString * __nonnull)string component:(int * __nullable)component;
--(NSString * __nonnull)appendNameFromVariable:(FEMVariable * __nonnull)variable component:(int * __nullable)component;
+-(NSString * _Nullable)appendNameFromString:(NSString * _Nonnull)string component:(int * _Nullable)component;
+-(NSString * _Nonnull)appendNameFromVariable:(FEMVariable * _Nonnull)variable component:(int * _Nullable)component;
 
--(NSString * __nonnull)nextFreeKeyword:(NSString * __nonnull)keyword0 dictionary:(NSMutableDictionary * __nonnull)dictionary;
--(void)checkOptionsInSolution:(FEMSolution * __nonnull)solution;
+-(NSString * _Nonnull)nextFreeKeyword:(NSString * _Nonnull)keyword0 dictionary:(NSMutableDictionary * _Nonnull)dictionary;
+-(void)checkOptionsInSolution:(FEMSolution * _Nonnull)solution;
 
--(void)addEquationBasicsToSolution:(FEMSolution * __nonnull)solution name:(NSString * __nonnull)name model:(FEMModel * __nonnull)model transient:(BOOL)transient;
--(void)addEquationToSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model transient:(BOOL)transient;
+-(void)addEquationBasicsToSolution:(FEMSolution * _Nonnull)solution name:(NSString * _Nonnull)name model:(FEMModel * _Nonnull)model transient:(BOOL)transient;
+-(void)addEquationToSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model transient:(BOOL)transient;
 
--(BOOL)isFileNameQualified:(NSString * __nonnull)file;
--(NSMutableString * __nullable)nextFreeFileName:(NSString * __nonnull)fileName0 suffix:(NSString * __nullable)suffix0 lastExisting:(BOOL * __nullable)lastExisting;
+-(BOOL)isFileNameQualified:(NSString * _Nonnull)file;
+-(NSMutableString * _Nullable)nextFreeFileName:(NSString * _Nonnull)fileName0 suffix:(NSString * _Nullable)suffix0 lastExisting:(BOOL * _Nullable)lastExisting;
 
 // Load bundle for plug-ins support
--(NSBundle * __nullable)loadBundle:(NSString * __nonnull)bundleName useApplicationSupportPath:(BOOL * __nullable)useApplicationSupportPath;
+-(NSBundle * _Nullable)loadBundle:(NSString * _Nonnull)bundleName useApplicationSupportPath:(BOOL * _Nullable)useApplicationSupportPath;
 
 // Plug-in validation
--(BOOL)plugInClassIsValid:(Class __nonnull)plugInClass;
+-(BOOL)plugInClassIsValid:(Class _Nonnull)plugInClass;
 
 // Generate the colors to color a mesh
--(void)generateColor:(RGBColors * __nonnull)color;
+-(void)generateColor:(RGBColors * _Nonnull)color;
 
 @end

@@ -38,7 +38,7 @@
     return self;
 }
 
--(ListMatrix_t * __nonnull)allocateMatrix:(int)n {
+-(ListMatrix_t * _Nonnull)allocateMatrix:(int)n {
     
     int i;
     ListMatrix_t *matrix = NULL;
@@ -54,7 +54,7 @@
     return matrix;
 }
 
--(void)freeMatrix:(ListMatrix_t * __nonnull)list size:(int)n {
+-(void)freeMatrix:(ListMatrix_t * _Nonnull)list size:(int)n {
     
     int i;
     ListMatrixEntry_t *p = NULL, *p1 = NULL;
@@ -72,7 +72,7 @@
     free(list);
 }
 
--(ListMatrix_t * __nonnull)enlargeMatrix:(ListMatrix_t * __nonnull)matrix toSize:(int)n {
+-(ListMatrix_t * _Nonnull)enlargeMatrix:(ListMatrix_t * _Nonnull)matrix toSize:(int)n {
     
     int i;
     ListMatrix_t *newMatrix = NULL;
@@ -88,7 +88,7 @@
     return newMatrix;
 }
 
--(ListMatrixEntry_t * __nonnull)getMatrixIndexInListMatrix:(ListMatrix_t * __nullable)list atIndex:(int)k1 andIndex:(int)k2 {
+-(ListMatrixEntry_t * _Nonnull)getMatrixIndexInListMatrix:(ListMatrix_t * _Nullable)list atIndex:(int)k1 andIndex:(int)k2 {
     
     ListMatrixEntry_t *cList = NULL, *entry = NULL, *prev = NULL;
     
@@ -144,7 +144,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************/
--(void)addToMatrixElement:(ListMatrix_t * __nonnull)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL * __nullable)setValue {
+-(void)addToMatrixElement:(ListMatrix_t * _Nonnull)list atIndex:(int)k1 andIndex:(int)k2 value:(double)value setValue:(BOOL * _Nullable)setValue {
     
     ListMatrixEntry_t *entry = NULL;
     BOOL set=NO;
@@ -167,7 +167,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 *************************************************************************************/
--(void)convertToCRSMatrix:(FEMMatrix * __nonnull)matrix{
+-(void)convertToCRSMatrix:(FEMMatrix * _Nonnull)matrix{
     
     int n, *rows = NULL, *cols = NULL, *diag = NULL;
     double *values = NULL;

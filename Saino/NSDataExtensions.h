@@ -28,9 +28,9 @@
 
 @interface NSData (Additions)
 
-- (NSRange)rangeOfData:(NSData * __nonnull)dataToFind;
-- (NSRange)rangeOfDataBackwardsSearch:(NSData * __nonnull)dataToFind;
-- (NSString * __nullable)stringValueWithEncoding:(NSStringEncoding)encoding;
+- (NSRange)rangeOfData:(NSData * _Nonnull)dataToFind;
+- (NSRange)rangeOfDataBackwardsSearch:(NSData * _Nonnull)dataToFind;
+- (NSString * _Nullable)stringValueWithEncoding:(NSStringEncoding)encoding;
 
 @end
 
@@ -41,6 +41,6 @@
 
 @interface NSMutableData (Additions)
 
-- (void)prepend:(NSData * __nonnull)data;
+- (void)prepend:(NSData * _Nonnull)data;
 
 @end

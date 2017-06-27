@@ -45,10 +45,10 @@ static char *_parallel_extensions[] = {
 
 @interface SIOMeshAgent ()
 
--(void)SIOMeshAgent_makeFilename:(char * __nonnull)buf model:(const char * __nonnull)model suffix:(const char * __nonnull)suffix;
+-(void)SIOMeshAgent_makeFilename:(char * _Nonnull)buf model:(const char * _Nonnull)model suffix:(const char * _Nonnull)suffix;
 -(int)SIOMeshAgent_elementNodes:(const int)type;
 -(void)SIOMeshAgent_cacheNodes;
--(int)SIOMeshAgent_copyCoords:(double * __nonnull)target address:(const int)address;
+-(int)SIOMeshAgent_copyCoords:(double * _Nonnull)target address:(const int)address;
 -(cacheNode *)SIOMeshAgent_searchNode:(const int)address;
 
 @end
@@ -77,7 +77,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Private methods
 
--(void)SIOMeshAgent_makeFilename:(char * __nonnull)buf model:(const char * __nonnull)model suffix:(const char * __nonnull)suffix {
+-(void)SIOMeshAgent_makeFilename:(char * _Nonnull)buf model:(const char * _Nonnull)model suffix:(const char * _Nonnull)suffix {
     
     buf[0] = '\0';
     strcat(buf, model);
@@ -139,7 +139,7 @@ static char *_parallel_extensions[] = {
     return retval;
 }
 
--(int)SIOMeshAgent_copyCoords:(double * __nonnull)target address:(const int)address {
+-(int)SIOMeshAgent_copyCoords:(double * _Nonnull)target address:(const int)address {
     
     int found = 1;
     if (self.parallel) {
@@ -164,7 +164,7 @@ static char *_parallel_extensions[] = {
 
 #pragma mark Public methods
 
--(id __nullable)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part
+-(id _Nullable)initWithManager:(SIOModelManager * _Nonnull)mm split:(int)split part:(int)part
 {
     self = [super init];
     if (self) {
@@ -201,7 +201,7 @@ static char *_parallel_extensions[] = {
     return self;
 }
     
--(int)createMesh:(NSString * __nonnull)dir {
+-(int)createMesh:(NSString * _Nonnull)dir {
     
     int i;
     char filename[PATH_MAX];
@@ -216,7 +216,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)openMesh:(NSString * __nonnull)dir {
+-(int)openMesh:(NSString * _Nonnull)dir {
     
     int i, j, isLineBreak, lineCount = 0;
     char filename[PATH_MAX];
@@ -296,7 +296,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readDescriptorNode:(int * __nonnull)nodeC element:(int * __nonnull)elementC boundaryElement:(int * __nonnull)boundaryElementC usedElementTypes:(int * __nonnull)usedElementTypes usedElementTypeTags:(int * __nonnull)usedElementTypeTags usedElementTypeCount:(int * __nonnull)usedElementTypeCount {
+-(int)readDescriptorNode:(int * _Nonnull)nodeC element:(int * _Nonnull)elementC boundaryElement:(int * _Nonnull)boundaryElementC usedElementTypes:(int * _Nonnull)usedElementTypes usedElementTypeTags:(int * _Nonnull)usedElementTypeTags usedElementTypeCount:(int * _Nonnull)usedElementTypeCount {
     
     int i;
     
@@ -313,13 +313,13 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readPartDescriptor:(int * __nonnull)shared {
+-(int)readPartDescriptor:(int * _Nonnull)shared {
     
     *shared = self.sharedNodeCount;
     return 0;
 }
 
--(int)readNextElementConnections:(int * __nonnull)tag part:(int * __nonnull)part body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly {
+-(int)readNextElementConnections:(int * _Nonnull)tag part:(int * _Nonnull)part body:(int * _Nonnull)body type:(int * _Nonnull)type pdofs:(int * _Nonnull)pdofs nodes:(int * _Nonnull)nodes colorIndex:(int * _Nullable)colorIndex parallelAssembly:(BOOL * _Nullable)parallelAssembly {
     
     int i, j, gotnodal;
     FileReader *reader;
@@ -401,7 +401,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextElementCoordinates:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord {
+-(int)readNextElementCoordinates:(int * _Nonnull)tag body:(int * _Nonnull)body type:(int * _Nonnull)type nodes:(int * _Nonnull)nodes coord:(double * _Nonnull)coord {
     
     int i, j;
     FileReader *reader;
@@ -446,7 +446,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readNextBoundaryElement:(int * __nonnull)tag part:(int * __nonnull)part boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord {
+-(int)readNextBoundaryElement:(int * _Nonnull)tag part:(int * _Nonnull)part boundary:(int * _Nonnull)boundary leftElement:(int * _Nonnull)leftElement rightElement:(int * _Nonnull)rightElement type:(int * _Nonnull)type nodes:(int * _Nonnull)nodes coord:(double * _Nonnull)coord {
     
     int i, j;
     FileReader *reader;
@@ -515,7 +515,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readAllNodes:(int * __nonnull)tags coord:(double * __nonnull)coord {
+-(int)readAllNodes:(int * _Nonnull)tags coord:(double * _Nonnull)coord {
     
     int i = 0;
     int pt = 0;
@@ -532,7 +532,7 @@ static char *_parallel_extensions[] = {
     return 0;
 }
 
--(int)readSharedNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partcount partitions:(int * __nonnull)partitions {
+-(int)readSharedNode:(int * _Nonnull)tag constraint:(int * _Nonnull)constraint coord:(double * _Nonnull)coord partCount:(int * _Nonnull)partcount partitions:(int * _Nonnull)partitions {
     
     int i, j;
     FileReader *reader;

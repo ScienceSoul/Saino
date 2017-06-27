@@ -40,7 +40,7 @@
         double *y -> value of the quantity y = x(u)
  
 ****************************************************************************/
-inline void NodalBasisFunctions1D(double * __nonnull y, Element_t * __nonnull element, double u) {
+inline void NodalBasisFunctions1D(double * _Nonnull y, Element_t * _Nonnull element, double u) {
     
     int i, n;
     int *p = NULL;
@@ -75,7 +75,7 @@ inline void NodalBasisFunctions1D(double * __nonnull y, Element_t * __nonnull el
         double *y -> value of the quantity y = x(u)
  
 ****************************************************************************/
-inline void NodalBasisFunctions2D(double * __nonnull y, Element_t * __nonnull element, double u, double v) {
+inline void NodalBasisFunctions2D(double * _Nonnull y, Element_t * _Nonnull element, double u, double v) {
     
     int i, n;
     int *p = NULL, *q = NULL;
@@ -133,7 +133,7 @@ inline void NodalBasisFunctions2D(double * __nonnull y, Element_t * __nonnull el
         double y -> value of the quantity y = x(u,v,w)
  
 **********************************************************************************/
-inline double InterpolateInElement3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
+inline double InterpolateInElement3D(Element_t * _Nonnull element, double * _Nonnull x, double u, double v, double w) {
     
     int i, l, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -231,7 +231,7 @@ inline double InterpolateInElement3D(Element_t * __nonnull element, double * __n
         double *y -> value of the quantity y = x(u)
  
 ****************************************************************************/
-inline void NodalBasisFunctions3D(double * __nonnull y, Element_t * __nonnull element, double u, double v, double w) {
+inline void NodalBasisFunctions3D(double * _Nonnull y, Element_t * _Nonnull element, double u, double v, double w) {
     
     int i, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -271,7 +271,7 @@ inline void NodalBasisFunctions3D(double * __nonnull y, Element_t * __nonnull el
     }
 }
 
-inline void NodalBasisFunctions(int n, double * __nonnull Basis, Element_t * __nonnull element, double u, double v,double w) {
+inline void NodalBasisFunctions(int n, double * _Nonnull Basis, Element_t * _Nonnull element, double u, double v,double w) {
     int q, dim;
     double NodalBasis[n];
     
@@ -318,7 +318,7 @@ inline void NodalBasisFunctions(int n, double * __nonnull Basis, Element_t * __n
         double **y -> value of the quantity y = @x/@u
  
 ****************************************************************************/
-inline void NodalFirstDerivatives1D(double * __nonnull y, Element_t * __nonnull element, double u) {
+inline void NodalFirstDerivatives1D(double * _Nonnull y, Element_t * _Nonnull element, double u) {
     
     int i, n;
     int *p = NULL;
@@ -353,7 +353,7 @@ inline void NodalFirstDerivatives1D(double * __nonnull y, Element_t * __nonnull 
         double **y -> value of the quantity y = @x(u,v)/@u
  
 ****************************************************************************/
-inline void NodalFirstDerivatives2D(double * __nonnull y, Element_t * __nonnull element, double u, double v) {
+inline void NodalFirstDerivatives2D(double * _Nonnull y, Element_t * _Nonnull element, double u, double v) {
     
     int i, n;
     int *p = NULL, *q = NULL;
@@ -421,7 +421,7 @@ inline void NodalFirstDerivatives2D(double * __nonnull y, Element_t * __nonnull 
         double y -> value of the quantity y = @x(u,v,w)/@u
  
 ***************************************************************************************/
-inline double FirstDerivativeInU3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
+inline double FirstDerivativeInU3D(Element_t * _Nonnull element, double * _Nonnull x, double u, double v, double w) {
     
     int i, l, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -527,7 +527,7 @@ inline double FirstDerivativeInU3D(Element_t * __nonnull element, double * __non
         double y -> value of the quantity y = @x(u,v,w)/@v
  
 ****************************************************************************************/
-inline double FirstDerivativeInV3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
+inline double FirstDerivativeInV3D(Element_t * _Nonnull element, double * _Nonnull x, double u, double v, double w) {
     
     int i, l, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -636,7 +636,7 @@ inline double FirstDerivativeInV3D(Element_t * __nonnull element, double * __non
     Method corresponds to Elmer from git on October 27 2015
  
 *****************************************************************************************/
-inline double FirstDerivativeInW3D(Element_t * __nonnull element, double * __nonnull x, double u, double v, double w) {
+inline double FirstDerivativeInW3D(Element_t * _Nonnull element, double * _Nonnull x, double u, double v, double w) {
     
     int i, l, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -742,7 +742,7 @@ inline double FirstDerivativeInW3D(Element_t * __nonnull element, double * __non
         double **y -> value of the quantity y =  @x(u,v,w)/@u
  
 ****************************************************************************/
-inline void NodalFirstDerivatives3D(double * __nonnull y, Element_t * __nonnull element, double u, double v, double w) {
+inline void NodalFirstDerivatives3D(double * _Nonnull y, Element_t * _Nonnull element, double u, double v, double w) {
     
     int i, n;
     int *p = NULL, *q = NULL, *r = NULL;
@@ -807,7 +807,7 @@ inline void NodalFirstDerivatives3D(double * __nonnull y, Element_t * __nonnull 
     }
 }
 
-inline void NodalFirstDerivatives(int n, double * __nonnull dLBasisdx, Element_t * __nonnull element, double u, double v, double w) {
+inline void NodalFirstDerivatives(int n, double * _Nonnull dLBasisdx, Element_t * _Nonnull element, double u, double v, double w) {
     
     int q, dim;
     double NodalBasis[n];
@@ -859,7 +859,7 @@ inline void NodalFirstDerivatives(int n, double * __nonnull dLBasisdx, Element_t
         double y -> value of the quantity y = @x/@u
  
 *******************************************************************************************************/
-inline double SecondDerivatives1D(Element_t * __nonnull element, double * __nonnull nodes, double u) {
+inline double SecondDerivatives1D(Element_t * _Nonnull element, double * _Nonnull nodes, double u) {
     
     double y;
     
@@ -904,7 +904,7 @@ inline double SecondDerivatives1D(Element_t * __nonnull element, double * __nonn
         double y -> value of the quantity s = @^2x(u,v)/@v^2
  
 *********************************************************************************************************/
-inline void SecondDerivatives2D(double * __nonnull ddx, Element_t * __nonnull element, double * __nonnull nodes, double u, double v) {
+inline void SecondDerivatives2D(double * _Nonnull ddx, Element_t * _Nonnull element, double * _Nonnull nodes, double u, double v) {
     
     int i, n;
     int *p = NULL, *q = NULL;
@@ -966,7 +966,7 @@ inline void SecondDerivatives2D(double * __nonnull ddx, Element_t * __nonnull el
         double y -> value of the quantity s = @^2x(u,v)/@v^2
  
 *****************************************************************************************************/
-inline void SecondDerivatives3D(double * __nonnull ddx, Element_t * __nonnull element, double * __nonnull nodes, double u, double v, double w) {
+inline void SecondDerivatives3D(double * _Nonnull ddx, Element_t * _Nonnull element, double * _Nonnull nodes, double u, double v, double w) {
     
     int i, n;
     int *p = NULL, *q = NULL, *r = NULL;

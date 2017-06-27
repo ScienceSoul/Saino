@@ -44,10 +44,10 @@
 @synthesize ismip_hom_C010_allDone = _ismip_hom_C010_allDone;
 @synthesize norm = _norm;
 
-static FEMTest * __nullable sharedTest = nil;
+static FEMTest * _Nullable sharedTest = nil;
 static dispatch_once_t onceToken;
 
-+(id __nonnull)sharedTest {
++(id _Nonnull)sharedTest {
     
     dispatch_once(&onceToken, ^{
         sharedTest = [[self alloc] init];
@@ -90,7 +90,7 @@ static dispatch_once_t onceToken;
     _norm = 0.0;
 }
 
--(void)setUpHeateqTest:(id __nonnull)model {
+-(void)setUpHeateqTest:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -207,7 +207,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"Mesh"];
 }
 
--(void)setUpStepStokesTest:(id __nonnull)model {
+-(void)setUpStepStokesTest:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -340,7 +340,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"Step"];
 }
 
--(void)setUpNaturalConvectionTest:(id __nonnull)model {
+-(void)setUpNaturalConvectionTest:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -540,7 +540,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"square"];
 }
 
--(void)setUpISMIP_HOM_A010Test:(id __nonnull)model {
+-(void)setUpISMIP_HOM_A010Test:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -745,7 +745,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"rectangle"];
 }
 
--(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id __nonnull)model {
+-(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id _Nonnull)model {
     
     [self setUpISMIP_HOM_A010Test:model];
     
@@ -791,7 +791,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"rectangle-colored"];
 }
 
--(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id __nonnull)model {
+-(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id _Nonnull)model {
     
     [self setUpISMIP_HOM_A010Test:model];
     
@@ -841,7 +841,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"rectangle-nzs"];
 }
 
--(void)setUpISMIP_HOM_B010Test:(id __nonnull)model {
+-(void)setUpISMIP_HOM_B010Test:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     
@@ -1009,7 +1009,7 @@ static dispatch_once_t onceToken;
     mod.meshName = [NSMutableString stringWithString:@"rectangle"];
 }
 
--(void)setUpISMIP_HOM_C010Test:(id __nonnull)model {
+-(void)setUpISMIP_HOM_C010Test:(id _Nonnull)model {
     
     FEMModel *mod = (FEMModel *)model;
     

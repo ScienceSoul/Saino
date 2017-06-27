@@ -151,7 +151,7 @@
     this method will return dummy (that is the standard naming form used by a solution variable).
     Otherwise it will return the name as it is.
 */
--(NSString * __nullable)canonicalizeName {
+-(NSString * _Nullable)canonicalizeName {
     
     if (self.name == nil) return nil;
     
@@ -163,7 +163,7 @@
     }
 }
 
--(variableArraysContainer * __nonnull)getContainers {
+-(variableArraysContainer * _Nonnull)getContainers {
     
     return _containers;
 }

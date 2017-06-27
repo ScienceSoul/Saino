@@ -43,7 +43,7 @@
     BOOL _complexMatrix;
     BOOL _dgMatrix;
     
-    matrixArraysContainer * __nonnull _containers;
+    matrixArraysContainer * _Nonnull _containers;
 }
 
 @property(nonatomic, strong, nullable) FEMMatrix *child;
@@ -67,6 +67,6 @@
 @property(nonatomic, assign, getter = isDgmatrix) BOOL dgMatrix;
 
 -(void)deallocation;
--(matrixArraysContainer * __nonnull)getContainers;
+-(matrixArraysContainer * _Nonnull)getContainers;
 
 @end

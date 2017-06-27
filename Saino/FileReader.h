@@ -26,25 +26,25 @@
 
 @interface FileReader : NSObject {
     
-    NSString * __nonnull		m_filePath;				/**< File path. */
-	NSFileHandle * __nonnull	m_fileHandle;			/**< File handle. */
+    NSString * _Nonnull		m_filePath;				/**< File path. */
+	NSFileHandle * _Nonnull	m_fileHandle;			/**< File handle. */
 	unsigned long long          m_currentOffset;		/**< Current offset is needed for forwards reading. */
 	unsigned long long          m_currentInset;			/**< Current inset is needed for backwards reading. */
 	NSRange                     m_prevDelimiterRange;	/**< Position and length of the last delimiter. */
 	unsigned long long          m_totalFileLength;		/**< Total number of bytes in file. */
-	NSString * __nonnull		m_lineDelimiter;		/**< Character for line break or page break. */
+	NSString * _Nonnull		m_lineDelimiter;		/**< Character for line break or page break. */
 	NSUInteger              m_chunkSize;			/**< Standard block size. */
 }
 
-- (id __nullable)initWithFilePath:(NSString * __nonnull)filePathh;
+- (id _Nullable)initWithFilePath:(NSString * _Nonnull)filePathh;
 - (void)closeHandle;
 - (void)rewind;
-- (NSString * __nullable)readLine;
-- (NSString * __nullable)readLineBackwards;
-- (NSString * __nullable)readTrimmedLine;
+- (NSString * _Nullable)readLine;
+- (NSString * _Nullable)readLineBackwards;
+- (NSString * _Nullable)readTrimmedLine;
 
 #if NS_BLOCKS_AVAILABLE
-- (void)enumerateLinesUsingBlock:(void(^ __nonnull)(NSString * __nonnull, BOOL * __nonnull))block;
+- (void)enumerateLinesUsingBlock:(void(^ _Nonnull)(NSString * _Nonnull, BOOL * _Nonnull))block;
 #endif
 
 @end

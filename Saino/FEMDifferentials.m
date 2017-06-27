@@ -26,15 +26,15 @@
 #import "FEMLinearAlgebra.h"
 
 @interface FEMDifferentials ()
--(void)FEMDifferentials_computeLorentzMagnetic:(double * __nonnull)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double * __nonnull)lorentzForce model:(FEMModel * __nonnull)model;
--(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel * __nonnull)model;
+-(void)FEMDifferentials_computeLorentzMagnetic:(double * _Nonnull)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double * _Nonnull)lorentzForce model:(FEMModel * _Nonnull)model;
+-(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel * _Nonnull)model;
 @end
 
 @implementation FEMDifferentials
 
 #pragma mark Private methods
 
--(void)FEMDifferentials_computeLorentzMagnetic:(double * __nonnull)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double * __nonnull)lorentzForce model:(FEMModel * __nonnull)model {
+-(void)FEMDifferentials_computeLorentzMagnetic:(double * _Nonnull)b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb lorentzForce:(double * _Nonnull)lorentzForce model:(FEMModel * _Nonnull)model {
     
     int i, j, k, l, m;
     double bc[3], jc[3], ji[3], perm[3][3][3], r, s;
@@ -128,7 +128,7 @@
     }
 }
 
--(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel * __nonnull)model {
+-(double)FEMDifferentials_computeMagneticHeat:(double[3])b dhdx:(double[][3])dhdx permeability:(double)mu sqrtMetric:(double)sqrtMetric metric:(double[][3])metric symbols:(double[][3][3])symb model:(FEMModel * _Nonnull)model {
     
     int i, j, k, l, m;
     double bc[3], jc[3], jh, ji[3], perm[3][3][3], r, s;
@@ -215,7 +215,7 @@
     Computes the Lorentz force resulting from a magnetic field at integration point (u,v,w).
  
 **************************************************************************************************************/
--(void)lorentzForceElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double * __nonnull)lorentzForce mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration coordinateSystems:(FEMCoordinateSystems * __nonnull)coordinateSystems listUtilities:(FEMListUtilities * __nonnull)listUtilities utilities:(FEMUtilities * __nonnull)utilities {
+-(void)lorentzForceElement:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w lorentzForce:(double * _Nonnull)lorentzForce mesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration coordinateSystems:(FEMCoordinateSystems * _Nonnull)coordinateSystems listUtilities:(FEMListUtilities * _Nonnull)listUtilities utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, k;
     double mu, sqrtElementMetric, sqrtMetric, x, y, z;
@@ -343,7 +343,7 @@
     Compute the Joule heating at integration point (u, v, w) given the appropriate electrostatic
     or magnetic field that indicates the current through a conductor.
 *************************************************************************************************/
--(double)jouleHeatElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(double)jouleHeatElement:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int)n integrationU:(double)u integrationV:(double)v integrationW:(double)w mesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
  
     int i, j, k, bf_id, jouleNode;
     static int prevElementBodyID = -1;

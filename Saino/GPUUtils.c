@@ -41,13 +41,13 @@ int precision(void) {
     return precisionMode;
 }
 
-void initGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize) {
+void initGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * _Nonnull allocationSize) {
 
     *allocationSize = (GlobalMemoryAllocationSize_t){.nb_char=0, .nb_uchar=0, .nb_short=0, .nb_ushort=0,
                        .nb_int=0, .nb_uint=0, .nb_long=0, .nb_ulong=0, .nb_float=0, .nb_double=0};
 }
 
-size_t computeGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize) {
+size_t computeGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * _Nonnull allocationSize) {
         
     return (sizeof(cl_char)*allocationSize->nb_char
             + sizeof(cl_uchar)*allocationSize->nb_uchar
@@ -99,7 +99,7 @@ static void check_size(va_list ap, int count, const char *source_type) {
     }
 }
 
-void * __nonnull alloc_mem(int precision, size_t size) {
+void * _Nonnull alloc_mem(int precision, size_t size) {
     
     void *pt;
     
@@ -123,7 +123,7 @@ void * __nonnull alloc_mem(int precision, size_t size) {
     where count gives the total number of aguments following count.
  
  ***********************************************************************************************************/
-int init_data(int precision, const char * __nonnull source_type, int count, ...) {
+int init_data(int precision, const char * _Nonnull source_type, int count, ...) {
     
     va_list ap;
     size_t size;
@@ -218,7 +218,7 @@ int init_data(int precision, const char * __nonnull source_type, int count, ...)
  
  
 ***********************************************************************************************************/
-int __attribute__((overloadable)) init_data_concat(const char * __nonnull source_type, float * __nonnull target, size_t size_target, bool reset, int count, ...) {
+int __attribute__((overloadable)) init_data_concat(const char * _Nonnull source_type, float * _Nonnull target, size_t size_target, bool reset, int count, ...) {
     
     va_list ap, ap2;
     size_t size;
@@ -292,7 +292,7 @@ int __attribute__((overloadable)) init_data_concat(const char * __nonnull source
     A reset option can be provided, if true, the indexing inside the target will be reset to 0.
  
 ***********************************************************************************************************/
-int __attribute__((overloadable)) init_data_concat(const char * __nonnull source_type, double * __nonnull target, size_t size_target, bool reset, int count, ...) {
+int __attribute__((overloadable)) init_data_concat(const char * _Nonnull source_type, double * _Nonnull target, size_t size_target, bool reset, int count, ...) {
     
     va_list ap, ap2;
     size_t size;

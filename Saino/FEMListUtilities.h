@@ -28,49 +28,49 @@
 
 @property(nonatomic, strong, nonnull) NSMutableDictionary <NSString *, NSNumber *> *timers;
 
-+(id __nonnull)sharedListUtilities;
++(id _Nonnull)sharedListUtilities;
 +(void)selfDestruct;
 
--(void)listParseDependencies:(NSArray * __nonnull)dependencies index:(int)ind name:(NSString * __nonnull)name toValues:(double * __nonnull)t count:(int * __nonnull)count model:(FEMModel * __nonnull)model allGlobal:(BOOL * __nonnull)allGlobal;
+-(void)listParseDependencies:(NSArray * _Nonnull)dependencies index:(int)ind name:(NSString * _Nonnull)name toValues:(double * _Nonnull)t count:(int * _Nonnull)count model:(FEMModel * _Nonnull)model allGlobal:(BOOL * _Nonnull)allGlobal;
 
--(void)listSetNameSpace:(NSString * __nullable)str;
--(char * __nonnull)listGetNameSpaceForVariable:(NSString * __nonnull)varName;
--(NSString * __nullable)listGetString:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
--(BOOL)listGetReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
--(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
--(BOOL)listGetRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result;
--(double)listGetConstReal:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv;
--(BOOL)listGetConstRealArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
+-(void)listSetNameSpace:(NSString * _Nullable)str;
+-(char * _Nonnull)listGetNameSpaceForVariable:(NSString * _Nonnull)varName;
+-(NSString * _Nullable)listGetString:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found;
+-(BOOL)listGetReal:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv;
+-(double)listGetValueParameter:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName value:(double)value info:(BOOL * _Nonnull)found minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv;
+-(BOOL)listGetRealArray:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result;
+-(double)listGetConstReal:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv;
+-(BOOL)listGetConstRealArray:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName buffer:(listBuffer * _Nonnull)result;
 
--(BOOL)listGetIntegerArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result;
--(int)listGetInteger:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv;
+-(BOOL)listGetIntegerArray:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName buffer:(listBuffer * _Nonnull)result;
+-(int)listGetInteger:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found minValue:(int * _Nullable)minv maxValue:(int * _Nullable)maxv;
 
--(BOOL)listGetLogical:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found;
+-(BOOL)listGetLogical:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found;
 
--(BOOL)listGetDerivativeValue:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result;
+-(BOOL)listGetDerivativeValue:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result;
 
--(FEMValueList * __nullable)listFindVariable:(NSString * __nonnull)varName inArray:(NSArray * __nonnull)array;
--(BOOL)listCheckPresentVariable:(NSString * __nonnull)varName inArray:(NSArray * __nonnull)array;
--(FEMValueList * __nullable)listFindPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array info:(BOOL * __nonnull)found;
--(BOOL)listCheckPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array;
+-(FEMValueList * _Nullable)listFindVariable:(NSString * _Nonnull)varName inArray:(NSArray * _Nonnull)array;
+-(BOOL)listCheckPresentVariable:(NSString * _Nonnull)varName inArray:(NSArray * _Nonnull)array;
+-(FEMValueList * _Nullable)listFindPrefix:(NSString * _Nonnull)prefix inArray:(NSArray * _Nonnull)array info:(BOOL * _Nonnull)found;
+-(BOOL)listCheckPrefix:(NSString * _Nonnull)prefix inArray:(NSArray * _Nonnull)array;
 
--(void)addStringInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(NSString * __nonnull)value;
--(void)addLogicalInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(BOOL)value;
--(void)addIntegerInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(int * __nullable)value orUsingBlock:(double (^ __nullable)())block;
--(void)addIntegerArrayInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValues:(int * __nullable)values size:(int)n orUsingBlock:(double (^ __nullable)())block;
--(void)addConstRealInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(double * __nullable)value orUsingBlock:(double (^ __nullable)())block string:(NSString * __nullable)str;
--(void)addConstRealArrayInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValues:(double * __nullable * __nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ __nullable)())block string:(NSString * __nullable)str;
--(void)addBlockInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName usingBlock:(double (^ __nonnull)(double * __nullable variablesValues))block dependencies:(NSArray * __nullable)dependencies;
+-(void)addStringInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(NSString * _Nonnull)value;
+-(void)addLogicalInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(BOOL)value;
+-(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)())block;
+-(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)())block;
+-(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str;
+-(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str;
+-(void)addBlockInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName usingBlock:(double (^ _Nonnull)(double * _Nullable variablesValues))block dependencies:(NSArray * _Nullable)dependencies;
 
--(BOOL)checkElementEquation:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element andEquation:(NSString * __nonnull)equation;
+-(BOOL)checkElementEquation:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element andEquation:(NSString * _Nonnull)equation;
 
--(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
--(BOOL)listCheckPresentAnyBodyForce:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
--(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name;
+-(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name;
+-(BOOL)listCheckPresentAnyBodyForce:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name;
+-(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name;
 
--(void)checkTimer:(NSString * __nonnull)timerName deleteTimer:(BOOL * __nullable)deleteTimer resetTimer:(BOOL * __nullable)resetTimer model:(FEMModel * __nonnull)model;
--(void)resetTimer:(NSString * __nonnull)timerName model:(FEMModel * __nonnull)model;
--(void)deletTimer:(NSString * __nonnull)timerName;
+-(void)checkTimer:(NSString * _Nonnull)timerName deleteTimer:(BOOL * _Nullable)deleteTimer resetTimer:(BOOL * _Nullable)resetTimer model:(FEMModel * _Nonnull)model;
+-(void)resetTimer:(NSString * _Nonnull)timerName model:(FEMModel * _Nonnull)model;
+-(void)deletTimer:(NSString * _Nonnull)timerName;
 
 -(void)deallocation;
 

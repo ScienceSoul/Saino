@@ -46,12 +46,12 @@
     BOOL _stabilize;
     BOOL _outputActive;
     
-    Element_t * __nullable _elements;
-    Element_t * __nullable _edges;
-    Element_t * __nullable _faces;
-    Nodes_t * __nullable _globalNodes;
-    Quadrant_t * __nullable _rootQuadrant;
-    Factors_t * __nullable _viewFactors;
+    Element_t * _Nullable _elements;
+    Element_t * _Nullable _edges;
+    Element_t * _Nullable _faces;
+    Nodes_t * _Nullable _globalNodes;
+    Quadrant_t * _Nullable _rootQuadrant;
+    Factors_t * _Nullable _viewFactors;
     
     NSMutableString *_name;
     NSMutableArray *_variables;
@@ -62,10 +62,10 @@
     FEMMesh *_parent;
     FEMMesh *_child;
     
-    int * __nullable _colorMapping;
-    int * __nullable _elementNodeIndexesStore;
-    int * __nullable _discontinousPerm;
-    int * __nullable _invPerm;
+    int * _Nullable _colorMapping;
+    int * _Nullable _elementNodeIndexesStore;
+    int * _Nullable _discontinousPerm;
+    int * _Nullable _invPerm;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -97,67 +97,67 @@
 @property(nonatomic, strong, nullable) FEMMesh *parent;
 @property(nonatomic, strong, nullable) FEMMesh *child;
 
--(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs;
+-(void)loadMeshForModel:(FEMModel * _Nonnull)model meshDirectory:(NSString * _Nonnull)dir meshName:(NSString * _Nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * _Nullable)numParts partitionID:(int * _Nullable)partID definitions:(int * _Nullable)defDofs;
 
 // Allocations methods
--(void)allocatePDefinitionsForElement:(Element_t * __nonnull)element;
+-(void)allocatePDefinitionsForElement:(Element_t * _Nonnull)element;
 
 // Assign nodes
--(void)assignNodes:(Nodes_t * __nonnull)nodes;
+-(void)assignNodes:(Nodes_t * _Nonnull)nodes;
 
 // Assign elements
--(void)assignElements:(Element_t * __nonnull)elements;
+-(void)assignElements:(Element_t * _Nonnull)elements;
 
 // Assign faces
--(void)assignFaces:(Element_t * __nonnull)faces;
+-(void)assignFaces:(Element_t * _Nonnull)faces;
 
 // Assign edges
--(void)assignEdges:(Element_t * __nonnull)edges;
+-(void)assignEdges:(Element_t * _Nonnull)edges;
 
 // Assign quadrants
--(void)assignQuadrant:(Quadrant_t * __nonnull)quadrant;
+-(void)assignQuadrant:(Quadrant_t * _Nonnull)quadrant;
 
 // Assign view factors
--(void)assignViewFactors:(Factors_t * __nonnull)factors;
+-(void)assignViewFactors:(Factors_t * _Nonnull)factors;
 
 // Assign inverse permutation
--(void)assignInvPerm:(int * __nonnull)perm;
+-(void)assignInvPerm:(int * _Nonnull)perm;
 
 // Assign color mapping
--(void)assignColorMapping:(int * __nonnull)colorMap;
+-(void)assignColorMapping:(int * _Nonnull)colorMap;
 
 // Assign indexes store
--(void)assignElementNodeIndexesStore:(int * __nonnull)elementNodeIndexesStore;
+-(void)assignElementNodeIndexesStore:(int * _Nonnull)elementNodeIndexesStore;
 
 // Nodes getter
--(Nodes_t * __nullable)getNodes;
+-(Nodes_t * _Nullable)getNodes;
 
 // Elements getter
--(Element_t * __nullable)getElements;
+-(Element_t * _Nullable)getElements;
 
 // Edges getter 
--(Element_t * __nullable)getEdges;
+-(Element_t * _Nullable)getEdges;
 
 // Faces getter
--(Element_t * __nullable)getFaces;
+-(Element_t * _Nullable)getFaces;
 
 // Quadrant getter
--(Quadrant_t * __nullable)getQuadrant;
+-(Quadrant_t * _Nullable)getQuadrant;
 
 // View Factors getter
--(Factors_t * __nullable)getViewFactors;
+-(Factors_t * _Nullable)getViewFactors;
 
 // Color mapping getter
--(int * __nullable)getColorMapping;
+-(int * _Nullable)getColorMapping;
 
 // Element permutation store getter
--(int * __nullable)getElementNodeIndexesStore;
+-(int * _Nullable)getElementNodeIndexesStore;
 
 // Discontinous permutation getter
--(int * __nullable)getDiscontinousPerm;
+-(int * _Nullable)getDiscontinousPerm;
 
 // Inverse permutation getter
--(int * __nullable)getInvPerm;
+-(int * _Nullable)getInvPerm;
 
 // Test associativity
 -(BOOL)isAssociatedEdges;

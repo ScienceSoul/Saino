@@ -330,7 +330,7 @@
     return self;
 }
 
--(void)allocatePDefinitionsForElement:(Element_t * __nonnull)element {
+-(void)allocatePDefinitionsForElement:(Element_t * _Nonnull)element {
     
     element->Pdefs = NULL;
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
@@ -346,7 +346,7 @@
     element->Pdefs->GaussPoints = 0;
 }
 
--(void)loadMeshForModel:(FEMModel * __nonnull)model meshDirectory:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * __nullable)numParts partitionID:(int * __nullable)partID definitions:(int * __nullable)defDofs {
+-(void)loadMeshForModel:(FEMModel * _Nonnull)model meshDirectory:(NSString * _Nonnull)dir meshName:(NSString * _Nonnull)name boundariesOnly:(BOOL)bd numberOfPartitions:(int * _Nullable)numParts partitionID:(int * _Nullable)partID definitions:(int * _Nullable)defDofs {
     
     int i, j, k, n, body, colorID=-1, type, bndry, left, right, tag;
     int addr1, addr2;
@@ -1000,91 +1000,91 @@
 
 #pragma mark Inverse permutation assignment
 
--(void)assignInvPerm:(int * __nonnull)perm {
+-(void)assignInvPerm:(int * _Nonnull)perm {
     
     _invPerm = perm;
 }
 
 #pragma  mark Color mapping assignment
 
--(void)assignColorMapping:(int * __nonnull)colorMap {
+-(void)assignColorMapping:(int * _Nonnull)colorMap {
     
     _colorMapping = colorMap;
 }
 
 #pragma  mark Indexes Store assignment
 
--(void)assignElementNodeIndexesStore:(int * __nonnull)elementNodeIndexesStore {
+-(void)assignElementNodeIndexesStore:(int * _Nonnull)elementNodeIndexesStore {
     
     _elementNodeIndexesStore = elementNodeIndexesStore;
 }
 
 #pragma mark Nodes getter
 
--(Nodes_t * __nullable)getNodes {
+-(Nodes_t * _Nullable)getNodes {
     
     return _globalNodes;
 }
 
 #pragma mark Elements getter
 
--(Element_t * __nullable)getElements {
+-(Element_t * _Nullable)getElements {
     
     return _elements;
 }
 
 #pragma mark Edges getter
 
--(Element_t * __nullable)getEdges {
+-(Element_t * _Nullable)getEdges {
     
     return _edges;
 }
 
 #pragma mark Faces getter
 
--(Element_t * __nullable)getFaces {
+-(Element_t * _Nullable)getFaces {
     
     return _faces;
 }
 
 #pragma mark Quadrant getter
 
--(Quadrant_t * __nullable)getQuadrant {
+-(Quadrant_t * _Nullable)getQuadrant {
     
     return _rootQuadrant;
 }
 
 #pragma mark View Factors getter
 
--(Factors_t * __nullable)getViewFactors {
+-(Factors_t * _Nullable)getViewFactors {
     
     return _viewFactors;
 }
 
 #pragma mark Color mapping getter
 
--(int * __nullable)getColorMapping {
+-(int * _Nullable)getColorMapping {
     
     return _colorMapping;
 }
 
 #pragma mark Element permutation store getter
 
--(int * __nullable)getElementNodeIndexesStore {
+-(int * _Nullable)getElementNodeIndexesStore {
     
     return _elementNodeIndexesStore;
 }
 
 #pragma mark Discontinous permutation getter
 
--(int * __nullable)getDiscontinousPerm {
+-(int * _Nullable)getDiscontinousPerm {
     
     return _discontinousPerm;
 }
 
 #pragma mark Inverse permutation getter
 
--(int * __nullable)getInvPerm {
+-(int * _Nullable)getInvPerm {
     
     return _invPerm;
 }

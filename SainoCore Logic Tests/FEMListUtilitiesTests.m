@@ -24,10 +24,10 @@
 
 @interface FEMListUtilitiesTests : XCTestCase
 
-@property (nonatomic) FEMListUtilities * __nonnull listUtilities;
-@property (nonatomic) FEMEquation * __nonnull equation;
-@property (nonatomic) FEMModel * __nonnull model;
-@property (nonatomic) FEMUtilities * __nonnull utilities;
+@property (nonatomic) FEMListUtilities * _Nonnull listUtilities;
+@property (nonatomic) FEMEquation * _Nonnull equation;
+@property (nonatomic) FEMModel * _Nonnull model;
+@property (nonatomic) FEMUtilities * _Nonnull utilities;
 
 @end
 

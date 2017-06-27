@@ -74,12 +74,12 @@
 @property(nonatomic, assign) int size2boundaryTangent2;
 @property(nonatomic, assign) int sizeIndexStore;
 @property(nonatomic, assign, nonnull) int *indexStore;
-@property(nonatomic, assign) bool * __nullable * __nullable ntZeroingDone;
+@property(nonatomic, assign) bool * _Nullable * _Nullable ntZeroingDone;
 @property(nonatomic, assign, nullable) int *boundaryReorder;
-@property(nonatomic, assign) int * __nullable * __nullable ntElement;
-@property(nonatomic, assign) double * __nullable * __nullable boundaryNormals;
-@property(nonatomic, assign) double * __nullable * __nullable boundaryTangent1;
-@property(nonatomic, assign) double * __nullable * __nullable boundaryTangent2;
+@property(nonatomic, assign) int * _Nullable * _Nullable ntElement;
+@property(nonatomic, assign) double * _Nullable * _Nullable boundaryNormals;
+@property(nonatomic, assign) double * _Nullable * _Nullable boundaryTangent1;
+@property(nonatomic, assign) double * _Nullable * _Nullable boundaryTangent2;
 @property(nonatomic, strong, nonnull) NSMutableString *normalTangentialName;
 @property(nonatomic, strong, nonnull) NSMutableArray <NSNumber *> *outputLevelMask;
 @property(nonatomic, assign, getter = isOutputPrefix) BOOL outputPrefix;
@@ -89,93 +89,93 @@
 @property(nonatomic, assign) int outputPE;
 
 // This class method retuns an instance (singleton) of FEMCore
-+(id __nonnull)sharedCore;
++(id _Nonnull)sharedCore;
 +(void)selfDestruct;
 
 -(void)deallocation;
 
--(void)initializeTimeStepInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)initializeToZeroMatrix:(FEMMatrix * __nonnull)matrix forceVector:(double * __nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution ;
--(void)defaultInitializeSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(BOOL)getReal:(FEMModel * __nonnull)model forElement:(Element_t * __nullable)element inArray:(NSArray * __nonnull)array variableName:(NSString * __nonnull)name buffer:(listBuffer * __nonnull)result listUtilities:(FEMListUtilities * __nonnull)listUtil;
--(int)isPElement:(Element_t * __nonnull)element;
--(void)getNodes:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model inElement:(Element_t * __nonnull)element resultNodes:(Nodes_t * __nonnull)nodes numberOfNodes:(int * __nullable)nd mesh:(FEMMesh * __nullable)mesh;
--(BOOL)isFluxElement:(Element_t * __nonnull)element mesh:(FEMMesh * __nonnull)mesh ;
--(int)getElementFamily:(Element_t * __nonnull)element;
--(int)getElementDofsSolution:(FEMSolution * __nullable)uSolution model:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element atIndexes:(int * __nonnull)indexes disableDiscontinuousGalerkin:(BOOL * __nullable)disableDiscontinuousGalerkin;
--(int)sgetElementDofsSolution:(FEMSolution * __nullable)uSolution model:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element atIndexes:(int * __nonnull)indexes;
--(int)getNumberOfBubbleDofsElement:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution;
--(Element_t * __nonnull)getActiveElement:(int)t solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(int)getNumberOfNodesForElement:(Element_t * __nonnull)element;
--(int)getBoundaryConditionID:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element;
--(NSArray * __nullable)getBoundaryCondition:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element ;
--(Element_t * __nonnull)getBoundaryElement:(FEMSolution * __nonnull)solution atIndex:(int)index ;
--(void)getScalarLocalField:(double * __nonnull)field sizeField:(int)sizeField name:(NSString * __nullable)name element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int * __nullable)tStep;
--(void)getVectorLocalField:(double * __nonnull * __nonnull)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString * __nullable)name element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int * __nullable)tStep;
--(int * __nonnull * __nonnull)getEdgeMap:(int)elementFamily mapSize:(int * __nullable)mapSize;
--(void)getBoundaryIndexes:(FEMMesh * __nonnull)mesh forBoundaryElement:(Element_t * __nonnull)element withParentElement:(Element_t * __nonnull)parent resultVector:(int * __nonnull)indexes sizeVector:(int)size indexSize:(int * __nonnull)indexSize;
--(int)getBodyForceIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model;
--(int)getMaterialIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model;
--(int)getEquationIDForElement:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model;
--(BOOL)getParentMaterialProperty:(NSString * __nonnull)name forElement:(Element_t * __nonnull)element parentElement:(Element_t * __nullable)parentElement model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities buffer:(listBuffer * __nonnull)result;
--(BOOL)isActiveBoundaryElement:(Element_t * __nonnull)element inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)checkNormalTangential:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int * __nonnull)indexes atBoundary:(int)bc variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * __nonnull)condName permutationOffset:(int)offset;
--(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution * __nonnull)solution;
--(void)setMatrixElementForSolution:(FEMSolution * __nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)addToMatrixElementForSolution:(FEMSolution * __nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value;
--(void)localBoundaryIntegral:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution atBoundary:(NSArray * __nonnull)bc forElement:(Element_t * __nonnull)element withNumberOfNodes:(int)nd andParent:(Element_t * __nonnull)parent withNumberOfNodes:(int)np boundaryName:(NSString * __nonnull)name functionIntegral:(double * __nonnull)integral;
--(void)localBoundaryBDOFs:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution atBoundary:(NSArray * __nonnull)bc forElement:(Element_t * __nonnull)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString * __nonnull)name resultMatrix:(double * __nonnull * __nonnull)stiff resultVector:(double * __nonnull)force;
--(void)solveWithLapackMatrix:(double * __nonnull)a andVector:(double * __nonnull)x size:(int)n leadingDimension:(int)lda;
--(void)solveLinearSystemWithMatrix:(double * __nonnull * __nonnull)a andVector:(double * __nonnull)x size:(int)n leadingDimension:(int)lda;
--(void)setDirichletBoundaries:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution variableName:(NSMutableString * __nonnull)name orderOfDofs:(int)dof permutationOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix listUtilites:(FEMListUtilities * __nonnull)listUtilites crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
--(void)scaleLinearSystem:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nullable)b result:(double * __nullable)x diagScaling:(double * __nullable)diagScaling applyScaling:(BOOL * __nullable)applyScaling rhsScaling:(BOOL * __nullable)rhsScaling;
--(void)backScaleLinearSystem:(FEMSolution * __nonnull)solution matrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nullable)b result:(double * __nullable)x diagScaling:(double * __nullable)diagScaling sizeOFDiagScaling:(int * __nullable)sizeOfDiagScaling;
--(void)matrixVectorMultplyInSolution:(FEMSolution * __nonnull)solution multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v;
--(void)matrixVectorMultplyInMatrix:(FEMMatrix * __nonnull)matrix multiplyVector:(double * __nonnull)u resultVector:(double * __nonnull)v;
--(void)invalidateVariableInTopMesh:(NSArray * __nonnull)topMesh primaryMesh:(FEMMesh * __nonnull)primaryMesh name:(NSString * __nonnull)name model:(FEMModel * __nonnull)model;
--(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution;
--(void)computeNodalWeightsInSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model weightBoundary:(BOOL)weightBoundary perm:(int * __nullable)perm sizePerm:(int * __nullable)sizePerm variableName:(NSString * __nullable)variableName;
--(void)nsCondensateStiff:(double * __nonnull * __nonnull)stiff force:(double * __nonnull)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double * __nonnull)force1;
--(void)condensateStiff:(double * __nonnull * __nonnull)stiff force:(double * __nonnull)force numberOfNodes:(int)n force1:(double * __nullable)force1;
+-(void)initializeTimeStepInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)initializeToZeroMatrix:(FEMMatrix * _Nonnull)matrix forceVector:(double * _Nonnull)forceVector sizeForceVector:(int)sizeForceVector model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution ;
+-(void)defaultInitializeSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(BOOL)getReal:(FEMModel * _Nonnull)model forElement:(Element_t * _Nullable)element inArray:(NSArray * _Nonnull)array variableName:(NSString * _Nonnull)name buffer:(listBuffer * _Nonnull)result listUtilities:(FEMListUtilities * _Nonnull)listUtil;
+-(int)isPElement:(Element_t * _Nonnull)element;
+-(void)getNodes:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model inElement:(Element_t * _Nonnull)element resultNodes:(Nodes_t * _Nonnull)nodes numberOfNodes:(int * _Nullable)nd mesh:(FEMMesh * _Nullable)mesh;
+-(BOOL)isFluxElement:(Element_t * _Nonnull)element mesh:(FEMMesh * _Nonnull)mesh ;
+-(int)getElementFamily:(Element_t * _Nonnull)element;
+-(int)getElementDofsSolution:(FEMSolution * _Nullable)uSolution model:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element atIndexes:(int * _Nonnull)indexes disableDiscontinuousGalerkin:(BOOL * _Nullable)disableDiscontinuousGalerkin;
+-(int)sgetElementDofsSolution:(FEMSolution * _Nullable)uSolution model:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element atIndexes:(int * _Nonnull)indexes;
+-(int)getNumberOfBubbleDofsElement:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution;
+-(Element_t * _Nonnull)getActiveElement:(int)t solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(int)getNumberOfNodesForElement:(Element_t * _Nonnull)element;
+-(int)getBoundaryConditionID:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element;
+-(NSArray * _Nullable)getBoundaryCondition:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element ;
+-(Element_t * _Nonnull)getBoundaryElement:(FEMSolution * _Nonnull)solution atIndex:(int)index ;
+-(void)getScalarLocalField:(double * _Nonnull)field sizeField:(int)sizeField name:(NSString * _Nullable)name element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int * _Nullable)tStep;
+-(void)getVectorLocalField:(double * _Nonnull * _Nonnull)field size1Field:(int)size1Field size2Field:(int)size2Field name:(NSString * _Nullable)name element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int * _Nullable)tStep;
+-(int * _Nonnull * _Nonnull)getEdgeMap:(int)elementFamily mapSize:(int * _Nullable)mapSize;
+-(void)getBoundaryIndexes:(FEMMesh * _Nonnull)mesh forBoundaryElement:(Element_t * _Nonnull)element withParentElement:(Element_t * _Nonnull)parent resultVector:(int * _Nonnull)indexes sizeVector:(int)size indexSize:(int * _Nonnull)indexSize;
+-(int)getBodyForceIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model;
+-(int)getMaterialIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model;
+-(int)getEquationIDForElement:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model;
+-(BOOL)getParentMaterialProperty:(NSString * _Nonnull)name forElement:(Element_t * _Nonnull)element parentElement:(Element_t * _Nullable)parentElement model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities buffer:(listBuffer * _Nonnull)result;
+-(BOOL)isActiveBoundaryElement:(Element_t * _Nonnull)element inSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)checkNormalTangential:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElementNumber:(int)elno numberofNodes:(int)n atIndexes:(int * _Nonnull)indexes atBoundary:(int)bc variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof activeCondition:(BOOL)conditional conditionName:(NSString * _Nonnull)condName permutationOffset:(int)offset;
+-(void)zeroTheNumberOfRows:(int)n inSolutionMatrix:(FEMSolution * _Nonnull)solution;
+-(void)setMatrixElementForSolution:(FEMSolution * _Nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)addToMatrixElementForSolution:(FEMSolution * _Nonnull)solution atIndex:(int)i andIndex:(int)j value:(double)value;
+-(void)localBoundaryIntegral:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution atBoundary:(NSArray * _Nonnull)bc forElement:(Element_t * _Nonnull)element withNumberOfNodes:(int)nd andParent:(Element_t * _Nonnull)parent withNumberOfNodes:(int)np boundaryName:(NSString * _Nonnull)name functionIntegral:(double * _Nonnull)integral;
+-(void)localBoundaryBDOFs:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution atBoundary:(NSArray * _Nonnull)bc forElement:(Element_t * _Nonnull)element withNumberOfNodes:(int)nd boundaryName:(NSMutableString * _Nonnull)name resultMatrix:(double * _Nonnull * _Nonnull)stiff resultVector:(double * _Nonnull)force;
+-(void)solveWithLapackMatrix:(double * _Nonnull)a andVector:(double * _Nonnull)x size:(int)n leadingDimension:(int)lda;
+-(void)solveLinearSystemWithMatrix:(double * _Nonnull * _Nonnull)a andVector:(double * _Nonnull)x size:(int)n leadingDimension:(int)lda;
+-(void)setDirichletBoundaries:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution variableName:(NSMutableString * _Nonnull)name orderOfDofs:(int)dof permutationOffset:(int * _Nullable)offset offDiaginalMatrix:(BOOL * _Nullable)offDiaginalMatrix listUtilites:(FEMListUtilities * _Nonnull)listUtilites crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
+-(void)scaleLinearSystem:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nullable)b result:(double * _Nullable)x diagScaling:(double * _Nullable)diagScaling applyScaling:(BOOL * _Nullable)applyScaling rhsScaling:(BOOL * _Nullable)rhsScaling;
+-(void)backScaleLinearSystem:(FEMSolution * _Nonnull)solution matrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nullable)b result:(double * _Nullable)x diagScaling:(double * _Nullable)diagScaling sizeOFDiagScaling:(int * _Nullable)sizeOfDiagScaling;
+-(void)matrixVectorMultplyInSolution:(FEMSolution * _Nonnull)solution multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v;
+-(void)matrixVectorMultplyInMatrix:(FEMMatrix * _Nonnull)matrix multiplyVector:(double * _Nonnull)u resultVector:(double * _Nonnull)v;
+-(void)invalidateVariableInTopMesh:(NSArray * _Nonnull)topMesh primaryMesh:(FEMMesh * _Nonnull)primaryMesh name:(NSString * _Nonnull)name model:(FEMModel * _Nonnull)model;
+-(void)getPassiveBoundaryAtIndex:(int)bcID model:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution;
+-(void)computeNodalWeightsInSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model weightBoundary:(BOOL)weightBoundary perm:(int * _Nullable)perm sizePerm:(int * _Nullable)sizePerm variableName:(NSString * _Nullable)variableName;
+-(void)nsCondensateStiff:(double * _Nonnull * _Nonnull)stiff force:(double * _Nonnull)force numberOfNodes:(int)n numberOfBubbles:(int)nb dimension:(int)dim force1:(double * _Nonnull)force1;
+-(void)condensateStiff:(double * _Nonnull * _Nonnull)stiff force:(double * _Nonnull)force numberOfNodes:(int)n force1:(double * _Nullable)force1;
 
 // Manipulate matrix coefficients for time dependent simulations
--(void)addFirstOrderTimeModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element massMatrix:(double * __nonnull * __nonnull)massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)addSecondOrderTimeModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element massMatrix:(double * __nonnull * __nonnull)massMatrix dampMatrix:(double * __nonnull * __nonnull)dampMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration;
--(void)updateMassMatrixModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution localMassMatrix:(double * __nonnull * __nonnull)localMassMatrix element:(Element_t * __nonnull)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes;
--(void)defaultUpdateMass:(double * __nonnull * __nonnull)mass element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)defaultUpdateComplexMass:(double complex * __nonnull * __nonnull)cmass element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)defaultUpdateDamp:(double * __nonnull * __nonnull)damp element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)defaultUpdateComplexDamp:(double complex * __nonnull * __nonnull)cdamp element:(Element_t * __nonnull)element solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)defaultFirstOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realMass:(double * __nonnull * __nonnull)mass realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)defaultFirstOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexMass:(double complex * __nonnull * __nonnull)cmass complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull)cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)defaultSecondOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realMass:(double * __nonnull * __nonnull)mass realDamp:(double * __nonnull * __nonnull)damp realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration;
--(void)defaultSecondOrderTime:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexMass:(double complex * __nonnull * __nonnull)cmass complexDamp:(double complex * __nonnull * __nonnull)cdamp complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull)cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration;
+-(void)addFirstOrderTimeModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element massMatrix:(double * _Nonnull * _Nonnull)massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)addSecondOrderTimeModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element massMatrix:(double * _Nonnull * _Nonnull)massMatrix dampMatrix:(double * _Nonnull * _Nonnull)dampMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force dt:(double)dt size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration;
+-(void)updateMassMatrixModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution localMassMatrix:(double * _Nonnull * _Nonnull)localMassMatrix element:(Element_t * _Nonnull)element numberOfNodes:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes;
+-(void)defaultUpdateMass:(double * _Nonnull * _Nonnull)mass element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)defaultUpdateComplexMass:(double complex * _Nonnull * _Nonnull)cmass element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)defaultUpdateDamp:(double * _Nonnull * _Nonnull)damp element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)defaultUpdateComplexDamp:(double complex * _Nonnull * _Nonnull)cdamp element:(Element_t * _Nonnull)element solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)defaultFirstOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realMass:(double * _Nonnull * _Nonnull)mass realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)defaultFirstOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexMass:(double complex * _Nonnull * _Nonnull)cmass complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull)cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)defaultSecondOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realMass:(double * _Nonnull * _Nonnull)mass realDamp:(double * _Nonnull * _Nonnull)damp realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration;
+-(void)defaultSecondOrderTime:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexMass:(double complex * _Nonnull * _Nonnull)cmass complexDamp:(double complex * _Nonnull * _Nonnull)cdamp complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull)cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration;
 
 
--(void)defaultFirstOrderTimeGlobalModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)defaultSecondOrderTimeGlobalModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration;
+-(void)defaultFirstOrderTimeGlobalModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)defaultSecondOrderTimeGlobalModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration;
 
 // Update global equations
--(void)updateGlobalEquationsModel:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element localStiffMatrix:(double * __nonnull * __nonnull)localStiffMatrix forceVector:(double * __nonnull)forceVector localForce:(double * __nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * __nonnull)nodeIndexes rows:(int * __nonnull)rows cols:(int * __nonnull)cols rotateNT:(BOOL * __nullable)rotateNT crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
--(void)defaultUpdateEquations:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element realStiff:(double * __nonnull * __nonnull)stiff realForce:(double * __nonnull)force stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
--(void)defaultUpdateEquations:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution forElement:(Element_t * __nonnull)element complexStiff:(double complex * __nonnull * __nonnull)cstiff complexForce:(double complex * __nonnull )cforce stiffRows:(int * __nonnull)rows stiffCols:(int * __nonnull)cols crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix;
--(void)defaultFinishBulkAssemblySolution:(FEMSolution * __nonnull)solution bulkUpdate:(BOOL * __nullable)bulkUpdate;
--(void)defaultFinishAssemblySolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)dirichletBoundaryConditions:(FEMModel * __nonnull)model inSolution:(FEMSolution * __nonnull)solution usingOffset:(int * __nullable)offset offDiaginalMatrix:(BOOL * __nullable)offDiaginalMatrix;
+-(void)updateGlobalEquationsModel:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element localStiffMatrix:(double * _Nonnull * _Nonnull)localStiffMatrix forceVector:(double * _Nonnull)forceVector localForce:(double * _Nonnull)localForce size:(int)n dofs:(int)dofs nodeIndexes:(int * _Nonnull)nodeIndexes rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols rotateNT:(BOOL * _Nullable)rotateNT crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element realStiff:(double * _Nonnull * _Nonnull)stiff realForce:(double * _Nonnull)force stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
+-(void)defaultUpdateEquations:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution forElement:(Element_t * _Nonnull)element complexStiff:(double complex * _Nonnull * _Nonnull)cstiff complexForce:(double complex * _Nonnull )cforce stiffRows:(int * _Nonnull)rows stiffCols:(int * _Nonnull)cols crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix;
+-(void)defaultFinishBulkAssemblySolution:(FEMSolution * _Nonnull)solution bulkUpdate:(BOOL * _Nullable)bulkUpdate;
+-(void)defaultFinishAssemblySolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)dirichletBoundaryConditions:(FEMModel * _Nonnull)model inSolution:(FEMSolution * _Nonnull)solution usingOffset:(int * _Nullable)offset offDiaginalMatrix:(BOOL * _Nullable)offDiaginalMatrix;
 
--(void)computeChange:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)aModel isSteadyState:(BOOL)steadyState nsize:(int * __nullable)nsize values:(double * __nullable)values values0:(double * __nullable)values0 sizeValues0:(int * __nullable)sizeValues0;
--(void)iterativeSolveMatrix:(FEMMatrix * __nonnull)matrix result:(double * __nonnull)x rhs:(double * __nonnull)b dimensions:(int * __nullable)ndim solution:(FEMSolution * __nonnull)solution;
--(void)solveSystemMatrix:(FEMMatrix * __nonnull)matrix rhs:(double * __nonnull)b result:(double * __nonnull)x norm:(double * __nonnull)norm dofs:(int)dofs solution:(FEMSolution * __nonnull)solution  model:(FEMModel * __nonnull)model;
--(double)findSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model backRorateNT:(BOOL * __nullable)backRorateNT;
+-(void)computeChange:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)aModel isSteadyState:(BOOL)steadyState nsize:(int * _Nullable)nsize values:(double * _Nullable)values values0:(double * _Nullable)values0 sizeValues0:(int * _Nullable)sizeValues0;
+-(void)iterativeSolveMatrix:(FEMMatrix * _Nonnull)matrix result:(double * _Nonnull)x rhs:(double * _Nonnull)b dimensions:(int * _Nullable)ndim solution:(FEMSolution * _Nonnull)solution;
+-(void)solveSystemMatrix:(FEMMatrix * _Nonnull)matrix rhs:(double * _Nonnull)b result:(double * _Nonnull)x norm:(double * _Nonnull)norm dofs:(int)dofs solution:(FEMSolution * _Nonnull)solution  model:(FEMModel * _Nonnull)model;
+-(double)findSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model backRorateNT:(BOOL * _Nullable)backRorateNT;
 
 // Utility method in matrix-vector multiplication
--(double)stopc:(FEMMatrix * __nonnull)matrix multiplyVector:(double * __nonnull)x righHandSide:(double * __nonnull)b ipar:(int * __nonnull)ipar;
+-(double)stopc:(FEMMatrix * _Nonnull)matrix multiplyVector:(double * _Nonnull)x righHandSide:(double * _Nonnull)b ipar:(int * _Nonnull)ipar;
 
 // Activating solution and starting the calculation
--(void)activateSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient;
--(void)solveEquationsModel:(FEMModel * __nonnull)model timeStep:(double * __nonnull)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL * __nonnull)steadyStateReached realTimeStep:(int * __nonnull)realTimeStep;
+-(void)activateSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(double)dt transientSimulation:(BOOL)transient;
+-(void)solveEquationsModel:(FEMModel * _Nonnull)model timeStep:(double * _Nonnull)dt transientSimulation:(BOOL)transient coupledMinIteration:(int)coupledMinIter coupleMaxIteration:(int)coupleMaxIter steadyStateReached:(BOOL * _Nonnull)steadyStateReached realTimeStep:(int * _Nonnull)realTimeStep;
 
 // OpenCL stuff
--(dispatch_queue_t __nonnull)getDispatchQueueAndInfoForDeviceType:(NSString * __nonnull)deviceType;
+-(dispatch_queue_t _Nonnull)getDispatchQueueAndInfoForDeviceType:(NSString * _Nonnull)deviceType;
 
 @end

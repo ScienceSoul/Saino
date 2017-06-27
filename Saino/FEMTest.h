@@ -42,17 +42,17 @@
 @property(nonatomic, assign) double norm;
 
 // This class method retuns an instance (singleton) of FEMTest
-+(id __nonnull)sharedTest;
++(id _Nonnull)sharedTest;
 +(void)selfDestruct;
 
 -(void)reset;
--(void)setUpHeateqTest:(id __nonnull)model;
--(void)setUpStepStokesTest:(id __nonnull)model;
--(void)setUpNaturalConvectionTest:(id __nonnull)model;
--(void)setUpISMIP_HOM_A010Test:(id __nonnull)model;
--(void)setUpISMIP_HOM_B010Test:(id __nonnull)model;
--(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id __nonnull)model;
--(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id __nonnull)model;
--(void)setUpISMIP_HOM_C010Test:(id __nonnull)model;
+-(void)setUpHeateqTest:(id _Nonnull)model;
+-(void)setUpStepStokesTest:(id _Nonnull)model;
+-(void)setUpNaturalConvectionTest:(id _Nonnull)model;
+-(void)setUpISMIP_HOM_A010Test:(id _Nonnull)model;
+-(void)setUpISMIP_HOM_B010Test:(id _Nonnull)model;
+-(void)setUpISMIP_HOM_A010Test_GPU_coloring:(id _Nonnull)model;
+-(void)setUpISMIP_HOM_A010Test_GPU_nonzeros:(id _Nonnull)model;
+-(void)setUpISMIP_HOM_C010Test:(id _Nonnull)model;
 
 @end

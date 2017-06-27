@@ -24,7 +24,7 @@
 
 @interface FEMRadiation : NSObject
 
--(double)computeRadiationLoadModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh element:(Element_t * __nonnull)elememt temperature:(double * __nonnull)temperature reorder:(int * __nonnull)reorder emissivity:(double)emissivity angleFraction:(double * __nullable)angleFraction;
--(double)computeRadiationCoeffModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh element:(Element_t * __nonnull)element index:(int)k;
+-(double)computeRadiationLoadModel:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh element:(Element_t * _Nonnull)elememt temperature:(double * _Nonnull)temperature reorder:(int * _Nonnull)reorder emissivity:(double)emissivity angleFraction:(double * _Nullable)angleFraction;
+-(double)computeRadiationCoeffModel:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh element:(Element_t * _Nonnull)element index:(int)k;
 
 @end

@@ -89,7 +89,7 @@ inline double d_wall_law(double ufric, double ut, double densit, double viscos, 
         dfx     -> derivative of the wall law
  
 *************************************************************************************************************/
-inline void solve_ufric(double densit, double viscos, double dist, double rough, double ut, double * __nonnull ufric, double * __nonnull dfx) {
+inline void solve_ufric(double densit, double viscos, double dist, double rough, double ut, double * _Nonnull ufric, double * _Nonnull dfx) {
     
     int iter, maxiter = 100;
     double fx=0.0, tauw, yplus;
@@ -133,7 +133,7 @@ inline void solve_ufric(double densit, double viscos, double dist, double rough,
         tomg    -> ...
  
 *************************************************************************************************************/
-inline void kewall(double * __nonnull tk, double * __nonnull teps, double * __nonnull tomg, double ut, double dist, double rough, double viscos, double densit) {
+inline void kewall(double * _Nonnull tk, double * _Nonnull teps, double * _Nonnull tomg, double ut, double dist, double rough, double viscos, double densit) {
     
     double alpha, dfx, omegaPlus, tomgl, tomgt, ufric, utlocal, yplus;
     double cmyy   = 0.09;
