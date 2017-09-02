@@ -49,7 +49,7 @@
     BOOL allocateValues ->  Should the values arrays be allocated?
  
  *********************************************************************************************************************/
--(FEMMatrix * __nonnull)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
+-(FEMMatrix * _Nonnull)createMatrixWithNumberOfRows:(int)rows subBand:(int)subBand symmetric:(BOOL)symmetric allocateValues:(BOOL)allocateValues {
     
     FEMMatrix *matrix;
     matrixArraysContainer *matContainers = NULL;
@@ -72,7 +72,7 @@
     return matrix;
 }
 
--(void)zeroRowInGlobal:(FEMSolution * __nonnull)solution numberOfRows:(int)n {
+-(void)zeroRowInGlobal:(FEMSolution * _Nonnull)solution numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -99,7 +99,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 **********************************************************************************************************/
--(void)setElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
+-(void)setElementInGlobal:(FEMSolution * _Nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -122,7 +122,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 **********************************************************************************************************/
--(void)addToElementInGlobal:(FEMSolution * __nonnull)solution row:(int)i col:(int)j value:(double)value {
+-(void)addToElementInGlobal:(FEMSolution * _Nonnull)solution row:(int)i col:(int)j value:(double)value {
     
     int k;
     matrixArraysContainer *matContainers = NULL;
@@ -154,7 +154,7 @@
         int **indexes           -> Maps element node number to global (or partition) node number
                                    (to matrix rows and cols if dofs = 1)
 *****************************************************************************************************************************************/
--(void)glueLocalMatrix:(double * __nonnull * __nonnull)localMatrix inGlobal:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * __nonnull)indexes {
+-(void)glueLocalMatrix:(double * _Nonnull * _Nonnull)localMatrix inGlobal:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dofs:(int)dofs indexes:(int * _Nonnull)indexes {
     
     int i, j, k, l, ind, row, col;
     matrixArraysContainer *matContainers = NULL;
@@ -206,7 +206,7 @@
         int n                   -> ordered number of the unknown (i.e., matrix row and column number)
         double value            -> value for the unknown
 ************************************************************************************************************/
--(void)sBand_setDirichlet:(FEMSolution * __nonnull)solution orderedNumber:(int)n value:(double)value {
+-(void)sBand_setDirichlet:(FEMSolution * _Nonnull)solution orderedNumber:(int)n value:(double)value {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -239,7 +239,7 @@
         double *u              -> Vector to multiply
         double *v              -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiplyInGlobal:(FEMSolution * __nonnull)solution vector:(double * __nonnull)u result:(double * __nonnull)v {
+-(void)matrixVectorMultiplyInGlobal:(FEMSolution * _Nonnull)solution vector:(double * _Nonnull)u result:(double * _Nonnull)v {
     
     int i, j, n;
     double s;
@@ -271,7 +271,7 @@
     }
 }
 
--(void)zeroRowInMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n {
+-(void)zeroRowInMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)n {
     
     int j;
     matrixArraysContainer *matContainers = NULL;
@@ -298,7 +298,7 @@
         int i, j                ->  row and column numbers respectively of the matrix element
         double value            ->  value to be set
 ************************************************************************************************/
--(void)setElementInMatrix:(FEMMatrix * __nonnull)matrix row:(int)i col:(int)j value:(double)value {
+-(void)setElementInMatrix:(FEMMatrix * _Nonnull)matrix row:(int)i col:(int)j value:(double)value {
     
     matrixArraysContainer *matContainers = NULL;
     
@@ -321,7 +321,7 @@
         double *u     -> Vector to multiply
         double *v     -> Result vector
 *******************************************************************************************/
--(void)matrixVectorMultiply:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)u result:(double * __nonnull)v {
+-(void)matrixVectorMultiply:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)u result:(double * _Nonnull)v {
     
     int i, j, n;
     double s;

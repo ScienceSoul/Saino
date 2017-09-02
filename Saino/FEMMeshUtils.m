@@ -39,33 +39,33 @@
 #import "GaussIntegration.h"
 
 @interface FEMMeshUtils ()
--(void)FEMMeshUtils_assignConstraints:(FEMMesh * __nonnull)mesh;
--(void)FEMMeshUtils_fixFaceEdges:(FEMMesh * __nonnull)mesh;
--(Element_t * __nullable)FEMMeshUtils_getEntityForElement:(Element_t * __nonnull)element edge:(int)number inMesh:(FEMMesh * __nonnull)mesh ;
--(void)FEMMeshUtils_unitSegmentDivisionTable:(double * __nonnull)w levels:(int)n model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString * __nonnull)type vector:(double * __nonnull)vector solution:(FEMSolution * __nonnull)solution;
--(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh * __nonnull)mesh haloNodes:(BOOL * __nullable)haloNodes sizeHaloNodes:(int * __nullable)size;
--(Element_t * __nullable)FEMMeshUtils_findFaceParent:(Element_t * __nonnull)parent element:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model;
--(FEMMatrix * __nullable)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(FEMMatrix * __nonnull)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh * __nonnull)bMesh1 bMesh2:(FEMMesh * __nonnull)bMesh2;
--(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 BCParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh * __nonnull)pMesh pParams:(FEMBoundaryCondition * __nonnull)pParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL * __nonnull)fullCircle model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 angles:(double * __nonnull)angles gotAngles:(BOOL * __nonnull)gotAngles;
--(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities;
--(FEMMatrix * __nonnull)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh * __nonnull)bMesh2 mesh1:(FEMMesh * __nonnull)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel * __nonnull)model;
--(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix * __nonnull)projector;
+-(void)FEMMeshUtils_assignConstraints:(FEMMesh * _Nonnull)mesh;
+-(void)FEMMeshUtils_fixFaceEdges:(FEMMesh * _Nonnull)mesh;
+-(Element_t * _Nullable)FEMMeshUtils_getEntityForElement:(Element_t * _Nonnull)element edge:(int)number inMesh:(FEMMesh * _Nonnull)mesh ;
+-(void)FEMMeshUtils_unitSegmentDivisionTable:(double * _Nonnull)w levels:(int)n model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString * _Nonnull)type vector:(double * _Nonnull)vector solution:(FEMSolution * _Nonnull)solution;
+-(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh * _Nonnull)mesh haloNodes:(BOOL * _Nullable)haloNodes sizeHaloNodes:(int * _Nullable)size;
+-(Element_t * _Nullable)FEMMeshUtils_findFaceParent:(Element_t * _Nonnull)parent element:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model;
+-(FEMMatrix * _Nullable)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(FEMMatrix * _Nonnull)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh * _Nonnull)bMesh1 bMesh2:(FEMMesh * _Nonnull)bMesh2;
+-(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 BCParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh * _Nonnull)pMesh pParams:(FEMBoundaryCondition * _Nonnull)pParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL * _Nonnull)fullCircle model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 angles:(double * _Nonnull)angles gotAngles:(BOOL * _Nonnull)gotAngles;
+-(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
+-(FEMMatrix * _Nonnull)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh * _Nonnull)bMesh2 mesh1:(FEMMesh * _Nonnull)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel * _Nonnull)model;
+-(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix * _Nonnull)projector;
 @end
 
 @implementation FEMMeshUtils
 
 #pragma mark Private methods
 
--(void)FEMMeshUtils_assignConstraints:(FEMMesh * __nonnull)mesh {
+-(void)FEMMeshUtils_assignConstraints:(FEMMesh * _Nonnull)mesh {
     
     int i, j, k, l, n, nfound, count=0;
     int *faceIndexes;
@@ -119,7 +119,7 @@
     }
 }
 
--(void)FEMMeshUtils_fixFaceEdges:(FEMMesh * __nonnull)mesh {
+-(void)FEMMeshUtils_fixFaceEdges:(FEMMesh * _Nonnull)mesh {
     
     int i, j, k, l, n, swap;
     int edgeind[4], i1[2], i2[2];
@@ -171,7 +171,7 @@
     }
 }
 
--(Element_t * __nullable)FEMMeshUtils_getEntityForElement:(Element_t * __nonnull)element edge:(int)number inMesh:(FEMMesh * __nonnull)mesh {
+-(Element_t * _Nullable)FEMMeshUtils_getEntityForElement:(Element_t * _Nonnull)element edge:(int)number inMesh:(FEMMesh * _Nonnull)mesh {
     
     Element_t *edges = NULL, *faces = NULL, *entity = NULL;
     
@@ -206,7 +206,7 @@
     positions and is therefore not bullet-proof.
  
 *************************************************************************************/
--(void)FEMMeshUtils_unitSegmentDivisionTable:(double * __nonnull)w levels:(int)n model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_unitSegmentDivisionTable:(double * _Nonnull)w levels:(int)n model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     BOOL found, gotRatio;
     
@@ -301,7 +301,7 @@
     }
 }
 
--(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString * __nonnull)type vector:(double * __nonnull)vector solution:(FEMSolution * __nonnull)solution {
+-(void)FEMMeshUtils_coordinateTransformationNodalType:(NSString * _Nonnull)type vector:(double * _Nonnull)vector solution:(FEMSolution * _Nonnull)solution {
     
     double coeff=0.0, rtmp[3];
     static BOOL visited = NO;
@@ -335,7 +335,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh * __nonnull)mesh haloNodes:(BOOL * __nullable)haloNodes sizeHaloNodes:(int * __nullable)size {
+-(void)FEMMeshUtils_markHaloNodesMesh:(FEMMesh * _Nonnull)mesh haloNodes:(BOOL * _Nullable)haloNodes sizeHaloNodes:(int * _Nullable)size {
     
     BOOL foundHaloNodes;
     
@@ -353,7 +353,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(Element_t * __nullable)FEMMeshUtils_findFaceParent:(Element_t * __nonnull)parent element:(Element_t * __nonnull)element model:(FEMModel * __nonnull)model {
+-(Element_t * _Nullable)FEMMeshUtils_findFaceParent:(Element_t * _Nonnull)parent element:(Element_t * _Nonnull)element model:(FEMModel * _Nonnull)model {
     
     int n;
     Element_t *ptr = NULL;
@@ -385,7 +385,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 **********************************************************************************************/
--(FEMMatrix * __nullable)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(FEMMatrix * _Nullable)FEMMeshUtils_weightedProjectorDiscontinousMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int actSides, e1, e2, e12, indp=0, i1, i2, j1, j2, n, nn, **newMap, **oldMap, parentFound, parentMissing, posSides;
     double coeff, detJ, x, u, v, val, w, weight;
@@ -992,7 +992,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************************/
--(FEMMatrix * __nonnull)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(FEMMatrix * _Nonnull)FEMMeshUtils_nodalProjectorDiscontinuousMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model boundary:(int)bc listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     BOOL found;
     
@@ -1057,7 +1057,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 **************************************************************************************************************/
--(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel * __nonnull)model mesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh * __nonnull)bMesh1 bMesh2:(FEMMesh * __nonnull)bMesh2 {
+-(BOOL)FEMMeshUtils_createInterfaceMeshesModel:(FEMModel * _Nonnull)model mesh:(FEMMesh * _Nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt bMesh1:(FEMMesh * _Nonnull)bMesh1 bMesh2:(FEMMesh * _Nonnull)bMesh2 {
     
     int k1, k2, n, constraint, en, haloCount, ind;
     int *pPerm;
@@ -1391,7 +1391,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ***************************************************************************/
--(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 BCParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_mapInterfaceCoordinateMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 BCParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     double *nodesX = NULL, *nodesY = NULL, *nodesZ = NULL;
     Nodes_t *bMeshNodes = NULL;
@@ -1492,7 +1492,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ***********************************************************************************/
--(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh * __nonnull)pMesh pParams:(FEMBoundaryCondition * __nonnull)pParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_cylinderFitMesh:(FEMMesh * _Nonnull)pMesh pParams:(FEMBoundaryCondition * _Nonnull)pParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int i, n, axisI, circleInd[3];
     double **a, axisNormal[3], coord[3], dist, d1, d2, circleCoord[3][3], ninj[3][3], maxDist, minDist, normals[3], sum, tangent1[3], tangent2[3];
@@ -1755,7 +1755,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ****************************************************************************************/
--(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL * __nonnull)fullCircle model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_rotationInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams cylindrical:(BOOL)cylindrical radius:(double)radius fullCircle:(BOOL * _Nonnull)fullCircle model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int n;
     double alpha, dfii1, dfii2, degOffset=0.0, eps_rad, err1, err2, fii, fii0=0.0, fmin, fmax, nSymmetry, normals[3], rad, tangent1[3], tangent2[3], x[3],
@@ -2043,7 +2043,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 *********************************************************************************/
--(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_radiusInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     double phi, phierr, r, x[3], x1_min[3], x1_max[3], x2_min[3], x2_max[3], z;
     FEMMesh *pMesh;
@@ -2141,7 +2141,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ***************************************************************/
--(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_flatInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int minDiffI=0;
     double *coord = NULL, diff, maxDiff, minDiff, relDiff, relDiff1=0;
@@ -2239,7 +2239,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 *******************************************************************/
--(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_planeInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int n;
     double coord[3], detJ, length, normals[3], normals0[3], normalSum[3], planeLess=0, planeLess1=0, **planeNormal, **planeNormal1, refSum, sum,
@@ -2429,7 +2429,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 *****************************************************************************************/
--(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 angles:(double * __nonnull)angles gotAngles:(BOOL * __nonnull)gotAngles {
+-(void)FEMMeshUtils_checkInterfaceAngleMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 angles:(double * _Nonnull)angles gotAngles:(BOOL * _Nonnull)gotAngles {
     
     int n;
     double alpha=0.0, dot1Min=0.0, dot2Min=0.0, normals[3], normal1[3], normal2[3];
@@ -2532,7 +2532,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ******************************************************************/
--(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 bcParams:(FEMBoundaryCondition * __nonnull)bcParams model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMMeshUtils_overlayInterfaceMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 bcParams:(FEMBoundaryCondition * _Nonnull)bcParams model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     double alpha, angles[3], scl[3], x[4], x1_min[3], x1_max[3], x2_min[3], x2_max[3], x2r_min[3], x2r_max[3], y[4];
     Nodes_t *bMesh1Nodes = NULL, *bMesh2Nodes = NULL;
@@ -2763,7 +2763,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 **************************************************************************************/
--(FEMMatrix * __nonnull)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh * __nonnull)bMesh2 mesh1:(FEMMesh * __nonnull)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel * __nonnull)model {
+-(FEMMatrix * _Nonnull)FEMMeshUtils_nodalProjectorMesh2:(FEMMesh * _Nonnull)bMesh2 mesh1:(FEMMesh * _Nonnull)bMesh1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating model:(FEMModel * _Nonnull)model {
     
     FEMMatrix *projector;
     
@@ -2822,7 +2822,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************/
- -(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix * __nonnull)projector {
+ -(void)FEMMeshUtils_setProjectorRowSum:(FEMMatrix * _Nonnull)projector {
      
      double rowsum;
     
@@ -2856,7 +2856,7 @@ jump:
     Find 2D mesh edges.
  
 ************************************************************************/
--(void)findEdges2DInMesh:(FEMMesh * __nonnull)mesh {
+-(void)findEdges2DInMesh:(FEMMesh * _Nonnull)mesh {
     
     int i, j, k, n=0, numbOfEdges;
     int node1, node2, edge=-1, swap, degree;
@@ -3016,7 +3016,7 @@ jump:
  Find 3D mesh edges.
  
 ************************************************************************/
--(void)findEdges3DInMesh:(FEMMesh * __nonnull)mesh {
+-(void)findEdges3DInMesh:(FEMMesh * _Nonnull)mesh {
     
     int i, ii, jj, k, n=0, numbOfEdges;
     int n1, n2;
@@ -3331,7 +3331,7 @@ jump:
  Find 3D mesh faces.
  
  ************************************************************************/
--(void)findFaces3DInMesh:(FEMMesh * __nonnull)mesh {
+-(void)findFaces3DInMesh:(FEMMesh * _Nonnull)mesh {
     
     int i, j, k, n, numbOfFaces;
     int n1 = 0, n2;
@@ -3677,7 +3677,7 @@ jump:
     Only for triangles and tetras. If mesh already has edges, do nothing
 
 ************************************************************************/
--(void)findEdgesForMesh:(FEMMesh * __nonnull)mesh findEdges:(BOOL * __nullable)present {
+-(void)findEdgesForMesh:(FEMMesh * _Nonnull)mesh findEdges:(BOOL * _Nullable)present {
     
     Element_t *edges = NULL, *faces = NULL;
     BOOL findEdges3D;
@@ -3712,7 +3712,7 @@ jump:
     p element attributes from element edge to boundary edge
 
 *************************************************************************/
--(void)assignLocalNumberToEdgeElement:(Element_t * __nonnull)edge fromElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh {
+-(void)assignLocalNumberToEdgeElement:(Element_t * _Nonnull)edge fromElement:(Element_t * _Nonnull)element inMesh:(FEMMesh * _Nonnull)mesh {
     
     int i, j, n, edgeNumber, numbEdges, bMap[4];
     Element_t *entity = NULL;
@@ -3817,7 +3817,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 ************************************************************************************************************/
--(FEMMatrix * __nullable)periodicProjectorInModel:(FEMModel * __nonnull)model forMesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * __nullable)galerkin {
+-(FEMMatrix * _Nullable)periodicProjectorInModel:(FEMModel * _Nonnull)model forMesh:(FEMMesh * _Nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * _Nullable)galerkin {
     
     int dim;
     FEMMatrix *projector;
@@ -4078,7 +4078,7 @@ jump:
     Currently works only for linear elements
  
 ********************************************************************************************/
--(FEMMesh * __nullable)splitMeshEqual:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model nodal:(double * __nullable)h sizeNodal:(int * __nullable)sizeNodal {
+-(FEMMesh * _Nullable)splitMeshEqual:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model nodal:(double * _Nullable)h sizeNodal:(int * _Nullable)sizeNodal {
     
     int i, j=0, k, l, n, newElCnt, nodeCnt, edgeCnt, node, parentID, diag, minVal, maxVal;
     int faceNumber, edge1, edge2, edge3, edge4, node12, node23, node34, node41, node31;
@@ -5411,7 +5411,7 @@ jump:
     return newMesh;
 }
 
--(void)setStabilizationParametersInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model {
+-(void)setStabilizationParametersInMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model {
     
     int i, j, n;
     Element_t *elements = NULL;
@@ -5455,7 +5455,7 @@ jump:
     free_dvector(nodes->z, 0, mesh.maxElementNodes-1);
 }
 
--(void)setCurrentMesh:(FEMMesh * __nonnull)mesh inModel:(FEMModel * __nonnull)model {
+-(void)setCurrentMesh:(FEMMesh * _Nonnull)mesh inModel:(FEMModel * _Nonnull)model {
     
     Element_t *meshElements = NULL;
     Nodes_t *meshNodes = NULL;
@@ -5475,7 +5475,7 @@ jump:
     model.numberOfBoundaryElements = mesh.numberOfBoundaryElements;
 }
 
--(void)updateMesh:(FEMMesh * __nonnull)mesh inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model {
+-(void)updateMesh:(FEMMesh * _Nonnull)mesh inSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model {
     
     int i, j, k, n, dofs, n1, n2;
     int *permutation;
@@ -5589,7 +5589,7 @@ jump:
     solution.mesh.changed = YES;
 }
 
--(void)allocatePDefinitionsElement:(Element_t * __nonnull)element {
+-(void)allocatePDefinitionsElement:(Element_t * _Nonnull)element {
     
     element->Pdefs = (PElementDefs_t*) malloc( sizeof(PElementDefs_t));
     if (element->Pdefs == NULL) fatal("FEMMeshUtils:allocatePDefinitionsElement", "Unable to allocate memory.");
@@ -5603,7 +5603,7 @@ jump:
     element->Pdefs->GaussPoints = 0;
 }
 
--(void)setEdgeFaceDofsMesh:(FEMMesh * __nonnull)mesh edgeDofs:(int * __nullable)edgeDofs faceDofs:(int * __nullable)faceDofs {
+-(void)setEdgeFaceDofsMesh:(FEMMesh * _Nonnull)mesh edgeDofs:(int * _Nullable)edgeDofs faceDofs:(int * _Nullable)faceDofs {
     
     Element_t *elements = NULL, *edges = NULL, *faces = NULL;
     
@@ -5694,7 +5694,7 @@ jump:
     [elementMaps deallocation];
 }
 
--(void)setMaximumDofsMesh:(FEMMesh * __nonnull)mesh {
+-(void)setMaximumDofsMesh:(FEMMesh * _Nonnull)mesh {
     
     Element_t *elements = mesh.getElements;
     FEMPElementMaps *elementMaps = [[FEMPElementMaps alloc] init];
@@ -5739,7 +5739,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 *************************************************************************/
--(FEMMesh * __nonnull)extrudeMesh:(FEMMesh * __nonnull)mesh inLevels:(int)inLevels model:(FEMModel * __nonnull)model {
+-(FEMMesh * _Nonnull)extrudeMesh:(FEMMesh * _Nonnull)mesh inLevels:(int)inLevels model:(FEMModel * _Nonnull)model {
     
     int j, k, l, n, bcid, cnt, dg_n, extrudedCoord, ind[8], ln, max_body, nnodes;
     double currentCoord, w;
@@ -6161,7 +6161,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************************************************/
--(FEMVariable * __nullable)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * __nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * __nullable)midNodePointer midLayerExists:(BOOL * __nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * __nullable)nodeLayer {
+-(FEMVariable * _Nullable)detectExtrudedStructureMesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * _Nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * _Nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * _Nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * _Nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * _Nullable)downNodePointer numberOfLayers:(int * _Nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * _Nullable)midNodePointer midLayerExists:(BOOL * _Nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * _Nullable)nodeLayer {
     
     int activeDirection=0, dim, ii, jj;
     double at0, at1, dotProduct, elemVector[3], eps, length, unitVector[3], *values = NULL, vector[3], vector2[3];
@@ -6535,7 +6535,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ***************************************************************************************/
--(void)preRotationalProjectorMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 mirrorNode:(BOOL * __nullable)mirrorNode sizeMirrorNode:(int * __nullable)sizeMirrorNode {
+-(void)preRotationalProjectorMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 mirrorNode:(BOOL * _Nullable)mirrorNode sizeMirrorNode:(int * _Nullable)sizeMirrorNode {
     
     int nFii;
     double fii;
@@ -6599,7 +6599,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 ****************************************************************************/
--(void)postRotationalProjector:(FEMMatrix * __nonnull)projector mirrorNode:(BOOL * __nonnull)mirrorNode sizeMirrorNode:(int * __nonnull)sizeMirrorNode {
+-(void)postRotationalProjector:(FEMMatrix * _Nonnull)projector mirrorNode:(BOOL * _Nonnull)mirrorNode sizeMirrorNode:(int * _Nonnull)sizeMirrorNode {
     
     if (mirrorNode == NULL) return;
     
@@ -6630,7 +6630,7 @@ jump:
     Method corresponds to Elmer from git on October 27 2015
  
 **************************************************************************/
--(void)saveProjector:(FEMMatrix * __nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * __nonnull)prefix invPerm:(int * __nullable)invPerm {
+-(void)saveProjector:(FEMMatrix * _Nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * _Nonnull)prefix invPerm:(int * _Nullable)invPerm {
     
     double dia, rowsum;
     
@@ -6690,7 +6690,7 @@ jump:
         Color a mesh using the First Fit (FF) algorithm (also called greedy algorithm)
  
 ************************************************************************************************/
--(void)colorMesh:(FEMMesh * __nonnull)mesh {
+-(void)colorMesh:(FEMMesh * _Nonnull)mesh {
     
     int i, j, numberOfColoredElements = 0, numberOfSameColors, numberOfElementsWithCurrentColor;
     BOOL isShared;
@@ -6853,7 +6853,7 @@ jump:
     //    }
 }
 
--(void)saveColoredMesh:(FEMMesh * __nonnull)mesh meshdir:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name elementsFileName:(NSString * __nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * __nonnull)colorFileName {
+-(void)saveColoredMesh:(FEMMesh * _Nonnull)mesh meshdir:(NSString * _Nonnull)dir meshName:(NSString * _Nonnull)name elementsFileName:(NSString * _Nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * _Nonnull)colorFileName {
     
     NSFileHandle *fileHandle;
     
@@ -6922,7 +6922,7 @@ jump:
     fprintf(stdout, "FEMMeshUtils:saveColoredMesh: done.\n");
 }
 
--(void)readColoredMesh:(FEMMesh * __nonnull)mesh name:(NSString * __nonnull)name directory:(NSString * __nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile {
+-(void)readColoredMesh:(FEMMesh * _Nonnull)mesh name:(NSString * _Nonnull)name directory:(NSString * _Nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile {
     
     int isLineBreak, j, lineCount = 0, nb=0;
     NSString *line;

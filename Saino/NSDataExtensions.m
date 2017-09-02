@@ -41,7 +41,7 @@
  @param dataToFind Data object specifying the delimiter and encoding.
  @returns A range.
  */
-- (NSRange)rangeOfData:(NSData * __nonnull)dataToFind {
+- (NSRange)rangeOfData:(NSData * _Nonnull)dataToFind {
 	
 	const void* bytes = [self bytes];
 	NSUInteger length = [self length];
@@ -77,7 +77,7 @@
 }
 
 
-- (NSRange)rangeOfDataBackwardsSearch:(NSData * __nonnull)dataToFind {
+- (NSRange)rangeOfDataBackwardsSearch:(NSData * _Nonnull)dataToFind {
 	
 	const void* bytes = [self bytes];
 	NSUInteger length = [self length];
@@ -124,7 +124,7 @@
 	return foundRange;
 }
 
-- (NSString * __nullable)stringValueWithEncoding:(NSStringEncoding)encoding {
+- (NSString * _Nullable)stringValueWithEncoding:(NSStringEncoding)encoding {
 	return [[NSString alloc] initWithData:self encoding:encoding];
 }
 
@@ -147,7 +147,7 @@
  Inserts the data before the data of the object.
  @param data Data to be prepended.
  */
-- (void)prepend:(NSData * __nonnull)data {
+- (void)prepend:(NSData * _Nonnull)data {
     
 	
 	NSMutableData* concat = [NSMutableData dataWithData:data];

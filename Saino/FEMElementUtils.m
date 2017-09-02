@@ -32,8 +32,8 @@
 #import "Utils.h"
 
 @interface FEMElementUtils ()
--(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs;
--(void)FEMElementUtils_initializeMatrix:(FEMMatrix * __nonnull)matrix size:(int)n list:(ListMatrix_t * __nonnull)list reorder:(int * __nonnull)reorder invInitialReorder:(int * __nonnull)invInitialReorder dofs:(int)dofs;
+-(ListMatrix_t * _Nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh reorder:(int * _Nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * _Nullable)equation dgSolver:(BOOL * _Nonnull)dgSolver globalBubbles:(BOOL * _Nonnull)globalBubbles nodalDofsOnly:(BOOL * _Nullable)nodalDofsOnly projectorDofs:(BOOL * _Nullable)projectorDofs;
+-(void)FEMElementUtils_initializeMatrix:(FEMMatrix * _Nonnull)matrix size:(int)n list:(ListMatrix_t * _Nonnull)list reorder:(int * _Nonnull)reorder invInitialReorder:(int * _Nonnull)invInitialReorder dofs:(int)dofs;
 @end
 
 @implementation FEMElementUtils
@@ -49,7 +49,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************************************************************************/
--(ListMatrix_t * __nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh reorder:(int * __nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * __nullable)equation dgSolver:(BOOL * __nonnull)dgSolver globalBubbles:(BOOL * __nonnull)globalBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {
+-(ListMatrix_t * _Nonnull)FEMElementUtils_makeListMatrixInModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh reorder:(int * _Nonnull)reorder sizeOfReorder:(int)sizeOfReorder localNodes:(int)localNodes equation:(NSString * _Nullable)equation dgSolver:(BOOL * _Nonnull)dgSolver globalBubbles:(BOOL * _Nonnull)globalBubbles nodalDofsOnly:(BOOL * _Nullable)nodalDofsOnly projectorDofs:(BOOL * _Nullable)projectorDofs {
     
     int t, i, j, k, l, m, k1, k2, n, edofs, fdofs, bdofs;
     int indexSize, numberOfFactors;
@@ -348,7 +348,7 @@
     glueLocalMatrix (defined in the FEMMatrixCRS class) is called (build up the index tables of 
     a CRS format matrix).
 ****************************************************************************************************************/
--(void)FEMElementUtils_initializeMatrix:(FEMMatrix * __nonnull)matrix size:(int)n list:(ListMatrix_t * __nonnull)list reorder:(int * __nonnull)reorder invInitialReorder:(int * __nonnull)invInitialReorder dofs:(int)dofs {
+-(void)FEMElementUtils_initializeMatrix:(FEMMatrix * _Nonnull)matrix size:(int)n list:(ListMatrix_t * _Nonnull)list reorder:(int * _Nonnull)reorder invInitialReorder:(int * _Nonnull)invInitialReorder dofs:(int)dofs {
     
     int i, j, k, l, m, k1, k2;
     ListMatrixEntry_t *cList;
@@ -399,7 +399,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ********************************************************************************************/
--(FEMMatrix * __nonnull)createMatrixInModel:(FEMModel * __nonnull)model forSolution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh dofs:(int)dofs permutation:(int * __nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * __nullable)equation discontinuousGalerkinSolution:(BOOL * __nullable)dgSolution globalBubbles:(BOOL * __nullable)gbBubbles nodalDofsOnly:(BOOL * __nullable)nodalDofsOnly projectorDofs:(BOOL * __nullable)projectorDofs {
+-(FEMMatrix * _Nonnull)createMatrixInModel:(FEMModel * _Nonnull)model forSolution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh dofs:(int)dofs permutation:(int * _Nonnull)perm sizeOfPermutation:(int)permSize matrixFormat:(int)matrixFormat optimizeBandwidth:(BOOL)optimizeBandwidth equationName:(NSString * _Nullable)equation discontinuousGalerkinSolution:(BOOL * _Nullable)dgSolution globalBubbles:(BOOL * _Nullable)gbBubbles nodalDofsOnly:(BOOL * _Nullable)nodalDofsOnly projectorDofs:(BOOL * _Nullable)projectorDofs {
     
     int i, j, k, l, m, n, p, k1, edofs, fdofs, bdofs, cols;
     int *invInitialReorder;
@@ -730,7 +730,7 @@
     Given the normal, return the tangent directions. The first tangent direction will always be on 
     the xy-plane if also the normal is in the xy-plane.
 *************************************************************************************************/
--(void)tangentDirectionsForNormal:(double * __nonnull)normal tangent1:(double * __nonnull)tangent1 tangent2:(double * __nonnull)tangent2 {
+-(void)tangentDirectionsForNormal:(double * _Nonnull)normal tangent1:(double * _Nonnull)tangent1 tangent2:(double * _Nonnull)tangent2 {
     
     int i;
     double n1, n2, n3, sum;
@@ -764,7 +764,7 @@
     }
 }
 
--(double)elementArea:(Element_t * __nonnull)element numberOfNodes:(int)n mesh:(FEMMesh * __nonnull)mesh nodel:(FEMModel * __nonnull)model {
+-(double)elementArea:(Element_t * _Nonnull)element numberOfNodes:(int)n mesh:(FEMMesh * _Nonnull)mesh nodel:(FEMModel * _Nonnull)model {
     
     int i, t;
     double a, detJ, sqrtMetric, nx[n], ny[n], nz[n], u, v, w, x, y, z;

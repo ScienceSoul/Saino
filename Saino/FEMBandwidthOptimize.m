@@ -23,15 +23,15 @@
 #import "Utils.h"
 
 @interface FEMBandwidthOptimize ()
--(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * __nonnull)current index:(int * __nonnull)index permLocal:(int * __nonnull)permLocal doneIndex:(int * __nonnull)doneIndex localNodes:(int)localNodes;
--(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * __nonnull)listMatrix maxLevel:(int * __nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin;
+-(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * _Nonnull)current index:(int * _Nonnull)index permLocal:(int * _Nonnull)permLocal doneIndex:(int * _Nonnull)doneIndex localNodes:(int)localNodes;
+-(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * _Nonnull)listMatrix maxLevel:(int * _Nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin;
 @end
 
 @implementation FEMBandwidthOptimize
 
 #pragma mark Private methods
 
--(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * __nonnull)current index:(int * __nonnull)index permLocal:(int * __nonnull)permLocal doneIndex:(int * __nonnull)doneIndex localNodes:(int)localNodes {
+-(void)FEMBandwidthOptimize_renumber:(ListMatrixEntry_t * _Nonnull)current index:(int * _Nonnull)index permLocal:(int * _Nonnull)permLocal doneIndex:(int * _Nonnull)doneIndex localNodes:(int)localNodes {
     
     int k;
     ListMatrixEntry_t *p = NULL;
@@ -50,7 +50,7 @@
     }
 }
 
--(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * __nonnull)listMatrix maxLevel:(int * __nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin {
+-(void)FEMBandwidthOptimize_levelSize:(ListMatrix_t * _Nonnull)listMatrix maxLevel:(int * _Nonnull)maxlevel localNodes:(int)localNodes doneAlready:(BOOL *)doneAlready nin:(int)nin levelin:(int)levelin {
     
     int n, level, stackp;
     ListMatrixEntry_t *p = NULL;
@@ -112,7 +112,7 @@
     Method for computing the bandwidth of a sparse matrix
  
 ***********************************************************************************/
--(int)computeBandWidthInListMatrix:(ListMatrix_t * __nonnull)list size:(int)n reorder:(int * __nullable)reorder invInitialReorder:(int * __nullable)invInitialReorder {
+-(int)computeBandWidthInListMatrix:(ListMatrix_t * _Nonnull)list size:(int)n reorder:(int * _Nullable)reorder invInitialReorder:(int * _Nullable)invInitialReorder {
     
     int i, j, k;
     int halfBandwidth;
@@ -143,7 +143,7 @@
     to element connections (which implies node to node connections and thus the global matrix structure).
  
 ****************************************************************************************************************************/
--(int)optimizeBandwidthInListMatrix:(ListMatrix_t * __nonnull)listMatrix permutation:(int * __nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * __nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * __nonnull)equation {
+-(int)optimizeBandwidthInListMatrix:(ListMatrix_t * _Nonnull)listMatrix permutation:(int * _Nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * _Nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * _Nonnull)equation {
     
     int i, j, k, halfBandwidth, halfBandwidthBefore, halfBandwidthAfter, index;
     int minDegree, startNode, maxLevel;

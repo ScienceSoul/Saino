@@ -43,7 +43,7 @@
     BOOL _secondary;
     BOOL _componentSecondaryVariable;
     
-    variableArraysContainer * __nonnull _containers;
+    variableArraysContainer * _Nonnull _containers;
 }
 
 @property(nonatomic, strong, nullable) NSString *name;
@@ -67,7 +67,7 @@
 @property(nonatomic, assign, getter = isComponentSecondaryVariable) BOOL componentSecondaryVariable;
 
 -(void)deallocation;
--(NSString * __nullable)canonicalizeName;
--(variableArraysContainer * __nonnull)getContainers;
+-(NSString * _Nullable)canonicalizeName;
+-(variableArraysContainer * _Nonnull)getContainers;
           
 @end

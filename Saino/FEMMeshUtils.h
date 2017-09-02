@@ -24,25 +24,25 @@
 
 @interface FEMMeshUtils : NSObject
 
--(void)findEdges2DInMesh:(FEMMesh * __nonnull)mesh;
--(void)findEdges3DInMesh:(FEMMesh * __nonnull)mesh;
--(void)findFaces3DInMesh:(FEMMesh * __nonnull)mesh;
--(void)findEdgesForMesh:(FEMMesh * __nonnull)mesh findEdges:(BOOL * __nullable)present;
--(void)assignLocalNumberToEdgeElement:(Element_t * __nonnull)edge fromElement:(Element_t * __nonnull)element inMesh:(FEMMesh * __nonnull)mesh;
--(FEMMatrix * __nullable)periodicProjectorInModel:(FEMModel * __nonnull)model forMesh:(FEMMesh * __nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * __nullable)galerkin;
--(FEMMesh * __nullable)splitMeshEqual:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model nodal:(double * __nullable)h sizeNodal:(int * __nullable)sizeNodal;
--(void)setStabilizationParametersInMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model;
--(void)setCurrentMesh:(FEMMesh * __nonnull)mesh inModel:(FEMModel * __nonnull)model;
--(void)updateMesh:(FEMMesh * __nonnull)mesh inSolution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model;
--(void)allocatePDefinitionsElement:(Element_t * __nonnull)element;
--(void)setEdgeFaceDofsMesh:(FEMMesh * __nonnull)mesh edgeDofs:(int * __nullable)edgeDofs faceDofs:(int * __nullable)faceDofs;
--(void)setMaximumDofsMesh:(FEMMesh * __nonnull)mesh;
--(FEMMesh * __nonnull)extrudeMesh:(FEMMesh * __nonnull)mesh inLevels:(int)inLevels model:(FEMModel * __nonnull)model;
--(FEMVariable * __nullable)detectExtrudedStructureMesh:(FEMMesh * __nonnull)mesh solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * __nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * __nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * __nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * __nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * __nullable)downNodePointer numberOfLayers:(int * __nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * __nullable)midNodePointer midLayerExists:(BOOL * __nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * __nullable)nodeLayer;
--(void)preRotationalProjectorMesh1:(FEMMesh * __nonnull)bMesh1 mesh2:(FEMMesh * __nonnull)bMesh2 mirrorNode:(BOOL * __nullable)mirrorNode sizeMirrorNode:(int * __nullable)sizeMirrorNode;
--(void)postRotationalProjector:(FEMMatrix * __nonnull)projector mirrorNode:(BOOL * __nonnull)mirrorNode sizeMirrorNode:(int * __nonnull)sizeMirrorNode;
--(void)saveProjector:(FEMMatrix * __nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * __nonnull)prefix invPerm:(int * __nullable)invPerm;
--(void)colorMesh:(FEMMesh * __nonnull)mesh;
--(void)saveColoredMesh:(FEMMesh * __nonnull)mesh meshdir:(NSString * __nonnull)dir meshName:(NSString * __nonnull)name elementsFileName:(NSString * __nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * __nonnull)colorFileName;
--(void)readColoredMesh:(FEMMesh * __nonnull)mesh name:(NSString * __nonnull)name directory:(NSString * __nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile;
+-(void)findEdges2DInMesh:(FEMMesh * _Nonnull)mesh;
+-(void)findEdges3DInMesh:(FEMMesh * _Nonnull)mesh;
+-(void)findFaces3DInMesh:(FEMMesh * _Nonnull)mesh;
+-(void)findEdgesForMesh:(FEMMesh * _Nonnull)mesh findEdges:(BOOL * _Nullable)present;
+-(void)assignLocalNumberToEdgeElement:(Element_t * _Nonnull)edge fromElement:(Element_t * _Nonnull)element inMesh:(FEMMesh * _Nonnull)mesh;
+-(FEMMatrix * _Nullable)periodicProjectorInModel:(FEMModel * _Nonnull)model forMesh:(FEMMesh * _Nonnull)mesh masterBoundary:(int)mbd targetBoundary:(int)trgt galerking:(BOOL * _Nullable)galerkin;
+-(FEMMesh * _Nullable)splitMeshEqual:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model nodal:(double * _Nullable)h sizeNodal:(int * _Nullable)sizeNodal;
+-(void)setStabilizationParametersInMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model;
+-(void)setCurrentMesh:(FEMMesh * _Nonnull)mesh inModel:(FEMModel * _Nonnull)model;
+-(void)updateMesh:(FEMMesh * _Nonnull)mesh inSolution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model;
+-(void)allocatePDefinitionsElement:(Element_t * _Nonnull)element;
+-(void)setEdgeFaceDofsMesh:(FEMMesh * _Nonnull)mesh edgeDofs:(int * _Nullable)edgeDofs faceDofs:(int * _Nullable)faceDofs;
+-(void)setMaximumDofsMesh:(FEMMesh * _Nonnull)mesh;
+-(FEMMesh * _Nonnull)extrudeMesh:(FEMMesh * _Nonnull)mesh inLevels:(int)inLevels model:(FEMModel * _Nonnull)model;
+-(FEMVariable * _Nullable)detectExtrudedStructureMesh:(FEMMesh * _Nonnull)mesh solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model numberofNodes:(int)numberofNodes ifMask:(BOOL)ifMask mask:(variableArraysContainer * _Nullable)mask isTopActive:(BOOL)isTopActive topNodePointer:(int * _Nullable)topNodePointer isBottomActive:(BOOL)isBottomActive bottomNodePointer:(int * _Nullable)bottomNodePointer isUpActive:(BOOL)isUpActive upNodePointer:(int * _Nullable)upNodePointer isDownActive:(BOOL)isDownActive downNodePointer:(int * _Nullable)downNodePointer numberOfLayers:(int * _Nullable)numberOfLayers isMidNode:(BOOL)isMidNode midNodePointer:(int * _Nullable)midNodePointer midLayerExists:(BOOL * _Nullable)midLayerExists isNodeLayer:(BOOL)isNodeLayer nodeLayer:(int * _Nullable)nodeLayer;
+-(void)preRotationalProjectorMesh1:(FEMMesh * _Nonnull)bMesh1 mesh2:(FEMMesh * _Nonnull)bMesh2 mirrorNode:(BOOL * _Nullable)mirrorNode sizeMirrorNode:(int * _Nullable)sizeMirrorNode;
+-(void)postRotationalProjector:(FEMMatrix * _Nonnull)projector mirrorNode:(BOOL * _Nonnull)mirrorNode sizeMirrorNode:(int * _Nonnull)sizeMirrorNode;
+-(void)saveProjector:(FEMMatrix * _Nonnull)projector saveRowSum:(BOOL)saveRowSum prefix:(NSString * _Nonnull)prefix invPerm:(int * _Nullable)invPerm;
+-(void)colorMesh:(FEMMesh * _Nonnull)mesh;
+-(void)saveColoredMesh:(FEMMesh * _Nonnull)mesh meshdir:(NSString * _Nonnull)dir meshName:(NSString * _Nonnull)name elementsFileName:(NSString * _Nonnull)elementsFileName saveAllElementData:(BOOL)saveAllElementData colorFileName:(NSString * _Nonnull)colorFileName;
+-(void)readColoredMesh:(FEMMesh * _Nonnull)mesh name:(NSString * _Nonnull)name directory:(NSString * _Nonnull)dir readElementsFromFile:(BOOL)readElementsFromFile;
 @end

@@ -24,6 +24,6 @@
 
 @interface FEMFreeSurface : NSObject
 
--(void)moveBoundaryModel:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration relax:(double)relax;
+-(void)moveBoundaryModel:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration relax:(double)relax;
 
 @end

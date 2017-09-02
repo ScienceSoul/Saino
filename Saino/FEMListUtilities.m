@@ -55,10 +55,10 @@
 
 #pragma mark Singleton method
 
-static FEMListUtilities * __nullable sharedListUtilities = nil;
+static FEMListUtilities * _Nullable sharedListUtilities = nil;
 static dispatch_once_t onceToken;
 
-+(id __nonnull)sharedListUtilities {
++(id _Nonnull)sharedListUtilities {
     
     dispatch_once(&onceToken, ^{
         sharedListUtilities = [[self alloc] init];
@@ -71,7 +71,7 @@ static dispatch_once_t onceToken;
     onceToken = 0;
 }
 
--(void)listParseDependencies:(NSArray * __nonnull)dependencies index:(int)ind name:(NSString * __nonnull)name toValues:(double * __nonnull)t count:(int * __nonnull)count model:(FEMModel * __nonnull)model allGlobal:(BOOL * __nonnull)allGlobal {
+-(void)listParseDependencies:(NSArray * _Nonnull)dependencies index:(int)ind name:(NSString * _Nonnull)name toValues:(double * _Nonnull)t count:(int * _Nonnull)count model:(FEMModel * _Nonnull)model allGlobal:(BOOL * _Nonnull)allGlobal {
 
     int k1, n;
     FEMVariable *variable = nil, *cVar = nil;
@@ -158,7 +158,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(void)listSetNameSpace:(NSString * __nullable)str {
+-(void)listSetNameSpace:(NSString * _Nullable)str {
     
     if (str != nil) {
         memcpy(_nameSpace, (char *)[str UTF8String], strlen((char *)[str UTF8String])*sizeof(char));
@@ -168,7 +168,7 @@ static dispatch_once_t onceToken;
     }
 }
 
--(char * __nonnull)listGetNameSpaceForVariable:(NSString * __nonnull)varName {
+-(char * _Nonnull)listGetNameSpaceForVariable:(NSString * _Nonnull)varName {
     
     char *str = NULL;
     char buffer[100];
@@ -186,7 +186,7 @@ static dispatch_once_t onceToken;
     return str;
 }
 
--(NSString * __nullable)listGetString:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
+-(NSString * _Nullable)listGetString:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found {
     
     NSString *s = nil;
     char *nameStr = NULL;
@@ -216,7 +216,7 @@ static dispatch_once_t onceToken;
     Gets a real valued parameter in each node of an element.
  
 *************************************************************************************/
--(BOOL)listGetReal:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
+-(BOOL)listGetReal:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv {
 
     int i, j, k;
     double *buffer;
@@ -335,7 +335,7 @@ static dispatch_once_t onceToken;
     is it sets some confusing limitations to the user.
  
 *************************************************************************/
--(double)listGetValueParameter:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName value:(double)value info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
+-(double)listGetValueParameter:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName value:(double)value info:(BOOL * _Nonnull)found minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv {
     
     double f, t[1];
     char *nameStr = NULL;
@@ -403,7 +403,7 @@ static dispatch_once_t onceToken;
     Gets a real array from the list by its name
  
 **********************************************************************************/
--(BOOL)listGetRealArray:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetRealArray:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result {
 
     int i, j, k, n1, n2;
     double t[32];
@@ -515,7 +515,7 @@ static dispatch_once_t onceToken;
     Gets a constant real from the list by its name
  
 **********************************************************************************/
--(double)listGetConstReal:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(double * __nullable)minv maxValue:(double * __nullable)maxv {
+-(double)listGetConstReal:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found minValue:(double * _Nullable)minv maxValue:(double * _Nullable)maxv {
 
     double f = 0.0;
     char *nameStr = NULL;
@@ -571,7 +571,7 @@ static dispatch_once_t onceToken;
     Gets a constant real array from the list by its name
  
 **********************************************************************************/
--(BOOL)listGetConstRealArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetConstRealArray:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName buffer:(listBuffer * _Nonnull)result {
 
     int i, j, n1, n2;
     BOOL found;
@@ -625,7 +625,7 @@ static dispatch_once_t onceToken;
     Gets an integer array from the list by its name
  
 **********************************************************************************/
--(BOOL)listGetIntegerArray:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetIntegerArray:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName buffer:(listBuffer * _Nonnull)result {
     
     int i, n;
     BOOL found;
@@ -670,7 +670,7 @@ static dispatch_once_t onceToken;
     return found;
 }
 
--(int)listGetInteger:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found minValue:(int * __nullable)minv maxValue:(int * __nullable)maxv {
+-(int)listGetInteger:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found minValue:(int * _Nullable)minv maxValue:(int * _Nullable)maxv {
     
     int l = 0;
     char *nameStr = NULL;
@@ -717,7 +717,7 @@ static dispatch_once_t onceToken;
     return l;
 }
 
--(BOOL)listGetLogical:(FEMModel * __nullable)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName info:(BOOL * __nonnull)found {
+-(BOOL)listGetLogical:(FEMModel * _Nullable)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName info:(BOOL * _Nonnull)found {
     
     BOOL l = NO;
     char *nameStr = NULL;
@@ -742,7 +742,7 @@ static dispatch_once_t onceToken;
     return l;
 }
 
--(FEMValueList * __nullable)listFindVariable:(NSString * __nonnull)varName inArray:(NSArray * __nonnull)array {
+-(FEMValueList * _Nullable)listFindVariable:(NSString * _Nonnull)varName inArray:(NSArray * _Nonnull)array {
     
     char *nameStr = NULL;
     
@@ -772,7 +772,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 *******************************************************************************/
--(FEMValueList * __nullable)listFindPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array info:(BOOL * __nonnull)found {
+-(FEMValueList * _Nullable)listFindPrefix:(NSString * _Nonnull)prefix inArray:(NSArray * _Nonnull)array info:(BOOL * _Nonnull)found {
     
     int k, n;
     char *nameStr = NULL;
@@ -831,7 +831,7 @@ static dispatch_once_t onceToken;
  
 **************************************************************/
 
--(BOOL)listCheckPrefix:(NSString * __nonnull)prefix inArray:(NSArray * __nonnull)array {
+-(BOOL)listCheckPrefix:(NSString * _Nonnull)prefix inArray:(NSArray * _Nonnull)array {
     
     FEMValueList *valueList;
     BOOL found;
@@ -840,7 +840,7 @@ static dispatch_once_t onceToken;
     return found;
 }
 
--(BOOL)listGetDerivativeValue:(FEMModel * __nonnull)model inArray:(NSArray * __nonnull)array forVariable:(NSString * __nonnull)varName numberOfNodes:(int)n indexes:(int * __nonnull)nodeIndexes buffer:(listBuffer * __nonnull)result {
+-(BOOL)listGetDerivativeValue:(FEMModel * _Nonnull)model inArray:(NSArray * _Nonnull)array forVariable:(NSString * _Nonnull)varName numberOfNodes:(int)n indexes:(int * _Nonnull)nodeIndexes buffer:(listBuffer * _Nonnull)result {
     
     int i, k;
     double *buffer, t;
@@ -911,7 +911,7 @@ static dispatch_once_t onceToken;
     return found;
 }
 
--(BOOL)listCheckPresentVariable:(NSString * __nonnull)varName inArray:(NSArray * __nonnull)array {
+-(BOOL)listCheckPresentVariable:(NSString * _Nonnull)varName inArray:(NSArray * _Nonnull)array {
     
     char *nameStr = NULL;
     
@@ -936,7 +936,7 @@ static dispatch_once_t onceToken;
     Adds a string to a given class list of values
  
 **********************************************************************************/
--(void)addStringInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(NSString * __nonnull)value {
+-(void)addStringInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(NSString * _Nonnull)value {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1006,7 +1006,7 @@ static dispatch_once_t onceToken;
     Adds a logical entry to a given class list of values
  
 **********************************************************************************/
--(void)addLogicalInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(BOOL)value {
+-(void)addLogicalInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(BOOL)value {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1075,7 +1075,7 @@ static dispatch_once_t onceToken;
     Adds an integer to a given class list of values
  
 **********************************************************************************/
--(void)addIntegerInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(int * __nullable)value orUsingBlock:(double (^ __nullable)())block {
+-(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)())block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1159,7 +1159,7 @@ static dispatch_once_t onceToken;
     Adds an integer array to a given class list of values
  
 **********************************************************************************/
--(void)addIntegerArrayInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValues:(int * __nullable)values size:(int)n orUsingBlock:(double (^ __nullable)())block {
+-(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)())block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1243,7 +1243,7 @@ static dispatch_once_t onceToken;
     Adds an constant real value to a given class list of values
  
 **********************************************************************************/
--(void)addConstRealInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValue:(double * __nullable)value orUsingBlock:(double (^ __nullable)())block string:(NSString * __nullable)str {
+-(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1329,7 +1329,7 @@ static dispatch_once_t onceToken;
     [valuesArray addObject:newValueList];
 }
 
--(void)addConstRealArrayInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName withValues:(double * __nullable * __nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ __nullable)())block string:(NSString * __nullable)str {
+-(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str {
     
     int i, j;
     FEMBoundaryCondition *boundary;
@@ -1423,7 +1423,7 @@ static dispatch_once_t onceToken;
     [valuesArray addObject:newValueList];
 }
 
--(void)addBlockInClassList:(id __nonnull)className theVariable:(NSString * __nonnull)varName usingBlock:(double (^ __nonnull)(double * __nullable variablesValues))block dependencies:(NSArray * __nullable)dependencies {
+-(void)addBlockInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName usingBlock:(double (^ _Nonnull)(double * _Nullable variablesValues))block dependencies:(NSArray * _Nullable)dependencies {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1492,7 +1492,7 @@ static dispatch_once_t onceToken;
     Check if given element belongs to a body for which a given equation should be solved
  
 *****************************************************************************************/
--(BOOL)checkElementEquation:(FEMModel * __nonnull)model forElement:(Element_t * __nonnull)element andEquation:(NSString * __nonnull)equation {
+-(BOOL)checkElementEquation:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element andEquation:(NSString * _Nonnull)equation {
     
     int k, bodyId;
     BOOL flag, found;
@@ -1516,7 +1516,7 @@ static dispatch_once_t onceToken;
     Check if the keyword is present in any boundary condition
  
 *****************************************************************************/
--(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
+-(BOOL)listCheckPresentAnyBoundaryCondition:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name {
     
     BOOL found;
     
@@ -1534,7 +1534,7 @@ static dispatch_once_t onceToken;
     Check if the keyword is present in any body force
  
 *****************************************************************************/
--(BOOL)listCheckPresentAnyBodyForce:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
+-(BOOL)listCheckPresentAnyBodyForce:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name {
     
     BOOL found;
     
@@ -1552,7 +1552,7 @@ static dispatch_once_t onceToken;
     Check if the keyword is YES in any boundary condition
  
 *****************************************************************************/
--(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * __nonnull)model name:(NSString * __nonnull)name {
+-(BOOL)listGetLogicalAnyBoundaryCondition:(FEMModel * _Nonnull)model name:(NSString * _Nonnull)name {
     
     BOOL found, gotIt;
     
@@ -1572,7 +1572,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 **************************************************************/
--(void)checkTimer:(NSString * __nonnull)timerName deleteTimer:(BOOL * __nullable)deleteTimer resetTimer:(BOOL * __nullable)resetTimer model:(FEMModel * __nonnull)model {
+-(void)checkTimer:(NSString * _Nonnull)timerName deleteTimer:(BOOL * _Nullable)deleteTimer resetTimer:(BOOL * _Nullable)resetTimer model:(FEMModel * _Nonnull)model {
     
     if (_timerPassive == YES) return;
     
@@ -1619,7 +1619,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 ******************************************************************************/
--(void)resetTimer:(NSString * __nonnull)timerName model:(FEMModel * __nonnull)model {
+-(void)resetTimer:(NSString * _Nonnull)timerName model:(FEMModel * _Nonnull)model {
     
     double ct, rt;
     static BOOL firstTime = YES;
@@ -1647,7 +1647,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 *************************************************************/
--(void)deletTimer:(NSString * __nonnull)timerName {
+-(void)deletTimer:(NSString * _Nonnull)timerName {
     
     if (_timerPassive == YES) return;
     

@@ -69,10 +69,10 @@
     FEMConstants *_constants;
     FileReader *_mdf;
     
-    Element_t * __nullable _elements;
-    Element_t * __nullable _currentElement;
-    Nodes_t * __nullable _nodes;
-    modelArraysContainer * __nonnull _containers;
+    Element_t * _Nullable _elements;
+    Element_t * _Nullable _currentElement;
+    Nodes_t * _Nullable _nodes;
+    modelArraysContainer * _Nonnull _containers;
 }
 
 @property(nonatomic, assign) int dimension;
@@ -113,19 +113,19 @@
 -(void)deallocation;
 
 // The dummy arguments are placeholders for future arguments related to MPI support
--(void)loadModelName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd dummy:(int * __nullable)d1 dummy:(int * __nullable)d2;
+-(void)loadModelName:(NSString * _Nonnull)name boundariesOnly:(BOOL)bd dummy:(int * _Nullable)d1 dummy:(int * _Nullable)d2;
 
 // Elements getter
--(Element_t * __nullable)getElements;
--(Element_t * __nullable)getCurrentElement;
+-(Element_t * _Nullable)getElements;
+-(Element_t * _Nullable)getCurrentElement;
 
 // Nodes getter
--(Nodes_t * __nullable)getNodes;
+-(Nodes_t * _Nullable)getNodes;
 
 // Elements and nodes setters
--(void)SetElements:(Element_t * __nonnull)elements;
--(void)setNodes:(Nodes_t * __nonnull)nodes;
+-(void)SetElements:(Element_t * _Nonnull)elements;
+-(void)setNodes:(Nodes_t * _Nonnull)nodes;
 
--(modelArraysContainer * __nonnull)getContainers;
+-(modelArraysContainer * _Nonnull)getContainers;
 
 @end

@@ -20,12 +20,12 @@
 
 #include "Numerics.h"
 
-extern inline void invertMatrix3x3(double * __nonnull GI, double * __nonnull covariantMetricTensor, double detG);
-extern inline double det3x3(double * __nonnull * __nonnull a);
-extern inline void derivatives(double * __nonnull dx, Element_t * __nonnull element, int nDOFs, Nodes_t * __nonnull nodes, double * __nonnull dLBasisdx);
-extern inline void covariantMetric(double * __nonnull covariantMetricTensor, double * __nonnull dx, Element_t * __nonnull element, int nDOFs, Nodes_t * __nonnull nodes, int meshDimension, double * __nonnull dLBasisdx);
-extern inline double detJ(double * __nonnull covariantMetricTensor, double * __nonnull dx, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double *  __nonnull dLBasisdx);
-extern inline bool contravariantMetric(double * __nonnull elementMetric, double * __nonnull dx, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull dLBasisdx);
-extern inline bool localtoGlobalMap(double * __nonnull ltoGMap, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull dLBasisdx);
-extern inline void globalSecondDerivatives(double * __nonnull elementMetric, Element_t * __nonnull element, Nodes_t * __nonnull nodes, int meshDimension, double u, double v, double w, double * __nonnull f, double * __nonnull dLBasisdx, double * __nonnull values);
+extern inline void invertMatrix3x3(double * _Nonnull GI, double * _Nonnull covariantMetricTensor, double detG);
+extern inline double det3x3(double * _Nonnull * _Nonnull a);
+extern inline void derivatives(double * _Nonnull dx, Element_t * _Nonnull element, int nDOFs, Nodes_t * _Nonnull nodes, double * _Nonnull dLBasisdx);
+extern inline void covariantMetric(double * _Nonnull covariantMetricTensor, double * _Nonnull dx, Element_t * _Nonnull element, int nDOFs, Nodes_t * _Nonnull nodes, int meshDimension, double * _Nonnull dLBasisdx);
+extern inline double detJ(double * _Nonnull covariantMetricTensor, double * _Nonnull dx, Element_t * _Nonnull element, Nodes_t * _Nonnull nodes, int meshDimension, double u, double v, double w, double *  _Nonnull dLBasisdx);
+extern inline bool contravariantMetric(double * _Nonnull elementMetric, double * _Nonnull dx, Element_t * _Nonnull element, Nodes_t * _Nonnull nodes, int meshDimension, double u, double v, double w, double * _Nonnull dLBasisdx);
+extern inline bool localtoGlobalMap(double * _Nonnull ltoGMap, Element_t * _Nonnull element, Nodes_t * _Nonnull nodes, int meshDimension, double u, double v, double w, double * _Nonnull dLBasisdx);
+extern inline void globalSecondDerivatives(double * _Nonnull elementMetric, Element_t * _Nonnull element, Nodes_t * _Nonnull nodes, int meshDimension, double u, double v, double w, double * _Nonnull f, double * _Nonnull dLBasisdx, double * _Nonnull values);
 

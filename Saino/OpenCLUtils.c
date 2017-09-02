@@ -24,7 +24,7 @@
 #include "OpenCLUtils.h"
 #include "memory.h"
 
-cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numberofPlatforms, cl_uint * __nullable numberOfDevices) {
+cl_platform_id _Nullable * _Nullable find_platforms(cl_uint * _Nullable numberofPlatforms, cl_uint * _Nullable numberOfDevices) {
     
     cl_platform_id    *platForms;
     cl_int            err;
@@ -69,7 +69,7 @@ cl_platform_id __nullable * __nullable find_platforms(cl_uint * __nullable numbe
     return platForms;
 }
 
-cl_device_id __nullable find_single_device(void) {
+cl_device_id _Nullable find_single_device(void) {
     
     cl_platform_id    *platForms;
     cl_device_id      device;
@@ -128,7 +128,7 @@ cl_device_id __nullable find_single_device(void) {
     return device;
 }
 
-int device_info(cl_device_id __nonnull device_id) {
+int device_info(cl_device_id _Nonnull device_id) {
     
     cl_uint err, clock_frequency, address_bits;
     
@@ -155,7 +155,7 @@ int device_info(cl_device_id __nonnull device_id) {
     return CL_SUCCESS;
 }
 
-int device_stats(cl_device_id __nonnull device_id) {
+int device_stats(cl_device_id _Nonnull device_id) {
     
     cl_uint err, addr_size, clock_frequency, max_compute_units;
     
@@ -210,7 +210,7 @@ int device_stats(cl_device_id __nonnull device_id) {
 	return CL_SUCCESS;
 }
 
-int LoadFileIntoString(const char * __nonnull filename, char * __nonnull * __nullable text, size_t * __nonnull len) {
+int LoadFileIntoString(const char * _Nonnull filename, char * _Nonnull * _Nullable text, size_t * _Nonnull len) {
     struct stat statbuf;
     FILE        *fh;
     int         file_len;

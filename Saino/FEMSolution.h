@@ -53,7 +53,7 @@
     NSMutableDictionary *_exportedVariables;         // Exported variables
     NSMutableArray *_valuesList;
     
-    solutionArraysContainer * __nonnull _containers;
+    solutionArraysContainer * _Nonnull _containers;
 }
 
 @property(nonatomic, assign) int simulationID;
@@ -86,9 +86,9 @@
 @property(nonatomic, strong, nonnull) NSMutableArray <FEMValueList *> *valuesList;
 
 -(void)deallocation;
--(solutionArraysContainer * __nonnull)getContainers;
+-(solutionArraysContainer * _Nonnull)getContainers;
 
 // Instantiate the plug-in principal class
--(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * __nonnull)bundle;
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * _Nonnull)bundle;
 
 @end

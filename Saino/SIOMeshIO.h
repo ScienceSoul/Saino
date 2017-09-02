@@ -37,15 +37,15 @@
 @property(nonatomic, strong, nullable) SIOModelManager *modelManager;
 @property(nonatomic, strong, nullable) SIOMeshAgent *meshAgent;
 
--(id __nonnull)initWithParallelNumberOfProcessors:(int)procs processorID:(int)me;
--(void)openMeshAtPath:(NSString * __nonnull)directory;
+-(id _Nonnull)initWithParallelNumberOfProcessors:(int)procs processorID:(int)me;
+-(void)openMeshAtPath:(NSString * _Nonnull)directory;
 -(void)closeMesh;
 -(void)close;
--(void)getMeshDescriptionNodeCount:(int * __nonnull)nodeCount elementCount:(int * __nonnull)elementCount boundaryElementCount:(int * __nonnull)boundaryElementCount usedElementTypes:(int * __nonnull)usedElementTypes elementTypeTags:(int * __nonnull)elementTypeTags elementCountByType:(int * __nonnull)elementCountByType;
--(void)getMeshNodes:(int * __nonnull)tags coord:(double * __nonnull)coord;
--(void)getMeshElementConnection:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly;
--(void)getMeshBoundaryElement:(int * __nonnull)tag boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord;
--(void)getPartDesription:(int * __nonnull)sharedNodeCount;
--(void)getPartNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partCount parts:(int * __nonnull)parts;
+-(void)getMeshDescriptionNodeCount:(int * _Nonnull)nodeCount elementCount:(int * _Nonnull)elementCount boundaryElementCount:(int * _Nonnull)boundaryElementCount usedElementTypes:(int * _Nonnull)usedElementTypes elementTypeTags:(int * _Nonnull)elementTypeTags elementCountByType:(int * _Nonnull)elementCountByType;
+-(void)getMeshNodes:(int * _Nonnull)tags coord:(double * _Nonnull)coord;
+-(void)getMeshElementConnection:(int * _Nonnull)tag body:(int * _Nonnull)body type:(int * _Nonnull)type pdofs:(int * _Nonnull)pdofs nodes:(int * _Nonnull)nodes colorIndex:(int * _Nullable)colorIndex parallelAssembly:(BOOL * _Nullable)parallelAssembly;
+-(void)getMeshBoundaryElement:(int * _Nonnull)tag boundary:(int * _Nonnull)boundary leftElement:(int * _Nonnull)leftElement rightElement:(int * _Nonnull)rightElement type:(int * _Nonnull)type nodes:(int * _Nonnull)nodes coord:(double * _Nonnull)coord;
+-(void)getPartDesription:(int * _Nonnull)sharedNodeCount;
+-(void)getPartNode:(int * _Nonnull)tag constraint:(int * _Nonnull)constraint coord:(double * _Nonnull)coord partCount:(int * _Nonnull)partCount parts:(int * _Nonnull)parts;
 
 @end

@@ -25,14 +25,14 @@
 
 @interface FEMPrecondition ()
 
--(int)FEMPrecondition_initializeILU1:(matrixArraysContainer * __nonnull)containers numberOfRows:(int)n;
--(int)FEMPrecondition_initializeComplexILU1:(matrixArraysContainer * __nonnull)containers numberOfRows:(int)n;
--(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix * __nonnull)matrix atIndex:(int)i numberOfRows:(int)n;
--(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix * __nonnull)matrix atIndex:(int)i numberOfRows:(int)n;
--(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n tolerance:(int)tol;
--(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n tolerance:(int)tol;
--(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix * __nonnull)matrix rightHandSide:(double * __nonnull)b;
--(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix * __nonnull)matrix rightHandSide:(double complex * __nonnull)b;
+-(int)FEMPrecondition_initializeILU1:(matrixArraysContainer * _Nonnull)containers numberOfRows:(int)n;
+-(int)FEMPrecondition_initializeComplexILU1:(matrixArraysContainer * _Nonnull)containers numberOfRows:(int)n;
+-(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix * _Nonnull)matrix atIndex:(int)i numberOfRows:(int)n;
+-(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix * _Nonnull)matrix atIndex:(int)i numberOfRows:(int)n;
+-(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)n tolerance:(int)tol;
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix * _Nonnull)matrix rightHandSide:(double * _Nonnull)b;
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix * _Nonnull)matrix rightHandSide:(double complex * _Nonnull)b;
 
 @end
 
@@ -40,7 +40,7 @@
 
 #pragma mark Private methods
 
--(int)FEMPrecondition_initializeILU1:(matrixArraysContainer * __nonnull)containers numberOfRows:(int)n {
+-(int)FEMPrecondition_initializeILU1:(matrixArraysContainer * _Nonnull)containers numberOfRows:(int)n {
     
     int i, j, k, l, nonZeros, rowMin, rowMax;
     int C[n];
@@ -118,7 +118,7 @@
     return nonZeros;
 }
 
--(int)FEMPrecondition_initializeComplexILU1:(matrixArraysContainer * __nonnull)containers numberOfRows:(int)n {
+-(int)FEMPrecondition_initializeComplexILU1:(matrixArraysContainer * _Nonnull)containers numberOfRows:(int)n {
     
     int i, j, k, l, nonZeros, rowMin, rowMax;
     int C[n];
@@ -196,7 +196,7 @@
     return nonZeros;
 }
 
--(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix * __nonnull)matrix atIndex:(int)i numberOfRows:(int)n {
+-(void)FEMPrecondition_ilutWorkspaceCheckMatrix:(FEMMatrix * _Nonnull)matrix atIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
     int *iWork = NULL;
@@ -237,7 +237,7 @@
     cWork = NULL;
 }
 
--(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix * __nonnull)matrix atIndex:(int)i numberOfRows:(int)n {
+-(void)FEMPrecondition_ilutComplexWorkspaceCheckMatrix:(FEMMatrix * _Nonnull)matrix atIndex:(int)i numberOfRows:(int)n {
     
     int j, k;
     int *iWork = NULL;
@@ -277,7 +277,7 @@
     cWork = NULL;
 }
 
--(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n tolerance:(int)tol {
+-(void)FEMPrecondition_computeIlutMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     bool C[n];
@@ -396,7 +396,7 @@
     }
 }
 
--(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)n tolerance:(int)tol {
+-(void)FEMPrecondition_computeComplexIlutMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)n tolerance:(int)tol {
     
     int i, j, k, l, rowMin, rowMax;
     bool C[n];
@@ -522,7 +522,7 @@
         double *b                -> On entry the RHS vector, on exit the solution vector.
  
 *******************************************************************************************/
--(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix * __nonnull)matrix rightHandSide:(double * __nonnull)b {
+-(void)FEMPrecondition_LUSolveSystemSize:(int)n matrix:(FEMMatrix * _Nonnull)matrix rightHandSide:(double * _Nonnull)b {
     
     int i, j;
     double s;
@@ -591,7 +591,7 @@
         double complex *b      -> On entry the RHS vector, on exit the solution vector.
  
 *******************************************************************************************/
--(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix * __nonnull)matrix rightHandSide:(double complex * __nonnull)b {
+-(void)FEMPrecondition_ComplexLUSolveSystemSize:(int)n matrix:(FEMMatrix * _Nonnull)matrix rightHandSide:(double complex * _Nonnull)b {
     
     int i, j;
     double complex s;
@@ -670,7 +670,7 @@
         int ipar               -> Input stucture holding info from the HUTIter iterative solver
  
 ***************************************************************************************************/
--(void)CRSDiagPreconditionMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double * __nonnull)u rightHandSide:(double * __nonnull)v info:(int * __nullable)ipar {
+-(void)CRSDiagPreconditionMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double * _Nonnull)u rightHandSide:(double * _Nonnull)v info:(int * _Nullable)ipar {
 
     int i, j, n;
     matrixArraysContainer *matContainers = NULL;
@@ -720,7 +720,7 @@
         int ipar               -> Input stucture holding info from the HUTIter iterative solver
  
 *******************************************************************************************/
--(void)CRSComplexDiagPreconditionMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double complex * __nonnull)u rightHandSide:(double complex * __nonnull)v info:(int * __nullable)ipar {
+-(void)CRSComplexDiagPreconditionMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double complex * _Nonnull)u rightHandSide:(double complex * _Nonnull)v info:(int * _Nullable)ipar {
     
     int i, j, n;
     double complex A;
@@ -761,7 +761,7 @@
  
 *******************************************************************************************/
 
--(void)CRSBlockDiagonalMatrix:(FEMMatrix * __nonnull)matrix blockDiagMatrix:(FEMMatrix * __nonnull)B numberOfBlocks:(int)blocks {
+-(void)CRSBlockDiagonalMatrix:(FEMMatrix * _Nonnull)matrix blockDiagMatrix:(FEMMatrix * _Nonnull)B numberOfBlocks:(int)blocks {
     
     int n;
     int i, k, l, kb;
@@ -808,7 +808,7 @@
     bContainers->Rows[(n+1)-1] = kb;
 }
 
--(void)initializeILUMatrix:(FEMMatrix * __nonnull)matrix numberOfRows:(int)ilun {
+-(void)initializeILUMatrix:(FEMMatrix * _Nonnull)matrix numberOfRows:(int)ilun {
     
     int i, n, m;
     
@@ -861,7 +861,7 @@
     matContainers->sizeILUValues = matContainers->ILURows[(n+1)-1]-1;
 }
 
--(void)initializeCILUMatrix:(FEMMatrix * __nonnull)matrix :(int)ilun {
+-(void)initializeCILUMatrix:(FEMMatrix * _Nonnull)matrix :(int)ilun {
     
     int i, j, k;
     int n;
@@ -963,7 +963,7 @@
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
--(BOOL)CRSIncompleteLUMatrix:(FEMMatrix * __nonnull)matrix fillsOrder:(int)ilun {
+-(BOOL)CRSIncompleteLUMatrix:(FEMMatrix * _Nonnull)matrix fillsOrder:(int)ilun {
     
     int i, j, k, l, n;
     double t, *S;
@@ -1124,7 +1124,7 @@
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
--(BOOL)CRSComplexIncompleteLUMatrix:(FEMMatrix * __nonnull)matrix fillsOrder: (int)ilun {
+-(BOOL)CRSComplexIncompleteLUMatrix:(FEMMatrix * _Nonnull)matrix fillsOrder: (int)ilun {
     
     int i, j, k, l, n;
     double t;
@@ -1273,7 +1273,7 @@
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
--(BOOL)CRSIlutMatrix:(FEMMatrix * __nonnull)matrix dropTolerance:(int)tol {
+-(BOOL)CRSIlutMatrix:(FEMMatrix * _Nonnull)matrix dropTolerance:(int)tol {
     
     int n;
     double t;
@@ -1318,7 +1318,7 @@
         Return Value           -> A BOOL whether or not the factorization succeeded.
  
 *******************************************************************************************/
--(BOOL)CRSComplexIlutMatrix:(FEMMatrix * __nonnull)matrix dropTolerance:(int)tol {
+-(BOOL)CRSComplexIlutMatrix:(FEMMatrix * _Nonnull)matrix dropTolerance:(int)tol {
     
     int n;
     double t;
@@ -1364,7 +1364,7 @@
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 *******************************************************************************************/
--(BOOL)CRSLuPreconditionMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double * __nonnull)u rightHandSide:(double * __nonnull)v info:(int * __nonnull)ipar {
+-(BOOL)CRSLuPreconditionMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double * _Nonnull)u rightHandSide:(double * _Nonnull)v info:(int * _Nonnull)ipar {
     
     memcpy(u, v, ipar[2]*sizeof(double));
     
@@ -1390,7 +1390,7 @@
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 ****************************************************************************************************************/
--(BOOL)CRSComplexLuPreconditionMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double complex * __nonnull)u rightHandSide:(double complex * __nonnull)v info:(int * __nonnull)ipar {
+-(BOOL)CRSComplexLuPreconditionMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double complex * _Nonnull)u rightHandSide:(double complex * _Nonnull)v info:(int * _Nonnull)ipar {
     
     memcpy(u, v, ipar[2]*sizeof(double));
     
@@ -1416,7 +1416,7 @@
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 *******************************************************************************************/
--(void)CRSMatrixVectorProduct:(FEMMatrix * __nonnull)matrix vector:(double * __nonnull)u result:(double * __nonnull)v info:(int * __nonnull)ipar {
+-(void)CRSMatrixVectorProduct:(FEMMatrix * _Nonnull)matrix vector:(double * _Nonnull)u result:(double * _Nonnull)v info:(int * _Nonnull)ipar {
     
     int i, j, n;
     double s;
@@ -1463,7 +1463,7 @@
         int ipar               -> Structure holding info from the HUTIter iterative solver.
  
 *******************************************************************************************/
--(void)CRSComplexMatrixVectorProduct:(FEMMatrix * __nonnull)matrix vector:(double complex * __nonnull)u result:(double complex * __nonnull)v info:(int * __nonnull)ipar {
+-(void)CRSComplexMatrixVectorProduct:(FEMMatrix * _Nonnull)matrix vector:(double complex * _Nonnull)u result:(double complex * _Nonnull)v info:(int * _Nonnull)ipar {
     
     int i, j, n;
     double complex s, rsum;
@@ -1501,7 +1501,7 @@
     Dummy preconditioner, if linear system scaling is active this corresponds
     to diagonal preconditioning.
 *******************************************************************************************/
--(void)CRSPCondDummyMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double * __nonnull)u rightHandSide:(double * __nonnull)v info:(int * __nonnull)ipar {
+-(void)CRSPCondDummyMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double * _Nonnull)u rightHandSide:(double * _Nonnull)v info:(int * _Nonnull)ipar {
     
     memcpy(u, v, ipar[2]*sizeof(double));
 }
@@ -1510,7 +1510,7 @@
     Complex dummy preconditioner, if linear system scaling is active this corresponds
     to diagonal preconditioning.
 *******************************************************************************************/
--(void)CRSPCondDummyComplexMatrix:(FEMMatrix * __nonnull)matrix afterPrecondition:(double complex * __nonnull)u rightHandSide:(double complex * __nonnull)v info:(int * __nonnull)ipar {
+-(void)CRSPCondDummyComplexMatrix:(FEMMatrix * _Nonnull)matrix afterPrecondition:(double complex * _Nonnull)u rightHandSide:(double complex * _Nonnull)v info:(int * _Nonnull)ipar {
     
     memcpy(u, v, ipar[2]*sizeof(double));
 }

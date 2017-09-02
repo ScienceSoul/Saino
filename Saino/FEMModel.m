@@ -501,7 +501,7 @@
     _nodes = NULL;
 }
 
--(void)loadModelName:(NSString * __nonnull)name boundariesOnly:(BOOL)bd dummy:(int * __nullable)d1 dummy:(int * __nullable)d2 {
+-(void)loadModelName:(NSString * _Nonnull)name boundariesOnly:(BOOL)bd dummy:(int * _Nullable)d1 dummy:(int * _Nullable)d2 {
     
     int i, j, l, nlen, meshKeep, meshLevels, sizeNodal, numberPartitions, partitionID;
     int defDofs[6];
@@ -943,32 +943,32 @@
 
 #pragma mark Elements getter
 
--(Element_t * __nullable)getElements {
+-(Element_t * _Nullable)getElements {
     
     return _elements;
 }
 
--(Element_t * __nullable)getCurrentElement {
+-(Element_t * _Nullable)getCurrentElement {
     
     return _currentElement;
 }
 
 #pragma mark Nodes getter
--(Nodes_t * __nullable)getNodes {
+-(Nodes_t * _Nullable)getNodes {
     
     return _nodes;
 }
 
 #pragma mark Elements and Nodes setter
--(void)SetElements:(Element_t * __nonnull)elements {
+-(void)SetElements:(Element_t * _Nonnull)elements {
     _elements = elements;
 }
 
--(void)setNodes:(Nodes_t * __nonnull)nodes {
+-(void)setNodes:(Nodes_t * _Nonnull)nodes {
     _nodes = nodes;
 }
 
--(modelArraysContainer * __nonnull)getContainers {
+-(modelArraysContainer * _Nonnull)getContainers {
     
     return _containers;
 }

@@ -23,32 +23,32 @@
 // GPU data structure for ice flow simulations
 typedef struct {
     
-    double * __nullable basisFunctions_dp;
-    double * __nullable nodesX_dp;
-    double * __nullable nodesY_dp;
-    double * __nullable nodesZ_dp;
-    double * __nullable nodesvx_dp;
-    double * __nullable nodesvy_dp;
-    double * __nullable nodesvz_dp;
-    double * __nullable varSol_dp;
-    double * __nullable matValues_dp;
-    double * __nullable matRHS_dp;
+    double * _Nullable basisFunctions_dp;
+    double * _Nullable nodesX_dp;
+    double * _Nullable nodesY_dp;
+    double * _Nullable nodesZ_dp;
+    double * _Nullable nodesvx_dp;
+    double * _Nullable nodesvy_dp;
+    double * _Nullable nodesvz_dp;
+    double * _Nullable varSol_dp;
+    double * _Nullable matValues_dp;
+    double * _Nullable matRHS_dp;
     double density_dp;
     double viscosity_dp;
     double gravity_dp;
     double hk_dp;
     double mk_dp;
     
-    float * __nullable basisFunctions_sp;
-    float * __nullable nodesX_sp;
-    float * __nullable nodesY_sp;
-    float * __nullable nodesZ_sp;
-    float * __nullable nodesvx_sp;
-    float * __nullable nodesvy_sp;
-    float * __nullable nodesvz_sp;
-    float * __nullable varSol_sp;
-    float * __nullable matValues_sp;
-    float * __nullable matRHS_sp;
+    float * _Nullable basisFunctions_sp;
+    float * _Nullable nodesX_sp;
+    float * _Nullable nodesY_sp;
+    float * _Nullable nodesZ_sp;
+    float * _Nullable nodesvx_sp;
+    float * _Nullable nodesvy_sp;
+    float * _Nullable nodesvz_sp;
+    float * _Nullable varSol_sp;
+    float * _Nullable matValues_sp;
+    float * _Nullable matRHS_sp;
     float density_sp;
     float viscosity_sp;
     float gravity_sp;
@@ -57,23 +57,23 @@ typedef struct {
     
     // Memory locations to which the real variables
     // point according to the precision used
-    void * __nullable basisFunctions_v;
-    void * __nullable nodesX_v;
-    void * __nullable nodesY_v;
-    void * __nullable nodesZ_v;
-    void * __nullable nodesvx_v;
-    void * __nullable nodesvy_v;
-    void * __nullable nodesvz_v;
-    void * __nullable varSol_v;
-    void * __nullable matValues_v;
-    void * __nullable matRHS_v;
-    void * __nullable density_v;
-    void * __nullable viscosity_v;
-    void * __nullable gravity_v;
-    void * __nullable hk_v;
-    void * __nullable mk_v;
+    void * _Nullable basisFunctions_v;
+    void * _Nullable nodesX_v;
+    void * _Nullable nodesY_v;
+    void * _Nullable nodesZ_v;
+    void * _Nullable nodesvx_v;
+    void * _Nullable nodesvy_v;
+    void * _Nullable nodesvz_v;
+    void * _Nullable varSol_v;
+    void * _Nullable matValues_v;
+    void * _Nullable matRHS_v;
+    void * _Nullable density_v;
+    void * _Nullable viscosity_v;
+    void * _Nullable gravity_v;
+    void * _Nullable hk_v;
+    void * _Nullable mk_v;
     
-    int * __nullable perm;
+    int * _Nullable perm;
     
 } ice_flow_gpu;
 
@@ -188,42 +188,42 @@ typedef struct {
 } stiff_force_d;
 
 typedef struct {
-    double * __nullable nodesX;
-    double * __nullable nodesY;
-    double * __nullable nodesZ;
-    double * __nullable nodesvx;
-    double * __nullable nodesvy;
-    double * __nullable nodesvz;
-    int * __nullable perm;
+    double * _Nullable nodesX;
+    double * _Nullable nodesY;
+    double * _Nullable nodesZ;
+    double * _Nullable nodesvx;
+    double * _Nullable nodesvy;
+    double * _Nullable nodesvz;
+    int * _Nullable perm;
 } bucket;
 
 typedef struct {
-    bucket * __nullable buckets;
+    bucket * _Nullable buckets;
     int numberOfBuckets;
     
-    ice_flow_gpu * __nullable data;
-    int * __nullable perm;
+    ice_flow_gpu * _Nullable data;
+    int * _Nullable perm;
     
-    cl_mem __nullable _nodal_nodes_x;
-    cl_mem __nullable _nodal_nodes_y;
-    cl_mem __nullable _nodal_nodes_z;
-    cl_mem __nullable _nodal_vx;
-    cl_mem __nullable _nodal_vy;
-    cl_mem __nullable _nodal_vz;
-    cl_mem __nullable _nodal_perm;
+    cl_mem _Nullable _nodal_nodes_x;
+    cl_mem _Nullable _nodal_nodes_y;
+    cl_mem _Nullable _nodal_nodes_z;
+    cl_mem _Nullable _nodal_vx;
+    cl_mem _Nullable _nodal_vy;
+    cl_mem _Nullable _nodal_vz;
+    cl_mem _Nullable _nodal_perm;
 } colors_data;
 
-void init_gpu_data(ice_flow_gpu * __nonnull data);
-void __attribute__((overloadable)) init_basis_functions(basis_functions_f * __nonnull data);
-void __attribute__((overloadable)) init_basis_functions(basis_functions_d * __nonnull data);
+void init_gpu_data(ice_flow_gpu * _Nonnull data);
+void __attribute__((overloadable)) init_basis_functions(basis_functions_f * _Nonnull data);
+void __attribute__((overloadable)) init_basis_functions(basis_functions_d * _Nonnull data);
 
-void __attribute__((overloadable)) init_nodal_data(nodal_data_f * __nonnull data, int size);
-void __attribute__((overloadable)) init_nodal_data(nodal_data_d * __nonnull data, int size);
+void __attribute__((overloadable)) init_nodal_data(nodal_data_f * _Nonnull data, int size);
+void __attribute__((overloadable)) init_nodal_data(nodal_data_d * _Nonnull data, int size);
 
-void init_nz_indexes(non_zero * __nonnull data, int size);
+void init_nz_indexes(non_zero * _Nonnull data, int size);
 
-void __attribute__((overloadable)) init_stiff_force(stiff_force_f * __nonnull data, int size);
-void __attribute__((overloadable)) init_stiff_force(stiff_force_d * __nonnull data, int size);
+void __attribute__((overloadable)) init_stiff_force(stiff_force_f * _Nonnull data, int size);
+void __attribute__((overloadable)) init_stiff_force(stiff_force_d * _Nonnull data, int size);
 
-void init_color_data(colors_data * __nonnull data, int size);
+void init_color_data(colors_data * _Nonnull data, int size);
 

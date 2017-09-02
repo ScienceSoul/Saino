@@ -44,14 +44,14 @@ enum {
 
 @interface FEMHeatSolution ()
 -(void)FEMHeatSolution_nullify;
--(void)FEMHeatSolution_findGapIndexesElement:(Element_t * __nonnull)element indexes:(int * __nonnull)indexes numberOfNodes:(int)n solution:(FEMSolution * __nonnull)solution;
--(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t * __nonnull)element numberOfNodes:(int)n material:(FEMMaterial * __nonnull)material model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities transientSimulation:(BOOL)transient;
--(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t * __nonnull)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh;
--(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution core:(FEMCore * __nonnull)core element:(Element_t * __nonnull)element numberOfNodes:(int)n forceVector:(double * __nonnull)forceVector angleFraction:(double * __nonnull)angleFraction text:(double * __nonnull)text timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element numberOfNodes:(int)n core:(FEMCore * __nonnull)core;
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray * __nonnull)bc element:(Element_t * __nonnull)element parent:(Element_t * __nonnull)parent numberOfNodes:(int)n forceVector:(double * __nonnull)forceVector core:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilites crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix integration:(FEMNumericIntegration * __nonnull)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic * __nonnull)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic * __nonnull)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities;
--(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution * __nonnull)solution;
--(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel * __nonnull)model;
+-(void)FEMHeatSolution_findGapIndexesElement:(Element_t * _Nonnull)element indexes:(int * _Nonnull)indexes numberOfNodes:(int)n solution:(FEMSolution * _Nonnull)solution;
+-(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t * _Nonnull)element numberOfNodes:(int)n material:(FEMMaterial * _Nonnull)material model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities transientSimulation:(BOOL)transient;
+-(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t * _Nonnull)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh;
+-(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution core:(FEMCore * _Nonnull)core element:(Element_t * _Nonnull)element numberOfNodes:(int)n forceVector:(double * _Nonnull)forceVector angleFraction:(double * _Nonnull)angleFraction text:(double * _Nonnull)text timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element numberOfNodes:(int)n core:(FEMCore * _Nonnull)core;
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray * _Nonnull)bc element:(Element_t * _Nonnull)element parent:(Element_t * _Nonnull)parent numberOfNodes:(int)n forceVector:(double * _Nonnull)forceVector core:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilites crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix integration:(FEMNumericIntegration * _Nonnull)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic * _Nonnull)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic * _Nonnull)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities;
+-(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution * _Nonnull)solution;
+-(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel * _Nonnull)model;
 @end
 
 @implementation FEMHeatSolution {
@@ -66,10 +66,10 @@ enum {
     int _doneTime;
     int _phaseChangeModel;
     int _localNodes;
-    int * __nullable _indexes;
+    int * _Nullable _indexes;
     int _rows;
-    int * __nullable _saveIndexes;
-    int * __nullable _tempPerm;
+    int * _Nullable _saveIndexes;
+    int * _Nullable _tempPerm;
     double _dt;
     double _emissivity;
     double _powerScaling;
@@ -78,56 +78,56 @@ enum {
     double _stefanBoltzmann;
     double _text;
     double _visibleFraction;
-    double *__nullable _u, * __nullable _v, * __nullable _w;
-    double *__nullable * __nullable _mu;
-    double * __nullable _pressure;
-    double * __nullable _dPressureDt;
-    double * __nullable _pressureCoeff;
-    double * __nullable _density;
-    double * __nullable _work;
-    double *__nullable _latentHeat;
-    double * __nullable * __nullable _phaseVelocity;
-    double *__nullable _electricConductivity;
+    double *_Nullable _u, * _Nullable _v, * _Nullable _w;
+    double *_Nullable * _Nullable _mu;
+    double * _Nullable _pressure;
+    double * _Nullable _dPressureDt;
+    double * _Nullable _pressureCoeff;
+    double * _Nullable _density;
+    double * _Nullable _work;
+    double *_Nullable _latentHeat;
+    double * _Nullable * _Nullable _phaseVelocity;
+    double *_Nullable _electricConductivity;
     double _normal[3];
-    double * __nullable _permeability;
-    double * __nullable _viscosity;
-    double * __nullable _c0;
-    double * __nullable _heatTransferCoeff;
-    double * __nullable _heatExpansionCoeff;
-    double * __nullable _referenceTemperature;
-    double * __nullable * __nullable _mass;
-    double * __nullable _localTemperature;
-    double * __nullable _heatCapacity;
-    double * __nullable _enthalpy;
-    double * __nullable _nodalEmissivity;
-    double * __nullable _gasConstant;
-    double * __nullable _aText;
-    double * __nullable * __nullable * __nullable _heatConductivity;
-    double * __nullable *__nullable _stiff;
-    double * __nullable _load;
-    double * __nullable _force;
-    double * __nullable _timeForce;
-    double * __nullable _perfusionRate;
-    double * __nullable _perfusionDensity;
-    double * __nullable _perfusionHeatCapacity;
-    double * __nullable _perfusionRefTemperature;
-    double * __nullable _heaterArea;
-    double * __nullable _heaterDensity;
-    double * __nullable _heaterSource;
-    double * __nullable _heaterScaling;
-    double * __nullable _heaterTarget;
-    double * __nullable _xx;
-    double * __nullable _yy;
-    double * __nullable _forceHeater;
-    double * __nullable _prevSolution;
-    double * __nullable _temperature;
-    double * __nullable _tSolution;
-    double * __nullable _tSolution1;
-    bool * __nullable _smarterHeaters;
-    bool * __nullable _integralHeaters;
-    Nodes_t * __nullable _elementNodes;
-    NSString * __nullable _phaseModel;
-    NSString * __nullable _radiationFlag;
+    double * _Nullable _permeability;
+    double * _Nullable _viscosity;
+    double * _Nullable _c0;
+    double * _Nullable _heatTransferCoeff;
+    double * _Nullable _heatExpansionCoeff;
+    double * _Nullable _referenceTemperature;
+    double * _Nullable * _Nullable _mass;
+    double * _Nullable _localTemperature;
+    double * _Nullable _heatCapacity;
+    double * _Nullable _enthalpy;
+    double * _Nullable _nodalEmissivity;
+    double * _Nullable _gasConstant;
+    double * _Nullable _aText;
+    double * _Nullable * _Nullable * _Nullable _heatConductivity;
+    double * _Nullable *_Nullable _stiff;
+    double * _Nullable _load;
+    double * _Nullable _force;
+    double * _Nullable _timeForce;
+    double * _Nullable _perfusionRate;
+    double * _Nullable _perfusionDensity;
+    double * _Nullable _perfusionHeatCapacity;
+    double * _Nullable _perfusionRefTemperature;
+    double * _Nullable _heaterArea;
+    double * _Nullable _heaterDensity;
+    double * _Nullable _heaterSource;
+    double * _Nullable _heaterScaling;
+    double * _Nullable _heaterTarget;
+    double * _Nullable _xx;
+    double * _Nullable _yy;
+    double * _Nullable _forceHeater;
+    double * _Nullable _prevSolution;
+    double * _Nullable _temperature;
+    double * _Nullable _tSolution;
+    double * _Nullable _tSolution1;
+    bool * _Nullable _smarterHeaters;
+    bool * _Nullable _integralHeaters;
+    Nodes_t * _Nullable _elementNodes;
+    NSString * _Nullable _phaseModel;
+    NSString * _Nullable _radiationFlag;
 }
 
 -(void)FEMHeatSolution_nullify {
@@ -176,7 +176,7 @@ enum {
     _elementNodes = NULL;
 }
 
--(void)FEMHeatSolution_findGapIndexesElement:(Element_t * __nonnull)element indexes:(int * __nonnull)indexes numberOfNodes:(int)n solution:(FEMSolution * __nonnull)solution {
+-(void)FEMHeatSolution_findGapIndexesElement:(Element_t * _Nonnull)element indexes:(int * _Nonnull)indexes numberOfNodes:(int)n solution:(FEMSolution * _Nonnull)solution {
     
     int i, j, k;
     double x0, y0, z0, x, y, z;
@@ -217,7 +217,7 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t * __nonnull)element numberOfNodes:(int)n material:(FEMMaterial * __nonnull)material model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilities transientSimulation:(BOOL)transient {
+-(void)FEMHeatSolution_effectiveHeatCapacityElement:(Element_t * _Nonnull)element numberOfNodes:(int)n material:(FEMMaterial * _Nonnull)material model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilities transientSimulation:(BOOL)transient {
     
     int i;
     BOOL any, found, specific;
@@ -344,7 +344,7 @@ enum {
     if (buffer.vector != NULL) free_dvector(buffer.vector, 0, buffer.m-1);
 }
 
--(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t * __nonnull)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution mesh:(FEMMesh * __nonnull)mesh {
+-(void)FEMHeatSolution_integrationOverSurfaceElement:(Element_t * _Nonnull)element boundaryNumberOfNodes:(int)n radiationBoundaryOfNodes:(int)m model:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution mesh:(FEMMesh * _Nonnull)mesh {
  
     int i, p, q, t;
     double alpha, detJ, force, s, x, y, z;
@@ -402,7 +402,7 @@ enum {
     [integration deallocation:mesh];
 }
 
--(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel * __nonnull)model solution:(FEMSolution * __nonnull)solution core:(FEMCore * __nonnull)core element:(Element_t * __nonnull)element numberOfNodes:(int)n forceVector:(double * __nonnull)forceVector angleFraction:(double * __nonnull)angleFraction text:(double * __nonnull)text timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)FEMHeatSolution_diffuseGrayRadiationModel:(FEMModel * _Nonnull)model solution:(FEMSolution * _Nonnull)solution core:(FEMCore * _Nonnull)core element:(Element_t * _Nonnull)element numberOfNodes:(int)n forceVector:(double * _Nonnull)forceVector angleFraction:(double * _Nonnull)angleFraction text:(double * _Nonnull)text timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, k, k1, k2, l, m, cols, implicitFactors, perm[element->Type.NumberOfNodes], rows;
     double area, asum, s, sum;
@@ -490,7 +490,7 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution * __nonnull)solution element:(Element_t * __nonnull)element numberOfNodes:(int)n core:(FEMCore * __nonnull)core {
+-(void)FEMHeatSolution_addHeatGapSolution:(FEMSolution * _Nonnull)solution element:(Element_t * _Nonnull)element numberOfNodes:(int)n core:(FEMCore * _Nonnull)core {
     
     int i, j, k, l, ind[n];
     
@@ -506,7 +506,7 @@ enum {
     }
 }
 
--(void)FEMHeatSolution_addHeatFluxBC:(NSArray * __nonnull)bc element:(Element_t * __nonnull)element parent:(Element_t * __nonnull)parent numberOfNodes:(int)n forceVector:(double * __nonnull)forceVector core:(FEMCore * __nonnull)core solution:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model listUtilities:(FEMListUtilities * __nonnull)listUtilites crsMatrix:(FEMMatrixCRS * __nonnull)crsMatrix bandMatrix:(FEMMatrixBand * __nonnull)bandMatrix integration:(FEMNumericIntegration * __nonnull)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic * __nonnull)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic * __nonnull)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration * __nonnull)timeIntegration utilities:(FEMUtilities * __nonnull)utilities {
+-(void)FEMHeatSolution_addHeatFluxBC:(NSArray * _Nonnull)bc element:(Element_t * _Nonnull)element parent:(Element_t * _Nonnull)parent numberOfNodes:(int)n forceVector:(double * _Nonnull)forceVector core:(FEMCore * _Nonnull)core solution:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model listUtilities:(FEMListUtilities * _Nonnull)listUtilites crsMatrix:(FEMMatrixCRS * _Nonnull)crsMatrix bandMatrix:(FEMMatrixBand * _Nonnull)bandMatrix integration:(FEMNumericIntegration * _Nonnull)integration diffuseConvectiveAnisotropic:(FEMDiffuseConvectiveAnisotropic * _Nonnull)diffuseConvectiveAnisotropic diffuseConvectiveGeneralAnisotropic:(FEMDiffuseConvectiveGeneralAnisotropic * _Nonnull)diffuseConvectiveGeneralAnisotropic timeIntegration:(FEMTimeIntegration * _Nonnull)timeIntegration utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j, k;
     BOOL found;
@@ -680,7 +680,7 @@ enum {
     if (buffer.vector != NULL) free_dvector(buffer.vector, 0, buffer.m-1);
 }
 
--(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution * __nonnull)solution {
+-(void)FEMHeatSolution_addGlobalTimeSolution:(FEMSolution * _Nonnull)solution {
     
     int i, j, k, n;
     double force[1];
@@ -734,7 +734,7 @@ enum {
     }
 }
 
--(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel * __nonnull)model {
+-(BOOL)FEMHeatSolution_checkLatentHeatModel:(FEMModel * _Nonnull)model {
     
     int i, j, k, t, body_id, eq_id, n;
     FEMMesh *mesh;
@@ -843,7 +843,7 @@ enum {
     return self;
 }
 
--(void)deallocation:(FEMSolution * __nonnull)solution {
+-(void)deallocation:(FEMSolution * _Nonnull)solution {
 
     int n = solution.mesh.maxElementDofs;
     variableArraysContainer *tempContainers = solution.variable.getContainers;
@@ -909,7 +909,7 @@ enum {
     if (_tSolution1 != NULL) free_dvector(_tSolution1, 0, _localNodes-1);
 }
 
--(void)solutionComputer:(FEMSolution * __nonnull)solution model:(FEMModel * __nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
+-(void)solutionComputer:(FEMSolution * _Nonnull)solution model:(FEMModel * _Nonnull)model timeStep:(int)timeStep transientSimulation:(BOOL)transient {
     
     int i, j, k, l, n, nb=0, nd, t, bf_id, body_id, compressibilityModel=-1, eq_id, iter, mat_id, nsdofs=0, nonLinearIter, newtonIter, smartHeaterNode=-1, smartHeaterBC=-1;
     int *indexes = NULL, *flowPerm = NULL;

@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include "NodeCompare.h"
 
-int __attribute__ ((cdecl)) nodecomp(const void * __nonnull a, const void * __nonnull b) {
+int __attribute__ ((cdecl)) nodecomp(const void * _Nonnull a, const void * _Nonnull b) {
     
     cacheNode *aptr = (cacheNode *)a;
     cacheNode *bptr = (cacheNode *)b;

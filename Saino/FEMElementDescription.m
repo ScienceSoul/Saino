@@ -30,8 +30,8 @@
 @interface FEMElementDescription ()
 
 -(void)FEMElementDescription_initElementsDefinition;
--(void)FEMElementDescription_compute1DPBasis:(double * __nonnull * __nonnull)basis sizeOfBasis:(int)n;
--(double)FEMElementDescription_interpolate1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u;
+-(void)FEMElementDescription_compute1DPBasis:(double * _Nonnull * _Nonnull)basis sizeOfBasis:(int)n;
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evalutationPoint:(double)u;
 @end
 
 @implementation FEMElementDescription {
@@ -47,46 +47,46 @@
     //---------------------------------------
     // List of supported elements definition
     //---------------------------------------
-    FEMElementsDefinition * __nonnull _1nodePoint;
-    FEMElementsDefinition * __nonnull _2nodePeriodic;
-    FEMElementsDefinition * __nonnull _2nodeLine;
-    FEMElementsDefinition * __nonnull _3nodeLine;
-    FEMElementsDefinition * __nonnull _4nodeLine;
-    FEMElementsDefinition * __nonnull _3nodeTriangle;
-    FEMElementsDefinition * __nonnull _6nodeTriangle;
-    FEMElementsDefinition * __nonnull _10nodeTriangle;
-    FEMElementsDefinition * __nonnull _4nodeQuadrilateral;
-    FEMElementsDefinition * __nonnull _8nodeQuadrilateral;
-    FEMElementsDefinition * __nonnull _9nodeQuadrilateral;
-    FEMElementsDefinition * __nonnull _12nodeQuadrilateral;
-    FEMElementsDefinition * __nonnull _16nodeQuadrilateral;
-    FEMElementsDefinition * __nonnull _4nodeTetrahedron;
-    FEMElementsDefinition * __nonnull _10nodeTetrahedron;
-    FEMElementsDefinition * __nonnull _5nodePyramid;
-    FEMElementsDefinition * __nonnull _13nodePyramid;
-    FEMElementsDefinition * __nonnull _6nodeWedge;
-    FEMElementsDefinition * __nonnull _8nodeOctahedron;
-    FEMElementsDefinition * __nonnull _20nodeOctahedron;
-    FEMElementsDefinition * __nonnull _27nodeOctahedron;
+    FEMElementsDefinition * _Nonnull _1nodePoint;
+    FEMElementsDefinition * _Nonnull _2nodePeriodic;
+    FEMElementsDefinition * _Nonnull _2nodeLine;
+    FEMElementsDefinition * _Nonnull _3nodeLine;
+    FEMElementsDefinition * _Nonnull _4nodeLine;
+    FEMElementsDefinition * _Nonnull _3nodeTriangle;
+    FEMElementsDefinition * _Nonnull _6nodeTriangle;
+    FEMElementsDefinition * _Nonnull _10nodeTriangle;
+    FEMElementsDefinition * _Nonnull _4nodeQuadrilateral;
+    FEMElementsDefinition * _Nonnull _8nodeQuadrilateral;
+    FEMElementsDefinition * _Nonnull _9nodeQuadrilateral;
+    FEMElementsDefinition * _Nonnull _12nodeQuadrilateral;
+    FEMElementsDefinition * _Nonnull _16nodeQuadrilateral;
+    FEMElementsDefinition * _Nonnull _4nodeTetrahedron;
+    FEMElementsDefinition * _Nonnull _10nodeTetrahedron;
+    FEMElementsDefinition * _Nonnull _5nodePyramid;
+    FEMElementsDefinition * _Nonnull _13nodePyramid;
+    FEMElementsDefinition * _Nonnull _6nodeWedge;
+    FEMElementsDefinition * _Nonnull _8nodeOctahedron;
+    FEMElementsDefinition * _Nonnull _20nodeOctahedron;
+    FEMElementsDefinition * _Nonnull _27nodeOctahedron;
     
-    NSArray * __nonnull _listOfDefinitions;
+    NSArray * _Nonnull _listOfDefinitions;
     
     //-----------------------------------------------------
     // Linked list strurture which contains the elements
     // definition and their allocations. The elements
     // definition are provided by the class itself.
     //-----------------------------------------------------
-    ElementType_t * __nullable _elementTypeList;
+    ElementType_t * _Nullable _elementTypeList;
     BOOL _isTypeListInitialized;
     
-    int * __nonnull * __nonnull _point;
-    int * __nonnull * __nonnull _line;
-    int * __nonnull * __nonnull _triangle;
-    int * __nonnull * __nonnull _quad;
-    int * __nonnull * __nonnull _tetra;
-    int * __nonnull * __nonnull _prism;
-    int * __nonnull * __nonnull _wedge;
-    int * __nonnull * __nonnull _brick;
+    int * _Nonnull * _Nonnull _point;
+    int * _Nonnull * _Nonnull _line;
+    int * _Nonnull * _Nonnull _triangle;
+    int * _Nonnull * _Nonnull _quad;
+    int * _Nonnull * _Nonnull _tetra;
+    int * _Nonnull * _Nonnull _prism;
+    int * _Nonnull * _Nonnull _wedge;
+    int * _Nonnull * _Nonnull _brick;
     
     BOOL _initialized[8];
 }
@@ -584,7 +584,7 @@
     Method to compute the 1D P-basis from Legendre polynomials
  
 ***************************************************************************/
--(void)FEMElementDescription_compute1DPBasis:(double * __nonnull * __nonnull)basis sizeOfBasis:(int)n {
+-(void)FEMElementDescription_compute1DPBasis:(double * _Nonnull * _Nonnull)basis sizeOfBasis:(int)n {
  
     int i, j, k, l;
     double s, p[n+1], p0[n], p1[n+1];
@@ -652,7 +652,7 @@
     Return y = x(u)
  
 **********************************************************************************************/
--(double)FEMElementDescription_interpolate1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u {
+-(double)FEMElementDescription_interpolate1DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evalutationPoint:(double)u {
     
     int i, n;
     int *p;
@@ -679,10 +679,10 @@
 
 #pragma mark Singleton method
 
-static FEMElementDescription * __nullable sharedElementDescription = nil;
+static FEMElementDescription * _Nullable sharedElementDescription = nil;
 static dispatch_once_t onceToken;
 
-+(id __nonnull)sharedElementDescription {
++(id _Nonnull)sharedElementDescription {
     
     dispatch_once(&onceToken, ^{
         sharedElementDescription = [[self alloc] init];
@@ -795,7 +795,7 @@ static dispatch_once_t onceToken;
                                to the list below
  
 ***********************************************************************************************/
--(void)addDescriptionOfElement:(ElementType_t * __nonnull)element withBasisTerms:(int * __nonnull)terms {
+-(void)addDescriptionOfElement:(ElementType_t * _Nonnull)element withBasisTerms:(int * _Nonnull)terms {
     
     int i, j, k, n, upow, vpow, wpow;
     double u, v, w;
@@ -1106,7 +1106,7 @@ static dispatch_once_t onceToken;
     free_ivector(basisTerms, 0, _maxDeg3-1);
 }
 
--(int * __nonnull * __nonnull)getEdgeMap:(int)elementFamily {
+-(int * _Nonnull * _Nonnull)getEdgeMap:(int)elementFamily {
     
     int **edgeMag = NULL;
     
@@ -1292,7 +1292,7 @@ static dispatch_once_t onceToken;
     Nodes_t *nodes      ->  nodal coodinate arrays of the element
  
 *****************************************************************************************/
--(double)elementDiameter:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes {
+-(double)elementDiameter:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes {
     
     int i, j, k, family;
     double x0, y0, z0, hk, a, s, cx, cy, cz;
@@ -1380,7 +1380,7 @@ static dispatch_once_t onceToken;
     L = (\nabla^2 u,\nabla^2 w), G = (\nabla u,\nabla w)
  
 *******************************************************************************************************/
--(void)computeStabilizationParameterInElement:(Element_t * __nonnull)element nodes:(Nodes_t * __nonnull)nodes mesh:(FEMMesh * __nonnull)mesh numberOfNodes:(int)n mk:(double * __nonnull)mk hk:(double * __nullable)hk {
+-(void)computeStabilizationParameterInElement:(Element_t * _Nonnull)element nodes:(Nodes_t * _Nonnull)nodes mesh:(FEMMesh * _Nonnull)mesh numberOfNodes:(int)n mk:(double * _Nonnull)mk hk:(double * _Nullable)hk {
  
     int i, j, p, q, t, dim;
     double eigr[n], s, ddp[3], ddq[3], dNodalBasisdx[n][n][3];
@@ -1540,7 +1540,7 @@ static dispatch_once_t onceToken;
     [numericIntegration deallocation:mesh];
 }
 
--(ElementType_t * __nullable)getElementType:(int)code inMesh:(FEMMesh * __nonnull)mesh stabilization:(BOOL * __nullable)computeStab {
+-(ElementType_t * _Nullable)getElementType:(int)code inMesh:(FEMMesh * _Nonnull)mesh stabilization:(BOOL * _Nullable)computeStab {
         
     Element_t *elm = NULL;
     ElementType_t *element = NULL;
@@ -1599,7 +1599,7 @@ static dispatch_once_t onceToken;
     Return y = @x/@u
  
 **********************************************************************************************/
--(double)firstDerivative1DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evalutationPoint:(double)u {
+-(double)firstDerivative1DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evalutationPoint:(double)u {
     
     int i, n;
     int *p;
@@ -1639,7 +1639,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in u of quantity x at point u,v y = @x(u,v)/@u
     
 **********************************************************************************************/
--(double)firstDerivativeU2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
+-(double)firstDerivativeU2DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -1679,7 +1679,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in v of quantity x at point u,v y = @x(u,v)/@v
  
 **********************************************************************************************/
--(double)firstDerivativeV2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
+-(double)firstDerivativeV2DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -1719,7 +1719,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in u of quantity x at point u,v,w y = @x(u,v,w)/@u
  
 **********************************************************************************************/
--(double)firstDerivativeU3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeU3DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1798,7 +1798,7 @@ static dispatch_once_t onceToken;
     Return first partial derivative in v of quantity x at point u,v,w y = @x(u,v,w)/@v
  
 **********************************************************************************************/
--(double)firstDerivativeV3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeV3DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1879,7 +1879,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 **********************************************************************************************/
--(double)firstDerivativeW3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)firstDerivativeW3DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -1965,7 +1965,7 @@ static dispatch_once_t onceToken;
     Return y = x(u,v,w)
 
 **********************************************************************************************/
--(double)interpolateInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double * __nullable)basis {
+-(double)interpolateInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w withBasis:(double * _Nullable)basis {
     
     int n;
     double value=0.0;
@@ -2000,7 +2000,7 @@ static dispatch_once_t onceToken;
     no elements of the other side.
  
 ***************************************************************************************/
--(void)checkNormalDirectionInBDElement:(Element_t * __nonnull)boundary forNormals:(double * __nonnull)normals mesh:(FEMMesh * __nonnull)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL * __nullable)turn {
+-(void)checkNormalDirectionInBDElement:(Element_t * _Nonnull)boundary forNormals:(double * _Nonnull)normals mesh:(FEMMesh * _Nonnull)mesh x:(double)x y:(double)y z:(double)z turn:(BOOL * _Nullable)turn {
     
     int i, n, k;
     double x1, y1, z1;
@@ -2117,7 +2117,7 @@ static dispatch_once_t onceToken;
     used as default.
  
 ***************************************************************************************/
--(void)normalVectorForBDElement:(Element_t * __nonnull)boundary boundaryNodes:(Nodes_t * __nonnull)nodes mesh:(FEMMesh * __nonnull)mesh paraU:(double * __nullable)u0 paraV:(double * __nullable)v0 check:(BOOL * __nullable)check normals:(double * __nonnull)normals {
+-(void)normalVectorForBDElement:(Element_t * _Nonnull)boundary boundaryNodes:(Nodes_t * _Nonnull)nodes mesh:(FEMMesh * _Nonnull)mesh paraU:(double * _Nullable)u0 paraV:(double * _Nullable)v0 check:(BOOL * _Nullable)check normals:(double * _Nonnull)normals {
     
     double u, v, auu, auv, avv, detA, x=0.0, y=0.0, z=0.0;
     double dxdu, dxdv, dydu, dydv, dzdu, dzdv;
@@ -2218,7 +2218,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 ***************************************************************************************************/
--(void)globalToLocalFromElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes localU:(double * __nonnull)u localV:(double * __nonnull)v localW:(double * __nonnull)w x:(double)x y:(double)y z:(double)z model:(FEMModel * __nonnull)model {
+-(void)globalToLocalFromElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes localU:(double * _Nonnull)u localV:(double * _Nonnull)v localW:(double * _Nonnull)w x:(double)x y:(double)y z:(double)z model:(FEMModel * _Nonnull)model {
     
     int i, j, n;
     int const maxIter = 50;
@@ -2386,7 +2386,7 @@ static dispatch_once_t onceToken;
     Return y = x(u,v)
  
 ************************************************************************************************/
--(double)interpolate2DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v {
+-(double)interpolate2DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v {
     
     int i, n;
     int *p, *q;
@@ -2424,7 +2424,7 @@ static dispatch_once_t onceToken;
     Return y = x(u,v,w)
  
 **********************************************************************************************/
--(double)interpolate3DInElement:(Element_t * __nonnull)element nodalValues:(double * __nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
+-(double)interpolate3DInElement:(Element_t * _Nonnull)element nodalValues:(double * _Nonnull)x evaluatedAt:(double)u andAt:(double)v andAt:(double)w {
     
     int i, n;
     int *p, *q, *r;
@@ -2514,7 +2514,7 @@ static dispatch_once_t onceToken;
     Method corresponds to Elmer from git on October 27 2015
  
 ****************************************************************************************************************/
--(void)getEdgeBasisElement:(Element_t * __nonnull)element wBasis:(double * __nonnull * __nonnull)wBasis rotWBasis:(double * __nonnull * __nonnull)rotWBasis basis:(double * __nonnull)basis dBasisdx:(double * __nonnull * __nonnull)dBasisdx {
+-(void)getEdgeBasisElement:(Element_t * _Nonnull)element wBasis:(double * _Nonnull * _Nonnull)wBasis rotWBasis:(double * _Nonnull * _Nonnull)rotWBasis basis:(double * _Nonnull)basis dBasisdx:(double * _Nonnull * _Nonnull)dBasisdx {
  
     int j, k, n=0, nk, nj, **edgeMap = NULL, size=0;
     double base=0, curlBasis[8][3], dBase[3], dTriBase[3][3], detF=0, detG, du[3], dudx[3][3], dudx1[3], dudx2[3], dudx3[3], edgeBasis[8][3], f[3][3], g[3][3], g1[3], g2[3], g3[3], rBase[3], sum, tbase[3], triBase[3], u=0, v=0, w=0;

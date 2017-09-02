@@ -31,7 +31,7 @@
 #import "FEMListMatrix.h"
 
 @interface FEMInterpolateMeshToMesh ()
--(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * __nonnull)variables model:(FEMModel * __nonnull)model fromMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh projector:(FEMProjector * __nonnull)projector utilities:(FEMUtilities * __nonnull)utilities;
+-(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * _Nonnull)variables model:(FEMModel * _Nonnull)model fromMesh:(FEMMesh * _Nonnull)oldMesh toMesh:(FEMMesh * _Nonnull)newMesh projector:(FEMProjector * _Nonnull)projector utilities:(FEMUtilities * _Nonnull)utilities;
 @end
 
 @implementation FEMInterpolateMeshToMesh
@@ -41,7 +41,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * __nonnull)variables model:(FEMModel * __nonnull)model fromMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh projector:(FEMProjector * __nonnull)projector utilities:(FEMUtilities * __nonnull)utilities {
+-(void)FEMInterpolateMeshToMesh_applyProjector:(NSMutableArray * _Nonnull)variables model:(FEMModel * _Nonnull)model fromMesh:(FEMMesh * _Nonnull)oldMesh toMesh:(FEMMesh * _Nonnull)newMesh projector:(FEMProjector * _Nonnull)projector utilities:(FEMUtilities * _Nonnull)utilities {
     
     int i, j;
     variableArraysContainer *varContainers = NULL, *oldContainers = NULL, *newContainers = NULL;
@@ -130,7 +130,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 ********************************************************************************************************/
--(void)interpolateQMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh oldVariables:(NSMutableArray * __nullable)oldVar newVariables:(NSMutableArray * __nullable)newVar model:(FEMModel * __nonnull)model quadrantTree:(BOOL * __nullable)useQuandrant projector:(FEMProjector * __nullable)projector mask:(NSString * __nullable)maskName nodesPresent:(BOOL * __nullable)nodesPresent newMaskPerm:(int * __nullable)newMaskPerm {
+-(void)interpolateQMesh:(FEMMesh * _Nonnull)oldMesh toMesh:(FEMMesh * _Nonnull)newMesh oldVariables:(NSMutableArray * _Nullable)oldVar newVariables:(NSMutableArray * _Nullable)newVar model:(FEMModel * _Nonnull)model quadrantTree:(BOOL * _Nullable)useQuandrant projector:(FEMProjector * _Nullable)projector mask:(NSString * _Nullable)maskName nodesPresent:(BOOL * _Nullable)nodesPresent newMaskPerm:(int * _Nullable)newMaskPerm {
     
     int i, j, k, l=-1, n, bfId, qTreeFails, np, nrow, totFails;
     int dim, epsTries, passiveCoordinate;
@@ -710,7 +710,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *******************************************************************************/
--(void)interpolateMesh:(FEMMesh * __nonnull)oldMesh toMesh:(FEMMesh * __nonnull)newMesh oldVariables:(NSMutableArray * __nullable)oldVar newVariables:(NSMutableArray * __nullable)newVar model:(FEMModel * __nonnull)model quadrantTree:(BOOL * __nullable)useQuandrant projector:(FEMProjector * __nullable)projector mask:(NSString * __nullable)maskName unfoundNodes:(BOOL * __nullable)unfoundNodes {
+-(void)interpolateMesh:(FEMMesh * _Nonnull)oldMesh toMesh:(FEMMesh * _Nonnull)newMesh oldVariables:(NSMutableArray * _Nullable)oldVar newVariables:(NSMutableArray * _Nullable)newVar model:(FEMModel * _Nonnull)model quadrantTree:(BOOL * _Nullable)useQuandrant projector:(FEMProjector * _Nullable)projector mask:(NSString * _Nullable)maskName unfoundNodes:(BOOL * _Nullable)unfoundNodes {
     
     BOOL *foundNodes = (BOOL*)malloc(sizeof(BOOL) * newMesh.numberOfNodes );
     memset( foundNodes, 0, newMesh.numberOfNodes*sizeof(BOOL) );
@@ -739,7 +739,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ***********************************************************************************/
--(FEMMatrix * __nonnull)weightedProjectorMesh2:(FEMMesh * __nonnull)bMesh2 mesh1:(FEMMesh * __nonnull)bMesh1 inversePermutation2:(int * __nonnull)invPerm2 sizeInversePermutation2:(int)sizeInversePermutation2 inversePermutation1:(int * __nonnull)invPerm1 sizeInversePermutation1:(int)sizeInversePermutation1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating periodicScale:(double)periodicScale nodalJump:(BOOL)nodalJump model:(FEMModel * __nonnull)model {
+-(FEMMatrix * _Nonnull)weightedProjectorMesh2:(FEMMesh * _Nonnull)bMesh2 mesh1:(FEMMesh * _Nonnull)bMesh1 inversePermutation2:(int * _Nonnull)invPerm2 sizeInversePermutation2:(int)sizeInversePermutation2 inversePermutation1:(int * _Nonnull)invPerm1 sizeInversePermutation1:(int)sizeInversePermutation1 useQuadrantTree:(BOOL)useQuadrantTree repeating:(BOOL)repeating antiRepeating:(BOOL)antiRepeating periodicScale:(double)periodicScale nodalJump:(BOOL)nodalJump model:(FEMModel * _Nonnull)model {
     
     int n, np, eqindsize, *indexes, pp, qq;
     double **rotWBasis = NULL, u, v, w, **wBasis = NULL, vq[3], wq[3];

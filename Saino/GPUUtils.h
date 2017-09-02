@@ -65,10 +65,10 @@ typedef struct GlobalMemoryAllocationSize_t {
     int nb_double;
 } GlobalMemoryAllocationSize_t;
 
-void initGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize);
-size_t computeGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * __nonnull allocationSize);
+void initGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * _Nonnull allocationSize);
+size_t computeGlobalMemoryAllocation(GlobalMemoryAllocationSize_t * _Nonnull allocationSize);
 
-void * __nonnull alloc_mem(int precision, size_t size);
-int init_data(int precision, const char * __nonnull source_type, int count, ...);
-int __attribute__((overloadable)) init_data_concat(const char * __nonnull source_type, float * __nonnull target, size_t size_target, bool reset, int count, ...);
-int __attribute__((overloadable)) init_data_concat(const char * __nonnull source_type, double * __nonnull target, size_t size_target, bool reset, int count, ...);
+void * _Nonnull alloc_mem(int precision, size_t size);
+int init_data(int precision, const char * _Nonnull source_type, int count, ...);
+int __attribute__((overloadable)) init_data_concat(const char * _Nonnull source_type, float * _Nonnull target, size_t size_target, bool reset, int count, ...);
+int __attribute__((overloadable)) init_data_concat(const char * _Nonnull source_type, double * _Nonnull target, size_t size_target, bool reset, int count, ...);

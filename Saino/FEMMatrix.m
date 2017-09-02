@@ -293,14 +293,14 @@
     }
 }
 
--(matrixArraysContainer * __nonnull)getContainers {
+-(matrixArraysContainer * _Nonnull)getContainers {
     
     return _containers;
 }
 
 // Retruns an ummutable copy of a FEMMatrix class
 
--(FEMMatrix * __nonnull)copyWithZone:(NSZone *)zone {
+-(FEMMatrix * _Nonnull)copyWithZone:(NSZone *)zone {
     
     FEMMatrix *matrix = [[FEMMatrix allocWithZone:zone] init];
     

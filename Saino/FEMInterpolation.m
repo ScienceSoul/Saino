@@ -25,7 +25,7 @@
 #import "Utils.h"
 
 @interface FEMInterpolation ()
--(Quadrant_t * __nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother;
+-(Quadrant_t * _Nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * _Nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * _Nonnull)mother;
 @end
 
 @implementation FEMInterpolation
@@ -37,7 +37,7 @@
     Method corresponds to Elmer from git on October 27 2015
  
 ************************************************************/
--(Quadrant_t * __nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * __nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * __nonnull)mother {
+-(Quadrant_t * _Nullable)FEMInterpolation_findPointsQuadrantForPoint:(double * _Nonnull)point dimension:(int)dim motherQuadrant:(Quadrant_t * _Nonnull)mother {
     
     int i, k;
     double bbox[6], eps3, *valuesPtr = NULL, maxVal;
@@ -102,7 +102,7 @@
     return self;
 }
 
--(Quadrant_t * __nullable)findLeafElementsForPoint:(double * __nonnull)point dimension:(int)dim rootQuadrant:(Quadrant_t * __nonnull)root {
+-(Quadrant_t * _Nullable)findLeafElementsForPoint:(double * _Nonnull)point dimension:(int)dim rootQuadrant:(Quadrant_t * _Nonnull)root {
     
     Quadrant_t *leaf = root;
     
@@ -128,7 +128,7 @@
     Method corresponds to Elmer from git on October 27 2015
 
 *********************************************************************************************/
--(BOOL)isPointInElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes point:(double * __nonnull)point localCoordinates:(double * __nonnull)localCoords globalEpsilon:(double * __nullable)globaleps localEpsilon:(double * __nullable)localeps numericEpsilon:(double * __nullable)numericeps globalDistance:(double * __nullable)globaldist localDistance:(double * __nullable)localdist model:(FEMModel * __nonnull)model elementDescription:(FEMElementDescription * __nonnull)elementDescription elementMaps:(FEMPElementMaps * __nonnull)elementMaps edgeBasis:(BOOL * __nullable)edgeBasis {
+-(BOOL)isPointInElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes point:(double * _Nonnull)point localCoordinates:(double * _Nonnull)localCoords globalEpsilon:(double * _Nullable)globaleps localEpsilon:(double * _Nullable)localeps numericEpsilon:(double * _Nullable)numericeps globalDistance:(double * _Nullable)globaldist localDistance:(double * _Nullable)localdist model:(FEMModel * _Nonnull)model elementDescription:(FEMElementDescription * _Nonnull)elementDescription elementMaps:(FEMPElementMaps * _Nonnull)elementMaps edgeBasis:(BOOL * _Nullable)edgeBasis {
     
     int n;
     double ug, vg, wg, xdist, ydist, zdist, sumdist, eps0, eps1, eps2, minx,
@@ -300,7 +300,7 @@
     Loop over all elements in the MotherQuadrant, placing them
     in one of the 2^dim child quadrants.
 ***************************************************************/
--(void)putElementsInChildQuadrants:(QuadrantPointer_t * __nonnull)childQuadrants motherQuadrant:(Quadrant_t * __nonnull)mother mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim {
+-(void)putElementsInChildQuadrants:(QuadrantPointer_t * _Nonnull)childQuadrants motherQuadrant:(Quadrant_t * _Nonnull)mother mesh:(FEMMesh * _Nonnull)mesh dimension:(int)dim {
     
     int i, j, t, n;
     int elementList[(int)pow(2, dim)][mother->nElementsInQuadrant];
@@ -418,7 +418,7 @@
     }
 }
 
--(void)createChildQuadrantFromMother:(Quadrant_t * __nonnull)quadrant mesh:(FEMMesh * __nonnull)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int * __nonnull)gen {
+-(void)createChildQuadrantFromMother:(Quadrant_t * _Nonnull)quadrant mesh:(FEMMesh * _Nonnull)mesh dimension:(int)dim maxLeafElements:(int)maxLeafElems generation:(int * _Nonnull)gen {
     
     int i, n;
     double xmin, xmax, ymin, ymax, zmin, zmax;
@@ -535,7 +535,7 @@
     Quandrant_t    ->  quadrant tree structure root
  
 **********************************************************************************/
--(void)buildQuadrantTreeForMesh:(FEMMesh * __nonnull)mesh model:(FEMModel * __nonnull)model boundingBox:(double * __nonnull)box rootQuadrant:(Quadrant_t * __nullable)quadrant {
+-(void)buildQuadrantTreeForMesh:(FEMMesh * _Nonnull)mesh model:(FEMModel * _Nonnull)model boundingBox:(double * _Nonnull)box rootQuadrant:(Quadrant_t * _Nullable)quadrant {
     
     int dim, generation, i;
     double xmin, xmax, ymin, ymax, zmin, zmax;

@@ -33,7 +33,7 @@
 #define MAXN 13
 #define MAX_INTEGRATION_POINTS MAXN*MAXN*MAXN
 
-inline void DerivPoly(int n, double * __nonnull Q, double * __nonnull P) {
+inline void DerivPoly(int n, double * _Nonnull Q, double * _Nonnull P) {
     
     int i;
     
@@ -42,7 +42,7 @@ inline void DerivPoly(int n, double * __nonnull Q, double * __nonnull P) {
     }
 }
 
-inline double EvalPoly(int n, double * __nonnull P, double x) {
+inline double EvalPoly(int n, double * _Nonnull P, double x) {
     int i;
     double s;
     
@@ -54,7 +54,7 @@ inline double EvalPoly(int n, double * __nonnull P, double x) {
     return s;
 }
 
-inline void RefineRoots(int n, double * __nonnull P, double * __nonnull Q, double * __nonnull Points) {
+inline void RefineRoots(int n, double * _Nonnull P, double * _Nonnull Q, double * _Nonnull Points) {
     
     int i, j;
     double x, s;
@@ -76,16 +76,16 @@ inline void RefineRoots(int n, double * __nonnull P, double * __nonnull Q, doubl
 void GaussQuadraturePoints1D(int n);
 void GaussQuadratureInit(void);
 void GaussQuadratureDeallocation(void);
-GaussIntegrationPoints * __nonnull GaussQuadrature0D(int np);
-GaussIntegrationPoints * __nonnull GaussQuadrature1D(int np);
-GaussIntegrationPoints * __nonnull GaussQuadratureTriangle(int np);
-GaussIntegrationPoints * __nonnull GaussQuadratureQuad(int np);
-GaussIntegrationPoints * __nonnull GaussQuadratureTetra(int np);
-GaussIntegrationPoints * __nonnull GaussQuadraturePyramid(int np);
-GaussIntegrationPoints * __nonnull GaussQuadratureWedge(int np);
-GaussIntegrationPoints * __nonnull GaussQuadratureBrick(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadrature0D(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadrature1D(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadratureTriangle(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadratureQuad(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadratureTetra(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadraturePyramid(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadratureWedge(int np);
+GaussIntegrationPoints * _Nonnull GaussQuadratureBrick(int np);
 
-inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull element, int * __nullable np, int * __nullable relOrder) {
+inline GaussIntegrationPoints * _Nonnull GaussQuadrature(Element_t * _Nonnull element, int * _Nullable np, int * _Nullable relOrder) {
     
     int n=0, eldim, p1d;
     GaussIntegrationPoints *IntegPoint = NULL;
@@ -178,7 +178,7 @@ inline GaussIntegrationPoints * __nonnull GaussQuadrature(Element_t * __nonnull 
     them to the OpenCL kernel.
  
 ****************************************************************************************************/
-inline GaussIntegrationPoints * __nonnull GaussQuadratureGPU(int ElementCode, int NumberOfGaussPoints) {
+inline GaussIntegrationPoints * _Nonnull GaussQuadratureGPU(int ElementCode, int NumberOfGaussPoints) {
     
     GaussIntegrationPoints *IntegPoint = NULL;
     

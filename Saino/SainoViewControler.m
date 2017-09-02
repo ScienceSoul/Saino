@@ -36,7 +36,7 @@
     return self;
 }
 
--(IBAction)press:(id __nullable)sender {
+-(IBAction)press:(id _Nullable)sender {
     if ([sender isKindOfClass: [NSButton class]]) {
         int initialize = 0;
         FEMTest *test = [FEMTest sharedTest];

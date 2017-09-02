@@ -38,14 +38,14 @@
     return self;
 }
 
--(void)writeString:(NSString * __nonnull)string toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+-(void)writeString:(NSString * _Nonnull)string toFileHandle:(NSFileHandle * _Nonnull)fileHandle {
     
     NSData *buffer;
     buffer = (NSMutableData *)[string dataUsingEncoding:NSUTF8StringEncoding];
     [fileHandle writeData:buffer];
 }
 
--(void)writeInteger:(int)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+-(void)writeInteger:(int)number toFileHandle:(NSFileHandle * _Nonnull)fileHandle {
     
     NSData *buffer;
     NSString *strBuffer;
@@ -54,7 +54,7 @@
     [fileHandle writeData:buffer];
 }
 
--(void)writeDouble:(double)number toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+-(void)writeDouble:(double)number toFileHandle:(NSFileHandle * _Nonnull)fileHandle {
     
     NSData *buffer;
     NSString *strBuffer;
@@ -63,7 +63,7 @@
     [fileHandle writeData:buffer];
 }
 
--(void)writeBytes:(const void * __nonnull)bytes length:(int)length toFileHandle:(NSFileHandle * __nonnull)fileHandle {
+-(void)writeBytes:(const void * _Nonnull)bytes length:(int)length toFileHandle:(NSFileHandle * _Nonnull)fileHandle {
     
     NSData *buffer;
     buffer = [NSData dataWithBytes:bytes length:length];
@@ -73,7 +73,7 @@
 /*********************************************************
     Writes data in ElmerPost format
 *********************************************************/
--(void)writeElmerPostFile:(NSString * __nonnull)postFile resultFile:(NSString * __nonnull)resultFile model:(FEMModel * __nonnull)model timeCount:(int)timeCount append:(BOOL * __nonnull)append {
+-(void)writeElmerPostFile:(NSString * _Nonnull)postFile resultFile:(NSString * _Nonnull)resultFile model:(FEMModel * _Nonnull)model timeCount:(int)timeCount append:(BOOL * _Nonnull)append {
     
     int i, ii, j, jj, k, l, n, q, numberOfNodes, numberOfElements, *maskOrder = NULL, dofs, nDofs, meshDim, index, savedCount, timeStep, node, iDummy, nZeros;
     double meshScale, coord[3], time, dummy;

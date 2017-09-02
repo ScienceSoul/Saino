@@ -23,7 +23,7 @@
 
 @interface FEMBandwidthOptimize : NSObject
 
--(int)computeBandWidthInListMatrix:(ListMatrix_t * __nonnull)list size:(int)n reorder:(int * __nullable)reorder invInitialReorder:(int * __nullable)invInitialReorder;
--(int)optimizeBandwidthInListMatrix:(ListMatrix_t * __nonnull)listMatrix permutation:(int * __nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * __nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * __nonnull)equation;
+-(int)computeBandWidthInListMatrix:(ListMatrix_t * _Nonnull)list size:(int)n reorder:(int * _Nullable)reorder invInitialReorder:(int * _Nullable)invInitialReorder;
+-(int)optimizeBandwidthInListMatrix:(ListMatrix_t * _Nonnull)listMatrix permutation:(int * _Nonnull)perm sizeOfPerm:(int)sizeOfPerm invInitialReorder:(int * _Nonnull)invInitialReorder localNodes:(int)localNodes optimize:(BOOL)optimize useOptimized:(BOOL)useOptimized equation:(NSString * _Nonnull)equation;
 
 @end

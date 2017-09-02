@@ -43,7 +43,7 @@
     return self;
 }
 
--(BOOL)allocation:(FEMMesh * __nonnull)mesh {
+-(BOOL)allocation:(FEMMesh * _Nonnull)mesh {
     
     _basis = doublevec(0, mesh.maxElementNodes-1);
     if (_basis == NULL) return NO;
@@ -60,7 +60,7 @@
     return YES;
 }
 
--(void)deallocation:(FEMMesh * __nonnull)mesh {
+-(void)deallocation:(FEMMesh * _Nonnull)mesh {
     
     free_dvector(_basis, 0, mesh.maxElementNodes-1);
     free_dmatrix(_basisFirstDerivative, 0, mesh.maxElementNodes-1, 0, 2);
@@ -87,7 +87,7 @@
     Retun NO if element is degenerate
  
 ***************************************************************************************************************/
--(BOOL)setBasisForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree {
+-(BOOL)setBasisForElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes inMesh:(FEMMesh * _Nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * _Nullable)degree {
     
     int n, dim, cdim;
     
@@ -123,7 +123,7 @@
     Retun NO if element is degenerate
  
 ********************************************************************************************/
--(BOOL)setBasisFirstDerivativeForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree {
+-(BOOL)setBasisFirstDerivativeForElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes inMesh:(FEMMesh * _Nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * _Nullable)degree {
     
     int i, j, k, n, q, dim, cdim;
     double ltoGMap[9];
@@ -178,7 +178,7 @@
     Retun NO if element is degenerate
  
 ********************************************************************************************/
--(BOOL)setBasisSecondDerivativeForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * __nullable)degree {
+-(BOOL)setBasisSecondDerivativeForElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes inMesh:(FEMMesh * _Nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w withBubbles:(BOOL)bubbles basisDegree:(int * _Nullable)degree {
     
     int i, j, n, q, dim, cdim;
     double dx[9], elementMetric[9], values[9];
@@ -219,7 +219,7 @@
     Square root of determinant of covariant metric tensor (=sqrt(det(J^TJ))).
  
 ***************************************************************************************************************************/
--(BOOL)setMetricDeterminantForElement:(Element_t * __nonnull)element elementNodes:(Nodes_t * __nonnull)nodes inMesh:(FEMMesh * __nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
+-(BOOL)setMetricDeterminantForElement:(Element_t * _Nonnull)element elementNodes:(Nodes_t * _Nonnull)nodes inMesh:(FEMMesh * _Nonnull)mesh firstEvaluationPoint:(double)u secondEvaluationPoint:(double)v thirdEvaluationPoint:(double)w {
 
     int n = element->Type.NumberOfNodes;
     double covariantMetricTensor[9], dx[9];

@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "Constructors.h"
 
-typedef double (^inputBlock) (double * __nullable variablesValues);
+typedef double (^inputBlock) (double * _Nullable variablesValues);
 
 @interface FEMValueList : NSObject {
     
@@ -35,7 +35,7 @@ typedef double (^inputBlock) (double * __nullable variablesValues);
     NSArray *_dependencies;       // Store the names of the variable to whhich there is/are a
                                   // dependency(ies) in the execution of the block
     
-    valueListArraysContainer * __nonnull _containers;
+    valueListArraysContainer * _Nonnull _containers;
     inputBlock _block;
 }
 
@@ -50,6 +50,6 @@ typedef double (^inputBlock) (double * __nullable variablesValues);
 @property(copy, nullable) inputBlock block;
 
 -(void)deallocation;
--(valueListArraysContainer * __nonnull)getContainers;
+-(valueListArraysContainer * _Nonnull)getContainers;
 
 @end

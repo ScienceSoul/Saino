@@ -88,7 +88,7 @@ double __attribute__((overloadable)) min(double x, double y, double z) {
     return (z < m) ? z : m;
 }
 
-int __attribute__((overloadable)) max_array(int * __nonnull a, int num_elements)
+int __attribute__((overloadable)) max_array(int * _Nonnull a, int num_elements)
 {
     int i, max = -INT_MAX;
     for (i=0; i<num_elements; i++) {
@@ -99,7 +99,7 @@ int __attribute__((overloadable)) max_array(int * __nonnull a, int num_elements)
     return max;
 }
 
-double __attribute__((overloadable)) max_array(double * __nonnull a, int num_elements) {
+double __attribute__((overloadable)) max_array(double * _Nonnull a, int num_elements) {
     
     int i;
     double max = -HUGE_VAL;
@@ -112,7 +112,7 @@ double __attribute__((overloadable)) max_array(double * __nonnull a, int num_ele
     
 }
 
-int __attribute__((overloadable)) min_array(int * __nonnull a, int num_elements) {
+int __attribute__((overloadable)) min_array(int * _Nonnull a, int num_elements) {
     
     int i, min = INT_MAX;
     for (i=0; i<num_elements; i++) {
@@ -124,7 +124,7 @@ int __attribute__((overloadable)) min_array(int * __nonnull a, int num_elements)
     
 }
 
-double __attribute__((overloadable)) min_array(double * __nonnull a, int num_elements) {
+double __attribute__((overloadable)) min_array(double * _Nonnull a, int num_elements) {
     
     int i;
     double min = HUGE_VAL;
@@ -142,7 +142,7 @@ double __attribute__((overloadable)) min_array(double * __nonnull a, int num_ele
     Work on an array of int values.
  
 *************************************************************************************************/
-bool __attribute__((overloadable)) all(int * __nonnull v, char mask, int val, int range) {
+bool __attribute__((overloadable)) all(int * _Nonnull v, char mask, int val, int range) {
 
     int i;
     bool rlt = true;
@@ -189,7 +189,7 @@ bool __attribute__((overloadable)) all(int * __nonnull v, char mask, int val, in
     Work on an array of float values.
  
 *************************************************************************************************/
-bool __attribute__((overloadable)) all(float * __nonnull v, char mask, float val, int range) {
+bool __attribute__((overloadable)) all(float * _Nonnull v, char mask, float val, int range) {
     
     int i;
     bool rlt = true;
@@ -236,7 +236,7 @@ bool __attribute__((overloadable)) all(float * __nonnull v, char mask, float val
     Work on an array of float values.
  
 *************************************************************************************************/
-bool __attribute__((overloadable)) all(double * __nonnull v, char mask, double val, int range) {
+bool __attribute__((overloadable)) all(double * _Nonnull v, char mask, double val, int range) {
     
     int i;
     bool rlt = true;
@@ -283,7 +283,7 @@ bool __attribute__((overloadable)) all(double * __nonnull v, char mask, double v
     starting at start
 
 *************************************************************************************************/
-bool __attribute__((overloadable)) all_in_range(int * __nonnull v, char mask, int val, int start, int range) {
+bool __attribute__((overloadable)) all_in_range(int * _Nonnull v, char mask, int val, int start, int range) {
     
     int i;
     bool rlt = true;
@@ -326,7 +326,7 @@ bool __attribute__((overloadable)) all_in_range(int * __nonnull v, char mask, in
 }
 
 
-bool __attribute__((overloadable)) any(int * __nonnull v, char mask, int val, int range) {
+bool __attribute__((overloadable)) any(int * _Nonnull v, char mask, int val, int range) {
     
     int i;
     bool rlt = false;
@@ -368,7 +368,7 @@ bool __attribute__((overloadable)) any(int * __nonnull v, char mask, int val, in
     
 }
 
-bool __attribute__((overloadable)) any(float * __nonnull v, char mask, float val, int range) {
+bool __attribute__((overloadable)) any(float * _Nonnull v, char mask, float val, int range) {
     
     int i;
     bool rlt = false;
@@ -410,7 +410,7 @@ bool __attribute__((overloadable)) any(float * __nonnull v, char mask, float val
     
 }
 
-bool __attribute__((overloadable)) any(double * __nonnull v, char mask, double val, int range) {
+bool __attribute__((overloadable)) any(double * _Nonnull v, char mask, double val, int range) {
     
     int i;
     bool rlt = false;
@@ -452,7 +452,7 @@ bool __attribute__((overloadable)) any(double * __nonnull v, char mask, double v
     
 }
 
-int __attribute__((overloadable)) count(int * __nonnull v, char mask, int val, int range) {
+int __attribute__((overloadable)) count(int * _Nonnull v, char mask, int val, int range) {
     
     int i;
     int rlt = 0;
@@ -491,7 +491,7 @@ int __attribute__((overloadable)) count(int * __nonnull v, char mask, int val, i
     
 }
 
-int __attribute__((overloadable)) count(float * __nonnull v, char mask, float val, int range) {
+int __attribute__((overloadable)) count(float * _Nonnull v, char mask, float val, int range) {
     
     int i;
     int rlt = 0;
@@ -530,7 +530,7 @@ int __attribute__((overloadable)) count(float * __nonnull v, char mask, float va
     
 }
 
-int __attribute__((overloadable)) count(double * __nonnull v, char mask, double val, int range) {
+int __attribute__((overloadable)) count(double * _Nonnull v, char mask, double val, int range) {
     
     int i;
     int rlt = 0;
@@ -575,7 +575,7 @@ int __attribute__((overloadable)) count(double * __nonnull v, char mask, double 
     arr is replaced on output by its sorted rearrangment.
  
 *******************************************************************************************/
-void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * _Nonnull arr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -642,7 +642,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr) {
     corresponding rearrangment of array brr[1...n].
  
 *******************************************************************************************/
-void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, int * __nonnull brr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * _Nonnull arr, int * _Nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -716,7 +716,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, in
     }
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, float * __nonnull brr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * _Nonnull arr, float * _Nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -791,7 +791,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, fl
     }
 }
 
-void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, double * __nonnull brr) {
+void __attribute__((overloadable)) sort(unsigned long n, int * _Nonnull arr, double * _Nonnull brr) {
     
     unsigned long i, ir=n, j, k, l=1, *istack;
     int jstack=0;
@@ -866,7 +866,7 @@ void __attribute__((overloadable)) sort(unsigned long n, int * __nonnull arr, do
     }    
 }
 
-void __attribute((overloadable)) reverse(int * __nonnull arr, size_t narr) {
+void __attribute((overloadable)) reverse(int * _Nonnull arr, size_t narr) {
     
     size_t i;
     
@@ -882,7 +882,7 @@ void __attribute((overloadable)) reverse(int * __nonnull arr, size_t narr) {
     Circular shift an array. Only works for shift > 0.
 
 *******************************************************************************************/
-void __attribute((overloadable)) cshift(int * __nonnull arr, size_t narr, unsigned long shift) {
+void __attribute((overloadable)) cshift(int * _Nonnull arr, size_t narr, unsigned long shift) {
     reverse(arr, shift);
     reverse(arr + shift, narr - shift);
     reverse(arr, narr);
@@ -893,7 +893,7 @@ void __attribute((overloadable)) cshift(int * __nonnull arr, size_t narr, unsign
     Retunrs current data and time.
 
 *******************************************************************************************/
-char * __nullable dateAndTime(void){
+char * _Nullable dateAndTime(void){
     time_t currtime;
     time(&currtime);
     size_t n = strftime(timeFormat,sizeof(timeFormat),"%Y/%m/%d %H:%M:%S",localtime(&currtime));
@@ -902,14 +902,14 @@ char * __nullable dateAndTime(void){
     } else return NULL;
 }
 
-void startAdvanceOutput(char * __nonnull solverName, char * __nonnull outputType) {
+void startAdvanceOutput(char * _Nonnull solverName, char * _Nonnull outputType) {
     
     advanceTime1 = realtime();
     advanceTime2 = realtime();
     printf("%s: %s\n", solverName, outputType);
 }
 
-void advanceOutput(int t, int n, double * __nullable dot_t, double * __nullable percent_t) {
+void advanceOutput(int t, int n, double * _Nullable dot_t, double * _Nullable percent_t) {
     
     int i;
     double d_t, p_t;

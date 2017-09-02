@@ -28,7 +28,7 @@
 
 @property(nonatomic, assign) int coordinates;
 
--(double)coordinateSquareRootMetricModel:(FEMModel * __nonnull)model coordX:(double)x coordY:(double)y coordZ:(double)z;
--(void)coordinateSystemInfoModel:(FEMModel * __nonnull)model metric:(double[_Nonnull][3])metric sqrtMetric:(double * __nonnull)sqrtMetric symbols:(double[_Nonnull][3][3])symbols dSymbols:(double[_Nonnull][3][3][3])dSymbols coordX:(double)x coordY:(double)y coordZ:(double)z;
+-(double)coordinateSquareRootMetricModel:(FEMModel * _Nonnull)model coordX:(double)x coordY:(double)y coordZ:(double)z;
+-(void)coordinateSystemInfoModel:(FEMModel * _Nonnull)model metric:(double[_Nonnull][3])metric sqrtMetric:(double * _Nonnull)sqrtMetric symbols:(double[_Nonnull][3][3])symbols dSymbols:(double[_Nonnull][3][3][3])dSymbols coordX:(double)x coordY:(double)y coordZ:(double)z;
 
 @end

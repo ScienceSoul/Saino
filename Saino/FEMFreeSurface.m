@@ -30,14 +30,14 @@
 #import "Utils.h"
 
 @interface FEMFreeSurface ()
--(void)FEMFreeSurface_poissonSolution:(double * __nonnull)poissonSolution xCoord:(double * __nonnull)xCoord yCoord:(double * __nonnull)yCoord zCoord:(double * __nonnull)zCoord moved:(int)moved model:(FEMModel * __nonnull)model core:(FEMCore * __nonnull)core integration:(FEMNumericIntegration * __nonnull)integration listUtilities:(FEMListUtilities * __nonnull)listUtilities;
+-(void)FEMFreeSurface_poissonSolution:(double * _Nonnull)poissonSolution xCoord:(double * _Nonnull)xCoord yCoord:(double * _Nonnull)yCoord zCoord:(double * _Nonnull)zCoord moved:(int)moved model:(FEMModel * _Nonnull)model core:(FEMCore * _Nonnull)core integration:(FEMNumericIntegration * _Nonnull)integration listUtilities:(FEMListUtilities * _Nonnull)listUtilities;
 @end
 
 @implementation FEMFreeSurface
 
 #pragma mark Private methods...
 
--(void)FEMFreeSurface_poissonSolution:(double * __nonnull)poissonSolution xCoord:(double * __nonnull)xCoord yCoord:(double * __nonnull)yCoord zCoord:(double * __nonnull)zCoord moved:(int)moved model:(FEMModel * __nonnull)model core:(FEMCore * __nonnull)core integration:(FEMNumericIntegration * __nonnull)integration listUtilities:(FEMListUtilities * __nonnull)listUtilities {
+-(void)FEMFreeSurface_poissonSolution:(double * _Nonnull)poissonSolution xCoord:(double * _Nonnull)xCoord yCoord:(double * _Nonnull)yCoord zCoord:(double * _Nonnull)zCoord moved:(int)moved model:(FEMModel * _Nonnull)model core:(FEMCore * _Nonnull)core integration:(FEMNumericIntegration * _Nonnull)integration listUtilities:(FEMListUtilities * _Nonnull)listUtilities {
     
     int i, j, k, n, p, q, t, dim;
     int *cPerm;
@@ -151,7 +151,7 @@
 
 #pragma mark Public methods...
 
--(void)moveBoundaryModel:(FEMModel * __nonnull)model integration:(FEMNumericIntegration * __nonnull)integration relax:(double)relax {
+-(void)moveBoundaryModel:(FEMModel * _Nonnull)model integration:(FEMNumericIntegration * _Nonnull)integration relax:(double)relax {
     
     int i, ii, j, k, m, n, t, fiter, which;
     double dxdu=0.0, dydu=0.0, dzdu=0.0, dxdv=0.0, dydv=0.0, dzdv=0.0, feps, r, s, sum, u, v, ux, uy, uz, x, x1, y1, y, z;

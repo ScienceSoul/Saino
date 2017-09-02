@@ -136,12 +136,12 @@
     _exportedVariables = nil;
 }
 
--(solutionArraysContainer * __nonnull)getContainers {
+-(solutionArraysContainer * _Nonnull)getContainers {
     
     return _containers;
 }
 
--(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * __nonnull)bundle {
+-(BOOL)instantiatePrincipalClassFromPlugIn:(NSBundle * _Nonnull)bundle {
     
     Class currPrincipalClass;
     FEMUtilities *utilities;

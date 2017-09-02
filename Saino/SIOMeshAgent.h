@@ -67,17 +67,17 @@
 @property(nonatomic, assign) int parallel;
 @property(nonatomic, assign) int meshFiles;
 
--(id __nullable)initWithManager:(SIOModelManager * __nonnull)mm split:(int)split part:(int)part;
--(int)createMesh:(NSString * __nonnull)dir;
--(int)openMesh:(NSString * __nonnull)dir;
+-(id _Nullable)initWithManager:(SIOModelManager * _Nonnull)mm split:(int)split part:(int)part;
+-(int)createMesh:(NSString * _Nonnull)dir;
+-(int)openMesh:(NSString * _Nonnull)dir;
 -(int)closeMesh;
 
 // Reading methods
--(int)readDescriptorNode:(int * __nonnull)nodeC element:(int * __nonnull)elementC boundaryElement:(int * __nonnull)boundaryElementC usedElementTypes:(int * __nonnull)usedElementTypes usedElementTypeTags:(int * __nonnull)usedElementTypeTags usedElementTypeCount:(int * __nonnull)usedElementTypeCount;
--(int)readNextElementConnections:(int * __nonnull)tag part:(int * __nonnull)part body:(int * __nonnull)body type:(int * __nonnull)type pdofs:(int * __nonnull)pdofs nodes:(int * __nonnull)nodes colorIndex:(int * __nullable)colorIndex parallelAssembly:(BOOL * __nullable)parallelAssembly;
--(int)readNextElementCoordinates:(int * __nonnull)tag body:(int * __nonnull)body type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord;
--(int)readNextBoundaryElement:(int * __nonnull)tag part:(int * __nonnull)part boundary:(int * __nonnull)boundary leftElement:(int * __nonnull)leftElement rightElement:(int * __nonnull)rightElement type:(int * __nonnull)type nodes:(int * __nonnull)nodes coord:(double * __nonnull)coord;
--(int)readAllNodes:(int * __nonnull)tags coord:(double * __nonnull)coord;
+-(int)readDescriptorNode:(int * _Nonnull)nodeC element:(int * _Nonnull)elementC boundaryElement:(int * _Nonnull)boundaryElementC usedElementTypes:(int * _Nonnull)usedElementTypes usedElementTypeTags:(int * _Nonnull)usedElementTypeTags usedElementTypeCount:(int * _Nonnull)usedElementTypeCount;
+-(int)readNextElementConnections:(int * _Nonnull)tag part:(int * _Nonnull)part body:(int * _Nonnull)body type:(int * _Nonnull)type pdofs:(int * _Nonnull)pdofs nodes:(int * _Nonnull)nodes colorIndex:(int * _Nullable)colorIndex parallelAssembly:(BOOL * _Nullable)parallelAssembly;
+-(int)readNextElementCoordinates:(int * _Nonnull)tag body:(int * _Nonnull)body type:(int * _Nonnull)type nodes:(int * _Nonnull)nodes coord:(double * _Nonnull)coord;
+-(int)readNextBoundaryElement:(int * _Nonnull)tag part:(int * _Nonnull)part boundary:(int * _Nonnull)boundary leftElement:(int * _Nonnull)leftElement rightElement:(int * _Nonnull)rightElement type:(int * _Nonnull)type nodes:(int * _Nonnull)nodes coord:(double * _Nonnull)coord;
+-(int)readAllNodes:(int * _Nonnull)tags coord:(double * _Nonnull)coord;
 
 // Writing methods
 //-(int)writeDescriptor:(int)nodeC: (int)elementC: (int)boundaryElementC: (int)usedElementTypes: (int *)elementTypeTags: (int *)elementCountByType;
@@ -86,7 +86,7 @@
 //-(int)writeBoundaryElement:(int)tag: (int)boundary: (int)leftElement: (int)rightElement: (int)type: (int *)nodes;
 //-(int)writeBoundaryElement:(int)tag: (int)boundary: (int)leftElement: (int)rightElement: (int)type: (int *)nodes;
 
--(int)readPartDescriptor:(int * __nonnull)shared;
--(int)readSharedNode:(int * __nonnull)tag constraint:(int * __nonnull)constraint coord:(double * __nonnull)coord partCount:(int * __nonnull)partcount partitions:(int * __nonnull)partitions;
+-(int)readPartDescriptor:(int * _Nonnull)shared;
+-(int)readSharedNode:(int * _Nonnull)tag constraint:(int * _Nonnull)constraint coord:(double * _Nonnull)coord partCount:(int * _Nonnull)partcount partitions:(int * _Nonnull)partitions;
 
 @end

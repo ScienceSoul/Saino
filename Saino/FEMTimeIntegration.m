@@ -27,7 +27,7 @@
 /*************************************************
     Fractional step integration scheme.
 *************************************************/
--(void)fractionalStepInSolution:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * __nonnull * __nonnull )massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force prevSolution:(double * __nonnull)prevSolution rows:(int * __nonnull)rows {
+-(void)fractionalStepInSolution:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * _Nonnull * _Nonnull )massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force prevSolution:(double * _Nonnull)prevSolution rows:(int * _Nonnull)rows {
     
     int i, j, nb;
     double s, fsStep, fsTheta, fsdTheta, fsAlpha, fsBeta, massCoeff=0.0, forceCoeff=0.0;
@@ -92,7 +92,7 @@
 /**************************************************************************
     Constant time step BDF integration scheme to elementwise matrix entry.
 **************************************************************************/
--(void)bdfLocalInSolution:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * __nonnull * __nonnull)massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force prevSolution:(double * __nonnull * __nonnull)prevSolution order:(int)order rows:(int * __nonnull)rows cols:(int * __nonnull)cols {
+-(void)bdfLocalInSolution:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * _Nonnull * _Nonnull)massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force prevSolution:(double * _Nonnull * _Nonnull)prevSolution order:(int)order rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols {
     
     int i, j, nb1, nb2;
     double s;
@@ -180,7 +180,7 @@
 /***************************************************************************
     Variable time step BDF integration scheme to elementwise matrix entry.
 ***************************************************************************/
--(void)vbdfLocalInSolution:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dts:(double * __nonnull)dts massMatrix:(double * __nonnull * __nonnull)massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force prevSolution:(double * __nonnull * __nonnull)prevSolution order:(int)order rows:(int * __nonnull)rows cols:(int * __nonnull)cols {
+-(void)vbdfLocalInSolution:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dts:(double * _Nonnull)dts massMatrix:(double * _Nonnull * _Nonnull)massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force prevSolution:(double * _Nonnull * _Nonnull)prevSolution order:(int)order rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols {
     
     int i, j, k, nb1, nb2;
     double s, a[4];
@@ -231,7 +231,7 @@
     Apply newmark beta scheme to local matrix equation. This is used also for Implicit Euler with beta=1.0 and
     Crank-Nicolson with beta=0.5.
 ****************************************************************************************************************/
--(void)newMarkBetaInSolution:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * __nonnull * __nonnull)massMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force prevSolution:(double * __nonnull)prevSolution beta:(double)beta rows:(int * __nonnull)rows cols:(int * __nonnull)cols {
+-(void)newMarkBetaInSolution:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * _Nonnull * _Nonnull)massMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force prevSolution:(double * _Nonnull)prevSolution beta:(double)beta rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols {
     
     int i, j, nb1, nb2;
     double s;
@@ -259,7 +259,7 @@
 /*********************************************************************************
     Second order Bossok time integration scheme to the elememtwise matrix entry.
 *********************************************************************************/
--(void)bossakSecondOrder:(FEMSolution * __nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * __nonnull * __nonnull)massMatrix dampMatrix:(double * __nonnull * __nonnull)dampMatrix stiffMatrix:(double * __nonnull * __nonnull)stiffMatrix force:(double * __nonnull)force prevSolution1:(double * __nonnull)x prevSolution2:(double * __nonnull)v prevSolution3:(double * __nonnull)a alpha:(double)alpha rows:(int * __nonnull)rows cols:(int * __nonnull)cols {
+-(void)bossakSecondOrder:(FEMSolution * _Nonnull)solution numberOfNodes:(int)n dt:(double)dt massMatrix:(double * _Nonnull * _Nonnull)massMatrix dampMatrix:(double * _Nonnull * _Nonnull)dampMatrix stiffMatrix:(double * _Nonnull * _Nonnull)stiffMatrix force:(double * _Nonnull)force prevSolution1:(double * _Nonnull)x prevSolution2:(double * _Nonnull)v prevSolution3:(double * _Nonnull)a alpha:(double)alpha rows:(int * _Nonnull)rows cols:(int * _Nonnull)cols {
     
     int i, j, nb1, nb2;
     double beta, gamma, s;
