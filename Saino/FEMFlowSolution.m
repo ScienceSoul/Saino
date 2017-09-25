@@ -581,7 +581,7 @@ navierStokesGeneralComposeMassMatrix:(void (* _Nonnull)(id, SEL, double**, doubl
             materialAtID = (model.materials)[mat_id-1];
             
             compressibilityFlag = listGetStringIMP(listUtilities, @selector(listGetString:inArray:forVariable:info:), model, materialAtID.valuesList, @"compressibility model", &found);
-            if (found == NO) compressibilityFlag = incompressible;
+            if (found == NO) compressibilityModel = incompressible;
             
             if ([compressibilityFlag isEqualToString:@"incompressible"] == YES) {
                 compressibilityModel = incompressible;

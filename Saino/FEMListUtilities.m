@@ -1075,7 +1075,7 @@ static dispatch_once_t onceToken;
     Adds an integer to a given class list of values
  
 **********************************************************************************/
--(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)())block {
+-(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)(void))block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1159,7 +1159,7 @@ static dispatch_once_t onceToken;
     Adds an integer array to a given class list of values
  
 **********************************************************************************/
--(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)())block {
+-(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)(void))block {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1243,7 +1243,7 @@ static dispatch_once_t onceToken;
     Adds an constant real value to a given class list of values
  
 **********************************************************************************/
--(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str {
+-(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)(void))block string:(NSString * _Nullable)str {
     
     FEMBoundaryCondition *boundary;
     FEMBodyForce *bodyForce;
@@ -1329,7 +1329,7 @@ static dispatch_once_t onceToken;
     [valuesArray addObject:newValueList];
 }
 
--(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str {
+-(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)(void))block string:(NSString * _Nullable)str {
     
     int i, j;
     FEMBoundaryCondition *boundary;

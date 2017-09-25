@@ -183,5 +183,5 @@
 
 #endif  /* _H_HUTI_DEFS */
 
-void HUTI_Init();
-void HUTI_Exit();
+void HUTI_Init(void);
+void HUTI_Exit(void);

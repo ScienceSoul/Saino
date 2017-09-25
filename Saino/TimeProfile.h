@@ -21,7 +21,7 @@
 #include <time.h>
 #include <mach/mach_time.h>
 
-double cputime();
-double realtime();
-double cpumemory();
+double cputime(void);
+double realtime(void);
+double cpumemory(void);
 double machcore(uint64_t endTime, uint64_t startTime);

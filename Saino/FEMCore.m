@@ -5844,7 +5844,7 @@ static dispatch_once_t onceToken;
     meshUtils = [[FEMMeshUtils alloc] init];
     
     findEdges = NO;
-    [meshUtils findEdgesForMesh:mesh findEdges:NO];
+    [meshUtils findEdgesForMesh:mesh findEdges:&findEdges];
     switch (mesh.dimension) {
         case 2:
             faces = mesh.getEdges;

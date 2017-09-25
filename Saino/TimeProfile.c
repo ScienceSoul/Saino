@@ -32,19 +32,19 @@ static struct rusage usage;
 static struct timeval tp;
 static struct timezone tzp;
 
-double cputime () {
+double cputime(void) {
     
     getrusage( RUSAGE_SELF, &usage );
     return (double) usage.ru_utime.tv_sec + usage.ru_utime.tv_usec*1.0e-6;
 }
 
-double realtime () {
+double realtime(void) {
     
     gettimeofday( &tp,&tzp );
     return (double) tp.tv_sec + tp.tv_usec*1.0e-6;
 }
 
-double cpumemory () {
+double cpumemory(void) {
     
     getrusage( RUSAGE_SELF, &usage );
     return (double) 1.0 * usage.ru_maxrss;

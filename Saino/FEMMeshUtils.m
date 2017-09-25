@@ -5835,7 +5835,7 @@ jump:
     // Generate volume bulk elements
     FEMElementDescription *elementDescription = [FEMElementDescription sharedElementDescription];
     meshOut.maxElementNodes = 0;
-    cnt = 0, dg_n = 0;
+    cnt = 0; dg_n = 0;
     needEdges = NO;
     n = mesh.numberOfNodes;
     for (int i=0; i<=inLevels; i++) {

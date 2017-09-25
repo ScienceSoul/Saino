@@ -56,11 +56,11 @@
 
 -(void)addStringInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(NSString * _Nonnull)value;
 -(void)addLogicalInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(BOOL)value;
--(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)())block;
--(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)())block;
--(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str;
--(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)())block string:(NSString * _Nullable)str;
--(void)addBlockInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName usingBlock:(double (^ _Nonnull)(double * _Nullable variablesValues))block dependencies:(NSArray * _Nullable)dependencies;
+-(void)addIntegerInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(int * _Nullable)value orUsingBlock:(double (^ _Nullable)(void))block;
+-(void)addIntegerArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(int * _Nullable)values size:(int)n orUsingBlock:(double (^ _Nullable)(void))block;
+-(void)addConstRealInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValue:(double * _Nullable)value orUsingBlock:(double (^ _Nullable)(void))block string:(NSString * _Nullable)str;
+-(void)addConstRealArrayInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName withValues:(double * _Nullable * _Nullable)fvalues size1:(int)m size2:(int)n orUsingBlock:(double (^ _Nullable)(void))block string:(NSString * _Nullable)str;
+-(void)addBlockInClassList:(id _Nonnull)className theVariable:(NSString * _Nonnull)varName usingBlock:(double (^ _Nonnull)(double * _Nullable))block dependencies:(NSArray * _Nullable)dependencies;
 
 -(BOOL)checkElementEquation:(FEMModel * _Nonnull)model forElement:(Element_t * _Nonnull)element andEquation:(NSString * _Nonnull)equation;
 
